@@ -14,9 +14,6 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   // var userData = {};
   MemoModelUser user = MemoModelUser.createDummy();
-  int postLen = 0;
-  int followers = 0;
-  int following = 0;
   bool isFollowing = false;
   bool isLoading = false;
 
@@ -132,9 +129,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Row(
                                 children: [
                                   Padding(padding: EdgeInsets.only(left: 25)),
-                                  buildStatColumn('Posts', postLen),
-                                  buildStatColumn('followers', followers),
-                                  buildStatColumn('following', following),
+                                  buildStatColumn('Posts', user.creator!.actions!),
+                                  buildStatColumn('followers', user.creator!.followerCount!),
+                                  buildStatColumn('following', user.creator!.followingCount!),
                                 ],
                               ),
                               Column(
@@ -189,7 +186,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding:
                         EdgeInsets.symmetric(horizontal: 20).copyWith(top: 10),
                     alignment: Alignment.bottomLeft,
-                    child: Text('bio goes here'),
+                    child: Text(user.creator!.profileText!),
                   ),
 
                   new Divider(

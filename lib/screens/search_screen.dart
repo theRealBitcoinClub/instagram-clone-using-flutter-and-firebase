@@ -59,9 +59,11 @@ class _SearchScreenState extends State<SearchScreen> {
                       return InkWell(
                         onTap: () {
                           Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => ProfileScreen(
-                                uid: (snapshot.data! as dynamic).docs[index]
-                                    ['uid']),
+                            builder: (context) => ProfileScreen(//TODO USER ID OF SEARCHED USER
+                                // uid: (snapshot.data! as dynamic).docs[index]
+                                //     ['uid']
+                                uid: "17ZY9npgMXstBGXHDCz1umWUEAc9ZU1hSZ",
+                            ),
                           ));
                         },
                         child: ListTile(

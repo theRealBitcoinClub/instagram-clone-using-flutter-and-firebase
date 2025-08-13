@@ -27,7 +27,7 @@ static User fromSnap(MemoModelUser user) {
 
     return User(
       username: user.creator!.name!,
-      password: user.WIF!,
+      password: user.wif!,
       uid: user.creator!.id!,
       email: "fdfdsf@fdsfs.com",
       photoURL: "photourl",

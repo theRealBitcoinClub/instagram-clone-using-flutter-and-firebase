@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/profile_buttons.dart';
 
@@ -11,7 +12,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  var userData = {};
+  // var userData = {};
+  MemoModelUser user = MemoModelUser.createDummy();
   int postLen = 0;
   int followers = 0;
   int following = 0;
@@ -95,7 +97,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               backgroundColor: mobileBackgroundColor,
               centerTitle: false,
               title: Text(
-                userData['username'],
+                user.creator!.name!,
+                // userData['username'],
                 style: TextStyle(color: Colors.black),
               ),
               actions: [
@@ -118,7 +121,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Container(
                           // padding: EdgeInsets.all(10).copyWith(top: 20),
                           child: CircleAvatar(
-                            backgroundImage: NetworkImage(userData['photoURL']),
+                            backgroundImage: NetworkImage(user.creator!.profileImage()),
+                            // backgroundImage: NetworkImage(userData['photoURL']),
                             radius: 40,
                           ),
                         ),
@@ -174,7 +178,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: EdgeInsets.symmetric(horizontal: 20),
                     alignment: Alignment.bottomLeft,
                     child: Text(
-                      userData['fullName'],
+                      user.creator!.name!,
+                      // userData['fullName'],
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),

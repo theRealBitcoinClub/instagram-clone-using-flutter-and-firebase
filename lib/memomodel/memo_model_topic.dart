@@ -16,4 +16,13 @@ class MemoModelTopic {
   final int? postCount;
   final int? followerCount;
   final String? lastPost;
+
+  static MemoModelTopic createDummy() {
+    return MemoModelTopic(
+        followerCount: 12,
+        postCount: 33,
+        lastPost: "13.09.2001 23:22",
+        header: "Super Topic",
+        url: "https://memo.cash/topic/Bitcoin+Map");
+  }
 }

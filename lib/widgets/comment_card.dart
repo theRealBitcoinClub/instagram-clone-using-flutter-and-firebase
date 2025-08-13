@@ -1,7 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
+import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/model/user.dart';
 import 'package:instagram_clone1/provider/user_provider.dart';
 import 'package:instagram_clone1/resources/firestore_method.dart';
@@ -10,8 +11,10 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class CommentsCard extends StatefulWidget {
-  final snap;
-  const CommentsCard({super.key, required this.snap});
+  // final snap;
+  // const CommentsCard({super.key, required this.snap});
+  final MemoModelPost post;
+  const CommentsCard({super.key, required this.post});
 
   @override
   State<CommentsCard> createState() => _CommentsCardState();
@@ -20,7 +23,6 @@ class CommentsCard extends StatefulWidget {
 class _CommentsCardState extends State<CommentsCard> {
   @override
   Widget build(BuildContext context) {
-    final User user = Provider.of<UserProvider>(context).getUser;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
       child: Row(
@@ -29,7 +31,7 @@ class _CommentsCardState extends State<CommentsCard> {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundImage: NetworkImage(widget.snap['profileImage']),
+            backgroundImage: NetworkImage(widget.post.creator!.profileImage()),
           ),
           Expanded(
               child: Column(
@@ -40,7 +42,7 @@ class _CommentsCardState extends State<CommentsCard> {
                   Padding(
                     padding: const EdgeInsets.only(left: 8.0),
                     child: Text(
-                      widget.snap['username'],
+                      widget.post.creator!.name!,
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                     ),
@@ -48,7 +50,8 @@ class _CommentsCardState extends State<CommentsCard> {
                   Padding(
                     padding: const EdgeInsets.only(left: 8.0),
                     child: Text(
-                      DateFormat.yMMMd().format(widget.snap['date'].toDate()),
+                      widget.post.created!,
+                      // DateFormat.yMMMd().format(widget.snap['date'].toDate()),
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
@@ -60,7 +63,7 @@ class _CommentsCardState extends State<CommentsCard> {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ExpandableText(
-                  widget.snap['comment'],
+                  widget.post.text!,
                   expandText: 'show more',
                   collapseText: 'show less',
                   maxLines: 3,
@@ -78,15 +81,18 @@ class _CommentsCardState extends State<CommentsCard> {
 
                    IconButton(
                    onPressed: () async {
-                     await FireStoreMethods().likeComment(widget.snap['postId'],
-                         widget.snap['commentId'], user.uid, widget.snap['likes']);
+                     //TODO LIKE BUTTON
+                     // await FireStoreMethods().likeComment(widget.snap['postId'],
+                     //     widget.snap['commentId'], user.uid, widget.snap['likes']);
                     },
-                   icon: widget.snap['likes'].contains(user.uid)? const Icon(
-                   Icons.favorite,
-                   color: Colors.red,
-                   size: 20,
-                   )
-                  : const Icon(
+                   icon: // TODO COLOR MARK OWN LIKES
+                   // widget.snap['likes'].contains(user.uid)? const Icon(
+                   // Icons.favorite,
+                   // color: Colors.red,
+                   // size: 20,
+                   // )
+                  // :
+                  const Icon(
                    Icons.favorite_border,
                     size: 20,
                    ),
@@ -96,7 +102,7 @@ class _CommentsCardState extends State<CommentsCard> {
           Positioned(   
             bottom: 6,
             left: 26,  
-            child: Text("${widget.snap['likes'].length}" , style: TextStyle(
+            child: Text("${widget.post.likeCounter}" , style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),

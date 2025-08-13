@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 
 class Post {
   final String discription;
@@ -22,18 +22,16 @@ class Post {
   });
 
 
-static Post fromSnap(DocumentSnapshot snap) {
-    var snapshot = snap.data() as Map<String, dynamic>;
-
+static Post fromSnap(MemoModelPost post) {
     return Post(
-      discription: snapshot["discription"],
-      uid: snapshot["uid"],
-      username: snapshot["username"],
-      postId: snapshot["postId"],
-      datePublished: snapshot["datePublished"],
-      postURL: snapshot["postURL"],
-      profileImage: snapshot["profileImage"],
-      likes: snapshot["likes"],
+      discription: post.text!,
+      uid: post.creator!.id!,
+      username: post.creator!.name!,
+      postId: post.txHash!,
+      datePublished: post.created!,
+      postURL: "https://memo.cash/post/" + post.txHash!,
+      profileImage: "https://memo.cash/img/profilepics/" + post.creator!.id! + "-128x128.jpg",
+      likes: post.likeCounter,
     );
   }
 

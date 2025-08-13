@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -31,28 +30,9 @@ class _PostCardState extends State<PostCard> {
   }
 
   void getComments() async {
-    // StreamBuilder(
-    //   stream: FirebaseFirestore.instance
-    //       .collection('posts')
-    //       .doc(widget.snap['postId'])
-    //       .collection('comments')
-    //       .snapshots(),
-    //   builder: (context, snapshot) {
-    //     if (snapshot.hasData) {
-    //       numberOfComments = snapshot.data!.docs.length;
-    //       print(numberOfComments);
-    //     }
-    //     return const CircularProgressIndicator();
-    //   },
-    // );
+    //TODO LOAD NUMBER OF REPLIES
 
-    final QuerySnapshot snap = await FirebaseFirestore.instance
-        .collection('posts')
-        .doc(widget.snap['postId'])
-        .collection('comments')
-        .get();
-
-    numberOfComments = snap.docs.length;
+    numberOfComments = 78;
     // print(numberOfComments);
   }
 
@@ -246,7 +226,7 @@ class _PostCardState extends State<PostCard> {
             Row(
               children: [
                 DefaultTextStyle(
-                  style: Theme.of(context).textTheme.subtitle2!.copyWith(
+                  style: Theme.of(context).textTheme.titleSmall!.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                   child: Text(

@@ -1,3 +1,5 @@
+import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+
 class User {
   final String email;
   final String uid;
@@ -20,18 +22,18 @@ class User {
   });
 
 
-static User fromSnap(DocumentSnapshot snap) {
-    var snapshot = snap.data() as Map<String, dynamic>;
+static User fromSnap(MemoModelUser user) {
+    // var snapshot = snap.data() as Map<String, dynamic>;
 
     return User(
-      username: snapshot["username"],
-      password: snapshot["password"],
-      uid: snapshot["uid"],
-      email: snapshot["email"],
-      photoURL: snapshot["photoURL"],
-      fullName: snapshot["fullName"],
-      followers: snapshot["followers"],
-      followings: snapshot["followings"],
+      username: user.creator!.name!,
+      password: user.WIF!,
+      uid: user.creator!.id!,
+      email: "fdfdsf@fdsfs.com",
+      photoURL: "photourl",
+      fullName: "full name",
+      followers: [],
+      followings: [],
     );
   }
 

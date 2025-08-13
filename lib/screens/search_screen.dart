@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/route%20handling/auth_page.dart';
 import 'package:instagram_clone1/screens/profile_screen.dart';
@@ -38,13 +37,16 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
         body: isShowUsers
             ? FutureBuilder(
-                future: FirebaseFirestore.instance
-                    .collection('users')
-                    .where(
-                      'username',
-                      isGreaterThanOrEqualTo: searchController.text,
-                    )
-                    .get(),
+                future: null
+                ,
+                // TODO SEARCH USERS BY NAME
+                // FirebaseFirestore.instance
+                //     .collection('users')
+                //     .where(
+                //       'username',
+                //       isGreaterThanOrEqualTo: searchController.text,
+                //     )
+                //     .get(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(
@@ -80,7 +82,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 },
               )
             : FutureBuilder(
-                future: FirebaseFirestore.instance.collection('posts').get(),
+                future:
+                null,
+                // TODO POSTS
+                // FirebaseFirestore.instance.collection('posts').get(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     const Center(

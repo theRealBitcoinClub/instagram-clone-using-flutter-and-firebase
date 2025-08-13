@@ -101,7 +101,7 @@ class _AddPostState extends State<AddPost> {
 
   @override
   Widget build(BuildContext context) {
-    final UserProvider userProvider = Provider.of<UserProvider>(context);
+    // final UserProvider userProvider = Provider.of<UserProvider>(context);
     return _image == null
         ? Center(
             child: IconButton(
@@ -121,10 +121,11 @@ class _AddPostState extends State<AddPost> {
               title: const Text('post to'),
               actions: [
                 TextButton(
-                    onPressed: () => postImage(
-                        userProvider.getUser.username,
-                        userProvider.getUser.uid,
-                        userProvider.getUser.photoURL),
+                    onPressed: () => "123".substring(0),
+                        // postImage( TODO UPLOAD IMAGE AND POST
+                        // userProvider.getUser.username,
+                        // userProvider.getUser.uid,
+                        // userProvider.getUser.photoURL),
                     child: const Text(
                       "post",
                       style: TextStyle(
@@ -146,8 +147,8 @@ class _AddPostState extends State<AddPost> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CircleAvatar(
-                      backgroundImage:
-                          NetworkImage(userProvider.getUser.photoURL),
+                      backgroundImage: //TODO IMAGE LOAD AVATAR
+                          NetworkImage("https://memo.cash/img/profilepics/17ZY9npgMXstBGXHDCz1umWUEAc9ZU1hSZ-128x128.jpg"),
                       radius: 22,
                     ),
 

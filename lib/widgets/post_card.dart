@@ -12,8 +12,10 @@ import 'package:provider/provider.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
 class PostCard extends StatefulWidget {
-  final snap;
-  const PostCard({super.key, required this.snap});
+  // final snap;
+  // const PostCard({super.key, required this.snap});
+  const PostCard({super.key});
+
 
   @override
   State<PostCard> createState() => _PostCardState();
@@ -38,7 +40,7 @@ class _PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
-    final model.User user = Provider.of<UserProvider>(context).getUser;
+    // final model.User user = Provider.of<UserProvider>(context).getUser;
   
     return Container(
       color: Colors.white,
@@ -53,7 +55,9 @@ class _PostCardState extends State<PostCard> {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundImage: NetworkImage(widget.snap['profileImage']),
+                backgroundImage: NetworkImage("https://memo.cash/img/profilepics/17ZY9npgMXstBGXHDCz1umWUEAc9ZU1hSZ-128x128.jpg"),
+                //TODO LOAD PROFILE IMAGE
+                // backgroundImage: NetworkImage(widget.snap['profileImage']),
               ),
               Expanded(
                 child: Padding(
@@ -63,7 +67,8 @@ class _PostCardState extends State<PostCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.snap['username'],
+                        "Feliz-TRBC",
+                        // widget.snap['username'], TODO USERNAME
                         style: const TextStyle(fontSize: 15),
                       ),
                     ],
@@ -85,12 +90,14 @@ class _PostCardState extends State<PostCard> {
                                 shrinkWrap: true,
                                 children: ["Delete", "edit"]
                                     .map((e) => InkWell(
-                                          onTap: () async {
-                                            String res =
-                                                await FireStoreMethods()
-                                                    .deletePost(
-                                                        widget.snap['postId']);
-                                            showSnackBar(res, context);
+                                          onTap: () {
+                                          //   TODO DELETEPOST LOLL
+                                          // async {
+                                          //   String res =
+                                          //       await FireStoreMethods()
+                                          //           .deletePost(
+                                          //               widget.snap['postId']);
+                                            showSnackBar("LOL", context);
                                             Navigator.pop(context);
                                           },
                                           child: Container(
@@ -111,8 +118,9 @@ class _PostCardState extends State<PostCard> {
         ),
         GestureDetector(
           onDoubleTap: () async {
-            FireStoreMethods().likePost(widget.snap['postId'],
-                user.uid, widget.snap['likes']);
+            // TODO LIKE POST
+            // FireStoreMethods().likePost(widget.snap['postId'],
+            //     user.uid, widget.snap['likes']);
             setState(() {
               isAnimating = true;
             });
@@ -130,7 +138,7 @@ class _PostCardState extends State<PostCard> {
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.45,
                   child: Image(
-                    image: NetworkImage(widget.snap['postURL']),
+                    image: NetworkImage("https://i.imgur.com/YbduTBp.png"), //TODO SHOW REAL IMAGE
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -164,17 +172,18 @@ class _PostCardState extends State<PostCard> {
           children: [
             //like
             LikeAnimation(
-              isAnimating: widget.snap['likes'].contains(user.uid),
+              isAnimating: true, //TODO CHECKS LIKE widget.snap['likes'].contains(user.uid),
               smallLike: true,
               child: IconButton(
                   onPressed: () async {
-                    await FireStoreMethods().likePost(widget.snap['postId'],
-                       user.uid, widget.snap['likes']);
+                    //TODO LIKE
+                    // await FireStoreMethods().likePost(widget.snap['postId'],
+                    //    user.uid, widget.snap['likes']);
                     setState(() {
                       isAnimating = true;
                     });
                   },
-                  icon: widget.snap['likes'].contains(user.uid)
+                  icon: true //TODO CHECKS widget.snap['likes'].contains(user.uid)
                       ? const Icon(
                           Icons.favorite,
                           color: Colors.red,
@@ -189,8 +198,9 @@ class _PostCardState extends State<PostCard> {
             //comment
             IconButton(
                 onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => CommentScreen(snap: widget.snap)));
+                  // Navigator.of(context).push(MaterialPageRoute(
+                  //     builder: (context) => CommentScreen(snap: widget.snap)));
+                  //TODO OPEN REPLIES AS COMMENT
                 },
                 icon: const Icon(
                   CupertinoIcons.chat_bubble,
@@ -229,18 +239,19 @@ class _PostCardState extends State<PostCard> {
                   style: Theme.of(context).textTheme.titleSmall!.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
-                  child: Text(
-                    '${widget.snap['likes'].length} likes',
+                  child:
+                  Text("0 likes"
+                  //   '${widget.snap['likes'].length} likes', TODO LIKESCOUNTER
                   ),
                 ),
 
                 const Spacer(),
 
                 //published date
-                Text(
-                  DateFormat.yMMMd().format(
-                    widget.snap['datePublished'].toDate(),
-                  ),
+                Text("11.11.1911",
+                  // DateFormat.yMMMd().format(
+                  //   widget.snap['datePublished'].toDate(), TODO DATE CREATED
+                  // ),
                   style: const TextStyle(fontSize: 12),
                 ),
               ],
@@ -252,9 +263,9 @@ class _PostCardState extends State<PostCard> {
 
             Column(
               children: <Widget>[
-                ExpandableText(
-                  widget.snap['discription'],
-                  prefixText: widget.snap['username'],
+                ExpandableText("Lorem ipsum dsahladfh dsfdsjf hdsf hwehf kjeshdfh ewiuhfie hfidshf hdsuf hdsiufhui hsiuhfsiud hfiuhds iufhdsiuhfiuds hfiudshui fhdsiuhfiudshiuf dshu",
+                  // widget.snap['discription'], TODO TEXT
+                  // prefixText: widget.snap['username'], TODO USERNAME
                   prefixStyle: const TextStyle(fontWeight: FontWeight.bold),
                   expandText: 'show more',
                   collapseText: 'show less',
@@ -267,13 +278,15 @@ class _PostCardState extends State<PostCard> {
             //number of comments
             InkWell(
               onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => CommentScreen(snap: widget.snap)));
+
+                //TODO REPLIES AS COMMENTS
+                // Navigator.of(context).push(MaterialPageRoute(
+                //     builder: (context) => CommentScreen(snap: widget.snap)));
               },
               child: Container(
                   padding: EdgeInsets.symmetric(vertical: 5),
-                  child: Text(
-                    'View all ${numberOfComments} comments..',
+                  child: Text("",
+                    // 'View all ${numberOfComments} comments..', TODO REPLYCOUNTER
                     style: TextStyle(color: Colors.grey.shade700, fontSize: 15),
                   )),
             )

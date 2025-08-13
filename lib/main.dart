@@ -18,17 +18,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_)=> UserProvider(),)
-      ],
-      child: MaterialApp(
+      // MultiProvider(
+      // providers: [
+      //   TODO UNDERSTAND USER PROVIDER
+      //   ChangeNotifierProvider(create: (_)=> UserProvider(),)
+      // ],
+      // child:
+      return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Memogram',
           // theme: ThemeData.dark()
           //     .copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
-          home: const AuthPage(),
-              ),
-    );
+          home: const AuthPage());
+    // );
   }
 }

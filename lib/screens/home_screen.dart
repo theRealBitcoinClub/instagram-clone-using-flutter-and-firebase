@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/model/user.dart' as model;
@@ -18,7 +17,8 @@ class HomeSceen extends StatefulWidget {
 }
 
 class _HomeSceenState extends State<HomeSceen> {
-  final user = FirebaseAuth.instance.currentUser!;
+  // final user = FirebaseAuth.instance.currentUser!;
+  // TODO CURREN TUSER
   int _page = 0;
   late PageController pageController;
 
@@ -36,14 +36,16 @@ class _HomeSceenState extends State<HomeSceen> {
   }
 
   addData() async {
-    UserProvider userProvider = Provider.of(context, listen: false);
-    await userProvider.refereshUser();
+    //TODO REFRESH USER
+    // UserProvider userProvider = Provider.of(context, listen: false);
+    // await userProvider.refereshUser();
   }
 
   void signUserOut() async {
     // final GoogleSignIn googleSignIn = GoogleSignIn();
-    await FirebaseAuth.instance.signOut();
+    // await FirebaseAuth.instance.signOut();
     // await googleSignIn.signOut();
+  // TODO SIGN OUT
   }
 
   void onPageChanged(int page) {
@@ -77,9 +79,9 @@ class _HomeSceenState extends State<HomeSceen> {
           const SearchScreen(),
           const AddPost(),
           const Text('activity'),
-          ProfileScreen(uid: FirebaseAuth.instance.currentUser!.uid),
+          // ProfileScreen(uid: FirebaseAuth.instance.currentUser!.uid), TODO USER ID TO PROFILE
+          ProfileScreen(uid: "17ZY9npgMXstBGXHDCz1umWUEAc9ZU1hSZ"),
         ],
-        
       ),
       bottomNavigationBar: CupertinoTabBar(
         

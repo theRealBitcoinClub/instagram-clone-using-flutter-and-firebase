@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:instagram_clone1/utils/colors.dart';
@@ -15,8 +13,8 @@ class FeedScreen extends StatefulWidget {
 class _FeedScreenState extends State<FeedScreen> {
   void signUserOut() async {
     // final GoogleSignIn googleSignIn = GoogleSignIn();
-    await FirebaseAuth.instance.signOut();
-    // await googleSignIn.signOut();
+    // await FirebaseAuth.instance.signOut();
+    // await googleSignIn.signOut();TODO SIGN OUT
   }
 
   @override
@@ -41,23 +39,26 @@ class _FeedScreenState extends State<FeedScreen> {
                 ))
           ],
         ),
-        body: StreamBuilder(
-            stream: FirebaseFirestore.instance
-                .collection('posts')
-                .orderBy('datePublished', descending: true)
-                .snapshots(),
-            builder: (context,
-                AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-              return ListView.builder(
-                itemCount: snapshot.data!.docs.length,
+        body:
+        // StreamBuilder(
+        //     stream: FirebaseFirestore.instance
+        //         .collection('posts')
+        //         .orderBy('datePublished', descending: true)
+        //         .snapshots(),
+        //     builder: (context,
+        //         AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+        //       if (snapshot.connectionState == ConnectionState.waiting) {
+        //         return const Center(
+        //           child: CircularProgressIndicator(),
+        //         );
+        //       } TODO FEED POSTS
+              ListView.builder(
+                itemCount: 0,
                 itemBuilder: (context, index) =>
-                    PostCard(snap: snapshot.data!.docs[index].data()),
-              );
-            }));
+                    PostCard(),
+                // PostCard(snap: snapshot.data!.docs[index].data()),
+              )
+            // })
+  );
   }
 }

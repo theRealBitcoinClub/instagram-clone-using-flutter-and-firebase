@@ -44,12 +44,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _isloading = true;
     });
 
-    String res = await AuthMedthod().signUpUser(
-        email: _emailController.text,
-        fullName: _fullNameController.text,
-        username: _userNameController.text,
-        password: _passwordController.text,
-        profilePicture: _image!);
+    // String res = await AuthMedthod().signUpUser(
+    //     email: _emailController.text,
+    //     fullName: _fullNameController.text,
+    //     username: _userNameController.text,
+    //     password: _passwordController.text,
+    //     profilePicture: _image!);
+    String res = 'success';
+    //TODO NO SIGN UP FOR SIGN UP FORWARD TO MEMO
 
     setState(() {
       _isloading = false;

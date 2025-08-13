@@ -1,15 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:instagram_clone1/utils/colors.dart';
-import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/profile_buttons.dart';
-import 'package:provider/provider.dart';
-
-import '../model/user.dart';
-import '../provider/user_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String uid;
@@ -37,32 +28,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       isLoading = true;
     });
-    try {
-      var userSnap = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.uid)
-          .get();
 
-      // get post lENGTH
-      var postSnap = await FirebaseFirestore.instance
-          .collection('posts')
-          .where('uid', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
-          .get();
-
-      postLen = postSnap.docs.length;
-      userData = userSnap.data()!;
-      followers = userSnap.data()!['followers'].length;
-      following = userSnap.data()!['followings'].length;
-      isFollowing = userSnap
-          .data()!['followers']
-          .contains(FirebaseAuth.instance.currentUser!.uid);
-      setState(() {});
-    } catch (e) {
-      showSnackBar(
-        e.toString(),
-        context,
-      );
-    }
+    // TODO LOAD USER BY ID
+    // try {
+    //   var userSnap = await FirebaseFirestore.instance
+    //       .collection('users')
+    //       .doc(widget.uid)
+    //       .get();
+    //
+    //   // get post lENGTH
+    //   var postSnap = await FirebaseFirestore.instance
+    //       .collection('posts')
+    //       .where('uid', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+    //       .get();
+    //
+    //   postLen = postSnap.docs.length;
+    //   userData = userSnap.data()!;
+    //   followers = userSnap.data()!['followers'].length;
+    //   following = userSnap.data()!['followings'].length;
+    //   isFollowing = userSnap
+    //       .data()!['followers']
+    //       .contains(FirebaseAuth.instance.currentUser!.uid);
+    //   setState(() {});
+    // } catch (e) {
+    //   showSnackBar(
+    //     e.toString(),
+    //     context,
+    //   );
+    // }
     setState(() {
       isLoading = false;
     });
@@ -144,9 +137,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Container(
-                                    child: FirebaseAuth
-                                                .instance.currentUser!.uid ==
-                                            widget.uid
+                                    child: true
+                                    // TODO implement check user id is same user
+                                    // FirebaseAuth
+                                    //             .instance.currentUser!.uid ==
+                                    //         widget.uid
                                         ? FollowButton(
                                             backgroundColor: Colors.transparent,
                                             borderColor: Colors.black,
@@ -246,12 +241,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     //                ),
 
                     child: FutureBuilder(
-                        future: FirebaseFirestore.instance
-                            .collection('posts')
-                            .where('uid', isEqualTo: widget.uid)
-                            .get(),
+                        future:
+                        // TODO GET POSTS BY SPECIFIC USER
+                        // FirebaseFirestore.instance
+                        //     .collection('posts')
+                        //     .where('uid', isEqualTo: widget.uid)
+                        //     .get(),
+                        null
+                        ,
                         builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
+                          if (true) {
+                          // if (!snapshot.hasData) {
                             const Center(
                               child: CircularProgressIndicator(),
                             );

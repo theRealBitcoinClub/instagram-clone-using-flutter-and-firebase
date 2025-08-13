@@ -32,8 +32,9 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       isLoading = true;
     });
-    String res = await AuthMedthod().signinUser(
-        email: _emailController.text, password: _passwordController.text);
+    // String res = await AuthMedthod().signinUser(
+    //     email: _emailController.text, password: _passwordController.text);
+    String res = "success"; //TODO CHECKS USER LOGIN WITH WIF AND TEST LIKE OR ANYTHING THAT DOESNT LEAVE TRACE BUT FAILS ON WRONG WIF
     if (res == 'success') {
       print("logged in");
     } else {

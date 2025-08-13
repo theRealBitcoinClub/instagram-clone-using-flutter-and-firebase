@@ -1,14 +1,8 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
-import 'package:instagram_clone1/model/user.dart';
-import 'package:instagram_clone1/provider/user_provider.dart';
-import 'package:instagram_clone1/resources/firestore_method.dart';
 import 'package:instagram_clone1/utils/colors.dart';
-import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 class CommentsCard extends StatefulWidget {
   // final snap;

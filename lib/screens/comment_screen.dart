@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/model/user.dart';
@@ -9,9 +8,12 @@ import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/comment_card.dart';
 import 'package:provider/provider.dart';
 
+import '../memomodel/memo_model_post.dart';
+
 class CommentScreen extends StatefulWidget {
-  final snap;
-  const CommentScreen({super.key, required this.snap});
+  // final snap;
+  // const CommentScreen({super.key, required this.snap});
+  const CommentScreen({super.key});
 
   @override
   State<CommentScreen> createState() => _CommentScreenState();
@@ -27,7 +29,8 @@ class _CommentScreenState extends State<CommentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final User user = Provider.of<UserProvider>(context).getUser;
+    //TODO GET USER DATA
+    // final User user = Provider.of<UserProvider>(context).getUser;
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
@@ -38,26 +41,29 @@ class _CommentScreenState extends State<CommentScreen> {
         ),
         backgroundColor: mobileBackgroundColor,
       ),
-      body: StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection('posts')
-            .doc(widget.snap['postId'])
-            .collection('comments')
-            .orderBy('date',descending: true)
-            .snapshots(),
-        builder: (context,
-            AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+      body:
 
-          return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) => CommentsCard(snap: snapshot.data!.docs[index].data(),),
-          );
-        },
+      // StreamBuilder(
+      //   stream: FirebaseFirestore.instance
+      //       .collection('posts')
+      //       .doc(widget.snap['postId'])
+      //       .collection('comments')
+      //       .orderBy('date',descending: true)
+      //       .snapshots(),
+      //   builder: (context,
+      //       AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+      //     if (snapshot.connectionState == ConnectionState.waiting) {
+      //       return const Center(
+      //         child: CircularProgressIndicator(),
+      //       );
+      //     } TODO LOAD REPLIES TO SPECIFIC POST HERE
+
+          ListView.builder(
+            itemCount: 0,
+            itemBuilder: (context, index) => CommentsCard(post: MemoModelPost.createDummy()),
+            // itemCount: snapshot.data!.docs.length,
+            // itemBuilder: (context, index) => CommentsCard(snap: snapshot.data!.docs[index].data(),),
+
       ),
       bottomSheet: SafeArea(
           child: Container(
@@ -67,7 +73,8 @@ class _CommentScreenState extends State<CommentScreen> {
           children: [
             CircleAvatar(
               radius: 20,
-              backgroundImage: NetworkImage(user.photoURL),
+              // backgroundImage: NetworkImage(user.photoURL),TODO PHOTO
+              backgroundImage: NetworkImage("https://memo.cash/img/profilepics/17ZY9npgMXstBGXHDCz1umWUEAc9ZU1hSZ-128x128.jpg"),
             ),
             Expanded(
               child: Padding(
@@ -80,21 +87,23 @@ class _CommentScreenState extends State<CommentScreen> {
                     // width: 1, color: Colors.grey
                     // )
                     // ),
-                    hintText: 'comment as ${user.username}',
+                    hintText: 'comment as xxxFELIZxxx', //TODO LOAD USER NAME
                   ),
                 ),
               ),
             ),
             IconButton(
                 onPressed: () async {
+
+                  //TODO UPLOAD REPLY
                   print('post pressed');
-                  String res = await FireStoreMethods().postComment(
-                      widget.snap['postId'],
-                      commentController.text,
-                      user.uid,
-                      user.username,
-                      user.photoURL);
-                  showSnackBar(res, context);
+                  // String res = await FireStoreMethods().postComment(
+                  //     widget.snap['postId'],
+                  //     commentController.text,
+                  //     user.uid,
+                  //     user.username,
+                  //     user.photoURL);
+                  showSnackBar("UPLOAD REPLY", context);
 
                   setState(() {
                     commentController.text = '';

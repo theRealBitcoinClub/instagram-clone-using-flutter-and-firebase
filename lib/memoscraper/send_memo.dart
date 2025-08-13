@@ -4,6 +4,7 @@ import 'package:dart_web_scraper/common/enums.dart';
 import 'package:dart_web_scraper/common/models/parser_model.dart';
 import 'package:dart_web_scraper/common/models/scraper_config_model.dart';
 import 'package:dart_web_scraper/dart_web_scraper/web_scraper.dart';
+import 'package:instagram_clone1/memoscraper/memo_transformation.dart';
 import '../memomodel/memo_model_creator.dart';
 import '../memomodel/memo_model_post.dart';
 import '../memomodel/memo_model_topic.dart';
@@ -25,8 +26,8 @@ const mainnetServers = [
 ];
 
 void main() async {
-  testMemoScraper();
-  // testMemoSend();
+  // testMemoScraper();
+  testMemoSend();
 }
 
 void testMemoScraper() async {
@@ -290,9 +291,14 @@ void testMemoSend() async {
   //
   // print("\n${await doMemoAction("YT2 https://www.youtube.com/watch?v=dQw4w9WgXcQ", MemoCode.ProfileMessage,"")}");
   // sleep(Duration(seconds: 1));
-  // f3b34db1d057a771f8b63e4d0c10fd897bc54b91e2118815b9454f4ead2c83ba JASON DOING SOME FUNNY STUFF
-  // var other = await doMemoAction("reply", MemoCode.postReply, "ba832cad4e4f45b9158811e2914bc57b89fd100c4d3eb6f871a757d0b14db3f3");
+  // var other = await doMemoAction("reply", MemoCode.postReply,
+  //     MemoTransformation.reOrderTxHash("ba832cad4e4f45b9158811e2914bc57b89fd100c4d3eb6f871a757d0b14db3f3"));
+  //
   // print("\n" + other);
+  var other = await doMemoAction(
+    MemoTransformation.reOrderTxHash("bad2095d2f5e177ffd4da96fd0220ebcb8de7b9e1cffac9d0c7667b403204072"), MemoCode.postLike, "");
+
+  print("\n" + other);
   // sleep(Duration(seconds: 1));
   // other = await doMemoAction("Keloke", MemoCode.ProfileName,"");
   // print("\n" + other);

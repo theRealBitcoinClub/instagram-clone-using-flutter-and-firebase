@@ -6,11 +6,10 @@ class MemoModelTopic {
     this.url,
     this.postCount,
     this.followerCount,
-    this.lastPost,
-    this.posts
+    this.lastPost
   });
 
-  List<MemoModelPost>? posts;
+  List<MemoModelPost> posts = [];
   final String? header;
   final String? url;
   final int? postCount;
@@ -20,7 +19,7 @@ class MemoModelTopic {
   static MemoModelTopic createDummy() {
     return MemoModelTopic(
         followerCount: 12,
-        postCount: 33,
+        postCount: 0,
         lastPost: "13.09.2001 23:22",
         header: "Super Topic",
         url: "https://memo.cash/topic/Bitcoin+Map");

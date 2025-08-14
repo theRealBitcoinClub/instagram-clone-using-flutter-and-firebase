@@ -35,9 +35,11 @@ class MemoModelPost {
   final String? age;
 
   static MemoModelPost createDummy() {
-    var memoModelCreator = MemoModelUser.createDummy().creator;
+    MemoModelUser memoModelUser = MemoModelUser.createDummy();
+    MemoModelCreator memoModelCreator = memoModelUser.creator!;
     
-    var memoModelPost = MemoModelPost(
+    MemoModelTopic topic = MemoModelTopic.createDummy();
+    MemoModelPost memoModelPost = MemoModelPost(
                     age: "11d",
                     created: "11.11.1911 11:11",
                     creator: memoModelCreator,
@@ -47,32 +49,12 @@ class MemoModelPost {
                     text: "SAFDHSF DSF HDSFHDSKJ HFDSKJ HFDSJHF DHSFKJH DSJFHDSKJ HFKJDSH",
                     tipsInSatoshi: 123456,
                     txHash: "3228faaa15d9512ee6ecc29b8808876a7680e6d7493c22014b942825c975c0ca",
-                    topic: MemoModelTopic.createDummy());
+                    topic: topic);
 
-    return MemoModelPost(
-        age: "11d",
-        created: "11.11.1911 11:11",
-        creator: memoModelCreator,
-        imageUrl: "https://i.imgur.com/YbduTBp.png",
-        likeCounter: 33,
-        replyCounter: 2,
-        text: "SAFDHSF DSF HDSFHDSKJ HFDSKJ HFDSJHF DHSFKJH DSJFHDSKJ HFKJDSH",
-        tipsInSatoshi: 123456,
-        txHash: "3228faaa15d9512ee6ecc29b8808876a7680e6d7493c22014b942825c975c0ca",
-        topic: MemoModelTopic(
-            followerCount: 12,
-            postCount: 33,
-            lastPost: "13.09.2001 23:22",
-            header: "Super Topic",
-            url: "https://memo.cash/topic/Bitcoin+Map",
-            posts: [
-                memoModelPost,
-                memoModelPost,
-                memoModelPost,
-                memoModelPost,
-                memoModelPost,
-                memoModelPost,
-                memoModelPost,
-                memoModelPost]));
+    for (int i=0; i<20; i++) {
+      topic.posts.add(memoModelPost);
+    }
+
+    return memoModelPost;
   }
 }

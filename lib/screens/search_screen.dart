@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:instagram_clone1/memomodel/memo_model_post.dart';
+import 'package:instagram_clone1/memomodel/memo_model_topic.dart';
 import 'package:instagram_clone1/route%20handling/auth_page.dart';
 import 'package:instagram_clone1/screens/profile_screen.dart';
 import 'package:instagram_clone1/utils/colors.dart';
@@ -85,7 +87,7 @@ class _SearchScreenState extends State<SearchScreen> {
             : FutureBuilder(
                 future:
                 null,
-                // TODO POSTS
+                // TODO LOAD POSTS MATCHING NAME, TOPIC OR HASHTAG
                 // FirebaseFirestore.instance.collection('posts').get(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
@@ -101,11 +103,11 @@ class _SearchScreenState extends State<SearchScreen> {
                       gridDelegate:
                           SliverSimpleGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2),
-                      itemCount: (snapshot.data! as dynamic).docs.length,
+                      itemCount: MemoModelPost.createDummy().topic!.posts.length,
+                      // itemCount: (snapshot.data! as dynamic).docs.length,
                       itemBuilder: (context, index) {
                         return ClipRRect(
-                          child: Image.network((snapshot.data! as dynamic)
-                              .docs[index]['postURL']),
+                          child: Image.network(MemoModelPost.createDummy().topic!.posts[index].imageUrl!),
                         );
                       });
                 }

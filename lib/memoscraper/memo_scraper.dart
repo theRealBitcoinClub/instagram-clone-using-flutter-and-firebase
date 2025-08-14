@@ -235,24 +235,30 @@ class MemoScraper {
           creator: MemoModelCreator(name: value["creatorName"].toString(),
               id: value["profileUrl"].toString().substring(8)));
 
-      String text = memoModelPost.text ?? "";
-      String trigger = "MemoApp.YouTube.AddPlayer('";
-      if (text.contains(trigger)) {
-        int i = text.indexOf(', ');
-        memoModelPost.videoUrl =
-            // "https://www.youtube.com/watch?v="
-            // +
-                text.substring(i + "', '".length - 1, text.indexOf("');", i - 1));
-      }
+      extractYouTubeUrlAndRemoveJavaScriptFromText(memoModelPost);
 
-      if (memoModelPost.videoUrl == null && memoModelPost.imageUrl == null)
+      if (memoModelPost.videoUrl == null && memoModelPost.imageUrl == null) {
         continue;
+      }
 
       postList.add(memoModelPost);
     }
 
     currentTopic.posts = postList;
     return postList;
+  }
+
+  void extractYouTubeUrlAndRemoveJavaScriptFromText(MemoModelPost memoModelPost) {
+    String text = memoModelPost.text ?? "";
+    String trigger = "MemoApp.YouTube.AddPlayer('";
+    if (text.contains(trigger)) {
+      int i = text.indexOf(', ');
+      int i2 = text.indexOf("?", i);
+      memoModelPost.videoUrl =
+              text.substring(i + "', '".length - 1,
+                 i2 == -1 ? text.indexOf("');", i) : i2);
+      // memoModelPost.text = text.replaceRange(text.indexOf(trigger), text.indexOf("');", i) + 3, "");
+    }
   }
 
   void printMemoModelPost(List<MemoModelPost> postList) {

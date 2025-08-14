@@ -281,7 +281,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         initialVideoId: post.videoUrl!,
                                         flags: YoutubePlayerFlags(
                                           mute: false,
-                                          autoPlay: true,
+                                          autoPlay: false,
                                         ),
                                       ),
                                       showVideoProgressIndicator: true,

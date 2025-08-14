@@ -110,7 +110,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               initialVideoId: MemoModelPost.globalPosts[index].videoUrl!,
                               flags: YoutubePlayerFlags(
                                 mute: false,
-                                autoPlay: true,
+                                autoPlay: false,
                               ),
                             ),
                             showVideoProgressIndicator: true,

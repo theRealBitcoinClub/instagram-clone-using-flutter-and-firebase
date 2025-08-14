@@ -127,10 +127,11 @@ class _PostCardState extends State<PostCard> {
               children: [post.imageUrl == null ?
               YoutubePlayer(
                 controller: YoutubePlayerController(
+
                   initialVideoId: post.videoUrl!,
                   flags: YoutubePlayerFlags(
                     mute: false,
-                    autoPlay: true,
+                    autoPlay: false,
                   ),
                 ),
                 showVideoProgressIndicator: true,

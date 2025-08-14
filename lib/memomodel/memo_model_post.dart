@@ -21,7 +21,7 @@ class MemoModelPost {
   });
 
   final int? tipsInSatoshi;
-  final String? text;
+  String? text;
   final String? txHash;
   final String? imageUrl;
   String? videoUrl;

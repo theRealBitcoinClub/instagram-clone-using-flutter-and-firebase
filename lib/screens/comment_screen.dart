@@ -1,12 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/model/user.dart';
-import 'package:instagram_clone1/provider/user_provider.dart';
-import 'package:instagram_clone1/resources/firestore_method.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/comment_card.dart';
-import 'package:provider/provider.dart';
 
 import '../memomodel/memo_model_post.dart';
 

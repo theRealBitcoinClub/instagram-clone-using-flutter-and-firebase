@@ -1,16 +1,12 @@
-import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:dart_web_scraper/common/enums.dart';
 import 'package:dart_web_scraper/common/models/parser_model.dart';
 import 'package:dart_web_scraper/common/models/scraper_config_model.dart';
 import 'package:dart_web_scraper/dart_web_scraper/web_scraper.dart';
-import 'package:instagram_clone1/memoscraper/memo_transformation.dart';
+
 import '../memomodel/memo_model_creator.dart';
 import '../memomodel/memo_model_post.dart';
 import '../memomodel/memo_model_topic.dart';
-import 'electrum_websocket_service.dart';
-import 'memo_code.dart';
-import 'memo_transaction_builder.dart';
 
 void main() async {
   testMemoScraper();

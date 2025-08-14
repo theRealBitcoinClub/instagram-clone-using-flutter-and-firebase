@@ -1,11 +1,5 @@
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'package:instagram_clone1/model/posts.dart';
-import 'package:instagram_clone1/model/user.dart';
-import 'package:instagram_clone1/provider/user_provider.dart';
-import 'package:instagram_clone1/resources/storage_methods.dart';
-import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
 
 class FireStoreMethods {
   // final FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;

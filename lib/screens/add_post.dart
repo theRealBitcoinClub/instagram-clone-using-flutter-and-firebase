@@ -1,12 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:instagram_clone1/provider/user_provider.dart';
 import 'package:instagram_clone1/resources/firestore_method.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/utils/image_picker.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
-import 'package:provider/provider.dart';
 
 class AddPost extends StatefulWidget {
   const AddPost({super.key});

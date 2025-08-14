@@ -1,14 +1,8 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/model/user.dart' as model;
-import 'package:instagram_clone1/provider/user_provider.dart';
-import 'package:instagram_clone1/resources/firestore_method.dart';
-import 'package:instagram_clone1/screens/comment_screen.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/like_animtion.dart';
-import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
 class PostCard extends StatefulWidget {

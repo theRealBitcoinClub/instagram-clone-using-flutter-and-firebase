@@ -1,13 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/model/user.dart' as model;
-import 'package:instagram_clone1/provider/user_provider.dart';
 import 'package:instagram_clone1/screens/add_post.dart';
 import 'package:instagram_clone1/screens/feed_screen.dart';
 import 'package:instagram_clone1/screens/profile_screen.dart';
 import 'package:instagram_clone1/screens/search_screen.dart';
 import 'package:instagram_clone1/utils/colors.dart';
-import 'package:provider/provider.dart';
 
 class HomeSceen extends StatefulWidget {
   const HomeSceen({super.key});

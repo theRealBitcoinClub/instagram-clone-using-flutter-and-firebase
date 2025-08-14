@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/provider/user_provider.dart';
 import 'package:instagram_clone1/route%20handling/auth_page.dart';
-import 'package:instagram_clone1/utils/colors.dart';
-import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

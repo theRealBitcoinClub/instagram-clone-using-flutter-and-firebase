@@ -245,7 +245,7 @@ class MemoScraper {
                 text.substring(i + "', '".length - 1, text.indexOf("');", i - 1));
       }
 
-      if (/*memoModelPost.videoUrl == null && */memoModelPost.imageUrl == null)
+      if (memoModelPost.videoUrl == null && memoModelPost.imageUrl == null)
         continue;
 
       postList.add(memoModelPost);

@@ -3,6 +3,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/screens/profile_screen.dart';
 import 'package:instagram_clone1/utils/colors.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -101,11 +102,19 @@ class _SearchScreenState extends State<SearchScreen> {
                       gridDelegate:
                           SliverSimpleGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2),
-                      itemCount: MemoModelPost.createDummy().topic!.posts.length,
-                      // itemCount: (snapshot.data! as dynamic).docs.length,
+                      itemCount: MemoModelPost.globalPosts.length,
                       itemBuilder: (context, index) {
                         return ClipRRect(
-                          child: Image.network(MemoModelPost.createDummy().topic!.posts[index].imageUrl!),
+                          child:MemoModelPost.globalPosts[index].imageUrl == null ?
+                          YoutubePlayer(
+                            controller: YoutubePlayerController.fromVideoId(
+                              videoId: MemoModelPost.globalPosts[index].videoUrl!,
+                              autoPlay: false,
+                              params: const YoutubePlayerParams(showFullscreenButton: true),
+                            ),
+                            aspectRatio: 16 / 9,
+                          ) :
+                          Image.network(MemoModelPost.globalPosts[index].imageUrl!),
                         );
                       });
                 }

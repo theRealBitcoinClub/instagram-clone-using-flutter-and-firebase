@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/like_animtion.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
 import '../memomodel/memo_model_post.dart';
@@ -123,7 +124,18 @@ class _PostCardState extends State<PostCard> {
             animationCurve: Curves.fastOutSlowIn,
             child: Stack(
               alignment: Alignment.center,
-              children: [
+              children: [post.imageUrl == null ?
+                YoutubePlayer(
+                  controller: YoutubePlayerController.fromVideoId(
+                    videoId: post.videoUrl!,
+                    autoPlay: false,
+                    params: const YoutubePlayerParams(
+                                      showControls: true,
+                                      showFullscreenButton: true),
+                  ),
+                  aspectRatio: 16 / 9,
+                )
+              :
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.45,
                   child: Image(

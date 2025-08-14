@@ -278,7 +278,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     child: MemoModelPost.globalPosts[index].imageUrl == null ?
                                     YoutubePlayer(
                                       controller: YoutubePlayerController(
-                                        initialVideoId: post.videoUrl!,
+                                        initialVideoId: MemoModelPost.globalPosts[index].videoUrl!,
                                         flags: YoutubePlayerFlags(
                                           mute: false,
                                           autoPlay: false,

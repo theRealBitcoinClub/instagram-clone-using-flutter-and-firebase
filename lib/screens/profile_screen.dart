@@ -3,7 +3,7 @@ import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/profile_buttons.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String uid;
@@ -276,17 +276,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               itemBuilder: (context, index) {
                                 return Container(
                                     child: MemoModelPost.globalPosts[index].imageUrl == null ?
-
-
                                     YoutubePlayer(
-                                      controller: YoutubePlayerController.fromVideoId(
-                                        videoId: MemoModelPost.globalPosts[index].videoUrl!,
-                                        autoPlay: false,
-                                        params: const YoutubePlayerParams(showFullscreenButton: true),
+                                      controller: YoutubePlayerController(
+                                        initialVideoId: post.videoUrl!,
+                                        flags: YoutubePlayerFlags(
+                                          mute: false,
+                                          autoPlay: true,
+                                        ),
                                       ),
-                                      aspectRatio: 16 / 9,
+                                      showVideoProgressIndicator: true,
+                                      onReady: () {
+                                        print('Player is ready.');
+                                      },
                                     )
-
                                     :
                                     Image(
                                         image: NetworkImage(MemoModelPost.globalPosts[index].imageUrl!),

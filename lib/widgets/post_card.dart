@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/like_animtion.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
 import '../memomodel/memo_model_post.dart';
@@ -125,16 +125,19 @@ class _PostCardState extends State<PostCard> {
             child: Stack(
               alignment: Alignment.center,
               children: [post.imageUrl == null ?
-                YoutubePlayer(
-                  controller: YoutubePlayerController.fromVideoId(
-                    videoId: post.videoUrl!,
-                    autoPlay: false,
-                    params: const YoutubePlayerParams(
-                                      showControls: true,
-                                      showFullscreenButton: true),
+              YoutubePlayer(
+                controller: YoutubePlayerController(
+                  initialVideoId: post.videoUrl!,
+                  flags: YoutubePlayerFlags(
+                    mute: false,
+                    autoPlay: true,
                   ),
-                  aspectRatio: 16 / 9,
-                )
+                ),
+                showVideoProgressIndicator: true,
+                onReady: () {
+                  print('Player is ready.');
+                },
+              )
               :
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.45,

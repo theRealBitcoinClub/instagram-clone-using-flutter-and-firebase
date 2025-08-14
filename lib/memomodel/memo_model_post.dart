@@ -33,6 +33,7 @@ class MemoModelPost {
   late final MemoModelCreator? creator;
   late final MemoModelTopic? topic;
   final String? age;
+  static final List<MemoModelPost> globalPosts = [];
 
   static MemoModelPost createDummy() {
     MemoModelUser memoModelUser = MemoModelUser.createDummy();
@@ -58,5 +59,10 @@ class MemoModelPost {
     memoModelCreator.posts=topic.posts;
 
     return memoModelPost;
+  }
+
+  static void addToGlobalPostList(List<MemoModelPost> createMemoModelPostList) {
+    globalPosts.addAll(createMemoModelPostList);
+
   }
 }

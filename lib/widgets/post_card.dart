@@ -5,31 +5,26 @@ import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/like_animtion.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
-class PostCard extends StatefulWidget {
-  // final snap;
-  // const PostCard({super.key, required this.snap});
-  const PostCard({super.key});
+import '../memomodel/memo_model_post.dart';
 
+class PostCard extends StatefulWidget {
+  final MemoModelPost post;
+  // const PostCard({super.key, required this.snap});
+  const PostCard(this.post, {super.key});
 
   @override
-  State<PostCard> createState() => _PostCardState();
+  State<PostCard> createState() => _PostCardState(post);
 }
 
 class _PostCardState extends State<PostCard> {
   bool isAnimating = false;
-  int numberOfComments = 0;
+  MemoModelPost post;
+
+  _PostCardState(this.post);
 
   @override
   void initState() {
     super.initState();
-    getComments();
-  }
-
-  void getComments() async {
-    //TODO LOAD NUMBER OF REPLIES
-
-    numberOfComments = 78;
-    // print(numberOfComments);
   }
 
   @override
@@ -49,7 +44,7 @@ class _PostCardState extends State<PostCard> {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundImage: NetworkImage("https://memo.cash/img/profilepics/17ZY9npgMXstBGXHDCz1umWUEAc9ZU1hSZ-128x128.jpg"),
+                backgroundImage: NetworkImage(post.creator!.profileImage()),
                 //TODO LOAD PROFILE IMAGE
                 // backgroundImage: NetworkImage(widget.snap['profileImage']),
               ),
@@ -61,7 +56,7 @@ class _PostCardState extends State<PostCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Feliz-TRBC",
+                        post.creator!.name!,
                         // widget.snap['username'], TODO USERNAME
                         style: const TextStyle(fontSize: 15),
                       ),
@@ -132,7 +127,7 @@ class _PostCardState extends State<PostCard> {
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.45,
                   child: Image(
-                    image: NetworkImage("https://i.imgur.com/YbduTBp.png"), //TODO SHOW REAL IMAGE
+                    image: NetworkImage(post.imageUrl!), //TODO SHOW REAL IMAGE
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -234,7 +229,7 @@ class _PostCardState extends State<PostCard> {
                         fontWeight: FontWeight.bold,
                       ),
                   child:
-                  Text("0 likes"
+                  Text("${post.likeCounter} likes"
                   //   '${widget.snap['likes'].length} likes', TODO LIKESCOUNTER
                   ),
                 ),
@@ -242,7 +237,7 @@ class _PostCardState extends State<PostCard> {
                 const Spacer(),
 
                 //published date
-                Text("11.11.1911",
+                Text("${post.age} - ${post.created}",
                   // DateFormat.yMMMd().format(
                   //   widget.snap['datePublished'].toDate(), TODO DATE CREATED
                   // ),
@@ -257,9 +252,9 @@ class _PostCardState extends State<PostCard> {
 
             Column(
               children: <Widget>[
-                ExpandableText("Lorem ipsum dsahladfh dsfdsjf hdsf hwehf kjeshdfh ewiuhfie hfidshf hdsuf hdsiufhui hsiuhfsiud hfiuhds iufhdsiuhfiuds hfiudshui fhdsiuhfiudshiuf dshu",
+                ExpandableText(post.text ?? "",
                   // widget.snap['discription'], TODO TEXT
-                  // prefixText: widget.snap['username'], TODO USERNAME
+                  prefixText: post.creator!.name,
                   prefixStyle: const TextStyle(fontWeight: FontWeight.bold),
                   expandText: 'show more',
                   collapseText: 'show less',
@@ -279,8 +274,8 @@ class _PostCardState extends State<PostCard> {
               },
               child: Container(
                   padding: EdgeInsets.symmetric(vertical: 5),
-                  child: Text("",
-                    // 'View all ${numberOfComments} comments..', TODO REPLYCOUNTER
+                  child: Text(
+                    'View all ${post.replyCounter} comments..',
                     style: TextStyle(color: Colors.grey.shade700, fontSize: 15),
                   )),
             )

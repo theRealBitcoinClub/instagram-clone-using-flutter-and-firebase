@@ -4,12 +4,12 @@ import 'package:instagram_clone1/memomodel/memo_model_topic.dart';
 class MemoModelCreator {
   MemoModelCreator({
     this.name,
-    this.created,
+    this.created = "2011.11.11 11:11",
     this.id,
-    this.followerCount,
-    this.followingCount,
-    this.actions,
-    this.profileText
+    this.followerCount = 43,
+    this.followingCount = 21,
+    this.actions = 4435,
+    this.profileText = "profileText"
     // this.img128px
   });
 
@@ -24,7 +24,7 @@ class MemoModelCreator {
   List<MemoModelTopic> topics = [];
 
   String profileImage() {
-    return "https://memo.cash/img/profilepics/17ZY9npgMXstBGXHDCz1umWUEAc9ZU1hSZ-128x128.jpg";
+    return "https://memo.cash/img/profilepics/${id}-128x128.jpg";
   }
 
   static MemoModelCreator createDummy() {

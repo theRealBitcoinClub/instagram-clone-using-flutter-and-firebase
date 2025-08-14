@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instagram_clone1/memoscraper/memo_scraper.dart';
 import 'package:instagram_clone1/route%20handling/auth_page.dart';
 
 void main() async {
@@ -7,6 +8,7 @@ void main() async {
   //   options: DefaultFirebaseOptions.currentPlatform
   // );
   //TODO SCRAPE MEMO, FILL LOCAL MEMORY DATABASE
+  MemoScraper().startMemoScraper();
   runApp(const MyApp());
 }
 

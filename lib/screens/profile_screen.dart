@@ -3,6 +3,7 @@ import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/profile_buttons.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String uid;
@@ -265,10 +266,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           }
                           return GridView.builder(
                               shrinkWrap: true,
-                              itemCount:
-                                  creator.posts.length == 0
-                                      ? 1
-                                      : creator.posts.length,
+                              itemCount:MemoModelPost.globalPosts.length,
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
                                       crossAxisCount: 3,
@@ -277,11 +275,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                               itemBuilder: (context, index) {
                                 return Container(
-                                    child: Image(
-                                        image: NetworkImage(
-                                            creator.posts.length == 0
-                                            ? "https://i.imgur.com/IdorGF4.png"
-                                            : creator.posts[index].imageUrl!),
+                                    child: MemoModelPost.globalPosts[index].imageUrl == null ?
+
+
+                                    YoutubePlayer(
+                                      controller: YoutubePlayerController.fromVideoId(
+                                        videoId: MemoModelPost.globalPosts[index].videoUrl!,
+                                        autoPlay: false,
+                                        params: const YoutubePlayerParams(showFullscreenButton: true),
+                                      ),
+                                      aspectRatio: 16 / 9,
+                                    )
+
+                                    :
+                                    Image(
+                                        image: NetworkImage(MemoModelPost.globalPosts[index].imageUrl!),
 
                                                 fit: BoxFit.cover,
 

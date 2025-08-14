@@ -252,12 +252,14 @@ class MemoScraper {
     String text = memoModelPost.text ?? "";
     String trigger = "MemoApp.YouTube.AddPlayer('";
     if (text.contains(trigger)) {
-      int i = text.indexOf(', ');
-      int i2 = text.indexOf("?", i);
+      int iTrigger = text.indexOf(trigger);
+      int iStart = text.indexOf(', ', iTrigger);
+      int iOptional = text.indexOf("?", iStart);
+      int iEnd = text.indexOf("');", iStart);
       memoModelPost.videoUrl =
-              text.substring(i + "', '".length - 1,
-                 i2 == -1 ? text.indexOf("');", i) : i2);
-      // memoModelPost.text = text.replaceRange(text.indexOf(trigger), text.indexOf("');", i) + 3, "");
+              text.substring(iStart + "', '".length - 1,
+                 iOptional == -1 ? iEnd : iOptional);
+      memoModelPost.text = text.replaceRange(iTrigger, iEnd + 3, "");
     }
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
+import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/post_card.dart';
 
@@ -53,7 +55,7 @@ class _FeedScreenState extends State<FeedScreen> {
         //         );
         //       } TODO FEED POSTS
               ListView.builder(
-                itemCount: 0,
+                itemCount: MemoModelPost.createDummy().topic!.posts.length,
                 itemBuilder: (context, index) =>
                     PostCard(),
                 // PostCard(snap: snapshot.data!.docs[index].data()),

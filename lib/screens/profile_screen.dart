@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
+import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/profile_buttons.dart';
@@ -13,13 +15,17 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   // var userData = {};
-  MemoModelUser user = MemoModelUser.createDummy();
+  MemoModelPost post = MemoModelPost.createDummy();
+  late MemoModelCreator creator;
   bool isFollowing = false;
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
+
+    creator = post.creator!;
+    
     getData();
   }
 
@@ -94,7 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               backgroundColor: mobileBackgroundColor,
               centerTitle: false,
               title: Text(
-                user.creator!.name!,
+                creator.name!,
                 // userData['username'],
                 style: TextStyle(color: Colors.black),
               ),
@@ -118,7 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Container(
                           // padding: EdgeInsets.all(10).copyWith(top: 20),
                           child: CircleAvatar(
-                            backgroundImage: NetworkImage(user.creator!.profileImage()),
+                            backgroundImage: NetworkImage(creator.profileImage()),
                             // backgroundImage: NetworkImage(userData['photoURL']),
                             radius: 40,
                           ),
@@ -129,9 +135,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Row(
                                 children: [
                                   Padding(padding: EdgeInsets.only(left: 25)),
-                                  buildStatColumn('Posts', user.creator!.actions!),
-                                  buildStatColumn('followers', user.creator!.followerCount!),
-                                  buildStatColumn('following', user.creator!.followingCount!),
+                                  buildStatColumn('Posts', creator.actions!),
+                                  buildStatColumn('followers', creator.followerCount!),
+                                  buildStatColumn('following', creator.followingCount!),
                                 ],
                               ),
                               Column(
@@ -175,7 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: EdgeInsets.symmetric(horizontal: 20),
                     alignment: Alignment.bottomLeft,
                     child: Text(
-                      user.creator!.name!,
+                      creator.name!,
                       // userData['fullName'],
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
@@ -186,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding:
                         EdgeInsets.symmetric(horizontal: 20).copyWith(top: 10),
                     alignment: Alignment.bottomLeft,
-                    child: Text(user.creator!.profileText!),
+                    child: Text(creator.profileText!),
                   ),
 
                   new Divider(
@@ -261,7 +267,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           return GridView.builder(
                               shrinkWrap: true,
                               itemCount:
-                                  (snapshot.data! as dynamic).docs.length,
+                                  creator.posts.length == 0
+                                      ? 1
+                                      : creator.posts.length,
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
                                       crossAxisCount: 3,
@@ -272,8 +280,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 return Container(
                                     child: Image(
                                         image: NetworkImage(
-                                            (snapshot.data! as dynamic)
-                                                .docs[index]['postURL']),
+                                            creator.posts.length == 0
+                                            ? "https://i.imgur.com/IdorGF4.png"
+                                            : creator.posts[index].imageUrl!),
 
                                                 fit: BoxFit.cover,
 

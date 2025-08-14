@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 
 import 'memo_model_creator.dart';
@@ -39,6 +40,7 @@ class MemoModelPost {
     MemoModelCreator memoModelCreator = memoModelUser.creator!;
     
     MemoModelTopic topic = MemoModelTopic.createDummy();
+    memoModelCreator.topics.add(topic);
     MemoModelPost memoModelPost = MemoModelPost(
                     age: "11d",
                     created: "11.11.1911 11:11",
@@ -54,6 +56,7 @@ class MemoModelPost {
     for (int i=0; i<20; i++) {
       topic.posts.add(memoModelPost);
     }
+    memoModelCreator.posts=topic.posts;
 
     return memoModelPost;
   }

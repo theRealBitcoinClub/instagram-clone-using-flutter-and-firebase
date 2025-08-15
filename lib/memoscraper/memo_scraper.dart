@@ -1,8 +1,9 @@
 import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:dart_web_scraper/common/enums.dart';
-import 'package:dart_web_scraper/common/models/parser_model.dart';
-import 'package:dart_web_scraper/common/models/scraper_config_model.dart';
-import 'package:dart_web_scraper/dart_web_scraper/web_scraper.dart';
+import 'package:instagram_clone1/dart_web_scraper/common/enums.dart';
+import 'package:instagram_clone1/dart_web_scraper/common/models/parser_model.dart';
+import 'package:instagram_clone1/dart_web_scraper/common/models/scraper_config_model.dart';
+import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper/web_scraper.dart';
+import 'package:html/dom.dart';
 
 import '../memomodel/memo_model_creator.dart';
 import '../memomodel/memo_model_post.dart';
@@ -37,8 +38,9 @@ class MemoScraper {
     }
   }
 
-  Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg) async {
+  Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg, [String? html]) async {
     Map<String, Object> topics = await webScraper.scrape(
+      html: html == null ? null : Document.html(html),
       concurrentParsing: true,
       url: Uri.parse(baseUrl + path),
       scraperConfig: cfg,

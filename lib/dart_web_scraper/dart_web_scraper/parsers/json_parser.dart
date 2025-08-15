@@ -1,5 +1,5 @@
-import 'package:dart_web_scraper/common/utils/data_extraction.dart';
-import 'package:dart_web_scraper/dart_web_scraper.dart';
+import 'package:instagram_clone1/dart_web_scraper/common/utils/data_extraction.dart';
+import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
 import 'package:json_path/json_path.dart';
 import 'package:json_path/fun_extra.dart';
 

@@ -1,4 +1,4 @@
-import 'package:dart_web_scraper/dart_web_scraper.dart';
+import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
 
 /// Returns static values configured in parser options
 /// Returns Data object with static string or map value or null if not configured

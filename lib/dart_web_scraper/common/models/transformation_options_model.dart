@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:dart_web_scraper/common/models/transformations/crop_transformation.dart';
-import 'package:dart_web_scraper/common/models/transformations/regex_replace_transformation.dart';
-import 'package:dart_web_scraper/common/models/transformations/regex_transformation.dart';
-import 'package:dart_web_scraper/common/models/transformations/replace_transformation.dart';
+import 'package:instagram_clone1/dart_web_scraper/common/models/transformations/crop_transformation.dart';
+import 'package:instagram_clone1/dart_web_scraper/common/models/transformations/regex_replace_transformation.dart';
+import 'package:instagram_clone1/dart_web_scraper/common/models/transformations/regex_transformation.dart';
+import 'package:instagram_clone1/dart_web_scraper/common/models/transformations/replace_transformation.dart';
 
 import '../utils/webscraper_utils.dart';
 

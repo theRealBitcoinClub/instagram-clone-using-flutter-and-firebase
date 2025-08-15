@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:dart_web_scraper/dart_web_scraper.dart';
+import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
 
 /// Configuration options for HTTP parser behavior.
 ///

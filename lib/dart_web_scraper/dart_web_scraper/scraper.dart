@@ -98,7 +98,7 @@ class Scraper {
 
     /// Clean the URL using configured URL cleaners
     printLog('Scraper: Cleaning URL...', debug, color: LogColor.blue);
-    url = cleanScraperConfigUrl(url, scraperConfig.urlCleaner);
+    // url = cleanScraperConfigUrl(url, scraperConfig.urlCleaner);
     printLog("Scraper: Cleaned URL :) $url", debug, color: LogColor.green);
 
     /// Initialize data container

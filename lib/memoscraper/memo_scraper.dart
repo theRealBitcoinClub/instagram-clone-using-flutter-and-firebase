@@ -112,7 +112,7 @@ class MemoScraper {
 
     List<MemoModelTopic> topicList = createMemoModelTopicList(topics);
 
-    final config = createScraperConfigMemoModelPost();
+    final config = createScraperConfigPost();
 
     // int index = 0;
 
@@ -132,6 +132,131 @@ class MemoScraper {
         // printMemoModelPost(postList);
       },);
     }
+
+  }
+
+  void startScrapePosts() async {
+    Map<String, Object> topics = await createScraper("topics/all", createScraperConfigMemoModelTopic());
+
+    List<MemoModelTopic> topicList = createMemoModelTopicList(topics);
+
+    final config = createScraperConfigPost();
+
+    // int index = 0;
+
+    for (MemoModelTopic currentTopic in topicList) {
+      // if (index++ > 2) {
+      //   continue;
+      // }
+
+      // printCurrentMemoModelTopic(currentTopic);
+    }
+
+    Future<Map<String, Object>> posts = createScraper("posts/new?offset=811500", config);
+
+    posts.then((value) {
+      var postList = createMemoModelPostList(value, MemoModelTopic.createDummy());
+      MemoModelPost.addToGlobalPostList(postList);
+
+      // printMemoModelPost(postList);
+    },);
+  }
+
+  ScraperConfig createScraperConfigPost() {
+    return ScraperConfig(
+      parsers: [
+        Parser(
+            id: "posts",
+            parents: ["_root"],
+            type: ParserType.element,
+            selectors: [
+              ".post",
+            ],
+            multiple: true
+        ),
+        Parser(
+            id: "msg",
+            parents: ["posts"],
+            type: ParserType.text,
+            selectors: [
+              ".message",
+            ]
+        ),
+        Parser(
+            id: "profileUrl",
+            parents: ["posts"],
+            type: ParserType.url,
+            selectors: [
+              ".profile",
+            ]
+
+        ),
+        Parser(
+            id: "age",
+            parents: ["posts"],
+            type: ParserType.text,
+            selectors: [
+              ".time-ago",
+            ]
+        ),
+        Parser(
+            id: "actions",
+            parents: ["posts"],
+            type: ParserType.text,
+            selectors: [
+              ".actions",
+            ]
+        ),
+        Parser(
+            id: "replyCount",
+            parents: ["posts"],
+            type: ParserType.text,
+            selectors: [
+              ".reply-count",
+            ]
+        ),
+        Parser(
+            id: "tipsInSatoshi",
+            parents: ["posts"],
+            type: ParserType.text,
+            selectors: [
+              ".tip-button",
+            ]
+        ),
+        Parser(
+            id: "created",
+            parents: ["posts"],
+            type: ParserType.attribute,
+            selectors: [
+              ".time-ago::title",
+            ]
+        ),
+        Parser(
+            id: "txhash",
+            parents: ["posts"],
+            type: ParserType.url,
+            selectors: [
+              ".time-ago",
+            ]
+        ),
+        Parser(
+            id: "creatorName",
+            parents: ["posts"],
+            type: ParserType.text,
+            selectors: [
+              ".profile",
+            ]
+        ),
+        Parser(
+            id: "imgur",
+            parents: ["posts"],
+            type: ParserType.attribute,
+            selectors: [
+              ".imgur::href",
+            ]
+        )
+      ],
+    );
   }
 
   Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg) async {

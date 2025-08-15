@@ -109,6 +109,8 @@ class _SearchScreenState extends State<SearchScreen> {
                             controller: YoutubePlayerController(
                               initialVideoId: MemoModelPost.globalPosts[index].videoUrl!,
                               flags: YoutubePlayerFlags(
+                                hideThumbnail: true,
+                                hideControls: true,
                                 mute: false,
                                 autoPlay: false,
                               ),

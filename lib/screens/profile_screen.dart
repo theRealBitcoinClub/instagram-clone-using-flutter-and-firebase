@@ -280,6 +280,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       controller: YoutubePlayerController(
                                         initialVideoId: MemoModelPost.globalPosts[index].videoUrl!,
                                         flags: YoutubePlayerFlags(
+                                          hideThumbnail: true,
+                                          hideControls: true,
                                           mute: false,
                                           autoPlay: false,
                                         ),

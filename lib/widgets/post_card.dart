@@ -130,6 +130,8 @@ class _PostCardState extends State<PostCard> {
 
                   initialVideoId: post.videoUrl!,
                   flags: YoutubePlayerFlags(
+                    hideThumbnail: true,
+                    hideControls: true,
                     mute: false,
                     autoPlay: false,
                   ),

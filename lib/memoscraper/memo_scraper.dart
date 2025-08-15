@@ -4,6 +4,7 @@ import 'package:instagram_clone1/dart_web_scraper/common/models/parser_model.dar
 import 'package:instagram_clone1/dart_web_scraper/common/models/scraper_config_model.dart';
 import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper/web_scraper.dart';
 import 'package:html/dom.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../memomodel/memo_model_creator.dart';
 import '../memomodel/memo_model_post.dart';
@@ -18,14 +19,21 @@ class MemoScraper {
   WebScraper webScraper = WebScraper();
 
   void startMemoScraper() async {
-    Map<String, Object> topics = await createScraper("topics/all", createScraperConfigMemoModelTopic());
+    var path = "topics/all";
+    Map<String, Object> topics = await createScraper(path, createScraperConfigMemoModelTopic());
 
     List<MemoModelTopic> topicList = createMemoModelTopicList(topics);
 
     final config = createScraperConfigMemoModelPost();
 
+    // int index = 0;
+
     for (MemoModelTopic currentTopic in topicList) {
-      printCurrentMemoModelTopic(currentTopic);
+      // if (index++ > 2) {
+      //   continue;
+      // }
+
+      // printCurrentMemoModelTopic(currentTopic);
 
       Future<Map<String, Object>> posts = createScraper(currentTopic.url!, config);
 
@@ -33,17 +41,19 @@ class MemoScraper {
         var postList = createMemoModelPostList(value, currentTopic);
         MemoModelPost.addToGlobalPostList(postList);
 
-        printMemoModelPost(postList);
+        // printMemoModelPost(postList);
       },);
     }
   }
 
-  Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg, [String? html]) async {
+  Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg) async {
+    String? cachedData = await loadCachedData(path);
     Map<String, Object> topics = await webScraper.scrape(
-      html: html == null ? null : Document.html(html),
+      html: cachedData == null ? null : Document.html(cachedData),
       concurrentParsing: true,
       url: Uri.parse(baseUrl + path),
       scraperConfig: cfg,
+      onCacheHtmlString: (data) => cacheData(path, data),
     );
     return topics;
   }
@@ -285,5 +295,16 @@ class MemoScraper {
       print(p.age);
       print(p.created);
     }
+  }
+
+  void cacheData(String key, String data) async {
+    // print("CACHEDATA" + data);
+    SharedPreferencesAsync().setString(key, data);
+  }
+
+  Future<String?> loadCachedData(String key) async {
+    // print("LOADDATA" + key);
+    String? data = await SharedPreferencesAsync().getString(key);
+    return data;
   }
 }

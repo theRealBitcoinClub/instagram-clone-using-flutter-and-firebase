@@ -81,6 +81,7 @@ class WebScraper {
     Map<String, String>? headers,
     String? userAgent,
     bool concurrentParsing = false,
+    required onCacheHtmlString(String html)
   }) async {
     /// Find the appropriate scraper configuration for this URL
     ScraperConfig? config;
@@ -97,6 +98,11 @@ class WebScraper {
           'No scraper configuration provided or this url is not supported by scraperConfigMap');
     }
 
+    bool isNoCacheRequest = false;
+
+    if (html == null)
+      isNoCacheRequest = true;
+
     /// Fetch the HTML content using the Scraper class
     Scraper scraping = Scraper();
     Data scrapedData = await scraping.scrape(
@@ -109,6 +115,10 @@ class WebScraper {
       userAgent: userAgent,
       proxyAPIConfig: proxyAPIConfig,
     );
+
+    if (isNoCacheRequest) {
+      onCacheHtmlString((scrapedData.obj as Document).outerHtml);
+    }
 
     /// Parse the HTML content using the WebParser class
     WebParser webParser = WebParser();

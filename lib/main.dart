@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memoscraper/memo_scraper.dart';
 import 'package:instagram_clone1/route%20handling/auth_page.dart';
@@ -9,6 +11,7 @@ void main() async {
   // );
   //TODO SCRAPE MEMO, FILL LOCAL MEMORY DATABASE
   MemoScraper().startMemoScraper();
+  sleep(Duration(milliseconds: 400));
   //TODO SHOW SOME TUTORIAL STUFF WHILE INITIAL SCRAPING
   //TODO CACHE SCRAPING RESULTS IN LOCAL DATABASE
   runApp(const MyApp());

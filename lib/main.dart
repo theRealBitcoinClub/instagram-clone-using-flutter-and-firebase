@@ -10,8 +10,8 @@ void main() async {
   //   options: DefaultFirebaseOptions.currentPlatform
   // );
   //TODO SCRAPE MEMO, FILL LOCAL MEMORY DATABASE
-  MemoScraper().startMemoScraper();
-  sleep(Duration(milliseconds: 400));
+  MemoScraper().startScrapeTopics();
+  MemoScraper().startScrapeCreators(["/most-actions", "/most-followers", "/most-actions", ""]);
   //TODO SHOW SOME TUTORIAL STUFF WHILE INITIAL SCRAPING
   //TODO CACHE SCRAPING RESULTS IN LOCAL DATABASE
   runApp(const MyApp());

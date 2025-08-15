@@ -10,24 +10,71 @@ import '../memomodel/memo_model_creator.dart';
 import '../memomodel/memo_model_post.dart';
 import '../memomodel/memo_model_topic.dart';
 
-void main() async {
-  // MemoScraper().loadUserData("id");
-}
-
-
-
 class MemoScraper {
   String baseUrl = "https://memo.cash/";
   WebScraper webScraper = WebScraper();
 
-  void loadUserData(String id) async {
-    Map<String, Object> users = await createScraper("profiles/most-actions", createScraperConfigMemoModelTopic());
 
-    print("object");
+  void startScrapeCreators(List<String> orderBy) async {
+    for (String order in orderBy) {
+      List<MemoModelCreator> creators = await MemoScraper().scrapeCreators(order);
+      for (MemoModelCreator creator in creators) {
+        await MemoScraper().loadCreator(creator.id!, creator);
+      }
+    }
+  }
+
+  Future<MemoModelCreator> loadCreator(String id, MemoModelCreator? creator) async {
+    Map<String, Object> data = await createScraper("profile/${id}", createScraperConfigProfile());
+
+    var split = data.values.first.toString().replaceAll(" ", "").split("\n");
+    split.removeWhere((element) => element.isEmpty);
+
+    MemoModelCreator result = creator == null ? MemoModelCreator() : creator;
+
+    result.name = split[0];
+    result.profileText = split[1];
+
+    return result;
+  }
+
+  ScraperConfig createScraperConfigProfile() {
+    return ScraperConfig(
+      parsers: [
+        Parser(
+            id: "nameAndText",
+            parents: ["_root"],
+            type: ParserType.text,
+            selectors: [
+              ".title",
+            ]
+        )
+      ],
+    );
+  }
+
+  Future<List<MemoModelCreator>> scrapeCreators(String sortedBy) async {
+    Map<String, Object> users = await createScraper("profiles${sortedBy}", createScraperConfigCreators());
+    List<MemoModelCreator> creators = [];
+
+    List<dynamic> items = users.values.first as List<dynamic>;
+    for (Map<String, Object> item in items) {
+      List<String> stats = item["stats"] as List<String>;
+      MemoModelCreator creator = MemoModelCreator(
+          id: item["id"].toString().substring("profile".length + 1),
+          followerCount: int.parse(stats[2].replaceAll(",", '')),
+          actions: int.parse(stats[1].replaceAll(",", '')),
+          created: stats[3],
+          lastActionDate: stats[4]
+      );
+      creators.add(creator);
+    }
+    // print("object");
+    return creators;
   }
 
 
-  ScraperConfig createScraperConfigProfile() {
+  ScraperConfig createScraperConfigCreators() {
     return ScraperConfig(
       parsers: [
         Parser(
@@ -44,7 +91,7 @@ class MemoScraper {
             parents: ["users"],
             type: ParserType.attribute,
             selectors: [
-              "div::data-profile-hash",
+              "a::href",
             ]
         ),
         Parser(
@@ -60,7 +107,7 @@ class MemoScraper {
     );
   }
 
-  void startMemoScraper() async {
+  void startScrapeTopics() async {
     Map<String, Object> topics = await createScraper("topics/all", createScraperConfigMemoModelTopic());
 
     List<MemoModelTopic> topicList = createMemoModelTopicList(topics);

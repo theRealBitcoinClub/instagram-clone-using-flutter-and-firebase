@@ -136,8 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 children: [
                                   Padding(padding: EdgeInsets.only(left: 25)),
                                   buildStatColumn('Posts', creator.actions!),
-                                  buildStatColumn('followers', creator.followerCount!),
-                                  buildStatColumn('following', creator.followingCount!),
+                                  buildStatColumn('followers', creator.followerCount!)
                                 ],
                               ),
                               Column(

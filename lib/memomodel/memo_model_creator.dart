@@ -7,18 +7,18 @@ class MemoModelCreator {
     this.created = "2011.11.11 11:11",
     this.id,
     this.followerCount = 43,
-    this.followingCount = 21,
     this.actions = 4435,
-    this.profileText = "profileText"
+    this.profileText = "profileText",
+    this.lastActionDate = "2022.12.12 12:12:12"
     // this.img128px
   });
 
-  final String? name;
+  String? name;
   final String? created;
+  final String? lastActionDate;
   final String? id;
-  final String? profileText;
+  String? profileText;
   final int? followerCount;
-  final int? followingCount;
   final int? actions;
   List<MemoModelPost> posts = [];
   List<MemoModelTopic> topics = [];
@@ -33,7 +33,6 @@ class MemoModelCreator {
         id: "17ZY9npgMXstBGXHDCz1umWUEAc9ZU1hSZ",
         followerCount: 123,
         actions: 4324,
-        followingCount: 22,
         name: "Feliz-TRBC",
         profileText: "TRBC: http://therealbitcoin.club"
             "\n\nBITCOINMAP: http://bmap.app"

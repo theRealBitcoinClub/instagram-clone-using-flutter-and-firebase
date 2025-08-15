@@ -11,16 +11,57 @@ import '../memomodel/memo_model_post.dart';
 import '../memomodel/memo_model_topic.dart';
 
 void main() async {
-  MemoScraper().startMemoScraper();
+  // MemoScraper().loadUserData("id");
 }
+
+
 
 class MemoScraper {
   String baseUrl = "https://memo.cash/";
   WebScraper webScraper = WebScraper();
 
+  void loadUserData(String id) async {
+    Map<String, Object> users = await createScraper("profiles/most-actions", createScraperConfigMemoModelTopic());
+
+    print("object");
+  }
+
+
+  ScraperConfig createScraperConfigProfile() {
+    return ScraperConfig(
+      parsers: [
+        Parser(
+            id: "users",
+            parents: ["_root"],
+            type: ParserType.element,
+            selectors: [
+              "tr",
+            ],
+            multiple: true
+        ),
+        Parser(
+            id: "id",
+            parents: ["users"],
+            type: ParserType.attribute,
+            selectors: [
+              "div::data-profile-hash",
+            ]
+        ),
+        Parser(
+            multiple: true,
+            id: "stats",
+            parents: ["users"],
+            type: ParserType.text,
+            selectors: [
+              "td",
+            ]
+        )
+      ],
+    );
+  }
+
   void startMemoScraper() async {
-    var path = "topics/all";
-    Map<String, Object> topics = await createScraper(path, createScraperConfigMemoModelTopic());
+    Map<String, Object> topics = await createScraper("topics/all", createScraperConfigMemoModelTopic());
 
     List<MemoModelTopic> topicList = createMemoModelTopicList(topics);
 

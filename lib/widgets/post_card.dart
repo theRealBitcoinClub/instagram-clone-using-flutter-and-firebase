@@ -136,7 +136,7 @@ class _PostCardState extends State<PostCard> {
                 ),
                 showVideoProgressIndicator: true,
                 onReady: () {
-                  print('Player is ready.');
+                  // print('Player is ready.');
                 },
               )
               :

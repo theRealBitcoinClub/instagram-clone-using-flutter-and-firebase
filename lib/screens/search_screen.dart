@@ -115,7 +115,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             ),
                             showVideoProgressIndicator: true,
                             onReady: () {
-                              print('Player is ready.');
+                              // print('Player is ready.');
                             },
                           ):
                           Image.network(MemoModelPost.globalPosts[index].imageUrl!),

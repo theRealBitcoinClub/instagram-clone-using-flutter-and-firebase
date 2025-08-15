@@ -286,7 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                       showVideoProgressIndicator: true,
                                       onReady: () {
-                                        print('Player is ready.');
+                                        // print('Player is ready.');
                                       },
                                     )
                                     :

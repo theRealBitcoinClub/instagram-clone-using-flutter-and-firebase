@@ -9,6 +9,8 @@ void main() async {
   // );
   //TODO SCRAPE MEMO, FILL LOCAL MEMORY DATABASE
   MemoScraper().startMemoScraper();
+  //TODO SHOW SOME TUTORIAL STUFF WHILE INITIAL SCRAPING
+  //TODO CACHE SCRAPING RESULTS IN LOCAL DATABASE
   runApp(const MyApp());
 }
 

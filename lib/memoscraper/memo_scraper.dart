@@ -8,33 +8,42 @@ import '../memomodel/memo_model_creator.dart';
 import '../memomodel/memo_model_post.dart';
 import '../memomodel/memo_model_topic.dart';
 
+void main() async {
+  MemoScraper().startMemoScraper();
+}
+
 class MemoScraper {
+  String baseUrl = "https://memo.cash/";
+  WebScraper webScraper = WebScraper();
 
   void startMemoScraper() async {
-    WebScraper webScraper = WebScraper();
-
-    Map<String, Object> topics = await webScraper.scrape(
-      url: Uri.parse("https://memo.cash/topics/all"),
-      scraperConfig: createScraperConfigMemoModelTopic(),
-    );
+    Map<String, Object> topics = await createScraper("topics/all", createScraperConfigMemoModelTopic());
 
     List<MemoModelTopic> topicList = createMemoModelTopicList(topics);
 
     final config = createScraperConfigMemoModelPost();
 
     for (MemoModelTopic currentTopic in topicList) {
-      // printCurrentMemoModelTopic(currentTopic);
+      printCurrentMemoModelTopic(currentTopic);
 
-      Map<String, Object> posts = await webScraper.scrape(
-        url: Uri.parse("https://memo.cash/${currentTopic.url!}"),
-        scraperConfig: config,
-      );
+      Future<Map<String, Object>> posts = createScraper(currentTopic.url!, config);
 
-      MemoModelPost.addToGlobalPostList(
-          createMemoModelPostList(posts, currentTopic));
+      posts.then((value) {
+        var postList = createMemoModelPostList(value, currentTopic);
+        MemoModelPost.addToGlobalPostList(postList);
 
-      // printMemoModelPost(postList);
+        printMemoModelPost(postList);
+      },);
     }
+  }
+
+  Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg) async {
+    Map<String, Object> topics = await webScraper.scrape(
+      concurrentParsing: true,
+      url: Uri.parse(baseUrl + path),
+      scraperConfig: cfg,
+    );
+    return topics;
   }
 
   ScraperConfig createScraperConfigMemoModelTopic() {

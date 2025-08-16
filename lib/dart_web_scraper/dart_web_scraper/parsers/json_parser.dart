@@ -1,7 +1,7 @@
 import 'package:instagram_clone1/dart_web_scraper/common/utils/data_extraction.dart';
 import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
-import 'package:json_path/json_path.dart';
 import 'package:json_path/fun_extra.dart';
+import 'package:json_path/json_path.dart';
 
 /// Extracts data from JSON using JSONPath selectors
 /// Returns Data object with extracted JSON data or null if not found

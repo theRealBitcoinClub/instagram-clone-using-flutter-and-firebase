@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:instagram_clone1/screens/add_post.dart';
 import 'package:instagram_clone1/screens/feed_screen.dart';
 import 'package:instagram_clone1/screens/profile_screen.dart';
-import 'package:instagram_clone1/screens/search_screen.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 
 class HomeSceen extends StatefulWidget {

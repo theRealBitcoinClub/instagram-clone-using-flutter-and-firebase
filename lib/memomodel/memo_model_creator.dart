@@ -1,5 +1,4 @@
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
-import 'package:instagram_clone1/memomodel/memo_model_topic.dart';
 
 class MemoModelCreator {
   MemoModelCreator({
@@ -43,5 +42,4 @@ class MemoModelCreator {
   }
 
   //TODO IMPLEMENT EQUALS METHOD, CHECK ID
-  // final String? img128px; https://memo.cash/img/profilepics/17ZY9npgMXstBGXHDCz1umWUEAc9ZU1hSZ-128x128.jpg?id=6312
 }

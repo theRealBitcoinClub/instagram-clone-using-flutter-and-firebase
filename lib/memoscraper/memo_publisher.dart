@@ -24,6 +24,7 @@ void main() async {
 }
 
 void testMemoSend() async {
+  String wif = "5HtpWVLipP5iKskfrhZLcxveVV39JZpiMGQseYRepRDUPGp97sU";
   // print("\n\n" + await doMemoAction("PostMessage", MemoCode.profileMessage,""));
   // print("\n${await doMemoAction("IMG1 https://imgur.com/eIEjcUe", MemoCode.ProfileMessage,"")}");
   // print("\n${await doMemoAction("IMG2 https://i.imgur.com/eIEjcUe.jpeg", MemoCode.ProfileMessage,"")}");
@@ -37,9 +38,7 @@ void testMemoSend() async {
   //     MemoTransformation.reOrderTxHash("ba832cad4e4f45b9158811e2914bc57b89fd100c4d3eb6f871a757d0b14db3f3"));
   //
   // print("\n" + other);
-  var other = await doMemoAction(
-    MemoTransformation.reOrderTxHash("bad2095d2f5e177ffd4da96fd0220ebcb8de7b9e1cffac9d0c7667b403204072"), MemoCode.postLike, "");
-
+  var other = await doMemoAction(wif, MemoTransformation.reOrderTxHash("bad2095d2f5e177ffd4da96fd0220ebcb8de7b9e1cffac9d0c7667b403204072"), MemoCode.postLike, "");
   print("\n" + other);
   // sleep(Duration(seconds: 1));
   // other = await doMemoAction("Keloke", MemoCode.ProfileName,"");
@@ -64,7 +63,7 @@ void testMemoSend() async {
   // print("\n" + other);
 }
 
-Future<String> doMemoAction (String memoMessage, MemoCode memoAction, String memoTopic) async {
+Future<String> doMemoAction (String wif, String memoMessage, MemoCode memoAction, String memoTopic) async {
   print("\n${memoAction.opCode}\n${memoAction.name}");
   final service = await ElectrumWebSocketService.connect(
       "wss://${mainnetServers[2]}:50004");
@@ -73,7 +72,7 @@ Future<String> doMemoAction (String memoMessage, MemoCode memoAction, String mem
 
   const network = BitcoinCashNetwork.mainnet;
 
-  final privateKey = ECPrivate.fromWif("5HtpWVLipP5iKskfrhZLcxveVV39JZpiMGQseYRepRDUPGp97sU", netVersion: network.wifNetVer);
+  final privateKey = ECPrivate.fromWif(wif, netVersion: network.wifNetVer);
 
   final publicKey = privateKey.getPublic();
 

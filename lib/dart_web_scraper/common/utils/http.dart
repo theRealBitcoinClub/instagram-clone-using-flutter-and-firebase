@@ -1,6 +1,7 @@
 import 'dart:convert';
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
+
 import 'package:http/http.dart' as http;
+import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
 
 /// GET request to fetch data from URL
 Future<String?> getRequest(

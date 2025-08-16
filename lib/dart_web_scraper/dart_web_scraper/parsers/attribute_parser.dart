@@ -1,5 +1,5 @@
-import 'package:instagram_clone1/dart_web_scraper/common/utils/data_extraction.dart';
 import 'package:html/dom.dart';
+import 'package:instagram_clone1/dart_web_scraper/common/utils/data_extraction.dart';
 import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
 
 /// Parses HTML attributes from DOM elements based on CSS selectors

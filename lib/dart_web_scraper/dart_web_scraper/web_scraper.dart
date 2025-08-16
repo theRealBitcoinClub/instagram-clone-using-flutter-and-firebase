@@ -1,5 +1,6 @@
-import '../dart_web_scraper.dart';
 import 'package:html/dom.dart';
+
+import '../dart_web_scraper.dart';
 
 /// High-level web scraper that combines HTML fetching and data parsing.
 ///

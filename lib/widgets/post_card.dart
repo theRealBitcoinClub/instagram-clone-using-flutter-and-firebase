@@ -151,7 +151,8 @@ class _PostCardState extends State<PostCard> {
                               fit: BoxFit.cover,
                             )
                       )
-                    ,
+                    , //TODO HANDLE TEXT ONLY AND HANDLE TOPICS SO PEOPLE CAN REPLY
+                      //TODO LET USERS INTERACT WITH HASHTAGS IN TEXT AND URLS IN TEXT
                     AnimatedOpacity(
                       duration: const Duration(milliseconds: 200),
                       opacity: isAnimating ? 1 : 0,

@@ -146,13 +146,12 @@ class _PostCardState extends State<PostCard> {
                     )
                   : SizedBox(
                       height: MediaQuery.of(context).size.height * 0.45,
-                      child: post.imgurUrl != null 
-                          ? Image(
-                              image: NetworkImage(post.imgurUrl!),
+                      child: Image(
+                              image: NetworkImage(post.imgurUrl == null ? "https://i.imgur.com/yhN4cfs.png" : post.imgurUrl!),
                               fit: BoxFit.cover,
                             )
-                          : Text(post.text!)
-                    ),
+                      )
+                    ,
                     AnimatedOpacity(
                       duration: const Duration(milliseconds: 200),
                       opacity: isAnimating ? 1 : 0,

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
@@ -19,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late MemoModelCreator creator;
   bool isFollowing = false;
   bool isLoading = false;
+  int viewMode = 0; //0 - all, 1 - foto, 2 - video, 3 - text
 
   @override
   void initState() {
@@ -234,7 +237,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       IconButton(
                           padding: EdgeInsets.symmetric(horizontal: 30),
-                          onPressed: () {},
+                          onPressed: () {setState(() {
+                            viewMode = 1;
+                          });},
                           icon: Icon(
                             Icons.photo,
                             size: 30,
@@ -242,12 +247,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           )),
                       IconButton(
                           padding: EdgeInsets.symmetric(horizontal: 30),
-                          onPressed: () {},
+                          onPressed: () {setState(() {
+                            viewMode = 2;
+                          });},
                           icon: Icon(Icons.video_library,
                               size: 30, color: Colors.grey.shade600)),
                       IconButton(
                           padding: EdgeInsets.symmetric(horizontal: 30),
-                          onPressed: () {},
+                          onPressed: () {setState(() {
+                            viewMode = 3;
+                          });},
                           icon: Icon(Icons.format_color_text,
                               size: 30, color: Colors.grey.shade600))
                     ],
@@ -308,7 +317,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                               itemBuilder: (context, index) {
                                 return Container(
-                                    child: MemoModelPost.globalPosts[index].youtubeId != null
+                                    child: ((viewMode == 0 || viewMode == 2) && MemoModelPost.globalPosts[index].youtubeId != null)
                                         ? YoutubePlayer(
                                             controller: YoutubePlayerController(
                                               initialVideoId: MemoModelPost.globalPosts[index].youtubeId!,
@@ -325,10 +334,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             },
                                           )
                                         : MemoModelPost.globalPosts[index].imgurUrl != null
-                                          ? Image(image: NetworkImage(MemoModelPost.globalPosts[index].imgurUrl!),
+                                          && (viewMode == 0 || viewMode == 1)
+                                        ? Image(image: NetworkImage(MemoModelPost.globalPosts[index].imgurUrl!),
                                                   fit: BoxFit.cover,
                                           )
-                                          : Text(MemoModelPost.globalPosts[index].text!)
+                                          : (viewMode == 0 || viewMode == 3)
+                                            && MemoModelPost.globalPosts[index].text != null
+                                            && MemoModelPost.globalPosts[index].text!.isNotEmpty
+                                            ? Text(MemoModelPost.globalPosts[index].text!) : SizedBox()
                                 );
                               });
                         }),

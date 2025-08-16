@@ -274,30 +274,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                               itemBuilder: (context, index) {
                                 return Container(
-                                    child: MemoModelPost.globalPosts[index].imageUrl == null ?
-                                    YoutubePlayer(
-                                      controller: YoutubePlayerController(
-                                        initialVideoId: MemoModelPost.globalPosts[index].videoUrl!,
-                                        flags: YoutubePlayerFlags(
-                                          hideThumbnail: true,
-                                          hideControls: true,
-                                          mute: false,
-                                          autoPlay: false,
-                                        ),
-                                      ),
-                                      showVideoProgressIndicator: true,
-                                      onReady: () {
-                                        // print('Player is ready.');
-                                      },
-                                    )
-                                    :
-                                    Image(
-                                        image: NetworkImage(MemoModelPost.globalPosts[index].imageUrl!),
-
-                                                fit: BoxFit.cover,
-
-                                                )
-                                                );
+                                    child: MemoModelPost.globalPosts[index].youtubeId != null
+                                        ? YoutubePlayer(
+                                            controller: YoutubePlayerController(
+                                              initialVideoId: MemoModelPost.globalPosts[index].youtubeId!,
+                                              flags: YoutubePlayerFlags(
+                                                hideThumbnail: true,
+                                                hideControls: true,
+                                                mute: false,
+                                                autoPlay: false,
+                                              ),
+                                            ),
+                                          showVideoProgressIndicator: true,
+                                          onReady: () {
+                                            // print('Player is ready.');
+                                            },
+                                          )
+                                        : MemoModelPost.globalPosts[index].imgurUrl != null
+                                          ? Image(image: NetworkImage(MemoModelPost.globalPosts[index].imgurUrl!),
+                                                  fit: BoxFit.cover,
+                                          )
+                                          : Text(MemoModelPost.globalPosts[index].text!)
+                                );
                               });
                         }),
                   )

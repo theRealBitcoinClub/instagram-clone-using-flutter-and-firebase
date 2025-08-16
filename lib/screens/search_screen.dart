@@ -105,22 +105,25 @@ class _SearchScreenState extends State<SearchScreen> {
                       itemCount: MemoModelPost.globalPosts.length,
                       itemBuilder: (context, index) {
                         return ClipRRect(
-                          child:MemoModelPost.globalPosts[index].imageUrl == null ?YoutubePlayer(
-                            controller: YoutubePlayerController(
-                              initialVideoId: MemoModelPost.globalPosts[index].videoUrl!,
-                              flags: YoutubePlayerFlags(
-                                hideThumbnail: true,
-                                hideControls: true,
-                                mute: false,
-                                autoPlay: false,
-                              ),
-                            ),
-                            showVideoProgressIndicator: true,
-                            onReady: () {
-                              // print('Player is ready.');
-                            },
-                          ):
-                          Image.network(MemoModelPost.globalPosts[index].imageUrl!),
+                          child:MemoModelPost.globalPosts[index].youtubeId != null
+                              ? YoutubePlayer(
+                                controller: YoutubePlayerController(
+                                  initialVideoId: MemoModelPost.globalPosts[index].youtubeId!,
+                                  flags: YoutubePlayerFlags(
+                                    hideThumbnail: true,
+                                    hideControls: true,
+                                    mute: false,
+                                    autoPlay: false,
+                                  ),
+                                ),
+                                showVideoProgressIndicator: true,
+                                onReady: () {
+                                  // print('Player is ready.');
+                                },
+                              )
+                              : MemoModelPost.globalPosts[index].imgurUrl != null
+                                ? Image.network(MemoModelPost.globalPosts[index].imgurUrl!)
+                                : Text(MemoModelPost.globalPosts[index].text!),
                         );
                       });
                 }

@@ -7,29 +7,27 @@ class MemoModelPost {
   MemoModelPost({
     this.text,
     this.txHash,
-    this.imageUrl,
-    this.videoUrl,
-    this.urls,
+    this.imgurUrl,
+    this.youtubeId,
     this.creator,
     this.tipsInSatoshi,
     this.likeCounter,
     this.replyCounter,
     this.created,
     this.age,
-    this.hashtags,
     this.topic
   });
 
   final int? tipsInSatoshi;
   String? text;
   final String? txHash;
-  final String? imageUrl;
-  String? videoUrl;
+  final String? imgurUrl;
+  String? youtubeId;
   final String? created;
   final int? likeCounter;
   final int? replyCounter;
-  final List<String>? urls;
-  final List<String>? hashtags;
+  final List<String> urls = [];
+  final List<String> hashtags = [];
   late final MemoModelCreator? creator;
   late final MemoModelTopic? topic;
   final String? age;
@@ -40,12 +38,11 @@ class MemoModelPost {
     MemoModelCreator memoModelCreator = memoModelUser.creator!;
     
     MemoModelTopic topic = MemoModelTopic.createDummy();
-    memoModelCreator.topics.add(topic);
     MemoModelPost memoModelPost = MemoModelPost(
                     age: "11d",
                     created: "11.11.1911 11:11",
                     creator: memoModelCreator,
-                    imageUrl: "https://i.imgur.com/YbduTBp.png",
+                    imgurUrl: "https://i.imgur.com/YbduTBp.png",
                     likeCounter: 33,
                     replyCounter: 2,
                     text: "SAFDHSF DSF HDSFHDSKJ HFDSKJ HFDSJHF DHSFKJH DSJFHDSKJ HFKJDSH",

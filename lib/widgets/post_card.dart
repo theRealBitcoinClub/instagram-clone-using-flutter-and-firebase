@@ -124,51 +124,51 @@ class _PostCardState extends State<PostCard> {
             animationCurve: Curves.fastOutSlowIn,
             child: Stack(
               alignment: Alignment.center,
-              children: [post.imageUrl == null ?
-              YoutubePlayer(
-                controller: YoutubePlayerController(
-
-                  initialVideoId: post.videoUrl!,
-                  flags: YoutubePlayerFlags(
-                    hideThumbnail: true,
-                    hideControls: true,
-                    mute: false,
-                    autoPlay: false,
-                  ),
-                ),
-                showVideoProgressIndicator: true,
-                onReady: () {
-                  // print('Player is ready.');
-                },
-              )
-              :
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.45,
-                  child: Image(
-                    image: NetworkImage(post.imageUrl!), //TODO SHOW REAL IMAGE
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                AnimatedOpacity(
-                  duration: const Duration(milliseconds: 200),
-                  opacity: isAnimating ? 1 : 0,
-                  child: LikeAnimation(
-                    child: const Icon(
-                      Icons.favorite,
-                      color: Color.fromRGBO(255, 255, 255, 1),
-                      size: 130,
+              children: [post.youtubeId != null 
+                  ? YoutubePlayer(
+                      controller: YoutubePlayerController(
+                        initialVideoId: post.youtubeId!,
+                        flags: YoutubePlayerFlags(
+                          hideThumbnail: true,
+                          hideControls: true,
+                          mute: false,
+                          autoPlay: false,
+                        ),
+                      ),
+                      showVideoProgressIndicator: true,
+                      onReady: () {
+                        // print('Player is ready.');
+                      },
+                    )
+                  : SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.45,
+                      child: post.imgurUrl != null 
+                          ? Image(
+                              image: NetworkImage(post.imgurUrl!), //TODO SHOW REAL IMAGE
+                              fit: BoxFit.cover,
+                            )
+                          : Text(post.text!)
                     ),
-                    isAnimating: isAnimating,
-                    duration: const Duration(
-                      milliseconds: 400,
-                    ),
-                    onEnd: () {
-                      setState(() {
-                        isAnimating = false;
-                      });
-                    },
-                  ),
-                )
+                    AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: isAnimating ? 1 : 0,
+                      child: LikeAnimation(
+                        child: const Icon(
+                          Icons.favorite,
+                          color: Color.fromRGBO(255, 255, 255, 1),
+                          size: 130,
+                        ),
+                        isAnimating: isAnimating,
+                        duration: const Duration(
+                          milliseconds: 400,
+                        ),
+                        onEnd: () {
+                          setState(() {
+                            isAnimating = false;
+                          });
+                        },
+                      ),
+                    )
               ],
             ),
           ),
@@ -178,6 +178,7 @@ class _PostCardState extends State<PostCard> {
         Row(
           children: [
             //like
+            post.topic != null ?
             LikeAnimation(
               isAnimating: true, //TODO CHECKS LIKE widget.snap['likes'].contains(user.uid),
               smallLike: true,
@@ -200,7 +201,7 @@ class _PostCardState extends State<PostCard> {
                           CupertinoIcons.heart,
                           size: 32,
                         )),
-            ),
+            ) : SizedBox(),
 
             //comment
             IconButton(
@@ -246,10 +247,10 @@ class _PostCardState extends State<PostCard> {
                   style: Theme.of(context).textTheme.titleSmall!.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
-                  child:
-                  Text("${post.likeCounter} likes"
+                  child: post.topic != null
+                          ? Text("${post.likeCounter} likes")
+                          : Text('')
                   //   '${widget.snap['likes'].length} likes', TODO LIKESCOUNTER
-                  ),
                 ),
 
                 const Spacer(),

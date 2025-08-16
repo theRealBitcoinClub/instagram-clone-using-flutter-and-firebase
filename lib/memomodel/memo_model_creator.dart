@@ -21,7 +21,6 @@ class MemoModelCreator {
   final int? followerCount;
   final int? actions;
   List<MemoModelPost> posts = [];
-  List<MemoModelTopic> topics = [];
 
   String profileImage() {
     return "https://memo.cash/img/profilepics/${id}-128x128.jpg";

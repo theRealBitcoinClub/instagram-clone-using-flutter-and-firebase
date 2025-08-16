@@ -62,4 +62,6 @@ class MemoModelPost {
     globalPosts.addAll(createMemoModelPostList);
 
   }
+
+  //TODO IMPLEMENT EQUALS METHOD, CHECK TX HASH
 }

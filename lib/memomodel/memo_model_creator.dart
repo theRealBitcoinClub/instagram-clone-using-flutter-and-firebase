@@ -41,5 +41,7 @@ class MemoModelCreator {
 
     return creator;
   }
+
+  //TODO IMPLEMENT EQUALS METHOD, CHECK ID
   // final String? img128px; https://memo.cash/img/profilepics/17ZY9npgMXstBGXHDCz1umWUEAc9ZU1hSZ-128x128.jpg?id=6312
 }

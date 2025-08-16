@@ -52,14 +52,18 @@ class _PostCardState extends State<PostCard> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(left: 8),
-                  child: Column(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         post.creator!.name!,
-                        // widget.snap['username'], TODO USERNAME
                         style: const TextStyle(fontSize: 15),
+                      ),
+                      const Spacer(),
+
+                      Text("${post.age} - ${post.created}",
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ],
                   ),
@@ -78,7 +82,7 @@ class _PostCardState extends State<PostCard> {
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 16),
                                 shrinkWrap: true,
-                                children: ["Delete", "edit"]
+                                children: ["Tip", "Share", "Mute Post"]
                                     .map((e) => InkWell(
                                           onTap: () {
                                           //   TODO DELETEPOST LOLL
@@ -108,7 +112,7 @@ class _PostCardState extends State<PostCard> {
         ),
         GestureDetector(
           onDoubleTap: () async {
-            // TODO LIKE POST
+            // TODO TIP POST WITH STANDARD TIP
             // FireStoreMethods().likePost(widget.snap['postId'],
             //     user.uid, widget.snap['likes']);
             setState(() {
@@ -144,7 +148,7 @@ class _PostCardState extends State<PostCard> {
                       height: MediaQuery.of(context).size.height * 0.45,
                       child: post.imgurUrl != null 
                           ? Image(
-                              image: NetworkImage(post.imgurUrl!), //TODO SHOW REAL IMAGE
+                              image: NetworkImage(post.imgurUrl!),
                               fit: BoxFit.cover,
                             )
                           : Text(post.text!)
@@ -154,7 +158,7 @@ class _PostCardState extends State<PostCard> {
                       opacity: isAnimating ? 1 : 0,
                       child: LikeAnimation(
                         child: const Icon(
-                          Icons.favorite,
+                          Icons.currency_bitcoin,
                           color: Color.fromRGBO(255, 255, 255, 1),
                           size: 130,
                         ),
@@ -174,130 +178,29 @@ class _PostCardState extends State<PostCard> {
           ),
         ),
 
-        //like comment save section
-        Row(
-          children: [
-            //like
-            post.topic != null ?
-            LikeAnimation(
-              isAnimating: true, //TODO CHECKS LIKE widget.snap['likes'].contains(user.uid),
-              smallLike: true,
-              child: IconButton(
-                  onPressed: () async {
-                    //TODO LIKE
-                    // await FireStoreMethods().likePost(widget.snap['postId'],
-                    //    user.uid, widget.snap['likes']);
-                    setState(() {
-                      isAnimating = true;
-                    });
-                  },
-                  icon: true //TODO CHECKS widget.snap['likes'].contains(user.uid)
-                      ? const Icon(
-                          Icons.favorite,
-                          color: Colors.red,
-                          size: 32,
-                        )
-                      : Icon(
-                          CupertinoIcons.heart,
-                          size: 32,
-                        )),
-            ) : SizedBox(),
-
-            //comment
-            IconButton(
-                onPressed: () {
-                  // Navigator.of(context).push(MaterialPageRoute(
-                  //     builder: (context) => CommentScreen(snap: widget.snap)));
-                  //TODO OPEN REPLIES AS COMMENT
-                },
-                icon: const Icon(
-                  CupertinoIcons.chat_bubble,
-                  size: 30,
-                )),
-
-            //share
-            IconButton(
-                onPressed: () {},
-                icon: const Icon(
-                  CupertinoIcons.paperplane,
-                  size: 30,
-                )),
-
-            Spacer(),
-            //bookmark
-            IconButton(
-                onPressed: () {},
-                icon: Icon(
-                  CupertinoIcons.bookmark,
-                  size: 30,
-                ))
-          ],
-        ),
-
         //number of likes , description and number of comments
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            //number of likes
-            Row(
-              children: [
-                DefaultTextStyle(
-                  style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                  child: post.topic != null
-                          ? Text("${post.likeCounter} likes")
-                          : Text('')
-                  //   '${widget.snap['likes'].length} likes', TODO LIKESCOUNTER
+                SizedBox(
+                  height: 8,
                 ),
 
-                const Spacer(),
-
-                //published date
-                Text("${post.age} - ${post.created}",
-                  // DateFormat.yMMMd().format(
-                  //   widget.snap['datePublished'].toDate(), TODO DATE CREATED
-                  // ),
-                  style: const TextStyle(fontSize: 12),
+                Column(
+                  children: <Widget>[
+                    ExpandableText(post.text ?? "",
+                      // widget.snap['discription'], TODO TEXT
+                      prefixText: post.creator!.name,
+                      prefixStyle: const TextStyle(fontWeight: FontWeight.bold),
+                      expandText: 'show more',
+                      collapseText: 'show less',
+                      maxLines: 5,
+                      linkColor: Colors.blue,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-
-            SizedBox(
-              height: 8,
-            ),
-
-            Column(
-              children: <Widget>[
-                ExpandableText(post.text ?? "",
-                  // widget.snap['discription'], TODO TEXT
-                  prefixText: post.creator!.name,
-                  prefixStyle: const TextStyle(fontWeight: FontWeight.bold),
-                  expandText: 'show more',
-                  collapseText: 'show less',
-                  maxLines: 3,
-                  linkColor: Colors.blue,
-                ),
-              ],
-            ),
-
-            //number of comments
-            InkWell(
-              onTap: () {
-
-                //TODO REPLIES AS COMMENTS
-                // Navigator.of(context).push(MaterialPageRoute(
-                //     builder: (context) => CommentScreen(snap: widget.snap)));
-              },
-              child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 5),
-                  child: Text(
-                    'View all ${post.replyCounter} comments..',
-                    style: TextStyle(color: Colors.grey.shade700, fontSize: 15),
-                  )),
-            )
           ]),
         )
       ]),

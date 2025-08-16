@@ -23,21 +23,24 @@ class _FeedScreenState extends State<FeedScreen> {
     return Scaffold(
         appBar: AppBar(
           backgroundColor: mobileBackgroundColor,
-          centerTitle: false,
-          title: SvgPicture.asset(
-            'assets/images/instagram.svg',
-            color: blackColor,
-            height: 50,
-          ),
+          centerTitle: true,
+          toolbarHeight: 40,
+          title: Text("Spend > Share > Inspire", style: TextStyle(fontFamily: "Open Sans"),),
+          
+          // SvgPicture.asset(
+          //   'assets/images/instagram.svg',
+          //   color: blackColor,
+          //   height: 50,
+          // ),
           actions: [
-            IconButton(
-                onPressed: () {
-                  signUserOut();
-                },
-                icon: Icon(
-                  Icons.messenger_outline,
-                  color: blackColor,
-                ))
+            // IconButton(
+            //     onPressed: () {
+            //       signUserOut();
+            //     },
+            //     icon: Icon(
+            //       Icons.messenger_outline,
+            //       color: blackColor,
+            //     ))
           ],
         ),
         body:

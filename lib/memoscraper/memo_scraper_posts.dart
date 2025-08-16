@@ -8,10 +8,10 @@ import '../memomodel/memo_model_post.dart';
 import '../memomodel/memo_model_topic.dart';
 
 class MemoScraperPost {
-  void startScrapePosts() async {
+  void startScrapePosts(int startOffset) async {
     final config = createScraperConfigPost();
 
-    for (int offset = 25; offset >= 0; offset -= 25) {
+    for (int offset = startOffset; offset >= 0; offset -= 25) {
       Map<String, Object> posts = await MemoScraperUtil.createScraper("posts/new?offset=${offset}", config);
 
         var postList = createPostList(posts);

@@ -73,15 +73,14 @@ class _HomeSceenState extends State<HomeSceen> {
         physics: const NeverScrollableScrollPhysics(),
         children:  [
           const FeedScreen(),
-          const SearchScreen(),
+          // const SearchScreen(),
           const AddPost(),
-          const Text('activity'),
           // ProfileScreen(uid: FirebaseAuth.instance.currentUser!.uid), TODO USER ID TO PROFILE
           ProfileScreen(uid: "17ZY9npgMXstBGXHDCz1umWUEAc9ZU1hSZ"),
         ],
       ),
       bottomNavigationBar: CupertinoTabBar(
-        
+        height: 70,
         backgroundColor: mobileBackgroundColor,
         items: [
           BottomNavigationBarItem(
@@ -93,35 +92,35 @@ class _HomeSceenState extends State<HomeSceen> {
               ),
               label: '',
               backgroundColor: primaryColor),
-          BottomNavigationBarItem (
-              icon: _page == 1 ? const Icon(
-                CupertinoIcons.search, color: blackColor,
-              )
-              :const Icon(
-                Icons.search,color: secondaryColor,
-              ),
-              label: '',
-              backgroundColor: primaryColor),
-          BottomNavigationBarItem(
-               icon: _page == 2 ? const Icon(
-                CupertinoIcons.add_circled_solid, color: blackColor,
-              )
-              :const Icon(
-                CupertinoIcons.add_circled,color: secondaryColor,
-              ),
-              label: '',
-              backgroundColor: primaryColor),
+          // BottomNavigationBarItem (
+          //     icon: _page == 1 ? const Icon(
+          //       CupertinoIcons.search, color: blackColor,
+          //     )
+          //     :const Icon(
+          //       Icons.search,color: secondaryColor,
+          //     ),
+          //     label: '',
+          //     backgroundColor: primaryColor),
+          // BottomNavigationBarItem(
+          //      icon: _page == 2 ? const Icon(
+          //       CupertinoIcons.add_circled_solid, color: blackColor,
+          //     )
+          //     :const Icon(
+          //       CupertinoIcons.add_circled,color: secondaryColor,
+          //     ),
+          //     label: '',
+          //     backgroundColor: primaryColor),
           BottomNavigationBarItem(
               icon: Icon(
-                Icons.favorite,
-                color: _page == 3 ? blackColor : secondaryColor,
+                Icons.currency_bitcoin_rounded,
+                color: _page == 1 ? blackColor : secondaryColor,
               ),
               label: '',
               backgroundColor: primaryColor),
           BottomNavigationBarItem(
               icon: Icon(
                 Icons.person,
-                color: _page == 4 ? blackColor : secondaryColor,
+                color: _page == 2 ? blackColor : secondaryColor,
               ),
               label: '',
               backgroundColor: primaryColor)

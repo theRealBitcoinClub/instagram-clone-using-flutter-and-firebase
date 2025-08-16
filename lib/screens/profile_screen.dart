@@ -97,18 +97,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
           )
         : Scaffold(
             appBar: AppBar(
+              toolbarHeight: 50,
               backgroundColor: mobileBackgroundColor,
               centerTitle: false,
-              title: Text(
-                creator.name!,
-                // userData['username'],
-                style: TextStyle(color: Colors.black),
-              ),
+              title:
+              Row(children: [
+                // Text(
+                //   creator.name!,
+                //   // userData['username'],
+                //   style: TextStyle(color: Colors.black, fontFamily: "Arial", fontSize: 12),
+                // ),
+                TextButton(
+                    onPressed: () {
+                      //TODO LAUNCH PROFILE ON MEMO WITH THAT ID
+                      print("object");
+                    },
+                    child: Text(
+                      creator.id!,
+                      // userData['username'],
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    )
+                )
+              ]),
               actions: [
                 IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      //TODO LAUNCH SIDESHIFT EXCHANGE
+                      //TODO SHOW BCH DEPOSIT QR CODE
+                      //TODO IMPLEMENT WALLETCONNECT
+                    },
                     icon: Icon(
-                      Icons.messenger_outline,
+                      Icons.currency_exchange,
                       color: blackColor,
                     ))
               ],
@@ -144,7 +163,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 children: [
                                   Container(
                                     child: true
-                                    // TODO implement check user id is same user
+                                    //TODO LET THEM AUTO POST TO TWITTER, INSTA & FBOOK FROM MEMO
+                                    //TODO FOLLOWING WITHOUT ANY EFFECT OR OFFER TO JUMP TO THEIR MEMO.CASH FOLLOWER FEED
+                                    //TODO INTENSE MUTING TO FILTER FEED TO WHAT USER WANTS
+                                    //TODO MUTED USERS CAN PAY TO BE UNMUTED
+                                    //TODO IF USERS HAVE MORE MUTES THAN WEEKS OF AGE THEIR OUTREACH SUFFERS
+                                    //TODO OUTREACH GOES DOWN IF AMOUNT OF POSTS GOES UP
+                                    //TODO USER HAVE TO PAY TO HAVE HIGHER OUTREACH
+                                    //TODO LET USER MUTE SPECIFIC POSTS, AFTER MUTING SAME USERS POST FOR X TIMES THE USER IS MUTED BUT STILL APPEARS ON SEARCH TO BE UNMUTED
+                                    //TODO implement check user id is same user
                                     // FirebaseAuth
                                     //             .instance.currentUser!.uid ==
                                     //         widget.uid
@@ -152,6 +179,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             backgroundColor: Colors.transparent,
                                             borderColor: Colors.black,
                                             text: 'Edit Profile',
+                                            //TODO Profile contains WIF and seed phrase for export
+                                            //TODO ALLOW FOR MULTIPLE ACCOUNT SWITCHES HERE, SAVE MULTIPLE WIFS
                                             textColor: Colors.black)
                                         : isFollowing
                                             ? FollowButton(
@@ -207,15 +236,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           padding: EdgeInsets.symmetric(horizontal: 30),
                           onPressed: () {},
                           icon: Icon(
-                            Icons.video_label_outlined,
+                            Icons.photo,
                             size: 30,
                             color: Colors.grey.shade600,
                           )),
                       IconButton(
                           padding: EdgeInsets.symmetric(horizontal: 30),
                           onPressed: () {},
-                          icon: Icon(Icons.video_library_outlined,
+                          icon: Icon(Icons.video_library,
                               size: 30, color: Colors.grey.shade600)),
+                      IconButton(
+                          padding: EdgeInsets.symmetric(horizontal: 30),
+                          onPressed: () {},
+                          icon: Icon(Icons.format_color_text,
+                              size: 30, color: Colors.grey.shade600))
                     ],
                   ),
 

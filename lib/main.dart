@@ -1,12 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/memoscraper/memo_scraper.dart';
 import 'package:instagram_clone1/memoscraper/memo_scraper_posts.dart';
 import 'package:instagram_clone1/route%20handling/auth_page.dart';
-
-import 'memoscraper/memo_scraper_creator.dart';
-import 'memoscraper/memo_scraper_topics.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +10,7 @@ void main() async {
   //TODO SCRAPE MEMO, FILL LOCAL MEMORY DATABASE
   // MemoScraperTopic().startScrapeTopics();
   // MemoScraperCreator().startScrapeCreators(["/most-actions", "/most-followers", "/most-actions", ""]);
-  MemoScraperPost().startScrapePosts();
+  MemoScraperPost().startScrapePosts(100);
   //TODO SHOW SOME TUTORIAL STUFF WHILE INITIAL SCRAPING
   //TODO CACHE SCRAPING RESULTS IN LOCAL DATABASE
 

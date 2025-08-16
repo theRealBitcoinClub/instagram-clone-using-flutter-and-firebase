@@ -13,6 +13,8 @@ class CommentsCard extends StatefulWidget {
   State<CommentsCard> createState() => _CommentsCardState();
 }
 
+
+//TODO NO COMMENTS, REPLY TO TOPICS IS ALLOWED AND IS PUT IN SAME TOPIC AS POST, ONLY POSTS NO REPLIES, NO COMMENTS, NO LIKES, ONLY TIPS
 class _CommentsCardState extends State<CommentsCard> {
   @override
   Widget build(BuildContext context) {

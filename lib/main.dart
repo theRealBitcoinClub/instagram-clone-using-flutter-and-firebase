@@ -13,7 +13,9 @@ void main() async {
   //TODO SCRAPE MEMO, FILL LOCAL MEMORY DATABASE
   // MemoScraperTopic().startScrapeTopics();
   // MemoScraperCreator().startScrapeCreators(["/most-actions", "/most-followers", "/most-actions", ""]);
+  // TODO IDENTIFY CREATORS PUT THEM INTO THE TOSTORE PACKAGE DB
   MemoScraperPost().startScrapePosts(100);
+  // MemoScraperTags().startScrapeTags(500);
   //TODO SHOW SOME TUTORIAL STUFF WHILE INITIAL SCRAPING
   //TODO CACHE SCRAPING RESULTS IN LOCAL DATABASE
 

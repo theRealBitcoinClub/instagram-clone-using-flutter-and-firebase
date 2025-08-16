@@ -152,6 +152,8 @@ class _PostCardState extends State<PostCard> {
                       )
                     , //TODO HANDLE TEXT ONLY AND HANDLE TOPICS SO PEOPLE CAN REPLY
                       //TODO LET USERS INTERACT WITH HASHTAGS IN TEXT AND URLS IN TEXT
+                      //TODO ADD MENTIONED HASHTAGS AS CLICKABLE BUTTONS BELOW POST
+                      //TODO ADD TOPIC AS CLICKABLE BUTTON
                     AnimatedOpacity(
                       duration: const Duration(milliseconds: 200),
                       opacity: isAnimating ? 1 : 0,
@@ -197,12 +199,22 @@ class _PostCardState extends State<PostCard> {
                       collapseText: 'show less',
                       maxLines: 5,
                       linkColor: Colors.blue,
-                    ),
+                    ), Row(children: [(post.topic != null ?
+                    TextButton(onPressed: () => onReplyTopic(post.topic!.url!), child: Text(post.topic!.header!))
+                        : SizedBox())]),
+                      // (post.hashtags.isNotEmpty ? post.hashtags.forEach((element) {
+                      // TextButton(onPressed: () => onHashTag(element)
+                      // ,child: Text(element)) //TODO SHOW BUTTON FOR EACH HASHTAG IN TEXT OR MAKE THE TEXT CLICKABLE ?
+                    // }) : SizedBox())])
                   ],
                 ),
           ]),
         )
       ]),
     );
+  }
+
+  void onReplyTopic(String s) {
+
   }
 }

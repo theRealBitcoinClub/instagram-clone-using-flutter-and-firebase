@@ -112,7 +112,7 @@ class MemoScraper {
 
     List<MemoModelTopic> topicList = createMemoModelTopicList(topics);
 
-    final config = createScraperConfigPost();
+    final config = createScraperConfigMemoModelPost();
 
     // int index = 0;
 
@@ -136,30 +136,16 @@ class MemoScraper {
   }
 
   void startScrapePosts() async {
-    Map<String, Object> topics = await createScraper("topics/all", createScraperConfigMemoModelTopic());
-
-    List<MemoModelTopic> topicList = createMemoModelTopicList(topics);
-
     final config = createScraperConfigPost();
 
-    // int index = 0;
+    for (int offset = 25; offset >= 0; offset -= 25) {
+        Map<String, Object> posts = await createScraper("posts/new?offset=${offset}", config);
 
-    for (MemoModelTopic currentTopic in topicList) {
-      // if (index++ > 2) {
-      //   continue;
-      // }
+        var postList = createPostList(posts);
+        MemoModelPost.addToGlobalPostList(postList);
 
-      // printCurrentMemoModelTopic(currentTopic);
+        printMemoModelPost(postList);
     }
-
-    Future<Map<String, Object>> posts = createScraper("posts/new?offset=811500", config);
-
-    posts.then((value) {
-      var postList = createMemoModelPostList(value, MemoModelTopic.createDummy());
-      MemoModelPost.addToGlobalPostList(postList);
-
-      // printMemoModelPost(postList);
-    },);
   }
 
   ScraperConfig createScraperConfigPost() {
@@ -200,22 +186,6 @@ class MemoScraper {
             ]
         ),
         Parser(
-            id: "actions",
-            parents: ["posts"],
-            type: ParserType.text,
-            selectors: [
-              ".actions",
-            ]
-        ),
-        Parser(
-            id: "replyCount",
-            parents: ["posts"],
-            type: ParserType.text,
-            selectors: [
-              ".reply-count",
-            ]
-        ),
-        Parser(
             id: "tipsInSatoshi",
             parents: ["posts"],
             type: ParserType.text,
@@ -253,6 +223,30 @@ class MemoScraper {
             type: ParserType.attribute,
             selectors: [
               ".imgur::href",
+            ]
+        ),
+        Parser(
+            id: "reply",
+            parents: ["posts"],
+            type: ParserType.text,
+            selectors: [
+              ".post-header",
+            ]
+        ),
+        Parser(
+            id: "topic",
+            parents: ["posts"],
+            type: ParserType.text,
+            selectors: [
+              ".topic-link",
+            ]
+        ),
+        Parser(
+            id: "topic-link",
+            parents: ["posts"],
+            type: ParserType.attribute,
+            selectors: [
+              ".topic-link::href",
             ]
         )
       ],
@@ -445,8 +439,67 @@ class MemoScraper {
     );
   }
 
+  List<MemoModelPost> createPostList(Map<String, Object> posts) {
+    List<MemoModelPost> postList = [];
+
+    for (Map<String, Object> value in posts.values.first as Iterable) {
+      if (value["reply"].toString().contains("replied")) {
+        continue;
+      }
+
+      // var likeCount = 0;
+      // var replyCount = 0;
+      // try {
+      //   if (value["actions"] != null) {
+      //     List<String> actions = value["actions"].toString()
+      //         .replaceAll(",", "")
+      //         .replaceAll(" ", "")
+      //         .split("\n");
+      //
+      //     // actions.removeWhere((element) => element.isEmpty);
+      //     replyCount = int.parse(actions[0]);
+      //     likeCount = int.parse(actions[1]);
+      //   }
+      //   //TODO ACTIONS
+      // } catch (e) {}
+
+      MemoModelPost memoModelPost = MemoModelPost(
+          topic: value["topic-link"] == null
+              ? null
+              : MemoModelTopic(
+                  url: value["topic-link"].toString(),
+                  header: value["topic"].toString()),
+          text: value["msg"]?.toString(),
+          age: value["age"].toString(),
+          tipsInSatoshi: int.parse(
+              (value["tipsInSatoshi"] ?? "0").toString().replaceAll(",", "")),
+          // likeCounter: likeCount,
+          // replyCounter: replyCount,
+          created: value["created"].toString(),
+          txHash: value["txhash"].toString().substring("/post".length),
+          imageUrl: value["imgur"]?.toString(),
+          creator: MemoModelCreator(name: value["creatorName"].toString(),
+              id: value["profileUrl"].toString().substring(8)));
+
+      extractYouTubeUrlAndRemoveJavaScriptFromText(memoModelPost);
+
+      if (memoModelPost.videoUrl == null && memoModelPost.imageUrl == null && memoModelPost.topic == null) {
+        continue;
+        //TODO CHECK FOR HASHTAGS, REMOVE ALL POSTS THAT DO NOT CONTAIN VIDEO, IMAGE, HASHTAG OR TOPIC
+      }
+
+      postList.add(memoModelPost);
+    }
+
+    return postList;
+  }
+
   List<MemoModelPost> createMemoModelPostList(Map<String, Object> posts,
       MemoModelTopic currentTopic) {
+    // if (posts.length==1) {
+    //   return [];
+    // }
+
     List<MemoModelPost> postList = [];
 
     for (Map<String, Object> value in posts.values.first as Iterable) {

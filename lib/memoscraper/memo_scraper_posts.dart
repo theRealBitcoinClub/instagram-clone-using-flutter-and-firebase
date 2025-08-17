@@ -8,17 +8,20 @@ import '../memomodel/memo_model_post.dart';
 import '../memomodel/memo_model_topic.dart';
 
 class MemoScraperPost {
-  void startScrapePosts(int startOffset) async {
+  Future<List<MemoModelPost>> startScrapePosts(String url, int startOffset) async {
     final config = createScraperConfigPost();
+    final List<MemoModelPost> result = [];
 
     for (int offset = startOffset; offset >= 0; offset -= 25) {
-      Map<String, Object> posts = await MemoScraperUtil.createScraper("posts/new?offset=${offset}", config);
+      Map<String, Object> posts = await MemoScraperUtil.createScraper("${url}?offset=${offset}", config);
 
         var postList = createPostList(posts);
         MemoModelPost.addToGlobalPostList(postList);
 
+        result.addAll(postList);
         // MemoScraperUtil.printMemoModelPost(postList);
     }
+    return result;
   }
 
   ScraperConfig createScraperConfigPost() {

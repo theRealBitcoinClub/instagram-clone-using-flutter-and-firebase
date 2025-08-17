@@ -1,9 +1,13 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/like_animtion.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
+import 'dart:ui' as ui;
 
 import '../memomodel/memo_model_post.dart';
 
@@ -145,9 +149,21 @@ class _PostCardState extends State<PostCard> {
                     )
                   : SizedBox(
                       height: MediaQuery.of(context).size.height * 0.45,
-                      child: Image(
+                      child:
+                      // CachedNetworkImage(
+                      //   imageUrl: post.imgurUrl == null ? "https://i.imgur.com/yhN4cfs.png" : post.imgurUrl!,
+                      //   fit: BoxFit.cover,
+                      //   placeholder: (context, url) => CircularProgressIndicator(),
+                      //
+                      //   imageBuilder: (ctx, builder) => onBuildImage(ctx, builder) ,
+                      //   errorWidget: (context, url, error) => Icon(Icons.error),
+                      //   errorListener: (error) => onErrorLoadImage(error),
+                      // )
+                      Image(
                               image: NetworkImage(post.imgurUrl == null ? "https://i.imgur.com/yhN4cfs.png" : post.imgurUrl!),
                               fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => errorLoadImage(context, error, stackTrace),
+                              loadingBuilder: (context, child, loadingProgress) => loadingImage(context, child, loadingProgress),
                             )
                       )
                     , //TODO HANDLE TEXT ONLY AND HANDLE TOPICS SO PEOPLE CAN REPLY
@@ -217,4 +233,41 @@ class _PostCardState extends State<PostCard> {
   void onReplyTopic(String s) {
 
   }
+
+  Widget loadingImage(BuildContext context, Widget? child, ImageChunkEvent? loadingProgress) {
+    if (child == null)
+      print("NULLLL");
+    print("object");
+    var x = ((child as Semantics).child as RawImage).image;
+    if (x == null)
+      print("img null");
+    else {
+      ui.Image img = x as ui.Image;
+      if (loadingProgress != null) {
+        print("notnull" + img.width.toString());
+      } else {
+        print("null" + img.width.toString());
+      }
+      if (img.width == 161)
+        return SizedBox(); //TODO these are the images not available anymore on imgur
+    }
+    //   return SizedBox();
+    return child;
+  }
+
+  Widget errorLoadImage(BuildContext context, Object error, StackTrace? stackTrace) {
+    // if ((error as SocketException).message == "Network is unreachable")
+    //   TODO SHOW TOAST
+    print("object");
+    return context.widget;
+  }
+
+  // onErrorLoadImage(error) {
+  //   print("object");
+  // }
+  //
+  // Widget onBuildImage(BuildContext ctx, ImageProvider<Object> builder) {
+  //   print("object");
+  //   return builder;
+  // }
 }

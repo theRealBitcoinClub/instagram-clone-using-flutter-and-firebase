@@ -148,9 +148,7 @@ class _PostCardState extends State<PostCard> {
                         // print('Player is ready.');
                       },
                     )
-                  : SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.45,
-                      child:
+                  :
                       // CachedNetworkImage(
                       //   imageUrl: post.imgurUrl == null ? "https://i.imgur.com/yhN4cfs.png" : post.imgurUrl!,
                       //   fit: BoxFit.cover,
@@ -162,11 +160,12 @@ class _PostCardState extends State<PostCard> {
                       // )
                       Image(
                               image: NetworkImage(post.imgurUrl == null ? "https://i.imgur.com/yhN4cfs.png" : post.imgurUrl!),
+                              height: MediaQuery.of(context).size.height * 0.45,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) => ImgurUtils.errorLoadImage(context, error, stackTrace),
                               loadingBuilder: (context, child, loadingProgress) => ImgurUtils.loadingImage(context, child, loadingProgress),
                             )
-                      )
+
                     , //TODO HANDLE TEXT ONLY AND HANDLE TOPICS SO PEOPLE CAN REPLY
                       //TODO LET USERS INTERACT WITH HASHTAGS IN TEXT AND URLS IN TEXT
                       //TODO ADD MENTIONED HASHTAGS AS CLICKABLE BUTTONS BELOW POST

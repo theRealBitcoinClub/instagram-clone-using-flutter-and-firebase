@@ -23,7 +23,7 @@ class MemoScraperTopic {
 
       posts.then((value) {
         var postList = createTopicPostList(value, currentTopic);
-        MemoModelPost.addToGlobalPostList(postList);
+        MemoModelPost.addToGlobalPostList(postList.reversed.toList());
 
         // printMemoModelPost(postList);
         // print("object");

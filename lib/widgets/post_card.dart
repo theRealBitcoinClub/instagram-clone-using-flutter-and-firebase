@@ -45,7 +45,7 @@ class _PostCardState extends State<PostCard> {
           child: Row(
             children: [
               GestureDetector(onTap: onClickCreatorName(post.creator!.id!), child: CircleAvatar(
-                radius: 20,
+                radius: 22,
                 backgroundImage: NetworkImage(post.creator!.profileImage()),
                 //TODO LOAD PROFILE IMAGE
                 // backgroundImage: NetworkImage(widget.snap['profileImage']),
@@ -57,14 +57,19 @@ class _PostCardState extends State<PostCard> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      /* TextButton(onPressed: onClickCreatorName(post.creator!.id!), child: */ Text(
+                      /* TextButton(onPressed: onClickCreatorName(post.creator!.id!), child: */
+                      /*
+                      Text(
                         post.creator!.name!,
                         style: const TextStyle(fontSize: 13),
-                      ),
+                      ),*/
                       const Spacer(),
 
-                      Text("${post.created}",
-                        style: const TextStyle(fontSize: 11),
+                      Text(post.age!,
+                        style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                      ),
+                      Text(" - ${post.created}",
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ],
                   ),
@@ -155,8 +160,11 @@ class _PostCardState extends State<PostCard> {
                       //   errorWidget: (context, url, error) => Icon(Icons.error),
                       //   errorListener: (error) => onErrorLoadImage(error),
                       // )
+                    post.imgurUrl == null
+                        ? Container(color: Colors.green, height: 0,)
+                        :
                       Image(
-                              image: NetworkImage(post.imgurUrl == null ? "https://i.imgur.com/yhN4cfs.png" : post.imgurUrl!),
+                              image: NetworkImage(post.imgurUrl!),
                               height: MediaQuery.of(context).size.height * 0.45,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) => ImgurUtils.errorLoadImage(context, error, stackTrace),
@@ -171,11 +179,6 @@ class _PostCardState extends State<PostCard> {
                       duration: const Duration(milliseconds: 200),
                       opacity: isAnimating ? 1 : 0,
                       child: LikeAnimation(
-                        child: const Icon(
-                          Icons.currency_bitcoin,
-                          color: Color.fromRGBO(255, 255, 255, 1),
-                          size: 130,
-                        ),
                         isAnimating: isAnimating,
                         duration: const Duration(
                           milliseconds: 400,
@@ -185,6 +188,11 @@ class _PostCardState extends State<PostCard> {
                             isAnimating = false;
                           });
                         },
+                        child: Icon(
+                          Icons.currency_bitcoin,
+                          color: Color.fromRGBO(255, 255, 255, 1),
+                          size: post.imgurUrl == null ? 0 : 150,
+                        ),
                       ),
                     )
               ],
@@ -206,7 +214,7 @@ class _PostCardState extends State<PostCard> {
                   children: <Widget>[
                     ExpandableText(post.text ?? "",
                       // widget.snap['discription'], TODO TEXT
-                      prefixText: post.creator!.name,
+                      prefixText: post.creator!.name! + ":",
                       prefixStyle: const TextStyle(fontWeight: FontWeight.bold),
                       expandText: 'show more',
                       collapseText: 'show less',

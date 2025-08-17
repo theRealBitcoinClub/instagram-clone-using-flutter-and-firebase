@@ -1,5 +1,6 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_clone1/screens/profile_screen.dart';
 import 'package:instagram_clone1/utils/imgur_utils.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/like_animtion.dart';
@@ -43,12 +44,12 @@ class _PostCardState extends State<PostCard> {
           //headerbar
           child: Row(
             children: [
-              CircleAvatar(
+              GestureDetector(onTap: onClickCreatorName(post.creator!.id!), child: CircleAvatar(
                 radius: 20,
                 backgroundImage: NetworkImage(post.creator!.profileImage()),
                 //TODO LOAD PROFILE IMAGE
                 // backgroundImage: NetworkImage(widget.snap['profileImage']),
-              ),
+              )),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(left: 8),
@@ -56,14 +57,14 @@ class _PostCardState extends State<PostCard> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      /* TextButton(onPressed: onClickCreatorName(post.creator!.id!), child: */ Text(
                         post.creator!.name!,
-                        style: const TextStyle(fontSize: 15),
+                        style: const TextStyle(fontSize: 13),
                       ),
                       const Spacer(),
 
-                      Text("${post.age} - ${post.created}",
-                        style: const TextStyle(fontSize: 12),
+                      Text("${post.created}",
+                        style: const TextStyle(fontSize: 11),
                       ),
                     ],
                   ),
@@ -228,6 +229,12 @@ class _PostCardState extends State<PostCard> {
 
   void onReplyTopic(String s) {
 
+  }
+
+  onClickCreatorName(String id) {
+    // Navigator.of(context).push(
+    //   MaterialPageRoute(builder: (context) => ProfileScreen(uid: id)),
+    // );
   }
 
   // onErrorLoadImage(error) {

@@ -66,24 +66,23 @@ class MemoModelPost {
   static void addToGlobalPostList(List<MemoModelPost> posts) {
     globalPosts.addAll(posts);
 
-    posts.forEach((element) {
+    //TODO DO NOT ITERATE THROUGH ALL POSTS HERE AS YOU ALREADY DID THAT BEFORE,
+    for (var element in posts) {
+      if (element.creator!.id != MemoModelCreator.createDummy().id)
+        continue; //TODO ONLY SHOW OWN POSTS ON PROFILE
+
       if (element.imgurUrl != null && element.imgurUrl!.isNotEmpty) {
         imgurPosts.add(element);
-      } else
-      if (element.youtubeId != null && element.youtubeId!.isNotEmpty) {
+      } else if (element.youtubeId != null && element.youtubeId!.isNotEmpty) {
         ytPosts.add(element);
-      } else
-      if (element.hashtags.isNotEmpty) {
+      } else if (element.hashtags.isNotEmpty) {
         tagPosts.add(element);
-      } else
-      if (element.urls.isNotEmpty) {
+      } else if (element.urls.isNotEmpty) {
         urlPosts.add(element);
-      } else
-      if (element.topic != null) {
+      } else if (element.topic != null) {
         topicPosts.add(element);
-      } else
-      throw Exception("dirty data");
-    },);
+      } else throw Exception("dirty data");
+    }
   }
 
   //TODO IMPLEMENT EQUALS METHOD, CHECK TX HASH

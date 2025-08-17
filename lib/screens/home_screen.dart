@@ -83,10 +83,10 @@ class _HomeSceenState extends State<HomeSceen> {
         backgroundColor: mobileBackgroundColor,
         items: [
           BottomNavigationBarItem(
-              icon: _page == 0 ?const  Icon(
+              icon: _page == 0 ? const  Icon(
                 CupertinoIcons.house_fill, color: blackColor,
               )
-              :const Icon(
+              : const Icon(
                 CupertinoIcons.house,color: secondaryColor,
               ),
               label: '',

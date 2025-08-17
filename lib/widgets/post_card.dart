@@ -249,7 +249,7 @@ class _PostCardState extends State<PostCard> {
         print("null" + img.width.toString());
       }
       if (img.width == 161)
-        return SizedBox(); //TODO these are the images not available anymore on imgur
+        return SizedBox(); //TODO these are the images not available anymore on imgur, return asset image
     }
     //   return SizedBox();
     return child;
@@ -258,6 +258,11 @@ class _PostCardState extends State<PostCard> {
   Widget errorLoadImage(BuildContext context, Object error, StackTrace? stackTrace) {
     // if ((error as SocketException).message == "Network is unreachable")
     //   TODO SHOW TOAST
+    if (error.toString() == "Exception: Invalid image data") {
+      // return Image(image: AssetImage(assetName),)
+      // TODO RETURN ASSET IMAGE
+      return Image(image: NetworkImage("https://i.imgur.com/yhN4cfs.png"));
+    }
     print("object");
     return context.widget;
   }

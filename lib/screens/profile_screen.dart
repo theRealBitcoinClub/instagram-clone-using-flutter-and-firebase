@@ -286,99 +286,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               size: 32, color: activeOrNot(4)))
                     ],
                   ),
-
-                  //posts grid
-
-                  Expanded(
-                    //  child: FutureBuilder(
-                    //                future: FirebaseFirestore.instance.collection('posts').get(),
-                    //                builder: (context, snapshot) {
-                    //                  if (!snapshot.hasData) {
-                    //                    const Center(
-                    //                      child: CircularProgressIndicator(),
-                    //                    );
-                    //                  }
-
-                    //                  return MasonryGridView.builder(
-                    //                      crossAxisSpacing: 4,
-                    //                      mainAxisSpacing: 4,
-                    //                      gridDelegate:
-                    //   const  SliverSimpleGridDelegateWithFixedCrossAxisCount(
-                    //         crossAxisCount: 2),
-                    //                      itemCount: (snapshot.data! as dynamic).docs.length,
-                    //                      itemBuilder: (context, index) {
-                    //   return ClipRRect(
-                    //     child: Image.network((snapshot.data! as dynamic)
-                    //         .docs[index]['postURL']),
-                    //   );
-                    //                      });
-                    //                }
-                    //                ),
-
-                    child: FutureBuilder(
-                        future:
-                        // TODO GET POSTS BY SPECIFIC USER
-                        // FirebaseFirestore.instance
-                        //     .collection('posts')
-                        //     .where('uid', isEqualTo: widget.uid)
-                        //     .get(),
-                        null
-                        ,
-                        builder: (context, snapshot) {
-                          if (true) {
-                          // if (!snapshot.hasData) {
-                            const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          }
-                          return GridView.builder(
-                              shrinkWrap: true,
-                              itemCount:
-                                viewMode == 0 ? MemoModelPost.imgurPosts.length :
-                                viewMode == 1 ? MemoModelPost.ytPosts.length :
-                                viewMode == 2 ? MemoModelPost.tagPosts.length :
-                                viewMode == 3 ? MemoModelPost.urlPosts.length :
-                                viewMode == 4 ? MemoModelPost.topicPosts.length : 0,
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: viewMode == 1 ? 1 : (viewMode == 0 ? 3 : 2),
-                                      crossAxisSpacing: viewMode == 1 ? 1 : (viewMode == 0 ? 1 : 5),
-                                      mainAxisSpacing:  viewMode == 1 ? 1 : (viewMode == 0 ? 1 : 5)
-                                      ),
-                              itemBuilder: (context, index) {
-                                switch (viewMode) {
-                                  case 0:
+                  SizedBox(height: 447, child:
+                        viewMode != 0 ?
+                            ListView.builder(
+                                itemCount:
+                                    viewMode == 1 ? MemoModelPost.ytPosts.length :
+                                    viewMode == 2 ? MemoModelPost.tagPosts.length :
+                                    viewMode == 3 ? MemoModelPost.urlPosts.length :
+                                    viewMode == 4 ? MemoModelPost.topicPosts.length : 0,
+                                itemBuilder: (context, index) {
+                                    switch (viewMode) {
+                                      case 1:
+                                        return YoutubePlayer(
+                                          controller: YoutubePlayerController(
+                                              initialVideoId: MemoModelPost.ytPosts[index].youtubeId!,
+                                              flags: YoutubePlayerFlags(
+                                                hideThumbnail: true,
+                                                hideControls: true,
+                                                mute: false,
+                                                autoPlay: false,
+                                              )),
+                                        );
+                                      case 2:
+                                        return buildTextBox(MemoModelPost.tagPosts, index);
+                                      case 3:
+                                        return buildTextBox(MemoModelPost.urlPosts, index);
+                                      case 4:
+                                        return buildTextBox(MemoModelPost.topicPosts, index);
+                                    }
+                                    return null;
+                                }
+                            )
+                        : GridView.builder(
+                            itemBuilder:  (context, index) {
                                     return Image(image: NetworkImage(MemoModelPost.imgurPosts[index].imgurUrl!),
-                                      fit: BoxFit.cover,
+                                      fit: BoxFit.contain,
                                       errorBuilder: (context, error, stackTrace) => ImgurUtils.errorLoadImage(context, error, stackTrace),
                                       loadingBuilder: (context, child, loadingProgress) => ImgurUtils.loadingImage(context, child, loadingProgress),
-                                    );
-                                  case 1: //TODO DONT USE GRIDVIEW, USE A LIST FOR YT TO HAVE ASPECT RATIO
-                                    return YoutubePlayer(
-                                      controller: YoutubePlayerController(
-                                          initialVideoId: MemoModelPost.ytPosts[index].youtubeId!,
-                                          flags: YoutubePlayerFlags(
-                                            hideThumbnail: true,
-                                            hideControls: true,
-                                            mute: false,
-                                            autoPlay: false,
-                                          )),
-                                    );
-                                  case 2: //TODO FOR TEXT USE LIST TOO ONLY IMAGES MAKE SENSE WITH GRIDVIEW
-                                    return Text(MemoModelPost.tagPosts[index].text!);
-                                  case 3:
-                                    return Text(MemoModelPost.urlPosts[index].text!);
-                                  case 4:
-                                    return Text(MemoModelPost.topicPosts[index].text!);
-                                } //TODO WHAT YA GONNA PRIORITIZE, TOPIC OR IMAGE, TOPIC OR VIDEO, TOPIC MUST BE PRIORITY AS IT OFFERS RESPONSE
-                              });
-                        }),
+                                    );},
+                            itemCount: MemoModelPost.imgurPosts.length,
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3))
                   )
-                ],
-              ),
-            ),
+
+                            //     } //TODO WHAT YA GONNA PRIORITIZE, TOPIC OR IMAGE, TOPIC OR VIDEO, TOPIC MUST BE PRIORITY AS IT OFFERS RESPONSE
+                            //   });
+                      ])
+                  )
           );
   }
+
+  SizedBox buildTextBox(List<MemoModelPost> posts, int index) => SizedBox(height: 100, child: Text(posts[index].text!));
 
   Color activeOrNot(int index) => viewMode == index ? Colors.grey.shade800 : Colors.grey.shade500;
 }

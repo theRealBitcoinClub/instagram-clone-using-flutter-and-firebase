@@ -16,8 +16,8 @@ void main() async {
   // MemoScraperCreator().startScrapeCreators(["/most-actions", "/most-followers"]);
   // TODO IDENTIFY CREATORS PUT THEM INTO THE TOSTORE PACKAGE DB
   // MemoScraperPost().startScrapePosts('posts/new', 100);
-  MemoScraperTag().startScrapeTags(["/most-posts"], 0);
-  https://memo.cash/tags/most-posts?&offset=1025
+  MemoScraperTag().startScrapeTags(["/most-posts"], 25);
+  // https://memo.cash/tags/most-posts?&offset=1025
   //TODO SHOW SOME TUTORIAL STUFF WHILE INITIAL SCRAPING
   //TODO CACHE SCRAPING RESULTS IN LOCAL DATABASE
 

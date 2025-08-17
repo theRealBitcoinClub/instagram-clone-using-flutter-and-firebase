@@ -26,9 +26,9 @@ class MemoScraperTopic {
         MemoModelPost.addToGlobalPostList(postList);
 
         // printMemoModelPost(postList);
-        print("object");
+        // print("object");
       },);
-      print("object");
+      // print("object");
     }
   }
 

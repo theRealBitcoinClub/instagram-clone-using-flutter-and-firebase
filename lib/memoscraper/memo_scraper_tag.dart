@@ -15,7 +15,7 @@ class MemoScraperTag {
         for (MemoModelTag tag in tags) {
           tag.posts.addAll(await MemoScraperPost().startScrapePosts("t/${tag.name}", off));
         }
-        print("object");
+        // print("object");
       }
     }
   }

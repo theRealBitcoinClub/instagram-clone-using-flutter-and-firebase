@@ -32,6 +32,11 @@ class MemoModelPost {
   late final MemoModelTopic? topic;
   final String? age;
   static final List<MemoModelPost> globalPosts = [];
+  static final List<MemoModelPost> ytPosts = [];
+  static final List<MemoModelPost> imgurPosts = [];
+  static final List<MemoModelPost> tagPosts = [];
+  static final List<MemoModelPost> urlPosts = [];
+  static final List<MemoModelPost> topicPosts = [];
 
   static MemoModelPost createDummy() {
     MemoModelUser memoModelUser = MemoModelUser.createDummy();
@@ -58,9 +63,27 @@ class MemoModelPost {
     return memoModelPost;
   }
 
-  static void addToGlobalPostList(List<MemoModelPost> createMemoModelPostList) {
-    globalPosts.addAll(createMemoModelPostList);
+  static void addToGlobalPostList(List<MemoModelPost> posts) {
+    globalPosts.addAll(posts);
 
+    posts.forEach((element) {
+      if (element.imgurUrl != null && element.imgurUrl!.isNotEmpty) {
+        imgurPosts.add(element);
+      } else
+      if (element.youtubeId != null && element.youtubeId!.isNotEmpty) {
+        ytPosts.add(element);
+      } else
+      if (element.hashtags.isNotEmpty) {
+        tagPosts.add(element);
+      } else
+      if (element.urls.isNotEmpty) {
+        urlPosts.add(element);
+      } else
+      if (element.topic != null) {
+        topicPosts.add(element);
+      } else
+      throw Exception("dirty data");
+    },);
   }
 
   //TODO IMPLEMENT EQUALS METHOD, CHECK TX HASH

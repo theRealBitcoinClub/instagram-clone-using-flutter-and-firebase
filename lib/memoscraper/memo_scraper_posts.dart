@@ -131,6 +131,8 @@ class MemoScraperPost {
 
   List<MemoModelPost> createPostList(Map<String, Object> posts) {
     List<MemoModelPost> postList = [];
+    if (posts.values.first.toString().contains("memo.cash"))
+      return [];
 
     for (Map<String, Object> item in posts.values.first as Iterable) {
       if (item["reply"].toString().contains("replied")) {

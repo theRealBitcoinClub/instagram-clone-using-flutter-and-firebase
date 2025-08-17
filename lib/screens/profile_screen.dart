@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
@@ -225,7 +226,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding:
                         EdgeInsets.symmetric(horizontal: 20).copyWith(top: 10),
                     alignment: Alignment.bottomLeft,
-                    child: Text(creator.profileText!),
+                    child: ExpandableText(creator.profileText ?? "",
+                      expandText: 'show more',
+                      collapseText: 'show less',
+                      maxLines: 3,
+                      linkColor: Colors.blue,
+                    ),
                   ),
 
                   new Divider(
@@ -238,29 +244,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                          padding: EdgeInsets.symmetric(horizontal: 30),
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          onPressed: () {setState(() {
+                            viewMode = 0;
+                          });},
+                          icon: Icon(
+                            Icons.image_rounded,
+                            size: 32,
+                            color: activeOrNot(0),
+                          )),
+                      IconButton(
+                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                           onPressed: () {setState(() {
                             viewMode = 1;
                           });},
                           icon: Icon(
-                            Icons.photo,
-                            size: 30,
-                            color: Colors.grey.shade600,
+                            Icons.video_library_rounded,
+                            size: 32,
+                            color: activeOrNot(1),
                           )),
                       IconButton(
-                          padding: EdgeInsets.symmetric(horizontal: 30),
+                          padding: EdgeInsets.symmetric(horizontal: 20),
                           onPressed: () {setState(() {
                             viewMode = 2;
                           });},
-                          icon: Icon(Icons.video_library,
-                              size: 30, color: Colors.grey.shade600)),
+                          icon: Icon(Icons.tag_rounded,
+                              size: 32, color : activeOrNot(2))),
                       IconButton(
-                          padding: EdgeInsets.symmetric(horizontal: 30),
+                          padding: EdgeInsets.symmetric(horizontal: 20),
                           onPressed: () {setState(() {
                             viewMode = 3;
                           });},
-                          icon: Icon(Icons.format_color_text,
-                              size: 30, color: Colors.grey.shade600))
+                          icon: Icon(Icons.format_color_text_rounded,
+                              size: 32, color: activeOrNot(3))),
+                      IconButton(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          onPressed: () {setState(() {
+                            viewMode = 4;
+                          });},
+                          icon: Icon(Icons.topic,
+                              size: 32, color: activeOrNot(4)))
                     ],
                   ),
 
@@ -310,43 +333,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           }
                           return GridView.builder(
                               shrinkWrap: true,
-                              itemCount:MemoModelPost.globalPosts.length,
+                              itemCount:
+                                viewMode == 0 ? MemoModelPost.imgurPosts.length :
+                                viewMode == 1 ? MemoModelPost.ytPosts.length :
+                                viewMode == 2 ? MemoModelPost.tagPosts.length :
+                                viewMode == 3 ? MemoModelPost.urlPosts.length :
+                                viewMode == 4 ? MemoModelPost.topicPosts.length : 0,
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 3,
-                                      crossAxisSpacing: 3,
-                                      mainAxisSpacing: 3
+                                      crossAxisCount: viewMode == 1 ? 1 : (viewMode == 0 ? 3 : 2),
+                                      crossAxisSpacing: viewMode == 1 ? 1 : (viewMode == 0 ? 1 : 5),
+                                      mainAxisSpacing:  viewMode == 1 ? 1 : (viewMode == 0 ? 1 : 5)
                                       ),
                               itemBuilder: (context, index) {
-                                return Container(
-                                    child: ((viewMode == 0 || viewMode == 2) && MemoModelPost.globalPosts[index].youtubeId != null)
-                                        ? YoutubePlayer(
-                                            controller: YoutubePlayerController(
-                                              initialVideoId: MemoModelPost.globalPosts[index].youtubeId!,
-                                              flags: YoutubePlayerFlags(
-                                                hideThumbnail: true,
-                                                hideControls: true,
-                                                mute: false,
-                                                autoPlay: false,
-                                              ),
-                                            ),
-                                          showVideoProgressIndicator: true,
-                                          onReady: () {
-                                            // print('Player is ready.');
-                                            },
-                                          )
-                                        : MemoModelPost.globalPosts[index].imgurUrl != null
-                                          && (viewMode == 0 || viewMode == 1)
-                                        ? Image(image: NetworkImage(MemoModelPost.globalPosts[index].imgurUrl!),
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (context, error, stackTrace) => ImgurUtils.errorLoadImage(context, error, stackTrace),
-                                                  loadingBuilder: (context, child, loadingProgress) => ImgurUtils.loadingImage(context, child, loadingProgress),
-                                          )
-                                          : (viewMode == 0 || viewMode == 3)
-                                            && MemoModelPost.globalPosts[index].text != null
-                                            && MemoModelPost.globalPosts[index].text!.isNotEmpty
-                                            ? Text(MemoModelPost.globalPosts[index].text!) : SizedBox()
-                                );
+                                switch (viewMode) {
+                                  case 0:
+                                    return Image(image: NetworkImage(MemoModelPost.imgurPosts[index].imgurUrl!),
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) => ImgurUtils.errorLoadImage(context, error, stackTrace),
+                                      loadingBuilder: (context, child, loadingProgress) => ImgurUtils.loadingImage(context, child, loadingProgress),
+                                    );
+                                  case 1: //TODO DONT USE GRIDVIEW, USE A LIST FOR YT TO HAVE ASPECT RATIO
+                                    return YoutubePlayer(
+                                      controller: YoutubePlayerController(
+                                          initialVideoId: MemoModelPost.ytPosts[index].youtubeId!,
+                                          flags: YoutubePlayerFlags(
+                                            hideThumbnail: true,
+                                            hideControls: true,
+                                            mute: false,
+                                            autoPlay: false,
+                                          )),
+                                    );
+                                  case 2: //TODO FOR TEXT USE LIST TOO ONLY IMAGES MAKE SENSE WITH GRIDVIEW
+                                    return Text(MemoModelPost.tagPosts[index].text!);
+                                  case 3:
+                                    return Text(MemoModelPost.urlPosts[index].text!);
+                                  case 4:
+                                    return Text(MemoModelPost.topicPosts[index].text!);
+                                } //TODO WHAT YA GONNA PRIORITIZE, TOPIC OR IMAGE, TOPIC OR VIDEO, TOPIC MUST BE PRIORITY AS IT OFFERS RESPONSE
                               });
                         }),
                   )
@@ -355,4 +379,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           );
   }
+
+  Color activeOrNot(int index) => viewMode == index ? Colors.grey.shade800 : Colors.grey.shade500;
 }

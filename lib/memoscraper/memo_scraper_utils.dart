@@ -64,7 +64,7 @@ class MemoScraperUtil {
     if (text == null || text.isEmpty)
       return [];
 
-    Iterable<RegExpMatch> matches = RegExp("[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)", caseSensitive: false).allMatches(text);
+    Iterable<RegExpMatch> matches = RegExp(r'/(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)', caseSensitive: false).allMatches(text);
     return convertRegExpMatchesToList(matches);
   }
 
@@ -72,7 +72,7 @@ class MemoScraperUtil {
     if (text == null || text.isEmpty)
       return [];
 
-    Iterable<RegExpMatch> matches = RegExp("/(?:\s|^)(?:#(?!(?:\d+|\w+?_|_\w*?)(?:\s|\$)))(\w+)(?=\s|\$)/gm", caseSensitive: false).allMatches(text);
+    Iterable<RegExpMatch> matches = RegExp(r'(?:\s|^)(?:#(?!(?:\d+|\w+?_|_\w*?)(?:\s|$)))(\w+)(?=\s|$)', caseSensitive: false).allMatches(text);
     return convertRegExpMatchesToList(matches);
   }
 
@@ -81,9 +81,10 @@ class MemoScraperUtil {
       return [];
     
     List<String> results = [];
-    matches.forEach((element) {
-      results.add(element.toString());
-    },);
+    for (var element in matches) {
+      String match = element.input.substring(element.start, element.end);
+      results.add(match);
+    }
     return results;
   }
 

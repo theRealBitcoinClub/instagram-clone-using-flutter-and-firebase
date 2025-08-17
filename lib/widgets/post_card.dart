@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_clone1/utils/imgur_utils.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/like_animtion.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -162,8 +163,8 @@ class _PostCardState extends State<PostCard> {
                       Image(
                               image: NetworkImage(post.imgurUrl == null ? "https://i.imgur.com/yhN4cfs.png" : post.imgurUrl!),
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => errorLoadImage(context, error, stackTrace),
-                              loadingBuilder: (context, child, loadingProgress) => loadingImage(context, child, loadingProgress),
+                              errorBuilder: (context, error, stackTrace) => ImgurUtils.errorLoadImage(context, error, stackTrace),
+                              loadingBuilder: (context, child, loadingProgress) => ImgurUtils.loadingImage(context, child, loadingProgress),
                             )
                       )
                     , //TODO HANDLE TEXT ONLY AND HANDLE TOPICS SO PEOPLE CAN REPLY
@@ -232,39 +233,6 @@ class _PostCardState extends State<PostCard> {
 
   void onReplyTopic(String s) {
 
-  }
-
-  Widget loadingImage(BuildContext context, Widget? child, ImageChunkEvent? loadingProgress) {
-    if (child == null)
-      print("NULLLL");
-    print("object");
-    var x = ((child as Semantics).child as RawImage).image;
-    if (x == null)
-      print("img null");
-    else {
-      ui.Image img = x as ui.Image;
-      if (loadingProgress != null) {
-        print("notnull" + img.width.toString());
-      } else {
-        print("null" + img.width.toString());
-      }
-      if (img.width == 161)
-        return SizedBox(); //TODO these are the images not available anymore on imgur, return asset image
-    }
-    //   return SizedBox();
-    return child;
-  }
-
-  Widget errorLoadImage(BuildContext context, Object error, StackTrace? stackTrace) {
-    // if ((error as SocketException).message == "Network is unreachable")
-    //   TODO SHOW TOAST
-    if (error.toString() == "Exception: Invalid image data") {
-      // return Image(image: AssetImage(assetName),)
-      // TODO RETURN ASSET IMAGE
-      return Image(image: NetworkImage("https://i.imgur.com/yhN4cfs.png"));
-    }
-    print("object");
-    return context.widget;
   }
 
   // onErrorLoadImage(error) {

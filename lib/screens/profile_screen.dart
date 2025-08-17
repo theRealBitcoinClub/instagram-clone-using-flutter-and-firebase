@@ -7,6 +7,8 @@ import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/profile_buttons.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
+import '../utils/imgur_utils.dart';
+
 class ProfileScreen extends StatefulWidget {
   final String uid;
   const ProfileScreen({Key? key, required this.uid}) : super(key: key);
@@ -337,6 +339,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           && (viewMode == 0 || viewMode == 1)
                                         ? Image(image: NetworkImage(MemoModelPost.globalPosts[index].imgurUrl!),
                                                   fit: BoxFit.cover,
+                                                  errorBuilder: (context, error, stackTrace) => ImgurUtils.errorLoadImage(context, error, stackTrace),
+                                                  loadingBuilder: (context, child, loadingProgress) => ImgurUtils.loadingImage(context, child, loadingProgress),
                                           )
                                           : (viewMode == 0 || viewMode == 3)
                                             && MemoModelPost.globalPosts[index].text != null

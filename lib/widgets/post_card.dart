@@ -308,17 +308,20 @@ class _PostCardState extends State<PostCard> {
   }
 
   void onSend() {
-    if (hasSelectedTopic)
+    if (hasSelectedTopic) {
       onReplyTopic();
+    }
   }
 
   void onSelectTopic() {
     setState(() {
       hasSelectedTopic = !hasSelectedTopic;
 
-      if (hasSelectedTags || hasSelectedTopic)
+      if (hasSelectedTags || hasSelectedTopic) {
         showInput = true;
-      else showInput = false;
+      } else {
+        showInput = false;
+      }
     });
 
   }
@@ -331,7 +334,7 @@ class _PostCardState extends State<PostCard> {
         } else if (MemoScraperUtil.extractHashtags(value).contains(post.hashtags[run])) {
           selectedHashtags[run] = true;
         }
-      } //TODO contains is not enough it must RegExp match because otherwise the spaces are ignored
+      }
 
       bool inputContainsHashtag = false;
       if (value.isNotEmpty) {
@@ -394,8 +397,6 @@ class _PostCardState extends State<PostCard> {
       } else {
         showSend = true;
       }
-
-      //TODO CHECK iF USER HAS WRITTEN MORE THAN THE TAGS AND SHOW
     });
   }
 

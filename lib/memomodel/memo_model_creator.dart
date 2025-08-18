@@ -21,6 +21,7 @@ class MemoModelCreator {
   final int? actions;
   List<MemoModelPost> posts = [];
 
+  //TODO SOME PROFILEIMAGES ARE LOADED WITH WRONG ID
   String profileImage() {
     return "https://memo.cash/img/profilepics/${id}-128x128.jpg";
   }

@@ -32,7 +32,8 @@ class _PostCardState extends State<PostCard> {
   bool hasSelectedTopic = false;
   TextEditingController textEdit=TextEditingController();
   List<bool> selectedHashtags = [false, false, false];
-  int max_tags_counter = 3;
+  final int maxTagsCounter = 3;
+  final int minTextLength = 20;
 
   _PostCardState(this.post);
 
@@ -243,10 +244,10 @@ class _PostCardState extends State<PostCard> {
                                         elevation: WidgetStatePropertyAll(5)),
                                     onPressed: () => onSend(),
                                     child: Text(hasSelectedTags && hasSelectedTopic
-                                                  ? "Post with Hashtags"
+                                                  ? "Topic reply with hashtags"
                                                     : hasSelectedTopic
                                                     ? "Reply to Topic"
-                                                      : "")
+                                                      : "Post with hashtags")
                                 )])
                           : SizedBox()
                     ,  post.topic != null
@@ -258,9 +259,9 @@ class _PostCardState extends State<PostCard> {
                                       onChanged: (value) { onSelectTopic(); },)
                               ],)
                           : SizedBox()
-                    ,  post.hashtags.isNotEmpty //TODO SHOW MAX THREE HASHTAGS AND MAX ONE URL IN THE TEXT ITSELF
+                    ,  post.hashtags.isNotEmpty
                         ? Column(children:
-                      List<Widget>.generate(post.hashtags.length > max_tags_counter ? max_tags_counter : post.hashtags.length, (index) {
+                      List<Widget>.generate(post.hashtags.length > maxTagsCounter ? maxTagsCounter : post.hashtags.length, (index) {
                         return  Row(children: [
                           GestureDetector(
                             onTap: () {
@@ -287,7 +288,7 @@ class _PostCardState extends State<PostCard> {
                     // ,
                           // (post.hashtags.isNotEmpty ? post.hashtags.forEach((element) {
                           // TextButton(onPressed: () => onHashTag(element)
-                          // ,child: Text(element)) //TODO SHOW BUTTON FOR EACH HASHTAG IN TEXT OR MAKE THE TEXT CLICKABLE ?
+                          // ,child: Text(element))
                         // }) : SizedBox())])
                   ],
                 ),
@@ -295,10 +296,6 @@ class _PostCardState extends State<PostCard> {
         )
       ]),
     );
-  }
-
-  void onReplyTopic() {
-
   }
 
   onClickCreatorName(String id) {
@@ -310,6 +307,8 @@ class _PostCardState extends State<PostCard> {
   void onSend() {
     if (hasSelectedTopic) {
       onReplyTopic();
+    } else {
+      onPostWithHashtags();
     }
   }
 
@@ -328,8 +327,8 @@ class _PostCardState extends State<PostCard> {
 
   void onInputText(String value) {
     setState(() {
-      for (int run = 0; run < max_tags_counter; run++) {
-        if (selectedHashtags[run] && !value.contains(post.hashtags[run])) {
+      for (int run = 0; run < maxTagsCounter && post.hashtags.length != run; run++) {
+        if (selectedHashtags[run] && !MemoScraperUtil.extractHashtags(value).contains(post.hashtags[run])) {
           selectedHashtags[run] = false;
         } else if (MemoScraperUtil.extractHashtags(value).contains(post.hashtags[run])) {
           selectedHashtags[run] = true;
@@ -338,16 +337,16 @@ class _PostCardState extends State<PostCard> {
 
       bool inputContainsHashtag = false;
       if (value.isNotEmpty) {
-        String tempValue = value;
+        String textWithoutHashtags = value;
 
         for (String tag in post.hashtags) {
-          tempValue = tempValue.replaceAll(tag, "").trim();
+          textWithoutHashtags = textWithoutHashtags.replaceAll(tag, "").trim();
           if (MemoScraperUtil.extractHashtags(value).contains(tag)) {
             inputContainsHashtag = true;
           }
         }
 
-        if (tempValue.isNotEmpty && tempValue.length > 20) {
+        if (textWithoutHashtags.length > minTextLength) {
           showSend = true;
           if (!inputContainsHashtag && !hasSelectedTopic) {
             showSend = false;
@@ -363,6 +362,7 @@ class _PostCardState extends State<PostCard> {
   }
 
   onSelectHashtag(int index) {
+    //TODO CHECK OVERALL TEXT LENGTH DOESNT EXCEED MAX
     setState(()
     {
       bool inputContainsHashtag = false;
@@ -375,6 +375,9 @@ class _PostCardState extends State<PostCard> {
       hasSelectedTags = false;
       int run = 0;
       for (bool t in selectedHashtags) {
+        if(post.hashtags.length == run)
+          continue;
+
         var hashtag = post.hashtags[run];
         if (t) {
           hasSelectedTags = true;
@@ -392,12 +395,27 @@ class _PostCardState extends State<PostCard> {
         showInput = false;
       }
 
+      String textWithoutHashtags = textEdit.text;
+
+      for (String tag in post.hashtags) {
+        textWithoutHashtags = textWithoutHashtags.replaceAll(tag, "").trim();
+      }
+
       if (!inputContainsHashtag && !hasSelectedTopic) {
         showSend = false;
-      } else {
+      } else if (textWithoutHashtags.length > minTextLength){
         showSend = true;
       }
     });
+  }
+
+  void onReplyTopic() {
+    MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.topicMessage, memoTopic: post.topic!.header!);
+    //TODO hide on success
+  }
+
+  void onPostWithHashtags() {
+    MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.profileMessage);
   }
 
   // onErrorLoadImage(error) {

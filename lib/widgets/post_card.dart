@@ -7,6 +7,7 @@ import 'package:instagram_clone1/screens/profile_screen.dart';
 import 'package:instagram_clone1/utils/imgur_utils.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/like_animtion.dart';
+import 'package:instagram_clone1/widgets/textfield_input.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
@@ -24,6 +25,10 @@ class PostCard extends StatefulWidget {
 class _PostCardState extends State<PostCard> {
   bool isAnimating = false;
   MemoModelPost post;
+  bool showInput = false;
+  bool showSend = false;
+  bool hasSelectedTags = false;
+  bool hasSelectedTopic = false;
 
   _PostCardState(this.post);
 
@@ -223,14 +228,38 @@ class _PostCardState extends State<PostCard> {
                       expandText: 'show more',
                       collapseText: 'show less',
                       maxLines: 5,
-                      linkColor: Colors.blue,
-                    ), Row(children: [(post.topic != null ?
-                    TextButton(onPressed: () => onReplyTopic(post.topic!.url!), child: Text(post.topic!.header!))
-                        : SizedBox())]),
-                      // (post.hashtags.isNotEmpty ? post.hashtags.forEach((element) {
-                      // TextButton(onPressed: () => onHashTag(element)
-                      // ,child: Text(element)) //TODO SHOW BUTTON FOR EACH HASHTAG IN TEXT OR MAKE THE TEXT CLICKABLE ?
-                    // }) : SizedBox())])
+                      linkColor: Colors.blue,)
+                    , showInput
+                        ? TextField(onChanged: (value) => onInputText(value)) : SizedBox()
+                    ,  showSend
+                          ? Row(children: [
+                                TextButton(
+                                    style: ButtonStyle(
+                                      backgroundColor: WidgetStatePropertyAll(Colors.green),
+                                        elevation: WidgetStatePropertyAll(5)),
+                                    onPressed: () => onSend(),
+                                    child: Text(hasSelectedTags
+                                                  ? "Post with Hashtags"
+                                                    : hasSelectedTopic
+                                                    ? "Reply to Topic"
+                                                      : "")
+                                )])
+                          : SizedBox()
+                    ,  post.topic != null
+                          ?  Row(children: [
+                              Row(children: [
+                                Text(post.topic!.header!),
+                                 Checkbox(
+                                  value: hasSelectedTopic,
+                                  onChanged: (value) => onSelectTopic(),)
+                                ])
+                              ],)
+                          : SizedBox()
+                    // ,
+                          // (post.hashtags.isNotEmpty ? post.hashtags.forEach((element) {
+                          // TextButton(onPressed: () => onHashTag(element)
+                          // ,child: Text(element)) //TODO SHOW BUTTON FOR EACH HASHTAG IN TEXT OR MAKE THE TEXT CLICKABLE ?
+                        // }) : SizedBox())])
                   ],
                 ),
           ]),
@@ -239,7 +268,7 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  void onReplyTopic(String s) {
+  void onReplyTopic() {
 
   }
 
@@ -247,6 +276,33 @@ class _PostCardState extends State<PostCard> {
     // Navigator.of(context).push(
     //   MaterialPageRoute(builder: (context) => ProfileScreen(uid: id)),
     // );
+  }
+
+  void onSend() {
+    if (hasSelectedTopic)
+      onReplyTopic();
+  }
+
+  void onSelectTopic() {
+    setState(() {
+      hasSelectedTopic = !hasSelectedTopic;
+
+      if (hasSelectedTopic) {
+        showInput = true;
+      }
+    });
+
+  }
+
+  void onInputText(String value) {
+    if (value.isNotEmpty) {
+      setState(() {
+        showSend = true;
+      });
+    } else
+      setState(() {
+        showSend = false;
+      });
   }
 
   // onErrorLoadImage(error) {

@@ -1,5 +1,8 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_clone1/memoscraper/memo_code.dart';
+import 'package:instagram_clone1/memoscraper/memo_publisher.dart';
+import 'package:instagram_clone1/memoscraper/memo_transformation.dart';
 import 'package:instagram_clone1/screens/profile_screen.dart';
 import 'package:instagram_clone1/utils/imgur_utils.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
@@ -118,6 +121,7 @@ class _PostCardState extends State<PostCard> {
         ),
         GestureDetector(
           onDoubleTap: () async {
+            MemoPublisher().doMemoAction(MemoTransformation.reOrderTxHash(post.txHash!), MemoCode.postLike);
             // TODO TIP POST WITH STANDARD TIP
             // FireStoreMethods().likePost(widget.snap['postId'],
             //     user.uid, widget.snap['likes']);

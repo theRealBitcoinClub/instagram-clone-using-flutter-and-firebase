@@ -11,12 +11,14 @@ void main() async {
   // await Firebase.initializeApp(
   //   options: DefaultFirebaseOptions.currentPlatform
   // );
+  final String cacheId = "250818";
   //TODO SCRAPE MEMO, FILL LOCAL MEMORY DATABASE
-  MemoScraperTopic().startScrapeTopics();
+  MemoScraperTopic().startScrapeTopics(cacheId);
   // MemoScraperCreator().startScrapeCreators(["/most-actions", "/most-followers"]);
   // TODO IDENTIFY CREATORS PUT THEM INTO THE TOSTORE PACKAGE DB
-  MemoScraperPost().startScrapePosts('posts/new', 100);
-  MemoScraperTag().startScrapeTags(["/most-posts"], 25);
+  MemoScraperPost().startScrapePosts('posts/new', 100, cacheId);
+  // MemoScraperTag().startScrapeTags(["/most-posts"], 25);
+  MemoScraperTag().startScrapeTags(["/recent"], 25, cacheId);
   // https://memo.cash/tags/most-posts?&offset=1025
   //TODO SHOW SOME TUTORIAL STUFF WHILE INITIAL SCRAPING
   //TODO CACHE SCRAPING RESULTS IN LOCAL DATABASE

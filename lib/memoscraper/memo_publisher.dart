@@ -63,7 +63,7 @@ class MemoPublisher {
   }
 
   Future<String> doMemoAction(String memoMessage, MemoCode memoAction,
-      {String memoTopic = "", String? wif}) async {
+      {String memoTopic = "", String? wif, String? tipReceiver, int? tipAmount}) async {
     print("\n${memoAction.opCode}\n${memoAction.name}");
     final service = await ElectrumWebSocketService.connect(
         "wss://${mainnetServers[2]}:50004");
@@ -80,6 +80,14 @@ class MemoPublisher {
 
     final BitcoinCashAddress p2pkhAddress =
     BitcoinCashAddress.fromBaseAddress(publicKey.toAddress());
+
+    final BitcoinCashAddress receiver = BitcoinCashAddress("bitcoincash:qzdvxd4xexu2dzal0kdn08sfatnygwvkk55v8gp7qy");
+    // final BitcoinCashAddress receiver2 = BitcoinCashAddress("bitcoincash:" + tipReceiver!);
+    // var test = P2pkAddress(publicKey: tipReceiver!).toAddress(network);
+
+    // BitcoinCashAddress.fromBaseAddress(.fromAddress(address: tipReceiver!, network: BitcoinCashNetwork.mainnet));
+
+    // final BitcoinCashAddress tipReceiver = BitcoinCashAddress.fromBaseAddress(address)
 
     print("https://bchblockexplorer.com/address/${p2pkhAddress.address}");
 
@@ -105,7 +113,7 @@ class MemoPublisher {
         memoMessage,
         memoAction,
         privateKey,
-        memoTopic: memoTopic);
+        memoTopic: memoTopic, receiver: receiver);
 
     print(tx.txId());
     print("http://memo.cash/explore/tx/${tx.txId()}");
@@ -125,7 +133,7 @@ class MemoPublisher {
   BtcTransaction createTransaction(BitcoinCashAddress p2pkhAddress,
       BigInt walletBalance, BigInt fee, BitcoinCashNetwork network,
       List<UtxoWithAddress> utxos, String memoMessage, MemoCode memoAction,
-      ECPrivate privateKey, {String memoTopic = ""}) {
+      ECPrivate privateKey, {String memoTopic = "", BitcoinCashAddress? receiver}) {
     final MemoTransactionBuilder txBuilder = createTransactionBuilder(
         p2pkhAddress,
         walletBalance,
@@ -134,7 +142,7 @@ class MemoPublisher {
         utxos,
         memoMessage,
         memoAction,
-        memoTopic);
+        memoTopic, receiver);
     final tx =
     txBuilder.buildTransaction((trDigest, utxo, publicKey, sighash) {
       return privateKey.signECDSA(trDigest, sighash: sighash);
@@ -145,13 +153,19 @@ class MemoPublisher {
   MemoTransactionBuilder createTransactionBuilder(
       BitcoinCashAddress p2pkhAddress, BigInt walletBalance, BigInt fee,
       BitcoinCashNetwork network, List<UtxoWithAddress> utxos,
-      String memoMessage, MemoCode memoAction, String memoTopic) {
+      String memoMessage, MemoCode memoAction, String memoTopic, BitcoinCashAddress? receiver) {
+
+    final BigInt tip = BtcUtils.toSatoshi("0.00001");
+    BigInt outputHome = walletBalance - fee;
+    if (receiver != null) {
+      outputHome = outputHome - tip;
+    }
+
     final txBuilder = MemoTransactionBuilder(
         outPuts: [
           BitcoinOutput(
             address: p2pkhAddress.baseAddress,
-            value: walletBalance -
-                fee,
+            value: outputHome,
           )
         ],
         fee: fee,
@@ -161,6 +175,10 @@ class MemoPublisher {
         memoCode: memoAction,
         memoTopic: memoTopic
     );
+
+    if (receiver != null)
+      txBuilder.outPuts.add(BitcoinOutput(address: receiver!.baseAddress, value: tip));
+
     return txBuilder;
   }
 

@@ -131,7 +131,7 @@ class _PostCardState extends State<PostCard> {
         ),
         GestureDetector(
           onDoubleTap: () async {
-            MemoPublisher().doMemoAction(MemoTransformation.reOrderTxHash(post.txHash!), MemoCode.postLike);
+            MemoPublisher().doMemoAction(MemoTransformation.reOrderTxHash(post.txHash!), MemoCode.postLike, tipReceiver: post.creator!.id!, tipAmount: 1111);
             // TODO TIP POST WITH STANDARD TIP
             // FireStoreMethods().likePost(widget.snap['postId'],
             //     user.uid, widget.snap['likes']);

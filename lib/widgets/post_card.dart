@@ -2,6 +2,7 @@ import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memoscraper/memo_code.dart';
 import 'package:instagram_clone1/memoscraper/memo_publisher.dart';
+import 'package:instagram_clone1/memoscraper/memo_scraper_utils.dart';
 import 'package:instagram_clone1/memoscraper/memo_transformation.dart';
 import 'package:instagram_clone1/screens/profile_screen.dart';
 import 'package:instagram_clone1/utils/imgur_utils.dart';
@@ -325,10 +326,11 @@ class _PostCardState extends State<PostCard> {
   void onInputText(String value) {
     setState(() {
       for (int run = 0; run < max_tags_counter; run++) {
-        if (selectedHashtags[run] && !textEdit.text.contains(post.hashtags[run])) {
+        if (selectedHashtags[run] && !value.contains(post.hashtags[run])) {
           selectedHashtags[run] = false;
-        } else if (textEdit.text.contains(post.hashtags[run]))
+        } else if (MemoScraperUtil.extractHashtags(value).contains(post.hashtags[run])) {
           selectedHashtags[run] = true;
+        }
       } //TODO contains is not enough it must RegExp match because otherwise the spaces are ignored
 
       bool inputContainsHashtag = false;
@@ -337,7 +339,7 @@ class _PostCardState extends State<PostCard> {
 
         for (String tag in post.hashtags) {
           tempValue = tempValue.replaceAll(tag, "").trim();
-          if (value.contains(tag)) {
+          if (MemoScraperUtil.extractHashtags(value).contains(tag)) {
             inputContainsHashtag = true;
           }
         }
@@ -346,8 +348,9 @@ class _PostCardState extends State<PostCard> {
           showSend = true;
           if (!inputContainsHashtag && !hasSelectedTopic) {
             showSend = false;
-          } else
+          } else {
             showSend = true;
+          }
         } else
           showSend = false;
       } else {
@@ -372,22 +375,25 @@ class _PostCardState extends State<PostCard> {
         var hashtag = post.hashtags[run];
         if (t) {
           hasSelectedTags = true;
-          textEdit.text += " ${hashtag}";
+          textEdit.text += " $hashtag";
         }
-        if (textEdit.text.contains(hashtag)) {
+        if (MemoScraperUtil.extractHashtags(textEdit.text).contains(post.hashtags[run])) {
           inputContainsHashtag = true;
         }
         run++;
       }
 
-      if (hasSelectedTags || hasSelectedTopic)
+      if (hasSelectedTags || hasSelectedTopic) {
         showInput = true;
-      else showInput = false;
+      } else {
+        showInput = false;
+      }
 
       if (!inputContainsHashtag && !hasSelectedTopic) {
         showSend = false;
-      } else
+      } else {
         showSend = true;
+      }
 
       //TODO CHECK iF USER HAS WRITTEN MORE THAN THE TAGS AND SHOW
     });

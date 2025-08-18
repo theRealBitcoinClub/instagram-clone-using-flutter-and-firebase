@@ -31,6 +31,7 @@ class _PostCardState extends State<PostCard> {
   bool hasSelectedTopic = false;
   TextEditingController textEdit=TextEditingController();
   List<bool> selectedHashtags = [false, false, false];
+  int max_tags_counter = 3;
 
   _PostCardState(this.post);
 
@@ -240,7 +241,7 @@ class _PostCardState extends State<PostCard> {
                                       backgroundColor: WidgetStatePropertyAll(Colors.green),
                                         elevation: WidgetStatePropertyAll(5)),
                                     onPressed: () => onSend(),
-                                    child: Text(hasSelectedTags
+                                    child: Text(hasSelectedTags && hasSelectedTopic
                                                   ? "Post with Hashtags"
                                                     : hasSelectedTopic
                                                     ? "Reply to Topic"
@@ -249,22 +250,26 @@ class _PostCardState extends State<PostCard> {
                           : SizedBox()
                     ,  post.topic != null
                           ?  Row(children: [
-                                  GestureDetector(onTap: () => onSelectTopic(), child:
+                                  GestureDetector(onTap: () { onSelectTopic(); }, child:
                                     Text("TOPIC: ${post.topic!.header!}")),
                                       Checkbox(
                                       value: hasSelectedTopic,
-                                      onChanged: (value) => onSelectTopic(),)
+                                      onChanged: (value) { onSelectTopic(); },)
                               ],)
                           : SizedBox()
                     ,  post.hashtags.isNotEmpty //TODO SHOW MAX THREE HASHTAGS AND MAX ONE URL IN THE TEXT ITSELF
-                        ? Row(children:
-                      List<Widget>.generate(post.hashtags.length > 3 ? 3 : post.hashtags.length, (index) {
-                        return GestureDetector(
+                        ? Column(children:
+                      List<Widget>.generate(post.hashtags.length > max_tags_counter ? max_tags_counter : post.hashtags.length, (index) {
+                        return  Row(children: [
+                          GestureDetector(
                             onTap: () {
                               onSelectHashtag(index);
                             },
                             child: Text(style: TextStyle(backgroundColor: index % 2 == 0
-                                ? Colors.grey.shade400 : Colors.grey.shade300), post.hashtags[index]));
+                                ? Colors.grey.shade400 : Colors.grey.shade300), post.hashtags[index]))
+                        , Checkbox(value: selectedHashtags[index], onChanged: (value) {
+                            onSelectHashtag(index);
+                        },)]);
                       })
                             )
                         : SizedBox()
@@ -310,33 +315,80 @@ class _PostCardState extends State<PostCard> {
     setState(() {
       hasSelectedTopic = !hasSelectedTopic;
 
-      if (hasSelectedTopic) {
+      if (hasSelectedTags || hasSelectedTopic)
         showInput = true;
-      }
+      else showInput = false;
     });
 
   }
 
   void onInputText(String value) {
-    if (value.isNotEmpty) {
-      setState(() {
-        showSend = true;
-      });
-    } else
-      setState(() {
+    setState(() {
+      for (int run = 0; run < max_tags_counter; run++) {
+        if (selectedHashtags[run] && !textEdit.text.contains(post.hashtags[run])) {
+          selectedHashtags[run] = false;
+        } else if (textEdit.text.contains(post.hashtags[run]))
+          selectedHashtags[run] = true;
+      } //TODO contains is not enough it must RegExp match because otherwise the spaces are ignored
+
+      bool inputContainsHashtag = false;
+      if (value.isNotEmpty) {
+        String tempValue = value;
+
+        for (String tag in post.hashtags) {
+          tempValue = tempValue.replaceAll(tag, "").trim();
+          if (value.contains(tag)) {
+            inputContainsHashtag = true;
+          }
+        }
+
+        if (tempValue.isNotEmpty && tempValue.length > 20) {
+          showSend = true;
+          if (!inputContainsHashtag && !hasSelectedTopic) {
+            showSend = false;
+          } else
+            showSend = true;
+        } else
+          showSend = false;
+      } else {
         showSend = false;
-      });
+      }
+    });
   }
 
   onSelectHashtag(int index) {
     setState(()
     {
-      String hashtag = post.hashtags[index];
-      if (!textEdit.text.contains(hashtag))
-        textEdit.text += hashtag;
-      if (!hasSelectedTopic)
-        hasSelectedTags = true;
-      showInput = true;
+      bool inputContainsHashtag = false;
+      selectedHashtags[index] = !selectedHashtags[index];
+
+      for (String t in post.hashtags) {
+        textEdit.text = textEdit.text.replaceAll(t, "").trim();
+      }
+
+      hasSelectedTags = false;
+      int run = 0;
+      for (bool t in selectedHashtags) {
+        var hashtag = post.hashtags[run];
+        if (t) {
+          hasSelectedTags = true;
+          textEdit.text += " ${hashtag}";
+        }
+        if (textEdit.text.contains(hashtag)) {
+          inputContainsHashtag = true;
+        }
+        run++;
+      }
+
+      if (hasSelectedTags || hasSelectedTopic)
+        showInput = true;
+      else showInput = false;
+
+      if (!inputContainsHashtag && !hasSelectedTopic) {
+        showSend = false;
+      } else
+        showSend = true;
+
       //TODO CHECK iF USER HAS WRITTEN MORE THAN THE TAGS AND SHOW
     });
   }

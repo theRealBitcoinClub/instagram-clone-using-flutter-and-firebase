@@ -83,7 +83,7 @@ class MemoScraperUtil {
     List<String> results = [];
     for (var element in matches) {
       String match = element.input.substring(element.start, element.end);
-      results.add(match);
+      results.add(match.trim());
     }
     return results;
   }

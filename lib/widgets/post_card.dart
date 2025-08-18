@@ -29,6 +29,8 @@ class _PostCardState extends State<PostCard> {
   bool showSend = false;
   bool hasSelectedTags = false;
   bool hasSelectedTopic = false;
+  TextEditingController textEdit=TextEditingController();
+  List<bool> selectedHashtags = [false, false, false];
 
   _PostCardState(this.post);
 
@@ -230,7 +232,7 @@ class _PostCardState extends State<PostCard> {
                       maxLines: 5,
                       linkColor: Colors.blue,)
                     , showInput
-                        ? TextField(onChanged: (value) => onInputText(value)) : SizedBox()
+                        ? TextField(controller: textEdit, onChanged: (value) => onInputText(value)) : SizedBox()
                     ,  showSend
                           ? Row(children: [
                                 TextButton(
@@ -247,14 +249,35 @@ class _PostCardState extends State<PostCard> {
                           : SizedBox()
                     ,  post.topic != null
                           ?  Row(children: [
-                              Row(children: [
-                                Text(post.topic!.header!),
-                                 Checkbox(
-                                  value: hasSelectedTopic,
-                                  onChanged: (value) => onSelectTopic(),)
-                                ])
+                                  GestureDetector(onTap: () => onSelectTopic(), child:
+                                    Text("TOPIC: ${post.topic!.header!}")),
+                                      Checkbox(
+                                      value: hasSelectedTopic,
+                                      onChanged: (value) => onSelectTopic(),)
                               ],)
                           : SizedBox()
+                    ,  post.hashtags.isNotEmpty //TODO SHOW MAX THREE HASHTAGS AND MAX ONE URL IN THE TEXT ITSELF
+                        ? Row(children:
+                      List<Widget>.generate(post.hashtags.length > 3 ? 3 : post.hashtags.length, (index) {
+                        return GestureDetector(
+                            onTap: () {
+                              onSelectHashtag(index);
+                            },
+                            child: Text(style: TextStyle(backgroundColor: index % 2 == 0
+                                ? Colors.grey.shade400 : Colors.grey.shade300), post.hashtags[index]));
+                      })
+                            )
+                        : SizedBox()
+
+// CheckboxListTile(value: selectedHashtags[index], onChanged: onSelectHashtag(index));
+
+                      // post.hashtags.forEach((element) {
+                          //   GestureDetector(onTap: () => onSelectTopic(), child:
+                          //   Text("${post.hashtags[0]!}")),
+                          //   Checkbox(
+                          //   value: hasSelectedTopic,
+                          //   onChanged: (value) => onSelectTopic(),)
+                          // },)
                     // ,
                           // (post.hashtags.isNotEmpty ? post.hashtags.forEach((element) {
                           // TextButton(onPressed: () => onHashTag(element)
@@ -303,6 +326,19 @@ class _PostCardState extends State<PostCard> {
       setState(() {
         showSend = false;
       });
+  }
+
+  onSelectHashtag(int index) {
+    setState(()
+    {
+      String hashtag = post.hashtags[index];
+      if (!textEdit.text.contains(hashtag))
+        textEdit.text += hashtag;
+      if (!hasSelectedTopic)
+        hasSelectedTags = true;
+      showInput = true;
+      //TODO CHECK iF USER HAS WRITTEN MORE THAN THE TAGS AND SHOW
+    });
   }
 
   // onErrorLoadImage(error) {

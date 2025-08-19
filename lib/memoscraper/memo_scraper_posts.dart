@@ -179,8 +179,8 @@ class MemoScraperPost {
 
       MemoScraperUtil.extractUrlsAndHashtags(post);
 
-      if (MemoScraperUtil.isTextOnly(post)) {
-        continue;
+      if (MemoScraperUtil.isTextOnly(post) || post.urls.isNotEmpty) {
+        continue; //TODO removing all posts that contain URLs in the text for now, high quality content
       }
 
       postList.add(post);

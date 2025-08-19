@@ -34,7 +34,7 @@ class MemoModelPost {
   static final List<MemoModelPost> globalPosts = [];
   static final List<MemoModelPost> ytPosts = [];
   static final List<MemoModelPost> imgurPosts = [];
-  static final List<MemoModelPost> tagPosts = [];
+  static final List<MemoModelPost> hashTagPosts = [];
   // static final List<MemoModelPost> urlPosts = [];
   static final List<MemoModelPost> topicPosts = [];
 
@@ -68,15 +68,15 @@ class MemoModelPost {
 
     //TODO DO NOT ITERATE THROUGH ALL POSTS HERE AS YOU ALREADY DID THAT BEFORE,
     for (var element in posts) {
-      if (element.creator!.id != MemoModelCreator.createDummy().id)
-        continue; //TODO ONLY SHOW OWN POSTS ON PROFILE
+      // if (element.creator!.id != MemoModelCreator.createDummy().id)
+      //   continue; //TODO ONLY SHOW OWN POSTS ON PROFILE
 
       if (element.imgurUrl != null && element.imgurUrl!.isNotEmpty) {
         imgurPosts.add(element);
       } else if (element.youtubeId != null && element.youtubeId!.isNotEmpty) {
         ytPosts.add(element);
       } else if (element.hashtags.isNotEmpty) {
-        tagPosts.add(element);
+        hashTagPosts.add(element);
       // } else if (element.urls.isNotEmpty) {
       //   urlPosts.add(element);
       } else if (element.topic != null) {

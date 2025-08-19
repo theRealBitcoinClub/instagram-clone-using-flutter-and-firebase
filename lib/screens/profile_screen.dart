@@ -270,13 +270,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           });},
                           icon: Icon(Icons.tag_rounded,
                               size: 32, color : activeOrNot(2))),
-                      IconButton(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          onPressed: () {setState(() {
-                            viewMode = 3;
-                          });},
-                          icon: Icon(Icons.format_color_text_rounded,
-                              size: 32, color: activeOrNot(3))),
+                      // IconButton(
+                      //     padding: EdgeInsets.symmetric(horizontal: 20),
+                      //     onPressed: () {setState(() {
+                      //       viewMode = 3;
+                      //     });},
+                      //     icon: Icon(Icons.format_color_text_rounded,
+                      //         size: 32, color: activeOrNot(3))),
                       IconButton(
                           padding: EdgeInsets.symmetric(horizontal: 20),
                           onPressed: () {setState(() {
@@ -291,7 +291,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ListView.builder(
                                 itemCount:
                                     viewMode == 1 ? MemoModelPost.ytPosts.length :
-                                    viewMode == 2 ? MemoModelPost.tagPosts.length :
+                                    viewMode == 2 ? MemoModelPost.hashTagPosts.length :
                                     // viewMode == 3 ? MemoModelPost.urlPosts.length :
                                     viewMode == 4 ? MemoModelPost.topicPosts.length : 0,
                                 itemBuilder: (context, index) {
@@ -308,7 +308,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               )),
                                         );
                                       case 2:
-                                        return buildTextBox(MemoModelPost.tagPosts, index);
+                                        return buildTextBox(MemoModelPost.hashTagPosts, index);
                                       // case 3:
                                       //   return buildTextBox(MemoModelPost.urlPosts, index);
                                       case 4:

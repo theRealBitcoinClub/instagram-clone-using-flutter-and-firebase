@@ -21,7 +21,7 @@ void main() async {
   // MemoScraperTag().startScrapeTags(["/recent","/most-posts"], 25, cacheId);
   MemoScraperTag().startScrapeTags(["/most-posts"], 0, cacheId);
   MemoScraperTag().startScrapeTags(["/recent"], 0, cacheId);
-  // MemoScraperPost().startScrapePosts('posts/new', 100, cacheId);
+  MemoScraperPost().startScrapePosts('posts/new', 100, cacheId);
   // https://memo.cash/tags/most-posts?&offset=1025
   //TODO SHOW SOME TUTORIAL STUFF WHILE INITIAL SCRAPING
   //TODO CACHE SCRAPING RESULTS IN LOCAL DATABASE

@@ -167,7 +167,7 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
 
     final BigInt walletBalance = getTotalWalletBalanceInSatoshis(utxos);
 
-    final BigInt fee = BtcUtils.toSatoshi("0.000004");
+    final BigInt fee = BtcUtils.toSatoshi("0.000005");
     // final BigInt tip = BigInt.parse(tipAmount);
     final BtcTransaction tx = createTransaction(
         p2pkhAddress,

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/memoscraper/memo_scraper_posts.dart';
 import 'package:instagram_clone1/route%20handling/auth_page.dart';
-
-import 'memoscraper/memo_scraper_creator.dart';
+import 'memoscraper/memo_scraper_posts.dart';
 import 'memoscraper/memo_scraper_tag.dart';
 import 'memoscraper/memo_scraper_topics.dart';
 
@@ -13,7 +11,7 @@ void main() async {
   // );
   final String cacheId = "250819";
   //TODO SCRAPE MEMO, FILL LOCAL MEMORY DATABASE
-  // MemoScraperTopic().startScrapeTopics(cacheId, 25);
+  MemoScraperTopic().startScrapeTopics(cacheId, 25);
   // MemoScraperCreator().startScrapeCreators(["/most-actions", "/most-followers"]);
   // TODO IDENTIFY CREATORS PUT THEM INTO THE TOSTORE PACKAGE DB
   //https://memo.cash/posts/top?range=1y
@@ -22,11 +20,12 @@ void main() async {
   // MemoScraperTag().startScrapeTags(["/most-posts"], 250, cacheId);
   // MemoScraperTag().startScrapeTags(["/recent","/most-posts"], 25, cacheId);
   MemoScraperTag().startScrapeTags(["/most-posts"], 0, cacheId);
-  // MemoScraperTag().startScrapeTags(["/recent"], 25, cacheId);
+  MemoScraperTag().startScrapeTags(["/recent"], 0, cacheId);
   // MemoScraperPost().startScrapePosts('posts/new', 100, cacheId);
   // https://memo.cash/tags/most-posts?&offset=1025
   //TODO SHOW SOME TUTORIAL STUFF WHILE INITIAL SCRAPING
   //TODO CACHE SCRAPING RESULTS IN LOCAL DATABASE
+  //TODO SHOW SCRAPING PROGRESS BAR, CALL SETSTATE MORE OFTEN
 
   runApp(const MyApp());
 }

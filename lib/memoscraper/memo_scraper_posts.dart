@@ -23,7 +23,7 @@ class MemoScraperPost {
       print("RUNNING SCRAPE:$url$offset");
     }
 
-    print("FINISH SCRAPE:$url$startOffset");
+    print("FINISH SCRAPE:$url");
     return result;
   }
 

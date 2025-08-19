@@ -72,6 +72,8 @@ class MemoScraperUtil {
     if (text == null || text.isEmpty)
       return [];
 
+
+    //TODO WHY ARE SOME POSTS WITH HASHTAGS THAT HAVE MISSING SPACES NOT SHOWING AS REPLIEABLE
     Iterable<RegExpMatch> matches = RegExp(r'(?:\s|^)(?:#(?!(?:\d+|\w+?_|_\w*?)(?:\s|$)))(\w+)(?=\s|$)', caseSensitive: false).allMatches(text);
     return convertRegExpMatchesToList(matches);
   }

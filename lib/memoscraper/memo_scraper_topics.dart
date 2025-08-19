@@ -20,17 +20,14 @@ class MemoScraperTopic {
       for (MemoModelTopic currentTopic in topicList) {
         // printCurrentMemoModelTopic(currentTopic);
 
-        Future<Map<String, Object>> posts = MemoScraperUtil.createScraper("${currentTopic.url!}?x=$cacheId", config);
+        Map<String, Object> posts = await MemoScraperUtil.createScraper("${currentTopic.url!}?x=$cacheId", config);
 
-        posts.then((value) {
-          var postList = createTopicPostList(value, currentTopic);
+          var postList = createTopicPostList(posts, currentTopic);
           MemoModelPost.addToGlobalPostList(postList.reversed.toList());
 
           // printMemoModelPost(postList);
           // print("object");
-        },);
-        // print("object");
-        print("RUNNING SCRAPE TOPICccccc: ${currentTopic.header}");
+          print("RUNNING SCRAPE TOPICccccc POSTS: ${currentTopic.header}");
       }
 
       print("FINISH SCRAPE TOPICS: $cacheId");

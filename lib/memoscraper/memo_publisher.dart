@@ -1,5 +1,6 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:instagram_clone1/memoscraper/memo_transformation.dart';
 
 import 'memo_code.dart';
@@ -19,7 +20,76 @@ const mainnetServers = [
   "node.minisatoshi.cash", // minisatoshi
 ];
 
+const int hash160DigestLength = QuickCrypto.hash160DigestSize;
+
 class MemoPublisher {
+
+static String legacyToBchAddress(
+{required BitcoinCashNetwork network,
+required String addressProgram,
+required BitcoinAddressType type}) {
+final programBytes = BytesUtils.fromHexString(addressProgram);
+final netVersion = _getBchNetVersion(
+network: network, type: type, secriptLength: programBytes.length);
+
+return BchBech32Encoder.encode(
+network.networkHRP, netVersion, programBytes);
+}
+
+static List<int> _getBchNetVersion(
+{required BitcoinCashNetwork network,
+required BitcoinAddressType type,
+int secriptLength = hash160DigestLength}) {
+final isToken = type.value.contains('WT');
+if (!type.isP2sh) {
+if (!isToken) return network.p2pkhNetVer;
+return network.p2pkhWtNetVer;
+} else {
+if (!isToken) {
+if (secriptLength == hash160DigestLength) {
+return network.p2shNetVer;
+}
+return network.p2sh32NetVer;
+}
+if (secriptLength == hash160DigestLength) {
+return network.p2shwt20NetVer;
+}
+return network.p2shwt32NetVer;
+}
+}
+
+
+List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
+  double len = data.length * from / to;
+  final length = strictMode ? len.floor() : len.ceil();
+
+  final mask = (1 << to) - 1;
+  final result = List.generate(length, (_) => 0);
+
+  var index = 0;
+  var accumulator = 0;
+  var bits = 0;
+
+  for (var i = 0; i < data.length; i++) {
+    var value = data[i];
+    accumulator = (accumulator << from) | value;
+    bits += from;
+    while (bits >= to) {
+      bits -= to;
+      result[index] = (accumulator >> bits) & mask;
+      index++;
+    }
+  }
+
+  if (!strictMode) {
+    if (bits > 0) {
+      result[index] = (accumulator << (to - bits)) & mask;
+      index++;
+    }
+  } else {}
+
+  return result;
+}
 
   void testMemoSend() async {
     // print("\n\n" + await doMemoAction("PostMessage", MemoCode.profileMessage,""));
@@ -81,13 +151,9 @@ class MemoPublisher {
     final BitcoinCashAddress p2pkhAddress =
     BitcoinCashAddress.fromBaseAddress(publicKey.toAddress());
 
-    final BitcoinCashAddress receiver = BitcoinCashAddress("bitcoincash:qzdvxd4xexu2dzal0kdn08sfatnygwvkk55v8gp7qy");
-    // final BitcoinCashAddress receiver2 = BitcoinCashAddress("bitcoincash:" + tipReceiver!);
-    // var test = P2pkAddress(publicKey: tipReceiver!).toAddress(network);
-
-    // BitcoinCashAddress.fromBaseAddress(.fromAddress(address: tipReceiver!, network: BitcoinCashNetwork.mainnet));
-
-    // final BitcoinCashAddress tipReceiver = BitcoinCashAddress.fromBaseAddress(address)
+    var legacy = P2pkhAddress.fromAddress(address: tipReceiver!, network: BitcoinNetwork.mainnet);
+    String addr = legacyToBchAddress(addressProgram: legacy.addressProgram, network: network, type: P2pkhAddressType.p2pkh);
+    final BitcoinCashAddress receiver = BitcoinCashAddress(addr);
 
     print("https://bchblockexplorer.com/address/${p2pkhAddress.address}");
 

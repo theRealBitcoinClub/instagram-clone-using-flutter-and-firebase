@@ -133,6 +133,8 @@ class _PostCardState extends State<PostCard> {
           onDoubleTap: () async {
             MemoPublisher().doMemoAction(MemoTransformation.reOrderTxHash(post.txHash!), MemoCode.postLike, tipReceiver: post.creator!.id!, tipAmount: 1111);
             // TODO TIP POST WITH STANDARD TIP
+            // TODO LET USER INPUT WIF AND CHOOSE THEIR STANDARD TIP
+            // TODO ALWAYS PUT HASHTAGS LAST IN POSTS
             // FireStoreMethods().likePost(widget.snap['postId'],
             //     user.uid, widget.snap['likes']);
             setState(() {
@@ -410,12 +412,13 @@ class _PostCardState extends State<PostCard> {
   }
 
   void onReplyTopic() {
-    MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.topicMessage, memoTopic: post.topic!.header!);
+    MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.topicMessage, memoTopic: post.topic!.header!, tipReceiver: post.creator!.id);
     //TODO hide on success
+    //TODO SHOW ANIMATION CONFETTI OVER THE WHOLE POST
   }
 
   void onPostWithHashtags() {
-    MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.profileMessage);
+    MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.profileMessage, tipReceiver: post.creator!.id);
   }
 
   // onErrorLoadImage(error) {

@@ -1,6 +1,5 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:flutter/foundation.dart';
 import 'package:instagram_clone1/memoscraper/memo_transformation.dart';
 
 import 'memo_code.dart';
@@ -148,12 +147,11 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
 
     final publicKey = privateKey.getPublic();
 
-    final BitcoinCashAddress p2pkhAddress =
-    BitcoinCashAddress.fromBaseAddress(publicKey.toAddress());
+    final BitcoinCashAddress p2pkhAddress = BitcoinCashAddress.fromBaseAddress(publicKey.toAddress());
 
     var legacy = P2pkhAddress.fromAddress(address: tipReceiver!, network: BitcoinNetwork.mainnet);
-    String addr = legacyToBchAddress(addressProgram: legacy.addressProgram, network: network, type: P2pkhAddressType.p2pkh);
-    final BitcoinCashAddress receiver = BitcoinCashAddress(addr);
+    // String addr = legacyToBchAddress(addressProgram: legacy.addressProgram, network: network, type: P2pkhAddressType.p2pkh);
+    final BitcoinCashAddress receiver = BitcoinCashAddress.fromBaseAddress(legacy);
 
     print("https://bchblockexplorer.com/address/${p2pkhAddress.address}");
 
@@ -170,6 +168,7 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
     final BigInt walletBalance = getTotalWalletBalanceInSatoshis(utxos);
 
     final BigInt fee = BtcUtils.toSatoshi("0.000004");
+    // final BigInt tip = BigInt.parse(tipAmount);
     final BtcTransaction tx = createTransaction(
         p2pkhAddress,
         walletBalance,

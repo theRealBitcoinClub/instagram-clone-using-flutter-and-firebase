@@ -20,7 +20,10 @@ class MemoScraperPost {
 
         result.addAll(postList);
         // MemoScraperUtil.printMemoModelPost(postList);
+      print("RUNNING SCRAPE:$url$offset");
     }
+
+    print("FINISH SCRAPE:$url$startOffset");
     return result;
   }
 

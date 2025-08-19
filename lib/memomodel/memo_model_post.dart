@@ -35,7 +35,7 @@ class MemoModelPost {
   static final List<MemoModelPost> ytPosts = [];
   static final List<MemoModelPost> imgurPosts = [];
   static final List<MemoModelPost> tagPosts = [];
-  static final List<MemoModelPost> urlPosts = [];
+  // static final List<MemoModelPost> urlPosts = [];
   static final List<MemoModelPost> topicPosts = [];
 
   static MemoModelPost createDummy() {
@@ -77,11 +77,11 @@ class MemoModelPost {
         ytPosts.add(element);
       } else if (element.hashtags.isNotEmpty) {
         tagPosts.add(element);
-      } else if (element.urls.isNotEmpty) {
-        urlPosts.add(element);
+      // } else if (element.urls.isNotEmpty) {
+      //   urlPosts.add(element);
       } else if (element.topic != null) {
         topicPosts.add(element);
-      } else throw Exception("dirty data");
+      }
     }
   }
 

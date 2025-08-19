@@ -94,7 +94,7 @@ class MemoScraperUtil {
         && post.imgurUrl == null
         && post.topic == null
         && post.hashtags.isEmpty
-        && post.urls.isEmpty;
+        && post.urls.isNotEmpty; //TODO removing all posts that contain URLs in the text for now, high quality content
   }
 
   static void extractUrlsAndHashtags(MemoModelPost post) {

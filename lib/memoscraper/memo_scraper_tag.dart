@@ -13,11 +13,13 @@ class MemoScraperTag {
       for (int off = offset; off >= 0; off -= 25) {
         List<MemoModelTag> tags = await scrapeTags(order, off);
         for (MemoModelTag tag in tags) {
-          tag.posts.addAll(await MemoScraperPost().startScrapePosts("t/${tag.name}", off, cacheId));
+          tag.posts.addAll(await MemoScraperPost().startScrapePosts("t/${tag.name}", 0, cacheId));
         }
         // print("object");
+        print("RUNNING SCRAPE:$order$off");
       }
     }
+    print("FINISH SCRAPE TAGS");
   }
 
   Future<List<MemoModelTag>> scrapeTags(String sortedBy, offset) async {

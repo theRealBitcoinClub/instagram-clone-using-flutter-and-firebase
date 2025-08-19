@@ -292,7 +292,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 itemCount:
                                     viewMode == 1 ? MemoModelPost.ytPosts.length :
                                     viewMode == 2 ? MemoModelPost.tagPosts.length :
-                                    viewMode == 3 ? MemoModelPost.urlPosts.length :
+                                    // viewMode == 3 ? MemoModelPost.urlPosts.length :
                                     viewMode == 4 ? MemoModelPost.topicPosts.length : 0,
                                 itemBuilder: (context, index) {
                                     switch (viewMode) {
@@ -309,8 +309,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         );
                                       case 2:
                                         return buildTextBox(MemoModelPost.tagPosts, index);
-                                      case 3:
-                                        return buildTextBox(MemoModelPost.urlPosts, index);
+                                      // case 3:
+                                      //   return buildTextBox(MemoModelPost.urlPosts, index);
                                       case 4:
                                         return buildTextBox(MemoModelPost.topicPosts, index);
                                     }

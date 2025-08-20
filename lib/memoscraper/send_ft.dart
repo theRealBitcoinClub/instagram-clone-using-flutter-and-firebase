@@ -1,22 +1,27 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
-import 'socket/electrum_websocket_service.dart';
+import 'package:instagram_clone1/memoscraper/socket/electrum_websocket_service.dart';
 
 void main() async {
   ElectrumWebSocketService service = await ElectrumWebSocketService.connect(
       "wss://bch.imaginary.cash:50004");
 
-  String tokenId = "your-FT-token-id";
+  //TODO if user profile id is provided, then trigger the SLP send to their original memo address
+  //TODO SLP SEND SERVERSIDE on every action	nerve jazz toward mother fury attack library piano shell neck math shoe
+
+  String tokenId = "d44bf7822552d522802e7076dc9405f5e43151f0ac12b9f6553bda1ce8560002";
   BitcoinCashNetwork network = BitcoinCashNetwork.mainnet;
 
   ElectrumProvider provider = ElectrumProvider(service);
   ECPrivate bip44Sender = createBip44PrivateKey(
-      "12-word-mnemonic that you can obtain on cashonize.com");
+      "xxxx");
   P2pkhAddress senderP2PKHWT = createAddressP2PKHWT(bip44Sender);
   ECPrivate bip44Receiver = createBip44PrivateKey(
-      "12-word-mnemonic that you can obtain on cashonize.com");
-  P2pkhAddress receiverP2PKHWT = createAddressP2PKHWT(bip44Receiver);
-  
+      "xxxx");
+  // P2pkhAddress receiverP2PKHWT = createAddressP2PKHWT(bip44Receiver);
+  //TODO burn token or send token depends on if receiver mnemonic is provided
+  BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress("bitcoincash:r0lxr93av56s6ja253zmg6tjgwclfryeardw6v427e74uv6nfkrlc2s5qtune").baseAddress;
+
   BitcoinCashAddress senderBCHp2pkhwt = BitcoinCashAddress.fromBaseAddress(senderP2PKHWT);
   
   List<ElectrumUtxo> electrumUTXOs = await provider.request(ElectrumRequestScriptHashListUnspent(
@@ -41,7 +46,7 @@ void main() async {
   BigInt totalAmountOfTokenAvailable = calculateTotalAmountOfThatToken(utxos, tokenId);
 
   ForkedTransactionBuilder bchTransaction = buildTxToTransferTokens(
-      15,
+      1,
       senderBCHp2pkhwt,
       totalAmountInSatoshisAvailable,
       utxos,
@@ -59,26 +64,28 @@ void main() async {
   print("success");
 }
 
-ForkedTransactionBuilder buildTxToTransferTokens(int tokenAmountToSend, BitcoinCashAddress senderBCHp2pkhwt, BigInt totalAmountInSatoshisAvailable, List<UtxoWithAddress> utxos, P2pkhAddress receiverP2PKHWT, CashToken token, BigInt totalAmountOfTokenAvailable, BitcoinCashNetwork network) {
+ForkedTransactionBuilder buildTxToTransferTokens(int tokenAmountToSend, BitcoinCashAddress senderBCHp2pkhwt, BigInt totalAmountInSatoshisAvailable, List<UtxoWithAddress> utxos, BitcoinBaseAddress receiverP2PKHWT, CashToken token, BigInt totalAmountOfTokenAvailable, BitcoinCashNetwork network) {
   var amount = BigInt.from(tokenAmountToSend);
-  BigInt fee = BtcUtils.toSatoshi("0.00003");
+  //TODO AUTO CONSOLIDATE TO SAVE ON FEES
+  BigInt fee = BtcUtils.toSatoshi("0.000007");
+  BigInt tokenFee = BtcUtils.toSatoshi("0.000007");
   return ForkedTransactionBuilder(
     outPuts: [
       /// change address for bch values (sum of bch amout - (outputs amount + fee))
       BitcoinOutput(
         address: senderBCHp2pkhwt.baseAddress,
         value: totalAmountInSatoshisAvailable -
-            (BtcUtils.toSatoshi("0.00002") + fee),
+            (tokenFee + tokenFee + fee),
       ),
       BitcoinTokenOutput(
           utxoHash: utxos.first.utxo.txHash,
           address: receiverP2PKHWT,
-          value: BtcUtils.toSatoshi("0.00001"),
+          value: tokenFee,
           token: token.copyWith(amount: amount)),
       BitcoinTokenOutput(
           utxoHash: utxos.first.utxo.txHash,
           address: senderBCHp2pkhwt.baseAddress,
-          value: BtcUtils.toSatoshi("0.00001"),
+          value: tokenFee,
           token: token.copyWith(amount: totalAmountOfTokenAvailable - amount)),
     ],
     fee: fee,

@@ -142,7 +142,7 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
     const network = BitcoinCashNetwork.mainnet;
 
     final privateKey = ECPrivate.fromWif(
-        wif ?? "5HtpWVLipP5iKskfrhZLcxveVV39JZpiMGQseYRepRDUPGp97sU",
+        wif ?? "xxx",
         netVersion: network.wifNetVer);
 
     final publicKey = privateKey.getPublic();

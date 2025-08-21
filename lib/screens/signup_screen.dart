@@ -2,14 +2,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:instagram_clone1/resources/auth_method.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/utils/image_picker.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/textfield_input.dart';
+import 'package:provider/provider.dart';
+
+import '../provider/user_provider.dart';
 
 class SignUpScreen extends StatefulWidget {
-  final Function()? onTap;
-  const SignUpScreen({super.key, required this.onTap});
+  final Function()? onToggle;
+  const SignUpScreen({super.key, required this.onToggle});
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -43,13 +47,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _isloading = true;
     });
 
+    String res = await AuthChecker().signUpCreateWif();
+    ProviderUser up = Provider.of(context, listen: false);
+    await up.refreshUser();
     // String res = await AuthMedthod().signUpUser(
     //     email: _emailController.text,
     //     fullName: _fullNameController.text,
     //     username: _userNameController.text,
     //     password: _passwordController.text,
     //     profilePicture: _image!);
-    String res = 'success';
+    // String res = 'success';
     //TODO NO SIGN UP FOR SIGN UP FORWARD TO MEMO
 
     setState(() {
@@ -191,7 +198,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               child: const Text("already have and account? "),
             ),
             GestureDetector(
-              onTap: widget.onTap,
+              onTap: widget.onToggle,
               child: Container(
                 alignment: Alignment.center,
                 padding: const EdgeInsets.symmetric(vertical: 12),

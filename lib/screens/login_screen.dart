@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:instagram_clone1/memomodel/memo_auth.dart';
+import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+import 'package:instagram_clone1/resources/auth_method.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/textfield_input.dart';
+import 'package:provider/provider.dart';
+
+import '../provider/user_provider.dart';
 
 class LoginScreen extends StatefulWidget {
-  final Function()? onTap;
-  const LoginScreen({super.key , required this.onTap});
+  final Function()? onToggle;
+  const LoginScreen({super.key , required this.onToggle});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -32,9 +38,17 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     // String res = await AuthMedthod().signinUser(
     //     email: _emailController.text, password: _passwordController.text);
-    String res = "success"; //TODO CHECKS USER LOGIN WITH WIF AND TEST LIKE OR ANYTHING THAT DOESNT LEAVE TRACE BUT FAILS ON WRONG WIF
+    String res = await AuthChecker().signInWithMnemonic(MemoModelUser.createDummy().mnemonic);
+    ProviderUser up = Provider.of(context, listen: false);
+    await up.refreshUser();
+    // setState(() {
+    //   MemoAuth().user.wif = "sdfdsfds";
+    //   MemoAuth().authStateChanges();
+    // });
+    // String res = "success"; //TODO CHECKS USER LOGIN WITH WIF AND TEST LIKE OR ANYTHING THAT DOESNT LEAVE TRACE BUT FAILS ON WRONG WIF
     if (res == 'success') {
       print("logged in");
+      showSnackBar(res, context);
     } else {
       showSnackBar(res, context);
     }
@@ -121,7 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: const Text("don't have an account? "),
             ),
             GestureDetector(
-              onTap: widget.onTap,
+              onTap: widget.onToggle,
               child: Container(
                 alignment: Alignment.center,
                 padding: const EdgeInsets.symmetric(vertical: 12),

@@ -14,3 +14,18 @@
 //     notifyListeners();
 //   }
 // }
+
+import 'package:flutter/cupertino.dart';
+import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+import 'package:instagram_clone1/resources/auth_method.dart';
+
+class ProviderUser with ChangeNotifier {
+  MemoModelUser? memoUser;
+
+  AuthChecker _authChecker = AuthChecker();
+
+  Future<void> refreshUser() async {
+    memoUser = await _authChecker.getUserFromDB();
+    notifyListeners();
+  }
+}

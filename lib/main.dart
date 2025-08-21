@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:instagram_clone1/provider/user_provider.dart';
 import 'package:instagram_clone1/route%20handling/auth_page.dart';
+import 'package:provider/provider.dart';
 import 'memoscraper/memo_scraper_posts.dart';
 import 'memoscraper/memo_scraper_tag.dart';
 import 'memoscraper/memo_scraper_topics.dart';
@@ -9,6 +11,9 @@ void main() async {
   // await Firebase.initializeApp(
   //   options: DefaultFirebaseOptions.currentPlatform
   // );
+
+  //TODO INITIALIZE USER WIF DATA?
+
   final String cacheId = "250819";
   MemoScraperTopic().startScrapeTopics(cacheId, 25);
   // MemoScraperCreator().startScrapeCreators(["/most-actions", "/most-followers"]);
@@ -50,12 +55,17 @@ class MyApp extends StatelessWidget {
       //   ChangeNotifierProvider(create: (_)=> UserProvider(),)
       // ],
       // child:
-      return MaterialApp(
+      return MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ProviderUser(),)
+        ],
+        child: MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Memogram',
           // theme: ThemeData.dark()
           //     .copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
-          home: const AuthPage());
+          home: const AuthPage())
+      );
     // );
   }
 }

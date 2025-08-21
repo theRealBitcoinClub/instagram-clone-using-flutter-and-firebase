@@ -23,9 +23,9 @@ class _LoginOrRegisterState extends State<LoginOrRegister> {
   @override
   Widget build(BuildContext context) {
     if (showLoginPage) {
-      return LoginScreen(onTap: togglePage);
+      return LoginScreen(onToggle: togglePage);
     } else {
-      return SignUpScreen(onTap: togglePage);
+      return SignUpScreen(onToggle: togglePage);
     }
   }
 }

@@ -1,3 +1,33 @@
+import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class AuthChecker {
+  Future<MemoModelUser> getUserFromDB() async {
+    String? mnemonic = await SharedPreferencesAsync().getString("mnemonic");
+    //TODO load creator with profile Id, get legacy ID
+    return MemoModelUser(mnemonic: mnemonic ?? "");
+  }
+  
+  Future<String> signUpCreateWif() async {
+    //TODO create memo.cash account derive legacy m44/0/0 as profile id
+    return signInWithMnemonic(MemoModelUser.createDummy().mnemonic!);
+  }
+
+  Future<String> signInWithMnemonic(String mnemonic) async {
+    try {
+      if (mnemonic.isEmpty) {
+        return "enter mnemonic of twelve words that is cashtoken compatible";
+      }
+      //TODO VALIDATE MNEMONIC
+      SharedPreferencesAsync().setString("mnemonic", mnemonic);
+    } catch (err) {
+      return err.toString();
+    }
+    return "success";
+  }
+}
+
+
 // import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:flutter/foundation.dart';

@@ -4,11 +4,14 @@ import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
+import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/profile_buttons.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
+import 'package:provider/provider.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
+import '../provider/user_provider.dart';
 import '../utils/imgur_utils.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -20,7 +23,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // var userData = {};
+  late MemoModelUser user;
   MemoModelPost post = MemoModelPost.createDummy();
   late MemoModelCreator creator;
   bool isFollowing = false;
@@ -32,7 +35,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
 
     creator = post.creator!;
-    
+    user = MemoModelUser.createDummy();
+
+    // ProviderUser provider = Provider.of<ProviderUser>(context);
+    // user = provider.memoUser!;
+
     getData();
   }
 
@@ -164,6 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   Padding(padding: EdgeInsets.only(left: 25)),
                                   buildStatColumn('Posts', creator.actions!),
                                   buildStatColumn('followers', creator.followerCount!)
+                                  //TODO SHOW SATOSHIS NOT FOLLOWERCOUNT
                                 ],
                               ),
                               Column(
@@ -419,8 +427,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           SimpleDialogOption(onPressed: () {
 
-          }, child: PrettyQrView.data(data: "data"),)
+          }, child: PrettyQrView.data(decoration:
+                const PrettyQrDecoration(image:
+                PrettyQrDecorationImage(image:
+                AssetImage('assets/images/cashtoken.png'))),
+              data: user.bchAddress),)
         ]
+            //TODO observe balance change of wallet, show snackbar on deposit
       );
     });
   }

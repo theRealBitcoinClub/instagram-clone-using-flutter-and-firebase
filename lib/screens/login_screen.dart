@@ -1,14 +1,12 @@
+
+import 'package:bip39_mnemonic/bip39_mnemonic.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:instagram_clone1/memomodel/memo_auth.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 import 'package:instagram_clone1/resources/auth_method.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/textfield_input.dart';
-import 'package:provider/provider.dart';
-
-import '../provider/user_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   final Function()? onToggle;
@@ -19,14 +17,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _memoProfileIdController = TextEditingController();
   final TextEditingController _mnemonicController = TextEditingController();
   bool isLoading = false;
 
   @override
   void dispose() {
     super.dispose();
-    _memoProfileIdController.dispose();
     _mnemonicController.dispose();
   }
 
@@ -36,14 +32,8 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       isLoading = true;
     });
-    // String res = await AuthMedthod().signinUser(
-    //     email: _emailController.text, password: _passwordController.text);
-    String res = await AuthChecker().signInWithMnemonic(MemoModelUser.createDummy().mnemonic, context);
-    // setState(() {
-    //   MemoAuth().user.wif = "sdfdsfds";
-    //   MemoAuth().authStateChanges();
-    // });
-    // String res = "success"; //TODO CHECKS USER LOGIN WITH WIF AND TEST LIKE OR ANYTHING THAT DOESNT LEAVE TRACE BUT FAILS ON WRONG WIF
+    String res = await AuthChecker().signInWithMnemonic(_mnemonicController.text, context);
+    //TODO VERIFY MNEMONIC IS VALID
     if (res != 'success') {
       showSnackBar(res, context);
     }
@@ -66,9 +56,8 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
 
         //app logo
-        SvgPicture.asset(
-          'assets/images/instagram.svg',
-          color: primaryColor,
+        Image.asset(
+          'assets/images/cashtoken.png',
           height: 80,
         ),
 
@@ -76,26 +65,11 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 64,
         ),
 
-
-        //TODO CHECK IF I CAN DERIVE THE PROFILE ID FROM THE SEED USING m44/0/0 legacy format
-        //TODO ANYWAY THIS ID MUST BE OPTIONAL
-        //username text input
-        TextInputField(
-            textEditingController: _memoProfileIdController,
-            hintText: 'profile id',
-            textInputType: TextInputType.text),
-
-        const SizedBox(
-          height: 25,
-        ),
-        //password text input
-
         //TODO ADD GENERATE MNEMONIC BUTTON
         TextInputField(
 
             textEditingController: _mnemonicController,
             hintText: 'mnemonic',
-            isPass: true,
             textInputType: TextInputType.text),
 
         const SizedBox(
@@ -103,7 +77,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
 
         //login button
-
         InkWell(
           onTap: loginUser,
           child: isLoading?const Center(child: CircularProgressIndicator(),) 
@@ -125,22 +98,22 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Container(),
         ),
 
-        //dont have and account ? signup
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: const Text("don't have an account? "),
+              child: const Text("Are you a new user? "),
             ),
             GestureDetector(
-              onTap: widget.onToggle,
+              // onTap: widget.onToggle,
+              onTap: generateMnemonic,
               child: Container(
                 alignment: Alignment.center,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: const Text(
-                  "Sign Up",
+                  "GENERATE MNEMONIC",
                   style:
                       TextStyle(fontWeight: FontWeight.bold, color: blueColor),
                 ),
@@ -155,5 +128,9 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ]),
     )));
+  }
+
+  generateMnemonic() {
+    _mnemonicController.text=Mnemonic.generate(Language.english, length: MnemonicLength.words12).sentence;
   }
 }

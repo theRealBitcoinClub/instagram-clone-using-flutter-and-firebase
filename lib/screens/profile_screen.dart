@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+import 'package:instagram_clone1/resources/auth_method.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/profile_buttons.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
@@ -356,7 +357,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void onProfileSettings() {
     showDialog(
         context: context,
-        builder: (context) {
+        builder: (ctxDialog) {
           return SimpleDialog(
               title: const Row(
                   children: [
@@ -393,7 +394,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 SimpleDialogOption(
                   padding: const EdgeInsets.all(20),
-                  onPressed: () async {},
+                  onPressed: () async {
+                    AuthChecker().signOut(context);
+                    Navigator.pop(ctxDialog);
+                  },
                   child: const Row(children: [
                     const Icon(Icons.logout_outlined),
                     const Spacer(),

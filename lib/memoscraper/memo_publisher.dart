@@ -132,7 +132,7 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
   }
 
   Future<String> doMemoAction(String memoMessage, MemoCode memoAction,
-      {String memoTopic = "", String? wif, String? tipReceiver, int? tipAmount}) async {
+      {String memoTopic = "", ECPrivate? pk, String? wif, String? tipReceiver, int? tipAmount}) async {
     print("\n${memoAction.opCode}\n${memoAction.name}");
     final service = await ElectrumWebSocketService.connect(
         "wss://${mainnetServers[2]}:50004");
@@ -141,17 +141,21 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
 
     const network = BitcoinCashNetwork.mainnet;
 
-    final privateKey = ECPrivate.fromWif(
+    final privateKey = pk ?? (ECPrivate.fromWif(
         wif ?? "xxx",
-        netVersion: network.wifNetVer);
+        netVersion: network.wifNetVer));
 
     final publicKey = privateKey.getPublic();
 
     final BitcoinCashAddress p2pkhAddress = BitcoinCashAddress.fromBaseAddress(publicKey.toAddress());
 
-    var legacy = P2pkhAddress.fromAddress(address: tipReceiver!, network: BitcoinNetwork.mainnet);
-    // String addr = legacyToBchAddress(addressProgram: legacy.addressProgram, network: network, type: P2pkhAddressType.p2pkh);
-    final BitcoinCashAddress receiver = BitcoinCashAddress.fromBaseAddress(legacy);
+    BitcoinCashAddress? receiver = null;
+
+    if (tipReceiver != null && tipAmount != null) {
+      P2pkhAddress legacy = P2pkhAddress.fromAddress(address: tipReceiver, network: BitcoinNetwork.mainnet);
+      // String addr = legacyToBchAddress(addressProgram: legacy.addressProgram, network: network, type: P2pkhAddressType.p2pkh);
+      receiver = BitcoinCashAddress.fromBaseAddress(legacy);
+    }
 
     print("https://bchblockexplorer.com/address/${p2pkhAddress.address}");
 
@@ -167,7 +171,7 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
 
     final BigInt walletBalance = getTotalWalletBalanceInSatoshis(utxos);
 
-    final BigInt fee = BtcUtils.toSatoshi("0.000005");
+    final BigInt fee = BtcUtils.toSatoshi("0.000006");
     // final BigInt tip = BigInt.parse(tipAmount);
     final BtcTransaction tx = createTransaction(
         p2pkhAddress,

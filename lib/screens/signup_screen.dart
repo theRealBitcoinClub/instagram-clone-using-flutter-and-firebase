@@ -47,9 +47,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _isloading = true;
     });
 
-    String res = await AuthChecker().signUpCreateWif();
-    ProviderUser up = Provider.of(context, listen: false);
-    await up.refreshUser();
+    String res = await AuthChecker().signUpCreateWif(context);
     // String res = await AuthMedthod().signUpUser(
     //     email: _emailController.text,
     //     fullName: _fullNameController.text,

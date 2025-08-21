@@ -12,7 +12,9 @@ class AuthPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var user = Provider.of<ProviderUser>(context).memoUser;
+    ProviderUser provider = Provider.of<ProviderUser>(context);
+    provider.refreshUser();
+    MemoModelUser? user = provider.memoUser;
     return Scaffold(
         // body: StreamBuilder<User?>(
       body:

@@ -38,9 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     // String res = await AuthMedthod().signinUser(
     //     email: _emailController.text, password: _passwordController.text);
-    String res = await AuthChecker().signInWithMnemonic(MemoModelUser.createDummy().mnemonic);
-    ProviderUser up = Provider.of(context, listen: false);
-    await up.refreshUser();
+    String res = await AuthChecker().signInWithMnemonic(MemoModelUser.createDummy().mnemonic, context);
     // setState(() {
     //   MemoAuth().user.wif = "sdfdsfds";
     //   MemoAuth().authStateChanges();

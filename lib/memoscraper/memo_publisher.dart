@@ -242,7 +242,7 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
     );
 
     if (receiver != null)
-      txBuilder.outPuts.add(BitcoinOutput(address: receiver!.baseAddress, value: tip));
+      txBuilder.outPuts.add(BitcoinOutput(address: receiver.baseAddress, value: tip));
 
     return txBuilder;
   }

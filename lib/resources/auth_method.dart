@@ -1,25 +1,47 @@
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../provider/user_provider.dart';
+
 class AuthChecker {
-  Future<MemoModelUser> getUserFromDB() async {
+  Future<MemoModelUser?> getUserFromDB() async {
     String? mnemonic = await SharedPreferencesAsync().getString("mnemonic");
+
+    if (mnemonic == null)
+      return null;
     //TODO load creator with profile Id, get legacy ID
-    return MemoModelUser(mnemonic: mnemonic ?? "");
+    return MemoModelUser(mnemonic: mnemonic);
   }
   
-  Future<String> signUpCreateWif() async {
+  Future<String> signUpCreateWif(ctx) async {
     //TODO create memo.cash account derive legacy m44/0/0 as profile id
-    return signInWithMnemonic(MemoModelUser.createDummy().mnemonic!);
+    String res = await signInWithMnemonic(MemoModelUser.createDummy().mnemonic, ctx);
+    ProviderUser up = Provider.of(ctx, listen: false);
+    await up.refreshUser();
+    return res;
   }
 
-  Future<String> signInWithMnemonic(String mnemonic) async {
+  Future<String> signInWithMnemonic(String mnemonic, ctx) async {
     try {
       if (mnemonic.isEmpty) {
         return "enter mnemonic of twelve words that is cashtoken compatible";
       }
       //TODO VALIDATE MNEMONIC
       SharedPreferencesAsync().setString("mnemonic", mnemonic);
+      ProviderUser up = Provider.of(ctx, listen: false);
+      await up.refreshUser();
+    } catch (err) {
+      return err.toString();
+    }
+    return "success";
+  }
+
+  Future<String> signOut(ctx) async {
+    try {
+      SharedPreferencesAsync().remove("mnemonic");
+      ProviderUser up = Provider.of(ctx, listen: false);
+      await up.refreshUser();
     } catch (err) {
       return err.toString();
     }

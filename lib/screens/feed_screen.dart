@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
+import 'package:instagram_clone1/resources/auth_method.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/post_card.dart';
+import 'package:provider/provider.dart';
+
+import '../provider/user_provider.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -15,6 +19,7 @@ class _FeedScreenState extends State<FeedScreen> {
     // final GoogleSignIn googleSignIn = GoogleSignIn();
     // await FirebaseAuth.instance.signOut();
     // await googleSignIn.signOut();TODO SIGN OUT
+    AuthChecker().signOut(context);
   }
 
   @override
@@ -32,14 +37,14 @@ class _FeedScreenState extends State<FeedScreen> {
           //   height: 50,
           // ),
           actions: [
-            // IconButton(
-            //     onPressed: () {
-            //       signUserOut();
-            //     },
-            //     icon: Icon(
-            //       Icons.messenger_outline,
-            //       color: blackColor,
-            //     ))
+            IconButton(
+                onPressed: () {
+                  signUserOut();
+                },
+                icon: Icon(
+                  Icons.logout_outlined,
+                  color: blackColor,
+                ))
           ],
         ),
         body:

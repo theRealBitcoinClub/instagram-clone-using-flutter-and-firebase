@@ -1,5 +1,7 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:instagram_clone1/memoscraper/memo_code.dart';
+import 'package:instagram_clone1/memoscraper/memo_publisher.dart';
 import 'package:instagram_clone1/memoscraper/socket/electrum_websocket_service.dart';
 
 void main() async {
@@ -7,20 +9,35 @@ void main() async {
       "wss://bch.imaginary.cash:50004");
 
   //TODO if user profile id is provided, then trigger the SLP send to their original memo address
-  //TODO SLP SEND SERVERSIDE on every action	nerve jazz toward mother fury attack library piano shell neck math shoe
+  //TODO SLP SEND SERVERSIDE on every action	mnemonic
 
   String tokenId = "d44bf7822552d522802e7076dc9405f5e43151f0ac12b9f6553bda1ce8560002";
   BitcoinCashNetwork network = BitcoinCashNetwork.mainnet;
 
   ElectrumProvider provider = ElectrumProvider(service);
   ECPrivate bip44Sender = createBip44PrivateKey(
-      "xxxx");
+      "xxxxxxxx", "m/44'/145'/0'/0/0");
   P2pkhAddress senderP2PKHWT = createAddressP2PKHWT(bip44Sender);
   ECPrivate bip44Receiver = createBip44PrivateKey(
-      "xxxx");
-  // P2pkhAddress receiverP2PKHWT = createAddressP2PKHWT(bip44Receiver);
+      "mnemonic", "m/44'/145'/0'/0/0");
+  ECPrivate legacyPK = createBip44PrivateKey(
+      "mnemonic", "m/44'/0'/0'/0/0");
+  ECPrivate slpPK = createBip44PrivateKey(
+      "mnemonic", "m/44'/245'/0'/0/0");
+  P2pkhAddress receiverP2PKHWT = createAddressP2PKHWT(bip44Receiver);
   //TODO burn token or send token depends on if receiver mnemonic is provided
-  BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress("bitcoincash:r0lxr93av56s6ja253zmg6tjgwclfryeardw6v427e74uv6nfkrlc2s5qtune").baseAddress;
+  var legacyP2PKH = legacyPK.getPublic().toAddress();
+  String legacy = legacyP2PKH.toAddress(BitcoinNetwork.mainnet);
+  var slpP2PKH = slpPK.getPublic().toAddress();
+  String slpLegacy = slpP2PKH.toAddress(BitcoinNetwork.mainnet);
+  // BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress("bitcoincash:qp97cpfavlgudx8jzk553n0rfe66lk73k59k2ayp36").baseAddress;
+  // BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress("bitcoincash:r0lxr93av56s6ja253zmg6tjgwclfryeardw6v427e74uv6nfkrlc2s5qtune").baseAddress;
+
+  //TODO use m/44/ for publishing to memo and m/145/ to send and burn tokens
+  //TODO user can use BCH to send the reply tip or cashtokens but paying with BCH should be more expensive
+  //TODO users can use BCH or cashtokens to burn on likes but BCH be double price
+  //TODO like BCH goes to address that will then buy and burn
+  // await MemoPublisher().doMemoAction("ok", MemoCode.profileMessage, wif: legacyPK.toWif());
 
   BitcoinCashAddress senderBCHp2pkhwt = BitcoinCashAddress.fromBaseAddress(senderP2PKHWT);
   
@@ -136,12 +153,12 @@ P2pkhAddress createAddressP2PKHWT(ECPrivate pk) {
       type: P2pkhAddressType.p2pkhwt);
 }
 
-ECPrivate createBip44PrivateKey(String mnemonic) {
+ECPrivate createBip44PrivateKey(String mnemonic, String derivationPath) {
   List<int> seed = Bip39SeedGenerator(Mnemonic.fromString(
       mnemonic))
       .generate();
   
   Bip32Slip10Secp256k1 bip32 = Bip32Slip10Secp256k1.fromSeed(seed);
-  Bip32Base bip44 = bip32.derivePath("m/44'/145'/0'/0/0");
+  Bip32Base bip44 = bip32.derivePath(derivationPath);
   return ECPrivate.fromBytes(bip44.privateKey.raw);
 }

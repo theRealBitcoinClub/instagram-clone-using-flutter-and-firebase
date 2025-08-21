@@ -1,35 +1,31 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
-import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:instagram_clone1/memoscraper/memo_code.dart';
-import 'package:instagram_clone1/memoscraper/memo_publisher.dart';
+import 'package:instagram_clone1/memoscraper/memo_bitcoin_base.dart';
 import 'package:instagram_clone1/memoscraper/socket/electrum_websocket_service.dart';
 
 void main() async {
   ElectrumWebSocketService service = await ElectrumWebSocketService.connect(
       "wss://bch.imaginary.cash:50004");
 
-  //TODO if user profile id is provided, then trigger the SLP send to their original memo address
-  //TODO SLP SEND SERVERSIDE on every action	mnemonic
-
   String tokenId = "d44bf7822552d522802e7076dc9405f5e43151f0ac12b9f6553bda1ce8560002";
   BitcoinCashNetwork network = BitcoinCashNetwork.mainnet;
 
+  //TODO if user profile id is provided, then trigger the SLP send to their original memo address
+  //TODO SLP SEND SERVERSIDE on every action	mnemonicZXCXZCASD
+
   ElectrumProvider provider = ElectrumProvider(service);
-  ECPrivate bip44Sender = createBip44PrivateKey(
-      "xxxxxxxx", "m/44'/145'/0'/0/0");
-  P2pkhAddress senderP2PKHWT = createAddressP2PKHWT(bip44Sender);
-  ECPrivate bip44Receiver = createBip44PrivateKey(
-      "mnemonic", "m/44'/145'/0'/0/0");
-  ECPrivate legacyPK = createBip44PrivateKey(
-      "mnemonic", "m/44'/0'/0'/0/0");
-  ECPrivate slpPK = createBip44PrivateKey(
-      "mnemonic", "m/44'/245'/0'/0/0");
-  P2pkhAddress receiverP2PKHWT = createAddressP2PKHWT(bip44Receiver);
+
+  MemoBitcoinBase base = MemoBitcoinBase();
+  ECPrivate bip44Sender = base.createBip44PrivateKey(
+      "mnemonicKDSFJE", "m/44'/145'/0'/0/0");
+  P2pkhAddress senderP2PKHWT = base.createAddressP2PKHWT(bip44Sender);
+  ECPrivate bip44Receiver = base.createBip44PrivateKey(
+      "mnemonicZXCXZCASD", "m/44'/145'/0'/0/0");
+  ECPrivate legacyPK = base.createBip44PrivateKey(
+      "mnemonicZXCXZCASD", "m/44'/0'/0'/0/0");
+  ECPrivate slpPK = base.createBip44PrivateKey(
+      "mnemonicZXCXZCASD", "m/44'/245'/0'/0/0");
+  P2pkhAddress receiverP2PKHWT = base.createAddressP2PKHWT(bip44Receiver);
   //TODO burn token or send token depends on if receiver mnemonic is provided
-  var legacyP2PKH = legacyPK.getPublic().toAddress();
-  String legacy = legacyP2PKH.toAddress(BitcoinNetwork.mainnet);
-  var slpP2PKH = slpPK.getPublic().toAddress();
-  String slpLegacy = slpP2PKH.toAddress(BitcoinNetwork.mainnet);
   // BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress("bitcoincash:qp97cpfavlgudx8jzk553n0rfe66lk73k59k2ayp36").baseAddress;
   // BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress("bitcoincash:r0lxr93av56s6ja253zmg6tjgwclfryeardw6v427e74uv6nfkrlc2s5qtune").baseAddress;
 
@@ -38,6 +34,15 @@ void main() async {
   //TODO users can use BCH or cashtokens to burn on likes but BCH be double price
   //TODO like BCH goes to address that will then buy and burn
   // await MemoPublisher().doMemoAction("ok", MemoCode.profileMessage, wif: legacyPK.toWif());
+
+  //TODO create an address to receive TOKENS and BCH that are unclaimed, keep track of profile IDs and how much they would earn if they would claim with their seed phrase
+  //TODO buy and burn all unclaimed BCH & tokens every 3rd january
+
+  //TODO to start let users earn tokens by posting and burn tokens by liking, both actions they have to pay BCH from their 145 dev path memo seed
+
+  //TODO let users start by importing the memo seed and generate the BCH for QR code from that seed
+
+  //TODO show them their 145 token balance & their 145 BCH balance instead of actions & followers
 
   BitcoinCashAddress senderBCHp2pkhwt = BitcoinCashAddress.fromBaseAddress(senderP2PKHWT);
   
@@ -51,7 +56,7 @@ void main() async {
     return;
   }
 
-  List<UtxoWithAddress> utxos = transformUtxosFilterForTokenId(electrumUTXOs, senderBCHp2pkhwt, bip44Sender, tokenId);
+  List<UtxoWithAddress> utxos = base.transformUtxosFilterForTokenId(electrumUTXOs, senderBCHp2pkhwt, bip44Sender, tokenId);
 
   BigInt totalAmountInSatoshisAvailable = utxos.sumOfUtxosValue();
   if (totalAmountInSatoshisAvailable == BigInt.zero) {
@@ -59,10 +64,10 @@ void main() async {
     return;
   }
 
-  CashToken token = findTokenById(electrumUTXOs, tokenId);
-  BigInt totalAmountOfTokenAvailable = calculateTotalAmountOfThatToken(utxos, tokenId);
+  CashToken token = base.findTokenById(electrumUTXOs, tokenId);
+  BigInt totalAmountOfTokenAvailable = base.calculateTotalAmountOfThatToken(utxos, tokenId);
 
-  ForkedTransactionBuilder bchTransaction = buildTxToTransferTokens(
+  ForkedTransactionBuilder bchTransaction = base.buildTxToTransferTokens(
       1,
       senderBCHp2pkhwt,
       totalAmountInSatoshisAvailable,
@@ -79,86 +84,4 @@ void main() async {
   await provider.request(
       ElectrumRequestBroadCastTransaction(transactionRaw: signedTx.toHex()));
   print("success");
-}
-
-ForkedTransactionBuilder buildTxToTransferTokens(int tokenAmountToSend, BitcoinCashAddress senderBCHp2pkhwt, BigInt totalAmountInSatoshisAvailable, List<UtxoWithAddress> utxos, BitcoinBaseAddress receiverP2PKHWT, CashToken token, BigInt totalAmountOfTokenAvailable, BitcoinCashNetwork network) {
-  var amount = BigInt.from(tokenAmountToSend);
-  //TODO AUTO CONSOLIDATE TO SAVE ON FEES
-  BigInt fee = BtcUtils.toSatoshi("0.000007");
-  BigInt tokenFee = BtcUtils.toSatoshi("0.000007");
-  return ForkedTransactionBuilder(
-    outPuts: [
-      /// change address for bch values (sum of bch amout - (outputs amount + fee))
-      BitcoinOutput(
-        address: senderBCHp2pkhwt.baseAddress,
-        value: totalAmountInSatoshisAvailable -
-            (tokenFee + tokenFee + fee),
-      ),
-      BitcoinTokenOutput(
-          utxoHash: utxos.first.utxo.txHash,
-          address: receiverP2PKHWT,
-          value: tokenFee,
-          token: token.copyWith(amount: amount)),
-      BitcoinTokenOutput(
-          utxoHash: utxos.first.utxo.txHash,
-          address: senderBCHp2pkhwt.baseAddress,
-          value: tokenFee,
-          token: token.copyWith(amount: totalAmountOfTokenAvailable - amount)),
-    ],
-    fee: fee,
-    network: network,
-    memo: null,
-    utxos: utxos,
-  );
-}
-
-CashToken findTokenById(List<ElectrumUtxo> electrumUTXOs, String tokenId) {
-  return electrumUTXOs
-      .firstWhere((e) =>
-  e.token?.category ==
-      tokenId)
-      .token!;
-}
-
-BigInt calculateTotalAmountOfThatToken(List<UtxoWithAddress> utxos, String tokenId) {
-  return utxos
-      .where((element) =>
-  element.utxo.token?.category ==
-      tokenId)
-      .fold(
-      BigInt.zero,
-          (previousValue, element) =>
-      previousValue + element.utxo.token!.amount);
-}
-
-List<UtxoWithAddress> transformUtxosFilterForTokenId(List<ElectrumUtxo> electrumUTXOs, BitcoinCashAddress senderBCHp2pkhwt, ECPrivate bip44Sender, String tokenId) {
-  return electrumUTXOs
-      .map((e) => UtxoWithAddress(
-      utxo: e.toUtxo(senderBCHp2pkhwt.type),
-      ownerDetails: UtxoAddressDetails(
-          publicKey: bip44Sender.getPublic().toHex(), address: senderBCHp2pkhwt.baseAddress)))
-      .toList()
-      .where((element) {
-    return element.utxo.token?.category ==
-        tokenId ||
-        element.utxo.token == null;
-  }).toList();
-}
-
-P2pkhAddress createAddressP2PKHWT(ECPrivate pk) {
-  ECPublic pubKey = pk.getPublic();
-  
-  return P2pkhAddress.fromHash160(
-      addrHash: pubKey.toAddress().addressProgram,
-      type: P2pkhAddressType.p2pkhwt);
-}
-
-ECPrivate createBip44PrivateKey(String mnemonic, String derivationPath) {
-  List<int> seed = Bip39SeedGenerator(Mnemonic.fromString(
-      mnemonic))
-      .generate();
-  
-  Bip32Slip10Secp256k1 bip32 = Bip32Slip10Secp256k1.fromSeed(seed);
-  Bip32Base bip44 = bip32.derivePath(derivationPath);
-  return ECPrivate.fromBytes(bip44.privateKey.raw);
 }

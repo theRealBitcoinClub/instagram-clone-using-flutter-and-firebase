@@ -435,7 +435,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const PrettyQrDecoration(image:
                 PrettyQrDecorationImage(image:
                 AssetImage('assets/images/cashtoken.png'))),
-              data: user.bchAddress),)
+              data: user.bchAddress145tokenAware),)
         ]
             //TODO observe balance change of wallet, show snackbar on deposit
       );

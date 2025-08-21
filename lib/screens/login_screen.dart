@@ -19,15 +19,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _memoProfileIdController = TextEditingController();
+  final TextEditingController _mnemonicController = TextEditingController();
   bool isLoading = false;
 
   @override
   void dispose() {
     super.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
+    _memoProfileIdController.dispose();
+    _mnemonicController.dispose();
   }
 
   //login user
@@ -44,10 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
     //   MemoAuth().authStateChanges();
     // });
     // String res = "success"; //TODO CHECKS USER LOGIN WITH WIF AND TEST LIKE OR ANYTHING THAT DOESNT LEAVE TRACE BUT FAILS ON WRONG WIF
-    if (res == 'success') {
-      print("logged in");
-      showSnackBar(res, context);
-    } else {
+    if (res != 'success') {
       showSnackBar(res, context);
     }
     setState(() {
@@ -79,20 +76,25 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 64,
         ),
 
+
+        //TODO CHECK IF I CAN DERIVE THE PROFILE ID FROM THE SEED USING m44/0/0 legacy format
+        //TODO ANYWAY THIS ID MUST BE OPTIONAL
         //username text input
         TextInputField(
-            textEditingController: _emailController,
-            hintText: 'enter your email id',
-            textInputType: TextInputType.emailAddress),
+            textEditingController: _memoProfileIdController,
+            hintText: 'profile id',
+            textInputType: TextInputType.text),
 
         const SizedBox(
           height: 25,
         ),
         //password text input
 
+        //TODO ADD GENERATE MNEMONIC BUTTON
         TextInputField(
-            textEditingController: _passwordController,
-            hintText: 'enter your password',
+
+            textEditingController: _mnemonicController,
+            hintText: 'mnemonic',
             isPass: true,
             textInputType: TextInputType.text),
 

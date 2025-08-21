@@ -6,6 +6,7 @@ import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/profile_buttons.dart';
+import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../utils/imgur_utils.dart';
@@ -131,6 +132,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       //TODO LAUNCH SIDESHIFT EXCHANGE
                       //TODO SHOW BCH DEPOSIT QR CODE
                       //TODO IMPLEMENT WALLETCONNECT
+                      showBchQR();
                     },
                     icon: Icon(
                       Icons.currency_exchange,
@@ -167,40 +169,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Container(
-                                    child: true
-                                    //TODO LET THEM AUTO POST TO TWITTER, INSTA & FBOOK FROM MEMO
-                                    //TODO FOLLOWING WITHOUT ANY EFFECT OR OFFER TO JUMP TO THEIR MEMO.CASH FOLLOWER FEED
-                                    //TODO INTENSE MUTING TO FILTER FEED TO WHAT USER WANTS
-                                    //TODO MUTED USERS CAN PAY TO BE UNMUTED
-                                    //TODO IF USERS HAVE MORE MUTES THAN WEEKS OF AGE THEIR OUTREACH SUFFERS
-                                    //TODO OUTREACH GOES DOWN IF AMOUNT OF POSTS GOES UP
-                                    //TODO USER HAVE TO PAY TO HAVE HIGHER OUTREACH
-                                    //TODO LET USER MUTE SPECIFIC POSTS, AFTER MUTING SAME USERS POST FOR X TIMES THE USER IS MUTED BUT STILL APPEARS ON SEARCH TO BE UNMUTED
-                                    //TODO implement check user id is same user
-                                    // FirebaseAuth
-                                    //             .instance.currentUser!.uid ==
-                                    //         widget.uid
-                                        ? FollowButton(
-                                            backgroundColor: Colors.transparent,
-                                            borderColor: Colors.black,
-                                            text: 'Edit Profile',
-                                            //TODO Profile contains WIF and seed phrase for export
-                                            //TODO ALLOW FOR MULTIPLE ACCOUNT SWITCHES HERE, SAVE MULTIPLE WIFS
-                                            textColor: Colors.black)
-                                        : isFollowing
+                                  GestureDetector(
+                                      onTap: () {
+                                        onProfileSettings();
+                                      },
+                                      child: Container(
+                                        child: true
+                                        //TODO LET THEM AUTO POST TO TWITTER, INSTA & FBOOK FROM MEMO
+                                        //TODO FOLLOWING WITHOUT ANY EFFECT OR OFFER TO JUMP TO THEIR MEMO.CASH FOLLOWER FEED
+                                        //TODO INTENSE MUTING TO FILTER FEED TO WHAT USER WANTS
+                                        //TODO MUTED USERS CAN PAY TO BE UNMUTED
+                                        //TODO IF USERS HAVE MORE MUTES THAN WEEKS OF AGE THEIR OUTREACH SUFFERS
+                                        //TODO OUTREACH GOES DOWN IF AMOUNT OF POSTS GOES UP
+                                        //TODO USER HAVE TO PAY TO HAVE HIGHER OUTREACH
+                                        //TODO LET USER MUTE SPECIFIC POSTS, AFTER MUTING SAME USERS POST FOR X TIMES THE USER IS MUTED BUT STILL APPEARS ON SEARCH TO BE UNMUTED
+                                        //TODO implement check user id is same user
+                                        // FirebaseAuth
+                                        //             .instance.currentUser!.uid ==
+                                        //         widget.uid
                                             ? FollowButton(
-                                                backgroundColor:
-                                                    Colors.transparent,
+                                                backgroundColor: Colors.transparent,
                                                 borderColor: Colors.black,
-                                                text: 'unfollow',
+                                                text: 'Edit Profile',
+                                                //TODO Profile contains WIF and seed phrase for export
+                                                //TODO ALLOW FOR MULTIPLE ACCOUNT SWITCHES HERE, SAVE MULTIPLE WIFS
                                                 textColor: Colors.black)
-                                            : FollowButton(
-                                                backgroundColor: Colors.blue,
-                                                borderColor: Colors.black,
-                                                text: 'follow',
-                                                textColor: Colors.black),
-                                  ),
+                                            : isFollowing
+                                                ? FollowButton(
+                                                    backgroundColor:
+                                                        Colors.transparent,
+                                                    borderColor: Colors.black,
+                                                    text: 'unfollow',
+                                                    textColor: Colors.black)
+                                                : FollowButton(
+                                                    backgroundColor: Colors.blue,
+                                                    borderColor: Colors.black,
+                                                    text: 'follow',
+                                                    textColor: Colors.black),
+                                  ))
                                 ],
                               ),
                             ],
@@ -338,4 +344,84 @@ class _ProfileScreenState extends State<ProfileScreen> {
   SizedBox buildTextBox(List<MemoModelPost> posts, int index) => SizedBox(height: 100, child: Text(posts[index].text!));
 
   Color activeOrNot(int index) => viewMode == index ? Colors.grey.shade800 : Colors.grey.shade500;
+
+  void onProfileSettings() {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return SimpleDialog(
+              title: const Row(
+                  children: [
+                    const Icon(Icons.settings),
+                    const Spacer(),
+                    const Text("PROFILE SETTINGS")]),
+              children: [
+                SimpleDialogOption(
+                  padding: const EdgeInsets.all(20),
+                  onPressed: () async {},
+                  child: const Row(children: [
+                    const Icon(Icons.verified_user_outlined),
+                    const Spacer(),
+                    const Text("NAME")
+                  ]),
+                ),
+                SimpleDialogOption(
+                  padding: const EdgeInsets.all(20),
+                  onPressed: () async {},
+                  child: const Row(children: [
+                    const Icon(Icons.verified_outlined),
+                    const Spacer(),
+                    const Text("DESCRIPTION")
+                  ]),
+                ),
+                SimpleDialogOption(
+                  padding: const EdgeInsets.all(20),
+                  onPressed: () async {},
+                  child: const Row(children: [
+                    const Icon(Icons.account_circle_outlined),
+                    const Spacer(),
+                    const Text("IMGUR")
+                  ]),
+                ),
+                SimpleDialogOption(
+                  padding: const EdgeInsets.all(20),
+                  onPressed: () async {},
+                  child: const Row(children: [
+                    const Icon(Icons.logout_outlined),
+                    const Spacer(),
+                    const Text("LOGOUT")
+                  ]),
+                ),
+                SimpleDialogOption(
+                  padding: const EdgeInsets.all(20),
+                  onPressed: () async {},
+                  child: const Row(children: [
+                    const Icon(Icons.backup_outlined),
+                    const Spacer(),
+                    const Text("BACKUP")
+                  ]),
+                ),
+                SimpleDialogOption(
+                  padding: const EdgeInsets.all(20),
+                  onPressed: () async {},
+                  child: const Row(children: [
+                    const Icon(Icons.link_outlined),
+                    const Spacer(),
+                    const Text("TWITTER")
+                ]))
+              ]);
+        });
+  }
+
+  void showBchQR() {
+    showDialog(context: context, builder: (context) {
+      return SimpleDialog(
+        children: [
+          SimpleDialogOption(onPressed: () {
+
+          }, child: PrettyQrView.data(data: "data"),)
+        ]
+      );
+    });
+  }
 }

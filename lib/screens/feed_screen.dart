@@ -6,6 +6,7 @@ import 'package:instagram_clone1/widgets/post_card.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/user_provider.dart';
+import '../utils/snackbar.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -15,6 +16,10 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
+  bool hasFilter (int i) {
+    return true;
+  }
+
   void signUserOut() async {
     // final GoogleSignIn googleSignIn = GoogleSignIn();
     // await FirebaseAuth.instance.signOut();
@@ -39,10 +44,42 @@ class _FeedScreenState extends State<FeedScreen> {
           actions: [
             IconButton(
                 onPressed: () {
-                  signUserOut();
+                  showDialog(context: context, builder: (context) {
+                    return SimpleDialog(children: [
+                      SimpleDialogOption(
+                        onPressed: () {
+                          onFilter(0);
+                        },
+                        child: Row(children: [const Icon(Icons.image_rounded), const Spacer(), const Text('IMAGES'), Checkbox(value: hasFilter(0), onChanged: (value) {
+                          onFilter(0);
+                      })],),),
+                      SimpleDialogOption(
+                        onPressed: () {
+                          onFilter(1);
+                        },
+                        child: Row(children: [const Icon(Icons.video_library_rounded), const Spacer(), const Text('VIDEOS'), Checkbox(value: hasFilter(1), onChanged: (value) {
+                          onFilter(1);
+                        })],),),
+                      SimpleDialogOption(
+                        onPressed: () {
+                          onFilter(2);
+                        },
+                        child: Row(children: [const Icon(Icons.tag_rounded), const Spacer(), const Text('HASHTAGS'), Checkbox(value: hasFilter(2), onChanged: (value) {
+                          onFilter(2);
+                        })],),),
+                      SimpleDialogOption(
+                        onPressed: () {
+                          onFilter(3);
+                        },
+                        child: Row(children: [const Icon(Icons.topic_rounded), const Spacer(), const Text('TOPICS'), Checkbox(value: hasFilter(3), onChanged: (value) {
+                          onFilter(3);
+                        })],),),
+                    ],);
+                  },);
+                  // signUserOut();
                 },
                 icon: Icon(
-                  Icons.logout_outlined,
+                  Icons.filter_list,
                   color: blackColor,
                 ))
           ],
@@ -68,5 +105,9 @@ class _FeedScreenState extends State<FeedScreen> {
               )
             // })
   );
+  }
+
+  void onFilter(int i) {
+    showSnackBar("filter$i", context);
   }
 }

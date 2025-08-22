@@ -38,10 +38,7 @@ class MemoModelPost {
   // static final List<MemoModelPost> urlPosts = [];
   static final List<MemoModelPost> topicPosts = [];
 
-  static MemoModelPost createDummy() {
-    MemoModelUser memoModelUser = MemoModelUser.createDummy();
-    MemoModelCreator memoModelCreator = memoModelUser.creator!;
-    
+  static Future<MemoModelPost> createDummy(MemoModelCreator memoModelCreator) async {
     MemoModelTopic topic = MemoModelTopic.createDummy();
     MemoModelPost memoModelPost = MemoModelPost(
                     age: "11d",

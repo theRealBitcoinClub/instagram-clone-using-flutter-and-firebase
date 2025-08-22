@@ -25,7 +25,11 @@ class ProviderUser with ChangeNotifier {
   AuthChecker _authChecker = AuthChecker();
 
   Future<void> refreshUser() async {
-    memoUser = await _authChecker.getUserFromDB();
+    memoUser = await loadUserFromDb();
     notifyListeners();
+  }
+
+  Future<MemoModelUser?> loadUserFromDb() async {
+    return _authChecker.getUserFromDB();
   }
 }

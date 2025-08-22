@@ -24,8 +24,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late MemoModelUser user;
-  MemoModelPost post = MemoModelPost.createDummy();
+  MemoModelUser? user;
+  // MemoModelPost? post;
   late MemoModelCreator creator;
   bool isFollowing = false;
   bool isLoading = false;
@@ -35,9 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
 
-    creator = post.creator!;
-    user = MemoModelUser.createDummy();
-
+    creator = MemoModelCreator.createDummy();
     // ProviderUser provider = Provider.of<ProviderUser>(context);
     // user = provider.memoUser!;
 
@@ -48,34 +46,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       isLoading = true;
     });
-
-    // TODO LOAD USER BY ID
-    // try {
-    //   var userSnap = await FirebaseFirestore.instance
-    //       .collection('users')
-    //       .doc(widget.uid)
-    //       .get();
-    //
-    //   // get post lENGTH
-    //   var postSnap = await FirebaseFirestore.instance
-    //       .collection('posts')
-    //       .where('uid', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
-    //       .get();
-    //
-    //   postLen = postSnap.docs.length;
-    //   userData = userSnap.data()!;
-    //   followers = userSnap.data()!['followers'].length;
-    //   following = userSnap.data()!['followings'].length;
-    //   isFollowing = userSnap
-    //       .data()!['followers']
-    //       .contains(FirebaseAuth.instance.currentUser!.uid);
-    //   setState(() {});
-    // } catch (e) {
-    //   showSnackBar(
-    //     e.toString(),
-    //     context,
-    //   );
-    // }
+    user = await MemoModelUser.createDummy(creator);
+    // post = await MemoModelPost.createDummy(creator);
     setState(() {
       isLoading = false;
     });
@@ -435,7 +407,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const PrettyQrDecoration(image:
                 PrettyQrDecorationImage(image:
                 AssetImage('assets/images/cashtoken.png'))),
-              data: user.bchAddress145tokenAware),)
+              data: user!.bchAddress145tokenAware),)
         ]
             //TODO observe balance change of wallet, show snackbar on deposit
       );

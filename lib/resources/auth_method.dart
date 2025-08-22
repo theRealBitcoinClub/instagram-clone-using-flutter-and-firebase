@@ -8,19 +8,19 @@ class AuthChecker {
   Future<MemoModelUser?> getUserFromDB() async {
     String? mnemonic = await SharedPreferencesAsync().getString("mnemonic");
 
-    if (mnemonic == null)
+    if (mnemonic == null || mnemonic.isEmpty)
       return null;
     //TODO load creator with profile Id, get legacy ID
     return MemoModelUser(mnemonic: mnemonic);
   }
   
-  Future<String> signUpCreateWif(ctx) async {
-    //TODO create memo.cash account derive legacy m44/0/0 as profile id
-    String res = await signInWithMnemonic(MemoModelUser.createDummy().mnemonic, ctx);
-    ProviderUser up = Provider.of(ctx, listen: false);
-    await up.refreshUser();
-    return res;
-  }
+  // Future<String> signUpCreateWif(ctx) async {
+  //   //TODO create memo.cash account derive legacy m44/0/0 as profile id
+  //   String res = await signInWithMnemonic(MemoModelUser.createDummy().mnemonic, ctx);
+  //   ProviderUser up = Provider.of(ctx, listen: false);
+  //   await up.refreshUser();
+  //   return res;
+  // }
 
   Future<String> signInWithMnemonic(String mnemonic, ctx) async {
     try {

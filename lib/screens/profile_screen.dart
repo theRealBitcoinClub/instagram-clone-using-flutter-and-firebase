@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:clipboard/clipboard.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
@@ -14,6 +15,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../provider/user_provider.dart';
 import '../utils/imgur_utils.dart';
+import '../utils/snackbar.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String uid;
@@ -25,6 +27,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   MemoModelUser? user;
+  bool isCashtoken145addressOrMemoDevPath0 = true;
   // MemoModelPost? post;
   late MemoModelCreator creator;
   bool isFollowing = false;
@@ -97,7 +100,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 TextButton(
                     onPressed: () {
                       //TODO LAUNCH PROFILE ON MEMO WITH THAT ID
-                      print("object");
+                      // print("object");
+                      showSnackBar("launch memo profile url or register on memo if 404 on profile", context);
                     },
                     child: Text(
                       creator.id!,
@@ -337,80 +341,101 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const Spacer(),
                     const Text("PROFILE SETTINGS")]),
               children: [
-                SimpleDialogOption(
-                  padding: const EdgeInsets.all(20),
-                  onPressed: () async {},
-                  child: const Row(children: [
-                    const Icon(Icons.verified_user_outlined),
-                    const Spacer(),
-                    const Text("NAME")
-                  ]),
-                ),
-                SimpleDialogOption(
-                  padding: const EdgeInsets.all(20),
-                  onPressed: () async {},
-                  child: const Row(children: [
-                    const Icon(Icons.verified_outlined),
-                    const Spacer(),
-                    const Text("DESCRIPTION")
-                  ]),
-                ),
-                SimpleDialogOption(
-                  padding: const EdgeInsets.all(20),
-                  onPressed: () async {},
-                  child: const Row(children: [
-                    const Icon(Icons.account_circle_outlined),
-                    const Spacer(),
-                    const Text("IMGUR")
-                  ]),
-                ),
-                SimpleDialogOption(
-                  padding: const EdgeInsets.all(20),
-                  onPressed: () async {
-                    AuthChecker().signOut(context);
-                    Navigator.pop(ctxDialog);
-                  },
-                  child: const Row(children: [
-                    const Icon(Icons.logout_outlined),
-                    const Spacer(),
-                    const Text("LOGOUT")
-                  ]),
-                ),
-                SimpleDialogOption(
-                  padding: const EdgeInsets.all(20),
-                  onPressed: () async {},
-                  child: const Row(children: [
-                    const Icon(Icons.backup_outlined),
-                    const Spacer(),
-                    const Text("BACKUP")
-                  ]),
-                ),
-                SimpleDialogOption(
-                  padding: const EdgeInsets.all(20),
-                  onPressed: () async {},
-                  child: const Row(children: [
-                    const Icon(Icons.link_outlined),
-                    const Spacer(),
-                    const Text("TWITTER")
-                ]))
+                settingsOption(Icons.verified_user_outlined, "NAME", ctxDialog, () {
+                  showSnackBar("set profile name", context);
+                }),
+                settingsOption(Icons.verified_outlined, "DESCRIPTION", ctxDialog, () {
+                  showSnackBar("set profile description", context);
+                }),
+                settingsOption(Icons.account_circle_outlined, "IMGUR", ctxDialog, () {
+                  showSnackBar("set profile IMGUR", context);
+                }),
+                settingsOption(Icons.logout_outlined, "LOGOUT", ctxDialog, () {
+                  AuthChecker().logOut(context);
+                }),
+                settingsOption(Icons.backup_outlined, "BACKUP", ctxDialog, () {
+                  showSnackBar("show mnemonic", context);
+                }),
+                settingsOption(Icons.link_rounded, "TWITTER", ctxDialog, () {
+                  showSnackBar("link twitter account", context);
+                }),
               ]);
         });
   }
 
+  SimpleDialogOption settingsOption(IconData ico, String txt, BuildContext ctxDialog, onSelect) {
+    return SimpleDialogOption(
+                padding: const EdgeInsets.all(20),
+                onPressed: () async {
+                  onSelect();
+                  Navigator.of(ctxDialog).pop();
+                },
+                child: Row(children: [
+                  Icon(ico),
+                  const Spacer(),
+                  Text(txt)
+                ]),
+              );
+  }
+
   void showBchQR() {
-    showDialog(context: context, builder: (context) {
+    showDialog(context: context, builder: (dialogCtx) {
       return SimpleDialog(
         children: [
-          SimpleDialogOption(onPressed: () {
-
-          }, child: PrettyQrView.data(decoration:
-                const PrettyQrDecoration(image:
-                PrettyQrDecorationImage(image:
-                AssetImage('assets/images/cashtoken.png'))),
-              data: user!.bchAddress145tokenAware),)
+          isCashtoken145addressOrMemoDevPath0
+              ?
+          qrCode(user!.bchAddress145tokenAware, "cashtoken", dialogCtx)
+              :
+          qrCode(user!.legacyAddress44Memo1BCH, "memo-128x128", dialogCtx)
         ]
             //TODO observe balance change of wallet, show snackbar on deposit
       );
     });
+  }
+
+  SimpleDialogOption qrCode(String address, String img, BuildContext dialogCtx) {
+    return SimpleDialogOption(
+              onPressed: () {
+                copyToClip(address, dialogCtx);
+                Navigator.of(dialogCtx).pop();
+        }, child: Column(children: [
+                    PrettyQrView.data(decoration:
+                          PrettyQrDecoration(image: PrettyQrDecorationImage(image:
+                          AssetImage("assets/images/$img.png"))),
+                        data: address
+                    ), GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              isCashtoken145addressOrMemoDevPath0 = !isCashtoken145addressOrMemoDevPath0;
+                            });
+                            Navigator.of(dialogCtx).pop();
+                            showBchQR();
+                          },
+                          child: Container(
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.all(50),
+                            child: Text(
+                              isCashtoken145addressOrMemoDevPath0 
+                                  ? "SHOW MEMO QR"
+                                  : "SHOW CASHONIZE QR",
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: blueColor),
+                            ),
+                          ),
+                        )
+                  ])
+    );
+  }
+
+  Future<void> copyToClip(String txt, ctx) async {
+    await FlutterClipboard.copyWithCallback(
+      text: txt,
+      onSuccess: () {
+        showSnackBar(txt, ctx);
+
+      },
+      onError: (error) {
+        showSnackBar('Copy failed: $error', ctx);
+      },
+    );
   }
 }

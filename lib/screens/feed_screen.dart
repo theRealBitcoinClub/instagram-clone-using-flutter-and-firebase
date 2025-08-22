@@ -24,7 +24,7 @@ class _FeedScreenState extends State<FeedScreen> {
     // final GoogleSignIn googleSignIn = GoogleSignIn();
     // await FirebaseAuth.instance.signOut();
     // await googleSignIn.signOut();TODO SIGN OUT
-    AuthChecker().signOut(context);
+    AuthChecker().logOut(context);
   }
 
   @override

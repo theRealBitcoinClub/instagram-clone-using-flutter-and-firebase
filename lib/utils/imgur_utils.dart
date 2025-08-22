@@ -30,10 +30,10 @@ class ImgurUtils {
     if (error.toString() == "Exception: Invalid image data") {
       // return Image(image: AssetImage(assetName),)
       // TODO RETURN ASSET IMAGE
-      return Image(image: NetworkImage("https://i.imgur.com/yhN4cfs.png"));
+      return Image(image: AssetImage("assets/images/memo-128x128.png"));
     }
-    print("object");
+    // print("object");
     //TODO I THINK ANY ERROR THAT HAPPENS THERE WILL BE RETURNED THE WIDGET
-    return Image(image: NetworkImage("https://i.imgur.com/yhN4cfs.png"));
+    return Image(image: AssetImage("assets/images/cashtoken.png"));
   }
 }

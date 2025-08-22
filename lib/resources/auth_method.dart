@@ -22,7 +22,7 @@ class AuthChecker {
   //   return res;
   // }
 
-  Future<String> signInWithMnemonic(String mnemonic, ctx) async {
+  Future<String> loginInWithMnemonic(String mnemonic, ctx) async {
     try {
       if (mnemonic.isEmpty) {
         return "enter mnemonic of twelve words that is cashtoken compatible";
@@ -37,7 +37,7 @@ class AuthChecker {
     return "success";
   }
 
-  Future<String> signOut(ctx) async {
+  Future<String> logOut(ctx) async {
     try {
       SharedPreferencesAsync().remove("mnemonic");
       ProviderUser up = Provider.of(ctx, listen: false);

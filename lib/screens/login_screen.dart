@@ -32,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       isLoading = true;
     });
-    String res = await AuthChecker().signInWithMnemonic(_mnemonicController.text, context);
+    String res = await AuthChecker().loginInWithMnemonic(_mnemonicController.text, context);
     //TODO VERIFY MNEMONIC IS VALID
     if (res != 'success') {
       showSnackBar(res, context);
@@ -103,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Container(
               alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 20),
               child: const Text("Are you a new user? "),
             ),
             GestureDetector(
@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onTap: generateMnemonic,
               child: Container(
                 alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.all(20),
                 child: const Text(
                   "GENERATE MNEMONIC",
                   style:

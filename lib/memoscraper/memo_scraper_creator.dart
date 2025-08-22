@@ -12,7 +12,7 @@ class MemoScraperCreator {
       for (MemoModelCreator creator in creators) {
         await loadCreatorNameAndText(creator.id!, creator);
       }
-      print("object");
+      // print("object");
     }
   }
 

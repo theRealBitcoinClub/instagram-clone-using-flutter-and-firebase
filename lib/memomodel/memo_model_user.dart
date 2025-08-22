@@ -5,23 +5,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../memoscraper/memo_bitcoin_base.dart';
 
 class MemoModelUser {
+  String mnemonic;
+  String _bchAddress145tokenAware = "";
+  String _legacyAddress44Memo1BCH = "";
+  MemoModelCreator? creator;
+
   MemoModelUser({
     required this.mnemonic,
     this.creator
-  }) {
-    // MemoBitcoinBase base = MemoBitcoinBase();
-    // ECPrivate bip44Receiver = base.createBip44PrivateKey(mnemonic, "m/44'/145'/0'/0/0");
-    // ECPrivate legacyPK = base.createBip44PrivateKey(mnemonic, "m/44'/0'/0'/0/0");
-    // ECPrivate slpPK = base.createBip44PrivateKey(mnemonic, "m/44'/245'/0'/0/0");
-    //
-    // bchAddress145tokenAware = bip44Receiver.getPublic().toAddress().toAddress(BitcoinCashNetwork.mainnet);
-    // legacyAddress44Memo1BCH = legacyPK.getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
-    // legacyAddress245Memo2SLP = slpPK.getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
+  });
 
-    // bchAddress145tokenAware = "";
-    legacyAddress44Memo1BCH = "";
-    legacyAddress245Memo2SLP = "";
+  String get legacyAddress44Memo1BCH {
+    if (_legacyAddress44Memo1BCH.isEmpty) {
+      _legacyAddress44Memo1BCH = MemoBitcoinBase().createBip44PrivateKey(mnemonic, "m/44'/44'/0'/0/0")
+          .getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
+    }
+    //TODO SAVE THIS IN SHARED PREFS AS IT IS INTENSE CALCULATION
+    return _legacyAddress44Memo1BCH;
   }
+
 
   String get bchAddress145tokenAware {
     if (_bchAddress145tokenAware.isEmpty) {
@@ -32,13 +34,6 @@ class MemoModelUser {
     return _bchAddress145tokenAware;
   }
 
-  String mnemonic;
-  String _bchAddress145tokenAware = "";
-  late String legacyAddress44Memo1BCH;
-  late String legacyAddress245Memo2SLP;
-  MemoModelCreator? creator;
-
-  //TODO generate BCH address from mnemonic
   //TODO generate creator profile id from mnemonic
 
   static Future<MemoModelUser> createDummy(MemoModelCreator creator) async {

@@ -39,6 +39,7 @@ dependencies:
   fast_cached_network_image: ^1.3.3+5
   tostore: ^2.2.2
   bip39_mnemonic: ^4.0.1
+  clipboard: ^2.0.0
   cached_network_image: ^3.4.1
   html: ^0.15.6
   shared_preferences: ^2.5.3

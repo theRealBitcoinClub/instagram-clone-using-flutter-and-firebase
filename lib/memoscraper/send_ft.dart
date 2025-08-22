@@ -3,26 +3,18 @@ import 'package:instagram_clone1/memoscraper/memo_bitcoin_base.dart';
 import 'package:instagram_clone1/memoscraper/socket/electrum_websocket_service.dart';
 
 void main() async {
-  ElectrumWebSocketService service = await ElectrumWebSocketService.connect(
-      "wss://bch.imaginary.cash:50004");
-
-  String tokenId = "d44bf7822552d522802e7076dc9405f5e43151f0ac12b9f6553bda1ce8560002";
-  BitcoinCashNetwork network = BitcoinCashNetwork.mainnet;
-
   //TODO if user profile id is provided, then trigger the SLP send to their original memo address
   //TODO SLP SEND SERVERSIDE on every action	mnemonicZXCXZCASD
 
-  ElectrumProvider provider = ElectrumProvider(service);
-
-  MemoBitcoinBase base = MemoBitcoinBase();
-  ECPrivate bip44Sender = base.createBip44PrivateKey(
+  MemoBitcoinBase base = await MemoBitcoinBase.create();
+  ECPrivate bip44Sender = MemoBitcoinBase.createBip44PrivateKey(
       "mnemonicKDSFJE", MemoBitcoinBase.derivationPathCashtoken);
   P2pkhAddress senderP2PKHWT = base.createAddressP2PKHWT(bip44Sender);
-  ECPrivate bip44Receiver = base.createBip44PrivateKey(
+  ECPrivate bip44Receiver = MemoBitcoinBase.createBip44PrivateKey(
       "mnemonicZXCXZCASD", MemoBitcoinBase.derivationPathCashtoken);
-  ECPrivate legacyPK = base.createBip44PrivateKey(
+  ECPrivate legacyPK = MemoBitcoinBase.createBip44PrivateKey(
       "mnemonicZXCXZCASD", MemoBitcoinBase.derivationPathMemoBch);
-  ECPrivate slpPK = base.createBip44PrivateKey(
+  ECPrivate slpPK = MemoBitcoinBase.createBip44PrivateKey(
       "mnemonicZXCXZCASD", MemoBitcoinBase.derivationPathMemoSlp);
   P2pkhAddress receiverP2PKHWT = base.createAddressP2PKHWT(bip44Receiver);
   //TODO burn token or send token depends on if receiver mnemonic is provided
@@ -46,7 +38,7 @@ void main() async {
 
   BitcoinCashAddress senderBCHp2pkhwt = BitcoinCashAddress.fromBaseAddress(senderP2PKHWT);
   
-  List<ElectrumUtxo> electrumUTXOs = await base.requestElectrumUtxos(provider, 
+  List<ElectrumUtxo> electrumUTXOs = await base.requestElectrumUtxos(
       senderBCHp2pkhwt, 
       includeCashtokens: true);
 
@@ -55,16 +47,17 @@ void main() async {
     return;
   }
 
-  List<UtxoWithAddress> utxos = base.transformUtxosFilterForTokenId(electrumUTXOs, senderBCHp2pkhwt, bip44Sender, tokenId);
+  List<UtxoWithAddress> utxos = base.transformUtxosFilterForTokenId(electrumUTXOs, senderBCHp2pkhwt, bip44Sender, MemoBitcoinBase.tokenId);
 
+  //TODO CHECK WHAT VALUE THE TOKEN UTXOS HAVE, DO THEY INFLUENCE TOTAL BALANCE?
   BigInt totalAmountInSatoshisAvailable = utxos.sumOfUtxosValue();
   if (totalAmountInSatoshisAvailable == BigInt.zero) {
     print("Zero UTXOs with that tokenId found");
     return;
   }
 
-  CashToken token = base.findTokenById(electrumUTXOs, tokenId);
-  BigInt totalAmountOfTokenAvailable = base.calculateTotalAmountOfThatToken(utxos, tokenId);
+  CashToken token = base.findTokenById(electrumUTXOs, MemoBitcoinBase.tokenId);
+  BigInt totalAmountOfTokenAvailable = base.calculateTotalAmountOfThatToken(utxos, MemoBitcoinBase.tokenId);
 
   ForkedTransactionBuilder bchTransaction = base.buildTxToTransferTokens(
       1,
@@ -73,14 +66,13 @@ void main() async {
       utxos,
       receiverP2PKHWT,
       token,
-      totalAmountOfTokenAvailable,
-      network);
+      totalAmountOfTokenAvailable);
 
   BtcTransaction signedTx = bchTransaction.buildTransaction((trDigest, utxo, publicKey, sighash) {
     return bip44Sender.signECDSA(trDigest, sighash: sighash);
   });
 
   //TODO handle dust exceptions, prepare utxo set with tiny BCH to cause exception
-  base.broadcastTransaction(provider, signedTx);
+  base.broadcastTransaction(signedTx);
   print("success");
 }

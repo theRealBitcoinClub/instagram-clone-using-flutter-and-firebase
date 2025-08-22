@@ -54,7 +54,7 @@ class MemoPublisher {
   Future<String> doMemoAction(String memoMessage, MemoCode memoAction,
       {String memoTopic = "", ECPrivate? pk, String? wif, String? tipReceiver, int? tipAmount}) async {
     print("\n${memoAction.opCode}\n${memoAction.name}");
-    var base = MemoBitcoinBase();
+    var base = await MemoBitcoinBase.create();
 
     final service = await ElectrumWebSocketService.connect(
         "wss://${MemoBitcoinBase.mainnetServers[2]}:50004");
@@ -81,8 +81,7 @@ class MemoPublisher {
 
     print("https://bchblockexplorer.com/address/${p2pkhAddress.address}");
 
-    final List<ElectrumUtxo> elctrumUtxos = await base.requestElectrumUtxos(
-        provider, p2pkhAddress);
+    final List<ElectrumUtxo> elctrumUtxos = await base.requestElectrumUtxos(p2pkhAddress);
 
     List<UtxoWithAddress> utxos = addUtxoAddressDetailsAsOwnerDetailsToCreateUtxoWithAddressModelList(
         elctrumUtxos, p2pkhAddress, publicKey);
@@ -112,7 +111,7 @@ class MemoPublisher {
     print("http://memo.cash/explore/tx/${tx.txId()}");
     print("https://bchblockexplorer.com/tx/${tx.txId()}");
 
-    await base.broadcastTransaction(provider, tx);
+    await base.broadcastTransaction(tx);
     return "success";
   }
 

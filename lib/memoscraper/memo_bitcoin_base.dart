@@ -4,6 +4,8 @@ import 'package:instagram_clone1/memoscraper/socket/electrum_websocket_service.d
 
 class MemoBitcoinBase {
 
+  static const String tokenId = "d44bf7822552d522802e7076dc9405f5e43151f0ac12b9f6553bda1ce8560002";
+
   static const mainnetServers = [
     "cashnode.bch.ninja", // Kallisti / Selene Official
     "fulcrum.jettscythe.xyz", // Jett
@@ -21,8 +23,25 @@ class MemoBitcoinBase {
   static const derivationPathMemoSlp = "m/44'/245'/0'/0/0";
   static const derivationPathCashtoken = "m/44'/145'/0'/0/0";
   static const tokenBurnerDotCashAddress = "bitcoincash:r0lxr93av56s6ja253zmg6tjgwclfryeardw6v427e74uv6nfkrlc2s5qtune";
+  
+  ElectrumWebSocketService? service;
+  BitcoinCashNetwork? network;
+  ElectrumProvider? provider;
+  
+  MemoBitcoinBase._create() {
+    network = BitcoinCashNetwork.mainnet;
+  }
+  
+  static Future<MemoBitcoinBase> create({network}) async {
+    MemoBitcoinBase instance = MemoBitcoinBase._create();
+    instance.network = network;
+    ElectrumWebSocketService service = await ElectrumWebSocketService.connect(
+        "wss://${mainnetServers[2]}:50004");
+    instance.provider = ElectrumProvider(service);
+    return instance;
+  }
 
-  ForkedTransactionBuilder buildTxToTransferTokens(int tokenAmountToSend, BitcoinCashAddress senderBCHp2pkhwt, BigInt totalAmountInSatoshisAvailable, List<UtxoWithAddress> utxos, BitcoinBaseAddress receiverP2PKHWT, CashToken token, BigInt totalAmountOfTokenAvailable, BitcoinCashNetwork network) {
+  ForkedTransactionBuilder buildTxToTransferTokens(int tokenAmountToSend, BitcoinCashAddress senderBCHp2pkhwt, BigInt totalAmountInSatoshisAvailable, List<UtxoWithAddress> utxos, BitcoinBaseAddress receiverP2PKHWT, CashToken token, BigInt totalAmountOfTokenAvailable) {
     var amount = BigInt.from(tokenAmountToSend);
     //TODO AUTO CONSOLIDATE TO SAVE ON FEES
     BigInt fee = BtcUtils.toSatoshi("0.000007");
@@ -47,7 +66,7 @@ class MemoBitcoinBase {
             token: token.copyWith(amount: totalAmountOfTokenAvailable - amount)),
       ],
       fee: fee,
-      network: network,
+      network: network!,
       memo: null,
       utxos: utxos,
     );
@@ -73,12 +92,7 @@ class MemoBitcoinBase {
   }
 
   List<UtxoWithAddress> transformUtxosFilterForTokenId(List<ElectrumUtxo> electrumUTXOs, BitcoinCashAddress senderBCHp2pkhwt, ECPrivate bip44Sender, String tokenId) {
-    return electrumUTXOs
-        .map((e) => UtxoWithAddress(
-        utxo: e.toUtxo(senderBCHp2pkhwt.type),
-        ownerDetails: UtxoAddressDetails(
-            publicKey: bip44Sender.getPublic().toHex(), address: senderBCHp2pkhwt.baseAddress)))
-        .toList()
+    return transformUtxosAddAddressDetails(electrumUTXOs, senderBCHp2pkhwt, bip44Sender)
         .where((element) {
       return element.utxo.token?.category ==
           tokenId ||
@@ -86,9 +100,17 @@ class MemoBitcoinBase {
     }).toList();
   }
 
-  Future<List<ElectrumUtxo>> requestElectrumUtxos(
-      ElectrumProvider provider, BitcoinCashAddress p2pkhAddress, {bool includeCashtokens = false}) async {
-    final utxos = await provider.request(ElectrumRequestScriptHashListUnspent(
+  List<UtxoWithAddress> transformUtxosAddAddressDetails(List<ElectrumUtxo> utxos, BitcoinCashAddress addr, ECPrivate pk) {
+    return utxos
+      .map((e) => UtxoWithAddress(
+      utxo: e.toUtxo(addr.type),
+      ownerDetails: UtxoAddressDetails(
+          publicKey: pk.getPublic().toHex(), address: addr.baseAddress)))
+      .toList();
+  }
+
+  Future<List<ElectrumUtxo>> requestElectrumUtxos(BitcoinCashAddress p2pkhAddress, {bool includeCashtokens = false}) async {
+    final utxos = await provider!.request(ElectrumRequestScriptHashListUnspent(
       scriptHash: p2pkhAddress.baseAddress.pubKeyHash(),
       includeTokens: includeCashtokens,
     ));
@@ -103,7 +125,15 @@ class MemoBitcoinBase {
         type: P2pkhAddressType.p2pkhwt);
   }
 
-  ECPrivate createBip44PrivateKey(String mnemonic, String derivationPath) {
+  P2pkhAddress createAddressLegacy(ECPrivate pk) {
+    ECPublic pubKey = pk.getPublic();
+
+    return P2pkhAddress.fromHash160(
+        addrHash: pubKey.toAddress().addressProgram,
+        type: P2pkhAddressType.p2pkh);
+  }
+
+  static ECPrivate createBip44PrivateKey(String mnemonic, String derivationPath) {
     //TODO check that derivationPath is one of specified Enums
 
     List<int> seed = Bip39SeedGenerator(Mnemonic.fromString(
@@ -115,10 +145,9 @@ class MemoBitcoinBase {
     return ECPrivate.fromBytes(bip44.privateKey.raw);
   }
 
-  Future<String> broadcastTransaction(ElectrumProvider provider,
-      BtcTransaction tx) async {
+  Future<String> broadcastTransaction(BtcTransaction tx) async {
     //TODO handle dust xceptions
-    await provider.request(
+    await provider!.request(
         ElectrumRequestBroadCastTransaction(transactionRaw: tx.toHex()),
         timeout: const Duration(seconds: 30));
     return "success";

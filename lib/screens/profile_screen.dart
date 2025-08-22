@@ -57,9 +57,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       isLoading = false;
     });
+    String refreshBch = await user!.refreshBalanceDevPath145();
+    String refreshTokens = await user!.refreshBalanceTokens();
+    String refreshMemo = await user!.refreshBalanceDevPath0();
+    setState(() {
+      // showSnackBar("refreshBCH", context);
+    });
   }
 
-  Column buildStatColumn(String title, int count) {
+  Column buildStatColumn(String title, String count) {
     return Column(
       children: [
         Padding(
@@ -67,7 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             children: [
               Text(
-                count.toString(),
+                count,
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               Text(
@@ -158,8 +164,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Row(
                                 children: [
                                   Padding(padding: EdgeInsets.only(left: 25)),
-                                  buildStatColumn('Posts', creator.actions!),
-                                  buildStatColumn('followers', creator.followerCount!)
+                                  buildStatColumn('BCH', user!.balanceBchDevPath145),
+                                  buildStatColumn('Token', user!.balanceCashtokensDevPath145),
+                                  buildStatColumn('Memo', user!.balanceBchDevPath0Memo)
                                   //TODO SHOW SATOSHIS NOT FOLLOWERCOUNT
                                   //TODO SHOW TOKEN AMOUNT
                                   //TODO SHOW CTSATS, MEMOSATS
@@ -400,7 +407,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ?
           qrCode(user!.bchAddressCashtokenAware, "cashtoken", dialogCtx)
               :
-          qrCode(user!.legacyAddressMemoBch, "memo-128x128", dialogCtx)
+          qrCode(user!.legacyAddressMemoBchAsCashaddress, "memo-128x128", dialogCtx)
         ]
             //TODO observe balance change of wallet, show snackbar on deposit
       );

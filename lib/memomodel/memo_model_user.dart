@@ -9,6 +9,7 @@ class MemoModelUser {
   String mnemonic;
   String _bchAddressCashtokenAware = "";
   String _legacyAddressMemoBch = "";
+  String _legacyAddressMemoBchAsCashaddress = "";
   String _legacyAddressMemoSlp = "";
   ECPrivate? _privateKeyBchCashtoken;
   ECPrivate? _privateKeyLegacy;
@@ -16,11 +17,77 @@ class MemoModelUser {
   String? _wifBchCashtoken;
   String? _wifLegacy;
   MemoModelCreator? creator;
+  String balanceCashtokensDevPath145 = "";
+  String balanceBchDevPath145 = "";
+  String balanceBchDevPath0Memo = "";
 
   MemoModelUser({
     required this.mnemonic,
     this.creator
   });
+
+  Future<String> refreshBalanceDevPath0() async {
+    MemoBitcoinBase base = await MemoBitcoinBase.create();
+    // MemoBitcoinBase base = await MemoBitcoinBase.create(network: BitcoinNetwork.mainnet);
+    P2pkhAddress p2pkhwt = base.createAddressLegacy(_pkLegacy);
+    BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
+    List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress);
+
+    if (utxos.isEmpty) {
+      balanceBchDevPath0Memo = "0";
+      return "noutxos";
+    }
+
+    List<UtxoWithAddress> utxosWA =  base.transformUtxosAddAddressDetails(utxos, cashAddress, _pkLegacy);
+    BigInt totalAmountInSatoshisAvailable = utxosWA.sumOfUtxosValue();
+    if (totalAmountInSatoshisAvailable == BigInt.zero) {
+      balanceBchDevPath0Memo = "0";
+      return "nofunds";
+    }
+
+    balanceBchDevPath0Memo = totalAmountInSatoshisAvailable.toString();
+    return "success";
+  }
+
+  Future<String> refreshBalanceDevPath145() async {
+    MemoBitcoinBase base = await MemoBitcoinBase.create();
+    P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(_pkBchCashtoken);
+    BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
+    List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress);
+
+    if (utxos.isEmpty) {
+      balanceBchDevPath145 = "0";
+      return "noutxos";
+    }
+
+    List<UtxoWithAddress> utxosWA =  base.transformUtxosAddAddressDetails(utxos, cashAddress, _pkBchCashtoken);
+    BigInt totalAmountInSatoshisAvailable = utxosWA.sumOfUtxosValue();
+    if (totalAmountInSatoshisAvailable == BigInt.zero) {
+      balanceBchDevPath145 = "0";
+      return "nofunds";
+    }
+
+    balanceBchDevPath145 = totalAmountInSatoshisAvailable.toString();
+    return "success";
+  }
+
+  Future<String> refreshBalanceTokens() async {
+    MemoBitcoinBase base = await MemoBitcoinBase.create();
+    P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(_pkBchCashtoken);
+    BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
+    List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress, includeCashtokens: true);
+
+    if (utxos.isEmpty) {
+      balanceCashtokensDevPath145 = "0";
+      return "noutxos";
+    }
+
+    List<UtxoWithAddress> utxosWA =  base.transformUtxosAddAddressDetails(utxos, cashAddress, _pkBchCashtoken);
+
+    BigInt totalAmountOfTokenAvailable = base.calculateTotalAmountOfThatToken(utxosWA, MemoBitcoinBase.tokenId);
+    balanceCashtokensDevPath145 = totalAmountOfTokenAvailable.toString();
+    return "success";
+  }
   
   String get profileIdMemoBch {
     return legacyAddressMemoBch;
@@ -50,6 +117,14 @@ class MemoModelUser {
     return _legacyAddressMemoSlp;
   }
 
+  String get legacyAddressMemoBchAsCashaddress {
+    if (_legacyAddressMemoBchAsCashaddress.isEmpty) {
+      _legacyAddressMemoBchAsCashaddress = _pkLegacy.getPublic().toAddress().toAddress(BitcoinCashNetwork.mainnet);
+    }
+    //TODO SAVE THIS IN SHARED PREFS AS IT IS INTENSE CALCULATION
+    return _legacyAddressMemoBchAsCashaddress;
+  }
+
   String get legacyAddressMemoBch {
     if (_legacyAddressMemoBch.isEmpty) {
       _legacyAddressMemoBch = _pkLegacy.getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
@@ -59,17 +134,17 @@ class MemoModelUser {
   }
 
   ECPrivate get _pkLegacySlp {
-    _privateKeyLegacySlp = _privateKeyLegacySlp ?? MemoBitcoinBase().createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoSlp);
+    _privateKeyLegacySlp = _privateKeyLegacySlp ?? MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoSlp);
     return _privateKeyLegacySlp!;
   }
 
   ECPrivate get _pkLegacy {
-    _privateKeyLegacy = _privateKeyLegacy ?? MemoBitcoinBase().createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoBch);
+    _privateKeyLegacy = _privateKeyLegacy ?? MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoBch);
     return _privateKeyLegacy!;
   }
 
   ECPrivate get _pkBchCashtoken {
-    _privateKeyBchCashtoken = _privateKeyBchCashtoken ?? MemoBitcoinBase().createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathCashtoken);
+    _privateKeyBchCashtoken = _privateKeyBchCashtoken ?? MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathCashtoken);
     return _privateKeyBchCashtoken!;
   }
 

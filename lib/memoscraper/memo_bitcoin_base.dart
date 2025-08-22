@@ -3,6 +3,25 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:instagram_clone1/memoscraper/socket/electrum_websocket_service.dart';
 
 class MemoBitcoinBase {
+
+  static const mainnetServers = [
+    "cashnode.bch.ninja", // Kallisti / Selene Official
+    "fulcrum.jettscythe.xyz", // Jett
+    "bch.imaginary.cash", // im_uname
+    "bitcoincash.network", // Dagur
+    "electroncash.dk", // Georg
+    "blackie.c3-soft.com", // Calin
+    "bch.loping.net",
+    "bch.soul-dev.com",
+    "bitcoincash.stackwallet.com", // Rehrar / Stack Wallet official
+    "node.minisatoshi.cash", // minisatoshi
+  ];
+
+  static const derivationPathMemoBch = "m/44'/0'/0'/0/0";
+  static const derivationPathMemoSlp = "m/44'/245'/0'/0/0";
+  static const derivationPathCashtoken = "m/44'/145'/0'/0/0";
+  static const tokenBurnerDotCashAddress = "bitcoincash:r0lxr93av56s6ja253zmg6tjgwclfryeardw6v427e74uv6nfkrlc2s5qtune";
+
   ForkedTransactionBuilder buildTxToTransferTokens(int tokenAmountToSend, BitcoinCashAddress senderBCHp2pkhwt, BigInt totalAmountInSatoshisAvailable, List<UtxoWithAddress> utxos, BitcoinBaseAddress receiverP2PKHWT, CashToken token, BigInt totalAmountOfTokenAvailable, BitcoinCashNetwork network) {
     var amount = BigInt.from(tokenAmountToSend);
     //TODO AUTO CONSOLIDATE TO SAVE ON FEES
@@ -67,6 +86,15 @@ class MemoBitcoinBase {
     }).toList();
   }
 
+  Future<List<ElectrumUtxo>> requestElectrumUtxos(
+      ElectrumProvider provider, BitcoinCashAddress p2pkhAddress, {bool includeCashtokens = false}) async {
+    final utxos = await provider.request(ElectrumRequestScriptHashListUnspent(
+      scriptHash: p2pkhAddress.baseAddress.pubKeyHash(),
+      includeTokens: includeCashtokens,
+    ));
+    return utxos;
+  }
+
   P2pkhAddress createAddressP2PKHWT(ECPrivate pk) {
     ECPublic pubKey = pk.getPublic();
 
@@ -85,5 +113,14 @@ class MemoBitcoinBase {
     Bip32Slip10Secp256k1 bip32 = Bip32Slip10Secp256k1.fromSeed(seed);
     Bip32Base bip44 = bip32.derivePath(derivationPath);
     return ECPrivate.fromBytes(bip44.privateKey.raw);
+  }
+
+  Future<String> broadcastTransaction(ElectrumProvider provider,
+      BtcTransaction tx) async {
+    //TODO handle dust xceptions
+    await provider.request(
+        ElectrumRequestBroadCastTransaction(transactionRaw: tx.toHex()),
+        timeout: const Duration(seconds: 30));
+    return "success";
   }
 }

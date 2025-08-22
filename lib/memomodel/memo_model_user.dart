@@ -5,11 +5,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../memoscraper/memo_bitcoin_base.dart';
 
 class MemoModelUser {
+  static MemoModelUser? dummy;
   String mnemonic;
   String _bchAddressCashtokenAware = "";
-  String _legacyAddressMemo1Bch = "";
+  String _legacyAddressMemoBch = "";
+  String _legacyAddressMemoSlp = "";
   ECPrivate? _privateKeyBchCashtoken;
   ECPrivate? _privateKeyLegacy;
+  ECPrivate? _privateKeyLegacySlp;
   String? _wifBchCashtoken;
   String? _wifLegacy;
   MemoModelCreator? creator;
@@ -18,6 +21,14 @@ class MemoModelUser {
     required this.mnemonic,
     this.creator
   });
+  
+  String get profileIdMemoBch {
+    return legacyAddressMemoBch;
+  }
+
+  String get profileIdMemoSlp {
+    return legacyAddressMemoSlp;
+  }
   
   String get wifLegacy {
     _wifLegacy = _wifLegacy ?? _pkLegacy.toWif();
@@ -29,21 +40,36 @@ class MemoModelUser {
     return _wifBchCashtoken!;
   }
 
-  String get legacyAddressMemo1Bch {
-    if (_legacyAddressMemo1Bch.isEmpty) {
-      _legacyAddressMemo1Bch = _pkLegacy.getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
+  String get legacyAddressMemoSlp {
+    if (_legacyAddressMemoSlp.isEmpty) {
+      _legacyAddressMemoSlp = _pkLegacySlp
+          .getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
     }
     //TODO SAVE THIS IN SHARED PREFS AS IT IS INTENSE CALCULATION
-    return _legacyAddressMemo1Bch;
+    //TODO save it in regards of mnemonic, add mnemonic hash to key
+    return _legacyAddressMemoSlp;
+  }
+
+  String get legacyAddressMemoBch {
+    if (_legacyAddressMemoBch.isEmpty) {
+      _legacyAddressMemoBch = _pkLegacy.getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
+    }
+    //TODO SAVE THIS IN SHARED PREFS AS IT IS INTENSE CALCULATION
+    return _legacyAddressMemoBch;
+  }
+
+  ECPrivate get _pkLegacySlp {
+    _privateKeyLegacySlp = _privateKeyLegacySlp ?? MemoBitcoinBase().createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoSlp);
+    return _privateKeyLegacySlp!;
   }
 
   ECPrivate get _pkLegacy {
-    _privateKeyLegacy = _privateKeyLegacy ?? MemoBitcoinBase().createBip44PrivateKey(mnemonic, "m/44'/0'/0'/0/0");
+    _privateKeyLegacy = _privateKeyLegacy ?? MemoBitcoinBase().createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoBch);
     return _privateKeyLegacy!;
   }
 
   ECPrivate get _pkBchCashtoken {
-    _privateKeyBchCashtoken = _privateKeyBchCashtoken ?? MemoBitcoinBase().createBip44PrivateKey(mnemonic, "m/44'/145'/0'/0/0");
+    _privateKeyBchCashtoken = _privateKeyBchCashtoken ?? MemoBitcoinBase().createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathCashtoken);
     return _privateKeyBchCashtoken!;
   }
 
@@ -55,10 +81,11 @@ class MemoModelUser {
     return _bchAddressCashtokenAware;
   }
 
-  //TODO generate creator profile id from mnemonic
-
   static Future<MemoModelUser> createDummy({MemoModelCreator? creator}) async {
-    String? mne = await SharedPreferencesAsync().getString("mnemonic");
-    return MemoModelUser(mnemonic: mne ?? "", creator: creator);
+    if (dummy == null) {
+      String? mne = await SharedPreferencesAsync().getString("mnemonic");
+      dummy = MemoModelUser(mnemonic: mne ?? "", creator: creator);
+    }
+    return dummy!;
   }
 }

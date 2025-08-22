@@ -10,13 +10,13 @@ class MemoScraperCreator {
     for (String order in orderBy) {
       List<MemoModelCreator> creators = await scrapeCreators(order);
       for (MemoModelCreator creator in creators) {
-        await loadCreatorNameAndText(creator.id!, creator);
+        await loadCreatorNameAndText(creator.id!, creator: creator);
       }
       // print("object");
     }
   }
 
-  Future<MemoModelCreator> loadCreatorNameAndText(String id, MemoModelCreator? creator) async {
+  Future<MemoModelCreator> loadCreatorNameAndText(String id, {MemoModelCreator? creator}) async {
     Map<String, Object> data = await MemoScraperUtil.createScraper("profile/${id}", createConfigCreatorDetails());
 
     var split = data.values.first.toString().replaceAll(" ", "").split("\n");

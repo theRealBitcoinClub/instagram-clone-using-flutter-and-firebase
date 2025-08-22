@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+import 'package:instagram_clone1/memoscraper/memo_scraper_creator.dart';
 import 'package:instagram_clone1/resources/auth_method.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/profile_buttons.dart';
@@ -27,6 +28,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   MemoModelUser? user;
+  bool showDefaultAvatar = false;
   bool isCashtoken145addressOrMemoDevPath0 = true;
   // MemoModelPost? post;
   late MemoModelCreator creator;
@@ -50,6 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       isLoading = true;
     });
     user = await MemoModelUser.createDummy(creator: creator);
+    creator = await MemoScraperCreator().loadCreatorNameAndText(user!.profileIdMemoBch);
     // post = await MemoModelPost.createDummy(creator);
     setState(() {
       isLoading = false;
@@ -104,7 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       showSnackBar("launch memo profile url or register on memo if 404 on profile", context);
                     },
                     child: Text(
-                      creator.id!,
+                      user!.profileIdMemoBch,
                       // userData['username'],
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     )
@@ -134,7 +137,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         Container(
                           // padding: EdgeInsets.all(10).copyWith(top: 20),
-                          child: CircleAvatar(
+                          child: 
+                          showDefaultAvatar ?
+                          CircleAvatar(backgroundImage: AssetImage("assets/images/default_profile.png"),)
+                          :
+                          CircleAvatar(
+                            onBackgroundImageError: (exception, stackTrace) {
+                              setState(() {
+                                showDefaultAvatar = true;
+                              });
+                            },
                             backgroundImage: NetworkImage(creator.profileImage()),
                             // backgroundImage: NetworkImage(userData['photoURL']),
                             radius: 40,
@@ -149,6 +161,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   buildStatColumn('Posts', creator.actions!),
                                   buildStatColumn('followers', creator.followerCount!)
                                   //TODO SHOW SATOSHIS NOT FOLLOWERCOUNT
+                                  //TODO SHOW TOKEN AMOUNT
+                                  //TODO SHOW CTSATS, MEMOSATS
                                 ],
                               ),
                               Column(
@@ -386,7 +400,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ?
           qrCode(user!.bchAddressCashtokenAware, "cashtoken", dialogCtx)
               :
-          qrCode(user!.legacyAddressMemo1Bch, "memo-128x128", dialogCtx)
+          qrCode(user!.legacyAddressMemoBch, "memo-128x128", dialogCtx)
         ]
             //TODO observe balance change of wallet, show snackbar on deposit
       );

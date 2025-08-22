@@ -16,18 +16,18 @@ void main() async {
 
   MemoBitcoinBase base = MemoBitcoinBase();
   ECPrivate bip44Sender = base.createBip44PrivateKey(
-      "mnemonicKDSFJE", "m/44'/145'/0'/0/0");
+      "mnemonicKDSFJE", MemoBitcoinBase.derivationPathCashtoken);
   P2pkhAddress senderP2PKHWT = base.createAddressP2PKHWT(bip44Sender);
   ECPrivate bip44Receiver = base.createBip44PrivateKey(
-      "mnemonicZXCXZCASD", "m/44'/145'/0'/0/0");
+      "mnemonicZXCXZCASD", MemoBitcoinBase.derivationPathCashtoken);
   ECPrivate legacyPK = base.createBip44PrivateKey(
-      "mnemonicZXCXZCASD", "m/44'/0'/0'/0/0");
+      "mnemonicZXCXZCASD", MemoBitcoinBase.derivationPathMemoBch);
   ECPrivate slpPK = base.createBip44PrivateKey(
-      "mnemonicZXCXZCASD", "m/44'/245'/0'/0/0");
+      "mnemonicZXCXZCASD", MemoBitcoinBase.derivationPathMemoSlp);
   P2pkhAddress receiverP2PKHWT = base.createAddressP2PKHWT(bip44Receiver);
   //TODO burn token or send token depends on if receiver mnemonic is provided
   // BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress("bitcoincash:qp97cpfavlgudx8jzk553n0rfe66lk73k59k2ayp36").baseAddress;
-  // BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress("bitcoincash:r0lxr93av56s6ja253zmg6tjgwclfryeardw6v427e74uv6nfkrlc2s5qtune").baseAddress;
+  // BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress(MemoBitcoinBase.burnCashtokenAddress).baseAddress;
 
   //TODO use m/44/ for publishing to memo and m/145/ to send and burn tokens
   //TODO user can use BCH to send the reply tip or cashtokens but paying with BCH should be more expensive
@@ -46,10 +46,9 @@ void main() async {
 
   BitcoinCashAddress senderBCHp2pkhwt = BitcoinCashAddress.fromBaseAddress(senderP2PKHWT);
   
-  List<ElectrumUtxo> electrumUTXOs = await provider.request(ElectrumRequestScriptHashListUnspent(
-    scriptHash: senderP2PKHWT.pubKeyHash(),
-    includeTokens: true,
-  ));
+  List<ElectrumUtxo> electrumUTXOs = await base.requestElectrumUtxos(provider, 
+      senderBCHp2pkhwt, 
+      includeCashtokens: true);
 
   if (electrumUTXOs.length == 0) {
     print("Zero UTXOs found");
@@ -81,7 +80,7 @@ void main() async {
     return bip44Sender.signECDSA(trDigest, sighash: sighash);
   });
 
-  await provider.request(
-      ElectrumRequestBroadCastTransaction(transactionRaw: signedTx.toHex()));
+  //TODO handle dust exceptions, prepare utxo set with tiny BCH to cause exception
+  base.broadcastTransaction(provider, signedTx);
   print("success");
 }

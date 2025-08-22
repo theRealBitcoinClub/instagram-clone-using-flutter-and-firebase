@@ -1,95 +1,15 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:instagram_clone1/memoscraper/memo_bitcoin_base.dart';
 import 'package:instagram_clone1/memoscraper/memo_transformation.dart';
 
 import 'memo_code.dart';
 import 'memo_transaction_builder.dart';
 import 'socket/electrum_websocket_service.dart';
 
-const mainnetServers = [
-  "cashnode.bch.ninja", // Kallisti / Selene Official
-  "fulcrum.jettscythe.xyz", // Jett
-  "bch.imaginary.cash", // im_uname
-  "bitcoincash.network", // Dagur
-  "electroncash.dk", // Georg
-  "blackie.c3-soft.com", // Calin
-  "bch.loping.net",
-  "bch.soul-dev.com",
-  "bitcoincash.stackwallet.com", // Rehrar / Stack Wallet official
-  "node.minisatoshi.cash", // minisatoshi
-];
-
 const int hash160DigestLength = QuickCrypto.hash160DigestSize;
 
 class MemoPublisher {
-
-static String legacyToBchAddress(
-{required BitcoinCashNetwork network,
-required String addressProgram,
-required BitcoinAddressType type}) {
-final programBytes = BytesUtils.fromHexString(addressProgram);
-final netVersion = _getBchNetVersion(
-network: network, type: type, secriptLength: programBytes.length);
-
-return BchBech32Encoder.encode(
-network.networkHRP, netVersion, programBytes);
-}
-
-static List<int> _getBchNetVersion(
-{required BitcoinCashNetwork network,
-required BitcoinAddressType type,
-int secriptLength = hash160DigestLength}) {
-final isToken = type.value.contains('WT');
-if (!type.isP2sh) {
-if (!isToken) return network.p2pkhNetVer;
-return network.p2pkhWtNetVer;
-} else {
-if (!isToken) {
-if (secriptLength == hash160DigestLength) {
-return network.p2shNetVer;
-}
-return network.p2sh32NetVer;
-}
-if (secriptLength == hash160DigestLength) {
-return network.p2shwt20NetVer;
-}
-return network.p2shwt32NetVer;
-}
-}
-
-
-List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
-  double len = data.length * from / to;
-  final length = strictMode ? len.floor() : len.ceil();
-
-  final mask = (1 << to) - 1;
-  final result = List.generate(length, (_) => 0);
-
-  var index = 0;
-  var accumulator = 0;
-  var bits = 0;
-
-  for (var i = 0; i < data.length; i++) {
-    var value = data[i];
-    accumulator = (accumulator << from) | value;
-    bits += from;
-    while (bits >= to) {
-      bits -= to;
-      result[index] = (accumulator >> bits) & mask;
-      index++;
-    }
-  }
-
-  if (!strictMode) {
-    if (bits > 0) {
-      result[index] = (accumulator << (to - bits)) & mask;
-      index++;
-    }
-  } else {}
-
-  return result;
-}
-
   void testMemoSend() async {
     // print("\n\n" + await doMemoAction("PostMessage", MemoCode.profileMessage,""));
     // print("\n${await doMemoAction("IMG1 https://imgur.com/eIEjcUe", MemoCode.ProfileMessage,"")}");
@@ -134,8 +54,10 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
   Future<String> doMemoAction(String memoMessage, MemoCode memoAction,
       {String memoTopic = "", ECPrivate? pk, String? wif, String? tipReceiver, int? tipAmount}) async {
     print("\n${memoAction.opCode}\n${memoAction.name}");
+    var base = MemoBitcoinBase();
+
     final service = await ElectrumWebSocketService.connect(
-        "wss://${mainnetServers[2]}:50004");
+        "wss://${MemoBitcoinBase.mainnetServers[2]}:50004");
 
     final provider = ElectrumProvider(service);
 
@@ -159,12 +81,10 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
 
     print("https://bchblockexplorer.com/address/${p2pkhAddress.address}");
 
-    final List<
-        ElectrumUtxo> elctrumUtxos = await requestElectrumUtxosFilterCashtokenUtxos(
+    final List<ElectrumUtxo> elctrumUtxos = await base.requestElectrumUtxos(
         provider, p2pkhAddress);
 
-    List<
-        UtxoWithAddress> utxos = addUtxoAddressDetailsAsOwnerDetailsToCreateUtxoWithAddressModelList(
+    List<UtxoWithAddress> utxos = addUtxoAddressDetailsAsOwnerDetailsToCreateUtxoWithAddressModelList(
         elctrumUtxos, p2pkhAddress, publicKey);
 
     utxos = removeSlpUtxos(utxos);
@@ -192,16 +112,7 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
     print("http://memo.cash/explore/tx/${tx.txId()}");
     print("https://bchblockexplorer.com/tx/${tx.txId()}");
 
-    await broadcastTransaction(provider, tx);
-    return "success";
-  }
-
-  Future<String> broadcastTransaction(ElectrumProvider provider,
-      BtcTransaction tx) async {
-  //TODO handle dust xceptions
-    await provider.request(
-        ElectrumRequestBroadCastTransaction(transactionRaw: tx.toHex()),
-        timeout: const Duration(seconds: 30));
+    await base.broadcastTransaction(provider, tx);
     return "success";
   }
 
@@ -255,16 +166,6 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
       txBuilder.outPuts.add(BitcoinOutput(address: tipToThisAddress.baseAddress, value: tip));
 
     return txBuilder;
-  }
-
-  Future<List<ElectrumUtxo>> requestElectrumUtxosFilterCashtokenUtxos(
-      ElectrumProvider provider, BitcoinCashAddress p2pkhAddress) async {
-    final elctrumUtxos =
-    await provider.request(ElectrumRequestScriptHashListUnspent(
-      scriptHash: p2pkhAddress.baseAddress.pubKeyHash(),
-      includeTokens: false,
-    ));
-    return elctrumUtxos;
   }
 
   List<

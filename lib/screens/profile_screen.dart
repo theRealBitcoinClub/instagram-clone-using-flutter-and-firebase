@@ -354,7 +354,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   AuthChecker().logOut(context);
                 }),
                 settingsOption(Icons.backup_outlined, "BACKUP", ctxDialog, () {
-                  showSnackBar("show mnemonic", context);
+                  copyToClip(user!.mnemonic, context);
                 }),
                 settingsOption(Icons.link_rounded, "TWITTER", ctxDialog, () {
                   showSnackBar("link twitter account", context);

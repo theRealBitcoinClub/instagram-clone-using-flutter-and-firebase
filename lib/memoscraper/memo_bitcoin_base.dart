@@ -76,6 +76,8 @@ class MemoBitcoinBase {
   }
 
   ECPrivate createBip44PrivateKey(String mnemonic, String derivationPath) {
+    //TODO check that derivationPath is one of specified Enums
+
     List<int> seed = Bip39SeedGenerator(Mnemonic.fromString(
         mnemonic))
         .generate();

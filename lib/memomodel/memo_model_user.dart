@@ -17,7 +17,7 @@ class MemoModelUser {
 
   String get legacyAddress44Memo1BCH {
     if (_legacyAddress44Memo1BCH.isEmpty) {
-      _legacyAddress44Memo1BCH = MemoBitcoinBase().createBip44PrivateKey(mnemonic, "m/44'/44'/0'/0/0")
+      _legacyAddress44Memo1BCH = MemoBitcoinBase().createBip44PrivateKey(mnemonic, "m/44'/0'/0'/0/0")
           .getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
     }
     //TODO SAVE THIS IN SHARED PREFS AS IT IS INTENSE CALCULATION

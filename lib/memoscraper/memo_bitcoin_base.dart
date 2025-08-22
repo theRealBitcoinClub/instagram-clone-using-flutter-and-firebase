@@ -32,9 +32,8 @@ class MemoBitcoinBase {
     network = BitcoinCashNetwork.mainnet;
   }
   
-  static Future<MemoBitcoinBase> create({network}) async {
+  static Future<MemoBitcoinBase> create() async {
     MemoBitcoinBase instance = MemoBitcoinBase._create();
-    instance.network = network;
     ElectrumWebSocketService service = await ElectrumWebSocketService.connect(
         "wss://${mainnetServers[2]}:50004");
     instance.provider = ElectrumProvider(service);

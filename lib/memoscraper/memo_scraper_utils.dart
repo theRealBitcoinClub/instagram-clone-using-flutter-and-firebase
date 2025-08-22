@@ -7,10 +7,10 @@ import '../memomodel/memo_model_post.dart';
 
 class MemoScraperUtil {
 
-  static Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg) async {
+  static Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg, {bool nocache = false}) async {
     String baseUrl = "https://memo.cash/";
     WebScraper webScraper = WebScraper();
-    String? cachedData = await loadCachedData(path);
+    String? cachedData = nocache ? null : await loadCachedData(path);
     Map<String, Object> topics = await webScraper.scrape(
       html: cachedData == null ? null : Document.html(cachedData),
       concurrentParsing: true,

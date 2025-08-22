@@ -16,8 +16,8 @@ class MemoScraperCreator {
     }
   }
 
-  Future<MemoModelCreator> loadCreatorNameAndText(String id, {MemoModelCreator? creator}) async {
-    Map<String, Object> data = await MemoScraperUtil.createScraper("profile/${id}", createConfigCreatorDetails());
+  Future<MemoModelCreator> loadCreatorNameAndText(String id, {MemoModelCreator? creator, bool nocache = false}) async {
+    Map<String, Object> data = await MemoScraperUtil.createScraper("profile/${id}", createConfigCreatorDetails(), nocache: nocache);
 
     var split = data.values.first.toString().replaceAll(" ", "").split("\n");
     split.removeWhere((element) => element.isEmpty);

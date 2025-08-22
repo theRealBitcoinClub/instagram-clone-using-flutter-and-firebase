@@ -52,7 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       isLoading = true;
     });
     user = await MemoModelUser.createDummy(creator: creator);
-    creator = await MemoScraperCreator().loadCreatorNameAndText(user!.profileIdMemoBch);
+    creator = await MemoScraperCreator().loadCreatorNameAndText(user!.profileIdMemoBch, nocache: true);
     // post = await MemoModelPost.createDummy(creator);
     setState(() {
       isLoading = false;
@@ -145,7 +145,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           // padding: EdgeInsets.all(10).copyWith(top: 20),
                           child: 
                           showDefaultAvatar ?
-                          CircleAvatar(backgroundImage: AssetImage("assets/images/default_profile.png"),)
+                          CircleAvatar(radius: 40,
+                              backgroundImage: AssetImage("assets/images/default_profile.png"),)
                           :
                           CircleAvatar(
                             onBackgroundImageError: (exception, stackTrace) {
@@ -153,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 showDefaultAvatar = true;
                               });
                             },
-                            backgroundImage: NetworkImage(creator.profileImage()),
+                            backgroundImage: NetworkImage(user!.profileImage()),
                             // backgroundImage: NetworkImage(userData['photoURL']),
                             radius: 40,
                           ),
@@ -163,10 +164,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Padding(padding: EdgeInsets.only(left: 25)),
+                                  Padding(padding: EdgeInsets.only(left: 30)),
                                   buildStatColumn('BCH', user!.balanceBchDevPath145),
+                                  Spacer(),
                                   buildStatColumn('Token', user!.balanceCashtokensDevPath145),
-                                  buildStatColumn('Memo', user!.balanceBchDevPath0Memo)
+                                  Spacer(),
+                                  buildStatColumn('Memo', user!.balanceBchDevPath0Memo),
+                                  Padding(padding: EdgeInsets.only(right: 30))
                                   //TODO SHOW SATOSHIS NOT FOLLOWERCOUNT
                                   //TODO SHOW TOKEN AMOUNT
                                   //TODO SHOW CTSATS, MEMOSATS
@@ -249,53 +253,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   new Divider(
                     color: Colors.grey.shade400,
                   ),
-
-                  //posts or reels
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      IconButton(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          onPressed: () {setState(() {
-                            viewMode = 0;
-                          });},
-                          icon: Icon(
-                            Icons.image_rounded,
-                            size: 32,
-                            color: activeOrNot(0),
-                          )),
-                      IconButton(
-                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                          onPressed: () {setState(() {
-                            viewMode = 1;
-                          });},
-                          icon: Icon(
-                            Icons.video_library_rounded,
-                            size: 32,
-                            color: activeOrNot(1),
-                          )),
-                      IconButton(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          onPressed: () {setState(() {
-                            viewMode = 2;
-                          });},
-                          icon: Icon(Icons.tag_rounded,
-                              size: 32, color : activeOrNot(2))),
-                      // IconButton(
-                      //     padding: EdgeInsets.symmetric(horizontal: 20),
-                      //     onPressed: () {setState(() {
-                      //       viewMode = 3;
-                      //     });},
-                      //     icon: Icon(Icons.format_color_text_rounded,
-                      //         size: 32, color: activeOrNot(3))),
-                      IconButton(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          onPressed: () {setState(() {
-                            viewMode = 4;
-                          });},
-                          icon: Icon(Icons.topic,
-                              size: 32, color: activeOrNot(4)))
+                      buildIconButton(0, Icons.image_rounded),
+                      buildIconButton(1, Icons.video_library_rounded),
+                      buildIconButton(2, Icons.tag_rounded),
+                      buildIconButton(4, Icons.topic)
                     ],
                   ),
                   SizedBox(height: 447, child:
@@ -332,7 +296,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         : GridView.builder(
                             itemBuilder:  (context, index) {
                                     return Image(image: NetworkImage(MemoModelPost.imgurPosts[index].imgurUrl!),
-                                      fit: BoxFit.contain,
+                                      fit: BoxFit.none,
                                       errorBuilder: (context, error, stackTrace) => ImgurUtils.errorLoadImage(context, error, stackTrace),
                                       loadingBuilder: (context, child, loadingProgress) => ImgurUtils.loadingImage(context, child, loadingProgress),
                                     );},
@@ -345,6 +309,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ])
                   )
           );
+  }
+
+  IconButton buildIconButton(index, icon) {
+    return IconButton(
+                        padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+                        onPressed: () {setState(() {
+                          viewMode = index;
+                        });},
+                        icon: Icon(
+                          icon,
+                          size: 36,
+                          color: activeOrNot(index),
+                        ));
   }
 
   SizedBox buildTextBox(List<MemoModelPost> posts, int index) => SizedBox(height: 100, child: Text(posts[index].text!));

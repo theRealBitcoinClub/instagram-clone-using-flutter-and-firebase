@@ -17,9 +17,9 @@ class MemoModelUser {
   String? _wifBchCashtoken;
   String? _wifLegacy;
   MemoModelCreator? creator;
-  String balanceCashtokensDevPath145 = "";
-  String balanceBchDevPath145 = "";
-  String balanceBchDevPath0Memo = "";
+  String balanceCashtokensDevPath145 = "?";
+  String balanceBchDevPath145 = "?";
+  String balanceBchDevPath0Memo = "?";
 
   MemoModelUser({
     required this.mnemonic,
@@ -28,7 +28,6 @@ class MemoModelUser {
 
   Future<String> refreshBalanceDevPath0() async {
     MemoBitcoinBase base = await MemoBitcoinBase.create();
-    // MemoBitcoinBase base = await MemoBitcoinBase.create(network: BitcoinNetwork.mainnet);
     P2pkhAddress p2pkhwt = base.createAddressLegacy(_pkLegacy);
     BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
     List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress);
@@ -162,5 +161,9 @@ class MemoModelUser {
       dummy = MemoModelUser(mnemonic: mne ?? "", creator: creator);
     }
     return dummy!;
+  }
+
+  String profileImage() {
+    return "https://memo.cash/img/profilepics/${legacyAddressMemoBch}-128x128.jpg";
   }
 }

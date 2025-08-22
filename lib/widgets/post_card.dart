@@ -189,7 +189,7 @@ class _PostCardState extends State<PostCard> {
                         :
                       Image(
                               image: NetworkImage(post.imgurUrl!),
-                              height: MediaQuery.of(context).size.height * 0.45,
+                              // height: MediaQuery.of(context).size.height * 0.45,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) => ImgurUtils.errorLoadImage(context, error, stackTrace),
                               loadingBuilder: (context, child, loadingProgress) => ImgurUtils.loadingImage(context, child, loadingProgress),

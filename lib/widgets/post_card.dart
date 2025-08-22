@@ -1,5 +1,6 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 import 'package:instagram_clone1/memoscraper/memo_code.dart';
 import 'package:instagram_clone1/memoscraper/memo_publisher.dart';
 import 'package:instagram_clone1/memoscraper/memo_scraper_utils.dart';
@@ -24,6 +25,7 @@ class PostCard extends StatefulWidget {
 }
 
 class _PostCardState extends State<PostCard> {
+  MemoModelUser? user;
   bool isAnimating = false;
   MemoModelPost post;
   bool showInput = false;
@@ -40,6 +42,12 @@ class _PostCardState extends State<PostCard> {
   @override
   void initState() {
     super.initState();
+
+    loadUser();
+  }
+
+  void loadUser() async {
+    user = await MemoModelUser.createDummy();
   }
 
   @override
@@ -411,14 +419,38 @@ class _PostCardState extends State<PostCard> {
     });
   }
 
-  void onReplyTopic() {
-    MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.topicMessage, memoTopic: post.topic!.header!, tipReceiver: post.creator!.id);
-    //TODO hide on success
-    //TODO SHOW ANIMATION CONFETTI OVER THE WHOLE POST
+  void onReplyTopic() async {
+    //TODO let user config the tip
+    // MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.topicMessage, memoTopic: post.topic!.header!, tipReceiver: post.creator!.id);
+    //TODO encapsulate the retry as all actions will be served like that
+    //TODO do not handle strings, handle enum response codes
+    String result = await MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.topicMessage,
+        memoTopic: post.topic!.header!, wif: user!.wifBchCashtoken);
+
+    if (result != "success") {
+      showSnackBar("trieng memo funds", context);
+
+      result = await MemoPublisher().doMemoAction(
+          textEdit.text.trim(), MemoCode.topicMessage,
+          memoTopic: post.topic!.header!, wif: user!.wifLegacy);
+
+      //TODO HANDLE RPCError: got code 1 with message "the transaction was rejected by network rules. DUST
+
+      if (result != "success") {
+        showSnackBar("you broke dude", context);
+      } else {
+        showSnackBar("show tx id link", context);
+        //TODO hide on success
+        //TODO SHOW ANIMATION CONFETTI OVER THE WHOLE POST
+      }
+    } else {
+      showSnackBar("show tx id link", context);
+    }
   }
 
   void onPostWithHashtags() {
-    MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.profileMessage, tipReceiver: post.creator!.id);
+    MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.profileMessage);
+    // MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.profileMessage, tipReceiver: post.creator!.id);
   }
 
   // onErrorLoadImage(error) {

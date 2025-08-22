@@ -149,12 +149,12 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
 
     final BitcoinCashAddress p2pkhAddress = BitcoinCashAddress.fromBaseAddress(publicKey.toAddress());
 
-    BitcoinCashAddress? receiver = null;
+    BitcoinCashAddress? tipToThisAddress;
 
     if (tipReceiver != null && tipAmount != null) {
       P2pkhAddress legacy = P2pkhAddress.fromAddress(address: tipReceiver, network: BitcoinNetwork.mainnet);
       // String addr = legacyToBchAddress(addressProgram: legacy.addressProgram, network: network, type: P2pkhAddressType.p2pkh);
-      receiver = BitcoinCashAddress.fromBaseAddress(legacy);
+      tipToThisAddress = BitcoinCashAddress.fromBaseAddress(legacy);
     }
 
     print("https://bchblockexplorer.com/address/${p2pkhAddress.address}");
@@ -169,9 +169,13 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
 
     utxos = removeSlpUtxos(utxos);
 
-    final BigInt walletBalance = getTotalWalletBalanceInSatoshis(utxos);
+    final BigInt walletBalance = utxos.sumOfUtxosValue();
 
-    final BigInt fee = BtcUtils.toSatoshi("0.000006");
+    if (walletBalance == BigInt.zero) {
+      return "This wallet has zero funds";
+    }
+
+    final BigInt fee = BtcUtils.toSatoshi("0.000007");
     // final BigInt tip = BigInt.parse(tipAmount);
     final BtcTransaction tx = createTransaction(
         p2pkhAddress,
@@ -182,27 +186,29 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
         memoMessage,
         memoAction,
         privateKey,
-        memoTopic: memoTopic, receiver: receiver);
+        memoTopic: memoTopic, tipToThisAddress: tipToThisAddress);
 
     print(tx.txId());
     print("http://memo.cash/explore/tx/${tx.txId()}");
     print("https://bchblockexplorer.com/tx/${tx.txId()}");
 
     await broadcastTransaction(provider, tx);
-    return "Success";
+    return "success";
   }
 
-  Future<void> broadcastTransaction(ElectrumProvider provider,
+  Future<String> broadcastTransaction(ElectrumProvider provider,
       BtcTransaction tx) async {
+  //TODO handle dust xceptions
     await provider.request(
         ElectrumRequestBroadCastTransaction(transactionRaw: tx.toHex()),
         timeout: const Duration(seconds: 30));
+    return "success";
   }
 
   BtcTransaction createTransaction(BitcoinCashAddress p2pkhAddress,
       BigInt walletBalance, BigInt fee, BitcoinCashNetwork network,
       List<UtxoWithAddress> utxos, String memoMessage, MemoCode memoAction,
-      ECPrivate privateKey, {String memoTopic = "", BitcoinCashAddress? receiver}) {
+      ECPrivate privateKey, {String memoTopic = "", BitcoinCashAddress? tipToThisAddress}) {
     final MemoTransactionBuilder txBuilder = createTransactionBuilder(
         p2pkhAddress,
         walletBalance,
@@ -211,7 +217,7 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
         utxos,
         memoMessage,
         memoAction,
-        memoTopic, receiver);
+        memoTopic, tipToThisAddress);
     final tx =
     txBuilder.buildTransaction((trDigest, utxo, publicKey, sighash) {
       return privateKey.signECDSA(trDigest, sighash: sighash);
@@ -222,11 +228,11 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
   MemoTransactionBuilder createTransactionBuilder(
       BitcoinCashAddress p2pkhAddress, BigInt walletBalance, BigInt fee,
       BitcoinCashNetwork network, List<UtxoWithAddress> utxos,
-      String memoMessage, MemoCode memoAction, String memoTopic, BitcoinCashAddress? receiver) {
+      String memoMessage, MemoCode memoAction, String memoTopic, BitcoinCashAddress? tipToThisAddress) {
 
     final BigInt tip = BtcUtils.toSatoshi("0.00001");
     BigInt outputHome = walletBalance - fee;
-    if (receiver != null) {
+    if (tipToThisAddress != null) {
       outputHome = outputHome - tip;
     }
 
@@ -245,18 +251,10 @@ List<int> convertBits(data, int from, int to, {bool strictMode = false}) {
         memoTopic: memoTopic
     );
 
-    if (receiver != null)
-      txBuilder.outPuts.add(BitcoinOutput(address: receiver.baseAddress, value: tip));
+    if (tipToThisAddress != null)
+      txBuilder.outPuts.add(BitcoinOutput(address: tipToThisAddress.baseAddress, value: tip));
 
     return txBuilder;
-  }
-
-  BigInt getTotalWalletBalanceInSatoshis(List<UtxoWithAddress> utxos) {
-    final sumOfUtxo = utxos.sumOfUtxosValue();
-    if (sumOfUtxo == BigInt.zero) {
-      throw Exception("No UTXO funds found");
-    }
-    return sumOfUtxo;
   }
 
   Future<List<ElectrumUtxo>> requestElectrumUtxosFilterCashtokenUtxos(

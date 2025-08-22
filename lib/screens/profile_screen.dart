@@ -49,7 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       isLoading = true;
     });
-    user = await MemoModelUser.createDummy(creator);
+    user = await MemoModelUser.createDummy(creator: creator);
     // post = await MemoModelPost.createDummy(creator);
     setState(() {
       isLoading = false;
@@ -384,9 +384,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           isCashtoken145addressOrMemoDevPath0
               ?
-          qrCode(user!.bchAddress145tokenAware, "cashtoken", dialogCtx)
+          qrCode(user!.bchAddressCashtokenAware, "cashtoken", dialogCtx)
               :
-          qrCode(user!.legacyAddress44Memo1BCH, "memo-128x128", dialogCtx)
+          qrCode(user!.legacyAddressMemo1Bch, "memo-128x128", dialogCtx)
         ]
             //TODO observe balance change of wallet, show snackbar on deposit
       );

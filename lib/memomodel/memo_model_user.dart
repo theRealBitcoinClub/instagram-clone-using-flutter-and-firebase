@@ -6,37 +6,58 @@ import '../memoscraper/memo_bitcoin_base.dart';
 
 class MemoModelUser {
   String mnemonic;
-  String _bchAddress145tokenAware = "";
-  String _legacyAddress44Memo1BCH = "";
+  String _bchAddressCashtokenAware = "";
+  String _legacyAddressMemo1Bch = "";
+  ECPrivate? _privateKeyBchCashtoken;
+  ECPrivate? _privateKeyLegacy;
+  String? _wifBchCashtoken;
+  String? _wifLegacy;
   MemoModelCreator? creator;
 
   MemoModelUser({
     required this.mnemonic,
     this.creator
   });
-
-  String get legacyAddress44Memo1BCH {
-    if (_legacyAddress44Memo1BCH.isEmpty) {
-      _legacyAddress44Memo1BCH = MemoBitcoinBase().createBip44PrivateKey(mnemonic, "m/44'/0'/0'/0/0")
-          .getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
-    }
-    //TODO SAVE THIS IN SHARED PREFS AS IT IS INTENSE CALCULATION
-    return _legacyAddress44Memo1BCH;
+  
+  String get wifLegacy {
+    _wifLegacy = _wifLegacy ?? _pkLegacy.toWif();
+    return _wifLegacy!;
   }
 
+  String get wifBchCashtoken {
+    _wifBchCashtoken = _wifBchCashtoken ?? _pkBchCashtoken.toWif();
+    return _wifBchCashtoken!;
+  }
 
-  String get bchAddress145tokenAware {
-    if (_bchAddress145tokenAware.isEmpty) {
-      _bchAddress145tokenAware = MemoBitcoinBase().createBip44PrivateKey(mnemonic, "m/44'/145'/0'/0/0")
-          .getPublic().toAddress().toAddress(BitcoinCashNetwork.mainnet);
+  String get legacyAddressMemo1Bch {
+    if (_legacyAddressMemo1Bch.isEmpty) {
+      _legacyAddressMemo1Bch = _pkLegacy.getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
     }
     //TODO SAVE THIS IN SHARED PREFS AS IT IS INTENSE CALCULATION
-    return _bchAddress145tokenAware;
+    return _legacyAddressMemo1Bch;
+  }
+
+  ECPrivate get _pkLegacy {
+    _privateKeyLegacy = _privateKeyLegacy ?? MemoBitcoinBase().createBip44PrivateKey(mnemonic, "m/44'/0'/0'/0/0");
+    return _privateKeyLegacy!;
+  }
+
+  ECPrivate get _pkBchCashtoken {
+    _privateKeyBchCashtoken = _privateKeyBchCashtoken ?? MemoBitcoinBase().createBip44PrivateKey(mnemonic, "m/44'/145'/0'/0/0");
+    return _privateKeyBchCashtoken!;
+  }
+
+  String get bchAddressCashtokenAware {
+    if (_bchAddressCashtokenAware.isEmpty) {
+      _bchAddressCashtokenAware = _pkBchCashtoken.getPublic().toAddress().toAddress(BitcoinCashNetwork.mainnet);
+    }
+    //TODO SAVE THIS IN SHARED PREFS AS IT IS INTENSE CALCULATION
+    return _bchAddressCashtokenAware;
   }
 
   //TODO generate creator profile id from mnemonic
 
-  static Future<MemoModelUser> createDummy(MemoModelCreator creator) async {
+  static Future<MemoModelUser> createDummy({MemoModelCreator? creator}) async {
     String? mne = await SharedPreferencesAsync().getString("mnemonic");
     return MemoModelUser(mnemonic: mne ?? "", creator: creator);
   }

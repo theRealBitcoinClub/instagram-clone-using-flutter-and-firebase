@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:clipboard/clipboard.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
@@ -186,11 +187,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             buildListView()
                         : GridView.builder(
                             itemBuilder:  (context, index) {
-                                    return Image(image: NetworkImage(MemoModelPost.imgurPosts[index].imgurUrl!),
+                                    MemoModelPost post = MemoModelPost.imgurPosts[index];
+                                    final img = Image(image: NetworkImage(post.imgurUrl!),
                                       fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) => ImgurUtils.errorLoadImage(context, error, stackTrace),
                                       loadingBuilder: (context, child, loadingProgress) => ImgurUtils.loadingImage(context, child, loadingProgress),
                                     );
+                                    return GestureDetector(onDoubleTap: () {
+                                      showDialog(context: context, builder: (dialogCtx) {
+                                        return SimpleDialog(title: Row(children: [
+                                                    CircleAvatar(backgroundImage: NetworkImage(post.creator!.profileImage())),
+                                                    Text(post.creator!.name!)],), children: [
+                                                        img,
+                                                        Expanded(child: Text(post.text ?? "", maxLines: 4))
+                                                ],);
+                                      },);
+                                    }, child: img);
                             },
                             itemCount: MemoModelPost.imgurPosts.length,
                             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3))
@@ -241,7 +253,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Row(
                     children: [
                       Container(
-                        // padding: EdgeInsets.all(10).copyWith(top: 20),
                         child: 
                         showDefaultAvatar ?
                         CircleAvatar(radius: 40,
@@ -254,7 +265,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             });
                           },
                           backgroundImage: NetworkImage(user!.profileImage()),
-                          // backgroundImage: NetworkImage(userData['photoURL']),
                           radius: 40,
                         ),
                       ),
@@ -272,7 +282,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 Padding(padding: EdgeInsets.only(right: 30))
                               ],
                             ),
-                            createFollowerButton(),
+                            buildSettingsButton(),
                           ],
                         ),
                       ),
@@ -281,7 +291,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 );
   }
 
-  Column createFollowerButton() {
+  Column buildSettingsButton() {
     return Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [

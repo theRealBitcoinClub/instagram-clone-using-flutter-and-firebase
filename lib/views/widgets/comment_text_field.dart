@@ -122,28 +122,28 @@ class CommentTextField extends StatelessWidget {
   }
 }
 
-class EmojiIcon extends StatelessWidget {
-  final String emoji;
-  final Function(String) onTap;
-  final double fontSize;
-
-  const EmojiIcon({
-    Key? key,
-    required this.emoji,
-    required this.onTap,
-    this.fontSize = 24,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => onTap(emoji),
-      child: Text(
-        emoji,
-        style: TextStyle(
-          fontSize: fontSize,
-        ),
-      ),
-    );
-  }
-}
+// class EmojiIcon extends StatelessWidget {
+//   final String emoji;
+//   final Function(String) onTap;
+//   final double fontSize;
+//
+//   const EmojiIcon({
+//     Key? key,
+//     required this.emoji,
+//     required this.onTap,
+//     this.fontSize = 24,
+//   }) : super(key: key);
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return GestureDetector(
+//       onTap: () => onTap(emoji),
+//       child: Text(
+//         emoji,
+//         style: TextStyle(
+//           fontSize: fontSize,
+//         ),
+//       ),
+//     );
+//   }
+// }

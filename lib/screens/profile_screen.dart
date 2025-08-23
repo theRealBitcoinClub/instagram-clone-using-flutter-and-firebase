@@ -40,6 +40,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     //TODO POPUP DETAIL VIEW WHEN ITEM IS CLICKED IN PROFILE
     //TODO FILTER PROFILE FOR OWN POSTS ONLY
+    //TODO LET THEM AUTO POST TO TWITTER, INSTA & FBOOK FROM MEMO
+    //TODO FOLLOWING WITHOUT ANY EFFECT OR OFFER TO JUMP TO THEIR MEMO.CASH FOLLOWER FEED
+    //TODO INTENSE MUTING TO FILTER FEED TO WHAT USER WANTS
+    //TODO MUTED USERS CAN PAY TO BE UNMUTED
+    //TODO IF USERS HAVE MORE MUTES THAN WEEKS OF AGE THEIR OUTREACH SUFFERS
+    //TODO OUTREACH GOES DOWN IF AMOUNT OF POSTS GOES UP
+    //TODO USER HAVE TO PAY TO HAVE HIGHER OUTREACH
+    //TODO LET USER MUTE SPECIFIC POSTS, AFTER MUTING SAME USERS POST FOR X TIMES THE USER IS MUTED BUT STILL APPEARS ON SEARCH TO BE UNMUTED
+
     super.initState();
 
     creator = MemoModelCreator.createDummy();
@@ -103,20 +112,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               centerTitle: false,
               title:
               Row(children: [
-                // Text(
-                //   creator.name!,
-                //   // userData['username'],
-                //   style: TextStyle(color: Colors.black, fontFamily: "Arial", fontSize: 12),
-                // ),
                 TextButton(
                     onPressed: () {
                       //TODO LAUNCH PROFILE ON MEMO WITH THAT ID
-                      // print("object");
                       showSnackBar("launch memo profile url or register on memo if 404 on profile", context);
                     },
                     child: Text(
                       user!.profileIdMemoBch,
-                      // userData['username'],
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     )
                 )
@@ -125,8 +127,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 IconButton(
                     onPressed: () {
                       //TODO LAUNCH SIDESHIFT EXCHANGE
-                      //TODO SHOW BCH DEPOSIT QR CODE
-                      //TODO IMPLEMENT WALLETCONNECT
                       showBchQR();
                     },
                     icon: Icon(
@@ -139,162 +139,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16).copyWith(top: 0),
-                    child: Row(
+                  Container(height: 265, child:
+                    Column(
+                      mainAxisSize: MainAxisSize.max,
                       children: [
-                        Container(
-                          // padding: EdgeInsets.all(10).copyWith(top: 20),
-                          child: 
-                          showDefaultAvatar ?
-                          CircleAvatar(radius: 40,
-                              backgroundImage: AssetImage("assets/images/default_profile.png"),)
-                          :
-                          CircleAvatar(
-                            onBackgroundImageError: (exception, stackTrace) {
-                              setState(() {
-                                showDefaultAvatar = true;
-                              });
-                            },
-                            backgroundImage: NetworkImage(user!.profileImage()),
-                            // backgroundImage: NetworkImage(userData['photoURL']),
-                            radius: 40,
+                          createTopDetails(),
+
+                          //full name
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            alignment: Alignment.bottomLeft,
+                            child: Text(
+                              creator.name!,
+                              // userData['fullName'],
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          child: Column(
+
+                          //bio
+                          Container(
+                            padding:
+                                EdgeInsets.symmetric(horizontal: 20).copyWith(top: 10),
+                            alignment: Alignment.bottomLeft,
+                            child: ExpandableText(creator.profileText ?? "",
+                              expandText: 'show more',
+                              collapseText: 'show less',
+                              maxLines: 3,
+                              linkColor: Colors.blue,
+                            ),
+                          ),
+
+                          new Divider(
+                            color: Colors.grey.shade400,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Row(
-                                children: [
-                                  Padding(padding: EdgeInsets.only(left: 30)),
-                                  buildStatColumn('BCH', user!.balanceBchDevPath145),
-                                  Spacer(),
-                                  buildStatColumn('Token', user!.balanceCashtokensDevPath145),
-                                  Spacer(),
-                                  buildStatColumn('Memo', user!.balanceBchDevPath0Memo),
-                                  Padding(padding: EdgeInsets.only(right: 30))
-                                  //TODO SHOW SATOSHIS NOT FOLLOWERCOUNT
-                                  //TODO SHOW TOKEN AMOUNT
-                                  //TODO SHOW CTSATS, MEMOSATS
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  GestureDetector(
-                                      onTap: () {
-                                        onProfileSettings();
-                                      },
-                                      child: Container(
-                                        child: true
-                                        //TODO LET THEM AUTO POST TO TWITTER, INSTA & FBOOK FROM MEMO
-                                        //TODO FOLLOWING WITHOUT ANY EFFECT OR OFFER TO JUMP TO THEIR MEMO.CASH FOLLOWER FEED
-                                        //TODO INTENSE MUTING TO FILTER FEED TO WHAT USER WANTS
-                                        //TODO MUTED USERS CAN PAY TO BE UNMUTED
-                                        //TODO IF USERS HAVE MORE MUTES THAN WEEKS OF AGE THEIR OUTREACH SUFFERS
-                                        //TODO OUTREACH GOES DOWN IF AMOUNT OF POSTS GOES UP
-                                        //TODO USER HAVE TO PAY TO HAVE HIGHER OUTREACH
-                                        //TODO LET USER MUTE SPECIFIC POSTS, AFTER MUTING SAME USERS POST FOR X TIMES THE USER IS MUTED BUT STILL APPEARS ON SEARCH TO BE UNMUTED
-                                        //TODO implement check user id is same user
-                                        // FirebaseAuth
-                                        //             .instance.currentUser!.uid ==
-                                        //         widget.uid
-                                            ? FollowButton(
-                                                backgroundColor: Colors.transparent,
-                                                borderColor: Colors.black,
-                                                text: 'Edit Profile',
-                                                //TODO Profile contains WIF and seed phrase for export
-                                                //TODO ALLOW FOR MULTIPLE ACCOUNT SWITCHES HERE, SAVE MULTIPLE WIFS
-                                                textColor: Colors.black)
-                                            : isFollowing
-                                                ? FollowButton(
-                                                    backgroundColor:
-                                                        Colors.transparent,
-                                                    borderColor: Colors.black,
-                                                    text: 'unfollow',
-                                                    textColor: Colors.black)
-                                                : FollowButton(
-                                                    backgroundColor: Colors.blue,
-                                                    borderColor: Colors.black,
-                                                    text: 'follow',
-                                                    textColor: Colors.black),
-                                  ))
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  //full name
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    alignment: Alignment.bottomLeft,
-                    child: Text(
-                      creator.name!,
-                      // userData['fullName'],
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-
-                  //bio
-                  Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 20).copyWith(top: 10),
-                    alignment: Alignment.bottomLeft,
-                    child: ExpandableText(creator.profileText ?? "",
-                      expandText: 'show more',
-                      collapseText: 'show less',
-                      maxLines: 3,
-                      linkColor: Colors.blue,
-                    ),
-                  ),
-
-                  new Divider(
-                    color: Colors.grey.shade400,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      buildIconButton(0, Icons.image_rounded),
-                      buildIconButton(1, Icons.video_library_rounded),
-                      buildIconButton(2, Icons.tag_rounded),
-                      buildIconButton(4, Icons.topic)
-                    ],
-                  ),
-                  SizedBox(height: 447, child:
+                              buildIconButton(0, Icons.image_rounded),
+                              buildIconButton(1, Icons.video_library_rounded),
+                              buildIconButton(2, Icons.tag_rounded),
+                              buildIconButton(4, Icons.topic)
+                            ],)
+                  ])),
+                  Container(height: 480, child:
                         viewMode != 0 ?
-                            ListView.builder(
-                                itemCount:
-                                    viewMode == 1 ? MemoModelPost.ytPosts.length :
-                                    viewMode == 2 ? MemoModelPost.hashTagPosts.length :
-                                    // viewMode == 3 ? MemoModelPost.urlPosts.length :
-                                    viewMode == 4 ? MemoModelPost.topicPosts.length : 0,
-                                itemBuilder: (context, index) {
-                                    switch (viewMode) {
-                                      case 1:
-                                        return YoutubePlayer(
-                                          controller: YoutubePlayerController(
-                                              initialVideoId: MemoModelPost.ytPosts[index].youtubeId!,
-                                              flags: YoutubePlayerFlags(
-                                                hideThumbnail: true,
-                                                hideControls: true,
-                                                mute: false,
-                                                autoPlay: false,
-                                              )),
-                                        );
-                                      case 2:
-                                        return buildTextBox(MemoModelPost.hashTagPosts, index);
-                                      // case 3:
-                                      //   return buildTextBox(MemoModelPost.urlPosts, index);
-                                      case 4:
-                                        return buildTextBox(MemoModelPost.topicPosts, index);
-                                    }
-                                    return null;
-                                }
-                            )
+                            buildListView()
                         : GridView.builder(
                             itemBuilder:  (context, index) {
                                     return Image(image: NetworkImage(MemoModelPost.imgurPosts[index].imgurUrl!),
@@ -312,6 +201,105 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ])
                   )
           );
+  }
+
+  ListView buildListView() {
+    return ListView.builder(
+                              itemCount:
+                                  viewMode == 1 ? MemoModelPost.ytPosts.length :
+                                  viewMode == 2 ? MemoModelPost.hashTagPosts.length :
+                                  // viewMode == 3 ? MemoModelPost.urlPosts.length :
+                                  viewMode == 4 ? MemoModelPost.topicPosts.length : 0,
+                              itemBuilder: (context, index) {
+                                  switch (viewMode) {
+                                    case 1:
+                                      return YoutubePlayer(
+                                        controller: YoutubePlayerController(
+                                            initialVideoId: MemoModelPost.ytPosts[index].youtubeId!,
+                                            flags: YoutubePlayerFlags(
+                                              hideThumbnail: true,
+                                              hideControls: true,
+                                              mute: false,
+                                              autoPlay: false,
+                                            )),
+                                      );
+                                    case 2:
+                                      return buildTextBox(MemoModelPost.hashTagPosts, index);
+                                    // case 3:
+                                    //   return buildTextBox(MemoModelPost.urlPosts, index);
+                                    case 4:
+                                      return buildTextBox(MemoModelPost.topicPosts, index);
+                                  }
+                                  return null;
+                              }
+                          );
+  }
+
+  Padding createTopDetails() {
+    return Padding(
+                  padding: const EdgeInsets.all(16).copyWith(top: 0),
+                  child: Row(
+                    children: [
+                      Container(
+                        // padding: EdgeInsets.all(10).copyWith(top: 20),
+                        child: 
+                        showDefaultAvatar ?
+                        CircleAvatar(radius: 40,
+                            backgroundImage: AssetImage("assets/images/default_profile.png"),)
+                        :
+                        CircleAvatar(
+                          onBackgroundImageError: (exception, stackTrace) {
+                            setState(() {
+                              showDefaultAvatar = true;
+                            });
+                          },
+                          backgroundImage: NetworkImage(user!.profileImage()),
+                          // backgroundImage: NetworkImage(userData['photoURL']),
+                          radius: 40,
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Padding(padding: EdgeInsets.only(left: 30)),
+                                buildStatColumn('BCH', user!.balanceBchDevPath145),
+                                Spacer(),
+                                buildStatColumn('Token', user!.balanceCashtokensDevPath145),
+                                Spacer(),
+                                buildStatColumn('Memo', user!.balanceBchDevPath0Memo),
+                                Padding(padding: EdgeInsets.only(right: 30))
+                              ],
+                            ),
+                            createFollowerButton(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+  }
+
+  Column createFollowerButton() {
+    return Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                GestureDetector(
+                                    onTap: () {
+                                      onProfileSettings();
+                                    },
+                                    child: Container(
+                                      child:
+                                      SettingsButton(
+                                              backgroundColor: Colors.transparent,
+                                              borderColor: Colors.black,
+                                              text: 'Edit Profile',
+                                              textColor: Colors.black)
+
+                                ))
+                              ],
+                            );
   }
 
   IconButton buildIconButton(index, icon) {

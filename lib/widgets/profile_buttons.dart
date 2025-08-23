@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class FollowButton extends StatelessWidget {
+class SettingsButton extends StatelessWidget {
   final Function()? function;
   final Color backgroundColor;
   final Color borderColor;
   final String text;
   final Color textColor;
-  const FollowButton({
+  const SettingsButton({
     Key? key,
     required this.backgroundColor,
     required this.borderColor,

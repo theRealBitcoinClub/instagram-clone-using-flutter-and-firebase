@@ -200,8 +200,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     SizedBox(width: 10,),
                                                     Text(post.creator!.name!)],), children: [
                                                         img,
-                                                        Padding(padding: EdgeInsetsGeometry.all(20), child:
-                                                        Expanded(child: Text(post.text ?? "", maxLines: 4)))
+                                                        SizedBox(height: post.text == null ||  post.text!.isEmpty ? 0 : 100,
+                                                            child: Padding(padding: EdgeInsetsGeometry.all(20),
+                                                                child: Text(post.text ?? "", maxLines: 4)))
                                                 ],);
                                       },);
                                     }, child: img);
@@ -227,16 +228,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               itemBuilder: (context, index) {
                                   switch (viewMode) {
                                     case 1:
-                                      return YoutubePlayer(
-                                        controller: YoutubePlayerController(
-                                            initialVideoId: MemoModelPost.ytPosts[index].youtubeId!,
+                                      var ytPost = MemoModelPost.ytPosts[index];
+                                      return Container(height: 353, child: Column(children: [
+                                        YoutubePlayer(
+                                          controller: YoutubePlayerController(
+                                            initialVideoId: ytPost.youtubeId!,
                                             flags: YoutubePlayerFlags(
                                               hideThumbnail: true,
                                               hideControls: true,
                                               mute: false,
                                               autoPlay: false,
                                             )),
-                                      );
+                                        ),
+                                        Padding(padding: EdgeInsetsGeometry.all(10),
+                                          child: SizedBox( height: 100 , child:
+                                                    Column(children: [
+
+                                                      Text(ytPost.text ?? "", maxLines: 4,),
+                                                      Divider(),
+                                                      Text("^^^   ${ytPost.creator!.name!}   ^^^", style: TextStyle(fontWeight: FontWeight.bold),),
+                                                    ]),
+                                                  ),)
+                                      ],));
                                     case 2:
                                       return buildTextBox(MemoModelPost.hashTagPosts, index);
                                     // case 3:

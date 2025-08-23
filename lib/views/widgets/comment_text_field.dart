@@ -40,12 +40,9 @@ class CommentTextField extends StatelessWidget {
     return Container(
       key: containerKey,
       constraints: BoxConstraints(
-        maxHeight: insets == EdgeInsets.zero ? 158 : 158 + insets.bottom,
+        maxHeight: insets == EdgeInsets.zero ? 150 : 150 + insets.bottom,
       ),
-      padding: const EdgeInsets.symmetric(
-        vertical: 20,
-        horizontal: 10,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 10, 15, 20),
       color: Colors.white,
       child: Column(
         mainAxisAlignment: insets == EdgeInsets.zero
@@ -100,7 +97,7 @@ class CommentTextField extends StatelessWidget {
               // ),
               // const Spacer(),
               SizedBox(
-                width: 390,
+                width: 380,
                 height: 115,
                 // width: width * .82,
                 child: CustomTextField(

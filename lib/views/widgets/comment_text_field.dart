@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 
@@ -6,7 +8,7 @@ import 'custom_text_field.dart';
 
 class CommentTextField extends StatelessWidget {
   final FlutterTaggerController controller;
-  final List<String> emojis;
+  // final List<String> emojis;
   final VoidCallback onSend;
   final EdgeInsets insets;
   final FocusNode? focusNode;
@@ -19,15 +21,15 @@ class CommentTextField extends StatelessWidget {
     required this.controller,
     required this.onSend,
     required this.insets,
-    this.emojis = const [
-      '😍',
-      '😜',
-      '👍',
-      '🤞',
-      '🙌',
-      '😉',
-      '🙏',
-    ],
+    // this.emojis = const [
+    //   '😍',
+    //   '😜',
+    //   '👍',
+    //   '🤞',
+    //   '🙌',
+    //   '😉',
+    //   '🙏',
+    // ],
     this.focusNode,
     this.containerKey,
   }) : super(key: key);
@@ -50,64 +52,67 @@ class CommentTextField extends StatelessWidget {
             ? MainAxisAlignment.end
             : MainAxisAlignment.start,
         children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: width,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  for (var emoji in emojis)
-                    EmojiIcon(
-                      fontSize: 24,
-                      emoji: emoji,
-                      onTap: (emoji) {
-                        final baseOffset = controller.selection.baseOffset;
-                        final cursorPosition = controller.cursorPosition;
-                        final substring = controller.formattedText
-                            .substring(0, cursorPosition);
-                        final newText = substring +
-                            emoji +
-                            controller.formattedText.substring(cursorPosition);
-
-                        controller.text = newText;
-                        controller.formatTags();
-
-                        controller.selection = TextSelection.fromPosition(
-                          TextPosition(offset: baseOffset + emoji.length),
-                        );
-                      },
-                    )
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
+          // SingleChildScrollView(
+          //   scrollDirection: Axis.horizontal,
+          //   child: SizedBox(
+          //     width: width,
+          //     child: Row(
+          //       mainAxisAlignment: MainAxisAlignment.spaceAround,
+          //       children: [
+          //         for (var emoji in emojis)
+          //           EmojiIcon(
+          //             fontSize: 24,
+          //             emoji: emoji,
+          //             onTap: (emoji) {
+          //               final baseOffset = controller.selection.baseOffset;
+          //               final cursorPosition = controller.cursorPosition;
+          //               final substring = controller.formattedText
+          //                   .substring(0, cursorPosition);
+          //               final newText = substring +
+          //                   emoji +
+          //                   controller.formattedText.substring(cursorPosition);
+          //
+          //               controller.text = newText;
+          //               controller.formatTags();
+          //
+          //               controller.selection = TextSelection.fromPosition(
+          //                 TextPosition(offset: baseOffset + emoji.length),
+          //               );
+          //             },
+          //           )
+          //       ],
+          //     ),
+          //   ),
+          // ),
+          // const SizedBox(height: 18),
           Row(
             children: [
-              Container(
-                height: 50,
-                width: 50,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                    fit: BoxFit.cover,
-                    image: NetworkImage(User.anon().avatar),
-                  ),
-                ),
-              ),
-              const Spacer(),
+              // Container(
+              //   height: 50,
+              //   width: 50,
+              //   decoration: BoxDecoration(
+              //     shape: BoxShape.circle,
+              //     image: DecorationImage(
+              //       fit: BoxFit.cover,
+              //       image: NetworkImage(User.anon().avatar),
+              //     ),
+              //   ),
+              // ),
+              // const Spacer(),
               SizedBox(
-                width: width * .82,
+                width: 390,
+                height: 115,
+                // width: width * .82,
                 child: CustomTextField(
                   focusNode: focusNode,
                   controller: controller,
-                  hint: "Type something fun...",
+                  hint: "Use the @ symbol to reply to topics\n\nWrite #something to add hashtags",
                   suffix: IconButton(
+                    iconSize: 45,
                     onPressed: onSend,
                     icon: const Icon(
                       Icons.send,
-                      color: Colors.redAccent,
+                      color: Colors.green,
                     ),
                   ),
                 ),

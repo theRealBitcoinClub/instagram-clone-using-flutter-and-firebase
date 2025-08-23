@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
+import 'package:instagram_clone1/memomodel/memo_model_tag.dart';
 
 import '../view_models/search_view_model.dart';
 import 'loading_indicator.dart';
@@ -40,7 +41,7 @@ class HashtagListView extends StatelessWidget {
           child: ValueListenableBuilder<bool>(
             valueListenable: searchViewModel.loading,
             builder: (_, loading, __) {
-              return ValueListenableBuilder<List<String>>(
+              return ValueListenableBuilder<List<MemoModelTag>>(
                 valueListenable: searchViewModel.hashtags,
                 builder: (_, hashtags, __) {
                   return Column(
@@ -70,7 +71,7 @@ class HashtagListView extends StatelessWidget {
                       if (!loading && hashtags.isEmpty)
                         const Center(
                           heightFactor: 8,
-                          child: Text("Didn't find anything!"),
+                          child: Text("Didn't find any tag!"),
                         ),
                       if (hashtags.isNotEmpty)
                         Expanded(
@@ -94,11 +95,11 @@ class HashtagListView extends StatelessWidget {
                                     style: TextStyle(color: Colors.blueAccent),
                                   ),
                                 ),
-                                title: Text(hashtag),
+                                title: Text(hashtag.name!),
                                 onTap: () {
                                   tagController.addTag(
-                                    id: hashtag,
-                                    name: hashtag,
+                                    id: hashtag.name!,
+                                    name: hashtag.name!,
                                   );
                                 },
                               );

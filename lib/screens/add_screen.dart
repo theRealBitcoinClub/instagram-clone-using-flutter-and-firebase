@@ -158,10 +158,11 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
                           )
                   )) : SizedBox()
           ]),
-          validVideo.isNotEmpty || validImgur.isNotEmpty
-              ? createTaggableInput(context, insets)
-              : SizedBox()
-        ])
+        ]),
+            bottomNavigationBar:
+                validVideo.isNotEmpty || validImgur.isNotEmpty
+                ? createTaggableInput(context, insets)
+                : SizedBox(),
         )
     );
   }
@@ -206,7 +207,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
     //wish to update its text value with raw tag string,
     //call (_controller.formatTags) after that.
     text:
-    "Hey @11a27531b866ce0016f9e582#brad#. It's time to #93f27531f294jp0016f9k013#Flutter#!",
+    "I like the topic @Bitcoin#Bitcoin#. It's time to earn #bch#bch#!",
   );
   late final _focusNode = FocusNode();
 
@@ -272,221 +273,11 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
               controller: _controller,
               onSend: () {
                 FocusScope.of(context).unfocus();
-                homeViewModel.addPost(_controller.formattedText);
+                // homeViewModel.addPost(_controller.formattedText);
                 _controller.clear();
               },
             );
           },
         );
   }
-  /*
-  Widget createTaggableInput() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: SizedBox(
-          width: 600,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ...comments.map((comment) {
-                return Card(
-                  margin: const EdgeInsets.all(4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text.rich(
-                      TextSpan(
-                        children: comment,
-                      ),
-                    ),
-                  ),
-                );
-              }),
-              Form(
-                key: _formKey,
-                child: CompositedTransformTarget(
-                  link: _layerLink,
-                  child: TextField(
-                    controller: _controller,
-                    focusNode: _focusNode,
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                      hintText: 'Type @ to tag a user or # to tag a topic',
-                      helperText: 'Backend format: $backendFormat',
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.send),
-                        onPressed: () async {
-                          final textSpans =
-                          await _buildTextSpans(_controller.text, context);
-                          setState(() {
-                            comments.add(textSpans);
-                            _controller.clear();
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  // This is an example of setting the initial text.
-                  _controller.setText(
-                    "Hello @aliceUniqueId and welcome to #myFlutterId",
-                    backendToTaggable,
-                  );
-                },
-                child: const Text('Set initial text'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  TextStyle? textStyleBuilder(
-      BuildContext context, String prefix, Taggable taggable) {
-    // if (taggable.id == 'hawkingUniqueId') {
-    //   return const TextStyle(
-    //     color: Colors.red,
-    //     decoration: TextDecoration.underline,
-    //     fontWeight: FontWeight.bold,
-    //   );
-    // }
-    return switch (prefix) {
-      '@' => TextStyle(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold),
-      '#' => TextStyle(
-          color: Theme.of(context).colorScheme.secondary,
-          fontWeight: FontWeight.bold),
-      _ => null,
-    };
-  }
-
-  /// This method is used to build the [InlineSpan]s from the backend format.
-  FutureOr<List<InlineSpan>> _buildTextSpans(
-      String backendFormat,
-      BuildContext context,
-      ) async {
-    return convertTagTextToInlineSpans<Taggable>(
-      backendFormat,
-      tagStyles: _controller.tagStyles,
-      backendToTaggable: backendToTaggable,
-      taggableToInlineSpan: (taggable, tagStyle) {
-        return TextSpan(
-          text: '${tagStyle.prefix}${taggable.name}',
-          style: textStyleBuilder(context, tagStyle.prefix, taggable),
-          recognizer: TapGestureRecognizer()
-            ..onTap = () => ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Tapped ${taggable.name} with id ${taggable.id}',
-                ),
-                duration: const Duration(seconds: 2),
-              ),
-            ),
-        );
-      },
-    );
-  }
-
-  /// Shows the overlay with the list of taggables.
-  Future<Taggable?> buildTaggables(
-      FutureOr<Iterable<Taggable>> taggables) async {
-    final availableTaggables = await taggables;
-
-    // We use a [Completer] to return the selected taggable from the overlay.
-    // This is because overlays do not return values directly.
-    Completer<Taggable?> completer = Completer();
-
-    // Remove the existing overlay if it exists.
-    _overlayEntry?.remove();
-    if (availableTaggables.isEmpty) {
-      // If there are no taggables to show, we return null.
-      _overlayEntry = null;
-      completer.complete(null);
-    } else {
-      _overlayEntry = OverlayEntry(builder: (context) {
-        // The following few lines are used to position the overlay above the
-        // [TextField]. It moves along if the [TextField] moves.
-        final renderBox =
-        _formKey.currentContext!.findRenderObject() as RenderBox;
-        return Positioned(
-          width: renderBox.size.width,
-          bottom: renderBox.size.height + 8,
-          child: CompositedTransformFollower(
-            link: _layerLink,
-            showWhenUnlinked: false,
-            followerAnchor: Alignment.bottomLeft,
-            child: Material(
-              child: ListView(
-                shrinkWrap: true,
-                children: availableTaggables.map((taggable) {
-                  // We show the list of taggables in a [ListView].
-                  return ListTile(
-                    leading: Icon(taggable.icon),
-                    title: Text(taggable.name),
-                    tileColor: Theme.of(context).colorScheme.primaryContainer,
-                    onTap: () {
-                      // When a taggable is selected, remove the overlay
-                      _overlayEntry?.remove();
-                      _overlayEntry = null;
-                      // and complete the Completer with the selected taggable.
-                      completer.complete(taggable);
-                      // Focus the [TextField] to continue typing.
-                      // Do this after completing the Completer to avoid
-                      // interfering with the logic of adding the taggable.
-                      _focusNode.requestFocus();
-                    },
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        );
-      });
-      if (mounted) {
-        Overlay.of(context).insert(_overlayEntry!);
-      }
-    }
-    return completer.future;
-  }
-
-  /// This method searches for taggables based on the tag prefix and tag name.
-  ///
-  /// You can specify different behaviour based on the tag prefix.
-  Future<Iterable<Taggable>> searchTaggables(
-      String tagPrefix, String? tagName) async {
-    if (tagName == null || tagName.isEmpty) {
-      return [];
-    }
-    return switch (tagPrefix) {
-      '#' => MemoModelTag.tags
-          .where((user) =>
-          user.name.toLowerCase().startsWith(tagName.toLowerCase()))
-          .toList(),
-      '@' => MemoModelTopic.topics
-          .where((topic) =>
-          topic.name.toLowerCase().startsWith(tagName.toLowerCase()))
-          .toList(),
-      'all:' => [...MemoModelTag.tags, ...MemoModelTopic.topics].where((taggable) =>
-          taggable.name.toLowerCase().startsWith(tagName.toLowerCase())),
-      _ => [],
-    };
-  }
-
-  /// This method converts the backend format to the taggable object.
-  FutureOr<Taggable?> backendToTaggable(String prefix, String id) {
-    return switch (prefix) {
-      '@' => MemoModelTag.tags.where((user) => user.id == id).firstOrNull,
-      '#' => MemoModelTopic.topics.where((topic) => topic.id == id).firstOrNull,
-      'all:' => [...MemoModelTag.tags, ...MemoModelTopic.topics]
-          .where((taggable) => taggable.id == id)
-          .firstOrNull,
-      _ => null,
-    };
-  }*/
 }

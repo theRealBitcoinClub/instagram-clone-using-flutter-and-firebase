@@ -17,6 +17,8 @@ class CustomTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      minLines: 4,
+      maxLines: 4,
       controller: controller,
       focusNode: focusNode,
       style: const TextStyle(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instagram_clone1/memomodel/memo_model_tag.dart';
 import 'package:instagram_clone1/memomodel/memo_model_topic.dart';
 
 import '../../models/user.dart';
@@ -16,8 +17,8 @@ class SearchViewModel {
   // late final ValueNotifier<List<User>> _users = ValueNotifier([]);
   // ValueNotifier<List<User>> get users => _users;
 
-  late final ValueNotifier<List<String>> _hashtags = ValueNotifier([]);
-  ValueNotifier<List<String>> get hashtags => _hashtags;
+  late final ValueNotifier<List<MemoModelTag>> _hashtags = ValueNotifier([]);
+  ValueNotifier<List<MemoModelTag>> get hashtags => _hashtags;
 
   late final ValueNotifier<bool> _loading = ValueNotifier(false);
   ValueNotifier<bool> get loading => _loading;
@@ -47,7 +48,7 @@ class SearchViewModel {
     final result = MemoModelTopic.topics
         .where(
           (topic) =>
-      topic.header!.toLowerCase().startsWith(query.toLowerCase()),
+      topic.header!.toLowerCase().contains(query),
     )
         .toList();
 
@@ -92,19 +93,11 @@ class SearchViewModel {
 
     await Future.delayed(const Duration(milliseconds: 250));
 
-    final result = _dummyHashtags
-        .where((tag) => tag.toLowerCase().contains(query))
+    final result = MemoModelTag.tags
+        .where((tag) => tag.name!.toLowerCase().contains(query))
         .toList();
 
     _hashtags.value = [...result];
     _setLoading(false);
   }
 }
-
-const _dummyHashtags = <String>[
-  "Flutter",
-  "FlutterDev",
-  "Dash",
-  "MobileDev",
-  "Dart",
-];

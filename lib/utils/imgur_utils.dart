@@ -30,6 +30,8 @@ class ImgurUtils {
     if (error.toString() == "Exception: Invalid image data") {
       // return Image(image: AssetImage(assetName),)
       // TODO RETURN ASSET IMAGE
+      // TODO TRY TO USE THE PATH OF THAT URL TO LAUNCH A NEW REQUEST
+      //  URL MIGHT BE https://imgur.com/GLXwHJU but must be https://i.imgur.com/GLXwHJU.jpeg
       return Image(image: AssetImage("assets/images/memo-128x128.png"));
     }
     // print("object");

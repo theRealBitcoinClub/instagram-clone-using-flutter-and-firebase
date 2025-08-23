@@ -296,7 +296,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         : GridView.builder(
                             itemBuilder:  (context, index) {
                                     return Image(image: NetworkImage(MemoModelPost.imgurPosts[index].imgurUrl!),
-                                      fit: BoxFit.none,
+                                      fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) => ImgurUtils.errorLoadImage(context, error, stackTrace),
                                       loadingBuilder: (context, child, loadingProgress) => ImgurUtils.loadingImage(context, child, loadingProgress),
                                     );},

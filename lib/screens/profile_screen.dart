@@ -229,7 +229,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   switch (viewMode) {
                                     case 1:
                                       var ytPost = MemoModelPost.ytPosts[index];
-                                      return Container(height: 353, child: Column(children: [
+                                      return Container(height: 369, child: Column(children: [
                                         YoutubePlayer(
                                           controller: YoutubePlayerController(
                                             initialVideoId: ytPost.youtubeId!,
@@ -241,7 +241,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             )),
                                         ),
                                         Padding(padding: EdgeInsetsGeometry.all(10),
-                                          child: SizedBox( height: 100 , child:
+                                          child: SizedBox( height: 116 , child:
                                                     Column(children: [
 
                                                       Text(ytPost.text ?? "", maxLines: 4,),
@@ -251,11 +251,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   ),)
                                       ],));
                                     case 2:
-                                      return buildTextBox(MemoModelPost.hashTagPosts, index);
+                                      return buildTextBox(MemoModelPost.hashTagPosts[index]);
                                     // case 3:
                                     //   return buildTextBox(MemoModelPost.urlPosts, index);
                                     case 4:
-                                      return buildTextBox(MemoModelPost.topicPosts, index);
+                                      return buildTextBox(MemoModelPost.topicPosts[index]);
                                   }
                                   return null;
                               }
@@ -340,7 +340,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ));
   }
 
-  SizedBox buildTextBox(List<MemoModelPost> posts, int index) => SizedBox(height: 100, child: Text(posts[index].text!));
+  SizedBox buildTextBox(MemoModelPost post) {
+    return SizedBox(height: 176,
+              child: Padding(padding: EdgeInsetsGeometry.all(20),
+                        child: Column(children: [
+                          Row(children: [Text(post.creator!.name!), Spacer(), Text(post.created!)],),
+                          Divider(),
+                          Text(post.text!)],)));
+  }
 
   Color activeOrNot(int index) => viewMode == index ? Colors.grey.shade800 : Colors.grey.shade500;
 

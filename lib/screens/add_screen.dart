@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clipboard/clipboard.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
@@ -25,41 +26,48 @@ class AddPost extends StatefulWidget {
 class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
   final TextEditingController imgurCtrl = TextEditingController();
   final TextEditingController youtubeCtrl = TextEditingController();
-  final TextEditingController topicCtrl = TextEditingController();
-  final TextEditingController hashtagCtrl = TextEditingController();
-  final TextEditingController textCtrl = TextEditingController();
   bool isLoading = false;
   String validImgur = "";
   String validVideo = "";
-  /// The [LayerLink] is used to link the [CompositedTransformTarget] and
-  /// [CompositedTransformFollower] widgets required to show the overlay.
-  // final _layerLink = LayerLink();
-
-  /// The [_formKey] is used to get the [RenderBox] of the [Form] widget to
-  /// position the overlay.
-  // final _formKey = GlobalKey<FormState>();
-
-  /// The [_focusNode] is used to focus the [TextField] when the overlay is
-  /// closed.
-  // late FocusNode _focusNode;
-
-  /// A list of comments made using the [TagTextEditingController].
-  // final List<List<InlineSpan>> comments = [];
-
-  /// The [TagTextEditingController] is used to control the [TextField] and
-  /// handle the tagging logic.
-  // late final TagTextEditingController _controller;
-
-  /// The [_overlayEntry] is used to show the overlay with the list of
-  /// taggables.
-  // OverlayEntry? _overlayEntry;
-
-  /// The [backendFormat] is used to display the backend format of the text
-  // String backendFormat = '';
 
   @override
   void initState() {
     super.initState();
+    initImgurListener();
+    initYouTubeListener();
+    initStateTagger();
+    checkClipboardHasValidYouTubeOrImgur();
+  }
+
+  Future<void> checkClipboardHasValidYouTubeOrImgur() async {
+    if (await FlutterClipboard.hasData()) {
+      String url = await FlutterClipboard.paste();
+      String validYtUrl = YoutubePlayer.convertUrlToId(url) ?? "";
+      if (validYtUrl.isNotEmpty) {
+        validVideo = validYtUrl;
+        youtubeCtrl.text = validVideo;
+      } else {
+        validImgur = extractValidImgurUrl(url);
+        imgurCtrl.text = validImgur;
+      }
+    }
+    setState(() {
+
+    });
+  }
+
+  String extractValidImgurUrl(String url) {
+    if (url.contains("i.imgur.com"))
+      return url;
+
+    return "";
+    // final RegExp exp = RegExp(r'(^(http|https):\/\/)?(i\.)?imgur.com\/((?P<gallery>gallery\/)(?P<galleryid>\w+)|(?P<album>a\/)(?P<albumid>\w+)#?)?(?P<imgid>\w*)');
+    // RegExpMatch? match = exp.firstMatch(url);
+    //
+    // return match != null ? url.substring(match.start, match.end) : "";
+  }
+
+  void initImgurListener() {
     imgurCtrl.addListener(() {
       validImgur = "";
       if (imgurCtrl.text.isNotEmpty) {
@@ -71,6 +79,9 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
       setState(() {
       });
     },);
+  }
+
+  void initYouTubeListener() {
     youtubeCtrl.addListener(() {
       validVideo = "";
       if (youtubeCtrl.text.isNotEmpty) {
@@ -83,23 +94,6 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
       setState(() {
       });
     },);
-
-    // _focusNode = FocusNode();
-
-    // Initialize the [TagTextEditingController] with the required parameters.
-    // _controller = TagTextEditingController<Taggable>(
-    //   searchTaggables: searchTaggables,
-    //   buildTaggables: buildTaggables,
-    //   toFrontendConverter: (taggable) => taggable.name,
-    //   toBackendConverter: (taggable) => taggable.id,
-    //   textStyleBuilder: textStyleBuilder,
-    //   tagStyles: const [TagStyle(prefix: '@'), TagStyle(prefix: '#')],
-    // );
-
-    // Add a listener to update the [backendFormat] when the text changes.
-    // _controller.addListener(
-    //         () => setState(() => backendFormat = _controller.textInBackendFormat));
-    initStateTagger();
   }
 
   @override
@@ -107,12 +101,6 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
     super.dispose();
     imgurCtrl.dispose();
     youtubeCtrl.dispose();
-    topicCtrl.dispose();
-    hashtagCtrl.dispose();
-    textCtrl.dispose();
-    // _focusNode.dispose();
-    // _controller.dispose();
-    // _overlayEntry?.remove();
     disposeTagger();
   }
 
@@ -174,26 +162,25 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
   }
 
   Future<void> showDialogImgur() async {
-    //TODO check clipboard first and if it contains valid imgur url no need for dialog
-    showDialog(builder: (dialogCtx) {
-          return SimpleDialog(children: [Text("Imgur URL"),
-            TextInputField(
-                textEditingController: imgurCtrl, 
-                hintText: "e.g. https://i.imgur.com/GLXwHJU.jpeg",
-                textInputType: TextInputType.url)]);
-        }, context: context,);
+    showUrlDialog("Paste an imgur URL", imgurCtrl, "e.g. https://i.imgur.com/GLXwHJU.jpeg");
   }
 
   Future<void> showDialogVideo() async {
-    //TODO check clipboard first and if it contains valid imgur url no need for dialog
-    showDialog(builder: (dialogCtx) {
-      return SimpleDialog(children: [Text("YouTube URL"),
-        TextInputField(
-            textEditingController: youtubeCtrl,
-            hintText: "e.g. https://youtu.be/Qx7OlKoryzE",
-            textInputType: TextInputType.url)]);
-    }, context: context,);
+    showUrlDialog("Paste a YouTube URL", youtubeCtrl, "e.g. https://youtu.be/Ft2jo9spIHg");
   }
+
+  void showUrlDialog(header, ctrl, hint) {
+    checkClipboardHasValidYouTubeOrImgur();
+    showDialog(builder: (dialogCtx) {
+          return SimpleDialog(children: [
+            Padding(padding: EdgeInsetsGeometry.all(10), child: Text(header),),
+            Padding(padding: EdgeInsetsGeometry.all(10), child: TextInputField(
+                textEditingController: ctrl,
+                hintText: hint,
+                textInputType: TextInputType.url))]);
+        }, context: context,);
+  }
+
   late AnimationController _animationController;
   late Animation<Offset> _animation;
 
@@ -207,7 +194,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
     //wish to update its text value with raw tag string,
     //call (_controller.formatTags) after that.
     text:
-    "I like the topic @Bitcoin#Bitcoin#. It's time to earn #bch#bch#!",
+    "I like the topic @Bitcoin#Bitcoin#. It's time to earn #bch#bch# and #cashtoken#cashtoken#!",
   );
   late final _focusNode = FocusNode();
 

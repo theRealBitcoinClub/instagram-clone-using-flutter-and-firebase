@@ -1,3 +1,4 @@
+import 'package:dynamic_themes/dynamic_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/resources/auth_method.dart';
@@ -5,6 +6,7 @@ import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/post_card.dart';
 import 'package:provider/provider.dart';
 
+import '../app_themes.dart';
 import '../provider/user_provider.dart';
 import '../utils/snackbar.dart';
 
@@ -42,6 +44,11 @@ class _FeedScreenState extends State<FeedScreen> {
           //   height: 50,
           // ),
           actions: [
+            IconButton(onPressed: () {
+              setState(() {
+                DynamicTheme.of(context)?.setTheme(AppThemes.Dark);
+              });
+            }, icon: Icon(Icons.color_lens_outlined)),
             IconButton(
                 onPressed: () {
                   showDialog(context: context, builder: (context) {

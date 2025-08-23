@@ -1,21 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:instagram_clone1/provider/user_provider.dart';
 import 'package:instagram_clone1/route%20handling/auth_page.dart';
 import 'package:provider/provider.dart';
+import 'package:random_color_scheme/random_color_scheme.dart';
 import 'memoscraper/memo_scraper_posts.dart';
 import 'memoscraper/memo_scraper_tag.dart';
 import 'memoscraper/memo_scraper_topics.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   // await Firebase.initializeApp(
   //   options: DefaultFirebaseOptions.currentPlatform
   // );
 
+  initData();
+  runApp(const MyApp());
+}
+
+initData() async {
   //TODO INITIALIZE USER WIF DATA?
 
   final String cacheId = "250819";
-  MemoScraperTopic().startScrapeTopics(cacheId, 25);
+  await MemoScraperTopic().startScrapeTopics(cacheId, 25);
   // MemoScraperCreator().startScrapeCreators(["/most-actions", "/most-followers"]);
   //TODO SEND CASHTOKENS WITH EVERY TRANSACTION, PEOPLE EARN TOKENS FOR INTERACTING WITH THE APP ONCE EVERY 144 blocks
   //TODO SEND NOTIFICATIONS TO REMIND USERS TO POST SOMETHING TO EARN MORE TOKEN
@@ -33,15 +41,15 @@ void main() async {
   //https://memo.cash/posts/top?range=all&offset=25
   // MemoScraperTag().startScrapeTags(["/most-posts"], 250, cacheId);
   // MemoScraperTag().startScrapeTags(["/recent","/most-posts"], 25, cacheId);
-  MemoScraperTag().startScrapeTags(["/most-posts"], 0, cacheId);
-  MemoScraperTag().startScrapeTags(["/recent"], 0, cacheId);
-  MemoScraperPost().startScrapePosts('posts/new', 100, cacheId);
+  await MemoScraperTag().startScrapeTags(["/most-posts"], 0, cacheId);
+  await MemoScraperTag().startScrapeTags(["/recent"], 0, cacheId);
+  await MemoScraperPost().startScrapePosts('posts/new', 100, cacheId);
   // https://memo.cash/tags/most-posts?&offset=1025
   //TODO SHOW SOME TUTORIAL STUFF WHILE INITIAL SCRAPING
   //TODO CACHE SCRAPING RESULTS IN LOCAL DATABASE
   //TODO SHOW SCRAPING PROGRESS BAR, CALL SETSTATE MORE OFTEN
 
-  runApp(const MyApp());
+  FlutterNativeSplash.remove();
 }
 
 class MyApp extends StatelessWidget {
@@ -49,12 +57,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      // MultiProvider(
-      // providers: [
-      //   TODO UNDERSTAND USER PROVIDER
-      //   ChangeNotifierProvider(create: (_)=> UserProvider(),)
-      // ],
-      // child:
       return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => ProviderUser(),)
@@ -62,6 +64,18 @@ class MyApp extends StatelessWidget {
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Memogram',
+          theme: ThemeData(
+            //TODO add switch color theme button top left
+            // colorScheme: randomColorSchemeDark()
+            // textButtonTheme: ,
+            // textTheme: ,
+              // dialogTheme: ,
+              // primaryColorDark: const Color(0xff29d969),
+              // primaryColor: const Color(0xff29d969),
+              // secondaryHeaderColor: const Color(0xfff69ffb),
+              // scaffoldBackgroundColor: const Color(0xff161815),
+            // colorScheme: ColorScheme.dark(
+          ),
           // theme: ThemeData.dark()
           //     .copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
           home: const AuthPage())

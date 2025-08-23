@@ -8,7 +8,7 @@ import '../memomodel/memo_model_creator.dart';
 import '../memomodel/memo_model_tag.dart';
 
 class MemoScraperTag {
-  void startScrapeTags(List<String> orderBy, int offset, String cacheId) async {
+  Future<void> startScrapeTags(List<String> orderBy, int offset, String cacheId) async {
     for (String order in orderBy) {
       for (int off = offset; off >= 0; off -= 25) {
         List<MemoModelTag> tags = await scrapeTags(order, off);

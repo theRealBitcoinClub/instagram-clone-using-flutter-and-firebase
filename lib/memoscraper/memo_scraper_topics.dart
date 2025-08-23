@@ -9,7 +9,7 @@ import '../memomodel/memo_model_post.dart';
 import '../memomodel/memo_model_topic.dart';
 
 class MemoScraperTopic {
-  void startScrapeTopics(String cacheId, int offset) async {
+  Future<void> startScrapeTopics(String cacheId, int offset) async {
     for (int off = offset; off >= 0; off -= 25) {
       Map<String, Object> topics = await MemoScraperUtil.createScraper("topics/all?offset=$off&x=$cacheId", createScraperConfigMemoModelTopic());
 

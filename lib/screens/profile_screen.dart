@@ -38,6 +38,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void initState() {
+    //TODO POPUP DETAIL VIEW WHEN ITEM IS CLICKED IN PROFILE
+    //TODO FILTER PROFILE FOR OWN POSTS ONLY
     super.initState();
 
     creator = MemoModelCreator.createDummy();

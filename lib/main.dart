@@ -43,8 +43,8 @@ initData() async {
   //https://memo.cash/posts/top?range=all&offset=25
   // MemoScraperTag().startScrapeTags(["/most-posts"], 250, cacheId);
   // MemoScraperTag().startScrapeTags(["/recent","/most-posts"], 25, cacheId);
-  await MemoScraperTag().startScrapeTags(["/most-posts"], 0, cacheId);
-  await MemoScraperTag().startScrapeTags(["/recent"], 0, cacheId);
+  await MemoScraperTag().startScrapeTags(["/most-posts", "/recent"], 0, cacheId);
+  // await MemoScraperTag().startScrapeTags(["/recent"], 0, cacheId);
   await MemoScraperPost().startScrapePosts('posts/new', 100, cacheId);
   // https://memo.cash/tags/most-posts?&offset=1025
   //TODO SHOW SOME TUTORIAL STUFF WHILE INITIAL SCRAPING

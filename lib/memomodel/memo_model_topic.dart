@@ -1,6 +1,8 @@
 import 'memo_model_post.dart';
 
 class MemoModelTopic {
+  static List<MemoModelTopic> topics = [];
+
   MemoModelTopic({
     this.header,
     this.url,

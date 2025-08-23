@@ -1,6 +1,8 @@
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 
 class MemoModelTag {
+  static List<MemoModelTag> tags = [];
+
   MemoModelTag({
     this.name,
     this.postCount,

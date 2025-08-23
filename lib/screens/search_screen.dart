@@ -102,13 +102,13 @@ class _SearchScreenState extends State<SearchScreen> {
                       gridDelegate:
                           SliverSimpleGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2),
-                      itemCount: MemoModelPost.globalPosts.length,
+                      itemCount: MemoModelPost.posts.length,
                       itemBuilder: (context, index) {
                         return ClipRRect(
-                          child:MemoModelPost.globalPosts[index].youtubeId != null
+                          child:MemoModelPost.posts[index].youtubeId != null
                               ? YoutubePlayer(
                                 controller: YoutubePlayerController(
-                                  initialVideoId: MemoModelPost.globalPosts[index].youtubeId!,
+                                  initialVideoId: MemoModelPost.posts[index].youtubeId!,
                                   flags: YoutubePlayerFlags(
                                     hideThumbnail: true,
                                     hideControls: true,
@@ -121,9 +121,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                   // print('Player is ready.');
                                 },
                               )
-                              : MemoModelPost.globalPosts[index].imgurUrl != null
-                                ? Image.network(MemoModelPost.globalPosts[index].imgurUrl!)
-                                : Text(MemoModelPost.globalPosts[index].text!),
+                              : MemoModelPost.posts[index].imgurUrl != null
+                                ? Image.network(MemoModelPost.posts[index].imgurUrl!)
+                                : Text(MemoModelPost.posts[index].text!),
                         );
                       });
                 }

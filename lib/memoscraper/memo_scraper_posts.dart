@@ -13,6 +13,7 @@ class MemoScraperPost {
     final List<MemoModelPost> result = [];
 
     for (int offset = startOffset; offset >= 0; offset -= 25) {
+      MemoModelPost.posts.clear();
       Map<String, Object> posts = await MemoScraperUtil.createScraper("${url}?offset=${offset}&x=${cacheId}", config);
 
         var postList = createPostList(posts);

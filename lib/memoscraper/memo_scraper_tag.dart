@@ -9,12 +9,14 @@ import '../memomodel/memo_model_tag.dart';
 
 class MemoScraperTag {
   Future<void> startScrapeTags(List<String> orderBy, int offset, String cacheId) async {
+    MemoModelTag.tags.clear();
     for (String order in orderBy) {
       for (int off = offset; off >= 0; off -= 25) {
         List<MemoModelTag> tags = await scrapeTags(order, off);
         for (MemoModelTag tag in tags) {
           tag.posts.addAll(await MemoScraperPost().startScrapePosts("t/${tag.name}", 0, cacheId));
         }
+        MemoModelTag.tags.addAll(tags);
         // print("object");
         print("RUNNING SCRAPE:$order$off");
       }

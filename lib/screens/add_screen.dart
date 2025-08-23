@@ -2,13 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_taggable/flutter_taggable.dart';
-import 'package:instagram_clone1/taggable/taggable.dart';
+import 'package:fluttertagger/fluttertagger.dart';
 import 'package:instagram_clone1/widgets/textfield_input.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../memomodel/memo_model_tag.dart';
 import '../memomodel/memo_model_topic.dart';
+import '../models/post.dart';
+import '../views/view_models/home_view_model.dart';
+import '../views/view_models/search_view_model.dart';
+import '../views/widgets/comment_text_field.dart';
+import '../views/widgets/post_widget.dart';
+import '../views/widgets/search_result_overlay.dart';
 
 class AddPost extends StatefulWidget {
   const AddPost({super.key});
@@ -17,7 +22,7 @@ class AddPost extends StatefulWidget {
   State<AddPost> createState() => _AddPostState();
 }
 
-class _AddPostState extends State<AddPost> {
+class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
   final TextEditingController imgurCtrl = TextEditingController();
   final TextEditingController youtubeCtrl = TextEditingController();
   final TextEditingController topicCtrl = TextEditingController();
@@ -94,6 +99,7 @@ class _AddPostState extends State<AddPost> {
     // Add a listener to update the [backendFormat] when the text changes.
     // _controller.addListener(
     //         () => setState(() => backendFormat = _controller.textInBackendFormat));
+    initStateTagger();
   }
 
   @override
@@ -107,6 +113,7 @@ class _AddPostState extends State<AddPost> {
     // _focusNode.dispose();
     // _controller.dispose();
     // _overlayEntry?.remove();
+    disposeTagger();
   }
 
   @override
@@ -114,7 +121,10 @@ class _AddPostState extends State<AddPost> {
     // final UserProvider userProvider = Provider.of<UserProvider>(context);
     var addImageIcon = Icon(Icons.image_search_outlined, size: 100,);
     var addVideoIcon = Icon(Icons.video_settings_rounded, size: 100,);
-    return Scaffold(appBar: AppBar(title: Text("Share to earn Bitcoin"),),
+    var insets = MediaQuery.of(context).viewInsets;
+    return GestureDetector(
+        onTap: _focusNode.unfocus,
+        child: Scaffold(appBar: AppBar(title: Text("Share to earn Bitcoin"),),
       body: Column(
         children: [
           Row(children: [
@@ -149,9 +159,10 @@ class _AddPostState extends State<AddPost> {
                   )) : SizedBox()
           ]),
           validVideo.isNotEmpty || validImgur.isNotEmpty
-              ? createTaggableInput()
+              ? createTaggableInput(context, insets)
               : SizedBox()
         ])
+        )
     );
   }
 
@@ -182,7 +193,92 @@ class _AddPostState extends State<AddPost> {
             textInputType: TextInputType.url)]);
     }, context: context,);
   }
+  late AnimationController _animationController;
+  late Animation<Offset> _animation;
 
+  double overlayHeight = 300;
+
+  late final homeViewModel = HomeViewModel();
+  late final _controller = FlutterTaggerController(
+    //Initial text value with tag is formatted internally
+    //following the construction of FlutterTaggerController.
+    //After this controller is constructed, if you
+    //wish to update its text value with raw tag string,
+    //call (_controller.formatTags) after that.
+    text:
+    "Hey @11a27531b866ce0016f9e582#brad#. It's time to #93f27531f294jp0016f9k013#Flutter#!",
+  );
+  late final _focusNode = FocusNode();
+
+  void initStateTagger() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+
+    _animation = Tween<Offset>(
+      begin: const Offset(0, 0.5),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  void disposeTagger() {
+    _animationController.dispose();
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget createTaggableInput(BuildContext context, insets) {
+        return FlutterTagger(
+          triggerStrategy: TriggerStrategy.eager,
+          controller: _controller,
+          animationController: _animationController,
+          onSearch: (query, triggerChar) {
+            if (triggerChar == "@") {
+              searchViewModel.searchTopic(query);
+            }
+            // if (triggerChar == "@") {
+            //   searchViewModel.searchUser(query);
+            // }
+            if (triggerChar == "#") {
+              searchViewModel.searchHashtag(query);
+            }
+          },
+          triggerCharacterAndStyles: const {
+            "@": TextStyle(color: Colors.pinkAccent),
+            "#": TextStyle(color: Colors.blueAccent),
+          },
+          tagTextFormatter: (id, tag, triggerCharacter) {
+            return "$triggerCharacter$id#$tag#";
+          },
+          overlayHeight: overlayHeight,
+          overlay: SearchResultOverlay(
+            animation: _animation,
+            tagController: _controller,
+          ),
+          builder: (context, containerKey) {
+            return CommentTextField(
+              focusNode: _focusNode,
+              containerKey: containerKey,
+              insets: insets,
+              controller: _controller,
+              onSend: () {
+                FocusScope.of(context).unfocus();
+                homeViewModel.addPost(_controller.formattedText);
+                _controller.clear();
+              },
+            );
+          },
+        );
+  }
   /*
   Widget createTaggableInput() {
     return Center(

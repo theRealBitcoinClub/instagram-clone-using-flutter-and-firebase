@@ -31,7 +31,7 @@ class MemoModelPost {
   late final MemoModelCreator? creator;
   late final MemoModelTopic? topic;
   final String? age;
-  static final List<MemoModelPost> globalPosts = [];
+  static final List<MemoModelPost> posts = [];
   static final List<MemoModelPost> ytPosts = [];
   static final List<MemoModelPost> imgurPosts = [];
   static final List<MemoModelPost> hashTagPosts = [];
@@ -60,11 +60,19 @@ class MemoModelPost {
     return memoModelPost;
   }
 
-  static void addToGlobalPostList(List<MemoModelPost> posts) {
-    globalPosts.addAll(posts);
+  static void clearLists() {
+    posts.clear();
+    imgurPosts.clear();
+    ytPosts.clear();
+    hashTagPosts.clear();
+    topicPosts.clear();
+  }
+
+  static void addToGlobalPostList(List<MemoModelPost> p) {
+    MemoModelPost.posts.addAll(p);
 
     //TODO DO NOT ITERATE THROUGH ALL POSTS HERE AS YOU ALREADY DID THAT BEFORE,
-    for (var element in posts) {
+    for (var element in p) {
       // if (element.creator!.id != MemoModelCreator.createDummy().id)
       //   continue; //TODO ONLY SHOW OWN POSTS ON PROFILE
 

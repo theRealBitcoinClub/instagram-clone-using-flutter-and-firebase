@@ -10,11 +10,13 @@ import '../memomodel/memo_model_topic.dart';
 
 class MemoScraperTopic {
   Future<void> startScrapeTopics(String cacheId, int offset) async {
+    MemoModelTopic.topics.clear();
     for (int off = offset; off >= 0; off -= 25) {
       Map<String, Object> topics = await MemoScraperUtil.createScraper("topics/all?offset=$off&x=$cacheId", createScraperConfigMemoModelTopic());
 
       List<MemoModelTopic> topicList = createMemoModelTopicList(topics);
 
+      MemoModelTopic.topics.addAll(topicList);
       final config = createScraperConfigMemoModelPost();
 
       for (MemoModelTopic currentTopic in topicList) {

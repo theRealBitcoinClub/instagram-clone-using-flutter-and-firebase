@@ -105,9 +105,9 @@ class _FeedScreenState extends State<FeedScreen> {
         //         );
         //       } TODO FEED POSTS
               ListView.builder(
-                itemCount: MemoModelPost.globalPosts.length,
+                itemCount: MemoModelPost.posts.length,
                 itemBuilder: (context, index) =>
-                    PostCard(MemoModelPost.globalPosts[index]),
+                    PostCard(MemoModelPost.posts[index]),
                 // PostCard(snap: snapshot.data!.docs[index].data()),
               )
             // })

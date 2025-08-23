@@ -197,9 +197,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       showDialog(context: context, builder: (dialogCtx) {
                                         return SimpleDialog(title: Row(children: [
                                                     CircleAvatar(backgroundImage: NetworkImage(post.creator!.profileImage())),
+                                                    SizedBox(width: 10,),
                                                     Text(post.creator!.name!)],), children: [
                                                         img,
-                                                        Expanded(child: Text(post.text ?? "", maxLines: 4))
+                                                        Padding(padding: EdgeInsetsGeometry.all(20), child:
+                                                        Expanded(child: Text(post.text ?? "", maxLines: 4)))
                                                 ],);
                                       },);
                                     }, child: img);

@@ -98,17 +98,23 @@ class MemoModelPost {
   //On return MemoAccountantResponse.yes everything worked fine and text can be cleared
   //Any other response should invoke a snackbar and later even better QR codes to insta deposit
 
-  Future<dynamic> publishReply(String replyText) async {
-    MemoVerificationResponse verifier = MemoVerifier(this).checkIsValidText(replyText);
+  Future<dynamic> publishReplyTopic(String replyText) async {
+    MemoVerificationResponse verifier = MemoVerifier(replyText).checkIsValidText(replyText);
     if (verifier == MemoVerificationResponse.valid) {
-      //TODO at this point accountant should never throw error as it is already checking balances before allowing the user to write
+      //TODO at this point accountant should never throw error as it should be already checking balances before allowing the user to write
       var user = await MemoModelUser.getUser();
-      var replyPost = MemoModelPost(text: replyText);
-      MemoAccountantResponse accountant = await MemoAccountant(user).publishReply(this, replyPost);
-
-      return accountant;
+      return await MemoAccountant(user).publishReplyTopic(this, replyText);
     } else
       return verifier;
+  }
+
+  Future<dynamic> publishReplyHashtags(String text) async {
+    MemoVerificationResponse verifier = MemoVerifier(text).checkIsValidText(text);
+    if (verifier != MemoVerificationResponse.valid) return verifier;
+
+    var user = await MemoModelUser.getUser();
+
+    return await MemoAccountant(user).publishReplyHashtags(this, text);
   }
 
   //TODO IMPLEMENT EQUALS METHOD, CHECK TX HASH

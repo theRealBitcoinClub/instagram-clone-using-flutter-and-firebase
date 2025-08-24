@@ -1,4 +1,3 @@
-import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/memoscraper/memo_scraper_utils.dart';
 
 enum MemoVerificationResponse {
@@ -17,25 +16,25 @@ enum MemoVerificationResponse {
 }
 
 class MemoVerifier {
-  final MemoModelPost post;
   List<String> _hashTags = [];
   List<String> _urls = [];
+  String text;
 
   List<String> get hashTags {
     if (_hashTags.isEmpty) {
-      _hashTags = MemoScraperUtil.extractHashtags(post.text);
+      _hashTags = MemoScraperUtil.extractHashtags(text);
     }
     return _hashTags;
   }
 
   List<String> get urls {
     if (_urls.isEmpty) {
-      _urls = MemoScraperUtil.extractUrls(post.text);
+      _urls = MemoScraperUtil.extractUrls(text);
     }
     return _urls;
   }
 
-  MemoVerifier(this.post);
+  MemoVerifier(this.text);
 
   MemoVerificationResponse checkIsValidText(String text) {
     if (hashTags.length > 3) return MemoVerificationResponse.moreThanThreeTags;

@@ -39,7 +39,7 @@ class MemoAccountant {
 
   //TODO let user choose the order in which he wants to spend his balance
   //TODO tip receiver can be the user that posted or the app itself to buy and burn tokens
-  Future<MemoAccountantResponse> publishReply(MemoModelPost post, MemoModelPost postReply) async {
+  Future<MemoAccountantResponse> publishReplyTopic(MemoModelPost post, String postReply) async {
     //Bch tx must be more expensive than token tx, always add extra fee receiver that burns tokens
     MemoAccountantResponse response = await _tryPublishReply(user.wifLegacy, post, postReply);
 
@@ -63,16 +63,21 @@ class MemoAccountant {
 
   Future<MemoAccountantResponse> tryPublishLike(MemoModelPost post, String wif) async {
     var mp = await MemoPublisher.create(MemoBitcoinBase.reOrderTxHash(post.txHash!), MemoCode.postLike, wif: wif);
-    return await mp.doPublish(tip: MemoTip(post.creator!.id, user.tipAmount));
+    return mp.doPublish(tip: MemoTip(post.creator!.id, user.tipAmount));
   }
 
   MemoAccountantResponse memoAccountantResponse(MemoAccountantResponse response) =>
       response != MemoAccountantResponse.yes ? MemoAccountantResponse.lowBalance : MemoAccountantResponse.yes;
 
-  Future<MemoAccountantResponse> _tryPublishReply(String wif, MemoModelPost post, MemoModelPost postReply) async {
-    var mp = await MemoPublisher.create(postReply.text!, MemoCode.topicMessage, wif: wif);
+  Future<MemoAccountantResponse> _tryPublishReply(String wif, MemoModelPost post, String postReply) async {
+    var mp = await MemoPublisher.create(postReply, MemoCode.topicMessage, wif: wif);
     var tip = MemoTip(getTipReceiver(post.creator!), user.tipAmount);
-    MemoAccountantResponse response = await mp.doPublish(topic: post.topic!.header, tip: tip);
-    return response;
+    return mp.doPublish(topic: post.topic!.header, tip: tip);
+  }
+
+  Future<MemoAccountantResponse> publishReplyHashtags(MemoModelPost post, String text) async {
+    MemoPublisher mp = await MemoPublisher.create(text, MemoCode.profileMessage, wif: user.wifLegacy);
+    var tip = MemoTip(getTipReceiver(post.creator!), user.tipAmount);
+    return mp.doPublish(tip: tip);
   }
 }

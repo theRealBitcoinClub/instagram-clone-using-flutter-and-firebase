@@ -10,8 +10,6 @@ import 'package:instagram_clone1/widgets/like_animtion.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
-import '../memobase/memo_code.dart';
-import '../memobase/memo_publisher.dart';
 import '../memomodel/memo_model_post.dart';
 import 'memo_confetti.dart';
 
@@ -62,108 +60,10 @@ class _PostCardState extends State<PostCard> {
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 1),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16).copyWith(right: 0),
-            color: Colors.white,
-            //headerbar
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: onClickCreatorName(post.creator!.id),
-                  child: CircleAvatar(
-                    radius: 22,
-                    backgroundImage: NetworkImage(post.creator!.profileImage()),
-                    //TODO LOAD PROFILE IMAGE
-                    // backgroundImage: NetworkImage(widget.snap['profileImage']),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        /* TextButton(onPressed: onClickCreatorName(post.creator!.id!), child: */
-                        /*
-                      Text(
-                        post.creator!.name!,
-                        style: const TextStyle(fontSize: 13),
-                      ),*/
-                        const Spacer(),
-
-                        Text(post.age!, style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic)),
-                        Text(" - ${post.created}", style: const TextStyle(fontSize: 12)),
-                      ],
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => Dialog(
-                        // backgroundColor: Colors.white10,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        elevation: 0,
-                        child: ListView(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shrinkWrap: true,
-                          children: ["Tip", "Share", "Mute Post"]
-                              .map(
-                                (e) => InkWell(
-                                  onTap: () {
-                                    //   TODO DELETEPOST LOLL
-                                    // async {
-                                    //   String res =
-                                    //       await FireStoreMethods()
-                                    //           .deletePost(
-                                    //               widget.snap['postId']);
-                                    showSnackBar("LOL", context);
-                                    Navigator.pop(context);
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                                    child: Center(child: Text(e)),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.more_vert),
-                ),
-              ],
-            ),
-          ),
+          buildPostCardHeader(context),
           GestureDetector(
-            onDoubleTap: () async {
-              setState(() {
-                isSendingTx = true;
-              });
-              MemoAccountantResponse response = await MemoAccountant(user!).publishLike(post);
-              setState(() {
-                isSendingTx = false;
-              });
-              if (context.mounted) {
-                setState(() {
-                  switch (response) {
-                    case MemoAccountantResponse.yes:
-                      setState(() {
-                        // MemoConfetti().launch(context);
-                        isAnimatingLike = true;
-                      });
-                    case MemoAccountantResponse.lowBalance:
-                      showSnackBar("low balance", context);
-                    case MemoAccountantResponse.noUtxo:
-                    case MemoAccountantResponse.dust:
-                      // these can not reach this layer
-                      throw UnimplementedError();
-                  }
-                });
-              }
+            onDoubleTap: () {
+              sendTipToCreator(context);
             },
             child: ZoomOverlay(
               modalBarrierColor: Colors.black12,
@@ -202,117 +102,218 @@ class _PostCardState extends State<PostCard> {
             ),
           ),
 
-          //number of likes , description and number of comments
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 8),
+          buildTextBelowImage(),
+        ],
+      ),
+    );
+  }
 
-                Column(
-                  children: <Widget>[
-                    ExpandableText(
-                      post.text ?? "",
-                      prefixText: "${post.creator!.name}:",
-                      prefixStyle: const TextStyle(fontWeight: FontWeight.bold),
-                      expandText: 'show more',
-                      collapseText: 'show less',
-                      maxLines: 5,
-                      linkColor: Colors.blue,
-                    ),
-                    showInput ? TextField(controller: textEdit, onChanged: (value) => onInputText(value)) : SizedBox(),
-                    showSend
-                        ? Row(
-                            children: [
-                              TextButton(
-                                style: ButtonStyle(
-                                  backgroundColor: WidgetStatePropertyAll(Colors.green),
-                                  elevation: WidgetStatePropertyAll(5),
-                                ),
-                                onPressed: () => onSend(),
-                                child: Text(
-                                  hasSelectedTags && hasSelectedTopic
-                                      ? "Topic reply with hashtags"
-                                      : hasSelectedTopic
-                                      ? "Reply to Topic"
-                                      : "Post with hashtags",
-                                ),
-                              ),
-                            ],
-                          )
-                        : SizedBox(),
-                    post.topic != null
-                        ? Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  onSelectTopic();
-                                },
-                                child: Text("TOPIC: ${post.topic!.header}"),
-                              ),
-                              Checkbox(
-                                value: hasSelectedTopic,
-                                onChanged: (value) {
-                                  onSelectTopic();
-                                },
-                              ),
-                            ],
-                          )
-                        : SizedBox(),
-                    post.hashtags.isNotEmpty
-                        ? Column(
-                            children: List<Widget>.generate(
-                              post.hashtags.length > maxTagsCounter ? maxTagsCounter : post.hashtags.length,
-                              (index) {
-                                return Row(
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () {
-                                        onSelectHashtag(index);
-                                      },
-                                      child: Text(
-                                        style: TextStyle(
-                                          backgroundColor: index % 2 == 0 ? Colors.grey.shade400 : Colors.grey.shade300,
-                                        ),
-                                        post.hashtags[index],
-                                      ),
-                                    ),
-                                    Checkbox(
-                                      value: selectedHashtags[index],
-                                      onChanged: (value) {
-                                        onSelectHashtag(index);
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                          )
-                        : SizedBox(),
-
-                    // CheckboxListTile(value: selectedHashtags[index], onChanged: onSelectHashtag(index));
-
-                    // post.hashtags.forEach((element) {
-                    //   GestureDetector(onTap: () => onSelectTopic(), child:
-                    //   Text("${post.hashtags[0]!}")),
-                    //   Checkbox(
-                    //   value: hasSelectedTopic,
-                    //   onChanged: (value) => onSelectTopic(),)
-                    // },)
-                    // ,
-                    // (post.hashtags.isNotEmpty ? post.hashtags.forEach((element) {
-                    // TextButton(onPressed: () => onHashTag(element)
-                    // ,child: Text(element))
-                    // }) : SizedBox())])
-                  ],
-                ),
-              ],
+  Container buildPostCardHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16).copyWith(right: 0),
+      color: Colors.white,
+      //headerbar
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: onClickCreatorName(post.creator!.id),
+            child: CircleAvatar(
+              radius: 22,
+              backgroundImage: NetworkImage(post.creator!.profileImage()),
+              //TODO LOAD PROFILE IMAGE
+              // backgroundImage: NetworkImage(widget.snap['profileImage']),
             ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /* TextButton(onPressed: onClickCreatorName(post.creator!.id!), child: */
+                  /*
+                    Text(
+                      post.creator!.name!,
+                      style: const TextStyle(fontSize: 13),
+                    ),*/
+                  const Spacer(),
+
+                  Text(post.age!, style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic)),
+                  Text(" - ${post.created}", style: const TextStyle(fontSize: 12)),
+                ],
+              ),
+            ),
+          ),
+          buildPostOptionsMenu(context),
+        ],
+      ),
+    );
+  }
+
+  Container buildTextBelowImage() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 8),
+
+          Column(
+            children: <Widget>[
+              ExpandableText(
+                post.text ?? "",
+                prefixText: "${post.creator!.name}:",
+                prefixStyle: const TextStyle(fontWeight: FontWeight.bold),
+                expandText: 'show more',
+                collapseText: 'show less',
+                maxLines: 5,
+                linkColor: Colors.blue,
+              ),
+              showInput ? TextField(controller: textEdit, onChanged: (value) => onInputText(value)) : SizedBox(),
+              showSend ? buildSendButton() : SizedBox(),
+              post.topic != null ? buildTopicCheckBox() : SizedBox(),
+              post.hashtags.isNotEmpty ? buildHashtagCheckboxes() : SizedBox(),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> sendTipToCreator(BuildContext context) async {
+    setState(() {
+      isSendingTx = true;
+    });
+    MemoAccountantResponse response = await MemoAccountant(user!).publishLike(post);
+    setState(() {
+      isSendingTx = false;
+    });
+    if (context.mounted) {
+      setState(() {
+        switch (response) {
+          case MemoAccountantResponse.yes:
+            setState(() {
+              // MemoConfetti().launch(context);
+              isAnimatingLike = true;
+            });
+          case MemoAccountantResponse.lowBalance:
+            showSnackBar("low balance", context);
+          case MemoAccountantResponse.noUtxo:
+          case MemoAccountantResponse.dust:
+            // these can not reach this layer
+            throw UnimplementedError();
+        }
+      });
+    }
+  }
+
+  IconButton buildPostOptionsMenu(BuildContext context) {
+    return IconButton(
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (dialogCtx) => Dialog(
+            // backgroundColor: Colors.white10,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 0,
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shrinkWrap: true,
+              children: ["Delete Post", "Ban User", "Report"]
+                  .map(
+                    (e) => InkWell(
+                      onTap: () {
+                        //   TODO DELETEPOST LOLL
+                        // async {
+                        //   String res =
+                        //       await FireStoreMethods()
+                        //           .deletePost(
+                        //               widget.snap['postId']);
+                        showSnackBar("😂", dialogCtx);
+                        Navigator.pop(dialogCtx);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        child: Center(child: Text(e)),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        );
+      },
+      icon: const Icon(Icons.more_vert),
+    );
+  }
+
+  Column buildHashtagCheckboxes() {
+    return Column(
+      children: List<Widget>.generate(post.hashtags.length > maxTagsCounter ? maxTagsCounter : post.hashtags.length, (
+        index,
+      ) {
+        return Row(
+          children: [
+            GestureDetector(
+              onTap: () {
+                onSelectHashtag(index);
+              },
+              child: Text(
+                style: TextStyle(backgroundColor: index % 2 == 0 ? Colors.grey.shade400 : Colors.grey.shade300),
+                post.hashtags[index],
+              ),
+            ),
+            Checkbox(
+              value: selectedHashtags[index],
+              onChanged: (value) {
+                onSelectHashtag(index);
+              },
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  Row buildTopicCheckBox() {
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () {
+            onSelectTopic();
+          },
+          child: Text("TOPIC: ${post.topic!.header}"),
+        ),
+        Checkbox(
+          value: hasSelectedTopic,
+          onChanged: (value) {
+            onSelectTopic();
+          },
+        ),
+      ],
+    );
+  }
+
+  Row buildSendButton() {
+    return Row(
+      children: [
+        TextButton(
+          style: ButtonStyle(
+            backgroundColor: WidgetStatePropertyAll(Colors.green),
+            elevation: WidgetStatePropertyAll(5),
+          ),
+          onPressed: () => onSend(),
+          child: Text(
+            hasSelectedTags && hasSelectedTopic
+                ? "Topic reply with hashtags"
+                : hasSelectedTopic
+                ? "Reply to Topic"
+                : "Post with hashtags",
+          ),
+        ),
+      ],
     );
   }
 
@@ -382,7 +383,7 @@ class _PostCardState extends State<PostCard> {
     if (hasSelectedTopic) {
       onReplyTopic(context);
     } else {
-      onPostWithHashtags();
+      onPostWithHashtags(context);
     }
   }
 
@@ -481,9 +482,20 @@ class _PostCardState extends State<PostCard> {
   }
 
   void onReplyTopic(BuildContext ctx) async {
-    var result = await post.publishReply(textEdit.text.trim());
+    var result = await post.publishReplyTopic(textEdit.text.trim());
     if (!ctx.mounted) return;
 
+    showVerificationResponse(result, ctx);
+  }
+
+  void onPostWithHashtags(BuildContext ctx) async {
+    var result = await post.publishReplyHashtags(textEdit.text.trim());
+    if (!ctx.mounted) return;
+
+    showVerificationResponse(result, ctx);
+  }
+
+  void showVerificationResponse(result, BuildContext ctx) {
     switch (result) {
       case MemoVerificationResponse.minWordCountNotReached:
         showSnackBar("write more words", ctx);
@@ -506,23 +518,19 @@ class _PostCardState extends State<PostCard> {
       case MemoAccountantResponse.lowBalance:
         showSnackBar("you broke dude", ctx);
       case MemoAccountantResponse.yes:
-        {
-          setState(() {
-            //TODO launch confetti only on the current post
-            MemoConfetti().launch(ctx);
-            textEdit.clear();
-            hasSelectedTopic = false;
-            showSend = false;
-            showInput = false;
-          });
-          // showSnackBar("success", ctx);
-        }
+        clearAndConfetti(ctx);
     }
   }
 
-  void onPostWithHashtags() {
-    MemoPublisher.create(textEdit.text.trim(), MemoCode.profileMessage).then((value) {
-      value.doPublish();
+  void clearAndConfetti(BuildContext ctx) {
+    setState(() {
+      //TODO launch confetti only on the current post
+      MemoConfetti().launch(ctx);
+      textEdit.clear();
+      hasSelectedTopic = false;
+      showSend = false;
+      showInput = false;
     });
+    // showSnackBar("success", ctx);
   }
 }

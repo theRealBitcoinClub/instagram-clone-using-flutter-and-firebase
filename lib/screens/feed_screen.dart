@@ -30,111 +30,70 @@ class _FeedScreenState extends State<FeedScreen> {
       appBar: AppBar(
         backgroundColor: mobileBackgroundColor,
         centerTitle: true,
-        toolbarHeight: 40,
-        title: Text("Spend > Share > Inspire", style: TextStyle(fontFamily: "Open Sans")),
-        actions: [
-          IconButton(
-            onPressed: () {
-              setState(() {
-                DynamicTheme.of(context)?.setTheme(AppThemes.Dark);
-              });
-            },
-            icon: Icon(Icons.color_lens_outlined),
-          ),
-          IconButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return SimpleDialog(
-                    children: [
-                      SimpleDialogOption(
-                        onPressed: () {
-                          onFilter(0);
-                        },
-                        child: Row(
-                          children: [
-                            const Icon(Icons.image_rounded),
-                            const Spacer(),
-                            const Text('IMAGES'),
-                            Checkbox(
-                              value: hasFilter(0),
-                              onChanged: (value) {
-                                onFilter(0);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      SimpleDialogOption(
-                        onPressed: () {
-                          onFilter(1);
-                        },
-                        child: Row(
-                          children: [
-                            const Icon(Icons.video_library_rounded),
-                            const Spacer(),
-                            const Text('VIDEOS'),
-                            Checkbox(
-                              value: hasFilter(1),
-                              onChanged: (value) {
-                                onFilter(1);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      SimpleDialogOption(
-                        onPressed: () {
-                          onFilter(2);
-                        },
-                        child: Row(
-                          children: [
-                            const Icon(Icons.tag_rounded),
-                            const Spacer(),
-                            const Text('HASHTAGS'),
-                            Checkbox(
-                              value: hasFilter(2),
-                              onChanged: (value) {
-                                onFilter(2);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      SimpleDialogOption(
-                        onPressed: () {
-                          onFilter(3);
-                        },
-                        child: Row(
-                          children: [
-                            const Icon(Icons.topic_rounded),
-                            const Spacer(),
-                            const Text('TOPICS'),
-                            Checkbox(
-                              value: hasFilter(3),
-                              onChanged: (value) {
-                                onFilter(3);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              );
-              // signUserOut();
-            },
-            icon: Icon(Icons.filter_list, color: blackColor),
-          ),
-        ],
+        toolbarHeight: 50,
+        title: Text("mahakka.com", style: TextStyle(fontFamily: "Open Sans")),
+        // actions: [buildMenuTheme(context), buildMenuFilter(context)],
       ),
       body: ListView.builder(
         itemCount: MemoModelPost.allPosts.length,
         itemBuilder: (context, index) => PostCard(MemoModelPost.allPosts[index]),
       ),
       // })
+    );
+  }
+
+  IconButton buildMenuFilter(BuildContext context) {
+    return IconButton(
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return SimpleDialog(
+              children: [
+                //TODO change icon if filter is on or off
+                buildFilterOption(0, "IMAGES", Icons.image_not_supported),
+                buildFilterOption(1, "VIDEOS", Icons.video_library_rounded),
+                buildFilterOption(2, "HASHTAGS", Icons.tag_rounded),
+                buildFilterOption(3, "TOPICS", Icons.topic_rounded),
+              ],
+            );
+          },
+        );
+        // signUserOut();
+      },
+      icon: Icon(Icons.filter_list, color: blackColor),
+    );
+  }
+
+  IconButton buildMenuTheme(BuildContext context) {
+    return IconButton(
+      onPressed: () {
+        setState(() {
+          DynamicTheme.of(context)?.setTheme(AppThemes.Dark);
+        });
+      },
+      icon: Icon(Icons.color_lens_outlined),
+    );
+  }
+
+  SimpleDialogOption buildFilterOption(int index, String text, icon) {
+    return SimpleDialogOption(
+      onPressed: () {
+        onFilter(index);
+      },
+      child: Row(
+        children: [
+          Icon(icon),
+          const Spacer(),
+          Text(text),
+          Checkbox(
+            value: hasFilter(0),
+            onChanged: (value) {
+              onFilter(0);
+            },
+          ),
+        ],
+      ),
     );
   }
 

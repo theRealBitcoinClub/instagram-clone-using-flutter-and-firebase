@@ -244,9 +244,6 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
         if (triggerChar == "@") {
           searchViewModel.searchTopic(query);
         }
-        // if (triggerChar == "@") {
-        //   searchViewModel.searchUser(query);
-        // }
         if (triggerChar == "#") {
           searchViewModel.searchHashtag(query);
         }

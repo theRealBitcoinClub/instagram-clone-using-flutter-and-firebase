@@ -4,6 +4,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:instagram_clone1/provider/user_provider.dart';
 import 'package:instagram_clone1/route%20handling/auth_page.dart';
 import 'package:provider/provider.dart';
+
 import 'app_themes.dart';
 import 'memoscraper/memo_scraper_posts.dart';
 import 'memoscraper/memo_scraper_tag.dart';

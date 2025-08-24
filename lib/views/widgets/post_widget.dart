@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../models/post.dart';
 import 'custom_text.dart';
 

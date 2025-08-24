@@ -4,10 +4,8 @@ import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/resources/auth_method.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/post_card.dart';
-import 'package:provider/provider.dart';
 
 import '../app_themes.dart';
-import '../provider/user_provider.dart';
 import '../utils/snackbar.dart';
 
 class FeedScreen extends StatefulWidget {

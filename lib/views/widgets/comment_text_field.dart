@@ -1,9 +1,6 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 
-import '../../models/user.dart';
 import 'custom_text_field.dart';
 
 class CommentTextField extends StatelessWidget {

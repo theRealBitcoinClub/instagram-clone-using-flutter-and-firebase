@@ -1,8 +1,6 @@
 
 import 'package:bip39_mnemonic/bip39_mnemonic.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 import 'package:instagram_clone1/resources/auth_method.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';

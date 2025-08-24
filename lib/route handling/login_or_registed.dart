@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/screens/login_screen.dart';
-import 'package:instagram_clone1/screens/signup_screen.dart';
 
 class LoginOrRegister extends StatefulWidget {
   const LoginOrRegister({super.key});
@@ -13,7 +12,7 @@ class _LoginOrRegisterState extends State<LoginOrRegister> {
   //initially show login page
   bool showLoginPage = true;
 
-//toggle between login and register page
+  //toggle between login and register page
   void togglePage() {
     setState(() {
       showLoginPage = !showLoginPage;
@@ -23,7 +22,7 @@ class _LoginOrRegisterState extends State<LoginOrRegister> {
   @override
   Widget build(BuildContext context) {
     // if (showLoginPage) {
-      return LoginScreen(onToggle: togglePage);
+    return LoginScreen(onToggle: togglePage);
     // } else {
     //   return SignUpScreen(onToggle: togglePage);
     // }

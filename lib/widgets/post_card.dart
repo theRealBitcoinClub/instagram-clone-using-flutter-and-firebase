@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memobase/memo_bitcoin_base.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 import 'package:instagram_clone1/memoscraper/memo_scraper_utils.dart';
-import 'package:instagram_clone1/screens/profile_screen.dart';
 import 'package:instagram_clone1/utils/imgur_utils.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/like_animtion.dart';
-import 'package:instagram_clone1/widgets/textfield_input.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 

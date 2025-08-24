@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 import 'package:instagram_clone1/memomodel/memo_model_topic.dart';
 
-import '../../models/user.dart';
 import '../view_models/search_view_model.dart';
 import 'loading_indicator.dart';
 

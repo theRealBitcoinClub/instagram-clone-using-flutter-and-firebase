@@ -1,5 +1,6 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
+
 import 'socket/electrum_websocket_service.dart';
 
 class MemoBitcoinBase {

@@ -116,10 +116,7 @@ enum MemoCode {
   // f3b34db1d057a771f8b63e4d0c10fd897bc54b91e2118815b9454f4ead2c83ba JASON DOING SOME FUNNY STUFF
   // var other = await doMemoAction("reply", MemoCode.postReply, "ba832cad4e4f45b9158811e2914bc57b89fd100c4d3eb6f871a757d0b14db3f3");
 
-
   final String opCode;
 
-  const MemoCode ({
-    required this.opCode
-  });
+  const MemoCode({required this.opCode});
 }

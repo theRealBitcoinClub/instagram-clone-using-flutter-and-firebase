@@ -14,10 +14,9 @@ class ElectrumWebSocketService with ElectrumServiceProvider {
     WebSocketCore channel, {
     this.defaultRequestTimeOut = const Duration(seconds: 30),
   }) : _socket = channel {
-    _subscription = channel.stream
-        .cast<String>()
-        .listen(_onMessge, onError: _onClose, onDone: _onDone);
+    _subscription = channel.stream.cast<String>().listen(_onMessge, onError: _onClose, onDone: _onDone);
   }
+
   WebSocketCore? _socket;
   StreamSubscription<String>? _subscription;
   final Duration defaultRequestTimeOut;
@@ -58,11 +57,9 @@ class ElectrumWebSocketService with ElectrumServiceProvider {
     Duration defaultRequestTimeOut = const Duration(seconds: 30),
     final Duration connectionTimeOut = const Duration(seconds: 30),
   }) async {
-    final channel =
-        await WebSocketCore.connect(url, protocols: protocols?.toList());
+    final channel = await WebSocketCore.connect(url, protocols: protocols?.toList());
 
-    return ElectrumWebSocketService._(url, channel,
-        defaultRequestTimeOut: defaultRequestTimeOut);
+    return ElectrumWebSocketService._(url, channel, defaultRequestTimeOut: defaultRequestTimeOut);
   }
 
   void _onMessge(String event) {
@@ -75,15 +72,12 @@ class ElectrumWebSocketService with ElectrumServiceProvider {
   }
 
   @override
-  Future<BaseServiceResponse<T>> doRequest<T>(ElectrumRequestDetails params,
-      {Duration? timeout}) async {
-    final AsyncRequestCompleter compeleter =
-        AsyncRequestCompleter(params.params);
+  Future<BaseServiceResponse<T>> doRequest<T>(ElectrumRequestDetails params, {Duration? timeout}) async {
+    final AsyncRequestCompleter compeleter = AsyncRequestCompleter(params.params);
     try {
       requests[params.requestID] = compeleter;
       add(params.toWebSocketParams());
-      final result = await compeleter.completer.future
-          .timeout(timeout ?? defaultRequestTimeOut);
+      final result = await compeleter.completer.future.timeout(timeout ?? defaultRequestTimeOut);
       return params.toResponse(result);
     } finally {
       requests.remove(params.requestID);

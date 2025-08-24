@@ -6,11 +6,7 @@ import '../view_models/search_view_model.dart';
 import 'loading_indicator.dart';
 
 class HashtagListView extends StatelessWidget {
-  const HashtagListView({
-    Key? key,
-    required this.tagController,
-    required this.animation,
-  }) : super(key: key);
+  const HashtagListView({Key? key, required this.tagController, required this.animation}) : super(key: key);
 
   final FlutterTaggerController tagController;
   final Animation<Offset> animation;
@@ -22,10 +18,7 @@ class HashtagListView extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 2),
         decoration: BoxDecoration(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
           color: Colors.white,
           boxShadow: [
             BoxShadow(
@@ -51,28 +44,14 @@ class HashtagListView extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           const Spacer(),
-                          Text(
-                            "Hashtags",
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
+                          Text("Hashtags", style: Theme.of(context).textTheme.titleMedium),
                           const Spacer(),
-                          IconButton(
-                            onPressed: tagController.dismissOverlay,
-                            icon: const Icon(Icons.close),
-                          ),
+                          IconButton(onPressed: tagController.dismissOverlay, icon: const Icon(Icons.close)),
                         ],
                       ),
-                      if (loading && hashtags.isEmpty) ...{
-                        const Center(
-                          heightFactor: 8,
-                          child: LoadingWidget(),
-                        )
-                      },
+                      if (loading && hashtags.isEmpty) ...{const Center(heightFactor: 8, child: LoadingWidget())},
                       if (!loading && hashtags.isEmpty)
-                        const Center(
-                          heightFactor: 8,
-                          child: Text("Didn't find any tag!"),
-                        ),
+                        const Center(heightFactor: 8, child: Text("Didn't find any tag!")),
                       if (hashtags.isNotEmpty)
                         Expanded(
                           child: ListView.builder(
@@ -86,21 +65,14 @@ class HashtagListView extends StatelessWidget {
                                   width: 40,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    border: Border.all(
-                                        color: Colors.lightBlueAccent),
+                                    border: Border.all(color: Colors.lightBlueAccent),
                                   ),
                                   alignment: Alignment.center,
-                                  child: const Text(
-                                    "#",
-                                    style: TextStyle(color: Colors.blueAccent),
-                                  ),
+                                  child: const Text("#", style: TextStyle(color: Colors.blueAccent)),
                                 ),
                                 title: Text(hashtag.name!),
                                 onTap: () {
-                                  tagController.addTag(
-                                    id: hashtag.name!,
-                                    name: hashtag.name!,
-                                  );
+                                  tagController.addTag(id: hashtag.name!, name: hashtag.name!);
                                 },
                               );
                             },

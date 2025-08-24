@@ -98,12 +98,8 @@ class ScraperConfig {
     return ScraperConfig(
       pathPatterns: List<String>.from(map['pathPatterns']),
       requiresHtml: map['requiresHtml'] ?? true,
-      urlCleaner: map['urlCleaner'] != null
-          ? UrlCleaner.fromMap(map['urlCleaner'])
-          : null,
-      parsers: (map['parsers'] as List)
-          .map((parser) => Parser.fromMap(parser))
-          .toList(),
+      urlCleaner: map['urlCleaner'] != null ? UrlCleaner.fromMap(map['urlCleaner']) : null,
+      parsers: (map['parsers'] as List).map((parser) => Parser.fromMap(parser)).toList(),
       forceRefresh: map['forceRefresh'] ?? false,
       userAgent: map['userAgent'] != null
           ? UserAgentDevice.values.firstWhere(

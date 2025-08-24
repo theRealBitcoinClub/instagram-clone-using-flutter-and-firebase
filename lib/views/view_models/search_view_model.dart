@@ -1,28 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_tag.dart';
 import 'package:instagram_clone1/memomodel/memo_model_topic.dart';
+
 ///Search view model
 final searchViewModel = SearchViewModel();
 
 enum SearchResultView {
   // users,
-  hashtag, topics, none}
+  hashtag,
+  topics,
+  none,
+}
 
 class SearchViewModel {
   late final ValueNotifier<List<MemoModelTopic>> _topics = ValueNotifier([]);
+
   ValueNotifier<List<MemoModelTopic>> get topics => _topics;
 
   // late final ValueNotifier<List<User>> _users = ValueNotifier([]);
   // ValueNotifier<List<User>> get users => _users;
 
   late final ValueNotifier<List<MemoModelTag>> _hashtags = ValueNotifier([]);
+
   ValueNotifier<List<MemoModelTag>> get hashtags => _hashtags;
 
   late final ValueNotifier<bool> _loading = ValueNotifier(false);
+
   ValueNotifier<bool> get loading => _loading;
 
-  late final ValueNotifier<SearchResultView> _activeView =
-      ValueNotifier(SearchResultView.none);
+  late final ValueNotifier<SearchResultView> _activeView = ValueNotifier(SearchResultView.none);
+
   ValueNotifier<SearchResultView> get activeView => _activeView;
 
   void _setLoading(bool val) {
@@ -43,12 +50,7 @@ class SearchViewModel {
 
     await Future.delayed(const Duration(milliseconds: 250));
 
-    final result = MemoModelTopic.topics
-        .where(
-          (topic) =>
-      topic.header!.toLowerCase().contains(query),
-    )
-        .toList();
+    final result = MemoModelTopic.topics.where((topic) => topic.header.toLowerCase().contains(query)).toList();
 
     _topics.value = [...result];
     _setLoading(false);
@@ -91,9 +93,7 @@ class SearchViewModel {
 
     await Future.delayed(const Duration(milliseconds: 250));
 
-    final result = MemoModelTag.tags
-        .where((tag) => tag.name!.toLowerCase().contains(query))
-        .toList();
+    final result = MemoModelTag.tags.where((tag) => tag.name!.toLowerCase().contains(query)).toList();
 
     _hashtags.value = [...result];
     _setLoading(false);

@@ -45,7 +45,7 @@ class _HomeSceenState extends State<HomeSceen> {
     // final GoogleSignIn googleSignIn = GoogleSignIn();
     // await FirebaseAuth.instance.signOut();
     // await googleSignIn.signOut();
-  // TODO SIGN OUT
+    // TODO SIGN OUT
   }
 
   void onPageChanged(int page) {
@@ -61,7 +61,6 @@ class _HomeSceenState extends State<HomeSceen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       // appBar: AppBar(
       //   actions: [
       //     IconButton(
@@ -74,7 +73,7 @@ class _HomeSceenState extends State<HomeSceen> {
         controller: pageController,
         onPageChanged: onPageChanged,
         physics: const NeverScrollableScrollPhysics(),
-        children:  [
+        children: [
           const FeedScreen(),
           // const SearchScreen(),
           const AddPost(),
@@ -87,14 +86,12 @@ class _HomeSceenState extends State<HomeSceen> {
         backgroundColor: mobileBackgroundColor,
         items: [
           BottomNavigationBarItem(
-              icon: _page == 0 ? const  Icon(
-                CupertinoIcons.house_fill, color: blackColor,
-              )
-              : const Icon(
-                CupertinoIcons.house,color: secondaryColor,
-              ),
-              label: '',
-              backgroundColor: primaryColor),
+            icon: _page == 0
+                ? const Icon(CupertinoIcons.house_fill, color: blackColor)
+                : const Icon(CupertinoIcons.house, color: secondaryColor),
+            label: '',
+            backgroundColor: primaryColor,
+          ),
           // BottomNavigationBarItem (
           //     icon: _page == 1 ? const Icon(
           //       CupertinoIcons.search, color: blackColor,
@@ -114,19 +111,15 @@ class _HomeSceenState extends State<HomeSceen> {
           //     label: '',
           //     backgroundColor: primaryColor),
           BottomNavigationBarItem(
-              icon: Icon(
-                Icons.currency_bitcoin_rounded,
-                color: _page == 1 ? blackColor : secondaryColor,
-              ),
-              label: '',
-              backgroundColor: primaryColor),
+            icon: Icon(Icons.currency_bitcoin_rounded, color: _page == 1 ? blackColor : secondaryColor),
+            label: '',
+            backgroundColor: primaryColor,
+          ),
           BottomNavigationBarItem(
-              icon: Icon(
-                Icons.person,
-                color: _page == 2 ? blackColor : secondaryColor,
-              ),
-              label: '',
-              backgroundColor: primaryColor)
+            icon: Icon(Icons.person, color: _page == 2 ? blackColor : secondaryColor),
+            label: '',
+            backgroundColor: primaryColor,
+          ),
         ],
         onTap: navigationPageSelected,
       ),

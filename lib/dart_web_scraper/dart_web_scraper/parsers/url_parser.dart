@@ -16,11 +16,7 @@ Data? urlParser({
   // Get parent element(s) to search within
   List<Element>? element = getElementObject(parentData);
   if (element == null || element.isEmpty) {
-    printLog(
-      "URL Parser: Element not found!",
-      debug,
-      color: LogColor.red,
-    );
+    printLog("URL Parser: Element not found!", debug, color: LogColor.red);
     return null;
   }
 
@@ -40,11 +36,7 @@ Data? urlParser({
     // Handle dynamic selectors with slot injection
     if (sel.contains("<slot>")) {
       selector = inject("slot", allData, sel);
-      printLog(
-        "URL Selector Modified: $selector",
-        debug,
-        color: LogColor.green,
-      );
+      printLog("URL Selector Modified: $selector", debug, color: LogColor.green);
     } else {
       selector = sel;
     }
@@ -59,10 +51,6 @@ Data? urlParser({
     }
   }
 
-  printLog(
-    "URL Parser: No data found!",
-    debug,
-    color: LogColor.orange,
-  );
+  printLog("URL Parser: No data found!", debug, color: LogColor.orange);
   return null;
 }

@@ -22,9 +22,10 @@ class MemoPublisher {
     //     MemoTransformation.reOrderTxHash("ba832cad4e4f45b9158811e2914bc57b89fd100c4d3eb6f871a757d0b14db3f3"));
     //
     // print("\n" + other);
-    var other = await doMemoAction(MemoBitcoinBase.reOrderTxHash(
-        "bad2095d2f5e177ffd4da96fd0220ebcb8de7b9e1cffac9d0c7667b403204072"),
-        MemoCode.postLike);
+    var other = await doMemoAction(
+      MemoBitcoinBase.reOrderTxHash("bad2095d2f5e177ffd4da96fd0220ebcb8de7b9e1cffac9d0c7667b403204072"),
+      MemoCode.postLike,
+    );
     print("\n" + other);
     // sleep(Duration(seconds: 1));
     // other = await doMemoAction("Keloke", MemoCode.ProfileName,"");
@@ -49,16 +50,21 @@ class MemoPublisher {
     // print("\n" + other);
   }
 
-  Future<String> doMemoAction(String memoMessage, MemoCode memoAction,
-      {String memoTopic = "", ECPrivate? pk, String? wif, String? tipReceiver, int? tipAmount}) async {
+  Future<String> doMemoAction(
+    String memoMessage,
+    MemoCode memoAction, {
+    String memoTopic = "",
+    ECPrivate? pk,
+    String? wif,
+    String? tipReceiver,
+    int? tipAmount,
+  }) async {
     print("\n${memoAction.opCode}\n${memoAction.name}");
     var base = await MemoBitcoinBase.create();
 
     const network = BitcoinCashNetwork.mainnet;
 
-    final privateKey = pk ?? (ECPrivate.fromWif(
-        wif ?? "xxx",
-        netVersion: network.wifNetVer));
+    final privateKey = pk ?? (ECPrivate.fromWif(wif ?? "xxx", netVersion: network.wifNetVer));
 
     final publicKey = privateKey.getPublic();
 
@@ -77,7 +83,10 @@ class MemoPublisher {
     final List<ElectrumUtxo> elctrumUtxos = await base.requestElectrumUtxos(p2pkhAddress);
 
     List<UtxoWithAddress> utxos = addUtxoAddressDetailsAsOwnerDetailsToCreateUtxoWithAddressModelList(
-        elctrumUtxos, p2pkhAddress, publicKey);
+      elctrumUtxos,
+      p2pkhAddress,
+      publicKey,
+    );
 
     utxos = removeSlpUtxos(utxos);
 
@@ -90,15 +99,17 @@ class MemoPublisher {
     final BigInt fee = BtcUtils.toSatoshi("0.000007");
     // final BigInt tip = BigInt.parse(tipAmount);
     final BtcTransaction tx = createTransaction(
-        p2pkhAddress,
-        walletBalance,
-        fee,
-        network,
-        utxos,
-        memoMessage,
-        memoAction,
-        privateKey,
-        memoTopic: memoTopic, tipToThisAddress: tipToThisAddress);
+      p2pkhAddress,
+      walletBalance,
+      fee,
+      network,
+      utxos,
+      memoMessage,
+      memoAction,
+      privateKey,
+      memoTopic: memoTopic,
+      tipToThisAddress: tipToThisAddress,
+    );
 
     print(tx.txId());
     print("http://memo.cash/explore/tx/${tx.txId()}");
@@ -108,31 +119,46 @@ class MemoPublisher {
     return "success";
   }
 
-  BtcTransaction createTransaction(BitcoinCashAddress p2pkhAddress,
-      BigInt walletBalance, BigInt fee, BitcoinCashNetwork network,
-      List<UtxoWithAddress> utxos, String memoMessage, MemoCode memoAction,
-      ECPrivate privateKey, {String memoTopic = "", BitcoinCashAddress? tipToThisAddress}) {
+  BtcTransaction createTransaction(
+    BitcoinCashAddress p2pkhAddress,
+    BigInt walletBalance,
+    BigInt fee,
+    BitcoinCashNetwork network,
+    List<UtxoWithAddress> utxos,
+    String memoMessage,
+    MemoCode memoAction,
+    ECPrivate privateKey, {
+    String memoTopic = "",
+    BitcoinCashAddress? tipToThisAddress,
+  }) {
     final MemoTransactionBuilder txBuilder = createTransactionBuilder(
-        p2pkhAddress,
-        walletBalance,
-        fee,
-        network,
-        utxos,
-        memoMessage,
-        memoAction,
-        memoTopic, tipToThisAddress);
-    final tx =
-    txBuilder.buildTransaction((trDigest, utxo, publicKey, sighash) {
+      p2pkhAddress,
+      walletBalance,
+      fee,
+      network,
+      utxos,
+      memoMessage,
+      memoAction,
+      memoTopic,
+      tipToThisAddress,
+    );
+    final tx = txBuilder.buildTransaction((trDigest, utxo, publicKey, sighash) {
       return privateKey.signECDSA(trDigest, sighash: sighash);
     });
     return tx;
   }
 
   MemoTransactionBuilder createTransactionBuilder(
-      BitcoinCashAddress p2pkhAddress, BigInt walletBalance, BigInt fee,
-      BitcoinCashNetwork network, List<UtxoWithAddress> utxos,
-      String memoMessage, MemoCode memoAction, String memoTopic, BitcoinCashAddress? tipToThisAddress) {
-
+    BitcoinCashAddress p2pkhAddress,
+    BigInt walletBalance,
+    BigInt fee,
+    BitcoinCashNetwork network,
+    List<UtxoWithAddress> utxos,
+    String memoMessage,
+    MemoCode memoAction,
+    String memoTopic,
+    BitcoinCashAddress? tipToThisAddress,
+  ) {
     final BigInt tip = BtcUtils.toSatoshi("0.00001");
     BigInt outputHome = walletBalance - fee;
     if (tipToThisAddress != null) {
@@ -140,18 +166,13 @@ class MemoPublisher {
     }
 
     final txBuilder = MemoTransactionBuilder(
-        outPuts: [
-          BitcoinOutput(
-            address: p2pkhAddress.baseAddress,
-            value: outputHome,
-          )
-        ],
-        fee: fee,
-        network: network,
-        utxos: utxos,
-        memo: memoMessage,
-        memoCode: memoAction,
-        memoTopic: memoTopic
+      outPuts: [BitcoinOutput(address: p2pkhAddress.baseAddress, value: outputHome)],
+      fee: fee,
+      network: network,
+      utxos: utxos,
+      memo: memoMessage,
+      memoCode: memoAction,
+      memoTopic: memoTopic,
     );
 
     if (tipToThisAddress != null)
@@ -160,17 +181,18 @@ class MemoPublisher {
     return txBuilder;
   }
 
-  List<
-      UtxoWithAddress> addUtxoAddressDetailsAsOwnerDetailsToCreateUtxoWithAddressModelList(
-      List<ElectrumUtxo> elctrumUtxos, BitcoinCashAddress p2pkhAddress,
-      ECPublic publicKey) {
+  List<UtxoWithAddress> addUtxoAddressDetailsAsOwnerDetailsToCreateUtxoWithAddressModelList(
+    List<ElectrumUtxo> elctrumUtxos,
+    BitcoinCashAddress p2pkhAddress,
+    ECPublic publicKey,
+  ) {
     List<UtxoWithAddress> utxos = elctrumUtxos
-        .map((e) =>
-        UtxoWithAddress(
+        .map(
+          (e) => UtxoWithAddress(
             utxo: e.toUtxo(p2pkhAddress.type),
-            ownerDetails: UtxoAddressDetails(
-                publicKey: publicKey.toHex(),
-                address: p2pkhAddress.baseAddress)))
+            ownerDetails: UtxoAddressDetails(publicKey: publicKey.toHex(), address: p2pkhAddress.baseAddress),
+          ),
+        )
         .toList();
     return utxos;
   }

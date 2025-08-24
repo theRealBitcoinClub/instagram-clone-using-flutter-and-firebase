@@ -5,6 +5,7 @@ import 'custom_text.dart';
 
 class PostWidget extends StatelessWidget {
   final Post post;
+
   const PostWidget({Key? key, required this.post}) : super(key: key);
 
   @override
@@ -23,10 +24,7 @@ class PostWidget extends StatelessWidget {
                 width: 50,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  image: DecorationImage(
-                    fit: BoxFit.cover,
-                    image: NetworkImage(post.poster.avatar),
-                  ),
+                  image: DecorationImage(fit: BoxFit.cover, image: NetworkImage(post.poster.avatar)),
                 ),
               ),
               const SizedBox(width: 8),
@@ -53,11 +51,7 @@ class PostWidget extends StatelessWidget {
                     ),
                     Text(
                       post.time,
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                      ),
+                      style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w400),
                     ),
                   ],
                 ),

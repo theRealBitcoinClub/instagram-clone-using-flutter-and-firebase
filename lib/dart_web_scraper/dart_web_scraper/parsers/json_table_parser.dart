@@ -18,24 +18,14 @@ Data? jsonTableParser({
   json ??= getStringObject(parentData);
 
   // Validate that keys and values selectors are configured
-  if (parser.parserOptions?.table?.keys == null ||
-      parser.parserOptions?.table?.values == null) {
-    printLog(
-      "JSON Table Parser: Keys or values are not set!",
-      debug,
-      color: LogColor.red,
-    );
+  if (parser.parserOptions?.table?.keys == null || parser.parserOptions?.table?.values == null) {
+    printLog("JSON Table Parser: Keys or values are not set!", debug, color: LogColor.red);
     return null;
   }
 
   // Extract key-value pairs from JSON data
   Map<String, Object> result = {};
-  Data? parsed = jsonParser(
-    parser: parser,
-    parentData: Data(parentData.url, json),
-    allData: allData,
-    debug: debug,
-  );
+  Data? parsed = jsonParser(parser: parser, parentData: Data(parentData.url, json), allData: allData, debug: debug);
 
   // Process each item in the JSON array/iterable
   if (parsed != null && parsed.obj is Iterable) {
@@ -75,8 +65,7 @@ Data? jsonTableParser({
           // Handle lists of keys and values
           if ((keyData.obj as List).length == (valData.obj as List).length) {
             for (int i = 0; i < (keyData.obj as List).length; i++) {
-              result
-                  .addAll({(keyData.obj as List)[i]: (valData.obj as List)[i]});
+              result.addAll({(keyData.obj as List)[i]: (valData.obj as List)[i]});
             }
           }
         }
@@ -89,10 +78,6 @@ Data? jsonTableParser({
     return Data(parentData.url, result);
   }
 
-  printLog(
-    "JSON Table Parser: No data found!",
-    debug,
-    color: LogColor.orange,
-  );
+  printLog("JSON Table Parser: No data found!", debug, color: LogColor.orange);
   return null;
 }

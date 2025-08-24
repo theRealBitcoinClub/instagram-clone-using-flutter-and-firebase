@@ -16,11 +16,7 @@ Data? elementParser({
   // Get element from parent data
   List<Element>? element = getElementObject(parentData);
   if (element == null || element.isEmpty) {
-    printLog(
-      "Element Parser: Element not found!",
-      debug,
-      color: LogColor.red,
-    );
+    printLog("Element Parser: Element not found!", debug, color: LogColor.red);
     return null;
   }
 
@@ -43,11 +39,7 @@ Data? elementParser({
     String selector;
     if (sel.contains("<slot>")) {
       selector = inject("slot", allData, sel);
-      printLog(
-        "Element Selector Modified: $selector",
-        debug,
-        color: LogColor.green,
-      );
+      printLog("Element Selector Modified: $selector", debug, color: LogColor.green);
     } else {
       selector = sel;
     }
@@ -59,21 +51,13 @@ Data? elementParser({
     }
   }
 
-  printLog(
-    "Element Parser: No data found!",
-    debug,
-    color: LogColor.orange,
-  );
+  printLog("Element Parser: No data found!", debug, color: LogColor.orange);
   return null;
 }
 
 /// Handles element selection based on parser configuration
 /// Returns single element or list of elements based on 'multiple' flag
-Object? elemHandler(
-  Parser parser,
-  Element parentData, {
-  required String selector,
-}) {
+Object? elemHandler(Parser parser, Element parentData, {required String selector}) {
   if (parser.multiple) {
     // Return all matching elements
     List<Element> qs = parentData.querySelectorAll(selector);

@@ -1,16 +1,15 @@
 import 'dart:async';
+
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html';
 
 import 'core.dart';
 
-Future<WebSocketCore> connectSoc(String url, {List<String>? protocols}) async =>
-    await WebsocketWeb.connect(url);
+Future<WebSocketCore> connectSoc(String url, {List<String>? protocols}) async => await WebsocketWeb.connect(url);
 
 class WebsocketWeb implements WebSocketCore {
   final WebSocket _socket;
-  final StreamController<dynamic> _streamController =
-      StreamController<dynamic>();
+  final StreamController<dynamic> _streamController = StreamController<dynamic>();
   final Completer<void> _connectedCompleter = Completer<void>();
 
   WebsocketWeb._(this._socket) {
@@ -34,11 +33,11 @@ class WebsocketWeb implements WebSocketCore {
 
   @override
   bool get isConnected => _socket.readyState == WebSocket.OPEN;
+
   @override
   Stream<dynamic> get stream => _streamController.stream;
 
-  static Future<WebsocketWeb> connect(String url,
-      {List<String>? protocols}) async {
+  static Future<WebsocketWeb> connect(String url, {List<String>? protocols}) async {
     final completer = Completer<WebsocketWeb>();
     final socket = WebSocket(url, protocols);
     WebsocketWeb._(socket)._connectedCompleter.future.then((_) {

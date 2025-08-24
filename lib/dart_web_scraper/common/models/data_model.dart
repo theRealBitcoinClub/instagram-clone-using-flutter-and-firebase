@@ -37,10 +37,7 @@ class Data {
   /// Parameters:
   /// - [url]: The source URL where data was extracted from
   /// - [obj]: The extracted data content
-  Data(
-    this.url,
-    this.obj,
-  );
+  Data(this.url, this.obj);
 
   /// Creates a Data instance from a Map.
   ///
@@ -56,10 +53,7 @@ class Data {
   /// Throws:
   /// - FormatException if the URL string is invalid
   factory Data.fromMap(Map<String, dynamic> map) {
-    return Data(
-      Uri.parse(map['url']),
-      map['obj'],
-    );
+    return Data(Uri.parse(map['url']), map['obj']);
   }
 
   /// Converts the Data instance to a Map.
@@ -70,10 +64,7 @@ class Data {
   /// Returns:
   /// - Map containing URL and data content
   Map<String, dynamic> toMap() {
-    return {
-      'url': url.toString(),
-      'obj': obj,
-    };
+    return {'url': url.toString(), 'obj': obj};
   }
 
   /// Creates a Data instance from a JSON string.

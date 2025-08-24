@@ -10,7 +10,7 @@ enum MemoVerificationError {
   offensiveWords,
   email,
   urlThatsNotTgNorImageNorVideo,
-  noImageNorVideo
+  noImageNorVideo,
 }
 
 class MemoVerifier {
@@ -21,6 +21,6 @@ class MemoVerifier {
   }
 
   _checkHasMoreThanThreeHashtags() {
-     return true;
+    return true;
   }
 }

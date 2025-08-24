@@ -5,6 +5,7 @@ import 'custom_text_field.dart';
 
 class CommentTextField extends StatelessWidget {
   final FlutterTaggerController controller;
+
   // final List<String> emojis;
   final VoidCallback onSend;
   final EdgeInsets insets;
@@ -33,18 +34,13 @@ class CommentTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
     return Container(
       key: containerKey,
-      constraints: BoxConstraints(
-        maxHeight: insets == EdgeInsets.zero ? 150 : 150 + insets.bottom,
-      ),
+      constraints: BoxConstraints(maxHeight: insets == EdgeInsets.zero ? 150 : 150 + insets.bottom),
       padding: const EdgeInsets.fromLTRB(16, 10, 15, 20),
       color: Colors.white,
       child: Column(
-        mainAxisAlignment: insets == EdgeInsets.zero
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
+        mainAxisAlignment: insets == EdgeInsets.zero ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           // SingleChildScrollView(
           //   scrollDirection: Axis.horizontal,
@@ -104,15 +100,12 @@ class CommentTextField extends StatelessWidget {
                   suffix: IconButton(
                     iconSize: 45,
                     onPressed: onSend,
-                    icon: const Icon(
-                      Icons.send,
-                      color: Colors.green,
-                    ),
+                    icon: const Icon(Icons.send, color: Colors.green),
                   ),
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );

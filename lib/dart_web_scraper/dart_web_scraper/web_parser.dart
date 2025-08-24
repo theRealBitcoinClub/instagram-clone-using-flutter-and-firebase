@@ -57,8 +57,7 @@ class WebParser {
     final List<Parser> allParsers = scraperConfig.parsers.toList();
 
     /// Build parent-to-children relationship map for hierarchical parsing
-    final Map<String, List<Parser>> parentToChildren =
-        _buildParentToChildrenMap(allParsers);
+    final Map<String, List<Parser>> parentToChildren = _buildParentToChildrenMap(allParsers);
 
     /// Identify root parsers (those that start the parsing chain)
     final List<Parser> rootParsers = parentToChildren['_root']?.toList() ?? [];
@@ -82,11 +81,7 @@ class WebParser {
 
     /// Log parsing performance
     stopwatch.stop();
-    printLog(
-      'Parsing took ${stopwatch.elapsedMilliseconds} ms.',
-      debug,
-      color: LogColor.green,
-    );
+    printLog('Parsing took ${stopwatch.elapsedMilliseconds} ms.', debug, color: LogColor.green);
 
     return parsedData;
   }
@@ -179,8 +174,7 @@ class WebParser {
           parsedData[id] = obj;
 
           /// Get child parsers that depend on this parser's output
-          final List<Parser> childParsers =
-              parentToChildren[id]?.toList() ?? [];
+          final List<Parser> childParsers = parentToChildren[id]?.toList() ?? [];
 
           if (childParsers.isNotEmpty) {
             if (obj is Iterable && parser.multiple) {
@@ -192,8 +186,7 @@ class WebParser {
               for (final singleData in obj) {
                 /// Define child task for each data item
                 Future<void> childTask() async {
-                  final Map<String, Object> childrenResults =
-                      await _distributeParsers(
+                  final Map<String, Object> childrenResults = await _distributeParsers(
                     parentToChildren: parentToChildren,
                     parsers: childParsers,
                     parentData: Data(data.url, singleData),
@@ -300,8 +293,7 @@ class WebParser {
 
       /// Apply transformations if configured
       if (parser.transformationOptions != null) {
-        data = parser.transformationOptions!
-            .applyTransformations(data, extractedData, debug);
+        data = parser.transformationOptions!.applyTransformations(data, extractedData, debug);
       }
       if (data == null) {
         return null;
@@ -313,19 +305,11 @@ class WebParser {
         final CleanerFunction cleaner = parser.cleaner!;
         final Object? cleaned = cleaner(Data(parsed.url, data), debug);
         if (cleaned != null) {
-          printLog(
-            "Cleaning success for ${parser.id}.",
-            debug,
-            color: LogColor.green,
-          );
+          printLog("Cleaning success for ${parser.id}.", debug, color: LogColor.green);
           extractedData[parser.id] = cleaned;
           data = cleaned;
         } else {
-          printLog(
-            "Cleaning failed for ${parser.id}!!",
-            debug,
-            color: LogColor.red,
-          );
+          printLog("Cleaning failed for ${parser.id}!!", debug, color: LogColor.red);
         }
       } else {
         extractedData[parser.id] = data;
@@ -362,47 +346,17 @@ class WebParser {
   }) async {
     switch (parser.type) {
       case ParserType.element:
-        return elementParser(
-          parser: parser,
-          parentData: parentData,
-          allData: extractedData,
-          debug: debug,
-        );
+        return elementParser(parser: parser, parentData: parentData, allData: extractedData, debug: debug);
       case ParserType.text:
-        return textParser(
-          parser: parser,
-          parentData: parentData,
-          allData: extractedData,
-          debug: debug,
-        );
+        return textParser(parser: parser, parentData: parentData, allData: extractedData, debug: debug);
       case ParserType.image:
-        return imageParser(
-          parser: parser,
-          parentData: parentData,
-          allData: extractedData,
-          debug: debug,
-        );
+        return imageParser(parser: parser, parentData: parentData, allData: extractedData, debug: debug);
       case ParserType.attribute:
-        return attributeParser(
-          parser: parser,
-          parentData: parentData,
-          allData: extractedData,
-          debug: debug,
-        );
+        return attributeParser(parser: parser, parentData: parentData, allData: extractedData, debug: debug);
       case ParserType.json:
-        return jsonParser(
-          parser: parser,
-          parentData: parentData,
-          allData: extractedData,
-          debug: debug,
-        );
+        return jsonParser(parser: parser, parentData: parentData, allData: extractedData, debug: debug);
       case ParserType.url:
-        return urlParser(
-          parser: parser,
-          parentData: parentData,
-          allData: extractedData,
-          debug: debug,
-        );
+        return urlParser(parser: parser, parentData: parentData, allData: extractedData, debug: debug);
       case ParserType.http:
         return await httpParser(
           parser: parser,
@@ -413,63 +367,23 @@ class WebParser {
           debug: debug,
         );
       case ParserType.strBetween:
-        return stringBetweenParser(
-          parser: parser,
-          parentData: parentData,
-          debug: debug,
-        );
+        return stringBetweenParser(parser: parser, parentData: parentData, debug: debug);
       case ParserType.jsonld:
-        return jsonLdParser(
-          parser: parser,
-          parentData: parentData,
-          debug: debug,
-        );
+        return jsonLdParser(parser: parser, parentData: parentData, debug: debug);
       case ParserType.table:
-        return tableParser(
-          parser: parser,
-          parentData: parentData,
-          allData: extractedData,
-          debug: debug,
-        );
+        return tableParser(parser: parser, parentData: parentData, allData: extractedData, debug: debug);
       case ParserType.sibling:
-        return siblingParser(
-          parser: parser,
-          parentData: parentData,
-          allData: extractedData,
-          debug: debug,
-        );
+        return siblingParser(parser: parser, parentData: parentData, allData: extractedData, debug: debug);
       case ParserType.urlParam:
-        return urlParamParser(
-          parser: parser,
-          parentData: parentData,
-          allData: extractedData,
-          debug: debug,
-        );
+        return urlParamParser(parser: parser, parentData: parentData, allData: extractedData, debug: debug);
       case ParserType.jsonTable:
-        return jsonTableParser(
-          parser: parser,
-          parentData: parentData,
-          allData: extractedData,
-          debug: debug,
-        );
+        return jsonTableParser(parser: parser, parentData: parentData, allData: extractedData, debug: debug);
       case ParserType.staticVal:
-        return staticValueParser(
-          parser: parser,
-          parentData: parentData,
-          debug: debug,
-        );
+        return staticValueParser(parser: parser, parentData: parentData, debug: debug);
       case ParserType.json5decode:
-        return json5DecodeParser(
-          parser: parser,
-          parentData: parentData,
-          debug: debug,
-        );
+        return json5DecodeParser(parser: parser, parentData: parentData, debug: debug);
       case ParserType.returnUrlParser:
-        return returnUrlParser(
-          parser: parser,
-          parentData: parentData,
-          debug: debug,
-        );
+        return returnUrlParser(parser: parser, parentData: parentData, debug: debug);
     }
   }
 }

@@ -33,24 +33,16 @@ class SiblingParserOptions {
   ///
   /// [where] provides an optional filter list of strings that the sibling
   /// element's text content must contain. If null, no text filtering is applied.
-  SiblingParserOptions({
-    this.direction,
-    this.where,
-  });
+  SiblingParserOptions({this.direction, this.where});
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'direction': direction?.toString().split('.').last,
-      'where': where,
-    };
+    return <String, dynamic>{'direction': direction?.toString().split('.').last, 'where': where};
   }
 
   factory SiblingParserOptions.fromMap(Map<String, dynamic> map) {
     return SiblingParserOptions(
       direction: map['direction'] != null
-          ? SiblingDirection.values.firstWhere(
-              (e) => e.toString() == 'SiblingDirection.${map['direction']}',
-            )
+          ? SiblingDirection.values.firstWhere((e) => e.toString() == 'SiblingDirection.${map['direction']}')
           : null,
       where: map['where'] != null ? List<String>.from(map['where']) : null,
     );

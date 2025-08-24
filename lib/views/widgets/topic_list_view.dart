@@ -6,11 +6,7 @@ import '../view_models/search_view_model.dart';
 import 'loading_indicator.dart';
 
 class TopicListView extends StatelessWidget {
-  const TopicListView({
-    Key? key,
-    required this.tagController,
-    required this.animation,
-  }) : super(key: key);
+  const TopicListView({Key? key, required this.tagController, required this.animation}) : super(key: key);
 
   final FlutterTaggerController tagController;
   final Animation<Offset> animation;
@@ -22,10 +18,7 @@ class TopicListView extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 2),
         decoration: BoxDecoration(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
           color: Colors.white,
           boxShadow: [
             BoxShadow(
@@ -48,22 +41,10 @@ class TopicListView extends StatelessWidget {
                     children: [
                       Align(
                         alignment: Alignment.centerRight,
-                        child: IconButton(
-                          onPressed: tagController.dismissOverlay,
-                          icon: const Icon(Icons.close),
-                        ),
+                        child: IconButton(onPressed: tagController.dismissOverlay, icon: const Icon(Icons.close)),
                       ),
-                      if (loading && topics.isEmpty) ...{
-                        Center(
-                          heightFactor: 8,
-                          child: LoadingWidget(),
-                        )
-                      },
-                      if (!loading && topics.isEmpty)
-                        const Center(
-                          heightFactor: 8,
-                          child: Text("No topic found"),
-                        ),
+                      if (loading && topics.isEmpty) ...{Center(heightFactor: 8, child: LoadingWidget())},
+                      if (!loading && topics.isEmpty) const Center(heightFactor: 8, child: Text("No topic found")),
                       if (topics.isNotEmpty)
                         Expanded(
                           child: ListView.builder(
@@ -78,17 +59,14 @@ class TopicListView extends StatelessWidget {
                                 //   decoration: BoxDecoration(
                                 //     shape: BoxShape.circle,
                                 //     image: DecorationImage(
-                                      // image: NetworkImage(topic.avatar),
-                                    // ),
-                                  // ),
+                                // image: NetworkImage(topic.avatar),
                                 // ),
-                                title: Text(topic.header!),
+                                // ),
+                                // ),
+                                title: Text(topic.header),
                                 subtitle: Text("@${topic.header}"),
                                 onTap: () {
-                                  tagController.addTag(
-                                    id: topic.header!,
-                                    name: topic.header!,
-                                  );
+                                  tagController.addTag(id: topic.header, name: topic.header);
                                 },
                               );
                             },

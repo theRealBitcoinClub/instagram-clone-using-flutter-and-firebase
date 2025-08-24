@@ -91,8 +91,7 @@ void dumpResponseToFile(String html, bool debug) {
     dump.writeAsStringSync(html, mode: FileMode.write);
   } catch (e) {
     /// Log error if dump saving fails
-    printLog('Unable to save file to $rootPath/dump folder', debug,
-        color: LogColor.red);
+    printLog('Unable to save file to $rootPath/dump folder', debug, color: LogColor.red);
   }
 }
 

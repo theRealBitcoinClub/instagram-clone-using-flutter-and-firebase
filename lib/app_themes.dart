@@ -6,6 +6,7 @@ class AppThemes {
   static const int LightRed = 1;
   static const int Dark = 2;
 }
+
 final themeCollection = ThemeCollection(
   themes: {
     AppThemes.LightBlue: ThemeData(primarySwatch: Colors.blue),

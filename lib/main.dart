@@ -59,35 +59,34 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      return MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => ProviderUser(),)
-        ],
-        child: DynamicTheme(
-          themeCollection: themeCollection,
-          defaultThemeId: AppThemes.LightBlue, // optional, default id is 0
-          builder: (context, theme) {
-            return MaterialApp(
-                debugShowCheckedModeBanner: false,
-                title: 'Memogram',
-                theme: ThemeData(
-                  //TODO add switch color theme button top left
-                  // colorScheme: randomColorSchemeDark()
-                  // textButtonTheme: ,
-                  // textTheme: ,
-                  // dialogTheme: ,
-                  // primaryColorDark: const Color(0xff29d969),
-                  // primaryColor: const Color(0xff29d969),
-                  // secondaryHeaderColor: const Color(0xfff69ffb),
-                  // scaffoldBackgroundColor: const Color(0xff161815),
-                  // colorScheme: ColorScheme.dark(
-                ),
-                // theme: ThemeData.dark()
-                //     .copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
-                home: const AuthPage());
-          }
-      )
-      );
+    return MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => ProviderUser())],
+      child: DynamicTheme(
+        themeCollection: themeCollection,
+        defaultThemeId: AppThemes.LightBlue, // optional, default id is 0
+        builder: (context, theme) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Memogram',
+            theme: ThemeData(
+              //TODO add switch color theme button top left
+              // colorScheme: randomColorSchemeDark()
+              // textButtonTheme: ,
+              // textTheme: ,
+              // dialogTheme: ,
+              // primaryColorDark: const Color(0xff29d969),
+              // primaryColor: const Color(0xff29d969),
+              // secondaryHeaderColor: const Color(0xfff69ffb),
+              // scaffoldBackgroundColor: const Color(0xff161815),
+              // colorScheme: ColorScheme.dark(
+            ),
+            // theme: ThemeData.dark()
+            //     .copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
+            home: const AuthPage(),
+          );
+        },
+      ),
+    );
     // );
   }
 }

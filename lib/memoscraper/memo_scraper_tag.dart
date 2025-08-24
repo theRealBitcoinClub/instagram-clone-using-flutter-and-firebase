@@ -32,11 +32,7 @@ class MemoScraperTag {
     List<dynamic> tags = data.values.first as List<dynamic>;
     for (Map<String, Object> tag in tags) {
       List<String> tagRow = tag["stats"] as List<String>;
-      MemoModelTag t = MemoModelTag(
-          name: tagRow[0].toString(),
-          lastPost: tagRow[1],
-          postCount: int.parse(tagRow[2]),
-      );
+      MemoModelTag t = MemoModelTag(name: tagRow[0].toString(), lastPost: tagRow[1], postCount: int.parse(tagRow[2]));
       result.add(t);
     }
     // print("object");
@@ -46,24 +42,8 @@ class MemoScraperTag {
   ScraperConfig createConfigPost() {
     return ScraperConfig(
       parsers: [
-        Parser(
-            id: "tags",
-            parents: ["_root"],
-            type: ParserType.element,
-            selectors: [
-              "tr",
-            ],
-            multiple: true
-        ),
-        Parser(
-            multiple: true,
-            id: "stats",
-            parents: ["tags"],
-            type: ParserType.text,
-            selectors: [
-              "td",
-            ]
-        )
+        Parser(id: "tags", parents: ["_root"], type: ParserType.element, selectors: ["tr"], multiple: true),
+        Parser(multiple: true, id: "stats", parents: ["tags"], type: ParserType.text, selectors: ["td"]),
       ],
     );
   }

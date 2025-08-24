@@ -21,10 +21,7 @@ class MemoModelUser {
   String balanceBchDevPath145 = "?";
   String balanceBchDevPath0Memo = "?";
 
-  MemoModelUser({
-    required this.mnemonic,
-    this.creator
-  });
+  MemoModelUser({required this.mnemonic, this.creator});
 
   Future<String> refreshBalanceDevPath0() async {
     MemoBitcoinBase base = await MemoBitcoinBase.create();
@@ -37,7 +34,7 @@ class MemoModelUser {
       return "noutxos";
     }
 
-    List<UtxoWithAddress> utxosWA =  base.transformUtxosAddAddressDetails(utxos, cashAddress, _pkLegacy);
+    List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, _pkLegacy);
     BigInt totalAmountInSatoshisAvailable = utxosWA.sumOfUtxosValue();
     if (totalAmountInSatoshisAvailable == BigInt.zero) {
       balanceBchDevPath0Memo = "0";
@@ -59,7 +56,7 @@ class MemoModelUser {
       return "noutxos";
     }
 
-    List<UtxoWithAddress> utxosWA =  base.transformUtxosAddAddressDetails(utxos, cashAddress, _pkBchCashtoken);
+    List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, _pkBchCashtoken);
     BigInt totalAmountInSatoshisAvailable = utxosWA.sumOfUtxosValue();
     if (totalAmountInSatoshisAvailable == BigInt.zero) {
       balanceBchDevPath145 = "0";
@@ -81,13 +78,13 @@ class MemoModelUser {
       return "noutxos";
     }
 
-    List<UtxoWithAddress> utxosWA =  base.transformUtxosAddAddressDetails(utxos, cashAddress, _pkBchCashtoken);
+    List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, _pkBchCashtoken);
 
     BigInt totalAmountOfTokenAvailable = base.calculateTotalAmountOfThatToken(utxosWA, MemoBitcoinBase.tokenId);
     balanceCashtokensDevPath145 = totalAmountOfTokenAvailable.toString();
     return "success";
   }
-  
+
   String get profileIdMemoBch {
     return legacyAddressMemoBch;
   }
@@ -95,7 +92,7 @@ class MemoModelUser {
   String get profileIdMemoSlp {
     return legacyAddressMemoSlp;
   }
-  
+
   String get wifLegacy {
     _wifLegacy = _wifLegacy ?? _pkLegacy.toWif();
     return _wifLegacy!;
@@ -108,8 +105,7 @@ class MemoModelUser {
 
   String get legacyAddressMemoSlp {
     if (_legacyAddressMemoSlp.isEmpty) {
-      _legacyAddressMemoSlp = _pkLegacySlp
-          .getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
+      _legacyAddressMemoSlp = _pkLegacySlp.getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
     }
     //TODO SAVE THIS IN SHARED PREFS AS IT IS INTENSE CALCULATION
     //TODO save it in regards of mnemonic, add mnemonic hash to key
@@ -133,17 +129,21 @@ class MemoModelUser {
   }
 
   ECPrivate get _pkLegacySlp {
-    _privateKeyLegacySlp = _privateKeyLegacySlp ?? MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoSlp);
+    _privateKeyLegacySlp =
+        _privateKeyLegacySlp ?? MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoSlp);
     return _privateKeyLegacySlp!;
   }
 
   ECPrivate get _pkLegacy {
-    _privateKeyLegacy = _privateKeyLegacy ?? MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoBch);
+    _privateKeyLegacy =
+        _privateKeyLegacy ?? MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoBch);
     return _privateKeyLegacy!;
   }
 
   ECPrivate get _pkBchCashtoken {
-    _privateKeyBchCashtoken = _privateKeyBchCashtoken ?? MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathCashtoken);
+    _privateKeyBchCashtoken =
+        _privateKeyBchCashtoken ??
+        MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathCashtoken);
     return _privateKeyBchCashtoken!;
   }
 

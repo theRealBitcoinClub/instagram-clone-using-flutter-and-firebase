@@ -17,7 +17,11 @@ class MemoScraperCreator {
   }
 
   Future<MemoModelCreator> loadCreatorNameAndText(String id, {MemoModelCreator? creator, bool nocache = false}) async {
-    Map<String, Object> data = await MemoScraperUtil.createScraper("profile/${id}", createConfigCreatorDetails(), nocache: nocache);
+    Map<String, Object> data = await MemoScraperUtil.createScraper(
+      "profile/${id}",
+      createConfigCreatorDetails(),
+      nocache: nocache,
+    );
 
     var split = data.values.first.toString().replaceAll(" ", "").split("\n");
     split.removeWhere((element) => element.isEmpty);
@@ -33,14 +37,7 @@ class MemoScraperCreator {
   ScraperConfig createConfigCreatorDetails() {
     return ScraperConfig(
       parsers: [
-        Parser(
-            id: "nameAndText",
-            parents: ["_root"],
-            type: ParserType.text,
-            selectors: [
-              ".title",
-            ]
-        )
+        Parser(id: "nameAndText", parents: ["_root"], type: ParserType.text, selectors: [".title"]),
       ],
     );
   }
@@ -53,11 +50,11 @@ class MemoScraperCreator {
     for (Map<String, Object> item in items) {
       List<String> stats = item["stats"] as List<String>;
       MemoModelCreator creator = MemoModelCreator(
-          id: item["id"].toString().substring("profile".length + 1),
-          followerCount: int.parse(stats[2].replaceAll(",", '')),
-          actions: int.parse(stats[1].replaceAll(",", '')),
-          created: stats[3],
-          lastActionDate: stats[4]
+        id: item["id"].toString().substring("profile".length + 1),
+        followerCount: int.parse(stats[2].replaceAll(",", '')),
+        actions: int.parse(stats[1].replaceAll(",", '')),
+        created: stats[3],
+        lastActionDate: stats[4],
       );
       creators.add(creator);
     }
@@ -65,36 +62,12 @@ class MemoScraperCreator {
     return creators;
   }
 
-
   ScraperConfig createConfigCreators() {
     return ScraperConfig(
       parsers: [
-        Parser(
-            id: "users",
-            parents: ["_root"],
-            type: ParserType.element,
-            selectors: [
-              "tr",
-            ],
-            multiple: true
-        ),
-        Parser(
-            id: "id",
-            parents: ["users"],
-            type: ParserType.attribute,
-            selectors: [
-              "a::href",
-            ]
-        ),
-        Parser(
-            multiple: true,
-            id: "stats",
-            parents: ["users"],
-            type: ParserType.text,
-            selectors: [
-              "td",
-            ]
-        )
+        Parser(id: "users", parents: ["_root"], type: ParserType.element, selectors: ["tr"], multiple: true),
+        Parser(id: "id", parents: ["users"], type: ParserType.attribute, selectors: ["a::href"]),
+        Parser(multiple: true, id: "stats", parents: ["users"], type: ParserType.text, selectors: ["td"]),
       ],
     );
   }

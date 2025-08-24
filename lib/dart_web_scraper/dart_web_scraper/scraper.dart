@@ -52,37 +52,23 @@ class Scraper {
   }) async {
     /// Build HTTP headers with appropriate defaults and custom settings
     printLog('Scraper: Building headers...', debug, color: LogColor.blue);
-    Map<String, String> headersMerged = {
-      "Accept-Language": "en-US,en",
-    };
+    Map<String, String> headersMerged = {"Accept-Language": "en-US,en"};
 
     /// Set User-Agent header based on configuration or custom value
     if (userAgent != null) {
-      printLog(
-        'Scraper: Using user-passed User-Agent...',
-        debug,
-        color: LogColor.blue,
-      );
+      printLog('Scraper: Using user-passed User-Agent...', debug, color: LogColor.blue);
       headersMerged['User-Agent'] = userAgent;
     }
 
     /// Generate random User-Agent if not provided by user
     if (!headersMerged.containsKey("User-Agent")) {
-      printLog(
-        'Scraper: Generating random User-Agent...',
-        debug,
-        color: LogColor.blue,
-      );
+      printLog('Scraper: Generating random User-Agent...', debug, color: LogColor.blue);
       headersMerged['User-Agent'] = randomUserAgent(scraperConfig.userAgent);
     }
 
     /// Add cookies to headers if provided
     if (cookies != null) {
-      printLog(
-        'Scraper: Using user-passed cookies...',
-        debug,
-        color: LogColor.blue,
-      );
+      printLog('Scraper: Using user-passed cookies...', debug, color: LogColor.blue);
       headersMerged['Cookie'] = mapToCookie(cookies);
     }
 
@@ -103,11 +89,7 @@ class Scraper {
 
     /// Initialize data container
     Data dom = Data(url, "");
-    printLog(
-      'Scraper: Checking if target requires html...',
-      debug,
-      color: LogColor.blue,
-    );
+    printLog('Scraper: Checking if target requires html...', debug, color: LogColor.blue);
 
     /// Handle HTML fetching based on configuration and available data
     if (scraperConfig.requiresHtml) {
@@ -116,38 +98,18 @@ class Scraper {
 
       /// Force HTTP request for fresh HTML content
       if (scraperConfig.forceRefresh) {
-        printLog(
-          'Scraper: Forcing http request for new html!!!',
-          debug,
-          color: LogColor.blue,
-        );
-        requestData = await getRequest(
-          url,
-          headers: headersMerged,
-          debug: debug,
-          proxyAPIConfig: proxyAPIConfig,
-        );
+        printLog('Scraper: Forcing http request for new html!!!', debug, color: LogColor.blue);
+        requestData = await getRequest(url, headers: headersMerged, debug: debug, proxyAPIConfig: proxyAPIConfig);
       }
-
       /// Use provided HTML if available and has content
       else if (html != null && html.hasContent()) {
-        printLog(
-          'Scraper: Using user-passed html :)',
-          debug,
-          color: LogColor.orange,
-        );
+        printLog('Scraper: Using user-passed html :)', debug, color: LogColor.orange);
         dom = Data(url, html);
       }
-
       /// Fetch HTML from URL
       else {
         printLog('Scraper: Fetching html...', debug, color: LogColor.blue);
-        requestData = await getRequest(
-          url,
-          headers: headersMerged,
-          debug: debug,
-          proxyAPIConfig: proxyAPIConfig,
-        );
+        requestData = await getRequest(url, headers: headersMerged, debug: debug, proxyAPIConfig: proxyAPIConfig);
       }
 
       /// Process fetched HTML data
@@ -157,20 +119,12 @@ class Scraper {
         printLog('Scraper: HTML fetched :)', debug, color: LogColor.green);
         dom = Data(url, parse(requestData));
       } else {
-        printLog(
-          'Scraper: Unable to fetch data!',
-          debug,
-          color: LogColor.red,
-        );
+        printLog('Scraper: Unable to fetch data!', debug, color: LogColor.red);
         throw WebScraperError('Unable to fetch data!');
       }
     } else {
       /// Skip HTML fetching if not required by configuration
-      printLog(
-        'Scraper: Target does not need html. Skipping...',
-        debug,
-        color: LogColor.orange,
-      );
+      printLog('Scraper: Target does not need html. Skipping...', debug, color: LogColor.orange);
     }
 
     printLog('Scraper: Returning data...', debug, color: LogColor.green);

@@ -7,10 +7,14 @@ void main() async {
 
   MemoBitcoinBase base = await MemoBitcoinBase.create();
   ECPrivate bip44Sender = MemoBitcoinBase.createBip44PrivateKey(
-      "mnemonicKDSFJE", MemoBitcoinBase.derivationPathCashtoken);
+    "mnemonicKDSFJE",
+    MemoBitcoinBase.derivationPathCashtoken,
+  );
   P2pkhAddress senderP2PKHWT = base.createAddressP2PKHWT(bip44Sender);
   ECPrivate bip44Receiver = MemoBitcoinBase.createBip44PrivateKey(
-      "mnemonicZXCXZCASD", MemoBitcoinBase.derivationPathCashtoken);
+    "mnemonicZXCXZCASD",
+    MemoBitcoinBase.derivationPathCashtoken,
+  );
   P2pkhAddress receiverP2PKHWT = base.createAddressP2PKHWT(bip44Receiver);
   //TODO burn token or send token depends on if receiver mnemonic is provided
   // BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress("bitcoincash:qp97cpfavlgudx8jzk553n0rfe66lk73k59k2ayp36").baseAddress;
@@ -32,17 +36,20 @@ void main() async {
   //TODO show them their 145 token balance & their 145 BCH balance instead of actions & followers
 
   BitcoinCashAddress senderBCHp2pkhwt = BitcoinCashAddress.fromBaseAddress(senderP2PKHWT);
-  
-  List<ElectrumUtxo> electrumUTXOs = await base.requestElectrumUtxos(
-      senderBCHp2pkhwt, 
-      includeCashtokens: true);
+
+  List<ElectrumUtxo> electrumUTXOs = await base.requestElectrumUtxos(senderBCHp2pkhwt, includeCashtokens: true);
 
   if (electrumUTXOs.length == 0) {
     print("Zero UTXOs found");
     return;
   }
 
-  List<UtxoWithAddress> utxos = base.transformUtxosFilterForTokenId(electrumUTXOs, senderBCHp2pkhwt, bip44Sender, MemoBitcoinBase.tokenId);
+  List<UtxoWithAddress> utxos = base.transformUtxosFilterForTokenId(
+    electrumUTXOs,
+    senderBCHp2pkhwt,
+    bip44Sender,
+    MemoBitcoinBase.tokenId,
+  );
 
   //TODO CHECK WHAT VALUE THE TOKEN UTXOS HAVE, DO THEY INFLUENCE TOTAL BALANCE?
   BigInt totalAmountInSatoshisAvailable = utxos.sumOfUtxosValue();
@@ -55,13 +62,14 @@ void main() async {
   BigInt totalAmountOfTokenAvailable = base.calculateTotalAmountOfThatToken(utxos, MemoBitcoinBase.tokenId);
 
   ForkedTransactionBuilder bchTransaction = base.buildTxToTransferTokens(
-      1,
-      senderBCHp2pkhwt,
-      totalAmountInSatoshisAvailable,
-      utxos,
-      receiverP2PKHWT,
-      token,
-      totalAmountOfTokenAvailable);
+    1,
+    senderBCHp2pkhwt,
+    totalAmountInSatoshisAvailable,
+    utxos,
+    receiverP2PKHWT,
+    token,
+    totalAmountOfTokenAvailable,
+  );
 
   BtcTransaction signedTx = bchTransaction.buildTransaction((trDigest, utxo, publicKey, sighash) {
     return bip44Sender.signECDSA(trDigest, sighash: sighash);

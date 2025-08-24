@@ -42,31 +42,21 @@ class StaticValueParserOptions {
   /// Parameters:
   /// - [stringValue]: Optional static string to return
   /// - [mapValue]: Optional static map to return
-  StaticValueParserOptions({
-    this.stringValue,
-    this.mapValue,
-  });
+  StaticValueParserOptions({this.stringValue, this.mapValue});
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'stringValue': stringValue,
-      'mapValue': mapValue,
-    };
+    return <String, dynamic>{'stringValue': stringValue, 'mapValue': mapValue};
   }
 
   factory StaticValueParserOptions.fromMap(Map<String, dynamic> map) {
     return StaticValueParserOptions(
-      stringValue:
-          map['stringValue'] != null ? map['stringValue'] as String : null,
-      mapValue: map['mapValue'] != null
-          ? Map<String, Object>.from(map['mapValue'])
-          : null,
+      stringValue: map['stringValue'] != null ? map['stringValue'] as String : null,
+      mapValue: map['mapValue'] != null ? Map<String, Object>.from(map['mapValue']) : null,
     );
   }
 
   String toJson() => json.encode(toMap());
 
   factory StaticValueParserOptions.fromJson(String source) =>
-      StaticValueParserOptions.fromMap(
-          json.decode(source) as Map<String, dynamic>);
+      StaticValueParserOptions.fromMap(json.decode(source) as Map<String, dynamic>);
 }

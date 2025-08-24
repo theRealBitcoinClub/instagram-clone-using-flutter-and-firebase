@@ -35,11 +35,7 @@ Object? getJsonObject(Data data, bool debug) {
     try {
       return jsonDecode(obj);
     } catch (e) {
-      printLog(
-        "Error in function getJsonObject: $e",
-        debug,
-        color: LogColor.red,
-      );
+      printLog("Error in function getJsonObject: $e", debug, color: LogColor.red);
       return null;
     }
   }

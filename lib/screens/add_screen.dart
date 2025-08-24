@@ -55,9 +55,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
         imgurCtrl.text = validImgur;
       }
     }
-    setState(() {
-
-    });
+    setState(() {});
   }
 
   String extractValidImgurUrl(String url) {
@@ -81,9 +79,8 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
       //TODO RUN RegExp on input to check if it is an URL
       //TODO Make a http request to see if response code is 200
       //TODO validate against own imgur regexp, reverse engineer a regexp
-      setState(() {
-      });
-    },);
+      setState(() {});
+    });
   }
 
   void initYouTubeListener() {
@@ -96,9 +93,8 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
       //TODO RUN RegExp on input to check if it is an URL
       //TODO Make a http request to see if response code is 200
       //TODO validate against own youtube regexp, reverse engineer a regexp
-      setState(() {
-      });
-    },);
+      setState(() {});
+    });
   }
 
   @override
@@ -112,58 +108,69 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     // final UserProvider userProvider = Provider.of<UserProvider>(context);
-    var addImageIcon = Icon(Icons.image_search_outlined, size: 100,);
-    var addVideoIcon = Icon(Icons.video_settings_rounded, size: 100,);
+    var addImageIcon = Icon(Icons.image_search_outlined, size: 100);
+    var addVideoIcon = Icon(Icons.video_settings_rounded, size: 100);
     var insets = MediaQuery.of(context).viewInsets;
     return GestureDetector(
-        onTap: _focusNode.unfocus,
-        child: Scaffold(appBar: AppBar(title: Text("Share to earn Bitcoin"),),
-      body: Column(
-        children: [
-          Row(children: [
-            validVideo.isEmpty ?
-              GestureDetector(onTap: () {
-                showDialogImgur();
-              }, child: Padding(
-                padding: EdgeInsets.all(15),
-                child:
-                validImgur.isNotEmpty
-                    ? Image(height: 230,
-                              image: NetworkImage(validImgur), errorBuilder: (context, error, stackTrace) {
-                                validImgur="";
-                                return placeHolderImage(addImageIcon);
-                              },
-                          )
-                    : placeHolderImage(addImageIcon)
-              ),) : SizedBox(),
-            validImgur.isEmpty ?
-            GestureDetector(onTap: () {
-              showDialogVideo();
-            }, child: Padding(
-                padding: EdgeInsets.all(15),
-                child:
-                    validVideo.isNotEmpty ? YoutubePlayer(width:350, controller:
-                                              YoutubePlayerController(initialVideoId: validVideo, flags:
-                                                YoutubePlayerFlags(autoPlay: false)))
-                        : Column(children: [
-                            Text("ADD VIDEO"),
-                            addVideoIcon]
-                          )
-                  )) : SizedBox()
-          ]),
-        ]),
-            bottomNavigationBar:
-                validVideo.isNotEmpty || validImgur.isNotEmpty
-                ? createTaggableInput(context, insets)
-                : SizedBox(),
-        )
+      onTap: _focusNode.unfocus,
+      child: Scaffold(
+        appBar: AppBar(title: Text("Share to earn Bitcoin")),
+        body: Column(
+          children: [
+            Row(
+              children: [
+                validVideo.isEmpty
+                    ? GestureDetector(
+                        onTap: () {
+                          showDialogImgur();
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.all(15),
+                          child: validImgur.isNotEmpty
+                              ? Image(
+                                  height: 230,
+                                  image: NetworkImage(validImgur),
+                                  errorBuilder: (context, error, stackTrace) {
+                                    validImgur = "";
+                                    return placeHolderImage(addImageIcon);
+                                  },
+                                )
+                              : placeHolderImage(addImageIcon),
+                        ),
+                      )
+                    : SizedBox(),
+                validImgur.isEmpty
+                    ? GestureDetector(
+                        onTap: () {
+                          showDialogVideo();
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.all(15),
+                          child: validVideo.isNotEmpty
+                              ? YoutubePlayer(
+                                  width: 350,
+                                  controller: YoutubePlayerController(
+                                    initialVideoId: validVideo,
+                                    flags: YoutubePlayerFlags(autoPlay: false),
+                                  ),
+                                )
+                              : Column(children: [Text("ADD VIDEO"), addVideoIcon]),
+                        ),
+                      )
+                    : SizedBox(),
+              ],
+            ),
+          ],
+        ),
+        bottomNavigationBar: validVideo.isNotEmpty || validImgur.isNotEmpty
+            ? createTaggableInput(context, insets)
+            : SizedBox(),
+      ),
     );
   }
 
   Column placeHolderImage(Icon addImageIcon) {
-    return Column(
-      children: [
-      Text("ADD IMAGE"),addImageIcon]);
+    return Column(children: [Text("ADD IMAGE"), addImageIcon]);
   }
 
   Future<void> showDialogImgur() async {
@@ -176,14 +183,20 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
 
   void showUrlDialog(header, ctrl, hint) {
     checkClipboardHasValidYouTubeOrImgur();
-    showDialog(builder: (dialogCtx) {
-          return SimpleDialog(children: [
-            Padding(padding: EdgeInsetsGeometry.all(10), child: Text(header),),
-            Padding(padding: EdgeInsetsGeometry.all(10), child: TextInputField(
-                textEditingController: ctrl,
-                hintText: hint,
-                textInputType: TextInputType.url))]);
-        }, context: context,);
+    showDialog(
+      builder: (dialogCtx) {
+        return SimpleDialog(
+          children: [
+            Padding(padding: EdgeInsetsGeometry.all(10), child: Text(header)),
+            Padding(
+              padding: EdgeInsetsGeometry.all(10),
+              child: TextInputField(textEditingController: ctrl, hintText: hint, textInputType: TextInputType.url),
+            ),
+          ],
+        );
+      },
+      context: context,
+    );
   }
 
   late AnimationController _animationController;
@@ -198,31 +211,22 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
     //After this controller is constructed, if you
     //wish to update its text value with raw tag string,
     //call (_controller.formatTags) after that.
-    text:
-    "I like the topic @Bitcoin#Bitcoin# It's time to earn #bch#bch# and #cashtoken#cashtoken#!",
+    text: "I like the topic @Bitcoin#Bitcoin# It's time to earn #bch#bch# and #cashtoken#cashtoken#!",
   );
   late final _focusNode = FocusNode();
 
   void initStateTagger() {
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    );
+    _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 150));
 
     _animation = Tween<Offset>(
       begin: const Offset(0, 0.5),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
 
     _tagController.addListener(() {
       //TODO CHECK ONLY ONE TOPIC, ONLY ONE @ sign is allowed
       //TODO Check only three hashtags, only three # are allowed
-    },);
+    });
   }
 
   void disposeTagger() {
@@ -231,70 +235,66 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
     _tagController.dispose();
   }
 
-  @override
   Widget createTaggableInput(BuildContext context, insets) {
-        return FlutterTagger(
-          triggerStrategy: TriggerStrategy.eager,
+    return FlutterTagger(
+      triggerStrategy: TriggerStrategy.eager,
+      controller: _tagController,
+      animationController: _animationController,
+      onSearch: (query, triggerChar) {
+        if (triggerChar == "@") {
+          searchViewModel.searchTopic(query);
+        }
+        // if (triggerChar == "@") {
+        //   searchViewModel.searchUser(query);
+        // }
+        if (triggerChar == "#") {
+          searchViewModel.searchHashtag(query);
+        }
+      },
+      triggerCharacterAndStyles: const {
+        "@": TextStyle(color: Colors.pinkAccent),
+        "#": TextStyle(color: Colors.blueAccent),
+      },
+      tagTextFormatter: (id, tag, triggerCharacter) {
+        return "$triggerCharacter$id#$tag#";
+      },
+      overlayHeight: overlayHeight,
+      overlay: SearchResultOverlay(animation: _animation, tagController: _tagController),
+      builder: (context, containerKey) {
+        return CommentTextField(
+          focusNode: _focusNode,
+          containerKey: containerKey,
+          insets: insets,
           controller: _tagController,
-          animationController: _animationController,
-          onSearch: (query, triggerChar) {
-            if (triggerChar == "@") {
-              searchViewModel.searchTopic(query);
+          onSend: () {
+            FocusScope.of(context).unfocus();
+
+            //TODO Check cant have multiple topics
+            //TODO Check cant have more than three hashtags
+            //TODO Check max length
+            String text = _tagController.text;
+            text = appendVideoOrImgurUrl(text);
+
+            String? topic = extractTopic(text);
+
+            //TODO MOVE THESE CALLS WITH RETRY TO NEW CLASS WITH RETRIES, ALSO THE REPLY IN POSTCARD
+            if (topic != null) {
+              MemoPublisher().doMemoAction(text, MemoCode.topicMessage, memoTopic: topic, wif: user!.wifLegacy);
+            } else {
+              MemoPublisher().doMemoAction(text, MemoCode.profileMessage, wif: user!.wifLegacy);
             }
-            // if (triggerChar == "@") {
-            //   searchViewModel.searchUser(query);
-            // }
-            if (triggerChar == "#") {
-              searchViewModel.searchHashtag(query);
-            }
-          },
-          triggerCharacterAndStyles: const {
-            "@": TextStyle(color: Colors.pinkAccent),
-            "#": TextStyle(color: Colors.blueAccent),
-          },
-          tagTextFormatter: (id, tag, triggerCharacter) {
-            return "$triggerCharacter$id#$tag#";
-          },
-          overlayHeight: overlayHeight,
-          overlay: SearchResultOverlay(
-            animation: _animation,
-            tagController: _tagController,
-          ),
-          builder: (context, containerKey) {
-            return CommentTextField(
-              focusNode: _focusNode,
-              containerKey: containerKey,
-              insets: insets,
-              controller: _tagController,
-              onSend: () {
-                FocusScope.of(context).unfocus();
+            _tagController.clear();
+            validImgur = "";
+            validVideo = "";
+            imgurCtrl.clear();
+            youtubeCtrl.clear();
 
-                //TODO Check cant have multiple topics
-                //TODO Check cant have more than three hashtags
-                //TODO Check max length
-                String text = _tagController.text;
-                text = appendVideoOrImgurUrl(text);
-                
-                String? topic = extractTopic(text);
-
-                //TODO MOVE THESE CALLS WITH RETRY TO NEW CLASS WITH RETRIES, ALSO THE REPLY IN POSTCARD
-                if (topic != null) {
-                  MemoPublisher().doMemoAction(text, MemoCode.topicMessage, memoTopic: topic, wif: user!.wifLegacy);
-                } else {
-                  MemoPublisher().doMemoAction(text, MemoCode.profileMessage, wif: user!.wifLegacy);
-                }
-                _tagController.clear();
-                validImgur = "";
-                validVideo = "";
-                imgurCtrl.clear();
-                youtubeCtrl.clear();
-
-                //TODO IF LAST SELECTED HASHTAG IS UNKOWN THE WHOLE MSG GETS FORMAT RESET
-                //IF I TOUCH THE KEY WHEN THERE IS AN EMPTY HASHTAG LIST IT GOES WRONG
-              },
-            );
+            //TODO IF LAST SELECTED HASHTAG IS UNKOWN THE WHOLE MSG GETS FORMAT RESET
+            //IF I TOUCH THE KEY WHEN THERE IS AN EMPTY HASHTAG LIST IT GOES WRONG
           },
         );
+      },
+    );
   }
 
   String? extractTopic(String text) {
@@ -319,8 +319,9 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
   //TODO MAKE SURE THAT WHEN IMAGE WAS LOADED BEFORE THEN VIDEO AFTERWARDS OR REVERSE ITS NOT GOING WRONG
   String appendVideoOrImgurUrl(String text) {
     return validVideo.isNotEmpty
-            ? "$text https://youtu.be/${validVideo}"
-            : validImgur.isNotEmpty 
-            ? "$text $validImgur" : text;
+        ? "$text https://youtu.be/${validVideo}"
+        : validImgur.isNotEmpty
+        ? "$text $validImgur"
+        : text;
   }
 }

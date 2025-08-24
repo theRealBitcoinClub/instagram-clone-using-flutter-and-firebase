@@ -8,6 +8,6 @@ pickImage(ImageSource source) async {
   if (_file != null) {
     return await _file.readAsBytes();
   } else {
-    return  null;
+    return null;
   }
 }

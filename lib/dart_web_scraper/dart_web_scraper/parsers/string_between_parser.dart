@@ -4,26 +4,14 @@ import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
 
 /// Extracts text between specified start and end strings
 /// Returns Data object with extracted text or null if not found
-Data? stringBetweenParser({
-  required Parser parser,
-  required Data parentData,
-  required bool debug,
-}) {
+Data? stringBetweenParser({required Parser parser, required Data parentData, required bool debug}) {
   printLog("----------------------------------", debug, color: LogColor.yellow);
-  printLog(
-    "ID: ${parser.id} Parser: String Between",
-    debug,
-    color: LogColor.cyan,
-  );
+  printLog("ID: ${parser.id} Parser: String Between", debug, color: LogColor.cyan);
 
   // Get parent element(s) to search within
   List<Element>? element = getElementObject(parentData);
   if (element == null || element.isEmpty) {
-    printLog(
-      "StringBetween Parser: Element not found!",
-      debug,
-      color: LogColor.red,
-    );
+    printLog("StringBetween Parser: Element not found!", debug, color: LogColor.red);
     return null;
   }
 
@@ -46,11 +34,7 @@ Data? stringBetweenParser({
   // Find start marker position
   final startIndex = source.indexOf(start);
   if (startIndex == -1) {
-    printLog(
-      "StringBetween Parser: No data found!",
-      debug,
-      color: LogColor.orange,
-    );
+    printLog("StringBetween Parser: No data found!", debug, color: LogColor.orange);
     return null;
   }
 
@@ -60,11 +44,7 @@ Data? stringBetweenParser({
     // Extract substring between markers
     tmp = source.substring(startIndex + start.length, endIndex);
   } catch (e) {
-    printLog(
-      "StringBetween Parser: No data found!",
-      debug,
-      color: LogColor.orange,
-    );
+    printLog("StringBetween Parser: No data found!", debug, color: LogColor.orange);
     return null;
   }
   return Data(parentData.url, tmp.trim());

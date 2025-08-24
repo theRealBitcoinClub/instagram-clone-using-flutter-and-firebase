@@ -1,4 +1,3 @@
-
 import 'package:bip39_mnemonic/bip39_mnemonic.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/resources/auth_method.dart';
@@ -8,7 +7,8 @@ import 'package:instagram_clone1/widgets/textfield_input.dart';
 
 class LoginScreen extends StatefulWidget {
   final Function()? onToggle;
-  const LoginScreen({super.key , required this.onToggle});
+
+  const LoginScreen({super.key, required this.onToggle});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -43,92 +43,80 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: SafeArea(
-            child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      width: double.infinity,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-        Flexible(
-          child: Container(),
-          flex: 2,
-        ),
+      body: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Flexible(child: Container(), flex: 2),
 
-        //app logo
-        Image.asset(
-          'assets/images/cashtoken.png',
-          height: 80,
-        ),
+              //app logo
+              Image.asset('assets/images/cashtoken.png', height: 80),
 
-        const SizedBox(
-          height: 64,
-        ),
+              const SizedBox(height: 64),
 
-        //TODO ADD GENERATE MNEMONIC BUTTON
-        TextInputField(
+              //TODO ADD GENERATE MNEMONIC BUTTON
+              TextInputField(
+                textEditingController: _mnemonicController,
+                hintText: 'mnemonic',
+                textInputType: TextInputType.text,
+              ),
 
-            textEditingController: _mnemonicController,
-            hintText: 'mnemonic',
-            textInputType: TextInputType.text),
+              const SizedBox(height: 25),
 
-        const SizedBox(
-          height: 25,
-        ),
+              //login button
+              InkWell(
+                onTap: loginUser,
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : Container(
+                        width: double.infinity,
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        decoration: const ShapeDecoration(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(4))),
+                          color: blueColor,
+                        ),
+                        child: const Text("Login"),
+                      ),
+              ),
 
-        //login button
-        InkWell(
-          onTap: loginUser,
-          child: isLoading?const Center(child: CircularProgressIndicator(),) 
-          :Container(
-            width: double.infinity,
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            decoration: const ShapeDecoration(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(4))),
-              color: blueColor,
-            ),
-            child: const Text("Login"),
+              Flexible(flex: 2, child: Container()),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: const Text("Are you a new user? "),
+                  ),
+                  GestureDetector(
+                    // onTap: widget.onToggle,
+                    onTap: generateMnemonic,
+                    child: Container(
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.all(20),
+                      child: const Text(
+                        "GENERATE MNEMONIC",
+                        style: TextStyle(fontWeight: FontWeight.bold, color: blueColor),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              Flexible(flex: 1, child: Container()),
+            ],
           ),
         ),
-
-        Flexible(
-          flex: 2,
-          child: Container(),
-        ),
-
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: const Text("Are you a new user? "),
-            ),
-            GestureDetector(
-              // onTap: widget.onToggle,
-              onTap: generateMnemonic,
-              child: Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(20),
-                child: const Text(
-                  "GENERATE MNEMONIC",
-                  style:
-                      TextStyle(fontWeight: FontWeight.bold, color: blueColor),
-                ),
-              ),
-            )
-          ],
-        ),
-
-        Flexible(
-          flex: 1,
-          child: Container(),
-        ),
-      ]),
-    )));
+      ),
+    );
   }
 
   generateMnemonic() {
-    _mnemonicController.text=Mnemonic.generate(Language.english, length: MnemonicLength.words12).sentence;
+    _mnemonicController.text = Mnemonic.generate(Language.english, length: MnemonicLength.words12).sentence;
   }
 }

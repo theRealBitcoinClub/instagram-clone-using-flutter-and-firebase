@@ -30,10 +30,10 @@ class CustomText extends StatelessWidget {
     this.textColor,
     this.onParentPressed,
     this.onUserTagPressed,
-  })  : _suffix = "...$suffix",
-        _text = text.trim(),
-        _fontSize = fontSize ?? 14,
-        super(key: key);
+  }) : _suffix = "...$suffix",
+       _text = text.trim(),
+       _fontSize = fontSize ?? 14,
+       super(key: key);
 
   final double _fontSize;
 
@@ -46,12 +46,7 @@ class CustomText extends StatelessWidget {
   int _length = 0;
 
   TextSpan _copyWith(TextSpan span, {String? text}) {
-    return TextSpan(
-      style: span.style,
-      recognizer: span.recognizer,
-      children: span.children,
-      text: text ?? span.text,
-    );
+    return TextSpan(style: span.style, recognizer: span.recognizer, children: span.children, text: text ?? span.text);
   }
 
   int get _maxTextLength {
@@ -66,12 +61,7 @@ class CustomText extends StatelessWidget {
       }
 
       if (span.text!.length > _maxTextLength) {
-        _spans.add(
-          _copyWith(
-            span,
-            text: text.substring(0, _maxTextLength),
-          ),
-        );
+        _spans.add(_copyWith(span, text: text.substring(0, _maxTextLength)));
       } else {
         _spans.add(span);
       }
@@ -104,15 +94,8 @@ class CustomText extends StatelessWidget {
   TextSpan get _parsedTextSpan {
     final elements = linkify(
       _text,
-      options: const LinkifyOptions(
-        removeWww: true,
-        looseUrl: true,
-      ),
-      linkifiers: [
-        const UrlLinkifier(),
-        CustomUserTagLinkifier(),
-        HashtagLinkifier(),
-      ],
+      options: const LinkifyOptions(removeWww: true, looseUrl: true),
+      linkifiers: [const UrlLinkifier(), CustomUserTagLinkifier(), HashtagLinkifier()],
     );
 
     for (var element in elements) {
@@ -121,11 +104,7 @@ class CustomText extends StatelessWidget {
         _addText(
           TextSpan(
             text: element.text,
-            style: TextStyle(
-              fontWeight: FontWeight.w400,
-              fontSize: _fontSize,
-              color: Colors.pinkAccent,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w400, fontSize: _fontSize, color: Colors.pinkAccent),
             recognizer: TapGestureRecognizer()
               ..onTap = () async {
                 final isEmail = _isEmail(element.text);
@@ -142,11 +121,7 @@ class CustomText extends StatelessWidget {
         _addText(
           TextSpan(
             text: element.name,
-            style: TextStyle(
-              fontWeight: FontWeight.w400,
-              fontSize: _fontSize,
-              color: Colors.pinkAccent,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w400, fontSize: _fontSize, color: Colors.pinkAccent),
             recognizer: TapGestureRecognizer()
               ..onTap = () {
                 onUserTagPressed?.call(element.userId);
@@ -157,11 +132,7 @@ class CustomText extends StatelessWidget {
         _addText(
           TextSpan(
             text: element.title,
-            style: TextStyle(
-              fontWeight: FontWeight.w400,
-              fontSize: _fontSize,
-              color: Colors.blueAccent,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w400, fontSize: _fontSize, color: Colors.blueAccent),
             recognizer: TapGestureRecognizer()
               ..onTap = () {
                 onUserTagPressed?.call(element.title);
@@ -182,10 +153,7 @@ class CustomText extends StatelessWidget {
       }
     }
 
-    if (showAllText &&
-        _length > maxTextLength &&
-        _spans.isNotEmpty &&
-        _spans.last.text != _suffix) {
+    if (showAllText && _length > maxTextLength && _spans.isNotEmpty && _spans.last.text != _suffix) {
       _spans.add(
         TextSpan(
           text: _suffix,
@@ -209,9 +177,7 @@ class CustomText extends StatelessWidget {
         recognizer: TapGestureRecognizer()..onTap = onParentPressed,
       );
     }
-    return RichText(
-      text: child,
-    );
+    return RichText(text: child);
   }
 }
 
@@ -219,11 +185,9 @@ class CustomUserTagLinkifier extends Linkifier {
   ///This matches any string in this format
   ///"@{userId}#{userName}#"
   final _userTagRegex = RegExp(r'^(.*?)(\@\w+\#..+?\#)');
+
   @override
-  List<LinkifyElement> parse(
-    List<LinkifyElement> elements,
-    LinkifyOptions options,
-  ) {
+  List<LinkifyElement> parse(List<LinkifyElement> elements, LinkifyOptions options) {
     final list = <LinkifyElement>[];
 
     for (var element in elements) {
@@ -241,15 +205,7 @@ class CustomUserTagLinkifier extends Linkifier {
 
           if (match.group(2)?.isNotEmpty == true) {
             final blob = match.group(2)!.split("#");
-            list.add(
-              CustomUserTagElement(
-                userId: blob.first.replaceAll(
-                  "@",
-                  "",
-                ),
-                name: "@${blob[1]}",
-              ),
-            );
+            list.add(CustomUserTagElement(userId: blob.first.replaceAll("@", ""), name: "@${blob[1]}"));
           }
 
           if (text.isNotEmpty) {
@@ -268,8 +224,8 @@ class CustomUserTagLinkifier extends Linkifier {
 class CustomUserTagElement extends LinkableElement {
   final String userId;
   final String name;
-  CustomUserTagElement({required this.userId, required this.name})
-      : super(userId, name);
+
+  CustomUserTagElement({required this.userId, required this.name}) : super(userId, name);
 
   @override
   String toString() {
@@ -284,21 +240,16 @@ class CustomUserTagElement extends LinkableElement {
 
   @override
   bool equals(other) =>
-      other is CustomUserTagElement &&
-      super.equals(other) &&
-      other.userId == userId &&
-      other.name == name;
+      other is CustomUserTagElement && super.equals(other) && other.userId == userId && other.name == name;
 }
 
 class HashtagLinkifier extends Linkifier {
   ///This matches any string in this format
   ///"#{id}#{hashtagTitle}#"
   final _userTagRegex = RegExp(r'^(.*?)(\#\w+\#..+?\#)');
+
   @override
-  List<LinkifyElement> parse(
-    List<LinkifyElement> elements,
-    LinkifyOptions options,
-  ) {
+  List<LinkifyElement> parse(List<LinkifyElement> elements, LinkifyOptions options) {
     final list = <LinkifyElement>[];
 
     for (var element in elements) {
@@ -316,11 +267,7 @@ class HashtagLinkifier extends Linkifier {
 
           if (match.group(2)?.isNotEmpty == true) {
             final blob = match.group(2)!.split("#");
-            list.add(
-              HashtagElement(
-                title: "#${blob[blob.length - 2]}",
-              ),
-            );
+            list.add(HashtagElement(title: "#${blob[blob.length - 2]}"));
           }
 
           if (text.isNotEmpty) {
@@ -338,6 +285,7 @@ class HashtagLinkifier extends Linkifier {
 
 class HashtagElement extends LinkableElement {
   final String title;
+
   HashtagElement({required this.title}) : super(title, title);
 
   @override
@@ -352,6 +300,5 @@ class HashtagElement extends LinkableElement {
   int get hashCode => Object.hashAll([title]);
 
   @override
-  bool equals(other) =>
-      other is HashtagElement && super.equals(other) && other.title == title;
+  bool equals(other) => other is HashtagElement && super.equals(other) && other.title == title;
 }

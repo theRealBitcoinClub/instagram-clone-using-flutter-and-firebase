@@ -12,7 +12,7 @@ enum HttpResponseType {
   html,
 
   /// Treat response as plain text without parsing
-  text
+  text,
 }
 
 /// Device types for user agent strings in HTTP requests.
@@ -126,7 +126,7 @@ enum HttpMethod {
   get,
 
   /// POST request method for sending data
-  post
+  post,
 }
 
 /// Types of payload data for HTTP requests.
@@ -139,7 +139,7 @@ enum HttpPayload {
   string,
 
   /// Send data as JSON format
-  json
+  json,
 }
 
 /// Directions for sibling element extraction.
@@ -152,7 +152,7 @@ enum SiblingDirection {
   previous,
 
   /// Extract the next sibling element
-  next
+  next,
 }
 
 /// Colors for debug logging output.
@@ -198,5 +198,5 @@ enum LogColor {
   white,
 
   /// Orange text color (typically for highlights)
-  orange
+  orange,
 }

@@ -46,23 +46,14 @@ class TableParserOptions {
   ///   values: "$.data",
   /// )
   /// ```
-  TableParserOptions({
-    required this.keys,
-    this.values,
-  });
+  TableParserOptions({required this.keys, this.values});
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'keys': keys,
-      'values': values,
-    };
+    return <String, dynamic>{'keys': keys, 'values': values};
   }
 
   factory TableParserOptions.fromMap(Map<String, dynamic> map) {
-    return TableParserOptions(
-      keys: map['keys'] as String,
-      values: map['values'] as String?,
-    );
+    return TableParserOptions(keys: map['keys'] as String, values: map['values'] as String?);
   }
 
   String toJson() => json.encode(toMap());

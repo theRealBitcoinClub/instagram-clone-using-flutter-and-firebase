@@ -27,10 +27,7 @@ import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
 ///   url: Uri.parse('https://example.com/products/123'),
 /// );
 /// ```
-ScraperConfig? findScraperConfig({
-  required ScraperConfigMap scraperConfigMap,
-  required Uri url,
-}) {
+ScraperConfig? findScraperConfig({required ScraperConfigMap scraperConfigMap, required Uri url}) {
   for (final host in scraperConfigMap.configs.keys) {
     // exact or subdomain
     final h = host.toLowerCase();

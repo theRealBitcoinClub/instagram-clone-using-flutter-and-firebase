@@ -155,17 +155,11 @@ class Parser {
     return Parser(
       id: map['id'],
       parents: List<String>.from(map['parent']),
-      type: ParserType.values.firstWhere(
-        (e) => e.toString() == 'ParserType.${map['type']}',
-      ),
-      selectors: map['selectors'] != null
-          ? List<String>.from(map['selectors'])
-          : const [],
+      type: ParserType.values.firstWhere((e) => e.toString() == 'ParserType.${map['type']}'),
+      selectors: map['selectors'] != null ? List<String>.from(map['selectors']) : const [],
       isPrivate: map['isPrivate'] ?? false,
       multiple: map['multiple'] ?? false,
-      parserOptions: map['parserOptions'] != null
-          ? ParserOptions.fromMap(map['parserOptions'])
-          : null,
+      parserOptions: map['parserOptions'] != null ? ParserOptions.fromMap(map['parserOptions']) : null,
       transformationOptions: map['transformationOptions'] != null
           ? TransformationOptions.fromMap(map['transformationOptions'])
           : null,

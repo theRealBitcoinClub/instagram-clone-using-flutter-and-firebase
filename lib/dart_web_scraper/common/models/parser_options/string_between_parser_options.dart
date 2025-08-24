@@ -50,29 +50,20 @@ class StringBetweenParserOptions {
   ///
   /// Throws an [ArgumentError] if either [start] or [end] is null
   /// or empty.
-  StringBetweenParserOptions({
-    required this.start,
-    required this.end,
-  })  : assert(start.isNotEmpty, 'Start string cannot be empty'),
-        assert(end.isNotEmpty, 'End string cannot be empty');
+  StringBetweenParserOptions({required this.start, required this.end})
+    : assert(start.isNotEmpty, 'Start string cannot be empty'),
+      assert(end.isNotEmpty, 'End string cannot be empty');
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'start': start,
-      'end': end,
-    };
+    return <String, dynamic>{'start': start, 'end': end};
   }
 
   factory StringBetweenParserOptions.fromMap(Map<String, dynamic> map) {
-    return StringBetweenParserOptions(
-      start: map['start'] as String,
-      end: map['end'] as String,
-    );
+    return StringBetweenParserOptions(start: map['start'] as String, end: map['end'] as String);
   }
 
   String toJson() => json.encode(toMap());
 
   factory StringBetweenParserOptions.fromJson(String source) =>
-      StringBetweenParserOptions.fromMap(
-          json.decode(source) as Map<String, dynamic>);
+      StringBetweenParserOptions.fromMap(json.decode(source) as Map<String, dynamic>);
 }

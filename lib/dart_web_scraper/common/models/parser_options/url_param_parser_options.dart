@@ -24,25 +24,18 @@ class UrlParamParserOptions {
   /// string that corresponds to a query parameter in the target URL.
   ///
   /// Throws an ArgumentError if paramName is null or empty.
-  UrlParamParserOptions({
-    required this.paramName,
-  });
+  UrlParamParserOptions({required this.paramName});
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'paramName': paramName,
-    };
+    return <String, dynamic>{'paramName': paramName};
   }
 
   factory UrlParamParserOptions.fromMap(Map<String, dynamic> map) {
-    return UrlParamParserOptions(
-      paramName: map['paramName'] as String,
-    );
+    return UrlParamParserOptions(paramName: map['paramName'] as String);
   }
 
   String toJson() => json.encode(toMap());
 
   factory UrlParamParserOptions.fromJson(String source) =>
-      UrlParamParserOptions.fromMap(
-          json.decode(source) as Map<String, dynamic>);
+      UrlParamParserOptions.fromMap(json.decode(source) as Map<String, dynamic>);
 }

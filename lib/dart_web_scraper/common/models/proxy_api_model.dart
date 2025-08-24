@@ -40,31 +40,19 @@ class ProxyAPIConfig {
   /// Parameters:
   /// - [apiUrl]: The base URL of the proxy API
   /// - [targetUrlParameter]: The query parameter name for the target URL
-  const ProxyAPIConfig({
-    required this.apiUrl,
-    required this.targetUrlParameter,
-  });
+  const ProxyAPIConfig({required this.apiUrl, required this.targetUrlParameter});
 
   /// Returns a new URL with the target URL parameter added.
   Uri generateUrl(Uri url) {
-    return apiUrl.replace(queryParameters: {
-      ...apiUrl.queryParameters,
-      targetUrlParameter: url.toString(),
-    });
+    return apiUrl.replace(queryParameters: {...apiUrl.queryParameters, targetUrlParameter: url.toString()});
   }
 
   factory ProxyAPIConfig.fromMap(Map<String, dynamic> map) {
-    return ProxyAPIConfig(
-      apiUrl: Uri.parse(map['apiUrl']),
-      targetUrlParameter: map['targetUrlParameter'],
-    );
+    return ProxyAPIConfig(apiUrl: Uri.parse(map['apiUrl']), targetUrlParameter: map['targetUrlParameter']);
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      'apiUrl': apiUrl.toString(),
-      'targetUrlParameter': targetUrlParameter,
-    };
+    return {'apiUrl': apiUrl.toString(), 'targetUrlParameter': targetUrlParameter};
   }
 
   factory ProxyAPIConfig.fromJson(String json) {

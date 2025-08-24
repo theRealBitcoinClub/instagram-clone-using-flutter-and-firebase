@@ -16,11 +16,7 @@ Data? tableParser({
   // Get parent element(s) to search within
   List<Element>? element = getElementObject(parentData);
   if (element == null || element.isEmpty) {
-    printLog(
-      "Table Parser: Element not found!",
-      debug,
-      color: LogColor.red,
-    );
+    printLog("Table Parser: Element not found!", debug, color: LogColor.red);
     return null;
   }
 
@@ -40,11 +36,7 @@ Data? tableParser({
     // Handle dynamic selectors with slot injection
     if (sel.contains("<slot>")) {
       selector = inject("slot", allData, sel);
-      printLog(
-        "Table Selector Modified: $selector",
-        debug,
-        color: LogColor.green,
-      );
+      printLog("Table Selector Modified: $selector", debug, color: LogColor.green);
     } else {
       selector = sel;
     }
@@ -61,14 +53,11 @@ Data? tableParser({
       for (final element in elements) {
         if (parser.parserOptions?.table?.keys != null) {
           // Use custom key and value selectors
-          Element? keySelector =
-              element.querySelector(parser.parserOptions!.table!.keys);
+          Element? keySelector = element.querySelector(parser.parserOptions!.table!.keys);
           String? key = keySelector?.text;
           String? value;
           if (parser.parserOptions?.table?.values != null) {
-            value = element
-                .querySelector(parser.parserOptions!.table!.values!)
-                ?.text;
+            value = element.querySelector(parser.parserOptions!.table!.values!)?.text;
           } else {
             value = keySelector?.nextElementSibling?.text;
           }
@@ -81,10 +70,8 @@ Data? tableParser({
           }
         } else {
           // Use default behavior: current element as key, next sibling as value
-          if (element.text.trim() != "" &&
-              element.nextElementSibling!.text.trim() != "") {
-            result.addAll(
-                {element.text.trim(): element.nextElementSibling!.text.trim()});
+          if (element.text.trim() != "" && element.nextElementSibling!.text.trim() != "") {
+            result.addAll({element.text.trim(): element.nextElementSibling!.text.trim()});
           }
         }
       }
@@ -92,10 +79,6 @@ Data? tableParser({
     }
   }
 
-  printLog(
-    "Table Parser: No data found!",
-    debug,
-    color: LogColor.orange,
-  );
+  printLog("Table Parser: No data found!", debug, color: LogColor.orange);
   return null;
 }

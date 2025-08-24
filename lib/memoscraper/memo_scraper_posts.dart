@@ -16,11 +16,11 @@ class MemoScraperPost {
       MemoModelPost.posts.clear();
       Map<String, Object> posts = await MemoScraperUtil.createScraper("${url}?offset=${offset}&x=${cacheId}", config);
 
-        var postList = createPostList(posts);
-        MemoModelPost.addToGlobalPostList(postList);
+      var postList = createPostList(posts);
+      MemoModelPost.addToGlobalPostList(postList);
 
-        result.addAll(postList);
-        // MemoScraperUtil.printMemoModelPost(postList);
+      result.addAll(postList);
+      // MemoScraperUtil.printMemoModelPost(postList);
       print("RUNNING SCRAPE:$url$offset");
     }
 
@@ -31,112 +31,25 @@ class MemoScraperPost {
   ScraperConfig createScraperConfigPost() {
     return ScraperConfig(
       parsers: [
-        Parser(
-            id: "posts",
-            parents: ["_root"],
-            type: ParserType.element,
-            selectors: [
-              ".post",
-            ],
-            multiple: true
-        ),
-        Parser(
-            id: "msg",
-            parents: ["posts"],
-            type: ParserType.text,
-            selectors: [
-              ".message",
-            ]
-        ),
-        Parser(
-            id: "profileUrl",
-            parents: ["posts"],
-            type: ParserType.url,
-            selectors: [
-              ".profile",
-            ]
-
-        ),
-        Parser(
-            id: "age",
-            parents: ["posts"],
-            type: ParserType.text,
-            selectors: [
-              ".time-ago",
-            ]
-        ),
-        Parser(
-            id: "tipsInSatoshi",
-            parents: ["posts"],
-            type: ParserType.text,
-            selectors: [
-              ".tip-button",
-            ]
-        ),
-        Parser(
-            id: "created",
-            parents: ["posts"],
-            type: ParserType.attribute,
-            selectors: [
-              ".time-ago::title",
-            ]
-        ),
-        Parser(
-            id: "txhash",
-            parents: ["posts"],
-            type: ParserType.url,
-            selectors: [
-              ".time-ago",
-            ]
-        ),
-        Parser(
-            id: "creatorName",
-            parents: ["posts"],
-            type: ParserType.text,
-            selectors: [
-              ".profile",
-            ]
-        ),
-        Parser(
-            id: "imgur",
-            parents: ["posts"],
-            type: ParserType.attribute,
-            selectors: [
-              ".imgur::href",
-            ]
-        ),
-        Parser(
-            id: "reply",
-            parents: ["posts"],
-            type: ParserType.text,
-            selectors: [
-              ".post-header",
-            ]
-        ),
-        Parser(
-            id: "topic",
-            parents: ["posts"],
-            type: ParserType.text,
-            selectors: [
-              ".topic-link",
-            ]
-        ),
-        Parser(
-            id: "topic-link",
-            parents: ["posts"],
-            type: ParserType.attribute,
-            selectors: [
-              ".topic-link::href",
-            ]
-        )
+        Parser(id: "posts", parents: ["_root"], type: ParserType.element, selectors: [".post"], multiple: true),
+        Parser(id: "msg", parents: ["posts"], type: ParserType.text, selectors: [".message"]),
+        Parser(id: "profileUrl", parents: ["posts"], type: ParserType.url, selectors: [".profile"]),
+        Parser(id: "age", parents: ["posts"], type: ParserType.text, selectors: [".time-ago"]),
+        Parser(id: "tipsInSatoshi", parents: ["posts"], type: ParserType.text, selectors: [".tip-button"]),
+        Parser(id: "created", parents: ["posts"], type: ParserType.attribute, selectors: [".time-ago::title"]),
+        Parser(id: "txhash", parents: ["posts"], type: ParserType.url, selectors: [".time-ago"]),
+        Parser(id: "creatorName", parents: ["posts"], type: ParserType.text, selectors: [".profile"]),
+        Parser(id: "imgur", parents: ["posts"], type: ParserType.attribute, selectors: [".imgur::href"]),
+        Parser(id: "reply", parents: ["posts"], type: ParserType.text, selectors: [".post-header"]),
+        Parser(id: "topic", parents: ["posts"], type: ParserType.text, selectors: [".topic-link"]),
+        Parser(id: "topic-link", parents: ["posts"], type: ParserType.attribute, selectors: [".topic-link::href"]),
       ],
     );
   }
 
   List<MemoModelPost> createPostList(Map<String, Object> posts) {
     List<MemoModelPost> postList = [];
-    if (posts.values.first.toString().contains("memo.cash"))
-      return [];
+    if (posts.values.first.toString().contains("memo.cash")) return [];
 
     for (Map<String, Object> item in posts.values.first as Iterable) {
       if (item["reply"].toString().contains("replied")) {
@@ -161,22 +74,19 @@ class MemoScraperPost {
       // } catch (e) {}
 
       MemoModelPost post = MemoModelPost(
-          topic: item["topic-link"] == null
-              ? null
-              : MemoModelTopic(
-                  url: item["topic-link"].toString(),
-                  header: item["topic"].toString()),
-          text: item["msg"]?.toString(),
-          age: item["age"].toString(),
-          tipsInSatoshi: int.parse(
-              (item["tipsInSatoshi"] ?? "0").toString().replaceAll(",", "")),
-          // likeCounter: likeCount,
-          // replyCounter: replyCount,
-          created: item["created"].toString(),
-          txHash: item["txhash"].toString().substring("/post".length),
-          imgurUrl: item["imgur"]?.toString(),
-          creator: MemoModelCreator(name: item["creatorName"].toString(),
-              id: item["profileUrl"].toString().substring(8)));
+        topic: item["topic-link"] == null
+            ? null
+            : MemoModelTopic(url: item["topic-link"].toString(), header: item["topic"].toString()),
+        text: item["msg"]?.toString(),
+        age: item["age"].toString(),
+        tipsInSatoshi: int.parse((item["tipsInSatoshi"] ?? "0").toString().replaceAll(",", "")),
+        // likeCounter: likeCount,
+        // replyCounter: replyCount,
+        created: item["created"].toString(),
+        txHash: item["txhash"].toString().substring("/post".length),
+        imgurUrl: item["imgur"]?.toString(),
+        creator: MemoModelCreator(name: item["creatorName"].toString(), id: item["profileUrl"].toString().substring(8)),
+      );
 
       MemoScraperUtil.extractUrlsAndHashtags(post);
 

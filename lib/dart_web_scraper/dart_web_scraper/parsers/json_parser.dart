@@ -29,11 +29,7 @@ Data? jsonParser({
   // Get JSON data from parent
   Object? json = getJsonObject(parentData, debug);
   if (json == null) {
-    printLog(
-      "Unable to find JSON!",
-      debug,
-      color: LogColor.green,
-    );
+    printLog("Unable to find JSON!", debug, color: LogColor.green);
     return null;
   }
 
@@ -45,11 +41,7 @@ Data? jsonParser({
     // Handle dynamic selectors with slot injection
     if (s.contains("<slot>")) {
       selector = inject("slot", allData, s);
-      printLog(
-        "JSON Selector Modified: $selector",
-        debug,
-        color: LogColor.green,
-      );
+      printLog("JSON Selector Modified: $selector", debug, color: LogColor.green);
     } else {
       selector = s;
     }
@@ -85,10 +77,6 @@ Data? jsonParser({
     }
   }
 
-  printLog(
-    "JSON Parser: No data found!",
-    debug,
-    color: LogColor.orange,
-  );
+  printLog("JSON Parser: No data found!", debug, color: LogColor.orange);
   return null;
 }

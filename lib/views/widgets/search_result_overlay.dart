@@ -6,11 +6,7 @@ import '../view_models/search_view_model.dart';
 import 'hashtag_list_view.dart';
 
 class SearchResultOverlay extends StatelessWidget {
-  const SearchResultOverlay({
-    Key? key,
-    required this.tagController,
-    required this.animation,
-  }) : super(key: key);
+  const SearchResultOverlay({Key? key, required this.tagController, required this.animation}) : super(key: key);
 
   final FlutterTaggerController tagController;
   final Animation<Offset> animation;
@@ -27,16 +23,10 @@ class SearchResultOverlay extends StatelessWidget {
         //   );
         // }
         if (view == SearchResultView.topics) {
-          return TopicListView(
-            tagController: tagController,
-            animation: animation,
-          );
+          return TopicListView(tagController: tagController, animation: animation);
         }
         if (view == SearchResultView.hashtag) {
-          return HashtagListView(
-            tagController: tagController,
-            animation: animation,
-          );
+          return HashtagListView(tagController: tagController, animation: animation);
         }
         return const SizedBox();
       },

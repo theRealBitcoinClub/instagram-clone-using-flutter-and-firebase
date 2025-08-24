@@ -60,11 +60,7 @@ class UrlCleaner {
   ///
   /// Note: If both whitelistParams and blacklistParams are specified,
   /// whitelistParams takes precedence and blacklistParams is ignored.
-  UrlCleaner({
-    this.whitelistParams,
-    this.blacklistParams,
-    this.appendParams,
-  });
+  UrlCleaner({this.whitelistParams, this.blacklistParams, this.appendParams});
 
   /// Creates a UrlCleaner instance from a Map.
   ///
@@ -78,15 +74,9 @@ class UrlCleaner {
   /// - New UrlCleaner instance with configuration from the map
   factory UrlCleaner.fromMap(Map<String, dynamic> map) {
     return UrlCleaner(
-      whitelistParams: map['whitelistParams'] != null
-          ? List<String>.from(map['whitelistParams'])
-          : null,
-      blacklistParams: map['blacklistParams'] != null
-          ? List<String>.from(map['blacklistParams'])
-          : null,
-      appendParams: map['appendParams'] != null
-          ? Map<String, String>.from(map['appendParams'])
-          : null,
+      whitelistParams: map['whitelistParams'] != null ? List<String>.from(map['whitelistParams']) : null,
+      blacklistParams: map['blacklistParams'] != null ? List<String>.from(map['blacklistParams']) : null,
+      appendParams: map['appendParams'] != null ? Map<String, String>.from(map['appendParams']) : null,
     );
   }
 
@@ -98,11 +88,7 @@ class UrlCleaner {
   /// Returns:
   /// - Map containing all URL cleaner configuration data
   Map<String, dynamic> toMap() {
-    return {
-      'whitelistParams': whitelistParams,
-      'blacklistParams': blacklistParams,
-      'appendParams': appendParams,
-    };
+    return {'whitelistParams': whitelistParams, 'blacklistParams': blacklistParams, 'appendParams': appendParams};
   }
 
   /// Creates a UrlCleaner instance from a JSON string.

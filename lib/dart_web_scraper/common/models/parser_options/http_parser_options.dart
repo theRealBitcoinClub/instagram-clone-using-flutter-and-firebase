@@ -106,28 +106,18 @@ class HttpParserOptions {
     return HttpParserOptions(
       url: map['url'] as String?,
       method: map['method'] != null
-          ? HttpMethod.values.firstWhere(
-              (e) => e.toString() == 'HttpMethod.${map['method']}',
-            )
+          ? HttpMethod.values.firstWhere((e) => e.toString() == 'HttpMethod.${map['method']}')
           : null,
-      headers: map['headers'] != null
-          ? Map<String, Object>.from(map['headers'] as Map)
-          : null,
+      headers: map['headers'] != null ? Map<String, Object>.from(map['headers'] as Map) : null,
       userAgent: map['userAgent'] != null
-          ? UserAgentDevice.values.firstWhere(
-              (e) => e.toString() == 'UserAgentDevice.${map['userAgent']}',
-            )
+          ? UserAgentDevice.values.firstWhere((e) => e.toString() == 'UserAgentDevice.${map['userAgent']}')
           : null,
       responseType: map['responseType'] != null
-          ? HttpResponseType.values.firstWhere(
-              (e) => e.toString() == 'HttpResponseType.${map['responseType']}',
-            )
+          ? HttpResponseType.values.firstWhere((e) => e.toString() == 'HttpResponseType.${map['responseType']}')
           : null,
       payload: map['payload'],
       payloadType: map['payloadType'] != null
-          ? HttpPayload.values.firstWhere(
-              (e) => e.toString() == 'HttpPayload.${map['payloadType']}',
-            )
+          ? HttpPayload.values.firstWhere((e) => e.toString() == 'HttpPayload.${map['payloadType']}')
           : null,
       useProxy: map['useProxy'] as bool,
       dumpResponse: map['dumpResponse'] as bool,

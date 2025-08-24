@@ -1,4 +1,3 @@
-
 import 'memo_model_creator.dart';
 import 'memo_model_topic.dart';
 
@@ -14,7 +13,7 @@ class MemoModelPost {
     this.replyCounter,
     this.created,
     this.age,
-    this.topic
+    this.topic,
   });
 
   final int? tipsInSatoshi;
@@ -34,27 +33,29 @@ class MemoModelPost {
   static final List<MemoModelPost> ytPosts = [];
   static final List<MemoModelPost> imgurPosts = [];
   static final List<MemoModelPost> hashTagPosts = [];
+
   // static final List<MemoModelPost> urlPosts = [];
   static final List<MemoModelPost> topicPosts = [];
 
   static Future<MemoModelPost> createDummy(MemoModelCreator memoModelCreator) async {
     MemoModelTopic topic = MemoModelTopic.createDummy();
     MemoModelPost memoModelPost = MemoModelPost(
-                    age: "11d",
-                    created: "11.11.1911 11:11",
-                    creator: memoModelCreator,
-                    imgurUrl: "https://i.imgur.com/YbduTBp.png",
-                    likeCounter: 33,
-                    replyCounter: 2,
-                    text: "SAFDHSF DSF HDSFHDSKJ HFDSKJ HFDSJHF DHSFKJH DSJFHDSKJ HFKJDSH",
-                    tipsInSatoshi: 123456,
-                    txHash: "3228faaa15d9512ee6ecc29b8808876a7680e6d7493c22014b942825c975c0ca",
-                    topic: topic);
+      age: "11d",
+      created: "11.11.1911 11:11",
+      creator: memoModelCreator,
+      imgurUrl: "https://i.imgur.com/YbduTBp.png",
+      likeCounter: 33,
+      replyCounter: 2,
+      text: "SAFDHSF DSF HDSFHDSKJ HFDSKJ HFDSJHF DHSFKJH DSJFHDSKJ HFKJDSH",
+      tipsInSatoshi: 123456,
+      txHash: "3228faaa15d9512ee6ecc29b8808876a7680e6d7493c22014b942825c975c0ca",
+      topic: topic,
+    );
 
-    for (int i=0; i<20; i++) {
+    for (int i = 0; i < 20; i++) {
       topic.posts.add(memoModelPost);
     }
-    memoModelCreator.posts=topic.posts;
+    memoModelCreator.posts = topic.posts;
 
     return memoModelPost;
   }
@@ -81,8 +82,8 @@ class MemoModelPost {
         ytPosts.add(element);
       } else if (element.hashtags.isNotEmpty) {
         hashTagPosts.add(element);
-      // } else if (element.urls.isNotEmpty) {
-      //   urlPosts.add(element);
+        // } else if (element.urls.isNotEmpty) {
+        //   urlPosts.add(element);
       } else if (element.topic != null) {
         topicPosts.add(element);
       }

@@ -16,11 +16,7 @@ Data? attributeParser({
   // Get parent element(s) to search within
   List<Element>? element = getElementObject(parentData);
   if (element == null || element.isEmpty) {
-    printLog(
-      "Attribute Parser: Element not found!",
-      debug,
-      color: LogColor.red,
-    );
+    printLog("Attribute Parser: Element not found!", debug, color: LogColor.red);
     return null;
   }
 
@@ -40,11 +36,7 @@ Data? attributeParser({
     // Handle dynamic selectors with slot injection
     if (sel.contains("<slot>")) {
       selector = inject("slot", allData, sel);
-      printLog(
-        "Attribute Selector Modified: $selector",
-        debug,
-        color: LogColor.green,
-      );
+      printLog("Attribute Selector Modified: $selector", debug, color: LogColor.green);
     } else {
       selector = sel;
     }
@@ -53,12 +45,7 @@ Data? attributeParser({
     List<String> split = selector.toString().split("::");
 
     // Extract attribute value using the handler
-    Object? data = attrHandler(
-      parser,
-      document,
-      selectr: split[0],
-      attr: split[1],
-    );
+    Object? data = attrHandler(parser, document, selectr: split[0], attr: split[1]);
 
     // Return first non-empty result
     if (data != null && data != "") {
@@ -66,22 +53,13 @@ Data? attributeParser({
     }
   }
 
-  printLog(
-    "Attribute Parser: No data found!",
-    debug,
-    color: LogColor.orange,
-  );
+  printLog("Attribute Parser: No data found!", debug, color: LogColor.orange);
   return null;
 }
 
 /// Handles attribute extraction for single or multiple elements
 /// Returns attribute value(s) or null if not found
-Object? attrHandler(
-  Parser parser,
-  Element source, {
-  required String selectr,
-  required String attr,
-}) {
+Object? attrHandler(Parser parser, Element source, {required String selectr, required String attr}) {
   // Handle multiple elements mode
   if (parser.multiple) {
     List<Element> selector = source.querySelectorAll(selectr);

@@ -68,9 +68,7 @@ class WebScraperError implements Exception {
   /// Returns:
   /// - Map containing the error message
   Map<String, dynamic> toMap() {
-    return {
-      'message': message,
-    };
+    return {'message': message};
   }
 
   /// Creates a WebScraperError instance from a JSON string.

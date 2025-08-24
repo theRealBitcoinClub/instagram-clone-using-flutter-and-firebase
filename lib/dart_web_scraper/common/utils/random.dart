@@ -5,12 +5,13 @@ import 'package:instagram_clone1/dart_web_scraper/common/enums.dart';
 final _rng = Random();
 
 int _randInt(int min, int max) => min + _rng.nextInt(max - min + 1);
+
 T _oneOf<T>(List<T> list) => list[_rng.nextInt(list.length)];
 
 // Chrome versions from modern builds
 int _chromeMajor() => _randInt(100, 127);
-String _chromeVersion() =>
-    "${_chromeMajor()}.0.${_randInt(3000, 6000)}.${_randInt(50, 200)}";
+
+String _chromeVersion() => "${_chromeMajor()}.0.${_randInt(3000, 6000)}.${_randInt(50, 200)}";
 
 // ---------- DESKTOP ----------
 
@@ -32,27 +33,21 @@ String _macDesktopUA() {
 }
 
 String _linuxDesktopUA() {
-  final distros = [
-    "Ubuntu; Linux x86_64",
-    "Fedora; Linux x86_64",
-    "Linux x86_64"
-  ];
+  final distros = ["Ubuntu; Linux x86_64", "Fedora; Linux x86_64", "Linux x86_64"];
   final distro = _oneOf(distros);
   return "Mozilla/5.0 (X11; $distro) "
       "AppleWebKit/537.36 (KHTML, like Gecko) "
       "Chrome/${_chromeVersion()} Safari/537.36";
 }
 
-String _randomDesktopUA() =>
-    _oneOf([_windowsDesktopUA(), _macDesktopUA(), _linuxDesktopUA()]);
+String _randomDesktopUA() => _oneOf([_windowsDesktopUA(), _macDesktopUA(), _linuxDesktopUA()]);
 
 // ---------- MOBILE ----------
 
 String _androidMobileUA() {
   final androidMajor = _randInt(8, 14);
   final androidMinor = androidMajor <= 10 ? _randInt(0, 3) : 0;
-  final androidVersion =
-      androidMinor > 0 ? "$androidMajor.$androidMinor" : "$androidMajor";
+  final androidVersion = androidMinor > 0 ? "$androidMajor.$androidMinor" : "$androidMajor";
 
   final devices = [
     "Pixel ${_randInt(3, 8)}",
@@ -71,16 +66,14 @@ String _iPhoneSafariUA() {
   final iosMajor = _randInt(14, 17);
   final iosMinor = _randInt(0, 7);
   final iosPatch = _randInt(0, 3);
-  final iosToken = iosPatch > 0
-      ? "${iosMajor}_${iosMinor}_$iosPatch"
-      : "${iosMajor}_$iosMinor";
+  final iosToken = iosPatch > 0 ? "${iosMajor}_${iosMinor}_$iosPatch" : "${iosMajor}_$iosMinor";
 
   const webkit = "605.1.15";
   final mobileBuilds = [
     "15E${_randInt(100, 999)}",
     "16E${_randInt(100, 999)}",
     "19A${_randInt(100, 999)}",
-    "20F${_randInt(1000, 9999)}"
+    "20F${_randInt(1000, 9999)}",
   ];
   final mobileBuild = _oneOf(mobileBuilds);
 
@@ -100,13 +93,7 @@ String randomUserAgent(UserAgentDevice type) {
     case UserAgentDevice.desktop:
       return _randomDesktopUA();
     case UserAgentDevice.random:
-      return _oneOf([
-        _windowsDesktopUA(),
-        _macDesktopUA(),
-        _linuxDesktopUA(),
-        _androidMobileUA(),
-        _iPhoneSafariUA()
-      ]);
+      return _oneOf([_windowsDesktopUA(), _macDesktopUA(), _linuxDesktopUA(), _androidMobileUA(), _iPhoneSafariUA()]);
     case UserAgentDevice.android:
       return _androidMobileUA();
     case UserAgentDevice.ios:

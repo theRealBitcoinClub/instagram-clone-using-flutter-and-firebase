@@ -16,11 +16,7 @@ Data? imageParser({
   // Get parent element(s) to search within
   List<Element>? element = getElementObject(parentData);
   if (element == null || element.isEmpty) {
-    printLog(
-      "Image Parser: Element not found!",
-      debug,
-      color: LogColor.red,
-    );
+    printLog("Image Parser: Element not found!", debug, color: LogColor.red);
     return null;
   }
 
@@ -40,11 +36,7 @@ Data? imageParser({
     // Handle dynamic selectors with slot injection
     if (sel.contains("<slot>")) {
       selector = inject("slot", allData, sel);
-      printLog(
-        "Image Selector Modified: $selector",
-        debug,
-        color: LogColor.green,
-      );
+      printLog("Image Selector Modified: $selector", debug, color: LogColor.green);
     } else {
       selector = sel;
     }
@@ -56,11 +48,7 @@ Data? imageParser({
     }
   }
 
-  printLog(
-    "Image Parser: No data found!",
-    debug,
-    color: LogColor.orange,
-  );
+  printLog("Image Parser: No data found!", debug, color: LogColor.orange);
   return null;
 }
 

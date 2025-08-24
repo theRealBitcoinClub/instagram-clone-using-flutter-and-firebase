@@ -23,16 +23,10 @@ class RegexReplaceTransformationOptions {
   ///
   /// [regexReplace] - The regex pattern to search for
   /// [regexReplaceWith] - The replacement string for matched patterns
-  RegexReplaceTransformationOptions({
-    required this.regexReplace,
-    required this.regexReplaceWith,
-  });
+  RegexReplaceTransformationOptions({required this.regexReplace, required this.regexReplaceWith});
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'regexReplace': regexReplace,
-      'regexReplaceWith': regexReplaceWith,
-    };
+    return <String, dynamic>{'regexReplace': regexReplace, 'regexReplaceWith': regexReplaceWith};
   }
 
   factory RegexReplaceTransformationOptions.fromMap(Map<String, dynamic> map) {
@@ -45,6 +39,5 @@ class RegexReplaceTransformationOptions {
   String toJson() => json.encode(toMap());
 
   factory RegexReplaceTransformationOptions.fromJson(String source) =>
-      RegexReplaceTransformationOptions.fromMap(
-          json.decode(source) as Map<String, dynamic>);
+      RegexReplaceTransformationOptions.fromMap(json.decode(source) as Map<String, dynamic>);
 }

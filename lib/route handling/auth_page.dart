@@ -14,10 +14,6 @@ class AuthPage extends StatelessWidget {
     ProviderUser provider = Provider.of<ProviderUser>(context);
     provider.refreshUser();
     MemoModelUser? user = provider.memoUser;
-    return Scaffold(
-      body: user != null && user.mnemonic.isNotEmpty
-          ? HomeSceen()
-          : LoginOrRegister(),
-    );
+    return Scaffold(body: user != null && user.mnemonic.isNotEmpty ? HomeSceen() : LoginOrRegister());
   }
 }

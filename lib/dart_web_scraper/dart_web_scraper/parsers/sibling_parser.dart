@@ -16,11 +16,7 @@ Data? siblingParser({
   // Get parent element(s) to search within
   List<Element>? element = getElementObject(parentData);
   if (element == null || element.isEmpty) {
-    printLog(
-      "Sibling Parser: Element not found!",
-      debug,
-      color: LogColor.red,
-    );
+    printLog("Sibling Parser: Element not found!", debug, color: LogColor.red);
     return null;
   }
 
@@ -36,11 +32,7 @@ Data? siblingParser({
   String selector;
   if (parser.selectors.first.contains("<slot>")) {
     selector = inject("slot", allData, parser.selectors.first);
-    printLog(
-      "Sibling Selector Modified: $selector",
-      debug,
-      color: LogColor.green,
-    );
+    printLog("Sibling Selector Modified: $selector", debug, color: LogColor.green);
   } else {
     selector = parser.selectors.first;
   }
@@ -52,8 +44,7 @@ Data? siblingParser({
       if (parser.parserOptions?.sibling != null) {
         // Use custom sibling options
         Element? sib;
-        if (parser.parserOptions!.sibling!.direction ==
-            SiblingDirection.previous) {
+        if (parser.parserOptions!.sibling!.direction == SiblingDirection.previous) {
           sib = element.previousElementSibling;
         } else {
           sib = element.nextElementSibling;
@@ -86,10 +77,6 @@ Data? siblingParser({
     }
   }
 
-  printLog(
-    "Sibling Parser: No data found!",
-    debug,
-    color: LogColor.orange,
-  );
+  printLog("Sibling Parser: No data found!", debug, color: LogColor.orange);
   return null;
 }

@@ -148,10 +148,10 @@ class TransformationOptions {
   ///
   /// Returns:
   /// - Transformed data, or null if any transformation fails
-  Object? applyTransformations(
-      Object data, Map<String, Object> allData, bool debug) {
+  Object? applyTransformations(Object data, Map<String, Object> allData, bool debug) {
     /// Determine the order of transformations to apply
-    final List<TransformationType> order = transformationOrder ??
+    final List<TransformationType> order =
+        transformationOrder ??
         [
           if (nth != null) TransformationType.nth,
           if (splitBy != null) TransformationType.splitBy,
@@ -392,24 +392,18 @@ class TransformationOptions {
   /// Returns:
   /// - Data with regex replacements applied, or null if replacement fails
   Object? _regexReplace(Object data, bool debug) {
-    if (_regexReplacePattern == null ||
-        regexReplace == null ||
-        (data is! String && data is! List)) {
+    if (_regexReplacePattern == null || regexReplace == null || (data is! String && data is! List)) {
       return null;
     }
     final String replaceWith = regexReplace!.regexReplaceWith;
 
     if (data is String) {
-      final String sanitized =
-          data.replaceAll(_regexReplacePattern!, replaceWith).trim();
+      final String sanitized = data.replaceAll(_regexReplacePattern!, replaceWith).trim();
       return sanitized.isNotEmpty ? sanitized : null;
     } else if (data is List) {
       final List<String> sanitizedList = [];
       for (final item in data) {
-        final String sanitized = item
-            .toString()
-            .replaceAll(_regexReplacePattern!, replaceWith)
-            .trim();
+        final String sanitized = item.toString().replaceAll(_regexReplacePattern!, replaceWith).trim();
         if (sanitized.isNotEmpty) {
           sanitizedList.add(sanitized);
         }
@@ -433,8 +427,7 @@ class TransformationOptions {
   Object? _regexMatch(Object data, bool debug) {
     if (_regexPattern == null || regexMatch == null) return null;
 
-    String? extractMatch(String s) =>
-        _regexPattern!.firstMatch(s)?.group(regexMatch!.regexGroup ?? 0);
+    String? extractMatch(String s) => _regexPattern!.firstMatch(s)?.group(regexMatch!.regexGroup ?? 0);
 
     if (data is String) {
       return extractMatch(data);
@@ -581,24 +574,14 @@ class TransformationOptions {
       splitBy: map['splitBy'],
       urldecode: map['urldecode'] == true,
       mapToList: map['mapToList'] == true,
-      regexMatch: map['regexMatch'] != null
-          ? RegexTransformationOptions.fromMap(map['regexMatch'])
-          : null,
-      regexReplace: map['regexReplace'] != null
-          ? RegexReplaceTransformationOptions.fromMap(map['regexReplace'])
-          : null,
-      replace: map['replace'] != null
-          ? ReplaceTransformationOptions.fromMap(map['replace'])
-          : null,
-      crop: map['crop'] != null
-          ? CropTransformationOptions.fromMap(map['crop'])
-          : null,
+      regexMatch: map['regexMatch'] != null ? RegexTransformationOptions.fromMap(map['regexMatch']) : null,
+      regexReplace: map['regexReplace'] != null ? RegexReplaceTransformationOptions.fromMap(map['regexReplace']) : null,
+      replace: map['replace'] != null ? ReplaceTransformationOptions.fromMap(map['replace']) : null,
+      crop: map['crop'] != null ? CropTransformationOptions.fromMap(map['crop']) : null,
       transformationOrder: map['transformationOrder'] != null
           ? (map['transformationOrder'] as List)
-              .map((e) => TransformationType.values.firstWhere(
-                    (t) => t.toString() == 'TransformationType.$e',
-                  ))
-              .toList()
+                .map((e) => TransformationType.values.firstWhere((t) => t.toString() == 'TransformationType.$e'))
+                .toList()
           : null,
     );
   }
@@ -623,9 +606,7 @@ class TransformationOptions {
       'regexReplace': regexReplace?.toMap(),
       'replace': replace?.toMap(),
       'crop': crop?.toMap(),
-      'transformationOrder': transformationOrder
-          ?.map((e) => e.toString().split('.').last)
-          .toList(),
+      'transformationOrder': transformationOrder?.map((e) => e.toString().split('.').last).toList(),
     };
   }
 

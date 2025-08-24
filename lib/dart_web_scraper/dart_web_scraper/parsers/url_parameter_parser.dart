@@ -10,11 +10,7 @@ Data? urlParamParser({
   required bool debug,
 }) {
   printLog("----------------------------------", debug, color: LogColor.yellow);
-  printLog(
-    "ID: ${parser.id} Parser: URL Parameter",
-    debug,
-    color: LogColor.cyan,
-  );
+  printLog("ID: ${parser.id} Parser: URL Parameter", debug, color: LogColor.cyan);
 
   // Get URL string from parent data
   String document = getStringObject(parentData);
@@ -36,18 +32,10 @@ Data? urlParamParser({
       return Data(parentData.url, uri.queryParameters[selector]!);
     }
   } catch (e) {
-    printLog(
-      "URL Parameter Parser: $e",
-      debug,
-      color: LogColor.red,
-    );
+    printLog("URL Parameter Parser: $e", debug, color: LogColor.red);
     return null;
   }
 
-  printLog(
-    "URL Parameter Parser: No data found!",
-    debug,
-    color: LogColor.red,
-  );
+  printLog("URL Parameter Parser: No data found!", debug, color: LogColor.red);
   return null;
 }

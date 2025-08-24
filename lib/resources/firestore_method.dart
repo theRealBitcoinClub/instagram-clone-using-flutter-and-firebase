@@ -59,8 +59,7 @@ class FireStoreMethods {
     // }
   }
 
-  Future<String> postComment(String postId, String comment, String uid,
-      String username, String profileImage) async {
+  Future<String> postComment(String postId, String comment, String uid, String username, String profileImage) async {
     // String res = 'some error occured';
     // try {
     //   if (comment.isNotEmpty) {
@@ -91,10 +90,9 @@ class FireStoreMethods {
     return "success";
   }
 
-//like comment
+  //like comment
 
-  Future<void> likeComment(
-      String postId, String commentId, String uid, List likes) async {
+  Future<void> likeComment(String postId, String commentId, String uid, List likes) async {
     // try {
     //   if (likes.contains(uid)) {
     //     await firebaseFirestore

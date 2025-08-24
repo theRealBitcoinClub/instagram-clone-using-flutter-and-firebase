@@ -20,30 +20,11 @@ Future<String?> getRequest(
   printLog("GET URL: $url", debug, color: LogColor.yellow);
   printLog("GET URL HEADERS: $headers", debug, color: LogColor.yellow);
   try {
-    var html = await http
-        .get(
-          url,
-          headers: headers,
-        )
-        .timeout(
-          Duration(seconds: 30),
-        );
+    var html = await http.get(url, headers: headers).timeout(Duration(seconds: 30));
     String body = utf8.decode(html.bodyBytes);
-    printLog(
-      "HTTP Response: ${html.statusCode}",
-      debug,
-      color: LogColor.yellow,
-    );
-    printLog(
-      "HTTP Response body.length ${body.length}",
-      debug,
-      color: LogColor.yellow,
-    );
-    printLog(
-      "HTTP Response html.headers ${html.headers.toString()}",
-      debug,
-      color: LogColor.yellow,
-    );
+    printLog("HTTP Response: ${html.statusCode}", debug, color: LogColor.yellow);
+    printLog("HTTP Response body.length ${body.length}", debug, color: LogColor.yellow);
+    printLog("HTTP Response html.headers ${html.headers.toString()}", debug, color: LogColor.yellow);
     if (dumpResponse) {
       dumpResponseToFile(body, debug);
     }
@@ -72,15 +53,7 @@ Future<String?> postRequest(
   printLog("HTTP Parser Headers: $headers", debug, color: LogColor.magenta);
   printLog("HTTP Parser Payload: $body", debug, color: LogColor.magenta);
   try {
-    var html = await http
-        .post(
-          url,
-          body: body,
-          headers: headers,
-        )
-        .timeout(
-          Duration(seconds: 30),
-        );
+    var html = await http.post(url, body: body, headers: headers).timeout(Duration(seconds: 30));
     return utf8.decode(html.bodyBytes);
   } catch (e) {
     return null;

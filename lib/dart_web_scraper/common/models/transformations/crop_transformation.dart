@@ -20,16 +20,10 @@ class CropTransformationOptions {
   /// The ending position for cropping (0-based index).
   final int? cropEnd;
 
-  CropTransformationOptions({
-    this.cropStart,
-    this.cropEnd,
-  });
+  CropTransformationOptions({this.cropStart, this.cropEnd});
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'cropStart': cropStart,
-      'cropEnd': cropEnd,
-    };
+    return <String, dynamic>{'cropStart': cropStart, 'cropEnd': cropEnd};
   }
 
   factory CropTransformationOptions.fromMap(Map<String, dynamic> map) {
@@ -42,6 +36,5 @@ class CropTransformationOptions {
   String toJson() => json.encode(toMap());
 
   factory CropTransformationOptions.fromJson(String source) =>
-      CropTransformationOptions.fromMap(
-          json.decode(source) as Map<String, dynamic>);
+      CropTransformationOptions.fromMap(json.decode(source) as Map<String, dynamic>);
 }

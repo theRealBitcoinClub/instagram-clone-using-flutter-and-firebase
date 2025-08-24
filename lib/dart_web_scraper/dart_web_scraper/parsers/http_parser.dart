@@ -48,10 +48,8 @@ Future<Data?> httpParser({
     }
 
     // Set random user agent if specified
-    if (!headers.containsKey("User-Agent") &&
-        parser.parserOptions!.http!.userAgent != null) {
-      headers['User-Agent'] =
-          randomUserAgent(parser.parserOptions!.http!.userAgent!);
+    if (!headers.containsKey("User-Agent") && parser.parserOptions!.http!.userAgent != null) {
+      headers['User-Agent'] = randomUserAgent(parser.parserOptions!.http!.userAgent!);
     }
 
     // Inject dynamic data into headers
@@ -93,11 +91,7 @@ Future<Data?> httpParser({
   // Inject dynamic data into URL
   url = inject("slot", allData, url);
 
-  printLog(
-    "HTTP Parser URL after injection: $url",
-    debug,
-    color: LogColor.magenta,
-  );
+  printLog("HTTP Parser URL after injection: $url", debug, color: LogColor.magenta);
 
   // Make HTTP request based on method
   Object? result;

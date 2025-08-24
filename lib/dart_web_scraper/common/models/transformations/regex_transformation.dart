@@ -23,16 +23,10 @@ class RegexTransformationOptions {
   ///
   /// [regex] is required and must be a valid regular expression pattern.
   /// [regexGroup] is optional and specifies which capture group to extract.
-  RegexTransformationOptions({
-    required this.regex,
-    this.regexGroup,
-  });
+  RegexTransformationOptions({required this.regex, this.regexGroup});
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'regex': regex,
-      'regexGroup': regexGroup,
-    };
+    return <String, dynamic>{'regex': regex, 'regexGroup': regexGroup};
   }
 
   factory RegexTransformationOptions.fromMap(Map<String, dynamic> map) {
@@ -45,6 +39,5 @@ class RegexTransformationOptions {
   String toJson() => json.encode(toMap());
 
   factory RegexTransformationOptions.fromJson(String source) =>
-      RegexTransformationOptions.fromMap(
-          json.decode(source) as Map<String, dynamic>);
+      RegexTransformationOptions.fromMap(json.decode(source) as Map<String, dynamic>);
 }

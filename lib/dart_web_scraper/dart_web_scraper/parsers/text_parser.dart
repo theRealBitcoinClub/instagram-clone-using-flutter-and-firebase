@@ -17,11 +17,7 @@ Data? textParser({
   // Get parent element(s) to search within
   List<Element>? element = getElementObject(parentData);
   if (element == null || element.isEmpty) {
-    printLog(
-      "Text Parser: Element not found!",
-      debug,
-      color: LogColor.red,
-    );
+    printLog("Text Parser: Element not found!", debug, color: LogColor.red);
     return null;
   }
 
@@ -44,11 +40,7 @@ Data? textParser({
     // Handle dynamic selectors with slot injection
     if (sel.contains("<slot>")) {
       selector = inject("slot", allData, sel);
-      printLog(
-        "Text Selector Modified: $selector",
-        debug,
-        color: LogColor.green,
-      );
+      printLog("Text Selector Modified: $selector", debug, color: LogColor.green);
     } else {
       selector = sel;
     }
@@ -60,11 +52,7 @@ Data? textParser({
     }
   }
 
-  printLog(
-    "Text Parser: No data found!",
-    debug,
-    color: LogColor.orange,
-  );
+  printLog("Text Parser: No data found!", debug, color: LogColor.orange);
   return null;
 }
 

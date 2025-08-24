@@ -34,14 +34,8 @@ class WebScraper {
   /// Returns:
   /// - `true` if a matching scraper configuration is found
   /// - `false` if no matching configuration exists
-  bool canScrape({
-    required Uri url,
-    required ScraperConfigMap scraperConfigMap,
-  }) {
-    ScraperConfig? scraperConfig = findScraperConfig(
-      url: url,
-      scraperConfigMap: scraperConfigMap,
-    );
+  bool canScrape({required Uri url, required ScraperConfigMap scraperConfigMap}) {
+    ScraperConfig? scraperConfig = findScraperConfig(url: url, scraperConfigMap: scraperConfigMap);
     return scraperConfig != null;
   }
 
@@ -82,27 +76,22 @@ class WebScraper {
     Map<String, String>? headers,
     String? userAgent,
     bool concurrentParsing = false,
-    required onCacheHtmlString(String html)
+    required onCacheHtmlString(String html),
   }) async {
     /// Find the appropriate scraper configuration for this URL
     ScraperConfig? config;
     if (scraperConfig != null) {
       config = scraperConfig;
     } else if (scraperConfigMap != null) {
-      config = findScraperConfig(
-        url: url,
-        scraperConfigMap: scraperConfigMap,
-      );
+      config = findScraperConfig(url: url, scraperConfigMap: scraperConfigMap);
     }
     if (config == null) {
-      throw WebScraperError(
-          'No scraper configuration provided or this url is not supported by scraperConfigMap');
+      throw WebScraperError('No scraper configuration provided or this url is not supported by scraperConfigMap');
     }
 
     bool isNoCacheRequest = false;
 
-    if (html == null)
-      isNoCacheRequest = true;
+    if (html == null) isNoCacheRequest = true;
 
     /// Fetch the HTML content using the Scraper class
     Scraper scraping = Scraper();

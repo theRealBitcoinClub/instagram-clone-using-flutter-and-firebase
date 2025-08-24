@@ -1,5 +1,6 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:instagram_clone1/memobase/memo_accountant.dart';
 import 'package:instagram_clone1/memobase/memo_bitcoin_base.dart';
 import 'package:instagram_clone1/memobase/memo_verifier.dart';
@@ -453,7 +454,7 @@ class _PostCardState extends State<PostCard> {
   }
 
   void onReplyTopic(BuildContext ctx) async {
-    var result = await post.publishReply(textEdit.text.trim(), post.topic!.header);
+    var result = await post.publishReply(textEdit.text.trim());
     if (!ctx.mounted) return;
 
     switch (result) {
@@ -478,9 +479,17 @@ class _PostCardState extends State<PostCard> {
       case MemoAccountantResponse.lowBalance:
         showSnackBar("you broke dude", ctx);
       case MemoAccountantResponse.yes:
-        showSnackBar("success", ctx);
-      //TODO hide on success
-      //TODO SHOW ANIMATION CONFETTI OVER THE WHOLE POST
+        {
+          setState(() {
+            //TODO launch confetti only on the current post
+            Confetti.launch(context, options: const ConfettiOptions(particleCount: 100, spread: 70, y: 0.6));
+            textEdit.clear();
+            hasSelectedTopic = false;
+            showSend = false;
+            showInput = false;
+          });
+          // showSnackBar("success", ctx);
+        }
     }
   }
 

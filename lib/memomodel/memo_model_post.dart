@@ -98,15 +98,13 @@ class MemoModelPost {
   //On return MemoAccountantResponse.yes everything worked fine and text can be cleared
   //Any other response should invoke a snackbar and later even better QR codes to insta deposit
 
-  Future<dynamic> publishReply(String text, String topic) async {
-    MemoVerificationResponse verifier = MemoVerifier().checkIsValidText(text);
+  Future<dynamic> publishReply(String replyText) async {
+    MemoVerificationResponse verifier = MemoVerifier(this).checkIsValidText(replyText);
     if (verifier == MemoVerificationResponse.valid) {
       //TODO at this point accountant should never throw error as it is already checking balances before allowing the user to write
-      MemoAccountantResponse accountant = await MemoAccountant(
-        await MemoModelUser.getUser(),
-        creator!,
-        text,
-      ).publishReply(topic);
+      var user = await MemoModelUser.getUser();
+      var replyPost = MemoModelPost(text: replyText, topic: topic);
+      MemoAccountantResponse accountant = await MemoAccountant(user, replyPost).publishReply();
 
       return accountant;
     } else

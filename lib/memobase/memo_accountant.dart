@@ -1,6 +1,6 @@
 import 'package:instagram_clone1/memobase/memo_code.dart';
 import 'package:instagram_clone1/memobase/memo_publisher.dart';
-import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
+import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 
 enum MemoAccountType { tokens, bch, memo }
@@ -12,17 +12,16 @@ enum MemoAccountantResponse { yes, noUtxo, lowBalance, dust }
 
 class MemoAccountant {
   final MemoModelUser user;
-  final MemoModelCreator creator;
-  final String text;
+  final MemoModelPost post;
 
-  MemoAccountant(this.user, this.creator, this.text);
+  MemoAccountant(this.user, this.post);
 
   static MemoAccountantResponse checkAccount(MemoAccountType t, MemoModelUser user) {
     return MemoAccountantResponse.yes;
   }
 
   String getTipReceiver() {
-    return creator.id;
+    return post.creator!.id;
 
     //TODO check if creator has BCH address, if so send him half or all of the tip
     //TODO other half goes to app or full amount goes to app if creator has only memo address funds
@@ -34,12 +33,12 @@ class MemoAccountant {
 
   //TODO let user choose the order in which he wants to spend his balance
   //TODO tip receiver can be the user that posted or the app itself to buy and burn tokens
-  Future<MemoAccountantResponse> publishReply(String topic) async {
+  Future<MemoAccountantResponse> publishReply() async {
     //Bch tx must be more expensive than token tx, always add extra fee receiver that burns tokens
-    MemoAccountantResponse response = await tryPublish(topic, user.wifLegacy);
+    MemoAccountantResponse response = await tryPublishReply(user.wifLegacy);
 
     if (response != MemoAccountantResponse.yes) {
-      response = await tryPublish(topic, user.wifBchCashtoken);
+      response = await tryPublishReply(user.wifBchCashtoken);
     }
 
     //TODO let user send specific amount of tokens to manager address then pay tx with faucet funds
@@ -48,11 +47,11 @@ class MemoAccountant {
     return response != MemoAccountantResponse.yes ? MemoAccountantResponse.lowBalance : MemoAccountantResponse.yes;
   }
 
-  Future<MemoAccountantResponse> tryPublish(String topic, String wif) async {
+  Future<MemoAccountantResponse> tryPublishReply(String wif) async {
     MemoAccountantResponse response = await MemoPublisher().doMemoAction(
-      text,
+      post.text!,
       MemoCode.topicMessage,
-      topic: topic,
+      topic: post.topic!.header,
       wif: wif,
       tipReceiver: getTipReceiver(),
       tipAmount: user.tipAmount,

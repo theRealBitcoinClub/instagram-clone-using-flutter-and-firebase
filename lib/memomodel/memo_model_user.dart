@@ -14,7 +14,7 @@ enum TipAmount { zero, maintenance, growth, moon }
 class MemoModelUser {
   static MemoModelUser? _user;
   TipReceiver _tipReceiver = TipReceiver.both;
-  TipAmount _tipAmount = TipAmount.growth;
+  TipAmount _tipAmount = TipAmount.zero;
   String mnemonic;
   String _bchAddressCashtokenAware = "";
   String _legacyAddressMemoBch = "";
@@ -79,6 +79,7 @@ class MemoModelUser {
   Future<String> refreshBalanceTokens() async {
     MemoBitcoinBase base = await MemoBitcoinBase.create();
     P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(_pkBchCashtoken);
+    p2pkhwt.toAddress(BitcoinCashNetwork.mainnet);
     BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
     List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress, includeCashtokens: true);
 
@@ -156,12 +157,27 @@ class MemoModelUser {
     return _privateKeyBchCashtoken!;
   }
 
-  String get bchAddressCashtokenAware {
+  // String get bchAddressCashtokenAware {
+  //   if (_bchAddressCashtokenAware.isEmpty) {
+  //     _bchAddressCashtokenAware = _pkBchCashtoken.getPublic().toAddress().toAddress(BitcoinCashNetwork.mainnet);
+  //   }
+  //   //TODO SAVE THIS IN SHARED PREFS AS IT IS INTENSE CALCULATION
+  //   return _bchAddressCashtokenAware;
+  // }
+
+  String get bchAddressCashtokenAwareCtFormat {
     if (_bchAddressCashtokenAware.isEmpty) {
-      _bchAddressCashtokenAware = _pkBchCashtoken.getPublic().toAddress().toAddress(BitcoinCashNetwork.mainnet);
+      final p2pkhWt = P2pkhAddress.fromHash160(
+        addrHash: _pkBchCashtoken.getPublic().toHash160Hex(),
+        type: P2pkhAddressType.p2pkhwt,
+      );
+      _bchAddressCashtokenAware = p2pkhWt.toAddress(BitcoinCashNetwork.mainnet);
     }
-    //TODO SAVE THIS IN SHARED PREFS AS IT IS INTENSE CALCULATION
+
     return _bchAddressCashtokenAware;
+
+    /// Output
+    /// bitcoincash:zrpl3edslpz452czc2wyfz992qncyzdkdyvc8vzuev
   }
 
   static Future<MemoModelUser> getUser({MemoModelCreator? creator}) async {

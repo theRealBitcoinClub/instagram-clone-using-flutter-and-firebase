@@ -1,8 +1,6 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:instagram_clone1/memobase/memo_accountant.dart';
-import 'package:instagram_clone1/memobase/memo_bitcoin_base.dart';
 import 'package:instagram_clone1/memobase/memo_verifier.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 import 'package:instagram_clone1/memoscraper/memo_scraper_utils.dart';
@@ -15,6 +13,7 @@ import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 import '../memobase/memo_code.dart';
 import '../memobase/memo_publisher.dart';
 import '../memomodel/memo_model_post.dart';
+import 'memo_confetti.dart';
 
 class PostCard extends StatefulWidget {
   final MemoModelPost post;
@@ -27,8 +26,10 @@ class PostCard extends StatefulWidget {
 }
 
 class _PostCardState extends State<PostCard> {
+  double alt_image_height = 50;
   MemoModelUser? user;
-  bool isAnimating = false;
+  bool isAnimatingLike = false;
+  bool isSendingTx = false;
   MemoModelPost post;
   bool showInput = false;
   bool showSend = false;
@@ -139,20 +140,30 @@ class _PostCardState extends State<PostCard> {
           ),
           GestureDetector(
             onDoubleTap: () async {
-              MemoPublisher().doMemoAction(
-                MemoBitcoinBase.reOrderTxHash(post.txHash!),
-                MemoCode.postLike,
-                tipReceiver: post.creator!.id,
-                tipAmount: 1111,
-              );
-              // TODO TIP POST WITH STANDARD TIP
-              // TODO LET USER INPUT WIF AND CHOOSE THEIR STANDARD TIP
-              // TODO ALWAYS PUT HASHTAGS LAST IN POSTS
-              // FireStoreMethods().likePost(widget.snap['postId'],
-              //     user.uid, widget.snap['likes']);
               setState(() {
-                isAnimating = true;
+                isSendingTx = true;
               });
+              MemoAccountantResponse response = await MemoAccountant(user!).publishLike(post);
+              setState(() {
+                isSendingTx = false;
+              });
+              if (context.mounted) {
+                setState(() {
+                  switch (response) {
+                    case MemoAccountantResponse.yes:
+                      setState(() {
+                        // MemoConfetti().launch(context);
+                        isAnimatingLike = true;
+                      });
+                    case MemoAccountantResponse.lowBalance:
+                      showSnackBar("low balance", context);
+                    case MemoAccountantResponse.noUtxo:
+                    case MemoAccountantResponse.dust:
+                      // these can not reach this layer
+                      throw UnimplementedError();
+                  }
+                });
+              }
             },
             child: ZoomOverlay(
               modalBarrierColor: Colors.black12,
@@ -168,33 +179,9 @@ class _PostCardState extends State<PostCard> {
                 alignment: Alignment.center,
                 children: [
                   post.youtubeId != null
-                      ? YoutubePlayer(
-                          controller: YoutubePlayerController(
-                            initialVideoId: post.youtubeId!,
-                            flags: YoutubePlayerFlags(
-                              hideThumbnail: true,
-                              hideControls: true,
-                              mute: false,
-                              autoPlay: false,
-                            ),
-                          ),
-                          showVideoProgressIndicator: true,
-                          onReady: () {
-                            // print('Player is ready.');
-                          },
-                        )
-                      :
-                        // CachedNetworkImage(
-                        //   imageUrl: post.imgurUrl == null ? "https://i.imgur.com/yhN4cfs.png" : post.imgurUrl!,
-                        //   fit: BoxFit.cover,
-                        //   placeholder: (context, url) => CircularProgressIndicator(),
-                        //
-                        //   imageBuilder: (ctx, builder) => onBuildImage(ctx, builder) ,
-                        //   errorWidget: (context, url, error) => Icon(Icons.error),
-                        //   errorListener: (error) => onErrorLoadImage(error),
-                        // )
-                        post.imgurUrl == null
-                      ? Container(color: Colors.green, height: 0)
+                      ? buildYoutubePlayer()
+                      : post.imgurUrl == null
+                      ? Container(color: Colors.greenAccent, height: alt_image_height)
                       : Image(
                           image: NetworkImage(post.imgurUrl!),
                           // height: MediaQuery.of(context).size.height * 0.45,
@@ -208,24 +195,8 @@ class _PostCardState extends State<PostCard> {
                   //TODO LET USERS INTERACT WITH HASHTAGS IN TEXT AND URLS IN TEXT
                   //TODO ADD MENTIONED HASHTAGS AS CLICKABLE BUTTONS BELOW POST
                   //TODO ADD TOPIC AS CLICKABLE BUTTON
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: isAnimating ? 1 : 0,
-                    child: LikeAnimation(
-                      isAnimating: isAnimating,
-                      duration: const Duration(milliseconds: 400),
-                      onEnd: () {
-                        setState(() {
-                          isAnimating = false;
-                        });
-                      },
-                      child: Icon(
-                        Icons.currency_bitcoin,
-                        color: Color.fromRGBO(255, 255, 255, 1),
-                        size: post.imgurUrl == null ? 0 : 150,
-                      ),
-                    ),
-                  ),
+                  buildSendingAnimation(),
+                  buildLikeAnimation(),
                 ],
               ),
             ),
@@ -341,6 +312,62 @@ class _PostCardState extends State<PostCard> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  YoutubePlayer buildYoutubePlayer() {
+    return YoutubePlayer(
+      controller: YoutubePlayerController(
+        initialVideoId: post.youtubeId!,
+        flags: YoutubePlayerFlags(hideThumbnail: true, hideControls: true, mute: false, autoPlay: false),
+      ),
+      showVideoProgressIndicator: true,
+      onReady: () {
+        // print('Player is ready.');
+      },
+    );
+  }
+
+  AnimatedOpacity buildSendingAnimation() {
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 500),
+      opacity: isSendingTx ? 1 : 0,
+      child: LikeAnimation(
+        isAnimating: isSendingTx,
+        duration: const Duration(milliseconds: 500),
+        onEnd: () {
+          setState(() {
+            isSendingTx = false;
+          });
+        },
+        child: Icon(
+          Icons.thumb_up_outlined,
+          color: Color.fromRGBO(255, 255, 255, 1),
+          size: post.imgurUrl == null ? alt_image_height : 150,
+        ),
+      ),
+    );
+  }
+
+  AnimatedOpacity buildLikeAnimation() {
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 500),
+      opacity: isAnimatingLike ? 1 : 0,
+      child: LikeAnimation(
+        isAnimating: isAnimatingLike,
+        duration: const Duration(milliseconds: 500),
+        onEnd: () {
+          setState(() {
+            isAnimatingLike = false;
+          });
+        },
+        //TODO show amount that was tipped and to whom it was tipped, app or creator
+        child: Icon(
+          Icons.currency_bitcoin,
+          color: Color.fromRGBO(255, 255, 255, 1),
+          size: post.imgurUrl == null ? alt_image_height : 150,
+        ),
       ),
     );
   }
@@ -482,7 +509,7 @@ class _PostCardState extends State<PostCard> {
         {
           setState(() {
             //TODO launch confetti only on the current post
-            Confetti.launch(context, options: const ConfettiOptions(particleCount: 100, spread: 70, y: 0.6));
+            MemoConfetti().launch(ctx);
             textEdit.clear();
             hasSelectedTopic = false;
             showSend = false;

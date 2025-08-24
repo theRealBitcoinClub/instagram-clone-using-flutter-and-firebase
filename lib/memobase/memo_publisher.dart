@@ -3,6 +3,7 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:instagram_clone1/memobase/memo_accountant.dart';
 import 'package:instagram_clone1/memobase/memo_bitcoin_base.dart';
 
+import '../memomodel/memo_tip.dart';
 import 'memo_code.dart';
 import 'memo_transaction_builder.dart';
 
@@ -57,8 +58,7 @@ class MemoPublisher {
     String topic = "",
     ECPrivate? pk,
     String? wif,
-    String? tipReceiver,
-    int? tipAmount,
+    MemoTip? tip,
   }) async {
     print("\n${memoAction.opCode}\n${memoAction.name}");
     var base = await MemoBitcoinBase.create();
@@ -70,14 +70,6 @@ class MemoPublisher {
     final publicKey = privateKey.getPublic();
 
     final BitcoinCashAddress p2pkhAddress = BitcoinCashAddress.fromBaseAddress(publicKey.toAddress());
-
-    BitcoinCashAddress? tipToThisAddress;
-
-    if (tipReceiver != null && tipAmount != null) {
-      P2pkhAddress legacy = P2pkhAddress.fromAddress(address: tipReceiver, network: BitcoinNetwork.mainnet);
-      // String addr = legacyToBchAddress(addressProgram: legacy.addressProgram, network: network, type: P2pkhAddressType.p2pkh);
-      tipToThisAddress = BitcoinCashAddress.fromBaseAddress(legacy);
-    }
 
     print("https://bchblockexplorer.com/address/${p2pkhAddress.address}");
 
@@ -113,7 +105,7 @@ class MemoPublisher {
       memoAction,
       privateKey,
       memoTopic: topic,
-      tipToThisAddress: tipToThisAddress,
+      memoTip: tip,
     );
 
     print(tx.txId());
@@ -121,10 +113,22 @@ class MemoPublisher {
     print("https://bchblockexplorer.com/tx/${tx.txId()}");
 
     //TODO TRY AGAIN ON TIMEOUT
-    //TODO TRY AGAIN ON REJECTED RAISE FEE
+    //TODO TRY AGAIN ON REJECTED NETWORK RULES RAISE FEE
     //TODO TRY AGAIN ON DUST ANALYSE DUST
+    // RPCError: got code 1 with message "the transaction was rejected by network rules.
+    //
+    // dust (code 64)
+    //  code: 1, message: the transaction was rejected by network rules.
+    //
+    // dust (code 64)
+    // ".
     //TODO OPTIMIZE FEE COST FOR PAYING CUSTOMERS TRY TINY FIRST
-    String broadcast = await base.broadcastTransaction(tx);
+    try {
+      await base.broadcastTransaction(tx);
+    } catch (e) {
+      print("catching");
+      return MemoAccountantResponse.dust;
+    }
     return MemoAccountantResponse.yes;
   }
 
@@ -138,7 +142,7 @@ class MemoPublisher {
     MemoCode memoAction,
     ECPrivate privateKey, {
     String memoTopic = "",
-    BitcoinCashAddress? tipToThisAddress,
+    MemoTip? memoTip,
   }) {
     final MemoTransactionBuilder txBuilder = createTransactionBuilder(
       p2pkhAddress,
@@ -149,7 +153,7 @@ class MemoPublisher {
       memoMessage,
       memoAction,
       memoTopic,
-      tipToThisAddress,
+      memoTip,
     );
     final tx = txBuilder.buildTransaction((trDigest, utxo, publicKey, sighash) {
       return privateKey.signECDSA(trDigest, sighash: sighash);
@@ -166,12 +170,18 @@ class MemoPublisher {
     String memoMessage,
     MemoCode memoAction,
     String memoTopic,
-    BitcoinCashAddress? tipToThisAddress,
+    MemoTip? memoTip,
   ) {
-    final BigInt tip = BtcUtils.toSatoshi("0.00001");
+    BigInt? tipAmount;
     BigInt outputHome = walletBalance - fee;
-    if (tipToThisAddress != null) {
-      outputHome = outputHome - tip;
+    BitcoinCashAddress? tipToThisAddress;
+    var hasValidTip = memoTip != null && memoTip.amountInSats > MemoTip.dust;
+    if (hasValidTip) {
+      tipAmount = BigInt.from(memoTip.amountInSats);
+      outputHome = outputHome - tipAmount;
+      P2pkhAddress legacy = P2pkhAddress.fromAddress(address: memoTip.receiverAddress, network: memoTip.network);
+      // String addr = legacyToBchAddress(addressProgram: legacy.addressProgram, network: network, type: P2pkhAddressType.p2pkh);
+      tipToThisAddress = BitcoinCashAddress.fromBaseAddress(legacy);
     }
 
     final txBuilder = MemoTransactionBuilder(
@@ -184,8 +194,7 @@ class MemoPublisher {
       memoTopic: memoTopic,
     );
 
-    if (tipToThisAddress != null)
-      txBuilder.outPuts.add(BitcoinOutput(address: tipToThisAddress.baseAddress, value: tip));
+    if (hasValidTip) txBuilder.outPuts.add(BitcoinOutput(address: tipToThisAddress!.baseAddress, value: tipAmount!));
 
     return txBuilder;
   }

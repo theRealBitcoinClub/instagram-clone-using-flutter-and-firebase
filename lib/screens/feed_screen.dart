@@ -20,10 +20,7 @@ class _FeedScreenState extends State<FeedScreen> {
     return true;
   }
 
-  void signUserOut() async {
-    // final GoogleSignIn googleSignIn = GoogleSignIn();
-    // await FirebaseAuth.instance.signOut();
-    // await googleSignIn.signOut();TODO SIGN OUT
+  void signOut() async {
     AuthChecker().logOut(context);
   }
 
@@ -35,12 +32,6 @@ class _FeedScreenState extends State<FeedScreen> {
         centerTitle: true,
         toolbarHeight: 40,
         title: Text("Spend > Share > Inspire", style: TextStyle(fontFamily: "Open Sans")),
-
-        // SvgPicture.asset(
-        //   'assets/images/instagram.svg',
-        //   color: blackColor,
-        //   height: 50,
-        // ),
         actions: [
           IconButton(
             onPressed: () {
@@ -139,24 +130,10 @@ class _FeedScreenState extends State<FeedScreen> {
           ),
         ],
       ),
-      body:
-          // StreamBuilder(
-          //     stream: FirebaseFirestore.instance
-          //         .collection('posts')
-          //         .orderBy('datePublished', descending: true)
-          //         .snapshots(),
-          //     builder: (context,
-          //         AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
-          //       if (snapshot.connectionState == ConnectionState.waiting) {
-          //         return const Center(
-          //           child: CircularProgressIndicator(),
-          //         );
-          //       } TODO FEED POSTS
-          ListView.builder(
-            itemCount: MemoModelPost.posts.length,
-            itemBuilder: (context, index) => PostCard(MemoModelPost.posts[index]),
-            // PostCard(snap: snapshot.data!.docs[index].data()),
-          ),
+      body: ListView.builder(
+        itemCount: MemoModelPost.allPosts.length,
+        itemBuilder: (context, index) => PostCard(MemoModelPost.allPosts[index]),
+      ),
       // })
     );
   }

@@ -26,7 +26,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   MemoModelUser? user;
   bool showDefaultAvatar = false;
-  bool isCashtoken145addressOrMemoDevPath0 = true;
+  bool toggleAddressType = true;
 
   // MemoModelPost? post;
   late MemoModelCreator creator;
@@ -85,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       children: [
         Padding(
-          padding: EdgeInsets.all(15).copyWith(bottom: 0),
+          padding: EdgeInsets.fromLTRB(0, 15, 0, 0),
           child: Column(
             children: [
               Text(count, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
@@ -423,8 +423,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (dialogCtx) {
         return SimpleDialog(
           children: [
-            isCashtoken145addressOrMemoDevPath0
-                ? qrCode(user!.bchAddressCashtokenAware, "cashtoken", dialogCtx)
+            toggleAddressType
+                ? qrCode(user!.bchAddressCashtokenAwareCtFormat, "cashtoken", dialogCtx)
                 : qrCode(user!.legacyAddressMemoBchAsCashaddress, "memo-128x128", dialogCtx),
           ],
           //TODO observe balance change of wallet, show snackbar on deposit
@@ -448,7 +448,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           GestureDetector(
             onTap: () {
               setState(() {
-                isCashtoken145addressOrMemoDevPath0 = !isCashtoken145addressOrMemoDevPath0;
+                toggleAddressType = !toggleAddressType;
               });
               Navigator.of(dialogCtx).pop();
               showBchQR();
@@ -457,7 +457,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               alignment: Alignment.center,
               padding: const EdgeInsets.all(50),
               child: Text(
-                isCashtoken145addressOrMemoDevPath0 ? "SHOW MEMO QR" : "SHOW CASHONIZE QR",
+                toggleAddressType ? "SHOW MEMO QR" : "SHOW CASHONIZE QR",
                 style: const TextStyle(fontWeight: FontWeight.bold, color: blueColor),
               ),
             ),

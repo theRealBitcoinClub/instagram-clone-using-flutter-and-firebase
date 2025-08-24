@@ -33,7 +33,7 @@ class MemoModelPost {
   late final MemoModelCreator? creator;
   late final MemoModelTopic? topic;
   final String? age;
-  static final List<MemoModelPost> posts = [];
+  static final List<MemoModelPost> allPosts = [];
   static final List<MemoModelPost> ytPosts = [];
   static final List<MemoModelPost> imgurPosts = [];
   static final List<MemoModelPost> hashTagPosts = [];
@@ -64,16 +64,16 @@ class MemoModelPost {
     return memoModelPost;
   }
 
-  static void clearLists() {
-    posts.clear();
-    imgurPosts.clear();
-    ytPosts.clear();
-    hashTagPosts.clear();
-    topicPosts.clear();
-  }
+  // static void clearLists() {
+  //   allPosts.clear();
+  //   imgurPosts.clear();
+  //   ytPosts.clear();
+  //   hashTagPosts.clear();
+  //   topicPosts.clear();
+  // }
 
   static void addToGlobalPostList(List<MemoModelPost> p) {
-    MemoModelPost.posts.addAll(p);
+    MemoModelPost.allPosts.addAll(p);
 
     //TODO DO NOT ITERATE THROUGH ALL POSTS HERE AS YOU ALREADY DID THAT BEFORE,
     for (var element in p) {
@@ -104,7 +104,7 @@ class MemoModelPost {
       //TODO at this point accountant should never throw error as it is already checking balances before allowing the user to write
       var user = await MemoModelUser.getUser();
       var replyPost = MemoModelPost(text: replyText);
-      MemoAccountantResponse accountant = await MemoAccountant(user, replyPost, this).publishReply();
+      MemoAccountantResponse accountant = await MemoAccountant(user).publishReply(this, replyPost);
 
       return accountant;
     } else

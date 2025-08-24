@@ -135,26 +135,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  isRefreshing ? LinearProgressIndicator() : SizedBox(),
+                  isRefreshing ? SizedBox(height: 1, child: LinearProgressIndicator()) : SizedBox(),
                   Container(
                     height: 265,
                     child: Column(
                       mainAxisSize: MainAxisSize.max,
                       children: [
                         createTopDetails(),
-
-                        //full name
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 20),
                           alignment: Alignment.bottomLeft,
-                          child: Text(
-                            creator.name,
-                            // userData['fullName'],
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          child: Text(creator.name, style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
-
-                        //bio
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 20).copyWith(top: 10),
                           alignment: Alignment.bottomLeft,
@@ -166,8 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             linkColor: Colors.blue,
                           ),
                         ),
-
-                        new Divider(color: Colors.grey.shade400),
+                        Divider(color: Colors.grey.shade300),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

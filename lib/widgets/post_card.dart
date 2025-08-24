@@ -241,7 +241,6 @@ class _PostCardState extends State<PostCard> {
                   children: <Widget>[
                     ExpandableText(
                       post.text ?? "",
-                      // widget.snap['discription'], TODO TEXT
                       prefixText: "${post.creator!.name}:",
                       prefixStyle: const TextStyle(fontWeight: FontWeight.bold),
                       expandText: 'show more',

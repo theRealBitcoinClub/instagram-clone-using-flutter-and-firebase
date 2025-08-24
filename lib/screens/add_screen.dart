@@ -4,6 +4,7 @@ import 'package:clipboard/clipboard.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
+import 'package:instagram_clone1/memoscraper/memo_publisher.dart';
 import 'package:instagram_clone1/widgets/textfield_input.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
@@ -187,7 +188,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
   double overlayHeight = 300;
 
   late final homeViewModel = HomeViewModel();
-  late final _controller = FlutterTaggerController(
+  late final _tagController = FlutterTaggerController(
     //Initial text value with tag is formatted internally
     //following the construction of FlutterTaggerController.
     //After this controller is constructed, if you
@@ -199,7 +200,6 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
   late final _focusNode = FocusNode();
 
   void initStateTagger() {
-    super.initState();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 150),
@@ -214,20 +214,24 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
         curve: Curves.easeInOut,
       ),
     );
+
+    _tagController.addListener(() {
+      //TODO CHECK ONLY ONE TOPIC, ONLY ONE @ sign is allowed
+      //TODO Check only three hashtags, only three # are allowed
+    },);
   }
 
   void disposeTagger() {
     _animationController.dispose();
     _focusNode.dispose();
-    _controller.dispose();
-    super.dispose();
+    _tagController.dispose();
   }
 
   @override
   Widget createTaggableInput(BuildContext context, insets) {
         return FlutterTagger(
           triggerStrategy: TriggerStrategy.eager,
-          controller: _controller,
+          controller: _tagController,
           animationController: _animationController,
           onSearch: (query, triggerChar) {
             if (triggerChar == "@") {
@@ -250,18 +254,25 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
           overlayHeight: overlayHeight,
           overlay: SearchResultOverlay(
             animation: _animation,
-            tagController: _controller,
+            tagController: _tagController,
           ),
           builder: (context, containerKey) {
             return CommentTextField(
               focusNode: _focusNode,
               containerKey: containerKey,
               insets: insets,
-              controller: _controller,
+              controller: _tagController,
               onSend: () {
                 FocusScope.of(context).unfocus();
+
+                //TODO Check cant have multiple topics
+                //TODO Check cant have more than three hashtags
+                // MemoPublisher().doMemoAction(, memoAction)
                 // homeViewModel.addPost(_controller.formattedText);
-                _controller.clear();
+                // _controller.clear();
+                _tagController.text;
+                _tagController.formattedText;
+                _tagController.tags;
               },
             );
           },

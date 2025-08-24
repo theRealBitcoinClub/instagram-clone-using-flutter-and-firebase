@@ -4,15 +4,17 @@ class MemoModelTopic {
   static List<MemoModelTopic> topics = [];
 
   MemoModelTopic({
-    this.header,
+    required this.header,
     this.url,
     this.postCount,
     this.followerCount,
     this.lastPost
-  });
+  }) {
+    header = header!.replaceAll(" ", "_");
+  }
 
   List<MemoModelPost> posts = [];
-  final String? header;
+  String header;
   final String? url;
   final int? postCount;
   final int? followerCount;

@@ -4,7 +4,6 @@ import 'package:instagram_clone1/dart_web_scraper/common/models/scraper_config_m
 import 'package:instagram_clone1/memoscraper/memo_scraper_posts.dart';
 import 'package:instagram_clone1/memoscraper/memo_scraper_utils.dart';
 
-import '../memomodel/memo_model_creator.dart';
 import '../memomodel/memo_model_tag.dart';
 
 class MemoScraperTag {
@@ -17,7 +16,6 @@ class MemoScraperTag {
           tag.posts.addAll(await MemoScraperPost().startScrapePosts("t/${tag.name}", 0, cacheId));
         }
         MemoModelTag.tags.addAll(tags);
-        // print("object");
         print("RUNNING SCRAPE:$order$off");
       }
     }

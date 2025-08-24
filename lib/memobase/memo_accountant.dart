@@ -12,16 +12,20 @@ enum MemoAccountantResponse { yes, noUtxo, lowBalance, dust }
 
 class MemoAccountant {
   final MemoModelUser user;
-  final MemoModelPost post;
+  final MemoModelPost postReaction;
+  final MemoModelPost? postOriginal;
 
-  MemoAccountant(this.user, this.post);
+  MemoAccountant(this.user, this.postReaction, this.postOriginal);
 
   static MemoAccountantResponse checkAccount(MemoAccountType t, MemoModelUser user) {
     return MemoAccountantResponse.yes;
   }
 
+  //TODO if it is new post then send somewhere the tip to the add or burn the tokens
+  //TODO to post new content they need the tokens to be able to burn them before post
+  //TODO reactions can be made with Bch only paid by memo funds or Bch funds
   String getTipReceiver() {
-    return post.creator!.id;
+    return postOriginal!.creator!.id;
 
     //TODO check if creator has BCH address, if so send him half or all of the tip
     //TODO other half goes to app or full amount goes to app if creator has only memo address funds
@@ -49,9 +53,9 @@ class MemoAccountant {
 
   Future<MemoAccountantResponse> tryPublishReply(String wif) async {
     MemoAccountantResponse response = await MemoPublisher().doMemoAction(
-      post.text!,
+      postReaction.text!,
       MemoCode.topicMessage,
-      topic: post.topic!.header,
+      topic: postOriginal!.topic!.header,
       wif: wif,
       tipReceiver: getTipReceiver(),
       tipAmount: user.tipAmount,

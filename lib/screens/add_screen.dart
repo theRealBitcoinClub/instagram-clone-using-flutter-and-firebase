@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
+import 'package:instagram_clone1/memobase/memo_accountant.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+import 'package:instagram_clone1/widgets/memo_confetti.dart';
 import 'package:instagram_clone1/widgets/textfield_input.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-import '../memobase/memo_code.dart';
-import '../memobase/memo_publisher.dart';
 import '../views/view_models/home_view_model.dart';
 import '../views/view_models/search_view_model.dart';
 import '../views/widgets/comment_text_field.dart';
@@ -49,7 +49,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
       String validYtUrl = YoutubePlayer.convertUrlToId(url) ?? "";
       if (validYtUrl.isNotEmpty) {
         validVideo = validYtUrl;
-        youtubeCtrl.text = validVideo;
+        youtubeCtrl.text = url;
       } else {
         validImgur = extractValidImgurUrl(url);
         imgurCtrl.text = validImgur;
@@ -269,26 +269,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
             //TODO Check cant have multiple topics
             //TODO Check cant have more than three hashtags
             //TODO Check max length
-            String text = _tagController.text;
-            text = appendVideoOrImgurUrl(text);
-
-            String? topic = extractTopic(text);
-
-            //TODO MOVE THESE CALLS WITH RETRY TO NEW CLASS WITH RETRIES, ALSO THE REPLY IN POSTCARD
-            if (topic != null) {
-              MemoPublisher.create(text, MemoCode.topicMessage, wif: user!.wifLegacy).then((value) {
-                value.doPublish(topic: topic);
-              });
-            } else {
-              MemoPublisher.create(text, MemoCode.profileMessage, wif: user!.wifLegacy).then((value) {
-                value.doPublish();
-              });
-            }
-            _tagController.clear();
-            validImgur = "";
-            validVideo = "";
-            imgurCtrl.clear();
-            youtubeCtrl.clear();
+            publishImageOrVideo(context);
 
             //TODO IF LAST SELECTED HASHTAG IS UNKOWN THE WHOLE MSG GETS FORMAT RESET
             //IF I TOUCH THE KEY WHEN THERE IS AN EMPTY HASHTAG LIST IT GOES WRONG
@@ -296,6 +277,30 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
         );
       },
     );
+  }
+
+  Future<void> publishImageOrVideo(BuildContext ctx) async {
+    String text = _tagController.text;
+    text = appendVideoOrImgurUrl(text);
+
+    String? topic = extractTopic(text);
+
+    var response = await MemoAccountant(user!).publishImageOrVideo(text, topic);
+
+    if (response == MemoAccountantResponse.yes) {
+      clearInputs();
+      setState(() {
+        if (ctx.mounted) MemoConfetti().launch(ctx);
+      });
+    }
+  }
+
+  void clearInputs() {
+    _tagController.clear();
+    validImgur = "";
+    validVideo = "";
+    imgurCtrl.clear();
+    youtubeCtrl.clear();
   }
 
   String? extractTopic(String text) {

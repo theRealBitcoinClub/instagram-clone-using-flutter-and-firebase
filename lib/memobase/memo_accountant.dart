@@ -1,5 +1,6 @@
 import 'package:instagram_clone1/memobase/memo_code.dart';
 import 'package:instagram_clone1/memobase/memo_publisher.dart';
+import 'package:instagram_clone1/memobase/memo_verifier.dart';
 import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
@@ -79,5 +80,22 @@ class MemoAccountant {
     MemoPublisher mp = await MemoPublisher.create(text, MemoCode.profileMessage, wif: user.wifLegacy);
     var tip = MemoTip(getTipReceiver(post.creator!), user.tipAmount);
     return mp.doPublish(tip: tip);
+  }
+
+  Future<dynamic> publishImageOrVideo(String text, String? topic) async {
+    MemoVerificationResponse res = MemoVerifier(text).checkIsValidText(text);
+
+    if (res != MemoVerificationResponse.valid) return res;
+
+    if (topic != null) {
+      return createPublisher(MemoCode.topicMessage, text, topic: topic);
+    } else {
+      return createPublisher(MemoCode.profileMessage, text);
+    }
+  }
+
+  Future<MemoAccountantResponse> createPublisher(MemoCode code, String text, {String topic = ""}) async {
+    MemoPublisher mp = await MemoPublisher.create(text, code, wif: user.wifLegacy);
+    return mp.doPublish(topic: topic);
   }
 }

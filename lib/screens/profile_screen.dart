@@ -148,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           padding: EdgeInsets.symmetric(horizontal: 20),
                           alignment: Alignment.bottomLeft,
                           child: Text(
-                            creator.name!,
+                            creator.name,
                             // userData['fullName'],
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
@@ -159,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           padding: EdgeInsets.symmetric(horizontal: 20).copyWith(top: 10),
                           alignment: Alignment.bottomLeft,
                           child: ExpandableText(
-                            creator.profileText ?? "",
+                            creator.profileText,
                             expandText: 'show more',
                             collapseText: 'show less',
                             maxLines: 3,
@@ -205,7 +205,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           children: [
                                             CircleAvatar(backgroundImage: NetworkImage(post.creator!.profileImage())),
                                             SizedBox(width: 10),
-                                            Text(post.creator!.name!),
+                                            Text(post.creator!.name),
                                           ],
                                         ),
                                         children: [
@@ -271,7 +271,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           Text(ytPost.text ?? "", maxLines: 4),
                           Divider(),
-                          Text("^^^   ${ytPost.creator!.name!}   ^^^", style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text("^^^   ${ytPost.creator!.name}   ^^^", style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -372,7 +372,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: EdgeInsetsGeometry.all(20),
         child: Column(
           children: [
-            Row(children: [Text(post.creator!.name!), Spacer(), Text(post.created!)]),
+            Row(children: [Text(post.creator!.name), Spacer(), Text(post.created!)]),
             Divider(),
             Text(post.text!),
           ],

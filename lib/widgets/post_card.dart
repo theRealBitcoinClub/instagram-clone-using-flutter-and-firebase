@@ -65,7 +65,7 @@ class _PostCardState extends State<PostCard> {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: onClickCreatorName(post.creator!.id!),
+                  onTap: onClickCreatorName(post.creator!.id),
                   child: CircleAvatar(
                     radius: 22,
                     backgroundImage: NetworkImage(post.creator!.profileImage()),
@@ -139,7 +139,7 @@ class _PostCardState extends State<PostCard> {
               MemoPublisher().doMemoAction(
                 MemoBitcoinBase.reOrderTxHash(post.txHash!),
                 MemoCode.postLike,
-                tipReceiver: post.creator!.id!,
+                tipReceiver: post.creator!.id,
                 tipAmount: 1111,
               );
               // TODO TIP POST WITH STANDARD TIP
@@ -242,7 +242,7 @@ class _PostCardState extends State<PostCard> {
                     ExpandableText(
                       post.text ?? "",
                       // widget.snap['discription'], TODO TEXT
-                      prefixText: post.creator!.name! + ":",
+                      prefixText: "${post.creator!.name}:",
                       prefixStyle: const TextStyle(fontWeight: FontWeight.bold),
                       expandText: 'show more',
                       collapseText: 'show less',

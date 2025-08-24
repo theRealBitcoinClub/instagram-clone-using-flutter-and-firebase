@@ -34,7 +34,7 @@ class _CommentsCardState extends State<CommentsCard> {
                     Padding(
                       padding: const EdgeInsets.only(left: 8.0),
                       child: Text(
-                        widget.post.creator!.name!,
+                        widget.post.creator!.name,
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                       ),
                     ),

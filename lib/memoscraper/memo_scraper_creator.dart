@@ -10,7 +10,7 @@ class MemoScraperCreator {
     for (String order in orderBy) {
       List<MemoModelCreator> creators = await scrapeCreators(order);
       for (MemoModelCreator creator in creators) {
-        await loadCreatorNameAndText(creator.id!, creator: creator);
+        await loadCreatorNameAndText(creator.id, creator: creator);
       }
       // print("object");
     }

@@ -9,6 +9,8 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'memo_code.dart';
 
 
+
+//TODO CHECK IF YOU CANT JUST EXTEND FORKEDTRANSACTIONBIULDER AND ONLY CHANGE ONE METHOD
 /// A transaction builder specifically designed for the Bitcoin Cash (BCH) and Bitcoin SV (BSV) networks.
 /// Implements [BasedBitcoinTransacationBuilder] interface for creating and validating transactions.
 ///

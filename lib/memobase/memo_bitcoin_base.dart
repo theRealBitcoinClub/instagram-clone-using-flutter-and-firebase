@@ -1,6 +1,6 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:instagram_clone1/memoscraper/socket/electrum_websocket_service.dart';
+import 'socket/electrum_websocket_service.dart';
 
 class MemoBitcoinBase {
 
@@ -150,5 +150,21 @@ class MemoBitcoinBase {
         ElectrumRequestBroadCastTransaction(transactionRaw: tx.toHex()),
         timeout: const Duration(seconds: 30));
     return "success";
+  }
+
+  static String reOrderTxHash(String hexString) {
+    // Step 1: Split the string into pairs
+    List<String> pairs = [];
+    for (int i = 0; i < hexString.length; i += 2) {
+      pairs.add(hexString.substring(i, i + 2));
+    }
+
+    // Step 2: Reverse the order of the pairs
+    pairs = pairs.reversed.toList();
+
+    // Step 3: Combine them back into a single string
+    String reversedHexString = pairs.join('');
+
+    return reversedHexString;
   }
 }

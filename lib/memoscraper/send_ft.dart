@@ -1,6 +1,5 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
-import 'package:instagram_clone1/memoscraper/memo_bitcoin_base.dart';
-import 'package:instagram_clone1/memoscraper/socket/electrum_websocket_service.dart';
+import 'package:instagram_clone1/memobase/memo_bitcoin_base.dart';
 
 void main() async {
   //TODO if user profile id is provided, then trigger the SLP send to their original memo address
@@ -12,10 +11,6 @@ void main() async {
   P2pkhAddress senderP2PKHWT = base.createAddressP2PKHWT(bip44Sender);
   ECPrivate bip44Receiver = MemoBitcoinBase.createBip44PrivateKey(
       "mnemonicZXCXZCASD", MemoBitcoinBase.derivationPathCashtoken);
-  ECPrivate legacyPK = MemoBitcoinBase.createBip44PrivateKey(
-      "mnemonicZXCXZCASD", MemoBitcoinBase.derivationPathMemoBch);
-  ECPrivate slpPK = MemoBitcoinBase.createBip44PrivateKey(
-      "mnemonicZXCXZCASD", MemoBitcoinBase.derivationPathMemoSlp);
   P2pkhAddress receiverP2PKHWT = base.createAddressP2PKHWT(bip44Receiver);
   //TODO burn token or send token depends on if receiver mnemonic is provided
   // BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress("bitcoincash:qp97cpfavlgudx8jzk553n0rfe66lk73k59k2ayp36").baseAddress;

@@ -5,11 +5,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
-import 'package:instagram_clone1/memoscraper/memo_code.dart';
-import 'package:instagram_clone1/memoscraper/memo_publisher.dart';
 import 'package:instagram_clone1/widgets/textfield_input.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
+import '../memobase/memo_code.dart';
+import '../memobase/memo_publisher.dart';
 import '../memomodel/memo_model_tag.dart';
 import '../memomodel/memo_model_topic.dart';
 import '../models/post.dart';

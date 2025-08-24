@@ -1,10 +1,8 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_clone1/memobase/memo_bitcoin_base.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
-import 'package:instagram_clone1/memoscraper/memo_code.dart';
-import 'package:instagram_clone1/memoscraper/memo_publisher.dart';
 import 'package:instagram_clone1/memoscraper/memo_scraper_utils.dart';
-import 'package:instagram_clone1/memoscraper/memo_transformation.dart';
 import 'package:instagram_clone1/screens/profile_screen.dart';
 import 'package:instagram_clone1/utils/imgur_utils.dart';
 import 'package:instagram_clone1/utils/snackbar.dart';
@@ -13,6 +11,8 @@ import 'package:instagram_clone1/widgets/textfield_input.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
+import '../memobase/memo_code.dart';
+import '../memobase/memo_publisher.dart';
 import '../memomodel/memo_model_post.dart';
 
 class PostCard extends StatefulWidget {
@@ -139,7 +139,8 @@ class _PostCardState extends State<PostCard> {
         ),
         GestureDetector(
           onDoubleTap: () async {
-            MemoPublisher().doMemoAction(MemoTransformation.reOrderTxHash(post.txHash!), MemoCode.postLike, tipReceiver: post.creator!.id!, tipAmount: 1111);
+
+            MemoPublisher().doMemoAction(MemoBitcoinBase.reOrderTxHash(post.txHash!), MemoCode.postLike, tipReceiver: post.creator!.id!, tipAmount: 1111);
             // TODO TIP POST WITH STANDARD TIP
             // TODO LET USER INPUT WIF AND CHOOSE THEIR STANDARD TIP
             // TODO ALWAYS PUT HASHTAGS LAST IN POSTS

@@ -2,7 +2,7 @@ import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../memoscraper/memo_bitcoin_base.dart';
+import '../memobase/memo_bitcoin_base.dart';
 
 class MemoModelUser {
   static MemoModelUser? dummy;

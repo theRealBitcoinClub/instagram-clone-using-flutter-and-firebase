@@ -10,7 +10,7 @@ class MemoModelTopic {
     this.followerCount,
     this.lastPost
   }) {
-    header = header!.replaceAll(" ", "_");
+    header = header.replaceAll(" ", "_");
   }
 
   List<MemoModelPost> posts = [];

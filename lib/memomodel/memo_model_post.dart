@@ -1,4 +1,3 @@
-import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 
 import 'memo_model_creator.dart';
 import 'memo_model_topic.dart';

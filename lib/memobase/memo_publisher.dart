@@ -1,11 +1,9 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:instagram_clone1/memoscraper/memo_bitcoin_base.dart';
-import 'package:instagram_clone1/memoscraper/memo_transformation.dart';
+import 'package:instagram_clone1/memobase/memo_bitcoin_base.dart';
 
 import 'memo_code.dart';
 import 'memo_transaction_builder.dart';
-import 'socket/electrum_websocket_service.dart';
 
 const int hash160DigestLength = QuickCrypto.hash160DigestSize;
 
@@ -24,7 +22,7 @@ class MemoPublisher {
     //     MemoTransformation.reOrderTxHash("ba832cad4e4f45b9158811e2914bc57b89fd100c4d3eb6f871a757d0b14db3f3"));
     //
     // print("\n" + other);
-    var other = await doMemoAction(MemoTransformation.reOrderTxHash(
+    var other = await doMemoAction(MemoBitcoinBase.reOrderTxHash(
         "bad2095d2f5e177ffd4da96fd0220ebcb8de7b9e1cffac9d0c7667b403204072"),
         MemoCode.postLike);
     print("\n" + other);
@@ -55,11 +53,6 @@ class MemoPublisher {
       {String memoTopic = "", ECPrivate? pk, String? wif, String? tipReceiver, int? tipAmount}) async {
     print("\n${memoAction.opCode}\n${memoAction.name}");
     var base = await MemoBitcoinBase.create();
-
-    final service = await ElectrumWebSocketService.connect(
-        "wss://${MemoBitcoinBase.mainnetServers[2]}:50004");
-
-    final provider = ElectrumProvider(service);
 
     const network = BitcoinCashNetwork.mainnet;
 

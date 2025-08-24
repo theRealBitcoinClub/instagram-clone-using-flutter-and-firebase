@@ -4,7 +4,7 @@ import 'dart:convert';
 
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/service/models/params.dart';
-import 'package:instagram_clone1/memoscraper/socket/request_completer.dart';
+import 'request_completer.dart';
 
 import 'core.dart';
 

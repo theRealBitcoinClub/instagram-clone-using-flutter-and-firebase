@@ -7,4 +7,14 @@ class MemoTip {
   final BasedUtxoNetwork network;
 
   MemoTip(this.receiverAddress, this.amountInSats, {this.network = BitcoinNetwork.mainnet});
+
+  BigInt get amountAsBigInt {
+    return BigInt.from(amountInSats);
+  }
+
+  BitcoinCashAddress get receiverAsBchAddress {
+    P2pkhAddress legacy = P2pkhAddress.fromAddress(address: receiverAddress, network: network);
+    // String addr = legacyToBchAddress(addressProgram: legacy.addressProgram, network: network, type: P2pkhAddressType.p2pkh);
+    return BitcoinCashAddress.fromBaseAddress(legacy);
+  }
 }

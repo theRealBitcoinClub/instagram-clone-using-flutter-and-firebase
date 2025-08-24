@@ -39,11 +39,9 @@ class MemoPublisher {
     base = await MemoBitcoinBase.create();
   }
 
-  Future<MemoAccountantResponse> doMemoAction({String topic = "", MemoTip? tip}) async {
-    print("\n${memoAction.opCode}\n${memoAction.name}");
-
-    print("https://bchblockexplorer.com/address/${p2pkhAddress.address}");
-
+  Future<MemoAccountantResponse> doPublish({String topic = "", MemoTip? tip}) async {
+    // print("\n${memoAction.opCode}\n${memoAction.name}");
+    // print("https://bchblockexplorer.com/address/${p2pkhAddress.address}");
     final List<ElectrumUtxo> elctrumUtxos = await base.requestElectrumUtxos(p2pkhAddress);
 
     if (elctrumUtxos.isEmpty) {
@@ -51,70 +49,41 @@ class MemoPublisher {
     }
 
     List<UtxoWithAddress> utxos = addUtxoAddressDetails(elctrumUtxos);
-
     utxos = removeSlpUtxos(utxos);
 
     final BigInt walletBalance = utxos.sumOfUtxosValue();
-
     if (walletBalance == BigInt.zero) {
       return MemoAccountantResponse.lowBalance;
     }
-    // final BigInt tip = BigInt.parse(tipAmount);
     final BtcTransaction tx = createTransaction(walletBalance, utxos, memoTopic: topic, memoTip: tip);
-
-    print(tx.txId());
-    print("http://memo.cash/explore/tx/${tx.txId()}");
-    print("https://bchblockexplorer.com/tx/${tx.txId()}");
-
+    // print(tx.txId());
+    // print("http://memo.cash/explore/tx/${tx.txId()}");
+    // print("https://bchblockexplorer.com/tx/${tx.txId()}");
     //TODO TRY AGAIN ON TIMEOUT
     //TODO TRY AGAIN ON REJECTED NETWORK RULES RAISE FEE
-    //TODO TRY AGAIN ON DUST ANALYSE DUST
-    // RPCError: got code 1 with message "the transaction was rejected by network rules.
-    //
-    // dust (code 64)
-    //  code: 1, message: the transaction was rejected by network rules.
-    //
-    // dust (code 64)
-    // ".
     //TODO OPTIMIZE FEE COST FOR PAYING CUSTOMERS TRY TINY FIRST
     try {
       await base.broadcastTransaction(tx);
     } catch (e) {
-      print("catching");
+      //TODO dust can mean that balance is low but also if tip thats lower than dust is being sent
       return MemoAccountantResponse.dust;
     }
     return MemoAccountantResponse.yes;
   }
 
-  BtcTransaction createTransaction(
-    BigInt walletBalance,
-    List<UtxoWithAddress> utxos, {
-    String memoTopic = "",
-    MemoTip? memoTip,
-  }) {
-    final MemoTransactionBuilder txBuilder = createTransactionBuilder(walletBalance, utxos, memoTopic, memoTip);
+  BtcTransaction createTransaction(BigInt balance, List<UtxoWithAddress> utxos, {memoTopic = "", MemoTip? memoTip}) {
+    final MemoTransactionBuilder txBuilder = createTxBuilder(balance, utxos, memoTopic, memoTip);
     final tx = txBuilder.buildTransaction((trDigest, utxo, publicKey, sighash) {
       return privateKey.signECDSA(trDigest, sighash: sighash);
     });
     return tx;
   }
 
-  MemoTransactionBuilder createTransactionBuilder(
-    BigInt walletBalance,
-    List<UtxoWithAddress> utxos,
-    String memoTopic,
-    MemoTip? memoTip,
-  ) {
-    BigInt? tipAmount;
-    BigInt outputHome = walletBalance - fee;
-    BitcoinCashAddress? tipToThisAddress;
-    var hasValidTip = memoTip != null && memoTip.amountInSats > MemoTip.dust;
+  MemoTransactionBuilder createTxBuilder(BigInt balance, List<UtxoWithAddress> utxos, String topic, MemoTip? tip) {
+    BigInt outputHome = balance - fee;
+    var hasValidTip = tip != null && tip.amountInSats > MemoTip.dust;
     if (hasValidTip) {
-      tipAmount = BigInt.from(memoTip.amountInSats);
-      outputHome = outputHome - tipAmount;
-      P2pkhAddress legacy = P2pkhAddress.fromAddress(address: memoTip.receiverAddress, network: memoTip.network);
-      // String addr = legacyToBchAddress(addressProgram: legacy.addressProgram, network: network, type: P2pkhAddressType.p2pkh);
-      tipToThisAddress = BitcoinCashAddress.fromBaseAddress(legacy);
+      outputHome = outputHome - tip.amountAsBigInt;
     }
 
     final txBuilder = MemoTransactionBuilder(
@@ -124,10 +93,11 @@ class MemoPublisher {
       utxos: utxos,
       memo: memoMessage,
       memoCode: memoAction,
-      memoTopic: memoTopic,
+      memoTopic: topic,
     );
 
-    if (hasValidTip) txBuilder.outPuts.add(BitcoinOutput(address: tipToThisAddress!.baseAddress, value: tipAmount!));
+    if (hasValidTip)
+      txBuilder.outPuts.add(BitcoinOutput(address: tip.receiverAsBchAddress.baseAddress, value: tip.amountAsBigInt));
 
     return txBuilder;
   }

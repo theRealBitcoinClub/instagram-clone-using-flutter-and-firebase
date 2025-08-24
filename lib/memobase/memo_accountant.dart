@@ -63,7 +63,7 @@ class MemoAccountant {
 
   Future<MemoAccountantResponse> tryPublishLike(MemoModelPost post, String wif) async {
     var mp = await MemoPublisher.create(MemoBitcoinBase.reOrderTxHash(post.txHash!), MemoCode.postLike, wif: wif);
-    return await mp.doMemoAction(tip: MemoTip(post.creator!.id, user.tipAmount));
+    return await mp.doPublish(tip: MemoTip(post.creator!.id, user.tipAmount));
   }
 
   MemoAccountantResponse memoAccountantResponse(MemoAccountantResponse response) =>
@@ -72,7 +72,7 @@ class MemoAccountant {
   Future<MemoAccountantResponse> _tryPublishReply(String wif, MemoModelPost post, MemoModelPost postReply) async {
     var mp = await MemoPublisher.create(postReply.text!, MemoCode.topicMessage, wif: wif);
     var tip = MemoTip(getTipReceiver(post.creator!), user.tipAmount);
-    MemoAccountantResponse response = await mp.doMemoAction(topic: post.topic!.header, tip: tip);
+    MemoAccountantResponse response = await mp.doPublish(topic: post.topic!.header, tip: tip);
     return response;
   }
 }

@@ -522,7 +522,7 @@ class _PostCardState extends State<PostCard> {
 
   void onPostWithHashtags() {
     MemoPublisher.create(textEdit.text.trim(), MemoCode.profileMessage).then((value) {
-      value.doMemoAction();
+      value.doPublish();
     });
   }
 }

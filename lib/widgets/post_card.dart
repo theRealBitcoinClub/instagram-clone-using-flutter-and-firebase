@@ -425,14 +425,14 @@ class _PostCardState extends State<PostCard> {
     //TODO encapsulate the retry as all actions will be served like that
     //TODO do not handle strings, handle enum response codes
     String result = await MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.topicMessage,
-        memoTopic: post.topic!.header!, wif: user!.wifBchCashtoken);
+        memoTopic: post.topic!.header, wif: user!.wifBchCashtoken);
 
     if (result != "success") {
       showSnackBar("trieng memo funds", context);
 
       result = await MemoPublisher().doMemoAction(
           textEdit.text.trim(), MemoCode.topicMessage,
-          memoTopic: post.topic!.header!, wif: user!.wifLegacy);
+          memoTopic: post.topic!.header, wif: user!.wifLegacy);
 
       //TODO HANDLE RPCError: got code 1 with message "the transaction was rejected by network rules. DUST
 

@@ -4,6 +4,8 @@ import 'package:clipboard/clipboard.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
+import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+import 'package:instagram_clone1/memoscraper/memo_code.dart';
 import 'package:instagram_clone1/memoscraper/memo_publisher.dart';
 import 'package:instagram_clone1/widgets/textfield_input.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -30,6 +32,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
   bool isLoading = false;
   String validImgur = "";
   String validVideo = "";
+  MemoModelUser? user;
 
   @override
   void initState() {
@@ -38,6 +41,11 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
     initYouTubeListener();
     initStateTagger();
     checkClipboardHasValidYouTubeOrImgur();
+    loadUser();
+  }
+
+  void loadUser() async {
+    user = await MemoModelUser.createDummy();
   }
 
   Future<void> checkClipboardHasValidYouTubeOrImgur() async {
@@ -58,8 +66,9 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
   }
 
   String extractValidImgurUrl(String url) {
-    if (url.contains("i.imgur.com"))
+    if (url.contains("i.imgur.com")) {
       return url;
+    }
 
     return "";
     // final RegExp exp = RegExp(r'(^(http|https):\/\/)?(i\.)?imgur.com\/((?P<gallery>gallery\/)(?P<galleryid>\w+)|(?P<album>a\/)(?P<albumid>\w+)#?)?(?P<imgid>\w*)');
@@ -195,7 +204,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
     //wish to update its text value with raw tag string,
     //call (_controller.formatTags) after that.
     text:
-    "I like the topic @Bitcoin#Bitcoin#. It's time to earn #bch#bch# and #cashtoken#cashtoken#!",
+    "I like the topic @Bitcoin#Bitcoin# It's time to earn #bch#bch# and #cashtoken#cashtoken#!",
   );
   late final _focusNode = FocusNode();
 
@@ -267,15 +276,56 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
 
                 //TODO Check cant have multiple topics
                 //TODO Check cant have more than three hashtags
-                // MemoPublisher().doMemoAction(, memoAction)
-                // homeViewModel.addPost(_controller.formattedText);
-                // _controller.clear();
-                _tagController.text;
-                _tagController.formattedText;
-                _tagController.tags;
+                //TODO Check max length
+                String text = _tagController.text;
+                text = appendVideoOrImgurUrl(text);
+                
+                String? topic = extractTopic(text);
+
+                //TODO MOVE THESE CALLS WITH RETRY TO NEW CLASS WITH RETRIES, ALSO THE REPLY IN POSTCARD
+                if (topic != null) {
+                  MemoPublisher().doMemoAction(text, MemoCode.topicMessage, memoTopic: topic, wif: user!.wifLegacy);
+                } else {
+                  MemoPublisher().doMemoAction(text, MemoCode.profileMessage, wif: user!.wifLegacy);
+                }
+                _tagController.clear();
+                validImgur = "";
+                validVideo = "";
+                imgurCtrl.clear();
+                youtubeCtrl.clear();
+
+                //TODO IF LAST SELECTED HASHTAG IS UNKOWN THE WHOLE MSG GETS FORMAT RESET
+                //IF I TOUCH THE KEY WHEN THERE IS AN EMPTY HASHTAG LIST IT GOES WRONG
               },
             );
           },
         );
+  }
+
+  String? extractTopic(String text) {
+    String? topic;
+    for (Tag t in _tagController.tags) {
+      if (t.triggerCharacter == "@") {
+        topic = t.text;
+      }
+    }
+    if (topic == null) {
+      if (text.contains("@")) {
+        for (String t in text.split(" ")) {
+          if (t.startsWith("@")) {
+            topic = t.substring(1);
+          }
+        }
+      }
+    }
+    return topic;
+  }
+
+  //TODO MAKE SURE THAT WHEN IMAGE WAS LOADED BEFORE THEN VIDEO AFTERWARDS OR REVERSE ITS NOT GOING WRONG
+  String appendVideoOrImgurUrl(String text) {
+    return validVideo.isNotEmpty
+            ? "$text https://youtu.be/${validVideo}"
+            : validImgur.isNotEmpty 
+            ? "$text $validImgur" : text;
   }
 }

@@ -40,7 +40,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
   }
 
   void loadUser() async {
-    user = await MemoModelUser.createDummy();
+    user = await MemoModelUser.getUser();
   }
 
   Future<void> checkClipboardHasValidYouTubeOrImgur() async {
@@ -279,7 +279,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
 
             //TODO MOVE THESE CALLS WITH RETRY TO NEW CLASS WITH RETRIES, ALSO THE REPLY IN POSTCARD
             if (topic != null) {
-              MemoPublisher().doMemoAction(text, MemoCode.topicMessage, memoTopic: topic, wif: user!.wifLegacy);
+              MemoPublisher().doMemoAction(text, MemoCode.topicMessage, topic: topic, wif: user!.wifLegacy);
             } else {
               MemoPublisher().doMemoAction(text, MemoCode.profileMessage, wif: user!.wifLegacy);
             }

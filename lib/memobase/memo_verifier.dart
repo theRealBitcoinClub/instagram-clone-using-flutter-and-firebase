@@ -1,5 +1,5 @@
-enum MemoVerificationError {
-  isValid,
+enum MemoVerificationResponse {
+  valid,
   moreThanThreeTags,
   zeroTags,
   noTopicNorTag,
@@ -14,10 +14,10 @@ enum MemoVerificationError {
 }
 
 class MemoVerifier {
-  MemoVerificationError checkIsValidText(String text) {
-    if (_checkHasMoreThanThreeHashtags()) return MemoVerificationError.moreThanThreeTags;
+  MemoVerificationResponse checkIsValidText(String text) {
+    if (_checkHasMoreThanThreeHashtags()) return MemoVerificationResponse.moreThanThreeTags;
 
-    return MemoVerificationError.isValid;
+    return MemoVerificationResponse.valid;
   }
 
   _checkHasMoreThanThreeHashtags() {

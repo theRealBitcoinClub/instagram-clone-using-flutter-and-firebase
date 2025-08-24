@@ -1,3 +1,7 @@
+import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+
+import '../memobase/memo_accountant.dart';
+import '../memobase/memo_verifier.dart';
 import 'memo_model_creator.dart';
 import 'memo_model_topic.dart';
 
@@ -88,6 +92,25 @@ class MemoModelPost {
         topicPosts.add(element);
       }
     }
+  }
+
+  //Returns either MemoVerificationResponse or MemoAccountantResponse
+  //On return MemoAccountantResponse.yes everything worked fine and text can be cleared
+  //Any other response should invoke a snackbar and later even better QR codes to insta deposit
+
+  Future<dynamic> publishReply(String text, String topic) async {
+    MemoVerificationResponse verifier = MemoVerifier().checkIsValidText(text);
+    if (verifier == MemoVerificationResponse.valid) {
+      //TODO at this point accountant should never throw error as it is already checking balances before allowing the user to write
+      MemoAccountantResponse accountant = await MemoAccountant(
+        await MemoModelUser.getUser(),
+        creator!,
+        text,
+      ).publishReply(topic);
+
+      return accountant;
+    } else
+      return verifier;
   }
 
   //TODO IMPLEMENT EQUALS METHOD, CHECK TX HASH

@@ -152,9 +152,12 @@ class MemoBitcoinBase {
 
   Future<String> broadcastTransaction(BtcTransaction tx) async {
     //TODO handle dust xceptions
-    await provider!.request(
-      ElectrumRequestBroadCastTransaction(transactionRaw: tx.toHex()),
-      timeout: const Duration(seconds: 30),
+    print(
+      "ANALYZE DUST: " +
+          await provider!.request(
+            ElectrumRequestBroadCastTransaction(transactionRaw: tx.toHex()),
+            timeout: const Duration(seconds: 5),
+          ),
     );
     return "success";
   }

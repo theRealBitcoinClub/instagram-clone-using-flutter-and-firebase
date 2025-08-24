@@ -4,8 +4,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../memobase/memo_bitcoin_base.dart';
 
+//TODO tips go partially to app and creator on default, if user has registered on the app,
+// otherwise it all goes to the app to pay for marketing to get users on the app
+enum TipReceiver { app, creator, both }
+
+//TODO User can choose four levels of support, that is displayed and can be filtered for by other users
+enum TipAmount { zero, maintenance, growth, moon }
+
 class MemoModelUser {
-  static MemoModelUser? dummy;
+  static MemoModelUser? _user;
+  TipReceiver _tipReceiver = TipReceiver.both;
+  TipAmount _tipAmount = TipAmount.growth;
   String mnemonic;
   String _bchAddressCashtokenAware = "";
   String _legacyAddressMemoBch = "";
@@ -155,15 +164,34 @@ class MemoModelUser {
     return _bchAddressCashtokenAware;
   }
 
-  static Future<MemoModelUser> createDummy({MemoModelCreator? creator}) async {
-    if (dummy == null) {
+  static Future<MemoModelUser> getUser({MemoModelCreator? creator}) async {
+    if (_user == null) {
       String? mne = await SharedPreferencesAsync().getString("mnemonic");
-      dummy = MemoModelUser(mnemonic: mne ?? "", creator: creator);
+      _user = MemoModelUser(mnemonic: mne ?? "", creator: creator);
     }
-    return dummy!;
+    return _user!;
   }
 
   String profileImage() {
     return "https://memo.cash/img/profilepics/${legacyAddressMemoBch}-128x128.jpg";
+  }
+
+  int get tipAmount {
+    //TODO SAVE AND LOAD FROM SHAREDPREFS
+    switch (_tipAmount) {
+      case TipAmount.zero:
+        return 0;
+      case TipAmount.maintenance:
+        return 1111;
+      case TipAmount.growth:
+        return 22222;
+      case TipAmount.moon:
+        return 333333;
+    }
+  }
+
+  TipReceiver get tipReceiver {
+    //TODO SAVE AND LOAD FROM SHAREDPREFS
+    return _tipReceiver;
   }
 }

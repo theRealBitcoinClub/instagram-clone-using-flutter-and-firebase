@@ -61,7 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       isLoading = true;
     });
-    user = await MemoModelUser.createDummy(creator: creator);
+    user = await MemoModelUser.getUser(creator: creator);
     // post = await MemoModelPost.createDummy(creator);
     setState(() {
       isLoading = false;
@@ -382,6 +382,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: const Row(children: [const Icon(Icons.settings), const Spacer(), const Text("PROFILE SETTINGS")]),
           children: [
             settingsOption(Icons.verified_user_outlined, "NAME", ctxDialog, () {
+              // Memo
               showSnackBar("set profile name", context);
             }),
             settingsOption(Icons.verified_outlined, "DESCRIPTION", ctxDialog, () {

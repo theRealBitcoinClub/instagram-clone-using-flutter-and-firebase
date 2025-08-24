@@ -1,5 +1,6 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:instagram_clone1/memobase/memo_accountant.dart';
 import 'package:instagram_clone1/memobase/memo_bitcoin_base.dart';
 
 import 'memo_code.dart';
@@ -26,7 +27,7 @@ class MemoPublisher {
       MemoBitcoinBase.reOrderTxHash("bad2095d2f5e177ffd4da96fd0220ebcb8de7b9e1cffac9d0c7667b403204072"),
       MemoCode.postLike,
     );
-    print("\n" + other);
+    print("\n" + other.toString());
     // sleep(Duration(seconds: 1));
     // other = await doMemoAction("Keloke", MemoCode.ProfileName,"");
     // print("\n" + other);
@@ -50,10 +51,10 @@ class MemoPublisher {
     // print("\n" + other);
   }
 
-  Future<String> doMemoAction(
+  Future<MemoAccountantResponse> doMemoAction(
     String memoMessage,
     MemoCode memoAction, {
-    String memoTopic = "",
+    String topic = "",
     ECPrivate? pk,
     String? wif,
     String? tipReceiver,
@@ -82,6 +83,10 @@ class MemoPublisher {
 
     final List<ElectrumUtxo> elctrumUtxos = await base.requestElectrumUtxos(p2pkhAddress);
 
+    if (elctrumUtxos.isEmpty) {
+      return MemoAccountantResponse.noUtxo;
+    }
+
     List<UtxoWithAddress> utxos = addUtxoAddressDetailsAsOwnerDetailsToCreateUtxoWithAddressModelList(
       elctrumUtxos,
       p2pkhAddress,
@@ -93,7 +98,7 @@ class MemoPublisher {
     final BigInt walletBalance = utxos.sumOfUtxosValue();
 
     if (walletBalance == BigInt.zero) {
-      return "This wallet has zero funds";
+      return MemoAccountantResponse.lowBalance;
     }
 
     final BigInt fee = BtcUtils.toSatoshi("0.000007");
@@ -107,7 +112,7 @@ class MemoPublisher {
       memoMessage,
       memoAction,
       privateKey,
-      memoTopic: memoTopic,
+      memoTopic: topic,
       tipToThisAddress: tipToThisAddress,
     );
 
@@ -115,8 +120,12 @@ class MemoPublisher {
     print("http://memo.cash/explore/tx/${tx.txId()}");
     print("https://bchblockexplorer.com/tx/${tx.txId()}");
 
-    await base.broadcastTransaction(tx);
-    return "success";
+    //TODO TRY AGAIN ON TIMEOUT
+    //TODO TRY AGAIN ON REJECTED RAISE FEE
+    //TODO TRY AGAIN ON DUST ANALYSE DUST
+    //TODO OPTIMIZE FEE COST FOR PAYING CUSTOMERS TRY TINY FIRST
+    String broadcast = await base.broadcastTransaction(tx);
+    return MemoAccountantResponse.yes;
   }
 
   BtcTransaction createTransaction(

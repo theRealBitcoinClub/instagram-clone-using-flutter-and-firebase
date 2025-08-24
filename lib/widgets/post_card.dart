@@ -1,6 +1,8 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_clone1/memobase/memo_accountant.dart';
 import 'package:instagram_clone1/memobase/memo_bitcoin_base.dart';
+import 'package:instagram_clone1/memobase/memo_verifier.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 import 'package:instagram_clone1/memoscraper/memo_scraper_utils.dart';
 import 'package:instagram_clone1/utils/imgur_utils.dart';
@@ -46,7 +48,7 @@ class _PostCardState extends State<PostCard> {
   }
 
   void loadUser() async {
-    user = await MemoModelUser.createDummy();
+    user = await MemoModelUser.getUser();
   }
 
   @override
@@ -350,7 +352,7 @@ class _PostCardState extends State<PostCard> {
 
   void onSend() {
     if (hasSelectedTopic) {
-      onReplyTopic();
+      onReplyTopic(context);
     } else {
       onPostWithHashtags();
     }
@@ -450,39 +452,35 @@ class _PostCardState extends State<PostCard> {
     });
   }
 
-  void onReplyTopic() async {
-    //TODO let user config the tip
-    // MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.topicMessage, memoTopic: post.topic!.header!, tipReceiver: post.creator!.id);
-    //TODO encapsulate the retry as all actions will be served like that
-    //TODO do not handle strings, handle enum response codes
-    String result = await MemoPublisher().doMemoAction(
-      textEdit.text.trim(),
-      MemoCode.topicMessage,
-      memoTopic: post.topic!.header,
-      wif: user!.wifBchCashtoken,
-    );
+  void onReplyTopic(BuildContext ctx) async {
+    var result = await post.publishReply(textEdit.text.trim(), post.topic!.header);
+    if (!ctx.mounted) return;
 
-    if (result != "success") {
-      showSnackBar("trieng memo funds", context);
-
-      result = await MemoPublisher().doMemoAction(
-        textEdit.text.trim(),
-        MemoCode.topicMessage,
-        memoTopic: post.topic!.header,
-        wif: user!.wifLegacy,
-      );
-
-      //TODO HANDLE RPCError: got code 1 with message "the transaction was rejected by network rules. DUST
-
-      if (result != "success") {
-        showSnackBar("you broke dude", context);
-      } else {
-        showSnackBar("show tx id link", context);
-        //TODO hide on success
-        //TODO SHOW ANIMATION CONFETTI OVER THE WHOLE POST
-      }
-    } else {
-      showSnackBar("show tx id link", context);
+    switch (result) {
+      case MemoVerificationResponse.minWordCountNotReached:
+        showSnackBar("write more words", ctx);
+      case MemoVerificationResponse.email:
+        showSnackBar("email not allowed", ctx);
+      case MemoVerificationResponse.moreThanOneTopic:
+        showSnackBar("only one topic allowed", ctx);
+      case MemoVerificationResponse.moreThanThreeTags:
+        showSnackBar("too many tags", ctx);
+      case MemoVerificationResponse.urlThatsNotTgNorImageNorVideo:
+        showSnackBar("no urls except TG, YT & i.imgur", ctx);
+      case MemoVerificationResponse.offensiveWords:
+        showSnackBar("offensivewords can be asterisk", ctx);
+      case MemoVerificationResponse.tooLong:
+        showSnackBar("too long should not be able to write so much anyway", ctx);
+      case MemoVerificationResponse.tooShort:
+        showSnackBar("too short shouldnt be able to submit but count tags as length", ctx);
+      case MemoVerificationResponse.zeroTags:
+        showSnackBar("add one tag visisble to user", ctx);
+      case MemoAccountantResponse.lowBalance:
+        showSnackBar("you broke dude", ctx);
+      case MemoAccountantResponse.yes:
+        showSnackBar("success", ctx);
+      //TODO hide on success
+      //TODO SHOW ANIMATION CONFETTI OVER THE WHOLE POST
     }
   }
 
@@ -490,13 +488,4 @@ class _PostCardState extends State<PostCard> {
     MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.profileMessage);
     // MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.profileMessage, tipReceiver: post.creator!.id);
   }
-
-  // onErrorLoadImage(error) {
-  //   print("object");
-  // }
-  //
-  // Widget onBuildImage(BuildContext ctx, ImageProvider<Object> builder) {
-  //   print("object");
-  //   return builder;
-  // }
 }

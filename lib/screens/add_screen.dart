@@ -279,9 +279,13 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
 
             //TODO MOVE THESE CALLS WITH RETRY TO NEW CLASS WITH RETRIES, ALSO THE REPLY IN POSTCARD
             if (topic != null) {
-              MemoPublisher().doMemoAction(text, MemoCode.topicMessage, topic: topic, wif: user!.wifLegacy);
+              MemoPublisher.create(text, MemoCode.topicMessage, wif: user!.wifLegacy).then((value) {
+                value.doMemoAction(topic: topic);
+              });
             } else {
-              MemoPublisher().doMemoAction(text, MemoCode.profileMessage, wif: user!.wifLegacy);
+              MemoPublisher.create(text, MemoCode.profileMessage, wif: user!.wifLegacy).then((value) {
+                value.doMemoAction();
+              });
             }
             _tagController.clear();
             validImgur = "";

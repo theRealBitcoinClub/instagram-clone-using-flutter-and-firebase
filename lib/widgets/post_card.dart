@@ -521,7 +521,8 @@ class _PostCardState extends State<PostCard> {
   }
 
   void onPostWithHashtags() {
-    MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.profileMessage);
-    // MemoPublisher().doMemoAction(textEdit.text.trim(), MemoCode.profileMessage, tipReceiver: post.creator!.id);
+    MemoPublisher.create(textEdit.text.trim(), MemoCode.profileMessage).then((value) {
+      value.doMemoAction();
+    });
   }
 }

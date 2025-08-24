@@ -62,26 +62,17 @@ class MemoAccountant {
   }
 
   Future<MemoAccountantResponse> tryPublishLike(MemoModelPost post, String wif) async {
-    MemoAccountantResponse response = await MemoPublisher().doMemoAction(
-      MemoBitcoinBase.reOrderTxHash(post.txHash!),
-      MemoCode.postLike,
-      tip: MemoTip(post.creator!.id, user.tipAmount),
-      wif: wif,
-    );
-    return response;
+    var mp = await MemoPublisher.create(MemoBitcoinBase.reOrderTxHash(post.txHash!), MemoCode.postLike, wif: wif);
+    return await mp.doMemoAction(tip: MemoTip(post.creator!.id, user.tipAmount));
   }
 
   MemoAccountantResponse memoAccountantResponse(MemoAccountantResponse response) =>
       response != MemoAccountantResponse.yes ? MemoAccountantResponse.lowBalance : MemoAccountantResponse.yes;
 
   Future<MemoAccountantResponse> _tryPublishReply(String wif, MemoModelPost post, MemoModelPost postReply) async {
-    MemoAccountantResponse response = await MemoPublisher().doMemoAction(
-      postReply.text!,
-      MemoCode.topicMessage,
-      topic: post.topic!.header,
-      wif: wif,
-      tip: MemoTip(getTipReceiver(post.creator!), user.tipAmount),
-    );
+    var mp = await MemoPublisher.create(postReply.text!, MemoCode.topicMessage, wif: wif);
+    var tip = MemoTip(getTipReceiver(post.creator!), user.tipAmount);
+    MemoAccountantResponse response = await mp.doMemoAction(topic: post.topic!.header, tip: tip);
     return response;
   }
 }

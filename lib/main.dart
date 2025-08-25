@@ -22,22 +22,41 @@ void main() async {
   runApp(const MyApp());
 }
 
-initData() async {
-  //TODO INITIALIZE USER WIF DATA?
-
+Future<void> initData() async {
+  // Make it Future<void>
   final String cacheId = "250819";
-  await MemoScraperTopic().startScrapeTopics(cacheId, 25);
-  await MemoCreatorService().fetchAndProcessCreators(["/most-actions", "/most-followers"]);
-  //https://memo.cash/posts/top?range=1y
-  //https://memo.cash/posts/top?range=all&offset=25
-  // MemoScraperTag().startScrapeTags(["/most-posts"], 250, cacheId);
-  // MemoScraperTag().startScrapeTags(["/recent","/most-posts"], 25, cacheId);
-  await MemoScraperTag().startScrapeTags(["/most-posts", "/recent"], 0, cacheId);
-  // await MemoScraperTag().startScrapeTags(["/recent"], 0, cacheId);
-  await MemoPostService().scrapePostsPaginated(baseUrl: 'posts/new', initialOffset: 100, cacheId: cacheId);
-  // https://memo.cash/tags/most-posts?&offset=1025
+  print("INFO: Starting initial data fetch...");
 
-  FlutterNativeSplash.remove();
+  try {
+    // List of all futures to run concurrently
+    final List<Future<dynamic>> dataFetchingFutures = [
+      MemoScraperTopic().startScrapeTopics(cacheId, 25),
+      MemoCreatorService().fetchAndProcessCreators(["/most-actions", "/most-followers"]),
+      MemoScraperTag().startScrapeTags(["/most-posts", "/recent"], 0, cacheId),
+      MemoPostService().scrapePostsPaginated(baseUrl: 'posts/new', initialOffset: 100, cacheId: cacheId),
+      // Add any other independent data fetching operations here
+    ];
+
+    // Await all futures to complete
+    // Future.wait will complete when all futures in the list have completed.
+    // If any future in the list throws an error, Future.wait will also complete with that error.
+    final List<dynamic> results = await Future.wait(dataFetchingFutures);
+
+    // Optional: You can inspect the results if your methods return values
+    // For example, if startScrapeTopics returned a list of topics:
+    // List<Topic> topics = results[0] as List<Topic>;
+    // print("INFO: Fetched ${topics.length} topics.");
+    print("INFO: All initial data fetched successfully.");
+  } catch (e, stackTrace) {
+    // Handle any error that occurred during any of the concurrent operations
+    print("ERROR: Failed to fetch initial data: $e");
+    print("Stack trace: $stackTrace");
+    // You might want to implement retry logic or show an error to the user
+  } finally {
+    // This will be called whether the operations succeeded or failed
+    print("INFO: Removing splash screen.");
+    FlutterNativeSplash.remove();
+  }
 }
 
 class MyApp extends StatelessWidget {

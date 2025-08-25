@@ -10,6 +10,7 @@ class CommentTextField extends StatelessWidget {
   final VoidCallback onSend;
   final EdgeInsets insets;
   final FocusNode? focusNode;
+  final String hintText;
 
   ///Key passed down from FlutterTagger
   final Key? containerKey;
@@ -30,6 +31,7 @@ class CommentTextField extends StatelessWidget {
     // ],
     this.focusNode,
     this.containerKey,
+    required this.hintText,
   }) : super(key: key);
 
   @override
@@ -37,7 +39,7 @@ class CommentTextField extends StatelessWidget {
     return Container(
       key: containerKey,
       constraints: BoxConstraints(maxHeight: insets == EdgeInsets.zero ? 150 : 150 + insets.bottom),
-      padding: const EdgeInsets.fromLTRB(16, 10, 15, 20),
+      padding: const EdgeInsets.fromLTRB(4, 10, 3, 20),
       color: Colors.white,
       child: Column(
         mainAxisAlignment: insets == EdgeInsets.zero ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -96,7 +98,7 @@ class CommentTextField extends StatelessWidget {
                 child: CustomTextField(
                   focusNode: focusNode,
                   controller: controller,
-                  hint: "Use the @ symbol to reply to topics\n\nWrite #something to add hashtags",
+                  hint: hintText,
                   suffix: IconButton(
                     iconSize: 45,
                     onPressed: onSend,

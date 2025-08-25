@@ -325,4 +325,14 @@ final ThemeData darkTheme = ThemeData(
     selectionColor: primaryGreen.withOpacity(0.5),
     selectionHandleColor: lightGreenAccent,
   ),
+  /*
+  // In your app_themes.dart (inside lightTheme and darkTheme)
+  listTileTheme: ListTileThemeData(
+    iconColor: colorScheme.onSurfaceVariant, // Default color for leading/trailing icons
+    textColor: colorScheme.onSurface, // Default color for title
+    // selectedColor: colorScheme.primary, // Color when selected
+    // tileColor: colorScheme.surface, // Background color of the tile itself
+    // selectedTileColor: colorScheme.primary.withOpacity(0.1),
+    // contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
+  ),*/
 );

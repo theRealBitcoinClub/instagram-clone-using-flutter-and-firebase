@@ -12,7 +12,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../utils/imgur_utils.dart'; // Your Imgur utilities
 import '../utils/snackbar.dart';
-import '../views/widgets/qr_code_dialog.dart'; // Your showSnackBar utility
+import '../views_taggable//widgets/qr_code_dialog.dart'; // Your showSnackBar utility
 
 // Basic logging placeholders (replace with a proper logger if needed)
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -66,7 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!mounted) return;
     setState(() {
       _isLoading = _user == null; // Show main loader only if no user data yet
-      _isRefreshing = _user != null; // Show refresh bar if user data exists
+      _isRefreshing = true;
     });
 
     try {
@@ -149,7 +149,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-
     if (_user == null || _creator == null) {
       // Handle state where user or creator is null after loading (should ideally not happen if _fetchProfileData is robust)
       return Scaffold(

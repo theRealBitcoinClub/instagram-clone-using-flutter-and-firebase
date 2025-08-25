@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
-import 'package:instagram_clone1/views/widgets/topic_list_view.dart';
+import 'package:instagram_clone1/views_taggable/widgets/topic_list_view.dart';
 
 import '../view_models/search_view_model.dart';
 import 'hashtag_list_view.dart';

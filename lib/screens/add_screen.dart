@@ -10,10 +10,9 @@ import 'package:instagram_clone1/widgets/memo_confetti.dart';
 import 'package:instagram_clone1/widgets/textfield_input.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-import '../views/view_models/home_view_model.dart';
-import '../views/view_models/search_view_model.dart';
-import '../views/widgets/comment_text_field.dart';
-import '../views/widgets/search_result_overlay.dart';
+import '../views_taggable/view_models/search_view_model.dart';
+import '../views_taggable/widgets/comment_text_field.dart';
+import '../views_taggable/widgets/search_result_overlay.dart';
 
 class AddPost extends StatefulWidget {
   const AddPost({super.key});
@@ -205,7 +204,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
 
   double overlayHeight = 300;
 
-  late final homeViewModel = HomeViewModel();
+  // late final homeViewModel = HomeViewModel();
   late final _tagController = FlutterTaggerController(
     //Initial text value with tag is formatted internally
     //following the construction of FlutterTaggerController.

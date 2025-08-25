@@ -270,60 +270,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildTopDetailsRow(theme, colorScheme),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: AnimatedOpacity(
-                opacity: _creator!.profileText.trim().isNotEmpty ? 1.0 : 0.0, // Control opacity
-                duration: const Duration(milliseconds: 300), // Adjust duration as needed
-                child: Text(_creator!.name, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: AnimatedOpacity(
-                opacity: _creator!.profileText.trim().isNotEmpty ? 1.0 : 0.0, // Control opacity
-                duration: const Duration(milliseconds: 700), // Adjust duration as needed
-                child: ExpandableText(
-                  _creator!.profileText,
-                  expandText: 'show more',
-                  collapseText: 'show less',
-                  maxLines: 3,
-                  linkColor: colorScheme.primary, // Use primary color for link
-                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.4), // Use themed text style
-                  linkStyle: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.primary,
-                  ),
-                  prefixStyle: theme.textTheme.bodyMedium, // Ensure prefix style also matches
-                ),
-              ),
-            ),
-          ),
+          _buildNameRow(theme),
+          _buildProfileText(colorScheme, theme),
           Divider(color: theme.dividerColor, height: 1.0, thickness: 0.5), // Themed divider
-          Padding(
-            // Add padding around the view mode icons
-            padding: const EdgeInsets.only(top: 10.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildViewModeIconButton(theme, 0, Icons.image_outlined, Icons.image_rounded),
-                _buildViewModeIconButton(theme, 1, Icons.video_library_outlined, Icons.video_library_rounded),
-                _buildViewModeIconButton(
-                  theme,
-                  2,
-                  Icons.tag_outlined,
-                  Icons.tag_rounded,
-                ), // Using different outline/filled
-                _buildViewModeIconButton(theme, 4, Icons.topic_outlined, Icons.topic_rounded),
-              ],
-            ),
-          ),
+          _buildTabSelector(theme),
         ],
+      ),
+    );
+  }
+
+  Padding _buildTabSelector(ThemeData theme) {
+    return Padding(
+      // Add padding around the view mode icons
+      padding: const EdgeInsets.only(top: 10.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildViewModeIconButton(theme, 0, Icons.image_outlined, Icons.image_rounded),
+          _buildViewModeIconButton(theme, 1, Icons.video_library_outlined, Icons.video_library_rounded),
+          _buildViewModeIconButton(theme, 2, Icons.tag_outlined, Icons.tag_rounded), // Using different outline/filled
+          _buildViewModeIconButton(theme, 4, Icons.topic_outlined, Icons.topic_rounded),
+        ],
+      ),
+    );
+  }
+
+  Padding _buildProfileText(ColorScheme colorScheme, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: AnimatedOpacity(
+          opacity: _creator!.profileText.trim().isNotEmpty ? 1.0 : 0.0, // Control opacity
+          duration: const Duration(milliseconds: 700), // Adjust duration as needed
+          child: ExpandableText(
+            _creator!.profileText,
+            expandText: 'show more',
+            collapseText: 'show less',
+            maxLines: 3,
+            linkColor: colorScheme.primary, // Use primary color for link
+            style: theme.textTheme.bodyMedium?.copyWith(height: 1.4), // Use themed text style
+            linkStyle: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.primary),
+            prefixStyle: theme.textTheme.bodyMedium, // Ensure prefix style also matches
+          ),
+        ),
+      ),
+    );
+  }
+
+  Padding _buildNameRow(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: AnimatedOpacity(
+          opacity: _creator!.profileText.trim().isNotEmpty ? 1.0 : 0.0, // Control opacity
+          duration: const Duration(milliseconds: 300), // Adjust duration as needed
+          child: Text(_creator!.name, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        ),
       ),
     );
   }

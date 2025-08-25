@@ -1,6 +1,7 @@
 import 'package:instagram_clone1/dart_web_scraper/common/enums.dart';
 import 'package:instagram_clone1/dart_web_scraper/common/models/parser_model.dart';
 import 'package:instagram_clone1/dart_web_scraper/common/models/scraper_config_model.dart';
+import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/memoscraper/memo_post_service.dart';
 import 'package:instagram_clone1/memoscraper/memo_scraper_utils.dart';
 
@@ -8,14 +9,17 @@ import '../memomodel/memo_model_tag.dart';
 
 class MemoScraperTag {
   Future<void> startScrapeTags(List<String> orderBy, int offset, String cacheId) async {
-    MemoModelTag.tags.clear();
     for (String order in orderBy) {
       for (int off = offset; off >= 0; off -= 25) {
         List<MemoModelTag> tags = await scrapeTags(order, off);
         for (MemoModelTag tag in tags) {
-          tag.posts.addAll(
-            await MemoPostService().scrapePostsPaginated(baseUrl: "t/${tag.name}", initialOffset: 0, cacheId: cacheId),
+          var list = await MemoPostService().scrapePostsPaginated(
+            baseUrl: "t/${tag.name}",
+            initialOffset: 0,
+            cacheId: cacheId,
           );
+          tag.posts.addAll(list);
+          MemoModelPost.addToGlobalPostList(list);
         }
         MemoModelTag.tags.addAll(tags);
         print("RUNNING SCRAPE:$order$off");

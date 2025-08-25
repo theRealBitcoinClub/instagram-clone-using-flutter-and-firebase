@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/resources/auth_method.dart';
+import 'package:instagram_clone1/theme_provider.dart';
+import 'package:instagram_clone1/utils/snackbar.dart';
 import 'package:instagram_clone1/widgets/post_card.dart';
 import 'package:provider/provider.dart';
-
-import '../theme_provider.dart';
-import '../utils/snackbar.dart';
 
 // Enum for better filter management (optional but good practice)
 enum PostFilterType { images, videos, hashtags, topics }

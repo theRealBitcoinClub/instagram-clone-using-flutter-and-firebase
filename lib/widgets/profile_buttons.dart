@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SettingsButton extends StatelessWidget {
-  final Function()? function;
+  final Function()? onPressed;
   final Color backgroundColor;
   final Color borderColor;
   final String text;
@@ -13,7 +13,7 @@ class SettingsButton extends StatelessWidget {
     required this.borderColor,
     required this.text,
     required this.textColor,
-    this.function,
+    this.onPressed,
   }) : super(key: key);
 
   @override
@@ -21,7 +21,7 @@ class SettingsButton extends StatelessWidget {
     return Container(
       margin: EdgeInsets.zero,
       child: TextButton(
-        onPressed: function,
+        onPressed: onPressed,
         child: Container(
           decoration: BoxDecoration(
             color: backgroundColor,

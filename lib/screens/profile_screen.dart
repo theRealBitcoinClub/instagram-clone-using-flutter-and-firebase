@@ -4,15 +4,26 @@ import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
-import 'package:instagram_clone1/memoscraper/memo_creator_service.dart';
-import 'package:instagram_clone1/resources/auth_method.dart';
-import 'package:instagram_clone1/utils/colors.dart';
-import 'package:instagram_clone1/widgets/profile_buttons.dart';
-import 'package:pretty_qr_code/pretty_qr_code.dart';
+import 'package:instagram_clone1/memoscraper/memo_creator_service.dart'; // Assuming this service exists
+import 'package:instagram_clone1/resources/auth_method.dart'; // Assuming AuthChecker is here
+import 'package:instagram_clone1/utils/colors.dart'; // Your color definitions
+import 'package:instagram_clone1/widgets/profile_buttons.dart'; // For SettingsButton
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-import '../utils/imgur_utils.dart';
+import '../utils/imgur_utils.dart'; // Your Imgur utilities
 import '../utils/snackbar.dart';
+import '../views/widgets/qr_code_dialog.dart'; // Your showSnackBar utility
+
+// Basic logging placeholders (replace with a proper logger if needed)
+void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
+  print('ERROR: $message');
+  if (error != null) print('  Error: $error');
+  if (stackTrace != null) print('  StackTrace: $stackTrace');
+}
+
+void _logInfo(String message) {
+  print('INFO: $message');
+}
 
 class ProfileScreen extends StatefulWidget {
   final String uid;
@@ -24,288 +35,262 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  MemoModelUser? user;
-  bool showDefaultAvatar = false;
-  bool toggleAddressType = true;
+  MemoModelUser? _user;
+  MemoModelCreator? _creator; // Made nullable for initial state
 
-  // MemoModelPost? post;
-  late MemoModelCreator creator;
-  bool isFollowing = false;
-  bool isLoading = false;
-  bool isRefreshing = false;
-  int viewMode = 0;
+  bool _isLoading = true; // Start with loading true
+  bool _isRefreshing = false;
+  bool _showDefaultAvatar = false;
+  int _viewMode = 0;
+
+  // For YouTube Player Controllers
+  final Map<String, YoutubePlayerController> _ytControllers = {};
 
   @override
   void initState() {
     super.initState();
-    // ProviderUser provider = Provider.of<ProviderUser>(context);
-    // user = provider.memoUser!;
-
-    getData();
+    _fetchProfileData();
   }
 
-  getData() async {
+  @override
+  void dispose() {
+    // Dispose all YouTube controllers
+    for (var controller in _ytControllers.values) {
+      controller.dispose();
+    }
+    _ytControllers.clear();
+    super.dispose();
+  }
+
+  Future<void> _fetchProfileData() async {
+    if (!mounted) return;
     setState(() {
-      isLoading = true;
+      _isLoading = _user == null; // Show main loader only if no user data yet
+      _isRefreshing = _user != null; // Show refresh bar if user data exists
     });
-    user = await MemoModelUser.getUser();
-    creator = MemoModelCreator.createDummy(id: user!.profileIdMemoBch);
-    // post = await MemoModelPost.createDummy(creator);
-    setState(() {
-      isLoading = false;
-    });
-    setState(() {
-      isRefreshing = true;
-    });
-    creator = await MemoCreatorService().fetchCreatorDetails(creator, noCache: true);
-    String refreshBch = await user!.refreshBalanceDevPath145();
-    String refreshTokens = await user!.refreshBalanceTokens();
-    String refreshMemo = await user!.refreshBalanceDevPath0();
-    setState(() {
-      isRefreshing = false;
-      if (refreshBch != "success")
+
+    try {
+      final localUser = await MemoModelUser.getUser(); // Assuming this fetches the current user
+      if (!mounted) return;
+
+      // Initial dummy creator for faster UI response if needed
+      final initialCreator = MemoModelCreator.createDummy(id: localUser.profileIdMemoBch);
+
+      setState(() {
+        _user = localUser;
+        _creator = initialCreator;
+        _isLoading = false; // Stop initial loading
+        // _isRefreshing can remain true if we are about to fetch more
+      });
+
+      // Perform subsequent fetches, potentially in parallel
+      final results = await Future.wait([
+        MemoCreatorService().fetchCreatorDetails(initialCreator, noCache: true),
+        localUser.refreshBalanceDevPath145(),
+        localUser.refreshBalanceTokens(),
+        localUser.refreshBalanceDevPath0(),
+      ]);
+
+      if (!mounted) return;
+
+      final refreshedCreator = results[0] as MemoModelCreator;
+      final refreshBchStatus = results[1] as String;
+      final refreshTokensStatus = results[2] as String;
+      final refreshMemoStatus = results[3] as String;
+
+      setState(() {
+        _creator = refreshedCreator;
+        _isRefreshing = false;
+      });
+
+      // Show SnackBars after final state update
+      if (refreshBchStatus != "success" && mounted) {
         showSnackBar("You haz no BCH, please deposit if you want to publish and earn token", context);
-      if (refreshTokens != "success")
+      }
+      if (refreshTokensStatus != "success" && mounted) {
         showSnackBar("You haz no tokens, deposit tokens to post/like/reply with discount", context);
-      if (refreshMemo != "success")
+      }
+      if (refreshMemoStatus != "success" && mounted) {
         showSnackBar("You haz no memo balance, likes/replies of OG memo posts will not send tips", context);
-    });
+      }
+    } catch (e, s) {
+      _logError("Error in _fetchProfileData", e, s);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isRefreshing = false;
+        });
+        showSnackBar("Failed to load profile data. Please try again.", context);
+      }
+    }
   }
 
-  Column buildStatColumn(String title, String count) {
+  Widget _buildStatColumn(String title, String count) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(0, 15, 0, 0),
-          child: Column(
-            children: [
-              Text(count, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
-              ),
-            ],
-          ),
+          padding: const EdgeInsets.only(top: 15.0),
+          child: Text(count, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        ),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.grey),
         ),
       ],
     );
   }
 
+  Color _activeOrNotColor(int index) => _viewMode == index ? Colors.grey.shade800 : Colors.grey.shade500;
+
   @override
   Widget build(BuildContext context) {
-    return isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : Scaffold(
-            appBar: AppBar(
-              toolbarHeight: 50,
-              backgroundColor: mobileBackgroundColor,
-              centerTitle: false,
-              title: Row(
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      //TODO LAUNCH PROFILE ON MEMO WITH THAT ID
-                      showSnackBar("launch memo profile url or register on memo if 404 on profile", context);
-                    },
-                    child: Text(user!.profileIdMemoBch, style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  ),
-                ],
-              ),
-              actions: [
-                IconButton(
-                  onPressed: () {
-                    //TODO ADD LINK TO SWAP BTC TO BCH
-                    showBchQR();
-                  },
-                  icon: Icon(Icons.currency_exchange, color: blackColor),
-                ),
-              ],
-            ),
-            body: SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  isRefreshing ? SizedBox(height: 1, child: LinearProgressIndicator()) : SizedBox(),
-                  Container(
-                    height: 265,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        createTopDetails(),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          alignment: Alignment.bottomLeft,
-                          child: Text(creator.name, style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 20).copyWith(top: 10),
-                          alignment: Alignment.bottomLeft,
-                          child: ExpandableText(
-                            creator.profileText,
-                            expandText: 'show more',
-                            collapseText: 'show less',
-                            maxLines: 3,
-                            linkColor: Colors.blue,
-                          ),
-                        ),
-                        Divider(color: Colors.grey.shade300),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            buildIconButton(0, Icons.image_rounded),
-                            buildIconButton(1, Icons.video_library_rounded),
-                            buildIconButton(2, Icons.tag_rounded),
-                            buildIconButton(4, Icons.topic),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    height: 480,
-                    child: viewMode != 0
-                        ? buildListView()
-                        : GridView.builder(
-                            itemBuilder: (context, index) {
-                              MemoModelPost post = MemoModelPost.imgurPosts[index];
-                              final img = Image(
-                                image: NetworkImage(post.imgurUrl!),
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    ImgurUtils.errorLoadImage(context, error, stackTrace),
-                                loadingBuilder: (context, child, loadingProgress) =>
-                                    ImgurUtils.loadingImage(context, child, loadingProgress),
-                              );
-                              return GestureDetector(
-                                onDoubleTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (dialogCtx) {
-                                      return SimpleDialog(
-                                        title: Row(
-                                          children: [
-                                            CircleAvatar(backgroundImage: NetworkImage(post.creator!.profileImage())),
-                                            SizedBox(width: 10),
-                                            Text(post.creator!.name),
-                                          ],
-                                        ),
-                                        children: [
-                                          img,
-                                          SizedBox(
-                                            height: post.text == null || post.text!.isEmpty ? 0 : 100,
-                                            child: Padding(
-                                              padding: EdgeInsetsGeometry.all(20),
-                                              child: Text(post.text ?? "", maxLines: 4),
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                                child: img,
-                              );
-                            },
-                            itemCount: MemoModelPost.imgurPosts.length,
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
-                          ),
-                  ),
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-                  //     } //TODO WHAT YA GONNA PRIORITIZE, TOPIC OR IMAGE, TOPIC OR VIDEO, TOPIC MUST BE PRIORITY AS IT OFFERS RESPONSE
-                  //   });
-                ],
-              ),
-            ),
-          );
-  }
+    if (_user == null || _creator == null) {
+      // Handle state where user or creator is null after loading (should ideally not happen if _fetchProfileData is robust)
+      return Scaffold(
+        appBar: AppBar(title: const Text("Profile")),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Could not load profile data."),
+              const SizedBox(height: 20),
+              ElevatedButton(onPressed: _fetchProfileData, child: const Text("Retry")),
+            ],
+          ),
+        ),
+      );
+    }
 
-  ListView buildListView() {
-    return ListView.builder(
-      itemCount: viewMode == 1
-          ? MemoModelPost.ytPosts.length
-          : viewMode == 2
-          ? MemoModelPost.hashTagPosts.length
-          :
-            // viewMode == 3 ? MemoModelPost.urlPosts.length :
-            viewMode == 4
-          ? MemoModelPost.topicPosts.length
-          : 0,
-      itemBuilder: (context, index) {
-        switch (viewMode) {
-          case 1:
-            var ytPost = MemoModelPost.ytPosts[index];
-            return Container(
-              height: 369,
-              child: Column(
-                children: [
-                  YoutubePlayer(
-                    controller: YoutubePlayerController(
-                      initialVideoId: ytPost.youtubeId!,
-                      flags: YoutubePlayerFlags(hideThumbnail: true, hideControls: true, mute: false, autoPlay: false),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsetsGeometry.all(10),
-                    child: SizedBox(
-                      height: 116,
-                      child: Column(
-                        children: [
-                          Text(ytPost.text ?? "", maxLines: 4),
-                          Divider(),
-                          Text("^^^   ${ytPost.creator!.name}   ^^^", style: TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          case 2:
-            return buildTextBox(MemoModelPost.hashTagPosts[index]);
-          // case 3:
-          //   return buildTextBox(MemoModelPost.urlPosts, index);
-          case 4:
-            return buildTextBox(MemoModelPost.topicPosts[index]);
-        }
-        return null;
-      },
+    return Scaffold(
+      appBar: AppBar(
+        toolbarHeight: 50,
+        backgroundColor: mobileBackgroundColor,
+        centerTitle: false,
+        title: TextButton(
+          onPressed: () {
+            //TODO LAUNCH PROFILE ON MEMO WITH THAT ID
+            showSnackBar("Launch memo profile URL or register on memo if 404 on profile", context);
+          },
+          child: Text(
+            _user!.profileIdMemoBch,
+            style: const TextStyle(color: Colors.grey, fontSize: 12),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: _showBchQRDialog,
+            icon: const Icon(Icons.currency_exchange, color: blackColor),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Column(
+          // Removed MainAxisSize.min, let it fill available space if needed, or use SingleChildScrollView
+          children: [
+            if (_isRefreshing) const SizedBox(height: 1, child: LinearProgressIndicator()),
+            _buildProfileHeader(),
+            Expanded(child: _buildContentView()), // Use Expanded for scrollable content
+          ],
+        ),
+      ),
     );
   }
 
-  Padding createTopDetails() {
+  Widget _buildProfileHeader() {
+    // This part is relatively static once data is loaded,
+    // could be a separate widget if it gets too complex.
+    return Container(
+      // Consider a fixed height or make it intrinsic based on content
+      // height: 265, // Original fixed height
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        mainAxisSize: MainAxisSize.min, // To fit content
+        children: [
+          _buildTopDetailsRow(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: Text(_creator!.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: ExpandableText(
+                _creator!.profileText,
+                expandText: 'show more',
+                collapseText: 'show less',
+                maxLines: 3,
+                linkColor: Colors.blue,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+          ),
+          const Divider(color: Colors.grey /*.shade300*/), // Simpler color
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Use spaceEvenly for better distribution
+            children: [
+              _buildViewModeIconButton(0, Icons.image_rounded),
+              _buildViewModeIconButton(1, Icons.video_library_rounded),
+              _buildViewModeIconButton(2, Icons.tag_rounded),
+              _buildViewModeIconButton(4, Icons.topic),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopDetailsRow() {
     return Padding(
-      padding: const EdgeInsets.all(16).copyWith(top: 0),
+      padding: const EdgeInsets.all(16).copyWith(top: 8, bottom: 8),
       child: Row(
         children: [
-          Container(
-            child: showDefaultAvatar
-                ? CircleAvatar(radius: 40, backgroundImage: AssetImage("assets/images/default_profile.png"))
-                : CircleAvatar(
-                    onBackgroundImageError: (exception, stackTrace) {
-                      setState(() {
-                        showDefaultAvatar = true;
-                      });
+          GestureDetector(
+            onTap: () {
+              // TODO: Allow changing profile picture
+            },
+            child: CircleAvatar(
+              radius: 40,
+              backgroundImage: _showDefaultAvatar || _user!.profileImage().isEmpty
+                  ? const AssetImage("assets/images/default_profile.png") as ImageProvider
+                  : NetworkImage(_user!.profileImage()),
+              onBackgroundImageError: _showDefaultAvatar
+                  ? null // Avoid recursive setState if default is already shown
+                  : (exception, stackTrace) {
+                      _logError("Error loading profile image", exception, stackTrace);
+                      if (mounted) {
+                        setState(() {
+                          _showDefaultAvatar = true;
+                        });
+                      }
                     },
-                    backgroundImage: NetworkImage(user!.profileImage()),
-                    radius: 40,
-                  ),
+            ),
           ),
+          const SizedBox(width: 15),
           Expanded(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Padding(padding: EdgeInsets.only(left: 30)),
-                    buildStatColumn('BCH', user!.balanceBchDevPath145),
-                    Spacer(),
-                    buildStatColumn('Token', user!.balanceCashtokensDevPath145),
-                    Spacer(),
-                    buildStatColumn('Memo', user!.balanceBchDevPath0Memo),
-                    Padding(padding: EdgeInsets.only(right: 30)),
+                    _buildStatColumn('BCH', _user!.balanceBchDevPath145),
+                    _buildStatColumn('Token', _user!.balanceCashtokensDevPath145),
+                    _buildStatColumn('Memo', _user!.balanceBchDevPath0Memo),
                   ],
                 ),
-                buildSettingsButton(),
+                const SizedBox(height: 8),
+                _buildEditProfileButton(),
               ],
             ),
           ),
@@ -314,158 +299,359 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Column buildSettingsButton() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        GestureDetector(
-          onTap: () {
-            onProfileSettings();
-          },
-          child: Container(
-            child: SettingsButton(
-              backgroundColor: Colors.transparent,
-              borderColor: Colors.black,
-              text: 'Edit Profile',
-              textColor: Colors.black,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  IconButton buildIconButton(index, icon) {
-    return IconButton(
-      padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
-      onPressed: () {
-        setState(() {
-          viewMode = index;
-        });
-      },
-      icon: Icon(icon, size: 36, color: activeOrNot(index)),
-    );
-  }
-
-  SizedBox buildTextBox(MemoModelPost post) {
+  Widget _buildEditProfileButton() {
     return SizedBox(
-      height: 176,
-      child: Padding(
-        padding: EdgeInsetsGeometry.all(20),
-        child: Column(
-          children: [
-            Row(children: [Text(post.creator!.name), Spacer(), Text(post.created!)]),
-            Divider(),
-            Text(post.text!),
-          ],
-        ),
+      width: double.infinity, // Make button take available width
+      child: SettingsButton(
+        // Assuming this is an OutlinedButton or similar
+        onPressed: _onProfileSettings,
+        backgroundColor: Colors.transparent, // These properties depend on SettingsButton implementation
+        borderColor: Colors.black54,
+        text: 'Edit Profile',
+        textColor: Colors.black87,
       ),
     );
   }
 
-  Color activeOrNot(int index) => viewMode == index ? Colors.grey.shade800 : Colors.grey.shade500;
+  Widget _buildViewModeIconButton(int index, IconData icon) {
+    return IconButton(
+      // padding: const EdgeInsets.fromLTRB(20, 10, 20, 20), // Default padding is often fine
+      iconSize: 32, // Slightly smaller
+      onPressed: () {
+        if (mounted) {
+          setState(() {
+            _viewMode = index;
+          });
+        }
+      },
+      icon: Icon(icon, color: _activeOrNotColor(index)),
+    );
+  }
 
-  void onProfileSettings() {
-    showDialog(
-      context: context,
-      builder: (ctxDialog) {
-        return SimpleDialog(
-          title: const Row(children: [const Icon(Icons.settings), const Spacer(), const Text("PROFILE SETTINGS")]),
-          children: [
-            settingsOption(Icons.verified_user_outlined, "NAME", ctxDialog, () {
-              // Memo
-              showSnackBar("set profile name", context);
-            }),
-            settingsOption(Icons.verified_outlined, "DESCRIPTION", ctxDialog, () {
-              showSnackBar("set profile description", context);
-            }),
-            settingsOption(Icons.account_circle_outlined, "IMGUR", ctxDialog, () {
-              showSnackBar("set profile IMGUR", context);
-            }),
-            settingsOption(Icons.logout_outlined, "LOGOUT", ctxDialog, () {
-              AuthChecker().logOut(context);
-            }),
-            settingsOption(Icons.backup_outlined, "BACKUP", ctxDialog, () {
-              copyToClip(user!.mnemonic, context);
-            }),
-            settingsOption(Icons.link_rounded, "TWITTER", ctxDialog, () {
-              showSnackBar("link twitter account", context);
-            }),
-          ],
+  Widget _buildContentView() {
+    final List<MemoModelPost> imgurPosts = MemoModelPost.imgurPosts;
+    final List<MemoModelPost> ytPosts = MemoModelPost.ytPosts;
+    final List<MemoModelPost> hashtagPosts = MemoModelPost.hashTagPosts;
+    final List<MemoModelPost> topicPosts = MemoModelPost.topicPosts;
+
+    switch (_viewMode) {
+      case 0: // Grid View (Images)
+        // final posts = MemoModelPost.imgurPosts; // Use your actual data
+        final posts = imgurPosts; // Using placeholder
+        if (posts.isEmpty) return const Center(child: Text("No image posts yet."));
+        return GridView.builder(
+          padding: const EdgeInsets.all(4),
+          itemCount: posts.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 4,
+          ),
+          itemBuilder: (context, index) {
+            final post = posts[index];
+            // Ensure imgurUrl is not null or empty before using NetworkImage
+            if (post.imgurUrl == null || post.imgurUrl!.isEmpty) {
+              return Container(color: Colors.grey.shade300, child: const Icon(Icons.broken_image));
+            }
+            final img = Image.network(
+              // Use Image.network directly for simplicity
+              post.imgurUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  ImgurUtils.errorLoadImage(context, error, stackTrace), // Keep your util
+              loadingBuilder: (context, child, loadingProgress) =>
+                  ImgurUtils.loadingImage(context, child, loadingProgress), // Keep your util
+            );
+            return GestureDetector(onDoubleTap: () => _showPostDialog(post, img), child: img);
+          },
         );
-      },
-    );
+      case 1: // YouTube Videos
+        // final posts = MemoModelPost.ytPosts; // Use your actual data
+        final posts = ytPosts; // Using placeholder
+        if (posts.isEmpty) return const Center(child: Text("No video posts yet."));
+        return _buildYouTubeListView(posts);
+      case 2: // Hashtag Posts
+        // final posts = MemoModelPost.hashTagPosts; // Use your actual data
+        final posts = hashtagPosts; // Using placeholder
+        if (posts.isEmpty) return const Center(child: Text("No tagged posts yet."));
+        return _buildGenericPostListView(posts);
+      case 4: // Topic Posts
+        // final posts = MemoModelPost.topicPosts; // Use your actual data
+        final posts = topicPosts; // Using placeholder
+        if (posts.isEmpty) return const Center(child: Text("No topic posts yet."));
+        return _buildGenericPostListView(posts);
+      default:
+        return const Center(child: Text("Select a view mode."));
+    }
   }
 
-  SimpleDialogOption settingsOption(IconData ico, String txt, BuildContext ctxDialog, onSelect) {
-    return SimpleDialogOption(
-      padding: const EdgeInsets.all(20),
-      onPressed: () async {
-        onSelect();
-        Navigator.of(ctxDialog).pop();
-      },
-      child: Row(children: [Icon(ico), const Spacer(), Text(txt)]),
-    );
-  }
+  void _showPostDialog(MemoModelPost post, Widget imageWidget) {
+    // Ensure creator is not null
+    if (post.creator == null) return;
 
-  void showBchQR() {
     showDialog(
       context: context,
       builder: (dialogCtx) {
         return SimpleDialog(
+          titlePadding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 16), // Image fills width
+          title: Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundImage: post.creator!.profileImage().isEmpty
+                    ? const AssetImage("assets/images/default_profile.png") as ImageProvider
+                    : NetworkImage(post.creator!.profileImage()),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(post.creator!.name, style: const TextStyle(fontSize: 16), overflow: TextOverflow.ellipsis),
+              ),
+            ],
+          ),
           children: [
-            toggleAddressType
-                ? qrCode(user!.bchAddressCashtokenAwareCtFormat, "cashtoken", dialogCtx)
-                : qrCode(user!.legacyAddressMemoBchAsCashaddress, "memo-128x128", dialogCtx),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: imageWidget, // Re-use the image widget
+            ),
+            // Inside _showPostDialog's children:
+            if (post.text != null && post.text!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: 10,
+                    minWidth: 100,
+                    maxWidth: 100,
+                    maxHeight: 100, // Example: Allow it to grow up to 100 pixels
+                    // Adjust this based on how much space you want to allow
+                  ),
+                  child: SingleChildScrollView(
+                    // Important for scrollability if content exceeds maxHeight
+                    child: ExpandableText(
+                      post.text!,
+                      expandText: 'show more',
+                      collapseText: 'show less',
+                      maxLines: 4, // This still ap
+                      collapseOnTextTap: true, // plies to the collapsed state
+                      linkColor: Colors.blue,
+                      animation: true,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ),
+              ),
           ],
-          //TODO observe balance change of wallet, show snackbar on deposit
         );
       },
     );
   }
 
-  SimpleDialogOption qrCode(String address, String img, BuildContext dialogCtx) {
-    return SimpleDialogOption(
-      onPressed: () {
-        copyToClip(address, dialogCtx);
-        Navigator.of(dialogCtx).pop();
-      },
-      child: Column(
-        children: [
-          PrettyQrView.data(
-            decoration: PrettyQrDecoration(image: PrettyQrDecorationImage(image: AssetImage("assets/images/$img.png"))),
-            data: address,
-          ),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                toggleAddressType = !toggleAddressType;
-              });
-              Navigator.of(dialogCtx).pop();
-              showBchQR();
-            },
-            child: Container(
-              alignment: Alignment.center,
-              padding: const EdgeInsets.all(50),
-              child: Text(
-                toggleAddressType ? "SHOW MEMO QR" : "SHOW CASHONIZE QR",
-                style: const TextStyle(fontWeight: FontWeight.bold, color: blueColor),
-              ),
+  Widget _buildYouTubeListView(List<MemoModelPost> posts) {
+    return ListView.builder(
+      itemCount: posts.length,
+      itemBuilder: (context, index) {
+        final ytPost = posts[index];
+        if (ytPost.youtubeId == null || ytPost.youtubeId!.isEmpty) {
+          return const SizedBox.shrink(); // Skip if no YouTube ID
+        }
+
+        YoutubePlayerController controller = _ytControllers.putIfAbsent(
+          ytPost.youtubeId!,
+          () => YoutubePlayerController(
+            initialVideoId: ytPost.youtubeId!,
+            flags: const YoutubePlayerFlags(
+              autoPlay: false,
+              mute: false, // User can unmute
+              hideControls: false, // Show controls by default
+              hideThumbnail: false, // Show thumbnail initially
+              // disableDragSeek: true,
+              // loop: false,
+              // isLive: false,
+              // forceHD: false,
+              // enableCaption: true,
             ),
           ),
+        );
+
+        return Card(
+          // Wrap in Card for better visual separation
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                YoutubePlayer(
+                  controller: controller,
+                  showVideoProgressIndicator: true,
+                  progressIndicatorColor: Colors.amber,
+                  progressColors: const ProgressBarColors(playedColor: Colors.amber, handleColor: Colors.amberAccent),
+                  // onReady: () { _logInfo('Player is ready.'); },
+                ),
+                const SizedBox(height: 8),
+                if (ytPost.text != null && ytPost.text!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0, bottom: 4.0),
+                    child: ExpandableText(
+                      ytPost.text!,
+                      expandText: 'show more',
+                      collapseText: 'show less',
+                      maxLines: 3,
+                      linkColor: Colors.blue,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                const Divider(),
+                Text(
+                  "Posted by: ${ytPost.creator?.name ?? 'Unknown'}", // Handle null creator name
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGenericPostListView(List<MemoModelPost> posts) {
+    return ListView.builder(
+      itemCount: posts.length,
+      itemBuilder: (context, index) {
+        final post = posts[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      post.creator?.name ?? 'Unknown', // Handle null
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    Text(
+                      post.created ?? '', // Handle null
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                ExpandableText(
+                  post.text ?? 'No content.', // Handle null
+                  expandText: 'show more',
+                  collapseText: 'show less',
+                  maxLines: 5,
+                  linkColor: Colors.blue,
+                  style: const TextStyle(fontSize: 15),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _onProfileSettings() {
+    showDialog(
+      context: context,
+      builder: (ctxDialog) {
+        return SimpleDialog(
+          titlePadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+          title: const Row(children: [Icon(Icons.settings), SizedBox(width: 10), Text("PROFILE SETTINGS")]),
+          children: [
+            _buildSettingsOption(Icons.verified_user_outlined, "NAME", ctxDialog, () {
+              showSnackBar("Set profile name (Not implemented)", context);
+            }),
+            _buildSettingsOption(Icons.description_outlined, "DESCRIPTION", ctxDialog, () {
+              showSnackBar("Set profile description (Not implemented)", context);
+            }),
+            _buildSettingsOption(Icons.image_outlined, "AVATAR URL", ctxDialog, () {
+              showSnackBar("Set profile IMGUR URL (Not implemented)", context);
+            }),
+            _buildSettingsOption(Icons.link_rounded, "TWITTER", ctxDialog, () {
+              showSnackBar("Link Twitter account (Not implemented)", context);
+            }),
+            const Divider(),
+            _buildSettingsOption(Icons.backup_outlined, "BACKUP MNEMONIC", ctxDialog, () {
+              if (_user?.mnemonic != null) {
+                _copyToClipboard(_user!.mnemonic, "Mnemonic copied!");
+              } else {
+                showSnackBar("Mnemonic not available.", context);
+              }
+            }),
+            _buildSettingsOption(Icons.logout_outlined, "LOGOUT", ctxDialog, () {
+              AuthChecker().logOut(context); // Assuming this handles navigation
+            }),
+          ],
+        );
+      },
+    );
+  }
+
+  SimpleDialogOption _buildSettingsOption(IconData icon, String text, BuildContext dialogCtx, VoidCallback onSelect) {
+    return SimpleDialogOption(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      onPressed: () {
+        Navigator.of(dialogCtx).pop(); // Pop before calling onSelect
+        onSelect();
+      },
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.grey.shade700),
+          const SizedBox(width: 15),
+          Text(text),
         ],
       ),
     );
   }
 
-  Future<void> copyToClip(String txt, ctx) async {
+  void _showBchQRDialog() {
+    // For simplicity, ProfileScreen still manages toggleAddressType.
+    // To make dialog fully independent, pass a ValueNotifier or callback.
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        // Use a StatefulWidget for the dialog's content if it needs its own independent state.
+        // For this example, we'll keep it simple and rebuild via ProfileScreen's state.
+        return QrCodeDialog(
+          // Using a separate StatefulWidget for the dialog
+          user: _user!,
+          initialToggleState: _tempToggleAddressTypeForDialog, // Pass current toggle state
+          onToggle: (newState) {
+            // Callback to update ProfileScreen's state if needed
+            if (mounted) {
+              setState(() {
+                _tempToggleAddressTypeForDialog = newState;
+              });
+            }
+          },
+        );
+      },
+    );
+  }
+
+  // Temporary state for the QR dialog toggle to avoid immediate ProfileScreen rebuild on tap inside dialog
+  bool _tempToggleAddressTypeForDialog = true;
+
+  Future<void> _copyToClipboard(String text, String successMessage) async {
+    if (text.isEmpty) {
+      showSnackBar("Nothing to copy.", context);
+      return;
+    }
     await FlutterClipboard.copyWithCallback(
-      text: txt,
+      text: text,
       onSuccess: () {
-        showSnackBar(txt, ctx);
+        if (mounted) showSnackBar(successMessage, context);
       },
       onError: (error) {
-        showSnackBar('Copy failed: $error', ctx);
+        _logError("Copy to clipboard failed", error);
+        if (mounted) showSnackBar('Copy failed. See logs for details.', context);
       },
     );
   }

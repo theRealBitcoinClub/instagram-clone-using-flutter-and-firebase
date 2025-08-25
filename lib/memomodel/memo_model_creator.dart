@@ -26,10 +26,10 @@ class MemoModelCreator {
     return "https://memo.cash/img/profilepics/${id}-128x128.jpg";
   }
 
-  static MemoModelCreator createDummy() {
+  static MemoModelCreator createDummy({String id = ""}) {
     MemoModelCreator creator = MemoModelCreator(
       created: "",
-      id: "",
+      id: id,
       followerCount: 0,
       actions: 0,
       name: "",

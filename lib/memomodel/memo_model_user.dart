@@ -184,6 +184,8 @@ class MemoModelUser {
     if (_user == null) {
       String? mne = await SharedPreferencesAsync().getString("mnemonic");
       _user = MemoModelUser(mnemonic: mne ?? "", creator: creator);
+    } else {
+      _user!.creator = creator;
     }
     return _user!;
   }

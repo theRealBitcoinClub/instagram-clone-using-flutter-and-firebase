@@ -1,6 +1,7 @@
 import 'package:dynamic_themes/dynamic_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:instagram_clone1/memoscraper/memo_creator_service.dart';
 import 'package:instagram_clone1/provider/user_provider.dart';
 import 'package:instagram_clone1/route%20handling/auth_page.dart';
 import 'package:provider/provider.dart';
@@ -26,7 +27,7 @@ initData() async {
 
   final String cacheId = "250819";
   await MemoScraperTopic().startScrapeTopics(cacheId, 25);
-  // MemoScraperCreator().startScrapeCreators(["/most-actions", "/most-followers"]);
+  await MemoCreatorService().fetchAndProcessCreators(["/most-actions", "/most-followers"]);
   //https://memo.cash/posts/top?range=1y
   //https://memo.cash/posts/top?range=all&offset=25
   // MemoScraperTag().startScrapeTags(["/most-posts"], 250, cacheId);

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
-import 'package:instagram_clone1/memoscraper/memo_scraper_creator.dart';
+import 'package:instagram_clone1/memoscraper/memo_creator_service.dart';
 import 'package:instagram_clone1/resources/auth_method.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/profile_buttons.dart';
@@ -38,8 +38,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-
-    creator = MemoModelCreator.createDummy();
     // ProviderUser provider = Provider.of<ProviderUser>(context);
     // user = provider.memoUser!;
 
@@ -50,7 +48,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       isLoading = true;
     });
-    user = await MemoModelUser.getUser(creator: creator);
+    user = await MemoModelUser.getUser();
+    creator = MemoModelCreator.createDummy(id: user!.profileIdMemoBch);
     // post = await MemoModelPost.createDummy(creator);
     setState(() {
       isLoading = false;
@@ -58,7 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       isRefreshing = true;
     });
-    creator = await MemoScraperCreator().loadCreatorNameAndText(user!.profileIdMemoBch, nocache: true);
+    creator = await MemoCreatorService().fetchCreatorDetails(creator, noCache: true);
     String refreshBch = await user!.refreshBalanceDevPath145();
     String refreshTokens = await user!.refreshBalanceTokens();
     String refreshMemo = await user!.refreshBalanceDevPath0();
@@ -113,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               actions: [
                 IconButton(
                   onPressed: () {
-                    //TODO LAUNCH SIDESHIFT EXCHANGE
+                    //TODO ADD LINK TO SWAP BTC TO BCH
                     showBchQR();
                   },
                   icon: Icon(Icons.currency_exchange, color: blackColor),

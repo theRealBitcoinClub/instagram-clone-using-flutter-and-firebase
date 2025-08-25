@@ -34,7 +34,7 @@ initData() async {
   // MemoScraperTag().startScrapeTags(["/recent","/most-posts"], 25, cacheId);
   await MemoScraperTag().startScrapeTags(["/most-posts", "/recent"], 0, cacheId);
   // await MemoScraperTag().startScrapeTags(["/recent"], 0, cacheId);
-  await MemoScraperPost().startScrapePosts('posts/new', 100, cacheId);
+  await MemoPostService().scrapePostsPaginated(baseUrl: 'posts/new', initialOffset: 100, cacheId: cacheId);
   // https://memo.cash/tags/most-posts?&offset=1025
 
   FlutterNativeSplash.remove();

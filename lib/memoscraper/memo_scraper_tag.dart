@@ -13,7 +13,9 @@ class MemoScraperTag {
       for (int off = offset; off >= 0; off -= 25) {
         List<MemoModelTag> tags = await scrapeTags(order, off);
         for (MemoModelTag tag in tags) {
-          tag.posts.addAll(await MemoScraperPost().startScrapePosts("t/${tag.name}", 0, cacheId));
+          tag.posts.addAll(
+            await MemoPostService().scrapePostsPaginated(baseUrl: "t/${tag.name}", initialOffset: 0, cacheId: cacheId),
+          );
         }
         MemoModelTag.tags.addAll(tags);
         print("RUNNING SCRAPE:$order$off");

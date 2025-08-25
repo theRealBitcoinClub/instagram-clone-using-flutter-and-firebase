@@ -121,6 +121,13 @@ final ThemeData lightTheme = ThemeData(
   cardColor: Colors.white,
   dividerColor: primaryLightGrey, // Subtle dividers
   hintColor: subtleTextOnLight, // For hint text in TextFields
+  // In your app_themes.dart, inside lightTheme
+  bottomNavigationBarTheme: BottomNavigationBarThemeData(
+    backgroundColor: Colors.white, // Or your desired light theme tab bar color
+    selectedItemColor: primaryGreen, // Will be overridden by CupertinoTabBar.activeColor
+    unselectedItemColor: primaryLightGrey, // Will be overridden by CupertinoTabBar.inactiveColor
+    // ... other properties if needed by Material BottomNavigationBar elsewhere
+  ),
 
   colorScheme: const ColorScheme.light(
     primary: primaryGreen,
@@ -200,6 +207,7 @@ final ThemeData lightTheme = ThemeData(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: textOnLight),
     contentTextStyle: TextStyle(fontSize: 14, color: textOnLight),
+    elevation: 6.0,
   ),
 
   // For hyperlinks not covered by TextButton (e.g., in Text.rich with recognizer)
@@ -221,6 +229,13 @@ final ThemeData darkTheme = ThemeData(
   cardColor: secondaryDarkGrey,
   dividerColor: primaryLightGrey.withOpacity(0.3), // More subtle dividers on dark
   hintColor: subtleTextOnDark,
+
+  // In your app_themes.dart, inside darkTheme
+  bottomNavigationBarTheme: BottomNavigationBarThemeData(
+    backgroundColor: secondaryDarkGrey, // Or your desired dark theme tab bar color
+    selectedItemColor: lightGreenAccent,
+    unselectedItemColor: primaryLightGrey.withOpacity(0.7),
+  ),
 
   colorScheme: const ColorScheme.dark(
     primary: primaryGreen,
@@ -302,6 +317,7 @@ final ThemeData darkTheme = ThemeData(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: textOnDark),
     contentTextStyle: TextStyle(fontSize: 14, color: textOnDark),
+    elevation: 6.0,
   ),
 
   textSelectionTheme: TextSelectionThemeData(

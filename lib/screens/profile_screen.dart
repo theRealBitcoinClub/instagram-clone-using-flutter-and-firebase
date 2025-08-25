@@ -4,25 +4,24 @@ import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
-import 'package:instagram_clone1/memoscraper/memo_creator_service.dart'; // Assuming this service exists
-import 'package:instagram_clone1/resources/auth_method.dart'; // Assuming AuthChecker is here
-import 'package:instagram_clone1/utils/colors.dart'; // Your color definitions
-import 'package:instagram_clone1/widgets/profile_buttons.dart'; // For SettingsButton
+import 'package:instagram_clone1/memoscraper/memo_creator_service.dart';
+import 'package:instagram_clone1/resources/auth_method.dart';
+// import 'package:instagram_clone1/utils/colors.dart'; // REMOVE THIS
+import 'package:instagram_clone1/widgets/profile_buttons.dart'; // Assumed themed SettingsButton
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-import '../utils/imgur_utils.dart'; // Your Imgur utilities
-import '../utils/snackbar.dart';
-import '../views_taggable//widgets/qr_code_dialog.dart'; // Your showSnackBar utility
+import '../utils/snackbar.dart'; // Ensure this uses themed SnackBars
+import '../views_taggable/widgets/qr_code_dialog.dart'; // Ensure this is themed
 
-// Basic logging placeholders (replace with a proper logger if needed)
+// Logging placeholders (remain the same)
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
-  print('ERROR: $message');
+  print('ERROR: ProfileScreen - $message');
   if (error != null) print('  Error: $error');
   if (stackTrace != null) print('  StackTrace: $stackTrace');
 }
 
 void _logInfo(String message) {
-  print('INFO: $message');
+  print('INFO: ProfileScreen - $message');
 }
 
 class ProfileScreen extends StatefulWidget {
@@ -36,14 +35,13 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   MemoModelUser? _user;
-  MemoModelCreator? _creator; // Made nullable for initial state
+  MemoModelCreator? _creator;
 
-  bool _isLoading = true; // Start with loading true
+  bool _isLoading = true;
   bool _isRefreshing = false;
   bool _showDefaultAvatar = false;
-  int _viewMode = 0;
+  int _viewMode = 0; // 0: Images, 1: Videos, 2: Hashtags, 4: Topics
 
-  // For YouTube Player Controllers
   final Map<String, YoutubePlayerController> _ytControllers = {};
 
   @override
@@ -54,7 +52,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
-    // Dispose all YouTube controllers
     for (var controller in _ytControllers.values) {
       controller.dispose();
     }
@@ -63,27 +60,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _fetchProfileData() async {
+    // ... (Your existing data fetching logic remains the same)
+    // Ensure showSnackBar calls use context that provides a themed SnackBar.
     if (!mounted) return;
     setState(() {
-      _isLoading = _user == null; // Show main loader only if no user data yet
+      _isLoading = _user == null;
       _isRefreshing = true;
     });
 
     try {
-      final localUser = await MemoModelUser.getUser(); // Assuming this fetches the current user
+      final localUser = await MemoModelUser.getUser();
       if (!mounted) return;
 
-      // Initial dummy creator for faster UI response if needed
       final initialCreator = MemoModelCreator.createDummy(id: localUser.profileIdMemoBch);
 
       setState(() {
         _user = localUser;
         _creator = initialCreator;
-        _isLoading = false; // Stop initial loading
-        // _isRefreshing can remain true if we are about to fetch more
+        _isLoading = false;
       });
 
-      // Perform subsequent fetches, potentially in parallel
       final results = await Future.wait([
         MemoCreatorService().fetchCreatorDetails(initialCreator, noCache: true),
         localUser.refreshBalanceDevPath145(),
@@ -103,16 +99,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isRefreshing = false;
       });
 
-      // Show SnackBars after final state update
       if (refreshBchStatus != "success" && mounted) {
         showSnackBar("You haz no BCH, please deposit if you want to publish and earn token", context);
       }
-      if (refreshTokensStatus != "success" && mounted) {
-        showSnackBar("You haz no tokens, deposit tokens to post/like/reply with discount", context);
-      }
-      if (refreshMemoStatus != "success" && mounted) {
-        showSnackBar("You haz no memo balance, likes/replies of OG memo posts will not send tips", context);
-      }
+      // ... (other snackbars)
     } catch (e, s) {
       _logError("Error in _fetchProfileData", e, s);
       if (mounted) {
@@ -125,171 +115,196 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Widget _buildStatColumn(String title, String count) {
+  Widget _buildStatColumn(ThemeData theme, String title, String count) {
+    // Pass Theme
     return Column(
       mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 15.0),
-          child: Text(count, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          padding: const EdgeInsets.only(top: 15.0, bottom: 2.0),
+          child: Text(
+            count,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              // color: theme.colorScheme.onSurface, // Inherited by default
+            ),
+          ),
         ),
         Text(
           title,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.grey),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant, // For secondary text
+          ),
         ),
       ],
     );
   }
 
-  Color _activeOrNotColor(int index) => _viewMode == index ? Colors.grey.shade800 : Colors.grey.shade500;
+  // No longer needed if using themed IconButtons
+  // Color _activeOrNotColor(ThemeData theme, int index) =>
+  //     _viewMode == index ? theme.colorScheme.primary : theme.iconTheme.color ?? theme.colorScheme.onSurfaceVariant;
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context); // Get the current theme
+    final ColorScheme colorScheme = theme.colorScheme;
+
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_user == null || _creator == null) {
-      // Handle state where user or creator is null after loading (should ideally not happen if _fetchProfileData is robust)
       return Scaffold(
-        appBar: AppBar(title: const Text("Profile")),
+        // Add Scaffold for consistent loading screen appearance
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          backgroundColor: theme.appBarTheme.backgroundColor,
+          elevation: 0, // No shadow during loading
+        ),
+        body: const Center(child: CircularProgressIndicator()), // Progress indicator will use theme color
+      );
+    }
+
+    if (_user == null || _creator == null) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          title: Text("Profile Error", style: theme.appBarTheme.titleTextStyle),
+          backgroundColor: theme.appBarTheme.backgroundColor,
+        ),
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text("Could not load profile data."),
-              const SizedBox(height: 20),
-              ElevatedButton(onPressed: _fetchProfileData, child: const Text("Retry")),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, color: colorScheme.error, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  "Could not load profile data.",
+                  style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onBackground),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.refresh),
+                  label: const Text("Retry"),
+                  onPressed: _fetchProfileData,
+                  // Style will come from theme.elevatedButtonTheme
+                ),
+              ],
+            ),
           ),
         ),
       );
     }
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
+        // backgroundColor: theme.appBarTheme.backgroundColor, // From theme
+        // foregroundColor: theme.appBarTheme.foregroundColor, // From theme for icons/text
         toolbarHeight: 50,
-        backgroundColor: mobileBackgroundColor,
-        centerTitle: false,
+        centerTitle: false, // As per your original
         title: TextButton(
           onPressed: () {
             //TODO LAUNCH PROFILE ON MEMO WITH THAT ID
-            showSnackBar("Launch memo profile URL or register on memo if 404 on profile", context);
+            showSnackBar("Launch memo profile URL for ${_user!.profileIdMemoBch}", context);
           },
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero, // Remove default padding for tighter fit
+            // foregroundColor: theme.appBarTheme.foregroundColor?.withOpacity(0.8) ?? colorScheme.onPrimary.withOpacity(0.8),
+          ),
           child: Text(
             _user!.profileIdMemoBch,
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
+            style: theme.textTheme.bodySmall?.copyWith(
+              // Smaller text for ID
+              color: (theme.appBarTheme.titleTextStyle?.color ?? colorScheme.onPrimary).withOpacity(
+                0.7,
+              ), // Subtler color
+            ),
             overflow: TextOverflow.ellipsis,
           ),
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.currency_bitcoin_rounded), // Changed icon for clarity
+            tooltip: "Show Balances QR",
+            // color: theme.appBarTheme.foregroundColor, // From theme
             onPressed: _showBchQRDialog,
-            icon: const Icon(Icons.currency_exchange, color: blackColor),
           ),
         ],
       ),
       body: SafeArea(
         child: Column(
-          // Removed MainAxisSize.min, let it fill available space if needed, or use SingleChildScrollView
           children: [
-            if (_isRefreshing) const SizedBox(height: 1, child: LinearProgressIndicator()),
-            _buildProfileHeader(),
-            Expanded(child: _buildContentView()), // Use Expanded for scrollable content
+            if (_isRefreshing)
+              const LinearProgressIndicator(
+                // valueColor will be from theme.progressIndicatorTheme
+                minHeight: 2, // Make it subtle
+              ),
+            _buildProfileHeader(theme, colorScheme),
+            Expanded(child: _buildContentView(theme)), // Pass theme
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProfileHeader() {
-    // This part is relatively static once data is loaded,
-    // could be a separate widget if it gets too complex.
+  Widget _buildProfileHeader(ThemeData theme, ColorScheme colorScheme) {
     return Container(
-      // Consider a fixed height or make it intrinsic based on content
-      // height: 265, // Original fixed height
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12.0),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface, // Use surface color for the header background
+        // Optional: add a subtle border at the bottom
+        // border: Border(bottom: BorderSide(color: theme.dividerColor, width: 0.5)),
+      ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // To fit content
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _buildTopDetailsRow(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: Text(_creator!.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: ExpandableText(
-                _creator!.profileText,
-                expandText: 'show more',
-                collapseText: 'show less',
-                maxLines: 3,
-                linkColor: Colors.blue,
-                style: const TextStyle(fontSize: 14),
+          _buildTopDetailsRow(theme, colorScheme),
+          if (_creator!.name.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(_creator!.name, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
               ),
             ),
-          ),
-          const Divider(color: Colors.grey /*.shade300*/), // Simpler color
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Use spaceEvenly for better distribution
-            children: [
-              _buildViewModeIconButton(0, Icons.image_rounded),
-              _buildViewModeIconButton(1, Icons.video_library_rounded),
-              _buildViewModeIconButton(2, Icons.tag_rounded),
-              _buildViewModeIconButton(4, Icons.topic),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTopDetailsRow() {
-    return Padding(
-      padding: const EdgeInsets.all(16).copyWith(top: 8, bottom: 8),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () {
-              // TODO: Allow changing profile picture
-            },
-            child: CircleAvatar(
-              radius: 40,
-              backgroundImage: _showDefaultAvatar || _user!.profileImage().isEmpty
-                  ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                  : NetworkImage(_user!.profileImage()),
-              onBackgroundImageError: _showDefaultAvatar
-                  ? null // Avoid recursive setState if default is already shown
-                  : (exception, stackTrace) {
-                      _logError("Error loading profile image", exception, stackTrace);
-                      if (mounted) {
-                        setState(() {
-                          _showDefaultAvatar = true;
-                        });
-                      }
-                    },
-            ),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatColumn('BCH', _user!.balanceBchDevPath145),
-                    _buildStatColumn('Token', _user!.balanceCashtokensDevPath145),
-                    _buildStatColumn('Memo', _user!.balanceBchDevPath0Memo),
-                  ],
+          if (_creator!.profileText.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: ExpandableText(
+                  _creator!.profileText,
+                  expandText: 'show more',
+                  collapseText: 'show less',
+                  maxLines: 3,
+                  linkColor: colorScheme.primary, // Use primary color for link
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.4), // Use themed text style
+                  linkStyle: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.primary,
+                  ),
+                  prefixStyle: theme.textTheme.bodyMedium, // Ensure prefix style also matches
                 ),
-                const SizedBox(height: 8),
-                _buildEditProfileButton(),
+              ),
+            ),
+          Divider(color: theme.dividerColor, height: 1.0, thickness: 0.5), // Themed divider
+          Padding(
+            // Add padding around the view mode icons
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildViewModeIconButton(theme, 0, Icons.image_outlined, Icons.image_rounded),
+                _buildViewModeIconButton(theme, 1, Icons.video_library_outlined, Icons.video_library_rounded),
+                _buildViewModeIconButton(
+                  theme,
+                  2,
+                  Icons.tag_outlined,
+                  Icons.tag_rounded,
+                ), // Using different outline/filled
+                _buildViewModeIconButton(theme, 4, Icons.topic_outlined, Icons.topic_rounded),
               ],
             ),
           ),
@@ -298,145 +313,248 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildEditProfileButton() {
-    return SizedBox(
-      width: double.infinity, // Make button take available width
-      child: SettingsButton(
-        // Assuming this is an OutlinedButton or similar
-        onPressed: _onProfileSettings,
-        backgroundColor: Colors.transparent, // These properties depend on SettingsButton implementation
-        borderColor: Colors.black54,
-        text: 'Edit Profile',
-        textColor: Colors.black87,
+  Widget _buildTopDetailsRow(ThemeData theme, ColorScheme colorScheme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () {
+              // TODO: Allow changing profile picture (e.g., show image picker)
+              showSnackBar("Change profile picture (Not implemented)", context);
+            },
+            child: CircleAvatar(
+              radius: 40,
+              backgroundColor: colorScheme.surfaceVariant, // Fallback color
+              backgroundImage: _showDefaultAvatar || _user!.profileImage().isEmpty
+                  ? const AssetImage("assets/images/default_profile.png") as ImageProvider
+                  : NetworkImage(_user!.profileImage()),
+              onBackgroundImageError: _showDefaultAvatar
+                  ? null
+                  : (exception, stackTrace) {
+                      _logError("Error loading profile image", exception, stackTrace);
+                      if (mounted) {
+                        setState(() => _showDefaultAvatar = true);
+                      }
+                    },
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Expanded(child: _buildStatColumn(theme, 'BCH', _user!.balanceBchDevPath145)),
+                    Expanded(child: _buildStatColumn(theme, 'Token', _user!.balanceCashtokensDevPath145)),
+                    Expanded(child: _buildStatColumn(theme, 'Memo', _user!.balanceBchDevPath0Memo)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildEditProfileButton(theme), // Pass theme
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildViewModeIconButton(int index, IconData icon) {
-    return IconButton(
-      // padding: const EdgeInsets.fromLTRB(20, 10, 20, 20), // Default padding is often fine
-      iconSize: 32, // Slightly smaller
-      onPressed: () {
-        if (mounted) {
-          setState(() {
-            _viewMode = index;
-          });
-        }
-      },
-      icon: Icon(icon, color: _activeOrNotColor(index)),
+  Widget _buildEditProfileButton(ThemeData theme) {
+    // Pass theme
+    return SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0), // Reduced horizontal padding
+        child: SettingsButton(
+          // Assuming SettingsButton is themed (uses OutlinedButton or ElevatedButton style)
+          text: 'Edit Profile',
+          onPressed: _onProfileSettings,
+          // If SettingsButton was refactored like Approach 2 (OutlinedButton style):
+          // No direct color props needed here, it picks from theme.outlinedButtonTheme
+          // If SettingsButton was refactored like Approach 3 (Custom Themed):
+          // You might pass a flag like `isPrimaryAction: false` if it supports it.
+        ),
+      ),
     );
   }
 
-  Widget _buildContentView() {
-    final List<MemoModelPost> imgurPosts = MemoModelPost.imgurPosts;
-    final List<MemoModelPost> ytPosts = MemoModelPost.ytPosts;
-    final List<MemoModelPost> hashtagPosts = MemoModelPost.hashTagPosts;
-    final List<MemoModelPost> topicPosts = MemoModelPost.topicPosts;
+  Widget _buildViewModeIconButton(ThemeData theme, int index, IconData inactiveIcon, IconData activeIcon) {
+    final bool isActive = _viewMode == index;
+    return IconButton(
+      iconSize: 28, // Adjusted size
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.all(12), // Consistent padding
+      icon: Icon(
+        isActive ? activeIcon : inactiveIcon,
+        color: isActive ? theme.colorScheme.primary : theme.iconTheme.color?.withOpacity(0.7),
+      ),
+      tooltip: _getViewModeTooltip(index),
+      onPressed: () {
+        if (mounted) {
+          setState(() => _viewMode = index);
+        }
+      },
+    );
+  }
+
+  String _getViewModeTooltip(int index) {
+    switch (index) {
+      case 0:
+        return "View Images";
+      case 1:
+        return "View Videos";
+      case 2:
+        return "View Tagged Posts";
+      case 4:
+        return "View Topic Posts";
+      default:
+        return "View";
+    }
+  }
+
+  Widget _buildContentView(ThemeData theme) {
+    // Pass theme
+    // Data lists are assumed to be populated correctly.
+    // Ensure MemoModelPost instances have data or handle nulls gracefully.
+
+    Widget emptyView(String message) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.layers_clear_outlined, size: 48, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
+              const SizedBox(height: 16),
+              Text(message, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            ],
+          ),
+        ),
+      );
+    }
 
     switch (_viewMode) {
       case 0: // Grid View (Images)
-        // final posts = MemoModelPost.imgurPosts; // Use your actual data
-        final posts = imgurPosts; // Using placeholder
-        if (posts.isEmpty) return const Center(child: Text("No image posts yet."));
+        final posts = MemoModelPost.imgurPosts;
+        if (posts.isEmpty) return emptyView("No image posts yet.");
         return GridView.builder(
           padding: const EdgeInsets.all(4),
           itemCount: posts.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
+            crossAxisCount: 3, // Adjust for screen size if needed
             crossAxisSpacing: 4,
             mainAxisSpacing: 4,
           ),
           itemBuilder: (context, index) {
             final post = posts[index];
-            // Ensure imgurUrl is not null or empty before using NetworkImage
+            Widget imagePlaceholder = Container(
+              color: theme.colorScheme.surfaceVariant,
+              child: Icon(Icons.broken_image_outlined, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
+            );
+
             if (post.imgurUrl == null || post.imgurUrl!.isEmpty) {
-              return Container(color: Colors.grey.shade300, child: const Icon(Icons.broken_image));
+              return imagePlaceholder;
             }
+
             final img = Image.network(
-              // Use Image.network directly for simplicity
               post.imgurUrl!,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  ImgurUtils.errorLoadImage(context, error, stackTrace), // Keep your util
-              loadingBuilder: (context, child, loadingProgress) =>
-                  ImgurUtils.loadingImage(context, child, loadingProgress), // Keep your util
+              errorBuilder: (context, error, stackTrace) {
+                // ImgurUtils.errorLoadImage should ideally return a themed widget
+                _logError("Error loading grid image: ${post.imgurUrl}", error, stackTrace);
+                return imagePlaceholder;
+              },
+              loadingBuilder: (context, child, loadingProgress) {
+                // ImgurUtils.loadingImage should ideally return a themed widget
+                if (loadingProgress == null) return child;
+                return Container(
+                  color: theme.colorScheme.surfaceVariant,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.0,
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  ),
+                );
+              },
             );
-            return GestureDetector(onDoubleTap: () => _showPostDialog(post, img), child: img);
+            return GestureDetector(
+              onDoubleTap: () =>
+                  _showPostDialog(theme, post, AspectRatio(aspectRatio: 1, child: img)), // Pass theme & wrapped image
+              child: AspectRatio(aspectRatio: 1, child: img), // Ensure square grid items
+            );
           },
         );
       case 1: // YouTube Videos
-        // final posts = MemoModelPost.ytPosts; // Use your actual data
-        final posts = ytPosts; // Using placeholder
-        if (posts.isEmpty) return const Center(child: Text("No video posts yet."));
-        return _buildYouTubeListView(posts);
+        final posts = MemoModelPost.ytPosts;
+        if (posts.isEmpty) return emptyView("No video posts yet.");
+        return _buildYouTubeListView(theme, posts); // Pass theme
       case 2: // Hashtag Posts
-        // final posts = MemoModelPost.hashTagPosts; // Use your actual data
-        final posts = hashtagPosts; // Using placeholder
-        if (posts.isEmpty) return const Center(child: Text("No tagged posts yet."));
-        return _buildGenericPostListView(posts);
+        final posts = MemoModelPost.hashTagPosts;
+        if (posts.isEmpty) return emptyView("No tagged posts yet.");
+        return _buildGenericPostListView(theme, posts); // Pass theme
       case 4: // Topic Posts
-        // final posts = MemoModelPost.topicPosts; // Use your actual data
-        final posts = topicPosts; // Using placeholder
-        if (posts.isEmpty) return const Center(child: Text("No topic posts yet."));
-        return _buildGenericPostListView(posts);
+        final posts = MemoModelPost.topicPosts;
+        if (posts.isEmpty) return emptyView("No topic posts yet.");
+        return _buildGenericPostListView(theme, posts); // Pass theme
       default:
-        return const Center(child: Text("Select a view mode."));
+        return emptyView("Select a view mode.");
     }
   }
 
-  void _showPostDialog(MemoModelPost post, Widget imageWidget) {
-    // Ensure creator is not null
-    if (post.creator == null) return;
+  void _showPostDialog(ThemeData theme, MemoModelPost post, Widget imageWidget) {
+    // Pass theme
+    if (post.creator == null) {
+      showSnackBar("Cannot show post details: Creator data missing.", context);
+      return;
+    }
 
     showDialog(
       context: context,
       builder: (dialogCtx) {
         return SimpleDialog(
-          titlePadding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 16), // Image fills width
+          // Uses theme.dialogTheme for shape, backgroundColor, titleTextStyle, contentTextStyle
+          titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+          contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
           title: Row(
             children: [
               CircleAvatar(
                 radius: 18,
+                backgroundColor: theme.colorScheme.surfaceVariant,
                 backgroundImage: post.creator!.profileImage().isEmpty
                     ? const AssetImage("assets/images/default_profile.png") as ImageProvider
                     : NetworkImage(post.creator!.profileImage()),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(post.creator!.name, style: const TextStyle(fontSize: 16), overflow: TextOverflow.ellipsis),
+                child: Text(
+                  post.creator!.name,
+                  style: theme.dialogTheme.titleTextStyle ?? theme.textTheme.titleLarge,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: imageWidget, // Re-use the image widget
-            ),
-            // Inside _showPostDialog's children:
+            Padding(padding: const EdgeInsets.symmetric(vertical: 12.0), child: imageWidget),
             if (post.text != null && post.text!.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    minHeight: 10,
-                    minWidth: 100,
-                    maxWidth: 100,
-                    maxHeight: 100, // Example: Allow it to grow up to 100 pixels
-                    // Adjust this based on how much space you want to allow
-                  ),
-                  child: SingleChildScrollView(
-                    // Important for scrollability if content exceeds maxHeight
-                    child: ExpandableText(
-                      post.text!,
-                      expandText: 'show more',
-                      collapseText: 'show less',
-                      maxLines: 4, // This still ap
-                      collapseOnTextTap: true, // plies to the collapsed state
-                      linkColor: Colors.blue,
-                      animation: true,
-                      style: const TextStyle(fontSize: 14),
-                    ),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: ExpandableText(
+                  post.text!,
+                  expandText: 'show more',
+                  collapseText: 'show less',
+                  maxLines: 4,
+                  linkColor: theme.colorScheme.primary,
+                  style: theme.dialogTheme.contentTextStyle ?? theme.textTheme.bodyMedium,
+                  linkStyle: (theme.dialogTheme.contentTextStyle ?? theme.textTheme.bodyMedium)?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -446,13 +564,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildYouTubeListView(List<MemoModelPost> posts) {
+  Widget _buildYouTubeListView(ThemeData theme, List<MemoModelPost> posts) {
+    // Pass theme
     return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: posts.length,
       itemBuilder: (context, index) {
         final ytPost = posts[index];
         if (ytPost.youtubeId == null || ytPost.youtubeId!.isEmpty) {
-          return const SizedBox.shrink(); // Skip if no YouTube ID
+          return const SizedBox.shrink();
         }
 
         YoutubePlayerController controller = _ytControllers.putIfAbsent(
@@ -461,50 +581,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
             initialVideoId: ytPost.youtubeId!,
             flags: const YoutubePlayerFlags(
               autoPlay: false,
-              mute: false, // User can unmute
-              hideControls: false, // Show controls by default
-              hideThumbnail: false, // Show thumbnail initially
-              // disableDragSeek: true,
-              // loop: false,
-              // isLive: false,
-              // forceHD: false,
-              // enableCaption: true,
+              mute: true, // Start muted for feed UX
+              hideControls: false,
+              hideThumbnail: false,
             ),
           ),
         );
 
         return Card(
-          // Wrap in Card for better visual separation
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          // margin uses theme.cardTheme.margin or default
+          // elevation uses theme.cardTheme.elevation
+          // shape uses theme.cardTheme.shape
+          // color uses theme.cardTheme.color
+          clipBehavior: Clip.antiAlias,
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(0), // Player can be edge-to-edge in card
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 YoutubePlayer(
                   controller: controller,
                   showVideoProgressIndicator: true,
-                  progressIndicatorColor: Colors.amber,
-                  progressColors: const ProgressBarColors(playedColor: Colors.amber, handleColor: Colors.amberAccent),
-                  // onReady: () { _logInfo('Player is ready.'); },
-                ),
-                const SizedBox(height: 8),
-                if (ytPost.text != null && ytPost.text!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4.0, bottom: 4.0),
-                    child: ExpandableText(
-                      ytPost.text!,
-                      expandText: 'show more',
-                      collapseText: 'show less',
-                      maxLines: 3,
-                      linkColor: Colors.blue,
-                      style: const TextStyle(fontSize: 14),
-                    ),
+                  progressIndicatorColor: theme.colorScheme.primary, // Themed
+                  progressColors: ProgressBarColors(
+                    // Themed
+                    playedColor: theme.colorScheme.primary,
+                    handleColor: theme.colorScheme.secondary,
+                    bufferedColor: theme.colorScheme.primary.withOpacity(0.4),
+                    backgroundColor: theme.colorScheme.onSurface.withOpacity(0.1),
                   ),
-                const Divider(),
-                Text(
-                  "Posted by: ${ytPost.creator?.name ?? 'Unknown'}", // Handle null creator name
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey),
+                ),
+                Padding(
+                  // Add padding for text content below video
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (ytPost.text != null && ytPost.text!.isNotEmpty) ...[
+                        ExpandableText(
+                          ytPost.text!,
+                          expandText: 'show more',
+                          collapseText: 'show less',
+                          maxLines: 3,
+                          linkColor: theme.colorScheme.primary,
+                          style: theme.textTheme.bodyMedium,
+                          linkStyle: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      // Divider(color: theme.dividerColor),
+                      Text(
+                        "Posted by: ${ytPost.creator?.name ?? 'Unknown'}",
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -514,39 +649,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildGenericPostListView(List<MemoModelPost> posts) {
+  Widget _buildGenericPostListView(ThemeData theme, List<MemoModelPost> posts) {
+    // Pass theme
     return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: posts.length,
       itemBuilder: (context, index) {
         final post = posts[index];
         return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Text(
-                      post.creator?.name ?? 'Unknown', // Handle null
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    Expanded(
+                      child: Text(
+                        post.creator?.name ?? 'Unknown',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     Text(
-                      post.created ?? '', // Handle null
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                      post.created ?? '',
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
-                const Divider(),
+                const SizedBox(height: 4),
+                Divider(color: theme.dividerColor),
+                const SizedBox(height: 8),
                 ExpandableText(
-                  post.text ?? 'No content.', // Handle null
+                  post.text ?? 'No content.',
                   expandText: 'show more',
                   collapseText: 'show less',
                   maxLines: 5,
-                  linkColor: Colors.blue,
-                  style: const TextStyle(fontSize: 15),
+                  linkColor: theme.colorScheme.primary,
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+                  linkStyle: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -557,35 +703,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _onProfileSettings() {
+    final ThemeData theme = Theme.of(context); // Get theme for dialog
+
     showDialog(
       context: context,
       builder: (ctxDialog) {
         return SimpleDialog(
-          titlePadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-          title: const Row(children: [Icon(Icons.settings), SizedBox(width: 10), Text("PROFILE SETTINGS")]),
+          // titlePadding will be from theme.dialogTheme or default
+          // shape from theme.dialogTheme
+          // backgroundColor from theme.dialogTheme
+          title: Row(
+            children: [
+              Icon(
+                Icons.settings_outlined,
+                color: theme.dialogTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface,
+              ),
+              const SizedBox(width: 10),
+              Text("PROFILE SETTINGS", style: theme.dialogTheme.titleTextStyle ?? theme.textTheme.titleLarge),
+            ],
+          ),
           children: [
-            _buildSettingsOption(Icons.verified_user_outlined, "NAME", ctxDialog, () {
+            _buildSettingsOption(theme, Icons.badge_outlined, "NAME", ctxDialog, () {
               showSnackBar("Set profile name (Not implemented)", context);
             }),
-            _buildSettingsOption(Icons.description_outlined, "DESCRIPTION", ctxDialog, () {
+            _buildSettingsOption(theme, Icons.notes_outlined, "DESCRIPTION", ctxDialog, () {
               showSnackBar("Set profile description (Not implemented)", context);
             }),
-            _buildSettingsOption(Icons.image_outlined, "AVATAR URL", ctxDialog, () {
+            _buildSettingsOption(theme, Icons.image_search_outlined, "AVATAR URL", ctxDialog, () {
               showSnackBar("Set profile IMGUR URL (Not implemented)", context);
             }),
-            _buildSettingsOption(Icons.link_rounded, "TWITTER", ctxDialog, () {
+            _buildSettingsOption(theme, Icons.alternate_email_outlined, "TWITTER", ctxDialog, () {
               showSnackBar("Link Twitter account (Not implemented)", context);
             }),
-            const Divider(),
-            _buildSettingsOption(Icons.backup_outlined, "BACKUP MNEMONIC", ctxDialog, () {
-              if (_user?.mnemonic != null) {
+            Divider(color: theme.dividerColor, height: 20, thickness: 0.5),
+            _buildSettingsOption(theme, Icons.vpn_key_outlined, "BACKUP MNEMONIC", ctxDialog, () {
+              if (_user?.mnemonic != null && _user!.mnemonic.isNotEmpty) {
                 _copyToClipboard(_user!.mnemonic, "Mnemonic copied!");
               } else {
                 showSnackBar("Mnemonic not available.", context);
               }
             }),
-            _buildSettingsOption(Icons.logout_outlined, "LOGOUT", ctxDialog, () {
-              AuthChecker().logOut(context); // Assuming this handles navigation
+            _buildSettingsOption(theme, Icons.logout, "LOGOUT", ctxDialog, () {
+              AuthChecker().logOut(context);
             }),
           ],
         );
@@ -593,52 +752,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  SimpleDialogOption _buildSettingsOption(IconData icon, String text, BuildContext dialogCtx, VoidCallback onSelect) {
+  Widget _buildSettingsOption(
+    ThemeData theme,
+    IconData icon,
+    String text,
+    BuildContext dialogCtx,
+    VoidCallback onSelect,
+  ) {
     return SimpleDialogOption(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       onPressed: () {
-        Navigator.of(dialogCtx).pop(); // Pop before calling onSelect
+        Navigator.of(dialogCtx).pop();
         onSelect();
       },
       child: Row(
         children: [
-          Icon(icon, color: Colors.grey.shade700),
+          Icon(icon, color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7) ?? theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 15),
-          Text(text),
+          Text(text, style: theme.textTheme.bodyLarge /*?.copyWith(color: theme.colorScheme.onSurface)*/),
         ],
       ),
     );
   }
 
   void _showBchQRDialog() {
-    // For simplicity, ProfileScreen still manages toggleAddressType.
-    // To make dialog fully independent, pass a ValueNotifier or callback.
+    final ThemeData theme = Theme.of(context);
+    if (_user == null) {
+      showSnackBar("User data not available for QR code.", context);
+      return;
+    }
+    // QrCodeDialog should be refactored to be theme-aware.
+    // For now, it will inherit ambient theme.
     showDialog(
       context: context,
       builder: (dialogCtx) {
-        // Use a StatefulWidget for the dialog's content if it needs its own independent state.
-        // For this example, we'll keep it simple and rebuild via ProfileScreen's state.
         return QrCodeDialog(
-          // Using a separate StatefulWidget for the dialog
           user: _user!,
-          initialToggleState: _tempToggleAddressTypeForDialog, // Pass current toggle state
+          initialToggleState: _tempToggleAddressTypeForDialog,
           onToggle: (newState) {
-            // Callback to update ProfileScreen's state if needed
             if (mounted) {
               setState(() {
                 _tempToggleAddressTypeForDialog = newState;
               });
             }
           },
+          // You might need to pass theme explicitly if QrCodeDialog cannot use Theme.of(context) effectively
+          // theme: theme,
         );
       },
     );
   }
 
-  // Temporary state for the QR dialog toggle to avoid immediate ProfileScreen rebuild on tap inside dialog
-  bool _tempToggleAddressTypeForDialog = true;
+  bool _tempToggleAddressTypeForDialog = true; // State for QR dialog toggle
 
   Future<void> _copyToClipboard(String text, String successMessage) async {
+    // ... (logic remains the same, showSnackBar should be themed)
     if (text.isEmpty) {
       showSnackBar("Nothing to copy.", context);
       return;

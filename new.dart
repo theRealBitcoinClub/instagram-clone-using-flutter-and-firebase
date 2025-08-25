@@ -110,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 hintText: 'Enter your 12-word mnemonic phrase',
                 textInputType: TextInputType.text,
                 // Ensure TextInputField uses theme.inputDecorationTheme and theme.textTheme
-                // maxLines: 3, // Allow more lines for mnemonic
+                maxLines: 3, // Allow more lines for mnemonic
               ),
 
               const SizedBox(height: 16),

@@ -4,16 +4,15 @@ import 'package:instagram_clone1/memobase/memo_accountant.dart';
 import 'package:instagram_clone1/memobase/memo_verifier.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 import 'package:instagram_clone1/memoscraper/memo_scraper_utils.dart';
-import 'package:instagram_clone1/utils/imgur_utils.dart';
-import 'package:instagram_clone1/utils/snackbar.dart';
-import 'package:instagram_clone1/widgets/like_animtion.dart';
+import 'package:instagram_clone1/utils/snackbar.dart'; // Ensure this uses themed SnackBars
+import 'package:instagram_clone1/widgets/like_animtion.dart'; // Ensure this is theme-aware or neutral
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
 import '../memomodel/memo_model_post.dart';
-import 'memo_confetti.dart'; // Assuming this exists
+import 'memo_confetti.dart'; // Ensure this is theme-aware or neutral
 
-// Basic logging placeholder
+// Basic logging placeholder (remains the same)
 void _logInfo(String message) => print('INFO: PostCard - $message');
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
   print('ERROR: PostCard - $message');
@@ -24,31 +23,31 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
 class PostCard extends StatefulWidget {
   final MemoModelPost post;
 
-  const PostCard(this.post, {Key? key}) : super(key: key); // Use Key? key
+  const PostCard(this.post, {Key? key}) : super(key: key);
 
   @override
-  State<PostCard> createState() => _PostCardState(); // No need to pass post here
+  State<PostCard> createState() => _PostCardState();
 }
 
 class _PostCardState extends State<PostCard> {
-  // Constants
+  // Constants (remain the same)
   static const double _altImageHeight = 50.0;
   static const int _maxTagsCounter = 3;
   static const int _minTextLength = 20;
   static const Duration _animationDuration = Duration(milliseconds: 500);
 
-  // State variables
+  // State variables (remain the same)
   MemoModelUser? _user;
   bool _isAnimatingLike = false;
   bool _isSendingTx = false;
   bool _showInput = false;
   bool _showSend = false;
   bool _hasSelectedTopic = false;
-  late List<bool> _selectedHashtags; // Initialize in initState
+  late List<bool> _selectedHashtags;
 
-  // Controllers
+  // Controllers (remain the same)
   late TextEditingController _textEditController;
-  YoutubePlayerController? _ytController; // Nullable, initialize if needed
+  YoutubePlayerController? _ytController;
 
   @override
   void initState() {
@@ -61,102 +60,175 @@ class _PostCardState extends State<PostCard> {
       _ytController = YoutubePlayerController(
         initialVideoId: widget.post.youtubeId!,
         flags: const YoutubePlayerFlags(
-          // Consider making some flags configurable or based on post properties
-          hideThumbnail: true, // Or false if you want initial thumbnail
-          hideControls: true, // Or false
-          mute: false, // Or true
           autoPlay: false,
+          mute: false,
+          // Consider making controls visible by default or using themed colors
+          // hideControls: false,
+          // controlsTimeOut: Duration(seconds: 5),
         ),
       );
     }
   }
 
   void _initializeSelectedHashtags() {
-    // Initialize based on the actual number of hashtags for the post, up to maxTagsCounter
     final int count = widget.post.hashtags.length > _maxTagsCounter ? _maxTagsCounter : widget.post.hashtags.length;
     _selectedHashtags = List<bool>.filled(count, false);
   }
 
   Future<void> _loadUser() async {
-    // No setState needed here if user is only used in async methods
     _user = await MemoModelUser.getUser();
-    // If you needed to update UI based on user loaded, then:
-    // if (mounted) setState(() {});
+    if (mounted) {
+      // If user data influences UI directly that's not part of an async operation,
+      // you might need a setState here. For now, assuming it's used in async ops like _sendTip.
+      // setState(() {});
+    }
   }
 
   @override
   void dispose() {
     _textEditController.dispose();
-    _ytController?.dispose(); // Dispose if not null
+    _ytController?.dispose();
     super.dispose();
   }
 
   // --- UI Builder Methods ---
 
-  Widget _buildPostMedia() {
+  Widget _buildPostMedia(ThemeData theme) {
     if (widget.post.youtubeId != null && _ytController != null) {
       return YoutubePlayer(
         controller: _ytController!,
         showVideoProgressIndicator: true,
-        // onReady: () { _logInfo('Player is ready.'); },
+        progressIndicatorColor: theme.colorScheme.primary, // Use theme color
+        progressColors: ProgressBarColors(
+          // Use theme colors
+          playedColor: theme.colorScheme.primary,
+          handleColor: theme.colorScheme.secondary,
+          bufferedColor: theme.colorScheme.primary.withOpacity(0.5),
+          backgroundColor: theme.colorScheme.onSurface.withOpacity(0.1),
+        ),
+        // Consider theming other aspects of the player if available
       );
     } else if (widget.post.imgurUrl != null) {
       return Image.network(
-        // Use Image.network directly for better const usage potential
         widget.post.imgurUrl!,
         fit: BoxFit.cover,
-        errorBuilder: ImgurUtils.errorLoadImage, // Pass function reference
-        loadingBuilder: ImgurUtils.loadingImage, // Pass function reference
+        errorBuilder: (context, error, stackTrace) {
+          // ImgurUtils.errorLoadImage should ideally return a themed widget
+          // For now, a simple themed error placeholder:
+          _logError("Failed to load Imgur image: ${widget.post.imgurUrl}", error, stackTrace);
+          return Container(
+            height: _altImageHeight * 2, // Make it a bit larger
+            color: theme.colorScheme.surfaceVariant,
+            child: Center(
+              child: Icon(Icons.broken_image_outlined, color: theme.colorScheme.onSurfaceVariant, size: 30),
+            ),
+          );
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          // ImgurUtils.loadingImage should ideally return a themed widget
+          if (loadingProgress == null) return child;
+          return Container(
+            height: _altImageHeight * 2,
+            color: theme.colorScheme.surfaceVariant,
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2.0,
+                // color is handled by theme.progressIndicatorTheme
+              ),
+            ),
+          );
+        },
       );
     } else {
       // Placeholder for text-only posts or posts without media
-      return Container(color: Colors.greenAccent, height: _altImageHeight);
+      return Container(
+        height: _altImageHeight,
+        color: theme.colorScheme.surfaceVariant, // Use themed background
+        child: Center(
+          child: Icon(
+            Icons.article_outlined, // Placeholder icon
+            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+            size: _altImageHeight * 0.6,
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Ensure creator is not null before building parts that depend on it
+    final ThemeData theme = Theme.of(context); // Get the current theme
+
     if (widget.post.creator == null) {
-      _logError("Post creator is null, cannot build PostCard for post ID: ${widget.post.txHash}");
-      return const SizedBox.shrink(child: Text("Error: Post data incomplete")); // Or some error placeholder
+      _logError("Post creator is null for post ID: ${widget.post.txHash}");
+      return Card(
+        // Use Card for consistent error display
+        color: theme.colorScheme.errorContainer,
+        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            "Error: Post data incomplete. Cannot display this post.",
+            style: TextStyle(color: theme.colorScheme.onErrorContainer),
+          ),
+        ),
+      );
     }
 
     return Card(
-      // Wrap in Card for common styling and elevation
+      // Card properties will now use theme.cardTheme
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-      elevation: 2.0,
-      color: Colors.white,
+      // elevation: theme.cardTheme.elevation ?? 2.0, // Or set explicitly
+      // color: theme.cardTheme.color, // Handled by CardTheme
+      // shape: theme.cardTheme.shape, // Handled by CardTheme
+      clipBehavior: Clip.antiAlias, // Good practice for cards with images
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Important for Column in a list
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _PostCardHeader(post: widget.post, onOptionsMenuPressed: _showPostOptionsMenu),
+          _PostCardHeader(
+            post: widget.post,
+            onOptionsMenuPressed: _showPostOptionsMenu,
+            // Pass theme if _PostCardHeader needs it directly,
+            // but it should primarily use Theme.of(context) internally
+          ),
           GestureDetector(
-            onDoubleTap: _sendTipToCreator,
+            onDoubleTap: _isSendingTx ? null : _sendTipToCreator, // Disable if already sending
             child: ZoomOverlay(
-              modalBarrierColor: Colors.black12,
+              modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3), // Themed scrim
               minScale: 0.5,
               maxScale: 3.0,
               twoTouchOnly: true,
-              animationDuration: const Duration(milliseconds: 300),
-              animationCurve: Curves.fastOutSlowIn,
+              animationDuration: const Duration(milliseconds: 200),
+              animationCurve: Curves.easeOut,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  _buildPostMedia(),
+                  _buildPostMedia(theme),
+                  // Assuming _SendingAnimation and _LikeSucceededAnimation are theme-aware
+                  // or their fixed colors are acceptable (e.g., white overlay icons).
+                  // If not, they also need to be refactored to use Theme.of(context).
                   _SendingAnimation(
                     isSending: _isSendingTx,
-                    mediaHeight: widget.post.imgurUrl == null ? _altImageHeight : 150.0, // Example size
+                    mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null
+                        ? _altImageHeight
+                        : 150.0,
                     onEnd: () {
                       if (mounted) setState(() => _isSendingTx = false);
                     },
+                    theme: theme, // Pass theme if it needs it directly for icons
                   ),
                   _LikeSucceededAnimation(
                     isAnimating: _isAnimatingLike,
-                    mediaHeight: widget.post.imgurUrl == null ? _altImageHeight : 150.0,
+                    mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null
+                        ? _altImageHeight
+                        : 150.0,
                     onEnd: () {
                       if (mounted) setState(() => _isAnimatingLike = false);
                     },
+                    theme: theme, // Pass theme
                   ),
                 ],
               ),
@@ -180,12 +252,12 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  // --- Interaction Logic Methods ---
+  // --- Interaction Logic Methods (Mostly unchanged, ensure SnackBars are themed) ---
 
   Future<void> _sendTipToCreator() async {
     if (_user == null) {
-      showSnackBar("User data not loaded yet.", context);
-      _loadUser(); // Attempt to reload user
+      showSnackBar("User data not loaded yet.", context); // showSnackBar should use themed context
+      _loadUser();
       return;
     }
     if (!mounted) return;
@@ -195,24 +267,22 @@ class _PostCardState extends State<PostCard> {
       MemoAccountantResponse response = await MemoAccountant(_user!).publishLike(widget.post);
       if (!mounted) return;
 
-      // Single setState for UI changes post-API call
       setState(() {
-        _isSendingTx = false; // Always set sending to false
+        _isSendingTx = false;
         switch (response) {
           case MemoAccountantResponse.yes:
-            _isAnimatingLike = true; // Trigger success animation
-            // MemoConfetti().launch(context); // Consider if confetti should be here or part of animation
+            _isAnimatingLike = true;
+            MemoConfetti().launch(context); // Assuming confetti is theme-neutral or adapts
             break;
           case MemoAccountantResponse.lowBalance:
             showSnackBar("Low balance", context);
             break;
           case MemoAccountantResponse.noUtxo:
           case MemoAccountantResponse.dust:
-            _logError("Accountant error: ${response.name}", response);
-            showSnackBar("Transaction error. Please try again later.", context);
+          default: // Catch-all for other non-success cases
+            _logError("Accountant error during tip: ${response.name}", response);
+            showSnackBar("Transaction error (${response.name}). Please try again later.", context);
             break;
-          // default: // Handle any other cases if MemoAccountantResponse enum grows
-          //   showSnackBar("An unexpected error occurred.", context);
         }
       });
     } catch (e, s) {
@@ -225,13 +295,15 @@ class _PostCardState extends State<PostCard> {
   }
 
   void _showPostOptionsMenu() {
-    // This method was building UI directly, which is fine for showDialog.
-    // No major performance changes here, but ensure the dialog content is efficient.
+    final ThemeData theme = Theme.of(context); // Get theme for the dialog
+
     showDialog(
       context: context,
       builder: (dialogCtx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 0,
+        // Dialog properties will now use theme.dialogTheme
+        // shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        // elevation: theme.dialogTheme.elevation ?? 0,
+        // backgroundColor: theme.dialogTheme.backgroundColor,
         child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 16),
           shrinkWrap: true,
@@ -247,7 +319,12 @@ class _PostCardState extends State<PostCard> {
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        child: Center(child: Text(e)),
+                        child: Center(
+                          child: Text(
+                            e,
+                            style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface),
+                          ),
+                        ),
                       ),
                     ),
                   )
@@ -255,6 +332,94 @@ class _PostCardState extends State<PostCard> {
         ),
       ),
     );
+  }
+
+  // _onSelectTopic, _onInputText, _onSelectHashtag, _evaluateShowSendButton, _onSend, _onCancel
+  // These methods primarily manage state and call _publish methods. Their logic remains the same.
+  // The UI they control (_PostCardFooter) will be themed.
+
+  // --- Publish and Response Methods (Ensure SnackBars are themed) ---
+
+  Future<void> _publishReplyTopic(String text) async {
+    // ... (logic remains)
+    var result = await widget.post.publishReplyTopic(text);
+    if (!mounted) return;
+    _showVerificationResponse(result, context);
+  }
+
+  Future<void> _publishReplyHashtags(String text) async {
+    // ... (logic remains)
+    var result = await widget.post.publishReplyHashtags(text);
+    if (!mounted) return;
+    _showVerificationResponse(result, context);
+  }
+
+  void _showVerificationResponse(dynamic result, BuildContext ctx) {
+    // ... (logic remains, ensure showSnackBar uses themed context)
+    String message = "";
+    bool success = false;
+
+    if (result is MemoVerificationResponse) {
+      // ... (existing switch cases)
+      switch (result) {
+        case MemoVerificationResponse.minWordCountNotReached:
+          message = "Write more words";
+          break;
+        // ... (all your other MemoVerificationResponse cases) ...
+        case MemoVerificationResponse.email:
+          message = "Email not allowed";
+          break;
+        case MemoVerificationResponse.moreThanOneTopic:
+          message = "Only one topic allowed";
+          break;
+        case MemoVerificationResponse.moreThanThreeTags:
+          message = "Too many tags";
+          break;
+        case MemoVerificationResponse.urlThatsNotTgNorImageNorVideo:
+          message = "Invalid URL.";
+          break;
+        case MemoVerificationResponse.offensiveWords:
+          message = "Offensive words detected.";
+          break;
+        case MemoVerificationResponse.tooLong:
+          message = "Text is too long.";
+          break;
+        case MemoVerificationResponse.tooShort:
+          message = "Too short. Tags count towards length.";
+          break;
+        case MemoVerificationResponse.zeroTags:
+          message = "Add at least one visible tag.";
+          break;
+        default:
+          message = "Verification issue: ${result.name}";
+      }
+    } else if (result is MemoAccountantResponse) {
+      switch (result) {
+        case MemoAccountantResponse.lowBalance:
+          message = "Insufficient balance.";
+          break;
+        case MemoAccountantResponse.yes:
+          success = true;
+          break;
+        case MemoAccountantResponse.noUtxo:
+          message = "Transaction error (no UTXO).";
+          break;
+        case MemoAccountantResponse.dust:
+          message = "Transaction error (dust).";
+          break;
+        default:
+          message = "Account issue: ${result.name}";
+      }
+    } else {
+      message = "An unexpected error occurred during verification.";
+      _logError("Unknown verification response type: ${result.runtimeType}", result);
+    }
+
+    if (success) {
+      _clearAndConfetti();
+    } else if (message.isNotEmpty && mounted) {
+      showSnackBar(message, ctx); // Ensure showSnackBar uses themed context
+    }
   }
 
   void _onSelectTopic() {
@@ -347,73 +512,12 @@ class _PostCardState extends State<PostCard> {
     });
   }
 
-  Future<void> _publishReplyTopic(String text) async {
-    // Consider adding a sending indicator specific to this action if it's long
-    var result = await widget.post.publishReplyTopic(text); // Assume widget.post is correct
-    if (!mounted) return;
-    _showVerificationResponse(result, context);
-  }
-
-  Future<void> _publishReplyHashtags(String text) async {
-    var result = await widget.post.publishReplyHashtags(text);
-    if (!mounted) return;
-    _showVerificationResponse(result, context);
-  }
-
-  void _showVerificationResponse(dynamic result, BuildContext ctx) {
-    // Made ctx non-nullable
-    // Ensure result is one of the expected types.
-    // This switch is extensive. Ensure all cases are handled correctly.
-    String message = "";
-    bool success = false;
-
-    if (result is MemoVerificationResponse) {
-      switch (result) {
-        case MemoVerificationResponse.minWordCountNotReached:
-          message = "Write more words";
-          break;
-        // ... (all your other MemoVerificationResponse cases) ...
-        case MemoVerificationResponse.tooShort:
-          message = "Too short. Tags count towards length.";
-          break;
-        case MemoVerificationResponse.zeroTags:
-          message = "Add at least one visible tag.";
-          break;
-        default:
-          message = "Verification issue: ${result.name}"; // Generic for unhandled enum values
-      }
-    } else if (result is MemoAccountantResponse) {
-      switch (result) {
-        case MemoAccountantResponse.lowBalance:
-          message = "You broke dude";
-          break;
-        case MemoAccountantResponse.yes:
-          success = true;
-          // Confetti and clear handled separately
-          break;
-        // ... (other MemoAccountantResponse cases like noUtxo, dust if they can reach here) ...
-        default:
-          message = "Account issue: ${result.name}";
-      }
-    } else {
-      message = "An unexpected error occurred during verification.";
-      _logError("Unknown verification response type: ${result.runtimeType}", result);
-    }
-
-    if (success) {
-      _clearAndConfetti();
-    } else if (message.isNotEmpty && mounted) {
-      showSnackBar(message, ctx);
-    }
-  }
-
   void _clearAndConfetti() {
     if (!mounted) return;
     setState(() {
-      MemoConfetti().launch(context); // Assuming MemoConfetti is correctly set up
-      _clearInputs(); // Reset selected hashtags
+      MemoConfetti().launch(context);
+      _clearInputs();
     });
-    // showSnackBar("Success!", context); // Optional success message
   }
 
   void _clearInputs() {
@@ -421,11 +525,11 @@ class _PostCardState extends State<PostCard> {
     _hasSelectedTopic = false;
     _showSend = false;
     _showInput = false;
-    _initializeSelectedHashtags(); // Reset selected hashtags
+    _initializeSelectedHashtags();
   }
 }
 
-// --- Helper Child Widgets (for better separation and potential const usage) ---
+// --- Helper Child Widgets (Refactored for Theming) ---
 
 class _PostCardHeader extends StatelessWidget {
   final MemoModelPost post;
@@ -433,67 +537,83 @@ class _PostCardHeader extends StatelessWidget {
 
   const _PostCardHeader({required this.post, required this.onOptionsMenuPressed});
 
-  // Example of what onClickCreatorName might do, assuming ProfileScreen exists
   void _navigateToProfile(BuildContext context, String creatorId) {
     _logInfo("Navigate to profile: $creatorId (Not implemented here)");
-    // Navigator.of(context).push(
-    //   MaterialPageRoute(builder: (context) => ProfileScreen(uid: creatorId)),
-    // );
-    showSnackBar("Navigate to profile $creatorId", context);
+    showSnackBar("Navigate to profile $creatorId", context); // Ensure showSnackBar is themed
   }
 
   @override
   Widget build(BuildContext context) {
-    // Creator should not be null here if PostCard build method checks it.
-    final creator = post.creator!;
+    final ThemeData theme = Theme.of(context);
+    final creator = post.creator!; // Null check in PostCard.build
 
     return Padding(
-      // Use Padding instead of Container with padding for const-ability
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16).copyWith(right: 8), // Adjusted right for menu
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16).copyWith(right: 8),
       child: Row(
         children: [
           GestureDetector(
             onTap: () => _navigateToProfile(context, creator.id),
             child: CircleAvatar(
-              radius: 22,
+              radius: 20, // Slightly smaller for a tighter look
+              backgroundColor: theme.colorScheme.surfaceVariant, // Fallback color
               backgroundImage: creator.profileImage().isEmpty
                   ? const AssetImage("assets/images/default_profile.png")
-                        as ImageProvider // Example default
+                        as ImageProvider // Keep your default
                   : NetworkImage(creator.profileImage()),
-              // Add onBackgroundImageError for NetworkImage if needed
+              onBackgroundImageError: (exception, stackTrace) {
+                _logError("Error loading profile image for ${creator.name}", exception, stackTrace);
+                // Optionally, you could use an Icon here as a fallback if the image fails.
+              },
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
-              // Use column for name and time details for better structure
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
-                  // Make name tappable too
                   onTap: () => _navigateToProfile(context, creator.id),
                   child: Text(
                     creator.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      // color: theme.colorScheme.onSurface, // Text color from theme
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Row(
-                  // Keep time details in a row
-                  children: [
-                    if (post.age != null) Text(post.age!, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                    if (post.age != null && post.created != null)
-                      const Text(" - ", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                    if (post.created != null)
-                      Text(post.created!, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                  ],
-                ),
+                // const SizedBox(height: 2), // Reduce spacing if too much
+                if (post.age != null || post.created != null)
+                  Row(
+                    children: [
+                      if (post.age != null)
+                        Text(
+                          post.age!,
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                      if (post.age != null && post.created != null)
+                        Text(
+                          " - ",
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                      if (post.created != null)
+                        Text(
+                          post.created!,
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                    ],
+                  ),
               ],
             ),
           ),
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: onOptionsMenuPressed),
+          IconButton(
+            icon: Icon(Icons.more_vert /* color: theme.colorScheme.onSurfaceVariant */), // Color from IconTheme
+            onPressed: onOptionsMenuPressed,
+            tooltip: "More options",
+            iconSize: 22,
+            visualDensity: VisualDensity.compact,
+          ),
         ],
       ),
     );
@@ -529,72 +649,109 @@ class _PostCardFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (post.creator == null) return const SizedBox.shrink(); // Should be checked by parent
+    final ThemeData theme = Theme.of(context);
+    // Creator null check should be done by parent (PostCard.build)
+    // if (post.creator == null) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (post.text != null && post.text!.isNotEmpty)
+          if (post.text != null && post.text!.isNotEmpty) ...[
             ExpandableText(
               post.text!,
-              prefixText: "${post.creator!.name}: ",
-              prefixStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5),
+              prefixText: post.creator != null ? "${post.creator!.name}: " : "", // Handle potential null creator
+              prefixStyle: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                // color: theme.colorScheme.onSurface,
+              ),
               expandText: 'show more',
               collapseText: 'show less',
-              maxLines: 5,
-              linkColor: Colors.blue,
-              style: const TextStyle(fontSize: 14.5),
+              maxLines: 4, // Adjust as needed
+              linkColor: theme.colorScheme.primary, // Themed link color
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.4), // Use themed text style
               animation: true,
+              linkEllipsis: true,
+              linkStyle: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
+            const SizedBox(height: 10),
+          ],
           if (showInput) ...[
-            // Use collection-if for cleaner conditional list
-            const SizedBox(height: 8),
             TextField(
               controller: textEditController,
               onChanged: onInputText,
-              decoration: const InputDecoration(
+              style: theme.textTheme.bodyMedium, // Use themed text style
+              decoration: InputDecoration(
+                // Will use theme.inputDecorationTheme
                 hintText: "Add a comment or reply...",
-                border: OutlineInputBorder(),
-                isDense: true,
+                // border: OutlineInputBorder(), // Handled by theme
+                // isDense: true, // Handled by theme if defined
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
-              maxLines: 3,
+              maxLines: 4,
               minLines: 1,
+              textInputAction: TextInputAction.newline,
             ),
+            const SizedBox(height: 10),
           ],
-          if (post.topic != null) ...[const SizedBox(height: 8), _buildTopicCheckBoxWidget()],
-          if (post.hashtags.isNotEmpty) ...[const SizedBox(height: 4), _buildHashtagCheckboxesWidget()],
+          if (post.topic != null) ...[_buildTopicCheckBoxWidget(theme), const SizedBox(height: 6)],
+          if (post.hashtags.isNotEmpty) ...[_buildHashtagCheckboxesWidget(theme), const SizedBox(height: 8)],
           if (showSend) ...[
-            const SizedBox(height: 8),
-            Row(children: [_buildCancelButtonWidget(), Spacer(), _buildSendButtonWidget()]),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end, // Align buttons to the end
+              children: [
+                _buildCancelButtonWidget(theme),
+                const SizedBox(width: 8), // Spacing between buttons
+                _buildSendButtonWidget(theme),
+              ],
+            ),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildTopicCheckBoxWidget() {
-    return Row(
-      children: [
-        InkWell(
-          // Use InkWell for better tap feedback
-          onTap: onSelectTopic,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: Text("TOPIC: ${post.topic!.header}", style: const TextStyle(color: Colors.blueAccent)),
-          ),
+  Widget _buildTopicCheckBoxWidget(ThemeData theme) {
+    return InkWell(
+      // Make the whole row tappable for the topic
+      onTap: onSelectTopic,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 2.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Checkbox(
+              value: hasSelectedTopic,
+              onChanged: (value) => onSelectTopic(),
+              activeColor: theme.colorScheme.primary,
+              checkColor: theme.colorScheme.onPrimary,
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              // Allow text to wrap if too long
+              child: Text(
+                "TOPIC: ${post.topic!.header}",
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: hasSelectedTopic ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                  fontWeight: hasSelectedTopic ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ),
+          ],
         ),
-        Checkbox(
-          value: hasSelectedTopic,
-          onChanged: (value) => onSelectTopic(),
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap, // Smaller tap area for checkbox itself
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildHashtagCheckboxesWidget() {
+  Widget _buildHashtagCheckboxesWidget(ThemeData theme) {
     final int displayCount = post.hashtags.length > _PostCardState._maxTagsCounter
         ? _PostCardState._maxTagsCounter
         : post.hashtags.length;
@@ -602,58 +759,72 @@ class _PostCardFooter extends StatelessWidget {
     if (displayCount == 0) return const SizedBox.shrink();
 
     return Wrap(
-      // Use Wrap for better layout if many hashtags
-      spacing: 6.0,
-      runSpacing: 0.0,
+      spacing: 8.0,
+      runSpacing: 4.0,
       children: List<Widget>.generate(displayCount, (index) {
-        return Row(
-          mainAxisSize: MainAxisSize.min, // Important for Row in Wrap
-          children: [
-            InkWell(
-              onTap: () => onSelectHashtag(index),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: selectedHashtags.length > index && selectedHashtags[index]
-                      ? Colors.blue.shade100
-                      : (index % 2 == 0 ? Colors.grey.shade300 : Colors.grey.shade200),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(post.hashtags[index]),
+        final bool isSelected = selectedHashtags.length > index && selectedHashtags[index];
+        return InkWell(
+          onTap: () => onSelectHashtag(index),
+          borderRadius: BorderRadius.circular(16), // Rounded chip-like tappable area
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? theme.colorScheme.primary.withOpacity(0.15) // Subtle primary highlight
+                  : theme.colorScheme.surfaceVariant.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.5),
+                width: 1.2,
               ),
             ),
-            Checkbox(
-              value: selectedHashtags.length > index && selectedHashtags[index],
-              onChanged: (value) => onSelectHashtag(index),
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Optional: Checkbox inside the chip, or rely on visual style
+                // Checkbox(
+                //   value: isSelected,
+                //   onChanged: (value) => onSelectHashtag(index),
+                //   activeColor: theme.colorScheme.primary,
+                //   visualDensity: VisualDensity.compact,
+                //   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                //   side: BorderSide(color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline),
+                // ),
+                // if (isSelected) SizedBox(width: 4),
+                Text(
+                  post.hashtags[index],
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       }),
     );
   }
 
-  Widget _buildCancelButtonWidget() {
-    String buttonText = "Cancel";
-
-    return Align(
-      // Align button to the right or center
-      alignment: Alignment.centerLeft,
-      child: TextButton(
-        style: TextButton.styleFrom(
-          backgroundColor: Colors.redAccent,
-          foregroundColor: Colors.white, // Text color
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+  Widget _buildCancelButtonWidget(ThemeData theme) {
+    return TextButton(
+      style: TextButton.styleFrom(
+        foregroundColor: theme.colorScheme.error, // Text color for cancel
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: theme.colorScheme.error.withOpacity(0.5)), // Optional border
         ),
-        onPressed: onCancel,
-        child: Text(buttonText),
+        textStyle: theme.textTheme.labelLarge,
       ),
+      onPressed: onCancel,
+      child: const Text("Cancel"),
     );
   }
 
-  Widget _buildSendButtonWidget() {
-    String buttonText = "Post";
+  Widget _buildSendButtonWidget(ThemeData theme) {
+    String buttonText = "Post"; // Default
+    // Logic to determine button text remains the same
     if (hasSelectedTopic && selectedHashtags.any((s) => s)) {
       buttonText = "Reply to Topic with tags";
     } else if (hasSelectedTopic) {
@@ -661,33 +832,36 @@ class _PostCardFooter extends StatelessWidget {
     } else if (selectedHashtags.any((s) => s)) {
       buttonText = "Post with tags";
     }
-    // else: it might be a general comment if you allow that without topic/tags
 
-    return Align(
-      // Align button to the right or center
-      alignment: Alignment.centerRight,
-      child: TextButton(
-        style: TextButton.styleFrom(
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white, // Text color
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        onPressed: onSend,
-        child: Text(buttonText),
+    return ElevatedButton(
+      // Use ElevatedButton for primary action
+      style: ElevatedButton.styleFrom(
+        // backgroundColor: theme.colorScheme.primary, // Handled by theme.elevatedButtonTheme
+        // foregroundColor: theme.colorScheme.onPrimary, // Handled by theme.elevatedButtonTheme
+        // padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), // Handled by theme
+        textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
       ),
+      onPressed: onSend,
+      child: Text(buttonText),
     );
   }
 }
 
-// --- Animation Helper Widgets (extracted for clarity and reusability) ---
+// --- Animation Helper Widgets (Pass Theme or ensure they use Theme.of(context)) ---
 
 class _SendingAnimation extends StatelessWidget {
   final bool isSending;
   final double mediaHeight;
   final VoidCallback onEnd;
+  final ThemeData theme; // Pass theme
 
-  const _SendingAnimation({required this.isSending, required this.mediaHeight, required this.onEnd});
+  const _SendingAnimation({
+    required this.isSending,
+    required this.mediaHeight,
+    required this.onEnd,
+    required this.theme,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -695,14 +869,14 @@ class _SendingAnimation extends StatelessWidget {
       duration: _PostCardState._animationDuration,
       opacity: isSending ? 1 : 0,
       child: LikeAnimation(
-        // Assuming LikeAnimation handles its own state for isAnimating
-        isAnimating: isSending, // Or manage isAnimating separately if LikeAnimation needs it
+        isAnimating: isSending,
         duration: _PostCardState._animationDuration,
         onEnd: onEnd,
         child: Icon(
-          Icons.thumb_up_outlined,
-          color: const Color.fromRGBO(255, 255, 255, 0.9), // Slightly transparent
-          size: mediaHeight * 0.8, // Relative size
+          Icons.thumb_up_alt_rounded, // Filled thumb up for sending
+          color: theme.colorScheme.onPrimary.withOpacity(0.85), // White on dark, dark on light (approx)
+          // or theme.colorScheme.surface for a different effect
+          size: mediaHeight * 0.6, // Slightly smaller
         ),
       ),
     );
@@ -713,8 +887,14 @@ class _LikeSucceededAnimation extends StatelessWidget {
   final bool isAnimating;
   final double mediaHeight;
   final VoidCallback onEnd;
+  final ThemeData theme; // Pass theme
 
-  const _LikeSucceededAnimation({required this.isAnimating, required this.mediaHeight, required this.onEnd});
+  const _LikeSucceededAnimation({
+    required this.isAnimating,
+    required this.mediaHeight,
+    required this.onEnd,
+    required this.theme,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -726,9 +906,9 @@ class _LikeSucceededAnimation extends StatelessWidget {
         duration: _PostCardState._animationDuration,
         onEnd: onEnd,
         child: Icon(
-          Icons.currency_bitcoin, // Or Icons.favorite for a more generic like
-          color: Colors.greenAccent, // Gold-ish, slightly transparent
-          size: mediaHeight * 0.8,
+          Icons.currency_bitcoin_rounded, // Themed Bitcoin icon
+          color: theme.colorScheme.primary, // Use primary green from theme
+          size: mediaHeight * 0.6,
         ),
       ),
     );

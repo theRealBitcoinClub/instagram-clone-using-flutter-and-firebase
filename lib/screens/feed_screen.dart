@@ -1,11 +1,11 @@
-import 'package:dynamic_themes/dynamic_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/resources/auth_method.dart';
 import 'package:instagram_clone1/utils/colors.dart';
 import 'package:instagram_clone1/widgets/post_card.dart';
+import 'package:provider/provider.dart';
 
-import '../app_themes.dart';
+import '../theme_provider.dart';
 import '../utils/snackbar.dart';
 
 class FeedScreen extends StatefulWidget {
@@ -26,13 +26,14 @@ class _FeedScreenState extends State<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: mobileBackgroundColor,
         centerTitle: true,
         toolbarHeight: 50,
         title: Text("mahakka.com", style: TextStyle(fontFamily: "Open Sans")),
-        // actions: [buildMenuTheme(context), buildMenuFilter(context)],
+        actions: [buildMenuTheme(themeProvider, context), buildMenuFilter(context)],
       ),
       body: ListView.builder(
         itemCount: MemoModelPost.allPosts.length,
@@ -65,11 +66,12 @@ class _FeedScreenState extends State<FeedScreen> {
     );
   }
 
-  IconButton buildMenuTheme(BuildContext context) {
+  IconButton buildMenuTheme(themeProvider, BuildContext context) {
     return IconButton(
       onPressed: () {
         setState(() {
-          DynamicTheme.of(context)?.setTheme(AppThemes.Dark);
+          themeProvider.toggleTheme();
+          // DynamicTheme.of(context)?.setTheme(AppThemes.Dark);
         });
       },
       icon: Icon(Icons.color_lens_outlined),

@@ -185,14 +185,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
-  dynamic_themes:
-    dependency: "direct main"
-    description:
-      name: dynamic_themes
-      sha256: "35e285d3b61cd70a25bf1035e6192fc578d7b6c7b09b0cc99da0f5e2780651a9"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.0"
   expandable_text:
     dependency: "direct main"
     description:

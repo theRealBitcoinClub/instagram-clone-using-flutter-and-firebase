@@ -1,12 +1,11 @@
-import 'package:dynamic_themes/dynamic_themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:instagram_clone1/memoscraper/memo_creator_service.dart';
 import 'package:instagram_clone1/provider/user_provider.dart';
 import 'package:instagram_clone1/route%20handling/auth_page.dart';
+import 'package:instagram_clone1/theme_provider.dart';
 import 'package:provider/provider.dart';
 
-import 'app_themes.dart';
+import 'memoscraper/memo_creator_service.dart';
 import 'memoscraper/memo_post_service.dart';
 import 'memoscraper/memo_scraper_tag.dart';
 import 'memoscraper/memo_scraper_topics.dart';
@@ -65,26 +64,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => ProviderUser())],
-      child: DynamicTheme(
-        themeCollection: themeCollection,
-        defaultThemeId: AppThemes.LightBlue, // optional, default id is 0
-        builder: (context, theme) {
+      providers: [
+        ChangeNotifierProvider(create: (_) => ProviderUser()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
+      child: Consumer<ThemeProvider>(
+        // Use Consumer to access ThemeProvider for MaterialApp
+        builder: (context, themeProvider, child) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'Memogram',
-            theme: ThemeData(
-              //TODO add switch color theme button top left
-              // colorScheme: randomColorSchemeDark()
-              // textButtonTheme: ,
-              // textTheme: ,
-              // dialogTheme: ,
-              // primaryColorDark: const Color(0xff29d969),
-              // primaryColor: const Color(0xff29d969),
-              // secondaryHeaderColor: const Color(0xfff69ffb),
-              // scaffoldBackgroundColor: const Color(0xff161815),
-              // colorScheme: ColorScheme.dark(
-            ),
+            theme: themeProvider.currentTheme,
             // theme: ThemeData.dark()
             //     .copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
             home: const AuthPage(),

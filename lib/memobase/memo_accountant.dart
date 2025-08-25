@@ -52,6 +52,18 @@ class MemoAccountant {
     }
   }
 
+  Future<MemoAccountantResponse> profileSetAvatar(String imgur) async {
+    return _publishToMemo(MemoCode.profileImgUrl, imgur);
+  }
+
+  Future<MemoAccountantResponse> profileSetName(String name) async {
+    return _publishToMemo(MemoCode.profileName, name);
+  }
+
+  Future<MemoAccountantResponse> profileSetText(String text) async {
+    return _publishToMemo(MemoCode.profileText, text);
+  }
+
   Future<MemoAccountantResponse> _tryPublishLike(MemoModelPost post, String wif) async {
     var mp = await MemoPublisher.create(MemoBitcoinBase.reOrderTxHash(post.txHash!), MemoCode.postLike, wif: wif);
     return mp.doPublish(tip: MemoTip(post.creator!.id, user.tipAmount));

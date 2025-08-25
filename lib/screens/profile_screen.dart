@@ -1,17 +1,20 @@
 import 'package:clipboard/clipboard.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
+import 'package:mahakka/memobase/memo_accountant.dart';
 import 'package:mahakka/memomodel/memo_model_creator.dart';
 import 'package:mahakka/memomodel/memo_model_post.dart';
 import 'package:mahakka/memomodel/memo_model_user.dart';
 import 'package:mahakka/memoscraper/memo_creator_service.dart';
 import 'package:mahakka/resources/auth_method.dart';
+import 'package:mahakka/widgets/memo_confetti.dart';
 // import 'package:mahakka/utils/colors.dart'; // REMOVE THIS
 import 'package:mahakka/widgets/profile_buttons.dart'; // Assumed themed SettingsButton
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../utils/snackbar.dart'; // Ensure this uses themed SnackBars
-import '../views_taggable/widgets/qr_code_dialog.dart'; // Ensure this is themed
+import '../views_taggable/widgets/qr_code_dialog.dart';
+import '../widgets/textfield_input.dart'; // Ensure this is themed
 
 // Logging placeholders (remain the same)
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -41,6 +44,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isRefreshing = false;
   bool _showDefaultAvatar = false;
   int _viewMode = 0; // 0: Images, 1: Videos, 2: Hashtags, 4: Topics
+  final TextEditingController _profileNameCtrl = TextEditingController();
+  final TextEditingController _profileTextCtrl = TextEditingController();
+  final TextEditingController _imgurCtrl = TextEditingController();
 
   final Map<String, YoutubePlayerController> _ytControllers = {};
 
@@ -56,6 +62,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       controller.dispose();
     }
     _ytControllers.clear();
+    _profileNameCtrl.dispose();
+    _profileTextCtrl.dispose();
+    _imgurCtrl.dispose();
     super.dispose();
   }
 
@@ -723,18 +732,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           children: [
-            _buildSettingsOption(theme, Icons.badge_outlined, "NAME", ctxDialog, () {
-              showSnackBar("Set profile name (Not implemented)", context);
-            }),
-            _buildSettingsOption(theme, Icons.notes_outlined, "DESCRIPTION", ctxDialog, () {
-              showSnackBar("Set profile description (Not implemented)", context);
-            }),
-            _buildSettingsOption(theme, Icons.image_search_outlined, "AVATAR URL", ctxDialog, () {
-              showSnackBar("Set profile IMGUR URL (Not implemented)", context);
-            }),
-            _buildSettingsOption(theme, Icons.alternate_email_outlined, "TWITTER", ctxDialog, () {
-              showSnackBar("Link Twitter account (Not implemented)", context);
-            }),
+            _buildSettingsInput(
+              theme,
+              Icons.image_search_outlined,
+              "Satoshi Nakamoto",
+              TextInputType.url,
+              _profileNameCtrl,
+            ),
+            _buildSettingsInput(
+              theme,
+              Icons.image_search_outlined,
+              "I am a Sci-Fi Ponk",
+              TextInputType.text,
+              _profileTextCtrl,
+            ),
+            _buildSettingsInput(
+              theme,
+              Icons.image_search_outlined,
+              "e.g. http://i.imgur.com/JF983F.png",
+              TextInputType.url,
+              _imgurCtrl,
+            ),
+            Padding(
+              padding: EdgeInsetsGeometry.symmetric(vertical: 0, horizontal: 30),
+              child: ElevatedButton(
+                onPressed: () {
+                  if (_hasInputData()) {
+                    _saveProfile(ctxDialog);
+                  }
+                },
+                child: Text("SAVE"),
+              ),
+            ),
             Divider(color: theme.dividerColor, height: 20, thickness: 0.5),
             _buildSettingsOption(theme, Icons.vpn_key_outlined, "BACKUP MNEMONIC", ctxDialog, () {
               if (_user?.mnemonic != null && _user!.mnemonic.isNotEmpty) {
@@ -749,6 +778,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildSettingsInput(ThemeData theme, IconData icon, String hintText, type, TextEditingController ctrl) {
+    return SimpleDialogOption(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7) ?? theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 15),
+          Expanded(
+            child: TextInputField(hintText: hintText, textEditingController: ctrl, textInputType: type),
+          ),
+        ],
+      ),
     );
   }
 
@@ -821,5 +865,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (mounted) showSnackBar('Copy failed. See logs for details.', context);
       },
     );
+  }
+
+  bool _hasInputData() {
+    return _profileNameCtrl.text.trim().isNotEmpty ||
+        _profileTextCtrl.text.trim().isNotEmpty ||
+        _imgurCtrl.text.trim().isNotEmpty;
+    ;
+  }
+
+  void _saveProfile(dialogCtc) async {
+    await MemoAccountant(_user!).profileSetName(_profileNameCtrl.text.trim());
+    await MemoAccountant(_user!).profileSetText(_profileTextCtrl.text.trim());
+    await MemoAccountant(_user!).profileSetAvatar(_imgurCtrl.text.trim());
+
+    _user = await MemoModelUser.getUser();
+    setState(() {
+      if (dialogCtc.mounted) {
+        MemoConfetti().launch(context);
+        Navigator.of(dialogCtc).pop();
+      }
+    });
   }
 }

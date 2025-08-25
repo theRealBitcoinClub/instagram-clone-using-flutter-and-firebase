@@ -1,4 +1,6 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
+import 'package:mahakka/memobase/memo_accountant.dart';
+import 'package:mahakka/memobase/memo_verifier.dart';
 import 'package:mahakka/memomodel/memo_model_creator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -211,5 +213,29 @@ class MemoModelUser {
   TipReceiver get tipReceiver {
     //TODO SAVE AND LOAD FROM SHAREDPREFS
     return _tipReceiver;
+  }
+
+  Future<dynamic> profileSetName(String name) async {
+    MemoVerificationResponse response = MemoVerifier(name).verifyUserName();
+
+    if (response != MemoVerificationResponse.valid) return response;
+
+    return await MemoAccountant(this).profileSetName(name);
+  }
+
+  Future<dynamic> profileSetText(String text) async {
+    MemoVerificationResponse response = MemoVerifier(text).verifyProfileText();
+
+    if (response != MemoVerificationResponse.valid) return response;
+
+    return await MemoAccountant(this).profileSetText(text);
+  }
+
+  Future<dynamic> profileSetAvatar(String imgur) async {
+    MemoVerificationResponse response = MemoVerifier(imgur).verifyImgur();
+
+    if (response != MemoVerificationResponse.valid) return response;
+
+    return await MemoAccountant(this).profileSetAvatar(imgur);
   }
 }

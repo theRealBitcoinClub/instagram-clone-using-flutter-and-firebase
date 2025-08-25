@@ -32,8 +32,8 @@ class MemoModelCreator {
       id: id,
       followerCount: 0,
       actions: 0,
-      name: "",
-      profileText: "",
+      name: " ",
+      profileText: " ",
     );
 
     return creator;

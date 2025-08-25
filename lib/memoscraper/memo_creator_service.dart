@@ -168,17 +168,17 @@ class MemoCreatorService {
     }
 
     final String rawText = data.values.first as String;
-    final List<String> lines = rawText.replaceAll(" ", "").split("\n")..removeWhere((element) => element.isEmpty);
+    final List<String> lines = rawText.split("\n")..removeWhere((element) => element.trim().isEmpty);
 
     if (lines.isNotEmpty) {
-      creator.name = lines[0];
+      creator.name = lines[0].trim();
     } else {
       _logWarning("Name not found for creator ID: ${creator.id}. Raw text: $rawText");
       // creator.name = "Unknown Name"; // Or keep as is, depending on MemoModelCreator design
     }
 
     if (lines.length > 1) {
-      creator.profileText = lines[1];
+      creator.profileText = lines[1].trim();
     } else {
       _logWarning("Profile text not found for creator ID: ${creator.id}. Raw text: $rawText");
       // creator.profileText = ""; // Or keep as is

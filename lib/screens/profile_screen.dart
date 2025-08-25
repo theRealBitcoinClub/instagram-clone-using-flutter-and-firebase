@@ -270,19 +270,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildTopDetailsRow(theme, colorScheme),
-          if (_creator!.name.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: AnimatedOpacity(
+                opacity: _creator!.profileText.trim().isNotEmpty ? 1.0 : 0.0, // Control opacity
+                duration: const Duration(milliseconds: 300), // Adjust duration as needed
                 child: Text(_creator!.name, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
               ),
             ),
-          if (_creator!.profileText.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: AnimatedOpacity(
+                opacity: _creator!.profileText.trim().isNotEmpty ? 1.0 : 0.0, // Control opacity
+                duration: const Duration(milliseconds: 700), // Adjust duration as needed
                 child: ExpandableText(
                   _creator!.profileText,
                   expandText: 'show more',
@@ -298,6 +303,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
+          ),
           Divider(color: theme.dividerColor, height: 1.0, thickness: 0.5), // Themed divider
           Padding(
             // Add padding around the view mode icons
@@ -732,29 +738,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           children: [
+            _buildSettingsInput(theme, Icons.badge_outlined, "Satoshi Nakamoto", TextInputType.text, _profileNameCtrl),
             _buildSettingsInput(
               theme,
-              Icons.image_search_outlined,
-              "Satoshi Nakamoto",
-              TextInputType.url,
-              _profileNameCtrl,
-            ),
-            _buildSettingsInput(
-              theme,
-              Icons.image_search_outlined,
+              Icons.notes_outlined,
               "I am a Sci-Fi Ponk",
               TextInputType.text,
               _profileTextCtrl,
             ),
             _buildSettingsInput(
               theme,
-              Icons.image_search_outlined,
+              Icons.account_circle_outlined,
               "e.g. http://i.imgur.com/JF983F.png",
               TextInputType.url,
               _imgurCtrl,
             ),
             Padding(
-              padding: EdgeInsetsGeometry.symmetric(vertical: 0, horizontal: 30),
+              padding: EdgeInsetsGeometry.symmetric(vertical: 0, horizontal: 24),
               child: ElevatedButton(
                 onPressed: () {
                   if (_hasInputData()) {

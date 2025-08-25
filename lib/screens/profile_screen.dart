@@ -12,6 +12,7 @@ import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:mahakka/widgets/profile_buttons.dart'; // Assumed themed SettingsButton
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
+import '../sliver_app_bar_delegate.dart';
 import '../utils/snackbar.dart'; // Ensure this uses themed SnackBars
 import '../views_taggable/widgets/qr_code_dialog.dart';
 import '../widgets/textfield_input.dart'; // Ensure this is themed
@@ -49,6 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _imgurCtrl = TextEditingController();
 
   final Map<String, YoutubePlayerController> _ytControllers = {};
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -65,12 +67,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _profileNameCtrl.dispose();
     _profileTextCtrl.dispose();
     _imgurCtrl.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _fetchProfileData() async {
-    // ... (Your existing data fetching logic remains the same)
-    // Ensure showSnackBar calls use context that provides a themed SnackBar.
     if (!mounted) return;
     setState(() {
       _isLoading = _user == null;
@@ -179,14 +180,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: _buildAppBar(context, theme, colorScheme),
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildCollapsibleProfileHeader(theme, colorScheme),
-            Container(
-              decoration: BoxDecoration(color: theme.colorScheme.surface),
-              child: _buildTabSelector(theme),
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            SliverToBoxAdapter(child: _buildCollapsibleProfileHeader(theme, colorScheme)),
+            SliverPersistentHeader(
+              delegate: SliverAppBarDelegate(minHeight: 60, maxHeight: 60, child: _buildTabSelector(theme)),
+              pinned: true,
             ),
-            Expanded(child: _buildContentView(theme)), // Pass theme
+
+            // If _isRefreshing for the content below the tabs,
+            // you might need another SliverToBoxAdapter for LinearProgressIndicator
+            // if (_isRefreshingForContent) // a new state variable if needed
+            //   const SliverToBoxAdapter(child: LinearProgressIndicator(minHeight: 2)),
+            _buildSliverContentView(theme), // Directly use the sliver-returning method
           ],
         ),
       ),
@@ -437,34 +444,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _getViewModeTooltip(int index) {
     switch (index) {
       case 0:
-        return "View Images";
+        return "Images";
       case 1:
-        return "View Videos";
+        return "Videos";
       case 2:
-        return "View Tagged Posts";
+        return "Tagged Posts";
       case 4:
-        return "View Topic Posts";
+        return "Topic Posts";
       default:
-        return "View";
+        return "Empty";
     }
   }
 
-  Widget _buildContentView(ThemeData theme) {
-    // Pass theme
-    // Data lists are assumed to be populated correctly.
-    // Ensure MemoModelPost instances have data or handle nulls gracefully.
-
-    Widget emptyView(String message) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.layers_clear_outlined, size: 48, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
-              const SizedBox(height: 16),
-              Text(message, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-            ],
+  Widget _buildSliverContentView(ThemeData theme) {
+    Widget emptySliver(String message) {
+      return SliverFillRemaining(
+        // Fills the remaining viewport space
+        hasScrollBody: false,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.layers_clear_outlined, size: 48, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                const SizedBox(height: 16),
+                Text(message, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              ],
+            ),
           ),
         ),
       );
@@ -473,71 +480,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
     switch (_viewMode) {
       case 0: // Grid View (Images)
         final posts = MemoModelPost.imgurPosts;
-        if (posts.isEmpty) return emptyView("No image posts yet.");
-        return GridView.builder(
+        if (posts.isEmpty) return emptySliver("No image posts yet.");
+        return SliverPadding(
+          // Add padding around the grid
           padding: const EdgeInsets.all(4),
-          itemCount: posts.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3, // Adjust for screen size if needed
-            crossAxisSpacing: 4,
-            mainAxisSpacing: 4,
-          ),
-          itemBuilder: (context, index) {
-            final post = posts[index];
-            Widget imagePlaceholder = Container(
-              color: theme.colorScheme.surfaceVariant,
-              child: Icon(Icons.broken_image_outlined, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
-            );
+          sliver: SliverGrid.builder(
+            itemCount: posts.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 4,
+              mainAxisSpacing: 4,
+            ),
+            itemBuilder: (context, index) {
+              final post = posts[index];
+              Widget imagePlaceholder = Container(
+                color: theme.colorScheme.surfaceVariant,
+                child: Icon(Icons.broken_image_outlined, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
+              );
 
-            if (post.imgurUrl == null || post.imgurUrl!.isEmpty) {
-              return imagePlaceholder;
-            }
-
-            final img = Image.network(
-              post.imgurUrl!,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                // ImgurUtils.errorLoadImage should ideally return a themed widget
-                _logError("Error loading grid image: ${post.imgurUrl}", error, stackTrace);
+              if (post.imgurUrl == null || post.imgurUrl!.isEmpty) {
                 return imagePlaceholder;
-              },
-              loadingBuilder: (context, child, loadingProgress) {
-                // ImgurUtils.loadingImage should ideally return a themed widget
-                if (loadingProgress == null) return child;
-                return Container(
-                  color: theme.colorScheme.surfaceVariant,
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.0,
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                          : null,
+              }
+
+              final img = Image.network(
+                post.imgurUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // ImgurUtils.errorLoadImage should ideally return a themed widget
+                  _logError("Error loading grid image: ${post.imgurUrl}", error, stackTrace);
+                  return imagePlaceholder;
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  // ImgurUtils.loadingImage should ideally return a themed widget
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: theme.colorScheme.surfaceVariant,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.0,
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
                     ),
-                  ),
-                );
-              },
-            );
-            return GestureDetector(
-              onDoubleTap: () =>
-                  _showPostDialog(theme, post, AspectRatio(aspectRatio: 1, child: img)), // Pass theme & wrapped image
-              child: AspectRatio(aspectRatio: 1, child: img), // Ensure square grid items
-            );
-          },
+                  );
+                },
+              );
+              return GestureDetector(
+                onDoubleTap: () =>
+                    _showPostDialog(theme, post, AspectRatio(aspectRatio: 1, child: img)), // Pass theme & wrapped image
+                child: AspectRatio(aspectRatio: 1, child: img), // Ensure square grid items
+              );
+            },
+          ),
         );
       case 1: // YouTube Videos
         final posts = MemoModelPost.ytPosts;
-        if (posts.isEmpty) return emptyView("No video posts yet.");
+        if (posts.isEmpty) return emptySliver("No video posts yet.");
         return _buildYouTubeListView(theme, posts); // Pass theme
       case 2: // Hashtag Posts
         final posts = MemoModelPost.hashTagPosts;
-        if (posts.isEmpty) return emptyView("No tagged posts yet.");
+        if (posts.isEmpty) return emptySliver("No tagged posts yet.");
         return _buildGenericPostListView(theme, posts); // Pass theme
       case 4: // Topic Posts
         final posts = MemoModelPost.topicPosts;
-        if (posts.isEmpty) return emptyView("No topic posts yet.");
+        if (posts.isEmpty) return emptySliver("No topic posts yet.");
         return _buildGenericPostListView(theme, posts); // Pass theme
       default:
-        return emptyView("Select a view mode.");
+        return emptySliver("Select a view mode.");
     }
   }
 
@@ -600,10 +610,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildYouTubeListView(ThemeData theme, List<MemoModelPost> posts) {
     // Pass theme
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: posts.length,
-      itemBuilder: (context, index) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(childCount: posts.length, (context, index) {
         final ytPost = posts[index];
         if (ytPost.youtubeId == null || ytPost.youtubeId!.isEmpty) {
           return const SizedBox.shrink();
@@ -679,16 +687,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         );
-      },
+      }),
     );
   }
 
   Widget _buildGenericPostListView(ThemeData theme, List<MemoModelPost> posts) {
     // Pass theme
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: posts.length,
-      itemBuilder: (context, index) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(childCount: posts.length, (context, index) {
         final post = posts[index];
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -732,7 +738,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         );
-      },
+      }),
     );
   }
 

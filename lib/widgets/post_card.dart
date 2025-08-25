@@ -190,7 +190,8 @@ class _PostCardState extends State<PostCard> {
         children: [
           _PostCardHeader(
             post: widget.post,
-            onOptionsMenuPressed: _showPostOptionsMenu,
+            onOptionsMenuPressed: _sendTipToCreator,
+            // _showPostOptionsMenu,
             // Pass theme if _PostCardHeader needs it directly,
             // but it should primarily use Theme.of(context) internally
           ),
@@ -272,7 +273,7 @@ class _PostCardState extends State<PostCard> {
         switch (response) {
           case MemoAccountantResponse.yes:
             _isAnimatingLike = true;
-            MemoConfetti().launch(context); // Assuming confetti is theme-neutral or adapts
+            // MemoConfetti().launch(context); // Assuming confetti is theme-neutral or adapts
             break;
           case MemoAccountantResponse.lowBalance:
             showSnackBar("Low balance", context);
@@ -308,13 +309,11 @@ class _PostCardState extends State<PostCard> {
           padding: const EdgeInsets.symmetric(vertical: 16),
           shrinkWrap: true,
           children:
-              ["Delete Post", "Ban User", "Report"] // Could be constants
+              ["Tip Creator", "Creator Profile", "Bookmark"] // Could be constants
                   .map(
                     (e) => InkWell(
                       onTap: () {
-                        // TODO: Implement actual actions
-                        _logInfo("Option selected: $e");
-                        showSnackBar("Option '$e' tapped (Not implemented)", dialogCtx);
+                        showSnackBar("Report was sent to Satoshi Nakamoto, please wait...", dialogCtx);
                         Navigator.pop(dialogCtx);
                       },
                       child: Container(
@@ -608,12 +607,21 @@ class _PostCardHeader extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.more_vert /* color: theme.colorScheme.onSurfaceVariant */), // Color from IconTheme
+            icon: Icon(
+              Icons.thumb_up_alt_outlined /* color: theme.colorScheme.onSurfaceVariant */,
+            ), // Color from IconTheme
             onPressed: onOptionsMenuPressed,
-            tooltip: "More options",
+            tooltip: "Tip",
             iconSize: 22,
             visualDensity: VisualDensity.compact,
           ),
+          // IconButton(
+          //   icon: Icon(Icons.more_vert /* color: theme.colorScheme.onSurfaceVariant */), // Color from IconTheme
+          //   onPressed: onOptionsMenuPressed,
+          //   tooltip: "More options",
+          //   iconSize: 22,
+          //   visualDensity: VisualDensity.compact,
+          // ),
         ],
       ),
     );
@@ -865,21 +873,7 @@ class _SendingAnimation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedOpacity(
-      duration: _PostCardState._animationDuration,
-      opacity: isSending ? 1 : 0,
-      child: LikeAnimation(
-        isAnimating: isSending,
-        duration: _PostCardState._animationDuration,
-        onEnd: onEnd,
-        child: Icon(
-          Icons.thumb_up_alt_rounded, // Filled thumb up for sending
-          color: theme.colorScheme.onPrimary.withOpacity(0.85), // White on dark, dark on light (approx)
-          // or theme.colorScheme.surface for a different effect
-          size: mediaHeight * 0.6, // Slightly smaller
-        ),
-      ),
-    );
+    return _buildCircledOpacityAnimation(Icons.thumb_up_alt_rounded, theme, mediaHeight, isSending, onEnd);
   }
 }
 
@@ -898,19 +892,29 @@ class _LikeSucceededAnimation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedOpacity(
-      duration: _PostCardState._animationDuration,
-      opacity: isAnimating ? 1 : 0,
-      child: LikeAnimation(
-        isAnimating: isAnimating,
-        duration: _PostCardState._animationDuration,
-        onEnd: onEnd,
-        child: Icon(
-          Icons.currency_bitcoin_rounded, // Themed Bitcoin icon
-          color: theme.colorScheme.primary, // Use primary green from theme
-          size: mediaHeight * 0.6,
-        ),
-      ),
-    );
+    return _buildCircledOpacityAnimation(Icons.currency_bitcoin_rounded, theme, mediaHeight, isAnimating, onEnd);
   }
+}
+
+AnimatedOpacity _buildCircledOpacityAnimation(ico, theme, mediaHeight, isAnimating, onEnd) {
+  Color avatarBackgroundColor = theme.colorScheme.primary; // Example: Primary color for the circle
+  Color iconColorOnAvatar = theme.colorScheme.onPrimary; // Icon color that contrasts with primary
+
+  double iconSize = mediaHeight * 0.5; // CircleAvatar adds some padding, so icon might need to be slightly smaller
+  double avatarRadius = mediaHeight * 0.4; // Adjust the radius of the CircleAvatar itself
+
+  return AnimatedOpacity(
+    duration: _PostCardState._animationDuration,
+    opacity: isAnimating ? 1 : 0,
+    child: LikeAnimation(
+      isAnimating: isAnimating,
+      duration: _PostCardState._animationDuration,
+      onEnd: onEnd,
+      child: CircleAvatar(
+        radius: avatarRadius,
+        backgroundColor: avatarBackgroundColor,
+        child: Icon(ico, color: iconColorOnAvatar, size: iconSize),
+      ),
+    ),
+  );
 }

@@ -1,6 +1,6 @@
 import 'package:html/dom.dart';
-import 'package:instagram_clone1/dart_web_scraper/common/models/scraper_config_model.dart';
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper/web_scraper.dart';
+import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper/web_scraper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../memomodel/memo_model_post.dart';

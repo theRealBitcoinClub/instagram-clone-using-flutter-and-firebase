@@ -1,9 +1,9 @@
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
-import 'package:instagram_clone1/dart_web_scraper/common/utils/cookie_utils.dart';
-import 'package:instagram_clone1/dart_web_scraper/common/utils/http.dart';
-import 'package:instagram_clone1/dart_web_scraper/common/utils/random.dart';
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
+import 'package:mahakka/dart_web_scraper/common/utils/cookie_utils.dart';
+import 'package:mahakka/dart_web_scraper/common/utils/http.dart';
+import 'package:mahakka/dart_web_scraper/common/utils/random.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper.dart';
 
 /// Handles HTTP requests and HTML fetching for web scraping operations.
 ///

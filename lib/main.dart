@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:instagram_clone1/provider/user_provider.dart';
-import 'package:instagram_clone1/route%20handling/auth_page.dart';
-import 'package:instagram_clone1/theme_provider.dart';
+import 'package:mahakka/provider/user_provider.dart';
+import 'package:mahakka/route%20handling/auth_page.dart';
+import 'package:mahakka/theme_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'memoscraper/memo_creator_service.dart';

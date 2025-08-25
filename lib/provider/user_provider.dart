@@ -1,6 +1,6 @@
 // import 'package:flutter/material.dart';
-// import 'package:instagram_clone1/model/user.dart';
-// import 'package:instagram_clone1/resources/auth_method.dart';
+// import 'package:mahakka/model/user.dart';
+// import 'package:mahakka/resources/auth_method.dart';
 //
 // class UserProvider with ChangeNotifier {
 //    late User _user;
@@ -16,8 +16,8 @@
 // }
 
 import 'package:flutter/cupertino.dart';
-import 'package:instagram_clone1/memomodel/memo_model_user.dart';
-import 'package:instagram_clone1/resources/auth_method.dart';
+import 'package:mahakka/memomodel/memo_model_user.dart';
+import 'package:mahakka/resources/auth_method.dart';
 
 class ProviderUser with ChangeNotifier {
   MemoModelUser? memoUser;

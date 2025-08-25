@@ -1,4 +1,4 @@
-// import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+// import 'package:mahakka/memomodel/memo_model_user.dart';
 //
 // class User {
 //   final String email;

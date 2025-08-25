@@ -1,4 +1,4 @@
-package com.example.instagram_clone1
+package com.mahakka
 
 import io.flutter.embedding.android.FlutterActivity
 

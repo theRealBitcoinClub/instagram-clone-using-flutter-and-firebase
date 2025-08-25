@@ -1,8 +1,8 @@
 // import 'package:flutter/material.dart';
 // import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-// import 'package:instagram_clone1/memomodel/memo_model_post.dart';
-// import 'package:instagram_clone1/screens/profile_screen.dart';
-// import 'package:instagram_clone1/utils/colors.dart';
+// import 'package:mahakka/memomodel/memo_model_post.dart';
+// import 'package:mahakka/screens/profile_screen.dart';
+// import 'package:mahakka/utils/colors.dart';
 // import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 //
 // class SearchScreen extends StatefulWidget {

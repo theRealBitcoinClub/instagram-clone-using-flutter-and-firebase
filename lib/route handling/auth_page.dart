@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/memomodel/memo_model_user.dart';
-import 'package:instagram_clone1/provider/user_provider.dart';
-import 'package:instagram_clone1/screens/home_screen.dart';
+import 'package:mahakka/memomodel/memo_model_user.dart';
+import 'package:mahakka/provider/user_provider.dart';
+import 'package:mahakka/screens/home_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'login_or_registed.dart';

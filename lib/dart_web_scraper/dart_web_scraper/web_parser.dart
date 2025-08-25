@@ -1,5 +1,5 @@
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper/parsers/exports.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper/parsers/exports.dart';
 
 /// Processes scraped HTML data using configurable parsers to extract structured information.
 ///

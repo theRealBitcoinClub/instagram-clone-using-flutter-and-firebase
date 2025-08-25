@@ -1,7 +1,7 @@
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
-import 'package:instagram_clone1/dart_web_scraper/common/utils/data_extraction.dart';
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
+import 'package:mahakka/dart_web_scraper/common/utils/data_extraction.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper.dart';
 
 /// Extracts text content from HTML elements
 /// Returns Data object with text content or null if not found

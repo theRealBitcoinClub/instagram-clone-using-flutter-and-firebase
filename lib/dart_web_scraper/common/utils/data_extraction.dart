@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper.dart';
 
 /// Extracts Element from Data object
 List<Element>? getElementObject(Data data) {

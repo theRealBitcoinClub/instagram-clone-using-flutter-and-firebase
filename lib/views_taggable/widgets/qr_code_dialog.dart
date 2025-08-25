@@ -1,8 +1,8 @@
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/memomodel/memo_model_user.dart';
-// import 'package:instagram_clone1/utils/colors.dart'; // REMOVE THIS
-import 'package:instagram_clone1/utils/snackbar.dart'; // Ensure this uses themed SnackBars
+import 'package:mahakka/memomodel/memo_model_user.dart';
+// import 'package:mahakka/utils/colors.dart'; // REMOVE THIS
+import 'package:mahakka/utils/snackbar.dart'; // Ensure this uses themed SnackBars
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 
 // Logging placeholder (remains the same)

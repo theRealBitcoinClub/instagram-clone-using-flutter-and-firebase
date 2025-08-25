@@ -2,11 +2,11 @@
 // import 'package:flutter/material.dart';
 // import 'package:flutter_svg/flutter_svg.dart';
 // import 'package:image_picker/image_picker.dart';
-// import 'package:instagram_clone1/resources/auth_method.dart';
-// import 'package:instagram_clone1/utils/colors.dart';
-// import 'package:instagram_clone1/utils/image_picker.dart';
-// import 'package:instagram_clone1/utils/snackbar.dart';
-// import 'package:instagram_clone1/widgets/textfield_input.dart';
+// import 'package:mahakka/resources/auth_method.dart';
+// import 'package:mahakka/utils/colors.dart';
+// import 'package:mahakka/utils/image_picker.dart';
+// import 'package:mahakka/utils/snackbar.dart';
+// import 'package:mahakka/widgets/textfield_input.dart';
 // import 'package:provider/provider.dart';
 //
 // import '../provider/user_provider.dart';

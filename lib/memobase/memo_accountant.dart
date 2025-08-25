@@ -1,8 +1,8 @@
-import 'package:instagram_clone1/memobase/memo_code.dart';
-import 'package:instagram_clone1/memobase/memo_publisher.dart';
-import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
-import 'package:instagram_clone1/memomodel/memo_model_post.dart';
-import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+import 'package:mahakka/memobase/memo_code.dart';
+import 'package:mahakka/memobase/memo_publisher.dart';
+import 'package:mahakka/memomodel/memo_model_creator.dart';
+import 'package:mahakka/memomodel/memo_model_post.dart';
+import 'package:mahakka/memomodel/memo_model_user.dart';
 
 import '../memomodel/memo_tip.dart';
 import 'memo_bitcoin_base.dart';

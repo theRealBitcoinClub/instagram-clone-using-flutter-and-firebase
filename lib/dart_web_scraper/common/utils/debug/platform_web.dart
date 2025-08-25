@@ -1,4 +1,4 @@
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper.dart';
 
 /// Web platform implementation of debug logging.
 ///

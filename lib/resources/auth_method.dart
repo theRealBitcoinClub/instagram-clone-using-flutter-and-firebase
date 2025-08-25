@@ -1,4 +1,4 @@
-import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+import 'package:mahakka/memomodel/memo_model_user.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,8 +51,8 @@ class AuthChecker {
 // import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:flutter/foundation.dart';
-// import 'package:instagram_clone1/model/user.dart' as model;
-// import 'package:instagram_clone1/resources/storage_methods.dart';
+// import 'package:mahakka/model/user.dart' as model;
+// import 'package:mahakka/resources/storage_methods.dart';
 //
 // class AuthMedthod {
 //   final FirebaseAuth _auth = FirebaseAuth.instance;

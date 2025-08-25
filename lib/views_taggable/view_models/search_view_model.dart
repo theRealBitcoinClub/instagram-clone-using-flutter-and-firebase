@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/memomodel/memo_model_tag.dart';
-import 'package:instagram_clone1/memomodel/memo_model_topic.dart';
+import 'package:mahakka/memomodel/memo_model_tag.dart';
+import 'package:mahakka/memomodel/memo_model_topic.dart';
 
 ///Search view model
 final searchViewModel = SearchViewModel();

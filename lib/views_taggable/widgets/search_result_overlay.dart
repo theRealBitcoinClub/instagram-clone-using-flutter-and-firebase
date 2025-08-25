@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart'; // Keep if FlutterTaggerController is used directly for styling
-import 'package:instagram_clone1/views_taggable/widgets/hashtag_list_view.dart';
+import 'package:mahakka/views_taggable/widgets/hashtag_list_view.dart';
 // Ensure these child widgets are also theme-aware
-import 'package:instagram_clone1/views_taggable/widgets/topic_list_view.dart';
+import 'package:mahakka/views_taggable/widgets/topic_list_view.dart';
 
 // Assuming SearchResultView and searchViewModel are correctly imported and accessible
 import '../view_models/search_view_model.dart';

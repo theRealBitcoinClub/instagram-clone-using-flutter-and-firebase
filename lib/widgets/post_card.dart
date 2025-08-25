@@ -1,11 +1,11 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/memobase/memo_accountant.dart';
-import 'package:instagram_clone1/memobase/memo_verifier.dart';
-import 'package:instagram_clone1/memomodel/memo_model_user.dart';
-import 'package:instagram_clone1/memoscraper/memo_scraper_utils.dart';
-import 'package:instagram_clone1/utils/snackbar.dart'; // Ensure this uses themed SnackBars
-import 'package:instagram_clone1/widgets/like_animtion.dart'; // Ensure this is theme-aware or neutral
+import 'package:mahakka/memobase/memo_accountant.dart';
+import 'package:mahakka/memobase/memo_verifier.dart';
+import 'package:mahakka/memomodel/memo_model_user.dart';
+import 'package:mahakka/memoscraper/memo_scraper_utils.dart';
+import 'package:mahakka/utils/snackbar.dart'; // Ensure this uses themed SnackBars
+import 'package:mahakka/widgets/like_animtion.dart'; // Ensure this is theme-aware or neutral
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
@@ -738,7 +738,7 @@ class _PostCardFooter extends StatelessWidget {
             Flexible(
               // Allow text to wrap if too long
               child: Text(
-                "TOPIC: ${post.topic!.header}",
+                post.topic!.header,
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: hasSelectedTopic ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                   fontWeight: hasSelectedTopic ? FontWeight.bold : FontWeight.normal,

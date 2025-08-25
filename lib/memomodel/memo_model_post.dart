@@ -1,4 +1,4 @@
-import 'package:instagram_clone1/memomodel/memo_model_user.dart';
+import 'package:mahakka/memomodel/memo_model_user.dart';
 
 import '../memobase/memo_accountant.dart';
 import '../memobase/memo_verifier.dart';

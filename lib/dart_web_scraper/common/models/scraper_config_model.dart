@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper.dart';
 
 /// Configuration for targeting and scraping specific types of URLs.
 ///

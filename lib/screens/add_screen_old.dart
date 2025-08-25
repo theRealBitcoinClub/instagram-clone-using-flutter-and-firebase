@@ -3,11 +3,11 @@
 // import 'package:clipboard/clipboard.dart';
 // import 'package:flutter/material.dart';
 // import 'package:fluttertagger/fluttertagger.dart';
-// import 'package:instagram_clone1/memobase/memo_accountant.dart';
-// import 'package:instagram_clone1/memomodel/memo_model_post.dart';
-// import 'package:instagram_clone1/memomodel/memo_model_user.dart';
-// import 'package:instagram_clone1/widgets/memo_confetti.dart';
-// import 'package:instagram_clone1/widgets/textfield_input.dart';
+// import 'package:mahakka/memobase/memo_accountant.dart';
+// import 'package:mahakka/memomodel/memo_model_post.dart';
+// import 'package:mahakka/memomodel/memo_model_user.dart';
+// import 'package:mahakka/widgets/memo_confetti.dart';
+// import 'package:mahakka/widgets/textfield_input.dart';
 // import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 //
 // import '../views_taggable/view_models/search_view_model.dart';

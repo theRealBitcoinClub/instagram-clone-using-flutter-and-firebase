@@ -1,4 +1,4 @@
-import 'package:instagram_clone1/models/user.dart';
+import 'package:mahakka/models/user.dart';
 
 class Post {
   final String caption;

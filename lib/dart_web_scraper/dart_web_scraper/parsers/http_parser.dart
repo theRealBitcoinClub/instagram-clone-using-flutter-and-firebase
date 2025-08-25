@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:html/parser.dart';
-import 'package:instagram_clone1/dart_web_scraper/common/utils/cookie_utils.dart';
-import 'package:instagram_clone1/dart_web_scraper/common/utils/http.dart';
-import 'package:instagram_clone1/dart_web_scraper/common/utils/random.dart';
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
+import 'package:mahakka/dart_web_scraper/common/utils/cookie_utils.dart';
+import 'package:mahakka/dart_web_scraper/common/utils/http.dart';
+import 'package:mahakka/dart_web_scraper/common/utils/random.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper.dart';
 
 /// Makes HTTP requests and processes responses
 /// Returns Data object with response content or null if failed

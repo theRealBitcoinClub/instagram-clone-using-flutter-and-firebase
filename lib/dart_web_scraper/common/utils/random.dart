@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:instagram_clone1/dart_web_scraper/common/enums.dart';
+import 'package:mahakka/dart_web_scraper/common/enums.dart';
 
 final _rng = Random();
 

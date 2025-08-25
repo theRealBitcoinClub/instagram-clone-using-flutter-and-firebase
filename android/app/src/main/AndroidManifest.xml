@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.instagram_clone1">
+    package="com.mahakka">
    <application
-        android:label="instagram_clone1"
+        android:label="mahakka"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

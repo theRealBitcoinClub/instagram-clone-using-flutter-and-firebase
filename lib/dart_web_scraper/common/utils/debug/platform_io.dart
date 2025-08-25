@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper.dart';
 import 'package:path/path.dart' as path;
 
 /// Prints colored log messages to stdout for IO platforms (Dart VM, Flutter).

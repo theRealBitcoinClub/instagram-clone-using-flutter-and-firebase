@@ -1,4 +1,4 @@
-import 'package:instagram_clone1/memomodel/memo_model_post.dart';
+import 'package:mahakka/memomodel/memo_model_post.dart';
 
 class MemoModelTag {
   static List<MemoModelTag> tags = [];

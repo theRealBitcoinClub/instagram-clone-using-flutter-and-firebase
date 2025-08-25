@@ -1,5 +1,5 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
-import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
+import 'package:mahakka/memomodel/memo_model_creator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../memobase/memo_bitcoin_base.dart';

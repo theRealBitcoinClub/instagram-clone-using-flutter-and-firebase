@@ -1,6 +1,6 @@
-import 'package:instagram_clone1/dart_web_scraper/common/utils/data_extraction.dart';
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper/parsers/json_parser.dart';
+import 'package:mahakka/dart_web_scraper/common/utils/data_extraction.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper/parsers/json_parser.dart';
 
 /// Extracts key-value pairs from JSON data structures
 /// Returns Data object with Map of key-value pairs or null if not found

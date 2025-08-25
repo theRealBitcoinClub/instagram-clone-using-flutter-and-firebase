@@ -1,9 +1,9 @@
 import 'package:bip39_mnemonic/bip39_mnemonic.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/resources/auth_method.dart';
-// import 'package:instagram_clone1/utils/colors.dart'; // REMOVE THIS
-import 'package:instagram_clone1/utils/snackbar.dart'; // Ensure this is themed
-import 'package:instagram_clone1/widgets/textfield_input.dart'; // Ensure this is themed
+import 'package:mahakka/resources/auth_method.dart';
+// import 'package:mahakka/utils/colors.dart'; // REMOVE THIS
+import 'package:mahakka/utils/snackbar.dart'; // Ensure this is themed
+import 'package:mahakka/widgets/textfield_input.dart'; // Ensure this is themed
 
 class LoginScreen extends StatefulWidget {
   final Function()? onToggle; // Assuming this is for toggling between Login/Signup

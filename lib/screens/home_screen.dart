@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/provider/user_provider.dart'; // Ensure ProviderUser is correctly defined and provided
-import 'package:instagram_clone1/screens/add_screen.dart'; // Ensure AddPost is themed
-import 'package:instagram_clone1/screens/feed_screen.dart'; // Ensure FeedScreen is themed
-import 'package:instagram_clone1/screens/profile_screen.dart'; // Ensure ProfileScreen is themed
-// import 'package:instagram_clone1/utils/colors.dart'; // REMOVE THIS - Colors should come from theme
+import 'package:mahakka/provider/user_provider.dart'; // Ensure ProviderUser is correctly defined and provided
+import 'package:mahakka/screens/add_screen.dart'; // Ensure AddPost is themed
+import 'package:mahakka/screens/feed_screen.dart'; // Ensure FeedScreen is themed
+import 'package:mahakka/screens/profile_screen.dart'; // Ensure ProfileScreen is themed
+// import 'package:mahakka/utils/colors.dart'; // REMOVE THIS - Colors should come from theme
 import 'package:provider/provider.dart';
 
 // Assuming your ThemeProvider and app_themes.dart are accessible

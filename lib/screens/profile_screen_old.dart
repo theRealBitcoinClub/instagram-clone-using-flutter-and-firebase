@@ -1,13 +1,13 @@
 // import 'package:clipboard/clipboard.dart';
 // import 'package:expandable_text/expandable_text.dart';
 // import 'package:flutter/material.dart';
-// import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
-// import 'package:instagram_clone1/memomodel/memo_model_post.dart';
-// import 'package:instagram_clone1/memomodel/memo_model_user.dart';
-// import 'package:instagram_clone1/memoscraper/memo_creator_service.dart';
-// import 'package:instagram_clone1/resources/auth_method.dart';
-// import 'package:instagram_clone1/utils/colors.dart';
-// import 'package:instagram_clone1/widgets/profile_buttons.dart';
+// import 'package:mahakka/memomodel/memo_model_creator.dart';
+// import 'package:mahakka/memomodel/memo_model_post.dart';
+// import 'package:mahakka/memomodel/memo_model_user.dart';
+// import 'package:mahakka/memoscraper/memo_creator_service.dart';
+// import 'package:mahakka/resources/auth_method.dart';
+// import 'package:mahakka/utils/colors.dart';
+// import 'package:mahakka/widgets/profile_buttons.dart';
 // import 'package:pretty_qr_code/pretty_qr_code.dart';
 // import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 //

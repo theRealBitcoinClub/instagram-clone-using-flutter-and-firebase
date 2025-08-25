@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
-import 'package:instagram_clone1/memomodel/memo_model_tag.dart'; // Ensure correct model import
+import 'package:mahakka/memomodel/memo_model_tag.dart'; // Ensure correct model import
 
 // Assuming SearchViewModel and LoadingWidget are correctly imported
 import '../view_models/search_view_model.dart';

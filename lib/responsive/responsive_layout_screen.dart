@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/responsive/dimensions.dart';
+import 'package:mahakka/responsive/dimensions.dart';
 
 class ResponsiveLayout extends StatelessWidget {
   final Widget MobileScreenLayout;

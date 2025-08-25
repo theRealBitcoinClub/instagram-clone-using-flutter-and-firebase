@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:html/dom.dart';
-import 'package:instagram_clone1/dart_web_scraper/common/utils/data_extraction.dart';
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
+import 'package:mahakka/dart_web_scraper/common/utils/data_extraction.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper.dart';
 
 /// Extracts JSON-LD structured data from HTML script tags
 /// Returns Data object with parsed JSON-LD data or null if not found

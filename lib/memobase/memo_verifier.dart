@@ -1,4 +1,4 @@
-import 'package:instagram_clone1/memoscraper/memo_scraper_utils.dart';
+import 'package:mahakka/memoscraper/memo_scraper_utils.dart';
 
 enum MemoVerificationResponse {
   valid,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:instagram_clone1/memomodel/memo_model_post.dart';
-import 'package:instagram_clone1/resources/auth_method.dart';
-import 'package:instagram_clone1/widgets/post_card.dart';
+import 'package:mahakka/memomodel/memo_model_post.dart';
+import 'package:mahakka/resources/auth_method.dart';
+import 'package:mahakka/widgets/post_card.dart';
 import 'package:provider/provider.dart';
 
 import '../theme_provider.dart';

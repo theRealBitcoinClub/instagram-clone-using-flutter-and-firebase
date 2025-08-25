@@ -1,4 +1,4 @@
-import 'package:instagram_clone1/dart_web_scraper/dart_web_scraper.dart';
+import 'package:mahakka/dart_web_scraper/dart_web_scraper.dart';
 
 /// Returns the URL from parent data as a Data object
 /// Simple utility parser that extracts the URL itself

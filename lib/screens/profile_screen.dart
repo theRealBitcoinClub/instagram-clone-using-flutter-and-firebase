@@ -236,7 +236,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.currency_bitcoin_rounded), // Changed icon for clarity
-            tooltip: "Show Balances QR",
+            tooltip: "Deposit BCH",
             // color: theme.appBarTheme.foregroundColor, // From theme
             onPressed: _showBchQRDialog,
           ),
@@ -307,7 +307,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Divider(color: theme.dividerColor, height: 1.0, thickness: 0.5), // Themed divider
           Padding(
             // Add padding around the view mode icons
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            padding: const EdgeInsets.only(top: 10.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -875,9 +875,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _saveProfile(dialogCtc) async {
-    await MemoAccountant(_user!).profileSetName(_profileNameCtrl.text.trim());
-    await MemoAccountant(_user!).profileSetText(_profileTextCtrl.text.trim());
-    await MemoAccountant(_user!).profileSetAvatar(_imgurCtrl.text.trim());
+    var name = _profileNameCtrl.text.trim();
+    if (name.isNotEmpty) await MemoAccountant(_user!).profileSetName(name);
+
+    var text = _profileTextCtrl.text.trim();
+    if (text.isNotEmpty) await MemoAccountant(_user!).profileSetText(text);
+
+    var imgur = _imgurCtrl.text.trim();
+    if (imgur.isNotEmpty) await MemoAccountant(_user!).profileSetAvatar(imgur);
 
     _user = await MemoModelUser.getUser();
     setState(() {

@@ -111,7 +111,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (refreshBchStatus != "success" && mounted) {
         showSnackBar("You haz no BCH, please deposit if you want to publish and earn token", context);
       }
-      // ... (other snackbars)
+
+      if (refreshTokensStatus != "success" && mounted) {
+        showSnackBar("You haz no Tokens, you will miss out on the discount", context);
+      }
+
+      if (refreshMemoStatus != "success" && mounted) {
+        showSnackBar("You haz no Memo balance, your actions will not tip memo users", context);
+      }
     } catch (e, s) {
       _logError("Error in _fetchProfileData", e, s);
       if (mounted) {
@@ -161,96 +168,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final ColorScheme colorScheme = theme.colorScheme;
 
     if (_isLoading) {
-      return Scaffold(
-        // Add Scaffold for consistent loading screen appearance
-        backgroundColor: theme.scaffoldBackgroundColor,
-        appBar: AppBar(
-          backgroundColor: theme.appBarTheme.backgroundColor,
-          elevation: 0, // No shadow during loading
-        ),
-        body: const Center(child: CircularProgressIndicator()), // Progress indicator will use theme color
-      );
+      return _buildLoadingScaffold(theme);
     }
 
     if (_user == null || _creator == null) {
-      return Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        appBar: AppBar(
-          title: Text("Profile Error", style: theme.appBarTheme.titleTextStyle),
-          backgroundColor: theme.appBarTheme.backgroundColor,
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, color: colorScheme.error, size: 48),
-                const SizedBox(height: 16),
-                Text(
-                  "Could not load profile data.",
-                  style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onBackground),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.refresh),
-                  label: const Text("Retry"),
-                  onPressed: _fetchProfileData,
-                  // Style will come from theme.elevatedButtonTheme
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
+      return _buildErrorScaffold(theme, colorScheme);
     }
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        // backgroundColor: theme.appBarTheme.backgroundColor, // From theme
-        // foregroundColor: theme.appBarTheme.foregroundColor, // From theme for icons/text
-        toolbarHeight: 50,
-        centerTitle: false, // As per your original
-        title: TextButton(
-          onPressed: () {
-            //TODO LAUNCH PROFILE ON MEMO WITH THAT ID
-            showSnackBar("Launch memo profile URL for ${_user!.profileIdMemoBch}", context);
-          },
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.zero, // Remove default padding for tighter fit
-            // foregroundColor: theme.appBarTheme.foregroundColor?.withOpacity(0.8) ?? colorScheme.onPrimary.withOpacity(0.8),
-          ),
-          child: Text(
-            _user!.profileIdMemoBch,
-            style: theme.textTheme.bodySmall?.copyWith(
-              // Smaller text for ID
-              color: (theme.appBarTheme.titleTextStyle?.color ?? colorScheme.onPrimary).withOpacity(
-                0.7,
-              ), // Subtler color
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.currency_bitcoin_rounded), // Changed icon for clarity
-            tooltip: "Deposit BCH",
-            // color: theme.appBarTheme.foregroundColor, // From theme
-            onPressed: _showBchQRDialog,
-          ),
-        ],
-      ),
+      appBar: _buildAppBar(context, theme, colorScheme),
       body: SafeArea(
         child: Column(
           children: [
-            if (_isRefreshing)
-              const LinearProgressIndicator(
-                // valueColor will be from theme.progressIndicatorTheme
-                minHeight: 2, // Make it subtle
-              ),
-            _buildProfileHeader(theme, colorScheme),
+            _buildCollapsibleProfileHeader(theme, colorScheme),
+            Container(
+              decoration: BoxDecoration(color: theme.colorScheme.surface),
+              child: _buildTabSelector(theme),
+            ),
             Expanded(child: _buildContentView(theme)), // Pass theme
           ],
         ),
@@ -258,9 +193,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileHeader(ThemeData theme, ColorScheme colorScheme) {
+  AppBar _buildAppBar(BuildContext context, ThemeData theme, ColorScheme colorScheme) {
+    return AppBar(
+      // backgroundColor: theme.appBarTheme.backgroundColor, // From theme
+      // foregroundColor: theme.appBarTheme.foregroundColor, // From theme for icons/text
+      toolbarHeight: 50,
+      centerTitle: false, // As per your original
+      title: TextButton(
+        onPressed: () {
+          //TODO LAUNCH PROFILE ON MEMO WITH THAT ID
+          showSnackBar("Launch memo profile URL for ${_user!.profileIdMemoBch}", context);
+        },
+        style: TextButton.styleFrom(
+          padding: EdgeInsets.zero, // Remove default padding for tighter fit
+          // foregroundColor: theme.appBarTheme.foregroundColor?.withOpacity(0.8) ?? colorScheme.onPrimary.withOpacity(0.8),
+        ),
+        child: Text(
+          _user!.profileIdMemoBch,
+          style: theme.textTheme.bodySmall?.copyWith(
+            // Smaller text for ID
+            color: (theme.appBarTheme.titleTextStyle?.color ?? colorScheme.onPrimary).withOpacity(0.7), // Subtler color
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.currency_bitcoin_rounded), // Changed icon for clarity
+          tooltip: "Deposit BCH",
+          // color: theme.appBarTheme.foregroundColor, // From theme
+          onPressed: _showBchQRDialog,
+        ),
+      ],
+    );
+  }
+
+  Scaffold _buildLoadingScaffold(ThemeData theme) {
+    return Scaffold(
+      // Add Scaffold for consistent loading screen appearance
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        elevation: 0, // No shadow during loading
+      ),
+      body: const Center(child: CircularProgressIndicator()), // Progress indicator will use theme color
+    );
+  }
+
+  Scaffold _buildErrorScaffold(ThemeData theme, ColorScheme colorScheme) {
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: Text("Profile Error", style: theme.appBarTheme.titleTextStyle),
+        backgroundColor: theme.appBarTheme.backgroundColor,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, color: colorScheme.error, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                "Could not load profile data.",
+                style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onBackground),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.refresh),
+                label: const Text("Retry"),
+                onPressed: _fetchProfileData,
+                // Style will come from theme.elevatedButtonTheme
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollapsibleProfileHeader(ThemeData theme, ColorScheme colorScheme) {
     return Container(
-      padding: const EdgeInsets.only(bottom: 12.0),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface, // Use surface color for the header background
         // Optional: add a subtle border at the bottom
@@ -269,11 +284,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (_isRefreshing) const LinearProgressIndicator(minHeight: 2),
           _buildTopDetailsRow(theme, colorScheme),
           _buildNameRow(theme),
           _buildProfileText(colorScheme, theme),
           Divider(color: theme.dividerColor, height: 1.0, thickness: 0.5), // Themed divider
-          _buildTabSelector(theme),
         ],
       ),
     );
@@ -282,7 +297,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Padding _buildTabSelector(ThemeData theme) {
     return Padding(
       // Add padding around the view mode icons
-      padding: const EdgeInsets.only(top: 10.0),
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [

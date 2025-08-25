@@ -63,9 +63,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String refreshMemo = await user!.refreshBalanceDevPath0();
     setState(() {
       isRefreshing = false;
-      if (refreshBch != "success") showSnackBar("Refresh BCH balance failed", context);
-      if (refreshTokens != "success") showSnackBar("Refresh Token balance failed", context);
-      if (refreshMemo != "success") showSnackBar("Refresh Memo balance failed", context);
+      if (refreshBch != "success")
+        showSnackBar("You haz no BCH, please deposit if you want to publish and earn token", context);
+      if (refreshTokens != "success")
+        showSnackBar("You haz no tokens, deposit tokens to post/like/reply with discount", context);
+      if (refreshMemo != "success")
+        showSnackBar("You haz no memo balance, likes/replies of OG memo posts will not send tips", context);
     });
   }
 

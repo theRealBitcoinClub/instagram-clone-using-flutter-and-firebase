@@ -28,7 +28,7 @@ class MemoAccountant {
   }
 
   Future<MemoAccountantResponse> publishReplyTopic(MemoModelPost post, String postReply) async {
-    MemoAccountantResponse response = await _tryPublishReply(user.wifLegacy, post, postReply);
+    MemoAccountantResponse response = await _tryPublishReplyTopic(user.wifLegacy, post, postReply);
 
     return _memoAccountantResponse(response);
   }
@@ -60,14 +60,14 @@ class MemoAccountant {
   MemoAccountantResponse _memoAccountantResponse(MemoAccountantResponse response) =>
       response != MemoAccountantResponse.yes ? MemoAccountantResponse.lowBalance : MemoAccountantResponse.yes;
 
-  Future<MemoAccountantResponse> _tryPublishReply(String wif, MemoModelPost post, String postReply) async {
+  Future<MemoAccountantResponse> _tryPublishReplyTopic(String wif, MemoModelPost post, String postReply) async {
     var tip = MemoTip(_getTipReceiver(post.creator!), user.tipAmount);
-    return _publishToMemo(MemoCode.profileMessage, postReply, tip: tip, top: post.topic!.header);
+    return _publishToMemo(MemoCode.topicMessage, postReply, tip: tip, top: post.topic!.header);
   }
 
-  Future<MemoAccountantResponse> _publishToMemo(MemoCode c, String text, {String top = "", MemoTip? tip}) async {
+  Future<MemoAccountantResponse> _publishToMemo(MemoCode c, String text, {String? top, MemoTip? tip}) async {
     MemoPublisher mp = await MemoPublisher.create(text, c, wif: user.wifLegacy);
-    return mp.doPublish(topic: top, tip: tip);
+    return mp.doPublish(topic: top ?? "", tip: tip);
   }
 
   String _getTipReceiver(MemoModelCreator creator) {

@@ -285,7 +285,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
     text = appendVideoOrImgurUrl(text);
     String? topic = extractTopic(text);
 
-    var response = MemoModelPost.publishImageOrVideo(text, topic);
+    var response = await MemoModelPost.publishImageOrVideo(text, topic);
 
     //TODO handle verification
     if (response == MemoAccountantResponse.yes) {

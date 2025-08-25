@@ -26,7 +26,6 @@ class MemoPostService {
   // Renamed for clarity on its purpose
   static const String _rootParserParent = "_root";
   static const String _txHashPrefix = "/post";
-  static const String _profileUrlPrefix = "profile/"; // Assuming "profile/" based on common patterns
   static const int _profileUrlPrefixLength = 8; // Length of "profile/" is 8, adjust if prefix changes
 
   // --- Configuration Method ---

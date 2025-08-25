@@ -4,6 +4,7 @@ import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 import 'package:instagram_clone1/memobase/memo_accountant.dart';
+import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
 import 'package:instagram_clone1/widgets/memo_confetti.dart';
 import 'package:instagram_clone1/widgets/textfield_input.dart';
@@ -282,11 +283,11 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
   Future<void> publishImageOrVideo(BuildContext ctx) async {
     String text = _tagController.text;
     text = appendVideoOrImgurUrl(text);
-
     String? topic = extractTopic(text);
 
-    var response = await MemoAccountant(user!).publishImageOrVideo(text, topic);
+    var response = MemoModelPost.publishImageOrVideo(text, topic);
 
+    //TODO handle verification
     if (response == MemoAccountantResponse.yes) {
       clearInputs();
       setState(() {

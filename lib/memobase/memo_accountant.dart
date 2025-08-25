@@ -1,6 +1,5 @@
 import 'package:instagram_clone1/memobase/memo_code.dart';
 import 'package:instagram_clone1/memobase/memo_publisher.dart';
-import 'package:instagram_clone1/memobase/memo_verifier.dart';
 import 'package:instagram_clone1/memomodel/memo_model_creator.dart';
 import 'package:instagram_clone1/memomodel/memo_model_post.dart';
 import 'package:instagram_clone1/memomodel/memo_model_user.dart';
@@ -45,11 +44,7 @@ class MemoAccountant {
     return _publishToMemo(MemoCode.profileMessage, text, tip: tip);
   }
 
-  Future<dynamic> publishImageOrVideo(String text, String? topic) async {
-    MemoVerificationResponse res = MemoVerifier(text).checkIsValidText(text);
-
-    if (res != MemoVerificationResponse.valid) return res;
-
+  Future<MemoAccountantResponse> publishImgurOrYoutube(String? topic, String text) {
     if (topic != null) {
       return _publishToMemo(MemoCode.topicMessage, text, top: topic);
     } else {

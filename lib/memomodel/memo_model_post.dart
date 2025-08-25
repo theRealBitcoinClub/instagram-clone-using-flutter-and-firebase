@@ -99,22 +99,31 @@ class MemoModelPost {
   //Any other response should invoke a snackbar and later even better QR codes to insta deposit
 
   Future<dynamic> publishReplyTopic(String replyText) async {
-    MemoVerificationResponse verifier = MemoVerifier(replyText).checkIsValidText(replyText);
+    MemoVerificationResponse verifier = MemoVerifier(replyText).checkIsValidText();
     if (verifier == MemoVerificationResponse.valid) {
       //TODO at this point accountant should never throw error as it should be already checking balances before allowing the user to write
       var user = await MemoModelUser.getUser();
-      return await MemoAccountant(user).publishReplyTopic(this, replyText);
+      return MemoAccountant(user).publishReplyTopic(this, replyText);
     } else
       return verifier;
   }
 
   Future<dynamic> publishReplyHashtags(String text) async {
-    MemoVerificationResponse verifier = MemoVerifier(text).checkIsValidText(text);
+    MemoVerificationResponse verifier = MemoVerifier(text).checkIsValidText();
     if (verifier != MemoVerificationResponse.valid) return verifier;
 
     var user = await MemoModelUser.getUser();
 
-    return await MemoAccountant(user).publishReplyHashtags(this, text);
+    return MemoAccountant(user).publishReplyHashtags(this, text);
+  }
+
+  static Future<dynamic> publishImageOrVideo(String text, String? topic) async {
+    MemoVerificationResponse res = MemoVerifier(text).checkIsValidText();
+    if (res != MemoVerificationResponse.valid) return res;
+
+    var user = await MemoModelUser.getUser();
+
+    return MemoAccountant(user).publishImgurOrYoutube(topic, text);
   }
 
   //TODO IMPLEMENT EQUALS METHOD, CHECK TX HASH

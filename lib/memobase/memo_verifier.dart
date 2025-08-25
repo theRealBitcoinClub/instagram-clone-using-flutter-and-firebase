@@ -36,7 +36,7 @@ class MemoVerifier {
 
   MemoVerifier(this.text);
 
-  MemoVerificationResponse checkIsValidText(String text) {
+  MemoVerificationResponse checkIsValidText() {
     if (hashTags.length > 3) return MemoVerificationResponse.moreThanThreeTags;
     // if (urls.length > 1 && !_urlMatchesTg() && post.imgurUrl.is) return MemoVerificationResponse.urlThatsNotTgNorImageNorVideo;
 

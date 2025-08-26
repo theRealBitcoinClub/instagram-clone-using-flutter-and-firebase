@@ -62,6 +62,7 @@ class _PostCardState extends State<PostCard> {
     _textEditController = TextEditingController();
     _initializeSelectedHashtags();
     _loadUser();
+    widget.post.creator!.refreshAvatar();
 
     if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
       _ytController = YoutubePlayerController(

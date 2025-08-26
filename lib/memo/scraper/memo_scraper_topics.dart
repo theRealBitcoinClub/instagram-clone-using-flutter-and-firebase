@@ -26,7 +26,7 @@ class MemoScraperTopic {
 
         Map<String, Object> posts = await MemoScraperUtil.createScraper("${currentTopic.url!}?x=$cacheId", config);
 
-        var postList = createTopicPostList(posts, currentTopic);
+        var postList = await createTopicPostList(posts, currentTopic);
         MemoModelPost.addToGlobalPostList(postList.reversed.toList());
 
         // printMemoModelPost(postList);
@@ -103,7 +103,7 @@ class MemoScraperTopic {
     );
   }
 
-  List<MemoModelPost> createTopicPostList(Map<String, Object> posts, MemoModelTopic topic) {
+  Future<List<MemoModelPost>> createTopicPostList(Map<String, Object> posts, MemoModelTopic topic) async {
     List<MemoModelPost> postList = [];
 
     for (Map<String, Object> item in posts.values.first as Iterable) {
@@ -122,7 +122,10 @@ class MemoScraperTopic {
         created: item["created"].toString(),
         txHash: item["txhash"].toString().substring("/post".length),
         imgurUrl: item["imgur"]?.toString(),
-        creator: MemoModelCreator(name: item["creatorName"].toString(), id: item["profileUrl"].toString().substring(8)),
+        creator: await MemoModelCreator.create(
+          name: item["creatorName"].toString(),
+          id: item["profileUrl"].toString().substring(8),
+        ),
       );
 
       MemoScraperUtil.extractUrlsAndHashtags(post);

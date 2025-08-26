@@ -10,6 +10,7 @@ import 'package:mahakka/resources/auth_method.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 // import 'package:mahakka/utils/colors.dart'; // REMOVE THIS
 import 'package:mahakka/widgets/profile_buttons.dart'; // Assumed themed SettingsButton
+import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../sliver_app_bar_delegate.dart';
@@ -84,13 +85,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final localUser = await MemoModelUser.getUser();
       if (!mounted) return;
 
-      final initialCreator = MemoModelCreator.createDummy(id: MemoModelUser.profileIdGet(localUser));
+      final initialCreator = await MemoModelCreator.create(id: MemoModelUser.profileIdGet(localUser), name: "");
 
       setState(() {
         _user = localUser;
         _creator = initialCreator;
         _isLoading = false;
       });
+
+      _creator!.refreshAvatar();
 
       final resultDetails = await Future.wait([
         MemoCreatorService().fetchCreatorDetails(initialCreator, noCache: true),
@@ -213,8 +216,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       centerTitle: false, // As per your original
       title: TextButton(
         onPressed: () {
+          launchUrl(Uri.parse("https://memo.cash/profile/${_creator!.id}"));
           //TODO LAUNCH PROFILE ON MEMO WITH THAT ID
-          showSnackBar("Launch memo profile URL for ${_user!.profileIdMemoBch}", context);
+          // showSnackBar("Launch memo profile URL for ${_user!.profileIdMemoBch}", context);
         },
         style: TextButton.styleFrom(
           padding: EdgeInsets.zero, // Remove default padding for tighter fit
@@ -366,31 +370,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           GestureDetector(
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (ctx) {
-                  return SimpleDialog(
-                    contentPadding: EdgeInsetsGeometry.all(10),
-                    children: [
-                      CircleAvatar(
-                        radius: 130,
-                        backgroundColor: colorScheme.surfaceVariant, // Fallback color
-                        backgroundImage: _showDefaultAvatar || _creator!.profileImageDetail().isEmpty
-                            ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                            : NetworkImage(_creator!.profileImageDetail()),
-                        onBackgroundImageError: _showDefaultAvatar
-                            ? null
-                            : (exception, stackTrace) {
-                                _logError("Error loading profile image", exception, stackTrace);
-                                if (mounted) {
-                                  setState(() => _showDefaultAvatar = true);
-                                }
-                              },
-                      ),
-                    ],
-                  );
-                },
-              );
+              showImageDetail(colorScheme);
             },
             child: CircleAvatar(
               radius: 40,
@@ -439,6 +419,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  }
+
+  void showImageDetail(ColorScheme colorScheme) async {
+    bool hasDetail = await _creator!.refreshDetail();
+
+    if (hasDetail && context.mounted) {
+      showDialog(
+        context: context,
+        builder: (ctx) {
+          return SimpleDialog(
+            contentPadding: EdgeInsetsGeometry.all(10),
+            children: [
+              CircleAvatar(
+                radius: 130,
+                backgroundColor: colorScheme.surfaceVariant, // Fallback color
+                backgroundImage: _showDefaultAvatar || _creator!.profileImageDetail().isEmpty
+                    ? const AssetImage("assets/images/default_profile.png") as ImageProvider
+                    : NetworkImage(_creator!.profileImageDetail()),
+                onBackgroundImageError: _showDefaultAvatar
+                    ? null
+                    : (exception, stackTrace) {
+                        _logError("Error loading profile image", exception, stackTrace);
+                        if (mounted) {
+                          setState(() => _showDefaultAvatar = true);
+                        }
+                      },
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   Widget _buildEditProfileButton(ThemeData theme) {

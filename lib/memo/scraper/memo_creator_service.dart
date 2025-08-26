@@ -3,8 +3,8 @@ import 'dart:async'; // For Future.wait and potentially Completer if needed else
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
-import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart'; // Assuming MemoModelCreator is defined here
+import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
 const log_prefix = "MemoCreatorService ";
 
@@ -136,8 +136,9 @@ class MemoCreatorService {
       int? tryParseStat(String value) => int.tryParse(value.replaceAll(",", ""));
 
       creators.add(
-        MemoModelCreator(
+        await MemoModelCreator.create(
           id: id,
+          name: "be fetched later",
           // Assuming MemoModelCreator constructor handles nulls or has defaults
           followerCount: tryParseStat(stats[2]) ?? 0,
           actions: tryParseStat(stats[1]) ?? 0,

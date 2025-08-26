@@ -107,7 +107,7 @@ class MemoPostService {
 
   // --- Data Parsing Logic ---
 
-  Future<List<MemoModelPost>> _parseScrapedPostData(Map<String, Object> scrapedData) async {
+  List<MemoModelPost> _parseScrapedPostData(Map<String, Object> scrapedData) {
     final List<MemoModelPost> postList = [];
 
     if (scrapedData.values.isEmpty) {
@@ -169,7 +169,7 @@ class MemoPostService {
       if (creatorName != null && profileUrlRaw != null && profileUrlRaw.length > _profileUrlPrefixLength) {
         // Assuming the ID is the part after the prefix (e.g., "profile/creatorId")
         final String creatorId = profileUrlRaw.substring(_profileUrlPrefixLength);
-        creator = await MemoModelCreator.create(name: creatorName, id: creatorId);
+        creator = MemoModelCreator(name: creatorName, id: creatorId);
       } else {
         _logWarning("Missing creator name or valid profile URL for post item: $item");
         // Decide how to handle missing creator: skip post, use a default, etc.

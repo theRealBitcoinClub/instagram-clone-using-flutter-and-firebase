@@ -58,7 +58,6 @@ class MemoModelPost {
     for (int i = 0; i < 20; i++) {
       topic.posts.add(memoModelPost);
     }
-    memoModelCreator.posts = topic.posts;
 
     return memoModelPost;
   }

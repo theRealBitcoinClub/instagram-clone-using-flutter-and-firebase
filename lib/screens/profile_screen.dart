@@ -85,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final localUser = await MemoModelUser.getUser();
       if (!mounted) return;
 
-      final initialCreator = await MemoModelCreator.create(id: MemoModelUser.profileIdGet(localUser), name: "");
+      final initialCreator = MemoModelCreator(id: MemoModelUser.profileIdGet(localUser), name: "");
 
       setState(() {
         _user = localUser;

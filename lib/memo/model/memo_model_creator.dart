@@ -1,84 +1,94 @@
-import 'package:mahakka/check_404.dart';
-import 'package:mahakka/memo/model/memo_model_post.dart';
+// [1]
+// The user has this file open:
+// /home/pachamama/github/mahakka/lib/memo/model/memo_model_creator.dart.
+import 'package:json_annotation/json_annotation.dart';
+import 'package:mahakka/check_404.dart'; // Assuming this is your utility function
 
+part 'memo_model_creator.g.dart'; // This will be generated
+
+@JsonSerializable(explicitToJson: true)
 class MemoModelCreator {
+  late String id; // Mark as late if initialized by fromJson
+  late String name;
+  String profileText = ""; // Provide default values
+  int followerCount = 0;
+  int actions = 0;
+  String created = "";
+  String lastActionDate = "";
+
+  MemoModelCreator({
+    required this.id,
+    required this.name,
+    this.profileText = "",
+    this.followerCount = 0,
+    this.actions = 0,
+    this.created = "",
+    this.lastActionDate = "",
+  });
+
+  // Constants are not part of JSON serialization
   static const String sizeAvatar = "128x128";
   static const String sizeDetail = "640x640";
   static const List<String> imageTypes = ["jpg", "png"];
   static const String imageBaseUrl = "https://memo.cash/img/profilepics/";
+  static int maxCheckImage = 1; // static fields are not serialized by default
 
-  String id;
-  String name;
-  String profileText;
-  int followerCount;
-  int actions;
-  String created;
-  String lastActionDate;
-
-  List<MemoModelPost> posts = [];
+  // These fields are runtime state and should likely not be part of the JSON
+  // If they were to be stored, they should probably be part of a different caching mechanism
+  // or a user session, not the core creator model persisted in the DB.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   String? _profileImageAvatar;
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
   String? _profileImageDetail;
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
   int hasCheckedImgAvatar = 0;
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
   int hasCheckedImgDetail = 0;
-  static int maxCheckImage = 1;
 
-  MemoModelCreator._create(
-    this.id,
-    this.name,
-    this.profileText,
-    this.followerCount,
-    this.actions,
-    this.created,
-    this.lastActionDate,
-  );
+  // Factory constructor for json_serializable to use for creating instances from JSON
+  factory MemoModelCreator.fromJson(Map<String, dynamic> json) => _$MemoModelCreatorFromJson(json);
 
-  static MemoModelCreator create({
-    required String id,
-    required String name,
-    String profileText = "",
-    int followerCount = 0,
-    int actions = 0,
-    String created = "",
-    String lastActionDate = "",
-  }) {
-    MemoModelCreator creator = MemoModelCreator._create(
-      id,
-      name,
-      profileText,
-      followerCount,
-      actions,
-      created,
-      lastActionDate,
-    );
-    return creator;
-  }
+  // Method for json_serializable to use for converting instances to JSON
+  Map<String, dynamic> toJson() => _$MemoModelCreatorToJson(this);
 
-  //TODO call on creation of postcard & creation of detail dialog in profile screen
+  // --- Your existing methods ---
 
   void refreshAvatar() {
     _checkProfileImageAvatar();
   }
 
-  //TODO call on launch of profile screen
-
   Future<bool> refreshDetail() async {
     return _checkProfileImageDetail();
   }
 
+  // These methods below expose the runtime state.
+  // The underlying fields (_profileImageAvatar, _profileImageDetail) are not serialized.
+  // If you need to persist profile image URLs that are *known* (not dynamically checked),
+  // add separate String fields to the class for that purpose and include them in serialization.
   String profileImageAvatar() {
     return _profileImageAvatar ?? "";
   }
 
   Future<void> _checkProfileImageAvatar() async {
-    if (hasCheckedImgAvatar > maxCheckImage) return;
+    if (hasCheckedImgAvatar >= maxCheckImage) return; // Use >= for safety
 
-    for (String t in imageTypes) {
-      if (_profileImageAvatar != null) return;
-
-      String avatarUrl = _profileImageUrl(sizeAvatar, t);
-      if (!await checkUrlReturns404(avatarUrl)) _profileImageAvatar = avatarUrl;
+    // Simple optimization: if already set, don't re-check within this call
+    if (_profileImageAvatar != null) {
+      // If you want a refresh to always re-check, you'd clear _profileImageAvatar at the start of refreshAvatar()
+      return;
     }
 
+    for (String t in imageTypes) {
+      String avatarUrl = _profileImageUrl(sizeAvatar, t);
+      // Assuming checkUrlReturns404 is available and works as intended
+      if (!await checkUrlReturns404(avatarUrl)) {
+        _profileImageAvatar = avatarUrl;
+        break; // Found one, no need to check other types
+      }
+    }
     hasCheckedImgAvatar++;
   }
 
@@ -87,27 +97,33 @@ class MemoModelCreator {
   }
 
   Future<bool> _checkProfileImageDetail() async {
-    if (hasCheckedImgDetail > maxCheckImage) return false;
+    if (hasCheckedImgDetail >= maxCheckImage) return false;
+
+    if (_profileImageDetail != null) {
+      return true; // Already found and set
+    }
 
     for (String t in imageTypes) {
-      if (_profileImageDetail != null) return true;
-
       String url = _profileImageUrl(sizeDetail, t);
       if (!await checkUrlReturns404(url)) {
         _profileImageDetail = url;
+        hasCheckedImgDetail++; // Increment only after success
         return true;
       }
     }
-
-    hasCheckedImgDetail++;
+    hasCheckedImgDetail++; // Increment even if not found to prevent re-checking beyond maxCheckImage
     return false;
   }
 
-  //add millis to get fresh image
-
   String _profileImageUrl(String size, String type) {
-    return "$imageBaseUrl$id-$size.$type?${DateTime.now().millisecondsSinceEpoch}";
+    return "$imageBaseUrl$id-$size.$type?v=${DateTime.now().millisecondsSinceEpoch}"; // Added 'v=' for cache busting, more standard
   }
 
-  //TODO IMPLEMENT EQUALS METHOD, CHECK ID
+  // Consider implementing equals and hashCode if you store these in Sets or use them as Map keys.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is MemoModelCreator && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

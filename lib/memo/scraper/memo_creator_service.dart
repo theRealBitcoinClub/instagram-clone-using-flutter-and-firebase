@@ -136,7 +136,7 @@ class MemoCreatorService {
       int? tryParseStat(String value) => int.tryParse(value.replaceAll(",", ""));
 
       creators.add(
-        await MemoModelCreator.create(
+        MemoModelCreator(
           id: id,
           name: "be fetched later",
           // Assuming MemoModelCreator constructor handles nulls or has defaults

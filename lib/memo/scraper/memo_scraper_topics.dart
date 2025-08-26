@@ -27,7 +27,7 @@ class MemoScraperTopic {
         Map<String, Object> posts = await MemoScraperUtil.createScraper("${currentTopic.url!}?x=$cacheId", config);
 
         var postList = await createTopicPostList(posts, currentTopic);
-        MemoModelPost.addToGlobalPostList(postList.reversed.toList());
+        MemoModelPost.addToGlobalPostList(postList.toList());
 
         // printMemoModelPost(postList);
         // print("object");

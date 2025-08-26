@@ -1,9 +1,9 @@
-import 'dart:io';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:mahakka/memo/firebase/creator_service.dart';
+import 'package:mahakka/memo/firebase/post_service.dart';
+import 'package:mahakka/memo/firebase/topic_service.dart';
+import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_topics.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/route%20handling/auth_page.dart';
@@ -11,7 +11,7 @@ import 'package:mahakka/theme_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
-import 'memo/model/memo_model_creator.dart';
+import 'memo/model/memo_model_topic.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -38,19 +38,22 @@ Future<void> initData() async {
     //   }
     //   sleep(Duration(seconds: 1));
     // }
-    int index = 0;
-    for (int off = 525; off <= 1000; off += 25) {
-      var result = MemoScraperTopic().startScrapeTopics(["/most-actions?offset=$off"]);
-      List<MemoModelCreator> creators = await result;
-      for (var c in creators) {
-        CreatorService().saveCreator(c);
-        index++;
-      }
-      sleep(Duration(seconds: 1));
+    int indexTopics = 0;
+    int indexPosts = 0;
+    await MemoScraperTopic().startScrapeTopics(cacheId, 0);
+
+    for (MemoModelTopic t in MemoModelTopic.topics) {
+      TopicService().saveTopic(t);
+      indexTopics++;
     }
 
-    print("TOTAL AMOUNT $index");
+    for (MemoModelPost p in MemoModelPost.allPosts) {
+      PostService().savePost(p);
+      indexPosts++;
+    }
 
+    print("TOTAL AMOUNT TOPICS $indexTopics");
+    print("TOTAL AMOUNT POSTS $indexPosts");
     // Optional: You can inspect the results if your methods return values
     // For example, if startScrapeTopics returned a list of topics:
     // List<Topic> topics = results[0] as List<Topic>;

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:mahakka/memo/memoscraper/memo_creator_service.dart';
-import 'package:mahakka/memo/memoscraper/memo_post_service.dart';
-import 'package:mahakka/memo/memoscraper/memo_scraper_tag.dart';
-import 'package:mahakka/memo/memoscraper/memo_scraper_topics.dart';
+import 'package:mahakka/memo/scraper/memo_creator_service.dart';
+import 'package:mahakka/memo/scraper/memo_post_service.dart';
+import 'package:mahakka/memo/scraper/memo_scraper_tag.dart';
+import 'package:mahakka/memo/scraper/memo_scraper_topics.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/route%20handling/auth_page.dart';
 import 'package:mahakka/theme_provider.dart';

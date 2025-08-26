@@ -3,7 +3,7 @@
 // import 'package:mahakka/dart_web_scraper/dart_web_scraper/web_scraper.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 //
-// import '../memomodel/memo_model_post.dart';
+// import '../model/memo_model_post.dart';
 //
 // class MemoScraperUtil {
 //   static Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg, {bool nocache = false}) async {

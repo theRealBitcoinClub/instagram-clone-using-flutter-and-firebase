@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/memomodel/memo_model_tag.dart';
-import 'package:mahakka/memo/memomodel/memo_model_topic.dart';
+import 'package:mahakka/memo/model/memo_model_tag.dart';
+import 'package:mahakka/memo/model/memo_model_topic.dart';
 
 ///Search view model_original
 final searchViewModel = SearchViewModel();

@@ -3,9 +3,8 @@ import 'dart:async'; // For Future.wait and potentially Completer if needed else
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
-import 'package:mahakka/memo/memoscraper/memo_scraper_utils.dart';
-
-import '../memomodel/memo_model_creator.dart'; // Assuming MemoModelCreator is defined here
+import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
+import 'package:mahakka/memo/model/memo_model_creator.dart'; // Assuming MemoModelCreator is defined here
 
 const log_prefix = "MemoCreatorService ";
 

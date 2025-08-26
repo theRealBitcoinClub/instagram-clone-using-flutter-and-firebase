@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/memomodel/memo_model_post.dart';
+import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/post_card.dart';
 import 'package:provider/provider.dart';
 

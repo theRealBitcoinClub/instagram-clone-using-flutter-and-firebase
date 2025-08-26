@@ -1,4 +1,4 @@
-import 'package:mahakka/memo/memoscraper/memo_scraper_utils.dart';
+import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
 enum MemoVerificationResponse {
   valid,

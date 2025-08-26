@@ -1,10 +1,10 @@
 // import 'package:mahakka/dart_web_scraper/common/enums.dart';
 // import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 // import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
-// import 'package:mahakka/memoscraper/memo_post_service.dart';
-// import 'package:mahakka/memoscraper/memo_scraper_utils.dart';
+// import 'package:mahakka/scraper/memo_post_service.dart';
+// import 'package:mahakka/scraper/memo_scraper_utils.dart';
 //
-// import '../memomodel/memo_model_tag.dart';
+// import '../model/memo_model_tag.dart';
 //
 // class MemoScraperTag {
 //   Future<void> startScrapeTags(List<String> orderBy, int offset, String cacheId) async {

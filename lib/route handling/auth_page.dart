@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/memomodel/memo_model_user.dart';
+import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/screens/home.dart';
 import 'package:provider/provider.dart';

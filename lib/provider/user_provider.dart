@@ -16,7 +16,7 @@
 // }
 
 import 'package:flutter/cupertino.dart';
-import 'package:mahakka/memo/memomodel/memo_model_user.dart';
+import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/resources/auth_method.dart';
 
 class ProviderUser with ChangeNotifier {

@@ -1,4 +1,4 @@
-import 'package:mahakka/memo/memomodel/memo_model_post.dart';
+import 'package:mahakka/memo/model/memo_model_post.dart';
 
 class MemoModelCreator {
   MemoModelCreator({

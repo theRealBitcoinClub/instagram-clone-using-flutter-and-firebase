@@ -1,6 +1,6 @@
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/memomodel/memo_model_user.dart';
+import 'package:mahakka/memo/model/memo_model_user.dart';
 // import 'package:mahakka/utils/colors.dart'; // REMOVE THIS
 import 'package:mahakka/utils/snackbar.dart'; // Ensure this uses themed SnackBars
 import 'package:pretty_qr_code/pretty_qr_code.dart';

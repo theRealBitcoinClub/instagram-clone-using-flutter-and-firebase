@@ -1,5 +1,5 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
-import 'package:mahakka/memo/memobase/memo_bitcoin_base.dart';
+import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 
 void main() async {
   //TODO if user profile id is provided, then trigger the SLP send to their original memo address

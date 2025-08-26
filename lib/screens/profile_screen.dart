@@ -1,11 +1,11 @@
 import 'package:clipboard/clipboard.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/memobase/memo_accountant.dart';
-import 'package:mahakka/memo/memomodel/memo_model_creator.dart';
-import 'package:mahakka/memo/memomodel/memo_model_post.dart';
-import 'package:mahakka/memo/memomodel/memo_model_user.dart';
-import 'package:mahakka/memo/memoscraper/memo_creator_service.dart';
+import 'package:mahakka/memo/base/memo_accountant.dart';
+import 'package:mahakka/memo/model/memo_model_creator.dart';
+import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/memo/model/memo_model_user.dart';
+import 'package:mahakka/memo/scraper/memo_creator_service.dart';
 import 'package:mahakka/resources/auth_method.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 // import 'package:mahakka/utils/colors.dart'; // REMOVE THIS

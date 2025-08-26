@@ -1,4 +1,4 @@
-// import 'package:mahakka/memo/memomodel/memo_model_user.dart';
+// import 'package:mahakka/memo/model/memo_model_user.dart';
 //
 // class User {
 //   final String email;

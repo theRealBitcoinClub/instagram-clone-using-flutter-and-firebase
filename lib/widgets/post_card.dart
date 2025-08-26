@@ -1,10 +1,10 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/memobase/memo_accountant.dart';
-import 'package:mahakka/memo/memobase/memo_verifier.dart';
-import 'package:mahakka/memo/memomodel/memo_model_post.dart';
-import 'package:mahakka/memo/memomodel/memo_model_user.dart';
-import 'package:mahakka/memo/memoscraper/memo_scraper_utils.dart';
+import 'package:mahakka/memo/base/memo_accountant.dart';
+import 'package:mahakka/memo/base/memo_verifier.dart';
+import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/memo/model/memo_model_user.dart';
+import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 import 'package:mahakka/utils/snackbar.dart'; // Ensure this uses themed SnackBars
 import 'package:mahakka/widgets/like_animtion.dart'; // Ensure this is theme-aware or neutral
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';

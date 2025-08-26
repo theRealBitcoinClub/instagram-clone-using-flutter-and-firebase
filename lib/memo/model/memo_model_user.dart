@@ -1,10 +1,9 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
-import 'package:mahakka/memo/memobase/memo_accountant.dart';
-import 'package:mahakka/memo/memobase/memo_verifier.dart';
-import 'package:mahakka/memo/memomodel/memo_model_creator.dart';
+import 'package:mahakka/memo/base/memo_accountant.dart';
+import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
+import 'package:mahakka/memo/base/memo_verifier.dart';
+import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../memobase/memo_bitcoin_base.dart';
 
 //TODO tips go partially to app and creator on default, if user has registered on the app,
 // otherwise it all goes to the app to pay for marketing to get users on the app

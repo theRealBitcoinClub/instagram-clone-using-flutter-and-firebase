@@ -1,10 +1,10 @@
-import 'package:mahakka/memo/memobase/memo_code.dart';
-import 'package:mahakka/memo/memobase/memo_publisher.dart';
-import 'package:mahakka/memo/memomodel/memo_model_creator.dart';
-import 'package:mahakka/memo/memomodel/memo_model_post.dart';
-import 'package:mahakka/memo/memomodel/memo_model_user.dart';
+import 'package:mahakka/memo/base/memo_code.dart';
+import 'package:mahakka/memo/base/memo_publisher.dart';
+import 'package:mahakka/memo/model/memo_model_creator.dart';
+import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/memo/model/memo_model_user.dart';
 
-import '../memomodel/memo_tip.dart';
+import 'package:mahakka/memo/model/memo_tip.dart';
 import 'memo_bitcoin_base.dart';
 
 enum MemoAccountType { tokens, bch, memo }

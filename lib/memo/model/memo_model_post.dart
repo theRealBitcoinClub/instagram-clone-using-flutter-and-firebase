@@ -1,9 +1,8 @@
-import 'package:mahakka/memo/memomodel/memo_model_user.dart';
-
-import '../memobase/memo_accountant.dart';
-import '../memobase/memo_verifier.dart';
-import 'memo_model_creator.dart';
-import 'memo_model_topic.dart';
+import 'package:mahakka/memo/base/memo_accountant.dart';
+import 'package:mahakka/memo/base/memo_verifier.dart';
+import 'package:mahakka/memo/model/memo_model_creator.dart';
+import 'package:mahakka/memo/model/memo_model_topic.dart';
+import 'package:mahakka/memo/model/memo_model_user.dart';
 
 class MemoModelPost {
   MemoModelPost({

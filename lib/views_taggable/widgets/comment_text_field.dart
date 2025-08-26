@@ -35,7 +35,7 @@ class CommentTextField extends StatelessWidget {
         : MainAxisAlignment.start;
 
     // Default height for the input area.
-    const double defaultInputAreaHeight = 115.0; // Your original height for the CustomTextField SizedBox
+    // const double defaultInputAreaHeight = 115.0; // Your original height for the CustomTextField SizedBox
     const double baseMaxHeight = 150.0; // Your original baseMaxHeight
 
     return Container(

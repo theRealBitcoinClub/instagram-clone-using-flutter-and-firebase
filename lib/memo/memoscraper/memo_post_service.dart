@@ -3,7 +3,7 @@ import 'dart:async'; // For potential future concurrency, though not strictly ne
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
-import 'package:mahakka/memoscraper/memo_scraper_utils.dart';
+import 'package:mahakka/memo/memoscraper/memo_scraper_utils.dart';
 
 import '../memomodel/memo_model_creator.dart';
 import '../memomodel/memo_model_post.dart';

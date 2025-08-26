@@ -1,4 +1,4 @@
-// import 'package:mahakka/memomodel/memo_model_post.dart';
+// import 'package:mahakka/memo/memomodel/memo_model_post.dart';
 //
 // class Post {
 //   final String discription;

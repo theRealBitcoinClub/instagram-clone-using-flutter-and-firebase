@@ -1,11 +1,11 @@
 import 'package:clipboard/clipboard.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
-import 'package:mahakka/memobase/memo_accountant.dart';
-import 'package:mahakka/memomodel/memo_model_creator.dart';
-import 'package:mahakka/memomodel/memo_model_post.dart';
-import 'package:mahakka/memomodel/memo_model_user.dart';
-import 'package:mahakka/memoscraper/memo_creator_service.dart';
+import 'package:mahakka/memo/memobase/memo_accountant.dart';
+import 'package:mahakka/memo/memomodel/memo_model_creator.dart';
+import 'package:mahakka/memo/memomodel/memo_model_post.dart';
+import 'package:mahakka/memo/memomodel/memo_model_user.dart';
+import 'package:mahakka/memo/memoscraper/memo_creator_service.dart';
 import 'package:mahakka/resources/auth_method.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 // import 'package:mahakka/utils/colors.dart'; // REMOVE THIS
@@ -24,9 +24,9 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
   if (stackTrace != null) print('  StackTrace: $stackTrace');
 }
 
-void _logInfo(String message) {
-  print('INFO: ProfileScreen - $message');
-}
+// void _logInfo(String message) {
+//   print('INFO: ProfileScreen - $message');
+// }
 
 class ProfileScreen extends StatefulWidget {
   final String uid;
@@ -868,7 +868,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showBchQRDialog() {
-    final ThemeData theme = Theme.of(context);
+    // final ThemeData theme = Theme.of(context);
     if (_user == null) {
       showSnackBar("User data not available for QR code.", context);
       return;
@@ -919,7 +919,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return _profileNameCtrl.text.trim().isNotEmpty ||
         _profileTextCtrl.text.trim().isNotEmpty ||
         _imgurCtrl.text.trim().isNotEmpty;
-    ;
   }
 
   void _saveProfile(dialogCtc) async {

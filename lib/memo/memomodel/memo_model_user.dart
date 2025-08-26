@@ -1,7 +1,7 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
-import 'package:mahakka/memobase/memo_accountant.dart';
-import 'package:mahakka/memobase/memo_verifier.dart';
-import 'package:mahakka/memomodel/memo_model_creator.dart';
+import 'package:mahakka/memo/memobase/memo_accountant.dart';
+import 'package:mahakka/memo/memobase/memo_verifier.dart';
+import 'package:mahakka/memo/memomodel/memo_model_creator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../memobase/memo_bitcoin_base.dart';

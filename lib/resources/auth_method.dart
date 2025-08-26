@@ -1,4 +1,4 @@
-import 'package:mahakka/memomodel/memo_model_user.dart';
+import 'package:mahakka/memo/memomodel/memo_model_user.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,7 +51,7 @@ class AuthChecker {
 // import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:flutter/foundation.dart';
-// import 'package:mahakka/model/user.dart' as model;
+// import 'package:mahakka/model_original/user.dart' as model_original;
 // import 'package:mahakka/resources/storage_methods.dart';
 //
 // class AuthMedthod {
@@ -59,12 +59,12 @@ class AuthChecker {
 //   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 //
 // //get snapshot of current user data
-//   Future<model.User> getUserDetails() async {
+//   Future<model_original.User> getUserDetails() async {
 //     User currentUser = _auth.currentUser!;
 //     DocumentSnapshot snap =
 //         await _firestore.collection('users').doc(currentUser.uid).get();
 //
-//     return model.User.fromSnap(snap);
+//     return model_original.User.fromSnap(snap);
 //   }
 //
 //   Future<String> signUpUser({
@@ -89,7 +89,7 @@ class AuthChecker {
 //
 //         //upload userdata to database
 //
-//         model.User user = model.User(
+//         model_original.User user = model_original.User(
 //             email: email,
 //             uid: credential.user!.uid,
 //             fullName: fullName,

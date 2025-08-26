@@ -1,7 +1,7 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:mahakka/memobase/memo_accountant.dart';
-import 'package:mahakka/memobase/memo_bitcoin_base.dart';
+import 'package:mahakka/memo/memobase/memo_accountant.dart';
+import 'package:mahakka/memo/memobase/memo_bitcoin_base.dart';
 
 import '../memomodel/memo_tip.dart';
 import 'memo_code.dart';

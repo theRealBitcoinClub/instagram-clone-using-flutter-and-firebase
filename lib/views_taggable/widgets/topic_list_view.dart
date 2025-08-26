@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
-import 'package:mahakka/memomodel/memo_model_topic.dart'; // Assuming this model is appropriate
+import 'package:mahakka/memo/memomodel/memo_model_topic.dart'; // Assuming this model_original is appropriate
 
 // Assuming SearchViewModel and LoadingWidget are correctly imported
 import '../view_models/search_view_model.dart';

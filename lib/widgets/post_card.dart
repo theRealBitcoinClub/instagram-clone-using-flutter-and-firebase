@@ -1,15 +1,15 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
-import 'package:mahakka/memobase/memo_accountant.dart';
-import 'package:mahakka/memobase/memo_verifier.dart';
-import 'package:mahakka/memomodel/memo_model_user.dart';
-import 'package:mahakka/memoscraper/memo_scraper_utils.dart';
+import 'package:mahakka/memo/memobase/memo_accountant.dart';
+import 'package:mahakka/memo/memobase/memo_verifier.dart';
+import 'package:mahakka/memo/memomodel/memo_model_post.dart';
+import 'package:mahakka/memo/memomodel/memo_model_user.dart';
+import 'package:mahakka/memo/memoscraper/memo_scraper_utils.dart';
 import 'package:mahakka/utils/snackbar.dart'; // Ensure this uses themed SnackBars
 import 'package:mahakka/widgets/like_animtion.dart'; // Ensure this is theme-aware or neutral
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
-import '../memomodel/memo_model_post.dart';
 import 'memo_confetti.dart'; // Ensure this is theme-aware or neutral
 
 // Basic logging placeholder (remains the same)
@@ -280,7 +280,7 @@ class _PostCardState extends State<PostCard> {
             break;
           case MemoAccountantResponse.noUtxo:
           case MemoAccountantResponse.dust:
-          default: // Catch-all for other non-success cases
+            // default: // Catch-all for other non-success cases
             _logError("Accountant error during tip: ${response.name}", response);
             showSnackBar("Transaction error (${response.name}). Please try again later.", context);
             break;
@@ -295,43 +295,43 @@ class _PostCardState extends State<PostCard> {
     }
   }
 
-  void _showPostOptionsMenu() {
-    final ThemeData theme = Theme.of(context); // Get theme for the dialog
-
-    showDialog(
-      context: context,
-      builder: (dialogCtx) => Dialog(
-        // Dialog properties will now use theme.dialogTheme
-        // shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        // elevation: theme.dialogTheme.elevation ?? 0,
-        // backgroundColor: theme.dialogTheme.backgroundColor,
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shrinkWrap: true,
-          children:
-              ["Tip Creator", "Creator Profile", "Bookmark"] // Could be constants
-                  .map(
-                    (e) => InkWell(
-                      onTap: () {
-                        showSnackBar("Report was sent to Satoshi Nakamoto, please wait...", dialogCtx);
-                        Navigator.pop(dialogCtx);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        child: Center(
-                          child: Text(
-                            e,
-                            style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface),
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-        ),
-      ),
-    );
-  }
+  // void _showPostOptionsMenu() {
+  //   final ThemeData theme = Theme.of(context); // Get theme for the dialog
+  //
+  //   showDialog(
+  //     context: context,
+  //     builder: (dialogCtx) => Dialog(
+  //       // Dialog properties will now use theme.dialogTheme
+  //       // shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  //       // elevation: theme.dialogTheme.elevation ?? 0,
+  //       // backgroundColor: theme.dialogTheme.backgroundColor,
+  //       child: ListView(
+  //         padding: const EdgeInsets.symmetric(vertical: 16),
+  //         shrinkWrap: true,
+  //         children:
+  //             ["Tip Creator", "Creator Profile", "Bookmark"] // Could be constants
+  //                 .map(
+  //                   (e) => InkWell(
+  //                     onTap: () {
+  //                       showSnackBar("Report was sent to Satoshi Nakamoto, please wait...", dialogCtx);
+  //                       Navigator.pop(dialogCtx);
+  //                     },
+  //                     child: Container(
+  //                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+  //                       child: Center(
+  //                         child: Text(
+  //                           e,
+  //                           style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 )
+  //                 .toList(),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   // _onSelectTopic, _onInputText, _onSelectHashtag, _evaluateShowSendButton, _onSend, _onCancel
   // These methods primarily manage state and call _publish methods. Their logic remains the same.
@@ -406,8 +406,8 @@ class _PostCardState extends State<PostCard> {
         case MemoAccountantResponse.dust:
           message = "Transaction error (dust).";
           break;
-        default:
-          message = "Account issue: ${result.name}";
+        // default:
+        //   message = "Account issue: ${result.name}";
       }
     } else {
       message = "An unexpected error occurred during verification.";

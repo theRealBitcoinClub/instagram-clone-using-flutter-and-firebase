@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mahakka/memomodel/memo_model_post.dart';
-import 'package:mahakka/resources/auth_method.dart';
+import 'package:mahakka/memo/memomodel/memo_model_post.dart';
 import 'package:mahakka/widgets/post_card.dart';
 import 'package:provider/provider.dart';
 
@@ -85,9 +84,9 @@ class _FeedScreenState extends State<FeedScreen> {
     // The ListView.builder will use the updated _filteredPosts.
   }
 
-  void _signOut() async {
-    AuthChecker().logOut(context);
-  }
+  // void _signOut() async {
+  //   AuthChecker().logOut(context);
+  // }
 
   @override
   Widget build(BuildContext context) {

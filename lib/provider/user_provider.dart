@@ -1,5 +1,5 @@
 // import 'package:flutter/material.dart';
-// import 'package:mahakka/model/user.dart';
+// import 'package:mahakka/model_original/user.dart';
 // import 'package:mahakka/resources/auth_method.dart';
 //
 // class UserProvider with ChangeNotifier {
@@ -16,7 +16,7 @@
 // }
 
 import 'package:flutter/cupertino.dart';
-import 'package:mahakka/memomodel/memo_model_user.dart';
+import 'package:mahakka/memo/memomodel/memo_model_user.dart';
 import 'package:mahakka/resources/auth_method.dart';
 
 class ProviderUser with ChangeNotifier {

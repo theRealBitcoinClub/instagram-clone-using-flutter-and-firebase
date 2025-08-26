@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mahakka/memomodel/memo_model_tag.dart';
-import 'package:mahakka/memomodel/memo_model_topic.dart';
+import 'package:mahakka/memo/memomodel/memo_model_tag.dart';
+import 'package:mahakka/memo/memomodel/memo_model_topic.dart';
 
-///Search view model
+///Search view model_original
 final searchViewModel = SearchViewModel();
 
 enum SearchResultView {

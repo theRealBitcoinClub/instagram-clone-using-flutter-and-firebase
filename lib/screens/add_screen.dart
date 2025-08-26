@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertagger/fluttertagger.dart';
-import 'package:mahakka/memobase/memo_accountant.dart';
-import 'package:mahakka/memomodel/memo_model_post.dart';
-import 'package:mahakka/memomodel/memo_model_user.dart';
+import 'package:mahakka/memo/memobase/memo_accountant.dart';
+import 'package:mahakka/memo/memomodel/memo_model_post.dart';
+import 'package:mahakka/memo/memomodel/memo_model_user.dart';
 import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure this is theme-neutral or adapts
 import 'package:mahakka/widgets/textfield_input.dart'; // CRITICAL: This MUST be themed internally
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';

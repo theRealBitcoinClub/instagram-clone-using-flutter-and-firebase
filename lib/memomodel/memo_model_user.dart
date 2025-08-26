@@ -192,8 +192,16 @@ class MemoModelUser {
     return _user!;
   }
 
-  String profileImage() {
-    return "https://memo.cash/img/profilepics/${legacyAddressMemoBch}-128x128.jpg";
+  String profileImageAvatar() {
+    return _profileImage("128x128");
+  }
+
+  String profileImageDetail() {
+    return _profileImage("640x640");
+  }
+
+  String _profileImage(String size) {
+    return "https://memo.cash/img/profilepics/$legacyAddressMemoBch-$size.jpg";
   }
 
   int get tipAmount {

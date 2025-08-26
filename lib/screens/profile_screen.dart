@@ -361,15 +361,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           GestureDetector(
             onTap: () {
-              // TODO: Allow changing profile picture (e.g., show image picker)
-              showSnackBar("Change profile picture (Not implemented)", context);
+              showDialog(
+                context: context,
+                builder: (ctx) {
+                  return SimpleDialog(
+                    contentPadding: EdgeInsetsGeometry.all(10),
+                    children: [
+                      CircleAvatar(
+                        radius: 130,
+                        backgroundColor: colorScheme.surfaceVariant, // Fallback color
+                        backgroundImage: _showDefaultAvatar || _user!.profileImageDetail().isEmpty
+                            ? const AssetImage("assets/images/default_profile.png") as ImageProvider
+                            : NetworkImage(_user!.profileImageDetail()),
+                        onBackgroundImageError: _showDefaultAvatar
+                            ? null
+                            : (exception, stackTrace) {
+                                _logError("Error loading profile image", exception, stackTrace);
+                                if (mounted) {
+                                  setState(() => _showDefaultAvatar = true);
+                                }
+                              },
+                      ),
+                    ],
+                  );
+                },
+              );
             },
             child: CircleAvatar(
               radius: 40,
               backgroundColor: colorScheme.surfaceVariant, // Fallback color
-              backgroundImage: _showDefaultAvatar || _user!.profileImage().isEmpty
+              backgroundImage: _showDefaultAvatar || _user!.profileImageAvatar().isEmpty
                   ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                  : NetworkImage(_user!.profileImage()),
+                  : NetworkImage(_user!.profileImageAvatar()),
               onBackgroundImageError: _showDefaultAvatar
                   ? null
                   : (exception, stackTrace) {

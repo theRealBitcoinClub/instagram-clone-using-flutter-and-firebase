@@ -676,7 +676,7 @@ class _PostCardFooter extends StatelessWidget {
               ),
               expandText: 'show more',
               collapseText: 'show less',
-              maxLines: 4, // Adjust as needed
+              maxLines: 6, // Adjust as needed
               linkColor: theme.colorScheme.primary, // Themed link color
               style: theme.textTheme.bodyMedium?.copyWith(height: 1.4), // Use themed text style
               animation: true,
@@ -725,35 +725,43 @@ class _PostCardFooter extends StatelessWidget {
   }
 
   Widget _buildTopicCheckBoxWidget(ThemeData theme) {
+    final bool topicTextIsEffectivelyEmpty = post.topic == null || post.topic!.header.trim().isEmpty;
+
     return InkWell(
-      // Make the whole row tappable for the topic
       onTap: onSelectTopic,
       borderRadius: BorderRadius.circular(4),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 2.0),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Checkbox(
-              value: hasSelectedTopic,
-              onChanged: (value) => onSelectTopic(),
-              activeColor: theme.colorScheme.primary,
-              checkColor: theme.colorScheme.onPrimary,
-              visualDensity: VisualDensity.compact,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            const SizedBox(width: 6),
-            Flexible(
-              // Allow text to wrap if too long
-              child: Text(
-                post.topic!.header,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: hasSelectedTopic ? theme.colorScheme.primary : theme.colorScheme.onSurface,
-                  fontWeight: hasSelectedTopic ? FontWeight.bold : FontWeight.normal,
-                ),
+        child: Align(
+          // Wrap the Row with Align
+          // Conditionally align: Center if no text, start if text is present
+          alignment: topicTextIsEffectivelyEmpty ? Alignment.center : Alignment.centerLeft,
+          child: Row(
+            mainAxisSize: MainAxisSize.min, // Keep this so the Row doesn't expand unnecessarily
+            children: [
+              Checkbox(
+                value: hasSelectedTopic,
+                onChanged: (value) => onSelectTopic(),
+                activeColor: theme.colorScheme.primary,
+                checkColor: theme.colorScheme.onPrimary,
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-            ),
-          ],
+              // Only add SizedBox and Text if there's actual text to display
+              if (!topicTextIsEffectivelyEmpty) ...[
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    post.topic!.header, // Safe to use ! because of the check above
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: hasSelectedTopic ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                      fontWeight: hasSelectedTopic ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -873,7 +881,7 @@ class _SendingAnimation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _buildCircledOpacityAnimation(Icons.thumb_up_alt_rounded, theme, mediaHeight, isSending, onEnd);
+    return _buildCircledOpacityAnimation(Icons.thumb_up_alt_outlined, theme, mediaHeight, isSending, onEnd);
   }
 }
 
@@ -896,12 +904,12 @@ class _LikeSucceededAnimation extends StatelessWidget {
   }
 }
 
-AnimatedOpacity _buildCircledOpacityAnimation(ico, theme, mediaHeight, isAnimating, onEnd) {
-  Color avatarBackgroundColor = theme.colorScheme.primary; // Example: Primary color for the circle
-  Color iconColorOnAvatar = theme.colorScheme.onPrimary; // Icon color that contrasts with primary
+AnimatedOpacity _buildCircledOpacityAnimation(IconData ico, ThemeData theme, mediaHeight, isAnimating, onEnd) {
+  Color avatarBackgroundColor = theme.colorScheme.surface; // Example: Primary color for the circle
+  Color iconColorOnAvatar = theme.colorScheme.primary; // Icon color that contrasts with primary
 
-  double iconSize = mediaHeight * 0.5; // CircleAvatar adds some padding, so icon might need to be slightly smaller
-  double avatarRadius = mediaHeight * 0.4; // Adjust the radius of the CircleAvatar itself
+  double iconSize = mediaHeight * 0.6; // CircleAvatar adds some padding, so icon might need to be slightly smaller
+  double avatarRadius = mediaHeight * 0.5; // Adjust the radius of the CircleAvatar itself
 
   return AnimatedOpacity(
     duration: _PostCardState._animationDuration,

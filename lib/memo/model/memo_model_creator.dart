@@ -50,8 +50,6 @@ class MemoModelCreator {
       created,
       lastActionDate,
     );
-    // creator._checkProfileImageAvatar();
-    // creator._checkProfileImageDetail();
     return creator;
   }
 
@@ -68,37 +66,8 @@ class MemoModelCreator {
   }
 
   String profileImageAvatar() {
-    // if (_profileImageAvatar == null) _checkProfileImageAvatar();
     return _profileImageAvatar ?? "";
   }
-
-  // Future<void> _checkProfileImage(int counter, String size, String? img) async {
-  //   if (counter > maxCheckImage) return;
-  //
-  //   for (String t in imageTypes) {
-  //     if (img != null) return;
-  //
-  //     String avatarUrl = _profileImageUrl(size, t);
-  //     if (!await checkUrlReturns404(avatarUrl)) img = avatarUrl;
-  //   }
-  //
-  //   counter++;
-  // }
-  //
-  // Future<void> _checkProfileImageAvatar() async {
-  //   _checkProfileImage(hasCheckedImgAvatar, sizeAvatar, _profileImageAvatar);
-  // }
-  //
-  // //TODO LAZY LOAD DETAIL IMAGE
-  //
-  // String profileImageDetail() {
-  //   if (_profileImageDetail == null) _checkProfileImageDetail();
-  //   return _profileImageDetail ?? "";
-  // }
-  //
-  // Future<void> _checkProfileImageDetail() async {
-  //   _checkProfileImage(hasCheckedImgDetail, sizeDetail, _profileImageDetail);
-  // }
 
   Future<void> _checkProfileImageAvatar() async {
     if (hasCheckedImgAvatar > maxCheckImage) return;
@@ -113,10 +82,7 @@ class MemoModelCreator {
     hasCheckedImgAvatar++;
   }
 
-  //TODO LAZY LOAD DETAIL IMAGE
-
   String profileImageDetail() {
-    // if (_profileImageDetail == null) _checkProfileImageDetail();
     return _profileImageDetail ?? "";
   }
 

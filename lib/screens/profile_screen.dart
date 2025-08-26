@@ -105,9 +105,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
 
       final refreshedCreator = resultDetails[0];
-      final refreshBchStatus = resultBalances[1];
-      final refreshTokensStatus = resultBalances[2];
-      final refreshMemoStatus = resultBalances[3];
+      final refreshBchStatus = resultBalances[0];
+      final refreshTokensStatus = resultBalances[1];
+      final refreshMemoStatus = resultBalances[2];
 
       setState(() {
         _creator = refreshedCreator;

@@ -67,6 +67,11 @@ dependencies:
   json_path: ^0.7.6
   path: ^1.9.1
   json_annotation: ^4.9.0 # Or latest version
+  # Firebase
+  firebase_core: ^2.27.0 # Or the latest version
+  cloud_firestore: ^4.15.8 # Or the latest version
+  # Other packages you might be using (e.g., intl for date formatting, etc.)
+  # intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:

@@ -8,8 +8,8 @@ part 'memo_model_creator.g.dart'; // This will be generated
 
 @JsonSerializable(explicitToJson: true)
 class MemoModelCreator {
-  late String id; // Mark as late if initialized by fromJson
-  late String name;
+  String id; // Mark as late if initialized by fromJson
+  String name;
   String profileText = ""; // Provide default values
   int followerCount = 0;
   int actions = 0;
@@ -17,8 +17,8 @@ class MemoModelCreator {
   String lastActionDate = "";
 
   MemoModelCreator({
-    required this.id,
-    required this.name,
+    this.id = "",
+    this.name = "",
     this.profileText = "",
     this.followerCount = 0,
     this.actions = 0,

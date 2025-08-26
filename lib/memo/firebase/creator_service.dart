@@ -1,32 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart'; // Your model path
-// If MemoModelCreator includes MemoModelPost, ensure it's imported if needed here,
-// though json_serializable handles the nesting.
 
 class CreatorService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static const String _creatorsCollection = 'creators_v2'; // Using a new collection name or path for safety
 
-  // Define a top-level collection name for creators
-  static const String _creatorsCollection = 'creators';
-
-  /// Saves or updates a MemoModelCreator document in Firestore.
-  /// If a document with the creator's ID already exists, it will be updated.
-  /// Otherwise, a new document will be created.
   Future<void> saveCreator(MemoModelCreator creator) async {
     try {
       final DocumentReference docRef = _firestore.collection(_creatorsCollection).doc(creator.id);
-      // Convert the MemoModelCreator object to a JSON map
-      final Map<String, dynamic> creatorJson = creator.toJson();
-      await docRef.set(creatorJson, SetOptions(merge: true)); // merge: true to update existing fields
+      final Map<String, dynamic> creatorJson = creator.toJson(); // Still works
+      await docRef.set(creatorJson, SetOptions(merge: true));
       print("Creator ${creator.id} saved successfully to Firestore.");
     } catch (e) {
       print("Error saving creator ${creator.id} to Firestore: $e");
-      rethrow; // Or handle more gracefully
+      rethrow;
     }
   }
 
-  /// Retrieves a single MemoModelCreator as a stream from Firestore.
-  /// This is useful for listening to real-time updates for a specific creator.
   Stream<MemoModelCreator?> getCreatorStream(String creatorId) {
     try {
       final DocumentReference docRef = _firestore.collection(_creatorsCollection).doc(creatorId);
@@ -35,25 +25,22 @@ class CreatorService {
           .snapshots()
           .map((snapshot) {
             if (snapshot.exists && snapshot.data() != null) {
-              // Convert the JSON map from Firestore back to a MemoModelCreator object
-              return MemoModelCreator.fromJson(snapshot.data()! as Map<String, dynamic>);
+              return MemoModelCreator.fromJson(snapshot.data()! as Map<String, dynamic>); // Still works
             } else {
               print("Creator with ID $creatorId not found in Firestore stream.");
-              return null; // Document doesn't exist or has no data
+              return null;
             }
           })
           .handleError((error) {
             print("Error in creator stream for $creatorId: $error");
-            // Optionally, you could return a stream of an error state or rethrow
             return null;
           });
     } catch (e) {
       print("Error getting creator stream for $creatorId: $e");
-      return Stream.value(null); // Return a stream with null on initial error
+      return Stream.value(null);
     }
   }
 
-  /// Retrieves a list of all MemoModelCreators as a stream from Firestore.
   Stream<List<MemoModelCreator>> getAllCreatorsStream() {
     try {
       final CollectionReference colRef = _firestore.collection(_creatorsCollection);
@@ -67,15 +54,14 @@ class CreatorService {
           })
           .handleError((error) {
             print("Error in all creators stream: $error");
-            return []; // Return an empty list on error
+            return [];
           });
     } catch (e) {
       print("Error getting all creators stream: $e");
-      return Stream.value([]); // Return a stream with an empty list on initial error
+      return Stream.value([]);
     }
   }
 
-  /// Fetches a single MemoModelCreator once (not a stream).
   Future<MemoModelCreator?> getCreatorOnce(String creatorId) async {
     try {
       final DocumentReference docRef = _firestore.collection(_creatorsCollection).doc(creatorId);

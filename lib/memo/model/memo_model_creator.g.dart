@@ -8,8 +8,8 @@ part of 'memo_model_creator.dart';
 
 MemoModelCreator _$MemoModelCreatorFromJson(Map<String, dynamic> json) =>
     MemoModelCreator(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: json['id'] as String? ?? "",
+      name: json['name'] as String? ?? "",
       profileText: json['profileText'] as String? ?? "",
       followerCount: (json['followerCount'] as num?)?.toInt() ?? 0,
       actions: (json['actions'] as num?)?.toInt() ?? 0,

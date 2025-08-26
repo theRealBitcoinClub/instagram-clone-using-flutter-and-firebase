@@ -55,10 +55,6 @@ class MemoModelPost {
       topic: topic,
     );
 
-    for (int i = 0; i < 20; i++) {
-      topic.posts.add(memoModelPost);
-    }
-
     return memoModelPost;
   }
 

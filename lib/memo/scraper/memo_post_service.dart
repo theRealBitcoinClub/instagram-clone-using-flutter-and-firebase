@@ -146,7 +146,7 @@ class MemoPostService {
       final String? topicLink = item["topicLink"]?.toString();
       final String? topicHeader = item["topic"]?.toString();
       final MemoModelTopic? topic = (topicLink != null && topicHeader != null)
-          ? MemoModelTopic(url: topicLink, header: topicHeader)
+          ? MemoModelTopic(url: topicLink, id: topicHeader)
           : null;
 
       final String? text = item["msg"]?.toString();

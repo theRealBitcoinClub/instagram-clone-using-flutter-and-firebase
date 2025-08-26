@@ -65,7 +65,7 @@ class MemoScraperTopic {
     for (Map<String, Object> value in topics.values.first as Iterable) {
       topicList.add(
         MemoModelTopic(
-          header: value["topic"].toString(),
+          id: value["topic"].toString(),
           url: value["topicURL"].toString(),
           followerCount: int.parse(cleanBody[itemIndex + 3]),
           lastPost: cleanBody[itemIndex + 1],
@@ -134,7 +134,6 @@ class MemoScraperTopic {
       postList.add(post);
     }
 
-    topic.posts = postList;
     return postList;
   }
 }

@@ -14,6 +14,7 @@ enum TipAmount { zero, maintenance, growth, moon }
 
 class MemoModelUser {
   static MemoModelUser? _user;
+  static String? _profileId;
   TipReceiver _tipReceiver = TipReceiver.both;
   TipAmount _tipAmount = TipAmount.zero;
   String mnemonic;
@@ -32,6 +33,18 @@ class MemoModelUser {
   String balanceBchDevPath0Memo = "?";
 
   MemoModelUser({required this.mnemonic, this.creator});
+
+  static String profileIdGet(MemoModelUser u) {
+    return _profileId ?? u.profileIdMemoBch;
+  }
+
+  static void profileIdSet(String pId) {
+    _profileId = pId;
+  }
+
+  static void profileIdReset() {
+    _profileId = null;
+  }
 
   Future<String> refreshBalanceDevPath0() async {
     MemoBitcoinBase base = await MemoBitcoinBase.create();
@@ -189,18 +202,6 @@ class MemoModelUser {
       _user!.creator = creator;
     }
     return _user!;
-  }
-
-  String profileImageAvatar() {
-    return _profileImage("128x128");
-  }
-
-  String profileImageDetail() {
-    return _profileImage("640x640");
-  }
-
-  String _profileImage(String size) {
-    return "https://memo.cash/img/profilepics/$legacyAddressMemoBch-$size.jpg";
   }
 
   int get tipAmount {

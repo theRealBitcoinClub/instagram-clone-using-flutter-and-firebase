@@ -24,7 +24,7 @@ class _CommentsCardState extends State<CommentsCard> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(radius: 20, backgroundImage: NetworkImage(widget.post.creator!.profileImage())),
+          CircleAvatar(radius: 20, backgroundImage: NetworkImage(widget.post.creator!.profileImageAvatar())),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/provider/user_provider.dart'; // Ensure ProviderUser is correctly defined and provided
 import 'package:mahakka/screens/add_screen.dart'; // Ensure AddPost is themed
 import 'package:mahakka/screens/feed_screen.dart'; // Ensure FeedScreen is themed
@@ -11,6 +12,10 @@ import 'package:provider/provider.dart';
 // import '../theme_provider.dart';
 // import '../app_themes.dart';
 
+class NavBarCallback {
+  switchToProfileTab() {}
+}
+
 class HomeSceen extends StatefulWidget {
   // Consider renaming to HomeScreen for convention
   const HomeSceen({Key? key}) : super(key: key);
@@ -19,7 +24,7 @@ class HomeSceen extends StatefulWidget {
   State<HomeSceen> createState() => _HomeSceenState();
 }
 
-class _HomeSceenState extends State<HomeSceen> {
+class _HomeSceenState extends State<HomeSceen> implements NavBarCallback {
   int _page = 0;
   late PageController _pageController; // Renamed for convention
 
@@ -34,6 +39,11 @@ class _HomeSceenState extends State<HomeSceen> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  @override
+  switchToProfileTab() {
+    _navigationPageSelected(2);
   }
 
   Future<void> _addData() async {
@@ -72,6 +82,7 @@ class _HomeSceenState extends State<HomeSceen> {
   }
 
   void _navigationPageSelected(int page) {
+    if (page != 2) MemoModelUser.profileIdReset();
     _pageController.jumpToPage(page);
     // No need to call setState here, _onPageChanged will handle it
   }
@@ -89,12 +100,12 @@ class _HomeSceenState extends State<HomeSceen> {
     // Screens to be displayed in the PageView
     // Ensure these screens are also themed internally
     final List<Widget> homeScreenItems = [
-      const FeedScreen(),
+      FeedScreen(navBarCallback: this),
       // const SearchScreen(), // If you have a SearchScreen
       const AddPost(), // Renamed from AddScreen to match common naming
       // TODO: Replace hardcoded UID with actual authenticated user ID
       // Example: ProfileScreen(uid: Provider.of<UserProvider>(context, listen: false).currentUser?.uid ?? 'default_fallback_uid'),
-      ProfileScreen(uid: "17ZY9npgMXstBGXHDCz1umWUEAc9ZU1hSZ"), // Placeholder UID
+      const ProfileScreen(), // Placeholder UID
     ];
 
     return Scaffold(

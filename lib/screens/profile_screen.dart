@@ -29,9 +29,7 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
 // }
 
 class ProfileScreen extends StatefulWidget {
-  final String uid;
-
-  const ProfileScreen({Key? key, required this.uid}) : super(key: key);
+  const ProfileScreen({Key? key}) : super(key: key);
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -71,6 +69,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
+  bool get isOwnProfile {
+    return _user!.profileIdMemoBch == _creator!.id;
+  }
+
   Future<void> _fetchProfileData() async {
     if (!mounted) return;
     setState(() {
@@ -82,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final localUser = await MemoModelUser.getUser();
       if (!mounted) return;
 
-      final initialCreator = MemoModelCreator.createDummy(id: localUser.profileIdMemoBch);
+      final initialCreator = MemoModelCreator.createDummy(id: MemoModelUser.profileIdGet(localUser));
 
       setState(() {
         _user = localUser;
@@ -90,8 +92,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoading = false;
       });
 
-      final results = await Future.wait([
+      final resultDetails = await Future.wait([
         MemoCreatorService().fetchCreatorDetails(initialCreator, noCache: true),
+      ]);
+
+      final resultBalances = await Future.wait([
         localUser.refreshBalanceDevPath145(),
         localUser.refreshBalanceTokens(),
         localUser.refreshBalanceDevPath0(),
@@ -99,10 +104,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (!mounted) return;
 
-      final refreshedCreator = results[0] as MemoModelCreator;
-      final refreshBchStatus = results[1] as String;
-      final refreshTokensStatus = results[2] as String;
-      final refreshMemoStatus = results[3] as String;
+      final refreshedCreator = resultDetails[0];
+      final refreshBchStatus = resultBalances[1];
+      final refreshTokensStatus = resultBalances[2];
+      final refreshMemoStatus = resultBalances[3];
 
       setState(() {
         _creator = refreshedCreator;
@@ -204,7 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return AppBar(
       // backgroundColor: theme.appBarTheme.backgroundColor, // From theme
       // foregroundColor: theme.appBarTheme.foregroundColor, // From theme for icons/text
-      toolbarHeight: 50,
+      toolbarHeight: 40,
       centerTitle: false, // As per your original
       title: TextButton(
         onPressed: () {
@@ -216,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // foregroundColor: theme.appBarTheme.foregroundColor?.withOpacity(0.8) ?? colorScheme.onPrimary.withOpacity(0.8),
         ),
         child: Text(
-          _user!.profileIdMemoBch,
+          _creator!.id,
           style: theme.textTheme.bodySmall?.copyWith(
             // Smaller text for ID
             color: (theme.appBarTheme.titleTextStyle?.color ?? colorScheme.onPrimary).withOpacity(0.7), // Subtler color
@@ -370,9 +375,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       CircleAvatar(
                         radius: 130,
                         backgroundColor: colorScheme.surfaceVariant, // Fallback color
-                        backgroundImage: _showDefaultAvatar || _user!.profileImageDetail().isEmpty
+                        backgroundImage: _showDefaultAvatar || _creator!.profileImageDetail().isEmpty
                             ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                            : NetworkImage(_user!.profileImageDetail()),
+                            : NetworkImage(_creator!.profileImageDetail()),
                         onBackgroundImageError: _showDefaultAvatar
                             ? null
                             : (exception, stackTrace) {
@@ -390,9 +395,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: CircleAvatar(
               radius: 40,
               backgroundColor: colorScheme.surfaceVariant, // Fallback color
-              backgroundImage: _showDefaultAvatar || _user!.profileImageAvatar().isEmpty
+              backgroundImage: _showDefaultAvatar || _creator!.profileImageAvatar().isEmpty
                   ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                  : NetworkImage(_user!.profileImageAvatar()),
+                  : NetworkImage(_creator!.profileImageAvatar()),
               onBackgroundImageError: _showDefaultAvatar
                   ? null
                   : (exception, stackTrace) {
@@ -411,9 +416,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Expanded(child: _buildStatColumn(theme, 'BCH', _user!.balanceBchDevPath145)),
-                    Expanded(child: _buildStatColumn(theme, 'Token', _user!.balanceCashtokensDevPath145)),
-                    Expanded(child: _buildStatColumn(theme, 'Memo', _user!.balanceBchDevPath0Memo)),
+                    Expanded(
+                      child: isOwnProfile
+                          ? _buildStatColumn(theme, 'BCH', _user!.balanceBchDevPath145)
+                          : SizedBox(child: Text("Tip Level")),
+                    ),
+                    Expanded(
+                      child: isOwnProfile
+                          ? _buildStatColumn(theme, 'Token', _user!.balanceCashtokensDevPath145)
+                          : SizedBox(),
+                    ),
+                    Expanded(
+                      child: isOwnProfile ? _buildStatColumn(theme, 'Memo', _user!.balanceBchDevPath0Memo) : SizedBox(),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -434,7 +449,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 4.0), // Reduced horizontal padding
         child: SettingsButton(
           // Assuming SettingsButton is themed (uses OutlinedButton or ElevatedButton style)
-          text: 'Edit Profile',
+          text: !isOwnProfile ? "Send Message" : 'Edit Profile',
           onPressed: _onProfileSettings,
           // If SettingsButton was refactored like Approach 2 (OutlinedButton style):
           // No direct color props needed here, it picks from theme.outlinedButtonTheme
@@ -593,9 +608,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: theme.colorScheme.surfaceVariant,
-                backgroundImage: post.creator!.profileImage().isEmpty
+                backgroundImage: post.creator!.profileImageAvatar().isEmpty
                     ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                    : NetworkImage(post.creator!.profileImage()),
+                    : NetworkImage(post.creator!.profileImageAvatar()),
               ),
               const SizedBox(width: 12),
               Expanded(

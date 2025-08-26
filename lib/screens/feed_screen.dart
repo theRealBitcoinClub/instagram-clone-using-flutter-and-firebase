@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/screens/home.dart';
 import 'package:mahakka/widgets/post_card.dart';
 import 'package:provider/provider.dart';
 
@@ -10,10 +11,11 @@ import '../utils/snackbar.dart';
 enum PostFilterType { images, videos, hashtags, topics }
 
 class FeedScreen extends StatefulWidget {
-  const FeedScreen({Key? key}) : super(key: key);
+  const FeedScreen({Key? key, required NavBarCallback this.navBarCallback}) : super(key: key);
+  final NavBarCallback navBarCallback;
 
   @override
-  State<FeedScreen> createState() => _FeedScreenState();
+  State<FeedScreen> createState() => _FeedScreenState(navBarCallback: navBarCallback);
 }
 
 class _FeedScreenState extends State<FeedScreen> {
@@ -24,6 +26,10 @@ class _FeedScreenState extends State<FeedScreen> {
 
   // This will hold the posts to be displayed after filtering
   List<MemoModelPost> _filteredPosts = [];
+
+  final NavBarCallback navBarCallback;
+
+  _FeedScreenState({required NavBarCallback this.navBarCallback});
 
   @override
   void initState() {
@@ -116,7 +122,7 @@ class _FeedScreenState extends State<FeedScreen> {
           : ListView.builder(
               itemCount: _filteredPosts.length, // Use the filtered list
               itemBuilder: (context, index) {
-                return PostCard(_filteredPosts[index]); // Pass the filtered post
+                return PostCard(_filteredPosts[index], navBarCallback); // Pass the filtered post
               },
             ),
     );

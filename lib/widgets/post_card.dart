@@ -5,6 +5,7 @@ import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
+import 'package:mahakka/screens/home.dart';
 import 'package:mahakka/utils/snackbar.dart'; // Ensure this uses themed SnackBars
 import 'package:mahakka/widgets/like_animtion.dart'; // Ensure this is theme-aware or neutral
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -23,10 +24,12 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
 class PostCard extends StatefulWidget {
   final MemoModelPost post;
 
-  const PostCard(this.post, {Key? key}) : super(key: key);
+  final NavBarCallback navBarCallback;
+
+  const PostCard(this.post, this.navBarCallback, {Key? key}) : super(key: key);
 
   @override
-  State<PostCard> createState() => _PostCardState();
+  State<PostCard> createState() => _PostCardState(navBarCallback: navBarCallback);
 }
 
 class _PostCardState extends State<PostCard> {
@@ -48,6 +51,10 @@ class _PostCardState extends State<PostCard> {
   // Controllers (remain the same)
   late TextEditingController _textEditController;
   YoutubePlayerController? _ytController;
+
+  final NavBarCallback navBarCallback;
+
+  _PostCardState({required NavBarCallback this.navBarCallback});
 
   @override
   void initState() {
@@ -191,6 +198,7 @@ class _PostCardState extends State<PostCard> {
           _PostCardHeader(
             post: widget.post,
             onOptionsMenuPressed: _sendTipToCreator,
+            navBarCallback: navBarCallback,
             // _showPostOptionsMenu,
             // Pass theme if _PostCardHeader needs it directly,
             // but it should primarily use Theme.of(context) internally
@@ -533,12 +541,15 @@ class _PostCardState extends State<PostCard> {
 class _PostCardHeader extends StatelessWidget {
   final MemoModelPost post;
   final VoidCallback onOptionsMenuPressed;
+  final NavBarCallback navBarCallback;
 
-  const _PostCardHeader({required this.post, required this.onOptionsMenuPressed});
+  const _PostCardHeader({required this.post, required this.onOptionsMenuPressed, required this.navBarCallback});
 
   void _navigateToProfile(BuildContext context, String creatorId) {
-    _logInfo("Navigate to profile: $creatorId (Not implemented here)");
-    showSnackBar("Navigate to profile $creatorId", context); // Ensure showSnackBar is themed
+    MemoModelUser.profileIdSet(creatorId);
+    navBarCallback.switchToProfileTab();
+    // _logInfo("Navigate to profile: $creatorId (Not implemented here)");
+    // showSnackBar("Navigate to profile $creatorId", context); // Ensure showSnackBar is themed
   }
 
   @override
@@ -555,10 +566,10 @@ class _PostCardHeader extends StatelessWidget {
             child: CircleAvatar(
               radius: 20, // Slightly smaller for a tighter look
               backgroundColor: theme.colorScheme.surfaceVariant, // Fallback color
-              backgroundImage: creator.profileImage().isEmpty
+              backgroundImage: creator.profileImageAvatar().isEmpty
                   ? const AssetImage("assets/images/default_profile.png")
                         as ImageProvider // Keep your default
-                  : NetworkImage(creator.profileImage()),
+                  : NetworkImage(creator.profileImageAvatar()),
               onBackgroundImageError: (exception, stackTrace) {
                 _logError("Error loading profile image for ${creator.name}", exception, stackTrace);
                 // Optionally, you could use an Icon here as a fallback if the image fails.

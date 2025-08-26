@@ -21,10 +21,7 @@ class MemoModelCreator {
   final int actions;
   List<MemoModelPost> posts = [];
 
-  //TODO SOME PROFILEIMAGES ARE LOADED WITH WRONG ID
-  String profileImage() {
-    return "https://memo.cash/img/profilepics/${id}-128x128.jpg";
-  }
+  //TODO SOME PROFILEIMAGES ARE LOADED WITH WRONG ID TRY THE SLP VARIANT
 
   static MemoModelCreator createDummy({String id = ""}) {
     MemoModelCreator creator = MemoModelCreator(
@@ -37,6 +34,18 @@ class MemoModelCreator {
     );
 
     return creator;
+  }
+
+  String profileImageAvatar() {
+    return _profileImage("128x128");
+  }
+
+  String profileImageDetail() {
+    return _profileImage("640x640");
+  }
+
+  String _profileImage(String size) {
+    return "https://memo.cash/img/profilepics/$id-$size.jpg";
   }
 
   //TODO IMPLEMENT EQUALS METHOD, CHECK ID

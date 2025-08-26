@@ -1,10 +1,10 @@
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
-import 'package:mahakka/memo/scraper/memo_post_service.dart';
-import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
+import 'package:mahakka/memo/scraper/memo_post_service.dart';
+import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
 class MemoScraperTag {
   Future<void> startScrapeTags(List<String> orderBy, int offset, String cacheId) async {
@@ -17,7 +17,6 @@ class MemoScraperTag {
             initialOffset: 0,
             cacheId: cacheId,
           );
-          tag.posts.addAll(list);
           MemoModelPost.addToGlobalPostList(list);
         }
         MemoModelTag.tags.addAll(tags);
@@ -37,7 +36,7 @@ class MemoScraperTag {
     List<dynamic> tags = data.values.first as List<dynamic>;
     for (Map<String, Object> tag in tags) {
       List<String> tagRow = tag["stats"] as List<String>;
-      MemoModelTag t = MemoModelTag(name: tagRow[0].toString(), lastPost: tagRow[1], postCount: int.parse(tagRow[2]));
+      MemoModelTag t = MemoModelTag(id: tagRow[0].toString(), lastPost: tagRow[1], postCount: int.parse(tagRow[2]));
       result.add(t);
     }
     // print("object");

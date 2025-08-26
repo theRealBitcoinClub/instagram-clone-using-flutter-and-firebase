@@ -117,17 +117,15 @@ class HashtagListView extends StatelessWidget {
                               ),
                             ),
                             title: Text(
-                              hashtag.name ?? "Unnamed Tag", // Handle null name
+                              hashtag.name, // Handle null name
                               style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface),
                             ),
                             // subtitle: Text(" Posts: ${hashtag.postCount ?? 0}", // Example if you have post count
                             //   style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                             // ),
                             onTap: () {
-                              if (hashtag.name != null) {
-                                tagController.addTag(id: hashtag.name!, name: hashtag.name!);
-                                tagController.dismissOverlay(); // Dismiss overlay after selection
-                              }
+                              tagController.addTag(id: hashtag.name, name: hashtag.name);
+                              tagController.dismissOverlay(); // Dismiss overlay after selection
                             },
                             // Add a subtle border or keep it clean
                             // dense: true, // For a more compact list

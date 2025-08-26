@@ -188,9 +188,9 @@ class MemoPostService {
         topic: topic,
         text: text,
         age: age,
-        tipsInSatoshi: tipsInSatoshi,
+        popularityScore: tipsInSatoshi,
         created: created,
-        txHash: txHash,
+        uniqueContentId: txHash,
         imgurUrl: imgurUrl,
         creator: creator,
         // likeCounter and replyCounter were commented out, assuming they are not used.
@@ -200,6 +200,12 @@ class MemoPostService {
       // If they can throw errors, wrap them in try-catch.
       try {
         MemoScraperUtil.extractUrlsAndHashtags(post);
+
+        post.topicId = topic != null ? topic.id : "";
+        post.creatorId = creator.id;
+        MemoScraperUtil.extractUrlsAndHashtags(post);
+        post.tagIds = post.hashtags;
+        post.topic = topic;
 
         // Your existing filter logic:
         // "TODO removing all posts that contain URLs in the text for now, high quality content"
@@ -217,12 +223,12 @@ class MemoPostService {
 
         if (post.imgurUrl == null && hasTextUrls) {
           // If no image, and has text URLs, skip.
-          _logInfo("Skipping post (no imgur, has text URLs): ${post.txHash}");
+          _logInfo("Skipping post (no imgur, has text URLs): ${post.uniqueContentId}");
           continue;
         }
         if (post.imgurUrl != null && hasTextUrls && !(post.urls.length == 1 && post.urls.first == post.imgurUrl)) {
           // If has imgur, but also OTHER text URLs, skip.
-          _logInfo("Skipping post (has imgur and other text URLs): ${post.txHash}");
+          _logInfo("Skipping post (has imgur and other text URLs): ${post.uniqueContentId}");
           continue;
         }
         // If it reaches here:
@@ -230,7 +236,7 @@ class MemoPostService {
         // 2. It has an imgurUrl and no OTHER text URLs.
       } catch (e, s) {
         _logError(
-          "Error during post-processing (extractUrlsAndHashtags or filtering) for txHash: ${post.txHash}",
+          "Error during post-processing (extractUrlsAndHashtags or filtering) for txHash: ${post.uniqueContentId}",
           e,
           s,
         );

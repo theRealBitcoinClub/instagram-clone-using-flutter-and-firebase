@@ -3,8 +3,8 @@ import 'package:mahakka/memo/base/memo_publisher.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
-
 import 'package:mahakka/memo/model/memo_tip.dart';
+
 import 'memo_bitcoin_base.dart';
 
 enum MemoAccountType { tokens, bch, memo }
@@ -65,7 +65,11 @@ class MemoAccountant {
   }
 
   Future<MemoAccountantResponse> _tryPublishLike(MemoModelPost post, String wif) async {
-    var mp = await MemoPublisher.create(MemoBitcoinBase.reOrderTxHash(post.txHash!), MemoCode.postLike, wif: wif);
+    var mp = await MemoPublisher.create(
+      MemoBitcoinBase.reOrderTxHash(post.uniqueContentId!),
+      MemoCode.postLike,
+      wif: wif,
+    );
     return mp.doPublish(tip: MemoTip(post.creator!.id, user.tipAmount));
   }
 

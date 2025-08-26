@@ -171,7 +171,7 @@ class _PostCardState extends State<PostCard> {
     final ThemeData theme = Theme.of(context); // Get the current theme
 
     if (widget.post.creator == null) {
-      _logError("Post creator is null for post ID: ${widget.post.txHash}");
+      _logError("Post creator is null for post ID: ${widget.post.uniqueContentId}");
       return Card(
         // Use Card for consistent error display
         color: theme.colorScheme.errorContainer,

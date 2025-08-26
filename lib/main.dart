@@ -1,20 +1,22 @@
+import 'dart:io';
+
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:mahakka/memo/scraper/memo_creator_service.dart';
-import 'package:mahakka/memo/scraper/memo_post_service.dart';
-import 'package:mahakka/memo/scraper/memo_scraper_tag.dart';
+import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_topics.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/route%20handling/auth_page.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:provider/provider.dart';
 
+import 'firebase_options.dart';
+import 'memo/model/memo_model_creator.dart';
+
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform
-  // );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   initData();
   runApp(const MyApp());
@@ -22,23 +24,32 @@ void main() async {
 
 Future<void> initData() async {
   // Make it Future<void>
-  final String cacheId = "250819";
+  final String cacheId = "250825";
   print("INFO: Starting initial data fetch...");
 
   try {
-    // List of all futures to run concurrently
-    final List<Future<dynamic>> dataFetchingFutures = [
-      MemoScraperTopic().startScrapeTopics(cacheId, 25),
-      MemoCreatorService().fetchAndProcessCreators(["/most-actions", "/most-followers"]),
-      MemoScraperTag().startScrapeTags(["/most-posts", "/recent"], 0, cacheId),
-      MemoPostService().scrapePostsPaginated(baseUrl: 'posts/new', initialOffset: 100, cacheId: cacheId),
-      // Add any other independent data fetching operations here
-    ];
+    // int index = 0;
+    // for (int off = 525; off <= 1000; off += 25) {
+    //   var result = MemoCreatorService().fetchAndProcessCreators(["/most-actions?offset=$off"]);
+    //   List<MemoModelCreator> creators = await result;
+    //   for (var c in creators) {
+    //     CreatorService().saveCreator(c);
+    //     index++;
+    //   }
+    //   sleep(Duration(seconds: 1));
+    // }
+    int index = 0;
+    for (int off = 525; off <= 1000; off += 25) {
+      var result = MemoScraperTopic().startScrapeTopics(["/most-actions?offset=$off"]);
+      List<MemoModelCreator> creators = await result;
+      for (var c in creators) {
+        CreatorService().saveCreator(c);
+        index++;
+      }
+      sleep(Duration(seconds: 1));
+    }
 
-    // Await all futures to complete
-    // Future.wait will complete when all futures in the list have completed.
-    // If any future in the list throws an error, Future.wait will also complete with that error.
-    final List<dynamic> results = await Future.wait(dataFetchingFutures);
+    print("TOTAL AMOUNT $index");
 
     // Optional: You can inspect the results if your methods return values
     // For example, if startScrapeTopics returned a list of topics:

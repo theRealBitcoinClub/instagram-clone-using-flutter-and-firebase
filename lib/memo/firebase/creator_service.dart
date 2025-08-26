@@ -3,7 +3,7 @@ import 'package:mahakka/memo/model/memo_model_creator.dart'; // Your model path
 
 class CreatorService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static const String _creatorsCollection = 'creators_v2'; // Using a new collection name or path for safety
+  static const String _creatorsCollection = 'creators'; // Using a new collection name or path for safety
 
   Future<void> saveCreator(MemoModelCreator creator) async {
     try {
@@ -14,6 +14,16 @@ class CreatorService {
     } catch (e) {
       print("Error saving creator ${creator.id} to Firestore: $e");
       rethrow;
+    }
+  }
+
+  Future<void> deleteCreator(String creatorId) async {
+    try {
+      await _firestore.collection(_creatorsCollection).doc(creatorId).delete();
+      print("Creator ${creatorId} deleted successfully from Firestore.");
+    } catch (e) {
+      print("Error deleting creator ${creatorId} from Firestore: $e");
+      rethrow; // Or handle more gracefully depending on your app's needs
     }
   }
 

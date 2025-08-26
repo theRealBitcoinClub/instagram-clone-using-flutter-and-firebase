@@ -112,21 +112,27 @@ class MemoScraperTopic {
         likeCount = int.parse(item["likeCount"].toString().split("\n")[0]);
       } catch (e) {}
 
+      MemoModelCreator creator = MemoModelCreator(
+        name: item["creatorName"].toString(),
+        id: item["profileUrl"].toString().substring(8),
+      );
       MemoModelPost post = MemoModelPost(
         topic: topic,
         text: item["msg"]?.toString(),
         age: item["age"].toString(),
-        tipsInSatoshi: int.parse((item["tipsInSatoshi"] ?? "0").toString().replaceAll(",", "")),
+        popularityScore: int.parse((item["tipsInSatoshi"] ?? "0").toString().replaceAll(",", "")),
         likeCounter: likeCount,
         replyCounter: int.parse((item["replyCount"] ?? "0").toString()),
         created: item["created"].toString(),
-        txHash: item["txhash"].toString().substring("/post".length),
+        uniqueContentId: item["txhash"].toString().substring("/post".length),
         imgurUrl: item["imgur"]?.toString(),
-        creator: MemoModelCreator(name: item["creatorName"].toString(), id: item["profileUrl"].toString().substring(8)),
+        creator: creator,
       );
 
+      post.topicId = topic.id;
+      post.creatorId = creator.id;
       MemoScraperUtil.extractUrlsAndHashtags(post);
-
+      post.tagIds = post.hashtags;
       if (MemoScraperUtil.isTextOnly(post)) {
         continue;
       }

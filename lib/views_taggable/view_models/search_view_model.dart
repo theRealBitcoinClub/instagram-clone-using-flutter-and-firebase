@@ -93,7 +93,7 @@ class SearchViewModel {
 
     await Future.delayed(const Duration(milliseconds: 250));
 
-    final result = MemoModelTag.tags.where((tag) => tag.name!.toLowerCase().contains(query)).toList();
+    final result = MemoModelTag.tags.where((tag) => tag.name.toLowerCase().contains(query)).toList();
 
     _hashtags.value = [...result];
     _setLoading(false);

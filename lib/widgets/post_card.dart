@@ -68,9 +68,6 @@ class _PostCardState extends State<PostCard> {
     _initializeSelectedHashtags();
     _loadUser();
     //TODO make sure creator instance is created only once per post instance
-    if (widget.post.creator == null) {
-      widget.post.creator = MemoModelCreator(id: widget.post.creatorId);
-    }
     _refreshCreator();
 
     if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
@@ -88,6 +85,9 @@ class _PostCardState extends State<PostCard> {
   }
 
   Future<void> _refreshCreator() async {
+    if (widget.post.creator == null) {
+      widget.post.creator = MemoModelCreator(id: widget.post.creatorId);
+    }
     widget.post.creator = await widget.post.creator!.refreshCreatorFirebase();
     widget.post.creator!.refreshAvatar();
   }
@@ -184,6 +184,7 @@ class _PostCardState extends State<PostCard> {
     final ThemeData theme = Theme.of(context); // Get the current theme
 
     if (widget.post.creator == null) {
+      _refreshCreator();
       _logError("Post creator is null for post ID: ${widget.post.uniqueContentId}");
       return Card(
         // Use Card for consistent error display

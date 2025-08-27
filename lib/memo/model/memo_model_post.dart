@@ -35,7 +35,7 @@ class MemoModelPost {
     this.popularityScore,
     this.likeCounter,
     this.replyCounter,
-    this.created, // Original string 'created', will not be serialized
+    this.created,
     this.age, // Will not be serialized
     this.topic, // Will not be serialized directly
     this.creatorId = '',
@@ -76,7 +76,6 @@ class MemoModelPost {
   @JsonKey(ignore: true) // Will not be included in JSON
   final String? age;
 
-  @JsonKey(ignore: true) // Original string version, will not be included in JSON
   final String? created;
 
   // IDs for relationships - these will be serialized.

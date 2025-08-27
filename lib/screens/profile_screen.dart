@@ -780,15 +780,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showPostDialog(ThemeData theme, MemoModelPost post, Widget imageWidget) {
-    // Attempt to ensure creator is loaded for the dialog.
-    // If post.creator is null but post.creatorId is available,
-    // the FutureBuilder in _PostCardHeader (if reused) or similar logic here would handle it.
-    // For simplicity, this dialog assumes creator might be available via post.creatorSync
-    // or you'd use a FutureBuilder here too.
-
-    // final postCreator = post.creatorSync; // Use the synchronous accessor
-    final postCreator = post.creator;
-
     showDialog(
       context: context,
       builder: (dialogCtx) {
@@ -800,14 +791,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: theme.colorScheme.surfaceVariant,
-                backgroundImage: postCreator?.profileImageAvatar().isEmpty ?? true
+                backgroundImage: _creator?.profileImageAvatar().isEmpty ?? true
                     ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                    : NetworkImage(postCreator!.profileImageAvatar()),
+                    : NetworkImage(_creator!.profileImageAvatar()),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  postCreator?.name ?? post.creatorId, // Fallback to creatorId if name not loaded
+                  _creator?.name ?? post.creatorId, // Fallback to creatorId if name not loaded
                   style: theme.dialogTheme.titleTextStyle ?? theme.textTheme.titleLarge,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -856,8 +847,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // This simple putIfAbsent might not be enough if videoId within the same post.id changes.
         // For profile view, this is usually fine.
 
-        // final postCreatorName = ytPost.creatorSync?.name ?? ytPost.creatorId; // Fallback
-        final postCreatorName = "fallback" + ytPost.creatorId;
+        // final _creatorName = ytPost.creatorSync?.name ?? ytPost.creatorId; // Fallback
+        // final _creatorName = "fallback" + ytPost.creatorId;
 
         return Card(
           clipBehavior: Clip.antiAlias,
@@ -868,6 +859,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 YoutubePlayer(
+                  // key: ValueKey("ytpost_" + ytPost.id),
                   controller: controller,
                   showVideoProgressIndicator: true,
                   progressIndicatorColor: theme.colorScheme.primary,
@@ -896,9 +888,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 8),
                       ],
                       Text(
-                        "Posted by: $postCreatorName",
+                        "Posted by: ${_creator!.name}",
                         style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       ),
+                      // Text("Posted by: $_creatorName", style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                     ],
                   ),
                 ),
@@ -911,44 +904,197 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildGenericPostListView(ThemeData theme, List<MemoModelPost> posts) {
+    // Assuming _creator is available in the scope of this widget, e.g., from _ProfileScreenState
+    // If not, you'd need to get creator info from 'post.creator' and handle its loading state.
+    // For this example, let's use the _creator from _ProfileScreenState for the header.
+    // Ensure _creator is not null before accessing its properties.
+
+    final String? creatorCreatedDate = _creator?.created;
+    // if (_creator?.createdDateTime !=
+    //     null) { // Assuming MemoModelCreator has createdDateTime
+    //   creatorCreatedDate =
+    //       DateFormat('MMM d, yyyy').format(_creator!.createdDateTime!);
+    // } else if (_creator?.created != null &&
+    //     _creator!.created!.isNotEmpty) { // Fallback to string if available
+    //   creatorCreatedDate = _creator!.created;
+    // } else {
+    //   creatorCreatedDate = null;
+    // }
+
     return SliverList(
       delegate: SliverChildBuilderDelegate(childCount: posts.length, (context, index) {
         final post = posts[index];
-        // final postCreatorName = post.creatorSync?.name ?? post.creatorId; // Fallback
-        final postCreatorName = "fb" + post.creatorId; // Fallback
+        final String postCreatorName = "dsfdsf";
+        // post.creator?.name ?? _creator?.name ?? post.creatorId; // Use post's creator first, then screen's _creator, then ID
+        final String postTimestamp = "dsfdsf${post.created}";
+        // post.createdDateTime != null
+        //     ? DateFormat('MMM d, yyyy HH:mm').format(post.createdDateTime!) // More detailed post timestamp
+        //     : (post.created ?? post.age ?? '');
 
         return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          elevation: 2.0,
+          // Add a bit of elevation for a nicer look
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          // Rounded corners
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          // Adjusted margin
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // --- Enhanced Header ---
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Optional: Creator Avatar (if available and desired)
+                    // if (post.creator?.profileImageAvatar().isNotEmpty ?? _creator?.profileImageAvatar().isNotEmpty ?? false)
+                    //   Padding(
+                    //     padding: const EdgeInsets.only(right: 12.0),
+                    //     child: CircleAvatar(
+                    //       radius: 20,
+                    //       backgroundImage: NetworkImage(
+                    //         post.creator?.profileImageAvatar() ?? _creator!.profileImageAvatar()
+                    //       ),
+                    //       backgroundColor: theme.colorScheme.surfaceVariant,
+                    //     ),
+                    //   ),
                     Expanded(
-                      child: Text(
-                        postCreatorName,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            postCreatorName,
+                            // Use the specific post's creator name if available
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (creatorCreatedDate != null &&
+                              post.creator == null) // Show overall creator join date if post.creator isn't detailed
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2.0),
+                              child: Text(
+                                'Creator since: $creatorCreatedDate',
+                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(post.created ?? post.age ?? '', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    Text(
+                      postTimestamp, // Use the post's own created/age string
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 11, // Slightly smaller for timestamp
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Divider(color: theme.dividerColor),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
+                Divider(color: theme.dividerColor.withOpacity(0.5), height: 1),
+                // Thinner divider
+                const SizedBox(height: 12),
+
+                // --- Colorized Text Content ---
                 ExpandableText(
-                  post.text ?? 'No content.',
+                  post.text ?? " ",
                   expandText: 'show more',
                   collapseText: 'show less',
                   maxLines: 5,
-                  linkColor: theme.colorScheme.primary,
-                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
-                  linkStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                  linkColor: theme.colorScheme.primary.withOpacity(0.85), // For "show more/less"
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    // Default style for the main text
+                    height: 1.5,
+                    color: theme.textTheme.bodyMedium?.color?.withOpacity(0.9), // Slightly softer main text
+                  ),
+                  linkStyle: theme.textTheme.bodyMedium?.copyWith(
+                    // Style for "show more/less" text
+                    color: theme.colorScheme.primary.withOpacity(0.85),
+                    fontWeight: FontWeight.w600,
+                  ),
+
+                  // --- Hashtag Styling and Tap Handling ---
+                  hashtagStyle: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.secondary, // Use secondary color for hashtags
+                    fontWeight: FontWeight.w600,
+                  ),
+                  onHashtagTap: (String hashtag) {
+                    print('Hashtag tapped: $hashtag');
+                    // TODO: Implement your navigation or action for hashtag taps
+                    // For example:
+                    // Navigator.push(context, MaterialPageRoute(builder: (context) => HashtagScreen(hashtag: hashtag)));
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on hashtag: $hashtag')));
+                  },
+
+                  // --- URL Styling and Tap Handling ---
+                  urlStyle: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.primary.withOpacity(0.70), // Primary color with desired opacity
+                    decoration: TextDecoration.underline,
+                    decorationColor: theme.colorScheme.primary.withOpacity(0.5), // Underline color also with opacity
+                  ),
+                  onUrlTap: (String url) async {
+                    print('URL tapped: $url');
+                    Uri? uri = Uri.tryParse(url);
+                    if (uri != null) {
+                      // Attempt to add scheme if missing (e.g., for "www.example.com")
+                      if (!uri.hasScheme && (url.startsWith('www.') || RegExp(r'^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(url))) {
+                        uri = Uri.parse('http://$url');
+                      }
+                      try {
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        } else {
+                          print('Could not launch $uri');
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open link: $url')));
+                          }
+                        }
+                      } catch (e) {
+                        print('Error launching URL $url: $e');
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error opening link: $url')));
+                        }
+                      }
+                    } else {
+                      print('Invalid URL: $url');
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid link format: $url')));
+                      }
+                    }
+                  },
+
+                  // --- Prefix for Topic ID ---
+                  prefixText: post.topicId.isNotEmpty ? "Topic: ${post.topicId}\n" : null,
+                  prefixStyle: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.tertiary,
+                    fontWeight: FontWeight.w600,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  onPrefixTap: () {
+                    print("Topic prefix tapped: ${post.topicId}");
+                    // TODO: Handle topic tap if needed, e.g., navigate to a topic screen
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on topic: ${post.topicId}')));
+                  },
                 ),
+
+                // --- Optional: Display Topic ID Separately if not prefixed ---
+                // if (post.topicId.isNotEmpty) ...[
+                //   const SizedBox(height: 10),
+                //   Row(
+                //     children: [
+                //       Icon(Icons.topic_outlined, size: 16, color: theme.colorScheme.tertiary.withOpacity(0.8)),
+                //       const SizedBox(width: 6),
+                //       Text(
+                //         "Topic: ${post.topicId}",
+                //         style: theme.textTheme.bodySmall?.copyWith(
+                //             color: theme.colorScheme.tertiary.withOpacity(0.9),
+                //             fontWeight: FontWeight.w500
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // ],
               ],
             ),
           ),

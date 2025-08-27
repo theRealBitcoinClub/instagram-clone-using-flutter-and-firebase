@@ -128,7 +128,7 @@ class _AdminCreatorsListPageState extends State<AdminCreatorsListPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("${index + 1}. ${creator.name ?? 'N/A'}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          Text("${index + 1}. ${creator.name}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 4),
                           Text('ID: ${creator.id}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                           const SizedBox(height: 6),

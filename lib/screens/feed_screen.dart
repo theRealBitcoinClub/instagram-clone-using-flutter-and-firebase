@@ -36,7 +36,7 @@ class _FeedScreenState extends State<FeedScreen> {
   void initState() {
     super.initState();
     // Initialize the stream. You might want to order it, e.g., by creation date
-    _postsStream = _postService.getAllPostsStream(orderByField: 'createdDateTime', descending: true);
+    _postsStream = _postService.getAllPostsStream();
     // Note: _applyFilters will now be called by the StreamBuilder
   }
 
@@ -79,7 +79,7 @@ class _FeedScreenState extends State<FeedScreen> {
           matches = true;
         }
         // Assuming post.topicId is a String from Firestore for topics
-        if (!matches && _activeFilters.contains(PostFilterType.topics) && post.topicId != null && post.topicId!.isNotEmpty) {
+        if (!matches && _activeFilters.contains(PostFilterType.topics) && post.topicId.isNotEmpty) {
           // Check post.topicId
           matches = true;
         }
@@ -195,7 +195,7 @@ class _FeedScreenState extends State<FeedScreen> {
         // Optionally change icon if any filter is active
         _activeFilters.isNotEmpty ? Icons.filter_alt_rounded : Icons.filter_list,
       ),
-      tooltip: "Filter Posts",
+      // tooltip: "Filter Posts",
       onPressed: () {
         showDialog(
           context: context,
@@ -223,7 +223,7 @@ class _FeedScreenState extends State<FeedScreen> {
   Widget _buildMenuTheme(ThemeProvider themeProvider, ThemeData theme) {
     return IconButton(
       icon: Icon(themeProvider.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
-      tooltip: "Toggle Theme",
+      // tooltip: "Toggle Theme",
       onPressed: () {
         themeProvider.toggleTheme();
       },

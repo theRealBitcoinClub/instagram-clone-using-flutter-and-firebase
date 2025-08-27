@@ -65,7 +65,7 @@ class HashtagListView extends StatelessWidget {
                 ),
                 IconButton(
                   icon: Icon(Icons.close, color: colorScheme.onSurfaceVariant),
-                  tooltip: "Close suggestions",
+                  // tooltip: "Close suggestions",
                   onPressed: tagController.dismissOverlay,
                 ),
               ],

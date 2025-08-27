@@ -93,7 +93,7 @@ class CommentTextField extends StatelessWidget {
                 // Use a themed color for the send icon.
                 // colorScheme.primary is a common choice for action buttons.
                 icon: Icon(Icons.send, size: 50, color: onSend != null ? colorScheme.primary : theme.disabledColor),
-                tooltip: "Send",
+                // tooltip: "Send",
                 onPressed: onSend, // onPressed can be null to disable the button
               ),
             ],

@@ -624,7 +624,7 @@ class _PostCardHeader extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.thumb_up_alt_outlined /* color: theme.colorScheme.onSurfaceVariant */), // Color from IconTheme
             onPressed: onOptionsMenuPressed,
-            tooltip: "Tip",
+            // tooltip: "Tip",
             iconSize: 22,
             visualDensity: VisualDensity.compact,
           ),

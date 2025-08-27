@@ -198,11 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       // Assuming PostService has a method to get posts by creatorId
       // and order them, e.g., by createdDateTime descending
-      _profilePostsStream = _postService.getPostsByCreatorIdStream(
-        creatorId,
-        orderByField: 'createdDateTime', // Make sure this field exists on your posts
-        descending: true,
-      );
+      _profilePostsStream = _postService.getPostsByCreatorIdStream(creatorId);
     });
   }
 
@@ -331,7 +327,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       actions: [
         if (isOwnProfile) // Only show deposit if it's own profile
-          IconButton(icon: const Icon(Icons.currency_bitcoin_rounded), tooltip: "Deposit BCH", onPressed: _showBchQRDialog),
+          IconButton(
+            icon: const Icon(Icons.currency_bitcoin_rounded),
+            // tooltip: "Deposit BCH",
+            onPressed: _showBchQRDialog,
+          ),
       ],
     );
   }
@@ -757,7 +757,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       visualDensity: VisualDensity.compact,
       padding: const EdgeInsets.all(12),
       icon: Icon(isActive ? activeIcon : inactiveIcon, color: isActive ? theme.colorScheme.primary : theme.iconTheme.color?.withOpacity(0.7)),
-      tooltip: _getViewModeTooltip(index),
+      // tooltip: _getViewModeTooltip(index),
       onPressed: () {
         if (mounted) setState(() => _viewMode = index);
       },
@@ -927,7 +927,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final String postCreatorName = _creator!.name;
         // final String postCreatorName = "dsfdsf";
         // post.creator?.name ?? _creator?.name ?? post.creatorId; // Use post's creator first, then screen's _creator, then ID
-        final String postTimestamp = "dsfdsf${post.created}";
+        final String postTimestamp = "${post.createdDateTime}";
         // post.createdDateTime != null
         //     ? DateFormat('MMM d, yyyy HH:mm').format(post.createdDateTime!) // More detailed post timestamp
         //     : (post.created ?? post.age ?? '');
@@ -1066,7 +1066,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
 
                   // --- Prefix for Topic ID ---
-                  prefixText: post.topicId.isNotEmpty ? "Topic: ${post.topicId}\n" : null,
+                  prefixText: post.topicId.isNotEmpty ? "Topic: ${post.topicId}\n\n" : null,
                   prefixStyle: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.w600,

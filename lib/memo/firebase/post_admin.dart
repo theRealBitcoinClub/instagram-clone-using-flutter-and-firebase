@@ -61,7 +61,7 @@ class _AdminPostsListPageState extends State<AdminPostsListPage> {
   Widget build(BuildContext context) {
     // Scaffold and AppBar are removed as they are handled by MainAdminDashboard
     return StreamBuilder<List<MemoModelPost>>(
-      stream: _postService.getAllPostsStream(orderByField: 'createdDateTime', descending: true),
+      stream: _postService.getAllPostsStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // widget.onCountChanged(0); // Optionally report 0

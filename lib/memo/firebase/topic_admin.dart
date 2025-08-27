@@ -106,7 +106,7 @@ class _AdminTopicsListPageState extends State<AdminTopicsListPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("${index + 1}. ${topic.header ?? 'N/A'}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          Text("${index + 1}. ${topic.header}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 4),
                           Text('ID: ${topic.id}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                           const SizedBox(height: 6),

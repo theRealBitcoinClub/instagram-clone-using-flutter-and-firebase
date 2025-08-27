@@ -65,7 +65,7 @@ class TopicListView extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: IconButton(
                 icon: Icon(Icons.close, color: colorScheme.onSurfaceVariant), // Themed icon color
-                tooltip: "Close suggestions",
+                // tooltip: "Close suggestions",
                 onPressed: tagController.dismissOverlay,
               ),
             ),

@@ -90,12 +90,12 @@
 //   }
 //
 //   static bool isTextOnly(MemoModelPost post) {
-//     return post.youtubeId == null && post.imgurUrl == null && post.topic == null && post.hashtags.isEmpty;
+//     return post.youtubeId == null && post.imgurUrl == null && post.topic == null && post.tagIds.isEmpty;
 //   }
 //
 //   static void extractUrlsAndHashtags(MemoModelPost post) {
 //     MemoScraperUtil.extractYouTubeUrlAndRemoveJavaScriptFromText(post);
-//     post.hashtags.addAll(MemoScraperUtil.extractHashtags(post.text));
+//     post.tagIds.addAll(MemoScraperUtil.extractHashtags(post.text));
 //     post.urls.addAll(MemoScraperUtil.extractUrls(post.text));
 //   }
 // }

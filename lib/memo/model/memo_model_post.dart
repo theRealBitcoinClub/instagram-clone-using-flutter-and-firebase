@@ -64,9 +64,6 @@ class MemoModelPost {
   @JsonKey(ignore: true) // Will not be included in JSON
   final List<String> urls = [];
 
-  @JsonKey(ignore: true) // Will not be included in JSON
-  final List<String> hashtags = [];
-
   @JsonKey(ignore: true) // Will not be included in JSON (only creatorId is serialized)
   MemoModelCreator? creator;
 
@@ -121,7 +118,7 @@ class MemoModelPost {
     // Manually populate urls/hashtags if needed for the dummy AFTER construction
     // for runtime use, as they won't be part of JSON.
     // memoModelPost.urls.add("http://example.com");
-    // memoModelPost.hashtags.add("#dummy");
+    // memoModelpost.tagIds.add("#dummy");
     return memoModelPost;
   }
 

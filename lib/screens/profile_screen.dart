@@ -924,7 +924,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return SliverList(
       delegate: SliverChildBuilderDelegate(childCount: posts.length, (context, index) {
         final post = posts[index];
-        final String postCreatorName = "dsfdsf";
+        final String postCreatorName = _creator!.name;
+        // final String postCreatorName = "dsfdsf";
         // post.creator?.name ?? _creator?.name ?? post.creatorId; // Use post's creator first, then screen's _creator, then ID
         final String postTimestamp = "dsfdsf${post.created}";
         // post.createdDateTime != null
@@ -1067,7 +1068,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // --- Prefix for Topic ID ---
                   prefixText: post.topicId.isNotEmpty ? "Topic: ${post.topicId}\n" : null,
                   prefixStyle: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.tertiary,
+                    color: theme.colorScheme.primary,
                     fontWeight: FontWeight.w600,
                     fontStyle: FontStyle.italic,
                   ),

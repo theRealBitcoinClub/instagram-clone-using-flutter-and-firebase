@@ -54,7 +54,7 @@ class MemoScraperUtil {
     post.topicId = topic != null ? topic.id : "";
     post.creatorId = creator.id;
     MemoScraperUtil.extractUrlsAndHashtags(post);
-    post.tagIds = post.hashtags;
+    post.tagIds = post.tagIds;
     post.topic = topic;
     if (MemoScraperUtil.isTextOnly(post)) {
       return true;
@@ -105,12 +105,12 @@ class MemoScraperUtil {
   }
 
   static bool isTextOnly(MemoModelPost post) {
-    return post.youtubeId == null && post.imgurUrl == null && post.topic == null && post.hashtags.isEmpty;
+    return post.youtubeId == null && post.imgurUrl == null && post.topic == null && post.tagIds.isEmpty;
   }
 
   static void extractUrlsAndHashtags(MemoModelPost post) {
     MemoScraperUtil.extractYouTubeUrlAndRemoveJavaScriptFromText(post);
-    post.hashtags.addAll(MemoScraperUtil.extractHashtags(post.text));
+    post.tagIds.addAll(MemoScraperUtil.extractHashtags(post.text));
     post.urls.addAll(MemoScraperUtil.extractUrls(post.text));
   }
 }

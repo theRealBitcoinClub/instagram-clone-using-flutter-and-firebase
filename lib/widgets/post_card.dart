@@ -93,7 +93,7 @@ class _PostCardState extends State<PostCard> {
   }
 
   void _initializeSelectedHashtags() {
-    final int count = widget.post.hashtags.length > _maxTagsCounter ? _maxTagsCounter : widget.post.hashtags.length;
+    final int count = widget.post.tagIds.length > _maxTagsCounter ? _maxTagsCounter : widget.post.tagIds.length;
     _selectedHashtags = List<bool>.filled(count, false);
   }
 
@@ -453,8 +453,8 @@ class _PostCardState extends State<PostCard> {
     setState(() {
       // Update selectedHashtags based on text input
       final currentTextHashtags = MemoScraperUtil.extractHashtags(value);
-      for (int i = 0; i < _selectedHashtags.length && i < widget.post.hashtags.length; i++) {
-        _selectedHashtags[i] = currentTextHashtags.contains(widget.post.hashtags[i]);
+      for (int i = 0; i < _selectedHashtags.length && i < widget.post.tagIds.length; i++) {
+        _selectedHashtags[i] = currentTextHashtags.contains(widget.post.tagIds[i]);
       }
       _evaluateShowSendButton(value);
     });
@@ -469,14 +469,14 @@ class _PostCardState extends State<PostCard> {
       // Rebuild text input based on selected hashtags
       String newText = _textEditController.text;
       // Remove all post hashtags first to avoid duplicates or incorrect removal
-      for (String tag in widget.post.hashtags) {
+      for (String tag in widget.post.tagIds) {
         newText = newText.replaceAll(tag, "").replaceAll("  ", " ").trim();
       }
 
       // Add back only the currently selected ones
-      for (int i = 0; i < _selectedHashtags.length && i < widget.post.hashtags.length; i++) {
+      for (int i = 0; i < _selectedHashtags.length && i < widget.post.tagIds.length; i++) {
         if (_selectedHashtags[i]) {
-          newText = "$newText ${widget.post.hashtags[i]}".trim();
+          newText = "$newText ${widget.post.tagIds[i]}".trim();
         }
       }
       _textEditController.text = newText;
@@ -491,7 +491,7 @@ class _PostCardState extends State<PostCard> {
   void _evaluateShowSendButton(String currentText) {
     // Remove all known post hashtags from currentText to get textWithoutHashtags
     String textWithoutKnownHashtags = currentText;
-    for (String tag in widget.post.hashtags) {
+    for (String tag in widget.post.tagIds) {
       textWithoutKnownHashtags = textWithoutKnownHashtags.replaceAll(tag, "").trim();
     }
     // Check if any of the *actually selected* hashtags are present in the text,
@@ -711,7 +711,7 @@ class _PostCardFooter extends StatelessWidget {
             const SizedBox(height: 10),
           ],
           if (post.topic != null) ...[_buildTopicCheckBoxWidget(theme), const SizedBox(height: 6)],
-          if (post.hashtags.isNotEmpty) ...[_buildHashtagCheckboxesWidget(theme), const SizedBox(height: 8)],
+          if (post.tagIds.isNotEmpty) ...[_buildHashtagCheckboxesWidget(theme), const SizedBox(height: 8)],
           if (showSend) ...[
             const SizedBox(height: 4),
             Row(
@@ -772,7 +772,7 @@ class _PostCardFooter extends StatelessWidget {
   }
 
   Widget _buildHashtagCheckboxesWidget(ThemeData theme) {
-    final int displayCount = post.hashtags.length > _PostCardState._maxTagsCounter ? _PostCardState._maxTagsCounter : post.hashtags.length;
+    final int displayCount = post.tagIds.length > _PostCardState._maxTagsCounter ? _PostCardState._maxTagsCounter : post.tagIds.length;
 
     if (displayCount == 0) return const SizedBox.shrink();
 
@@ -807,7 +807,7 @@ class _PostCardFooter extends StatelessWidget {
                 // ),
                 // if (isSelected) SizedBox(width: 4),
                 Text(
-                  post.hashtags[index],
+                  post.tagIds[index],
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,

@@ -114,6 +114,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       String profileIdOfCreatorOrUser = MemoModelUser.profileIdGet(localUser);
       MemoModelCreator? initialCreator = await CreatorService().getCreatorOnce(profileIdOfCreatorOrUser);
+      //TODO the user wanted to check his own profile but the profile is new and doesnt exist on firebase
+      initialCreator ??= MemoModelCreator(id: profileIdOfCreatorOrUser);
 
       if (!mounted) return;
       setState(() {

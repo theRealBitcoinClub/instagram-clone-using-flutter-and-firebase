@@ -10,8 +10,11 @@ import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
 import 'memo/firebase/tag_service.dart';
+import 'memo/firebase/topic_service.dart';
 import 'memo/model/memo_model_tag.dart';
+import 'memo/model/memo_model_topic.dart';
 import 'memo/scraper/memo_scraper_tag.dart';
+import 'memo/scraper/memo_scraper_topics.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -39,38 +42,10 @@ Future<void> initData() async {
     //   sleep(Duration(seconds: 1));
     // }
 
-    // int indexTopics = 0;
-    // int indexPosts = 0;
-    // await MemoScraperTopic().startScrapeTopics(cacheId, 125, 25);
-    //
-    // for (MemoModelTopic t in MemoModelTopic.topics) {
-    //   TopicService().saveTopic(t);
-    //   indexTopics++;
-    // }
-    //
-    // for (MemoModelPost p in MemoModelPost.allPosts) {
-    //   PostService().savePost(p);
-    //   indexPosts++;
-    // }
-    // print("TOTAL AMOUNT TOPICS $indexTopics");
-    // print("TOTAL AMOUNT POSTS $indexPosts");
+    // await scrapeTopics(cacheId);
 
-    int indexTags = 0;
-    int indexPosts = 0;
-    await MemoScraperTag().startScrapeTags(["/most-posts"], 125, 100, cacheId);
+    // await scrapeTags(cacheId);
 
-    for (MemoModelTag t in MemoModelTag.tags) {
-      TagService().saveTag(t);
-      indexTags++;
-    }
-
-    for (MemoModelPost p in MemoModelPost.allPosts) {
-      PostService().savePost(p);
-      indexPosts++;
-    }
-
-    print("TOTAL AMOUNT TAGS $indexTags");
-    print("TOTAL AMOUNT POSTS $indexPosts");
     // Optional: You can inspect the results if your methods return values
     // For example, if startScrapeTopics returned a list of topics:
     // List<Topic> topics = results[0] as List<Topic>;
@@ -86,6 +61,43 @@ Future<void> initData() async {
     print("INFO: Removing splash screen.");
     FlutterNativeSplash.remove();
   }
+}
+
+Future<void> scrapeTopics(String cacheId) async {
+  int indexTopics = 0;
+  int indexPosts = 0;
+  await MemoScraperTopic().startScrapeTopics(cacheId, 125, 25);
+
+  for (MemoModelTopic t in MemoModelTopic.topics) {
+    TopicService().saveTopic(t);
+    indexTopics++;
+  }
+
+  for (MemoModelPost p in MemoModelPost.allPosts) {
+    PostService().savePost(p);
+    indexPosts++;
+  }
+  print("TOTAL AMOUNT TOPICS $indexTopics");
+  print("TOTAL AMOUNT POSTS $indexPosts");
+}
+
+Future<void> scrapeTags(String cacheId) async {
+  int indexTags = 0;
+  int indexPosts = 0;
+  await MemoScraperTag().startScrapeTags(["/most-posts"], 125, 100, cacheId);
+
+  for (MemoModelTag t in MemoModelTag.tags) {
+    TagService().saveTag(t);
+    indexTags++;
+  }
+
+  for (MemoModelPost p in MemoModelPost.allPosts) {
+    PostService().savePost(p);
+    indexPosts++;
+  }
+
+  print("TOTAL AMOUNT TAGS $indexTags");
+  print("TOTAL AMOUNT POSTS $indexPosts");
 }
 
 class MyApp extends StatelessWidget {

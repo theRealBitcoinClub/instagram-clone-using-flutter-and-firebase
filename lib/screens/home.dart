@@ -101,6 +101,8 @@ class _HomeSceenState extends State<HomeSceen> implements NavBarCallback {
     // Ensure these screens are also themed internally
     final List<Widget> homeScreenItems = [
       FeedScreen(navBarCallback: this),
+      // FeedScreen(),
+
       // const SearchScreen(), // If you have a SearchScreen
       const AddPost(), // Renamed from AddScreen to match common naming
       // TODO: Replace hardcoded UID with actual authenticated user ID
@@ -145,9 +147,7 @@ class _HomeSceenState extends State<HomeSceen> implements NavBarCallback {
           // ),
           BottomNavigationBarItem(
             // Using a Material icon here - ensure it looks consistent or use a Cupertino equivalent
-            icon: Icon(
-              _page == 1 ? CupertinoIcons.add_circled_solid : CupertinoIcons.add_circled,
-            ), // Example for AddPost
+            icon: Icon(_page == 1 ? CupertinoIcons.add_circled_solid : CupertinoIcons.add_circled), // Example for AddPost
             // label: 'Add',
           ),
           BottomNavigationBarItem(

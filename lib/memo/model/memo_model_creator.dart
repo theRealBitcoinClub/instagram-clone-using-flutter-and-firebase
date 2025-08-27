@@ -2,7 +2,8 @@
 // The user has this file open:
 // /home/pachamama/github/mahakka/lib/memo/model/memo_model_creator.dart.
 import 'package:json_annotation/json_annotation.dart';
-import 'package:mahakka/check_404.dart'; // Assuming this is your utility function
+import 'package:mahakka/check_404.dart';
+import 'package:mahakka/memo/firebase/creator_service.dart'; // Assuming this is your utility function
 
 part 'memo_model_creator.g.dart'; // This will be generated
 
@@ -15,6 +16,9 @@ class MemoModelCreator {
   int actions = 0;
   String created = "";
   String lastActionDate = "";
+  CreatorService _creatorService = CreatorService();
+
+  String get profileIdShort => id.substring(0, 4);
 
   MemoModelCreator({
     this.id = "",
@@ -60,8 +64,41 @@ class MemoModelCreator {
     _checkProfileImageAvatar();
   }
 
-  Future<bool> refreshDetail() async {
+  Future<bool> refreshDetailScraper() async {
     return _checkProfileImageDetail();
+  }
+
+  /// Fetches the creator using the id and updates the local `creator` field.
+  /// Returns true if the creator was successfully fetched and updated, false otherwise.
+  Future<MemoModelCreator> refreshCreatorFirebase() async {
+    if (id.isEmpty) {
+      print("MemoModelPost (ID: $id): id is empty, cannot refresh creator.");
+      // Optionally set this.creator to null if it wasn't already
+      // if (this.creator != null) {
+      //   this.creator = null;
+      // }
+      return this; // Or throw an error, depending on desired behavior
+    }
+
+    try {
+      print("MemoModelPost (ID: $id): Refreshing creator for ID: $id...");
+      final fetchedCreator = await _creatorService.getCreatorOnce(id);
+      if (fetchedCreator != null) {
+        print("MemoModelPost (ID: $id): Creator ${name} (ID: ${id}) refreshed successfully.");
+        return fetchedCreator;
+      } else {
+        print("MemoModelPost (ID: $id): Failed to refresh creator for ID: $id. Creator not found or error during fetch.");
+        // Decide if you want to set this.creator to null if the fetch fails
+        // this.creator = null;
+        return this;
+      }
+    } catch (e, s) {
+      print("MemoModelPost (ID: $id): Error during refreshCreator for ID $id: $e");
+      print(s);
+      // Decide if you want to set this.creator to null on error
+      // this.creator = null;
+      return this;
+    }
   }
 
   // These methods below expose the runtime state.
@@ -121,8 +158,7 @@ class MemoModelCreator {
 
   // Consider implementing equals and hashCode if you store these in Sets or use them as Map keys.
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) || other is MemoModelCreator && runtimeType == other.runtimeType && id == other.id;
+  bool operator ==(Object other) => identical(this, other) || other is MemoModelCreator && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;

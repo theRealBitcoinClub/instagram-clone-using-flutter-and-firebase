@@ -171,9 +171,7 @@ class MemoModelPost {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is MemoModelPost &&
-        runtimeType == other.runtimeType &&
-        id == other.id; // Primary check using the document ID
+    return other is MemoModelPost && runtimeType == other.runtimeType && id == other.id; // Primary check using the document ID
   }
 
   @override

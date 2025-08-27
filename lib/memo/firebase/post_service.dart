@@ -10,6 +10,31 @@ class PostService {
   // Choose a distinct collection name for posts
   static const String _postsCollection = 'posts'; // Or 'posts_v1', etc.
 
+  /// Fetches a paginated list of posts.
+  ///
+  /// [limit]: The number of documents to retrieve.
+  /// [startAfterDoc]: Optional. The DocumentSnapshot to start retrieving documents after.
+  /// [orderByField]: The field to order by (e.g., 'createdDateTime').
+  /// [descending]: Whether the order should be descending.
+  Stream<QuerySnapshot> getPostsPaginated({
+    required int limit,
+    DocumentSnapshot? startAfterDoc,
+    String orderByField = 'createdDateTime', // Ensure this field exists and is indexed
+    bool descending = true,
+  }) {
+    Query query = _firestore.collection(_postsCollection).orderBy(orderByField, descending: descending).limit(limit);
+
+    if (startAfterDoc != null) {
+      query = query.startAfterDocument(startAfterDoc);
+    }
+
+    return query.snapshots().handleError((error) {
+      print("Error in paginated posts stream for field '$orderByField': $error. Check Firestore indexes.");
+      // Depending on how you consume this, you might rethrow or return an empty snapshot stream
+      throw error; // Or handle more gracefully
+    });
+  }
+
   // Optional: If you often need to interact with other services
   // final TagService _tagService = TagService(); // Example
 

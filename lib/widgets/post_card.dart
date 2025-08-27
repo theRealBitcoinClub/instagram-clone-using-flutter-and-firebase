@@ -2,15 +2,16 @@ import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
+import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
-import 'package:mahakka/screens/home.dart';
 import 'package:mahakka/utils/snackbar.dart'; // Ensure this uses themed SnackBars
 import 'package:mahakka/widgets/like_animtion.dart'; // Ensure this is theme-aware or neutral
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
+import '../screens/home.dart';
 import 'memo_confetti.dart'; // Ensure this is theme-aware or neutral
 
 // Basic logging placeholder (remains the same)
@@ -24,10 +25,14 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
 class PostCard extends StatefulWidget {
   final MemoModelPost post;
 
+  // const PostCard({super.key, required this.post});
+  //
   final NavBarCallback navBarCallback;
 
-  const PostCard(this.post, this.navBarCallback, {Key? key}) : super(key: key);
-
+  const PostCard(this.post, this.navBarCallback, {super.key});
+  //
+  // @override
+  // State<PostCard> createState() => _PostCardState();
   @override
   State<PostCard> createState() => _PostCardState(navBarCallback: navBarCallback);
 }
@@ -62,7 +67,11 @@ class _PostCardState extends State<PostCard> {
     _textEditController = TextEditingController();
     _initializeSelectedHashtags();
     _loadUser();
-    widget.post.creator!.refreshAvatar();
+    //TODO make sure creator instance is created only once per post instance
+    if (widget.post.creator == null) {
+      widget.post.creator = MemoModelCreator(id: widget.post.creatorId);
+    }
+    _refreshCreator();
 
     if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
       _ytController = YoutubePlayerController(
@@ -76,6 +85,11 @@ class _PostCardState extends State<PostCard> {
         ),
       );
     }
+  }
+
+  Future<void> _refreshCreator() async {
+    widget.post.creator = await widget.post.creator!.refreshCreatorFirebase();
+    widget.post.creator!.refreshAvatar();
   }
 
   void _initializeSelectedHashtags() {
@@ -104,6 +118,7 @@ class _PostCardState extends State<PostCard> {
   Widget _buildPostMedia(ThemeData theme) {
     if (widget.post.youtubeId != null && _ytController != null) {
       return YoutubePlayer(
+        // key: ValueKey('youtube_${widget.post.id}'),
         controller: _ytController!,
         showVideoProgressIndicator: true,
         progressIndicatorColor: theme.colorScheme.primary, // Use theme color
@@ -127,9 +142,7 @@ class _PostCardState extends State<PostCard> {
           return Container(
             height: _altImageHeight * 2, // Make it a bit larger
             color: theme.colorScheme.surfaceVariant,
-            child: Center(
-              child: Icon(Icons.broken_image_outlined, color: theme.colorScheme.onSurfaceVariant, size: 30),
-            ),
+            child: Center(child: Icon(Icons.broken_image_outlined, color: theme.colorScheme.onSurfaceVariant, size: 30)),
           );
         },
         loadingBuilder: (context, child, loadingProgress) {
@@ -178,10 +191,7 @@ class _PostCardState extends State<PostCard> {
         margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Text(
-            "Error: Post data incomplete. Cannot display this post.",
-            style: TextStyle(color: theme.colorScheme.onErrorContainer),
-          ),
+          child: Text("Error: Post data incomplete. Cannot display this post.", style: TextStyle(color: theme.colorScheme.onErrorContainer)),
         ),
       );
     }
@@ -207,6 +217,7 @@ class _PostCardState extends State<PostCard> {
           GestureDetector(
             onDoubleTap: _isSendingTx ? null : _sendTipToCreator, // Disable if already sending
             child: ZoomOverlay(
+              // key: ValueKey('zoom_${widget.post.id}'),
               modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3), // Themed scrim
               minScale: 0.5,
               maxScale: 3.0,
@@ -222,9 +233,7 @@ class _PostCardState extends State<PostCard> {
                   // If not, they also need to be refactored to use Theme.of(context).
                   _SendingAnimation(
                     isSending: _isSendingTx,
-                    mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null
-                        ? _altImageHeight
-                        : 150.0,
+                    mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null ? _altImageHeight : 150.0,
                     onEnd: () {
                       if (mounted) setState(() => _isSendingTx = false);
                     },
@@ -232,9 +241,7 @@ class _PostCardState extends State<PostCard> {
                   ),
                   _LikeSucceededAnimation(
                     isAnimating: _isAnimatingLike,
-                    mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null
-                        ? _altImageHeight
-                        : 150.0,
+                    mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null ? _altImageHeight : 150.0,
                     onEnd: () {
                       if (mounted) setState(() => _isAnimatingLike = false);
                     },
@@ -543,8 +550,9 @@ class _PostCardHeader extends StatelessWidget {
   final MemoModelPost post;
   final VoidCallback onOptionsMenuPressed;
   final NavBarCallback navBarCallback;
-
+  //
   const _PostCardHeader({required this.post, required this.onOptionsMenuPressed, required this.navBarCallback});
+  // const _PostCardHeader({required this.post, required this.onOptionsMenuPressed});
 
   void _navigateToProfile(BuildContext context, String creatorId) {
     MemoModelUser.profileIdSet(creatorId);
@@ -599,29 +607,18 @@ class _PostCardHeader extends StatelessWidget {
                   Row(
                     children: [
                       if (post.age != null)
-                        Text(
-                          post.age!,
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                        ),
+                        Text(post.age!, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                       if (post.age != null && post.created != null)
-                        Text(
-                          " - ",
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                        ),
+                        Text(" - ", style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                       if (post.created != null)
-                        Text(
-                          post.created!,
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                        ),
+                        Text(post.created!, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                     ],
                   ),
               ],
             ),
           ),
           IconButton(
-            icon: Icon(
-              Icons.thumb_up_alt_outlined /* color: theme.colorScheme.onSurfaceVariant */,
-            ), // Color from IconTheme
+            icon: Icon(Icons.thumb_up_alt_outlined /* color: theme.colorScheme.onSurfaceVariant */), // Color from IconTheme
             onPressed: onOptionsMenuPressed,
             tooltip: "Tip",
             iconSize: 22,
@@ -680,23 +677,17 @@ class _PostCardFooter extends StatelessWidget {
         children: [
           if (post.text != null && post.text!.isNotEmpty) ...[
             ExpandableText(
-              post.text!,
-              prefixText: post.creator != null ? "${post.creator!.name}: " : "", // Handle potential null creator
-              prefixStyle: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                // color: theme.colorScheme.onSurface,
-              ),
+              post.creator!.name + ": " + post.text!,
+              prefixText: post.creator != null ? "${post.creator!.profileIdShort}" : "", // Handle potential null creator
+              prefixStyle: theme.textTheme.titleSmall?.copyWith(letterSpacing: 2.0),
               expandText: 'show more',
               collapseText: 'show less',
               maxLines: 6, // Adjust as needed
               linkColor: theme.colorScheme.primary, // Themed link color
-              style: theme.textTheme.bodyMedium?.copyWith(height: 1.4), // Use themed text style
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.3), // Use themed text style
               animation: true,
               linkEllipsis: true,
-              linkStyle: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
+              linkStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 10),
           ],
@@ -780,9 +771,7 @@ class _PostCardFooter extends StatelessWidget {
   }
 
   Widget _buildHashtagCheckboxesWidget(ThemeData theme) {
-    final int displayCount = post.hashtags.length > _PostCardState._maxTagsCounter
-        ? _PostCardState._maxTagsCounter
-        : post.hashtags.length;
+    final int displayCount = post.hashtags.length > _PostCardState._maxTagsCounter ? _PostCardState._maxTagsCounter : post.hashtags.length;
 
     if (displayCount == 0) return const SizedBox.shrink();
 
@@ -801,10 +790,7 @@ class _PostCardFooter extends StatelessWidget {
                   ? theme.colorScheme.primary.withOpacity(0.15) // Subtle primary highlight
                   : theme.colorScheme.surfaceVariant.withOpacity(0.7),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.5),
-                width: 1.2,
-              ),
+              border: Border.all(color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.5), width: 1.2),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -884,12 +870,7 @@ class _SendingAnimation extends StatelessWidget {
   final VoidCallback onEnd;
   final ThemeData theme; // Pass theme
 
-  const _SendingAnimation({
-    required this.isSending,
-    required this.mediaHeight,
-    required this.onEnd,
-    required this.theme,
-  });
+  const _SendingAnimation({required this.isSending, required this.mediaHeight, required this.onEnd, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -903,12 +884,7 @@ class _LikeSucceededAnimation extends StatelessWidget {
   final VoidCallback onEnd;
   final ThemeData theme; // Pass theme
 
-  const _LikeSucceededAnimation({
-    required this.isAnimating,
-    required this.mediaHeight,
-    required this.onEnd,
-    required this.theme,
-  });
+  const _LikeSucceededAnimation({required this.isAnimating, required this.mediaHeight, required this.onEnd, required this.theme});
 
   @override
   Widget build(BuildContext context) {

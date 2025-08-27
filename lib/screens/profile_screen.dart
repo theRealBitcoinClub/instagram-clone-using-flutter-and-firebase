@@ -2,6 +2,7 @@ import 'package:clipboard/clipboard.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
+import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
@@ -85,7 +86,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final localUser = await MemoModelUser.getUser();
       if (!mounted) return;
 
-      final initialCreator = MemoModelCreator(id: MemoModelUser.profileIdGet(localUser), name: "");
+      String profileIdOfCreatorOrUser = MemoModelUser.profileIdGet(localUser);
+      // final initialCreator = MemoModelCreator(id: profileIdGet, name: "");
+      MemoModelCreator? initialCreator = await CreatorService().getCreatorOnce(profileIdOfCreatorOrUser);
 
       setState(() {
         _user = localUser;
@@ -95,9 +98,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       _creator!.refreshAvatar();
 
-      final resultDetails = await Future.wait([
-        MemoCreatorService().fetchCreatorDetails(initialCreator, noCache: true),
-      ]);
+      final resultDetails = await Future.wait([MemoCreatorService().fetchCreatorDetails(initialCreator!, noCache: true)]);
 
       final resultBalances = await Future.wait([
         localUser.refreshBalanceDevPath145(),
@@ -107,10 +108,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (!mounted) return;
 
-      final refreshedCreator = resultDetails[0];
-      final refreshBchStatus = resultBalances[0];
-      final refreshTokensStatus = resultBalances[1];
-      final refreshMemoStatus = resultBalances[2];
+      MemoModelCreator refreshedCreator = resultDetails[0];
+      //TODO update user details store them on firebase
+      CreatorService().saveCreator(refreshedCreator);
+
+      String refreshBchStatus = resultBalances[0];
+      String refreshTokensStatus = resultBalances[1];
+      String refreshMemoStatus = resultBalances[2];
 
       setState(() {
         _creator = refreshedCreator;
@@ -192,10 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           controller: _scrollController,
           slivers: [
             SliverToBoxAdapter(child: _buildCollapsibleProfileHeader(theme, colorScheme)),
-            SliverPersistentHeader(
-              delegate: SliverAppBarDelegate(minHeight: 60, maxHeight: 60, child: _buildTabSelector(theme)),
-              pinned: true,
-            ),
+            SliverPersistentHeader(delegate: SliverAppBarDelegate(minHeight: 60, maxHeight: 60, child: _buildTabSelector(theme)), pinned: true),
 
             // If _isRefreshing for the content below the tabs,
             // you might need another SliverToBoxAdapter for LinearProgressIndicator
@@ -357,7 +358,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: AnimatedOpacity(
           opacity: _creator!.profileText.trim().isNotEmpty ? 1.0 : 0.0, // Control opacity
           duration: const Duration(milliseconds: 300), // Adjust duration as needed
-          child: Text(_creator!.name, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+          child: Row(
+            children: [
+              Text(_creator!.name, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              Text(" ${_creator!.profileIdShort}", style: theme.textTheme.titleSmall?.copyWith(letterSpacing: 2.0)),
+            ],
+          ),
         ),
       ),
     );
@@ -397,18 +403,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Expanded(
-                      child: isOwnProfile
-                          ? _buildStatColumn(theme, 'BCH', _user!.balanceBchDevPath145)
-                          : SizedBox(child: Text("Tip Level")),
+                      child: isOwnProfile ? _buildStatColumn(theme, 'BCH', _user!.balanceBchDevPath145) : SizedBox(child: Text("Tip Level")),
                     ),
-                    Expanded(
-                      child: isOwnProfile
-                          ? _buildStatColumn(theme, 'Token', _user!.balanceCashtokensDevPath145)
-                          : SizedBox(),
-                    ),
-                    Expanded(
-                      child: isOwnProfile ? _buildStatColumn(theme, 'Memo', _user!.balanceBchDevPath0Memo) : SizedBox(),
-                    ),
+                    Expanded(child: isOwnProfile ? _buildStatColumn(theme, 'Token', _user!.balanceCashtokensDevPath145) : SizedBox()),
+                    Expanded(child: isOwnProfile ? _buildStatColumn(theme, 'Memo', _user!.balanceBchDevPath0Memo) : SizedBox()),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -422,7 +420,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void showImageDetail(ColorScheme colorScheme) async {
-    bool hasDetail = await _creator!.refreshDetail();
+    bool hasDetail = await _creator!.refreshDetailScraper();
 
     if (hasDetail && context.mounted) {
       showDialog(
@@ -478,10 +476,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       iconSize: 28, // Adjusted size
       visualDensity: VisualDensity.compact,
       padding: const EdgeInsets.all(12), // Consistent padding
-      icon: Icon(
-        isActive ? activeIcon : inactiveIcon,
-        color: isActive ? theme.colorScheme.primary : theme.iconTheme.color?.withOpacity(0.7),
-      ),
+      icon: Icon(isActive ? activeIcon : inactiveIcon, color: isActive ? theme.colorScheme.primary : theme.iconTheme.color?.withOpacity(0.7)),
       tooltip: _getViewModeTooltip(index),
       onPressed: () {
         if (mounted) {
@@ -536,11 +531,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.all(4),
           sliver: SliverGrid.builder(
             itemCount: posts.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 4,
-              mainAxisSpacing: 4,
-            ),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 4, mainAxisSpacing: 4),
             itemBuilder: (context, index) {
               final post = posts[index];
               Widget imagePlaceholder = Container(
@@ -577,8 +568,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 },
               );
               return GestureDetector(
-                onDoubleTap: () =>
-                    _showPostDialog(theme, post, AspectRatio(aspectRatio: 1, child: img)), // Pass theme & wrapped image
+                onDoubleTap: () => _showPostDialog(theme, post, AspectRatio(aspectRatio: 1, child: img)), // Pass theme & wrapped image
                 child: AspectRatio(aspectRatio: 1, child: img), // Ensure square grid items
               );
             },
@@ -718,10 +708,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           maxLines: 3,
                           linkColor: theme.colorScheme.primary,
                           style: theme.textTheme.bodyMedium,
-                          linkStyle: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          linkStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 8),
                       ],
@@ -763,10 +750,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      post.created ?? '',
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                    ),
+                    Text(post.created ?? '', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -779,10 +763,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   maxLines: 5,
                   linkColor: theme.colorScheme.primary,
                   style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
-                  linkStyle: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  linkStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -804,30 +785,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // backgroundColor from theme.dialogTheme
           title: Row(
             children: [
-              Icon(
-                Icons.settings_outlined,
-                color: theme.dialogTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface,
-              ),
+              Icon(Icons.settings_outlined, color: theme.dialogTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface),
               const SizedBox(width: 10),
               Text("PROFILE SETTINGS", style: theme.dialogTheme.titleTextStyle ?? theme.textTheme.titleLarge),
             ],
           ),
           children: [
             _buildSettingsInput(theme, Icons.badge_outlined, "Satoshi Nakamoto", TextInputType.text, _profileNameCtrl),
-            _buildSettingsInput(
-              theme,
-              Icons.notes_outlined,
-              "I am a Sci-Fi Ponk",
-              TextInputType.text,
-              _profileTextCtrl,
-            ),
-            _buildSettingsInput(
-              theme,
-              Icons.account_circle_outlined,
-              "e.g. http://i.imgur.com/JF983F.png",
-              TextInputType.url,
-              _imgurCtrl,
-            ),
+            _buildSettingsInput(theme, Icons.notes_outlined, "I am a Sci-Fi Ponk", TextInputType.text, _profileTextCtrl),
+            _buildSettingsInput(theme, Icons.account_circle_outlined, "e.g. http://i.imgur.com/JF983F.png", TextInputType.url, _imgurCtrl),
             Padding(
               padding: EdgeInsetsGeometry.symmetric(vertical: 0, horizontal: 24),
               child: ElevatedButton(
@@ -871,13 +837,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSettingsOption(
-    ThemeData theme,
-    IconData icon,
-    String text,
-    BuildContext dialogCtx,
-    VoidCallback onSelect,
-  ) {
+  Widget _buildSettingsOption(ThemeData theme, IconData icon, String text, BuildContext dialogCtx, VoidCallback onSelect) {
     return SimpleDialogOption(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       onPressed: () {
@@ -943,9 +903,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   bool _hasInputData() {
-    return _profileNameCtrl.text.trim().isNotEmpty ||
-        _profileTextCtrl.text.trim().isNotEmpty ||
-        _imgurCtrl.text.trim().isNotEmpty;
+    return _profileNameCtrl.text.trim().isNotEmpty || _profileTextCtrl.text.trim().isNotEmpty || _imgurCtrl.text.trim().isNotEmpty;
   }
 
   void _saveProfile(dialogCtc) async {

@@ -1,40 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/screens/home.dart';
-import 'package:mahakka/widgets/post_card.dart';
 import 'package:provider/provider.dart';
 
+import '../memo/firebase/post_service.dart';
 import '../theme_provider.dart';
 import '../utils/snackbar.dart';
+import '../widgets/post_card.dart';
+import 'home.dart';
 
-// Enum for better filter management (optional but good practice)
 enum PostFilterType { images, videos, hashtags, topics }
 
 class FeedScreen extends StatefulWidget {
-  const FeedScreen({Key? key, required NavBarCallback this.navBarCallback}) : super(key: key);
+  // const FeedScreen({super.key});
+
+  const FeedScreen({super.key, required this.navBarCallback});
   final NavBarCallback navBarCallback;
 
   @override
-  State<FeedScreen> createState() => _FeedScreenState(navBarCallback: navBarCallback);
+  State<FeedScreen> createState() => _FeedScreenState(); // Removed constructor argument here
 }
 
 class _FeedScreenState extends State<FeedScreen> {
-  // Use a Set for active filters for easier management
-  final Set<PostFilterType> _activeFilters = {
-    // PostFilterType.images // Example: Start with Images filter on by default
-  }; // Start with no filters active or define defaults
+  // No constructor needed here for widget.navBarCallback
+  final PostService _postService = PostService(); // Instance of your PostService
+  final Set<PostFilterType> _activeFilters = {};
 
+  // This will hold all posts fetched from Firebase before filtering
+  List<MemoModelPost> _allFirebasePosts = [];
   // This will hold the posts to be displayed after filtering
   List<MemoModelPost> _filteredPosts = [];
 
-  final NavBarCallback navBarCallback;
-
-  _FeedScreenState({required NavBarCallback this.navBarCallback});
+  Stream<List<MemoModelPost>>? _postsStream;
 
   @override
   void initState() {
     super.initState();
-    _applyFilters(); // Apply initial filters (which might be none, showing all posts)
+    // Initialize the stream. You might want to order it, e.g., by creation date
+    _postsStream = _postService.getAllPostsStream(orderByField: 'createdDateTime', descending: true);
+    // Note: _applyFilters will now be called by the StreamBuilder
   }
 
   bool hasFilter(PostFilterType filterType) {
@@ -48,51 +51,48 @@ class _FeedScreenState extends State<FeedScreen> {
       } else {
         _activeFilters.add(filterType);
       }
-      _applyFilters(); // Re-apply filters whenever a filter is toggled
+      // _applyFilters will be called based on the StreamBuilder's new data
+      // or if you explicitly call it on the current _allFirebasePosts
+      _applyFiltersOnData(_allFirebasePosts); // Apply filters to the current set of all posts
     });
-    // The onFilter method is now primarily for the snackbar
     _showFilterChangeSnackbar(filterType);
   }
 
-  void _applyFilters() {
-    final allPosts = MemoModelPost.allPosts; // Get all posts from your static source
+  // Modified to take a list of posts as input
+  void _applyFiltersOnData(List<MemoModelPost> allPosts) {
+    if (!mounted) return; // Ensure widget is still in the tree
 
     if (_activeFilters.isEmpty) {
-      // If no filters are active, show all posts
       _filteredPosts = List.from(allPosts);
     } else {
       _filteredPosts = allPosts.where((post) {
-        // Check if the post matches ANY of the active filters
         bool matches = false;
         if (_activeFilters.contains(PostFilterType.images) && post.imgurUrl != null && post.imgurUrl!.isNotEmpty) {
           matches = true;
         }
-        if (!matches && // Optimization: if already matched, no need to check further for this post
-            _activeFilters.contains(PostFilterType.videos) &&
-            post.youtubeId != null &&
-            post.youtubeId!.isNotEmpty) {
+        if (!matches && _activeFilters.contains(PostFilterType.videos) && post.youtubeId != null && post.youtubeId!.isNotEmpty) {
           matches = true;
         }
-        if (!matches && _activeFilters.contains(PostFilterType.hashtags) && post.hashtags.isNotEmpty) {
-          // Assuming `hashtags` is a List<String>
+        // Assuming post.tagIds is List<String> from Firestore for hashtags
+        if (!matches && _activeFilters.contains(PostFilterType.hashtags) && post.tagIds.isNotEmpty) {
+          //Check post.tagIds
           matches = true;
         }
-        if (!matches &&
-            _activeFilters.contains(PostFilterType.topics) &&
-            post.topic != null /* && post.topic.header.isNotEmpty - if topic is an object */ ) {
+        // Assuming post.topicId is a String from Firestore for topics
+        if (!matches && _activeFilters.contains(PostFilterType.topics) && post.topicId != null && post.topicId!.isNotEmpty) {
+          // Check post.topicId
           matches = true;
         }
         return matches;
       }).toList();
     }
-    // No need to call setState here for _filteredPosts because
-    // _applyFilters is called within setState when toggleFilter is used.
-    // The ListView.builder will use the updated _filteredPosts.
+    // No direct setState here for _filteredPosts because this function is called
+    // from within StreamBuilder's builder or toggleFilter (which has setState).
+    // The StreamBuilder itself will handle rebuilding when its input stream changes,
+    // and toggleFilter has its own setState.
+    // However, if called from toggleFilter, we might need a setState if StreamBuilder isn't active.
+    // The setState in toggleFilter already covers this.
   }
-
-  // void _signOut() async {
-  //   AuthChecker().logOut(context);
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -107,9 +107,50 @@ class _FeedScreenState extends State<FeedScreen> {
         title: Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
         actions: [_buildMenuTheme(themeProvider, theme), _buildMenuFilter(theme)],
       ),
-      body: _filteredPosts.isEmpty && _activeFilters.isNotEmpty
-          ? Center(
-              // Show a message if filters are active but no posts match
+      body: StreamBuilder<List<MemoModelPost>>(
+        stream: _postsStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            print("Error in posts stream: ${snapshot.error}");
+            return Center(child: Text('Error loading posts: ${snapshot.error}. Check Firestore indexes.'));
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            _allFirebasePosts = []; // Clear if no data
+            _applyFiltersOnData(_allFirebasePosts); // Apply filters (will result in empty _filteredPosts)
+            // Still show "No posts match..." if filters are active but stream is empty
+            // Or show "No posts available." if stream is empty and no filters
+            if (_activeFilters.isNotEmpty && _filteredPosts.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text(
+                    "No posts match the selected filters from the available feed.",
+                    style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
+            }
+            return Center(
+              child: Text(
+                'No posts available in the feed yet.',
+                style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
+
+          // Store all posts from Firebase and then apply filters
+          _allFirebasePosts = snapshot.data!;
+          // .where((post) => post.id.isNotEmpty) // Filter out posts with empty IDs
+          // .toList();
+          _applyFiltersOnData(_allFirebasePosts);
+
+          if (_filteredPosts.isEmpty && _activeFilters.isNotEmpty) {
+            return Center(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Text(
@@ -118,13 +159,33 @@ class _FeedScreenState extends State<FeedScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
-            )
-          : ListView.builder(
-              itemCount: _filteredPosts.length, // Use the filtered list
-              itemBuilder: (context, index) {
-                return PostCard(_filteredPosts[index], navBarCallback); // Pass the filtered post
-              },
-            ),
+            );
+          }
+          if (_filteredPosts.isEmpty && _activeFilters.isEmpty) {
+            // This case should ideally be covered by the (!snapshot.hasData || snapshot.data!.isEmpty)
+            // but as a safeguard if _applyFiltersOnData somehow results in empty for no filters.
+            return Center(
+              child: Text(
+                'No posts available to display.',
+                style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
+
+          return ListView.builder(
+            itemCount: _filteredPosts.length,
+            itemBuilder: (context, index) {
+              return PostCard(
+                _filteredPosts[index],
+                widget.navBarCallback,
+                // key: ValueKey<String>("key${Random().nextInt(99999999)}$index"), // Use a unique ID from your post
+              );
+              return SizedBox(height: 100, width: 100);
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -147,20 +208,8 @@ class _FeedScreenState extends State<FeedScreen> {
               shape: theme.dialogTheme.shape,
               backgroundColor: theme.dialogTheme.backgroundColor,
               children: [
-                _buildFilterOption(
-                  theme,
-                  PostFilterType.images,
-                  "IMAGES",
-                  Icons.image_search_outlined,
-                  Icons.image_rounded,
-                ),
-                _buildFilterOption(
-                  theme,
-                  PostFilterType.videos,
-                  "VIDEOS",
-                  Icons.video_library_outlined,
-                  Icons.video_library_rounded,
-                ),
+                _buildFilterOption(theme, PostFilterType.images, "IMAGES", Icons.image_search_outlined, Icons.image_rounded),
+                _buildFilterOption(theme, PostFilterType.videos, "VIDEOS", Icons.video_library_outlined, Icons.video_library_rounded),
                 _buildFilterOption(theme, PostFilterType.hashtags, "HASHTAGS", Icons.tag_outlined, Icons.tag_rounded),
                 _buildFilterOption(theme, PostFilterType.topics, "TOPICS", Icons.topic_outlined, Icons.topic_rounded),
               ],
@@ -181,22 +230,12 @@ class _FeedScreenState extends State<FeedScreen> {
     );
   }
 
-  Widget _buildFilterOption(
-    ThemeData theme,
-    PostFilterType filterType,
-    String text,
-    IconData icon,
-    IconData activeIcon,
-  ) {
-    // We need a StatefulWidget or StatefulBuilder for the dialog options if we want them
-    // to update their checkbox state live while the dialog is open without closing it.
-    // However, since we pop the dialog on selection, we can use the main state.
+  Widget _buildFilterOption(ThemeData theme, PostFilterType filterType, String text, IconData icon, IconData activeIcon) {
     final bool isSelected = hasFilter(filterType);
-
     return SimpleDialogOption(
       onPressed: () {
-        toggleFilter(filterType); // This will call setState in _FeedScreenState
-        Navigator.pop(context); // Close dialog after selection
+        toggleFilter(filterType);
+        Navigator.pop(context);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -220,10 +259,8 @@ class _FeedScreenState extends State<FeedScreen> {
             Checkbox(
               value: isSelected,
               onChanged: (value) {
-                // This onChanged is redundant if SimpleDialogOption.onPressed does the job,
-                // but standard for Checkbox.
                 toggleFilter(filterType);
-                Navigator.pop(context); // Close dialog after selection
+                Navigator.pop(context);
               },
               activeColor: theme.colorScheme.primary,
               checkColor: theme.colorScheme.onPrimary,
@@ -235,7 +272,6 @@ class _FeedScreenState extends State<FeedScreen> {
     );
   }
 
-  // Renamed from onFilter to be more specific
   void _showFilterChangeSnackbar(PostFilterType filterType) {
     final filterName = _getFilterName(filterType);
     final isActive = hasFilter(filterType);
@@ -249,7 +285,7 @@ class _FeedScreenState extends State<FeedScreen> {
       case PostFilterType.videos:
         return "VIDEOS";
       case PostFilterType.hashtags:
-        return "HASHTAGS";
+        return "TAGS";
       case PostFilterType.topics:
         return "TOPICS";
     }

@@ -49,9 +49,7 @@ class _AdminTagsListPageState extends State<AdminTagsListPage> {
       } catch (e) {
         print("Error deleting tag: $e");
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to delete tag "$tagId": $e'), backgroundColor: Colors.red));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete tag "$tagId": $e'), backgroundColor: Colors.red));
         }
       }
     }
@@ -115,10 +113,7 @@ class _AdminTagsListPageState extends State<AdminTagsListPage> {
                           ),
                           const SizedBox(height: 6),
                           _buildPropertyRow('Post Count:', tag.postCount?.toString() ?? '0'),
-                          _buildPropertyRow(
-                            'Last Used:',
-                            _formatDateSafe(tag.lastPost),
-                          ), // Assuming you have this field
+                          _buildPropertyRow('Last Used:', _formatDateSafe(tag.lastPost)), // Assuming you have this field
                         ],
                       ),
                     ),

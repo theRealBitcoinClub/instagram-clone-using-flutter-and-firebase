@@ -74,8 +74,7 @@ class _CreatorDisplayPageState extends State<CreatorDisplayPage> {
                 // const SizedBox(height: 16),
                 _buildInfoCard(context, "ID", creator.id),
                 _buildInfoCard(context, "Name", creator.name, isTitle: true),
-                if (creator.profileText.isNotEmpty)
-                  _buildInfoCard(context, "Profile Text", creator.profileText, maxLines: 5),
+                if (creator.profileText.isNotEmpty) _buildInfoCard(context, "Profile Text", creator.profileText, maxLines: 5),
                 _buildInfoCard(context, "Follower Count", creator.followerCount.toString()),
                 _buildInfoCard(context, "Actions", creator.actions.toString()),
                 _buildInfoCard(context, "Created", _formatDate(creator.created)),
@@ -131,15 +130,13 @@ class _CreatorDisplayPageState extends State<CreatorDisplayPage> {
                     widget.creatorService
                         .saveCreator(updatedCreator)
                         .then((_) {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text("Update requested for ${creator.id}")));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Update requested for ${creator.id}")));
                           print("Update requested for ${creator.id} (simpler model)");
                         })
                         .catchError((e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Failed to request update: $e"), backgroundColor: Colors.red),
-                          );
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text("Failed to request update: $e"), backgroundColor: Colors.red));
                           print("Failed to request update: $e");
                         });
                   },
@@ -165,10 +162,9 @@ class _CreatorDisplayPageState extends State<CreatorDisplayPage> {
           children: [
             Text(
               label,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 4),
             Text(

@@ -110,10 +110,7 @@ class HashtagListView extends StatelessWidget {
                               backgroundColor: colorScheme.primaryContainer,
                               child: Text(
                                 "#",
-                                style: textTheme.titleMedium?.copyWith(
-                                  color: colorScheme.onPrimaryContainer,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: textTheme.titleMedium?.copyWith(color: colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
                               ),
                             ),
                             title: Text(

@@ -28,9 +28,7 @@ class _AdminCreatorsListPageState extends State<AdminCreatorsListPage> {
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Confirm Delete'),
-          content: Text(
-            'Are you sure you want to delete creator "${creatorName ?? 'N/A'}" (ID: $creatorId)? This action cannot be undone.',
-          ),
+          content: Text('Are you sure you want to delete creator "${creatorName ?? 'N/A'}" (ID: $creatorId)? This action cannot be undone.'),
           actions: <Widget>[
             TextButton(child: const Text('Cancel'), onPressed: () => Navigator.of(dialogContext).pop(false)),
             TextButton(
@@ -47,17 +45,17 @@ class _AdminCreatorsListPageState extends State<AdminCreatorsListPage> {
       try {
         await _creatorService.deleteCreator(creatorId);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Creator $creatorId deleted successfully'), backgroundColor: Colors.green),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Creator $creatorId deleted successfully'), backgroundColor: Colors.green));
         }
         // The StreamBuilder will automatically rebuild and show the updated list
       } catch (e) {
         print("Error deleting creator: $e");
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete creator $creatorId: $e'), backgroundColor: Colors.red),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to delete creator $creatorId: $e'), backgroundColor: Colors.red));
         }
       }
     }
@@ -130,10 +128,7 @@ class _AdminCreatorsListPageState extends State<AdminCreatorsListPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "${index + 1}. ${creator.name ?? 'N/A'}",
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
+                          Text("${index + 1}. ${creator.name ?? 'N/A'}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 4),
                           Text('ID: ${creator.id}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                           const SizedBox(height: 6),

@@ -30,9 +30,7 @@ class CommentTextField extends StatelessWidget {
 
     // Determine the alignment of the input field within its constrained box.
     // This logic seems specific to your layout needs based on insets.
-    final MainAxisAlignment columnMainAxisAlignment = insets == EdgeInsets.zero
-        ? MainAxisAlignment.end
-        : MainAxisAlignment.start;
+    final MainAxisAlignment columnMainAxisAlignment = insets == EdgeInsets.zero ? MainAxisAlignment.end : MainAxisAlignment.start;
 
     // Default height for the input area.
     // const double defaultInputAreaHeight = 115.0; // Your original height for the CustomTextField SizedBox

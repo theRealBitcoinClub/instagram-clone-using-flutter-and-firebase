@@ -9,11 +9,7 @@ import 'core.dart';
 import 'request_completer.dart';
 
 class ElectrumWebSocketService with ElectrumServiceProvider {
-  ElectrumWebSocketService._(
-    this.url,
-    WebSocketCore channel, {
-    this.defaultRequestTimeOut = const Duration(seconds: 30),
-  }) : _socket = channel {
+  ElectrumWebSocketService._(this.url, WebSocketCore channel, {this.defaultRequestTimeOut = const Duration(seconds: 30)}) : _socket = channel {
     _subscription = channel.stream.cast<String>().listen(_onMessge, onError: _onClose, onDone: _onDone);
   }
 

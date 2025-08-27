@@ -169,10 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      "Are you a new user? ",
-                      style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
-                    ),
+                    Text("Are you a new user? ", style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
                     GestureDetector(
                       onTap: widget.onToggle,
                       child: Padding(

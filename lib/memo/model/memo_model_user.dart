@@ -153,21 +153,18 @@ class MemoModelUser {
   }
 
   ECPrivate get _pkLegacySlp {
-    _privateKeyLegacySlp =
-        _privateKeyLegacySlp ?? MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoSlp);
+    _privateKeyLegacySlp = _privateKeyLegacySlp ?? MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoSlp);
     return _privateKeyLegacySlp!;
   }
 
   ECPrivate get _pkLegacy {
-    _privateKeyLegacy =
-        _privateKeyLegacy ?? MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoBch);
+    _privateKeyLegacy = _privateKeyLegacy ?? MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoBch);
     return _privateKeyLegacy!;
   }
 
   ECPrivate get _pkBchCashtoken {
     _privateKeyBchCashtoken =
-        _privateKeyBchCashtoken ??
-        MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathCashtoken);
+        _privateKeyBchCashtoken ?? MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathCashtoken);
     return _privateKeyBchCashtoken!;
   }
 
@@ -181,10 +178,7 @@ class MemoModelUser {
 
   String get bchAddressCashtokenAwareCtFormat {
     if (_bchAddressCashtokenAware.isEmpty) {
-      final p2pkhWt = P2pkhAddress.fromHash160(
-        addrHash: _pkBchCashtoken.getPublic().toHash160Hex(),
-        type: P2pkhAddressType.p2pkhwt,
-      );
+      final p2pkhWt = P2pkhAddress.fromHash160(addrHash: _pkBchCashtoken.getPublic().toHash160Hex(), type: P2pkhAddressType.p2pkhwt);
       _bchAddressCashtokenAware = p2pkhWt.toAddress(BitcoinCashNetwork.mainnet);
     }
 

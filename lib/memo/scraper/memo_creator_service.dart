@@ -75,9 +75,7 @@ class MemoCreatorService {
 
         // Filter out nulls (failed detail fetches) and add to the main list
         allProcessedCreators.addAll(detailedCreators.whereType<MemoModelCreator>());
-        _logInfo(
-          "Successfully processed ${detailedCreators.whereType<MemoModelCreator>().length} creators for order: $order",
-        );
+        _logInfo("Successfully processed ${detailedCreators.whereType<MemoModelCreator>().length} creators for order: $order");
       } catch (e, s) {
         _logError("Failed to scrape or process creators for order: $order", e, s);
         // Depending on requirements, you might want to:
@@ -111,9 +109,7 @@ class MemoCreatorService {
     final List<MemoModelCreator> creators = [];
     for (final dynamic itemUntyped in rawItems) {
       if (itemUntyped is! Map<String, Object?>) {
-        _logWarning(
-          "Expected item in creator list to be a Map, but got ${itemUntyped.runtimeType}. Item: $itemUntyped",
-        );
+        _logWarning("Expected item in creator list to be a Map, but got ${itemUntyped.runtimeType}. Item: $itemUntyped");
         continue;
       }
       final Map<String, Object?> item = itemUntyped;

@@ -7,9 +7,7 @@ class ImgurUtils {
     ui.Image? img = ((child as Semantics).child as RawImage).image;
     if (img != null) {
       if (img.width == 161 && img.height == 81)
-        return Text(
-          "This image was removed from Imgur",
-        ); //TODO these are the images not available anymore on imgur, return asset image
+        return Text("This image was removed from Imgur"); //TODO these are the images not available anymore on imgur, return asset image
     }
     //   return SizedBox();
     return child;

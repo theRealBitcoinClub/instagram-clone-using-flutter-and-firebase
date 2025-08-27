@@ -65,11 +65,7 @@ class MemoAccountant {
   }
 
   Future<MemoAccountantResponse> _tryPublishLike(MemoModelPost post, String wif) async {
-    var mp = await MemoPublisher.create(
-      MemoBitcoinBase.reOrderTxHash(post.uniqueContentId!),
-      MemoCode.postLike,
-      wif: wif,
-    );
+    var mp = await MemoPublisher.create(MemoBitcoinBase.reOrderTxHash(post.uniqueContentId!), MemoCode.postLike, wif: wif);
     return mp.doPublish(tip: MemoTip(post.creator!.id, user.tipAmount));
   }
 

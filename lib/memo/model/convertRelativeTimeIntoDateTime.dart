@@ -74,8 +74,7 @@ DateTime? convertRelativeTimeToAbsolute(String? relativeTimeString) {
       DateTime parsedDate = DateFormat("MMM d", "en_US").parseLoose(input);
       // If the parsed date is in the future relative to "now" (e.g., it's Jan and date is "Dec 25"),
       // assume it was last year.
-      if (parsedDate.isAfter(now) &&
-          (now.month < parsedDate.month || (now.month == parsedDate.month && now.day < parsedDate.day))) {
+      if (parsedDate.isAfter(now) && (now.month < parsedDate.month || (now.month == parsedDate.month && now.day < parsedDate.day))) {
         return DateTime(now.year - 1, parsedDate.month, parsedDate.day);
       }
       return DateTime(now.year, parsedDate.month, parsedDate.day);

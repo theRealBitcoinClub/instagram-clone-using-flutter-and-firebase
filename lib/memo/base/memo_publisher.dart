@@ -2,8 +2,8 @@ import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
-
 import 'package:mahakka/memo/model/memo_tip.dart';
+
 import 'memo_code.dart';
 import 'memo_transaction_builder.dart';
 
@@ -96,8 +96,7 @@ class MemoPublisher {
       memoTopic: topic,
     );
 
-    if (hasValidTip)
-      txBuilder.outPuts.add(BitcoinOutput(address: tip.receiverAsBchAddress.baseAddress, value: tip.amountAsBigInt));
+    if (hasValidTip) txBuilder.outPuts.add(BitcoinOutput(address: tip.receiverAsBchAddress.baseAddress, value: tip.amountAsBigInt));
 
     return txBuilder;
   }

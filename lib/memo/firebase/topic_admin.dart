@@ -23,9 +23,7 @@ class _AdminTopicsListPageState extends State<AdminTopicsListPage> {
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Confirm Delete'),
-          content: Text(
-            'Are you sure you want to delete topic "${topicName ?? 'N/A'}" (ID: $topicId)? This action cannot be undone.',
-          ),
+          content: Text('Are you sure you want to delete topic "${topicName ?? 'N/A'}" (ID: $topicId)? This action cannot be undone.'),
           actions: <Widget>[
             TextButton(child: const Text('Cancel'), onPressed: () => Navigator.of(dialogContext).pop(false)),
             TextButton(
@@ -42,9 +40,9 @@ class _AdminTopicsListPageState extends State<AdminTopicsListPage> {
       try {
         await _topicService.deleteTopic(topicId);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Topic "$topicId" deleted successfully'), backgroundColor: Colors.green),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Topic "$topicId" deleted successfully'), backgroundColor: Colors.green));
         }
       } catch (e) {
         print("Error deleting topic: $e");
@@ -108,10 +106,7 @@ class _AdminTopicsListPageState extends State<AdminTopicsListPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "${index + 1}. ${topic.header ?? 'N/A'}",
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
+                          Text("${index + 1}. ${topic.header ?? 'N/A'}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 4),
                           Text('ID: ${topic.id}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                           const SizedBox(height: 6),

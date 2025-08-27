@@ -90,9 +90,7 @@ class _AdminPostsListPageState extends State<AdminPostsListPage> {
           itemCount: posts.length,
           itemBuilder: (context, index) {
             final post = posts[index];
-            final postTextSnippet = post.text != null && post.text!.length > 20
-                ? "${post.text!.substring(0, 20)}..."
-                : post.text;
+            final postTextSnippet = post.text != null && post.text!.length > 20 ? "${post.text!.substring(0, 20)}..." : post.text;
 
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

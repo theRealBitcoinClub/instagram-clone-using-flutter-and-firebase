@@ -17,8 +17,7 @@ class QrCodeDialog extends StatefulWidget {
   final bool initialToggleState;
   final ValueChanged<bool> onToggle;
 
-  const QrCodeDialog({Key? key, required this.user, required this.initialToggleState, required this.onToggle})
-    : super(key: key);
+  const QrCodeDialog({Key? key, required this.user, required this.initialToggleState, required this.onToggle}) : super(key: key);
 
   @override
   State<QrCodeDialog> createState() => _QrCodeDialogState();

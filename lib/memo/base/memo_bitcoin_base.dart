@@ -55,10 +55,7 @@ class MemoBitcoinBase {
     return ForkedTransactionBuilder(
       outPuts: [
         /// change address for bch values (sum of bch amout - (outputs amount + fee))
-        BitcoinOutput(
-          address: senderBCHp2pkhwt.baseAddress,
-          value: totalAmountInSatoshisAvailable - (tokenFee + tokenFee + fee),
-        ),
+        BitcoinOutput(address: senderBCHp2pkhwt.baseAddress, value: totalAmountInSatoshisAvailable - (tokenFee + tokenFee + fee)),
         BitcoinTokenOutput(
           utxoHash: utxos.first.utxo.txHash,
           address: receiverP2PKHWT,
@@ -100,11 +97,7 @@ class MemoBitcoinBase {
     }).toList();
   }
 
-  List<UtxoWithAddress> transformUtxosAddAddressDetails(
-    List<ElectrumUtxo> utxos,
-    BitcoinCashAddress addr,
-    ECPrivate pk,
-  ) {
+  List<UtxoWithAddress> transformUtxosAddAddressDetails(List<ElectrumUtxo> utxos, BitcoinCashAddress addr, ECPrivate pk) {
     return utxos
         .map(
           (e) => UtxoWithAddress(
@@ -115,15 +108,9 @@ class MemoBitcoinBase {
         .toList();
   }
 
-  Future<List<ElectrumUtxo>> requestElectrumUtxos(
-    BitcoinCashAddress p2pkhAddress, {
-    bool includeCashtokens = false,
-  }) async {
+  Future<List<ElectrumUtxo>> requestElectrumUtxos(BitcoinCashAddress p2pkhAddress, {bool includeCashtokens = false}) async {
     final utxos = await provider!.request(
-      ElectrumRequestScriptHashListUnspent(
-        scriptHash: p2pkhAddress.baseAddress.pubKeyHash(),
-        includeTokens: includeCashtokens,
-      ),
+      ElectrumRequestScriptHashListUnspent(scriptHash: p2pkhAddress.baseAddress.pubKeyHash(), includeTokens: includeCashtokens),
     );
     return utxos;
   }
@@ -154,10 +141,7 @@ class MemoBitcoinBase {
     //TODO handle dust xceptions
     print(
       "ANALYZE DUST: " +
-          await provider!.request(
-            ElectrumRequestBroadCastTransaction(transactionRaw: tx.toHex()),
-            timeout: const Duration(seconds: 5),
-          ),
+          await provider!.request(ElectrumRequestBroadCastTransaction(transactionRaw: tx.toHex()), timeout: const Duration(seconds: 5)),
     );
     return "success";
   }

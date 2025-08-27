@@ -6,15 +6,9 @@ void main() async {
   //TODO SLP SEND SERVERSIDE on every action	mnemonicZXCXZCASD
 
   MemoBitcoinBase base = await MemoBitcoinBase.create();
-  ECPrivate bip44Sender = MemoBitcoinBase.createBip44PrivateKey(
-    "mnemonicKDSFJE",
-    MemoBitcoinBase.derivationPathCashtoken,
-  );
+  ECPrivate bip44Sender = MemoBitcoinBase.createBip44PrivateKey("mnemonicKDSFJE", MemoBitcoinBase.derivationPathCashtoken);
   P2pkhAddress senderP2PKHWT = base.createAddressP2PKHWT(bip44Sender);
-  ECPrivate bip44Receiver = MemoBitcoinBase.createBip44PrivateKey(
-    "mnemonicZXCXZCASD",
-    MemoBitcoinBase.derivationPathCashtoken,
-  );
+  ECPrivate bip44Receiver = MemoBitcoinBase.createBip44PrivateKey("mnemonicZXCXZCASD", MemoBitcoinBase.derivationPathCashtoken);
   P2pkhAddress receiverP2PKHWT = base.createAddressP2PKHWT(bip44Receiver);
   //TODO burn token or send token depends on if receiver mnemonic is provided
   // BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress("bitcoincash:qp97cpfavlgudx8jzk553n0rfe66lk73k59k2ayp36").baseAddress;
@@ -44,12 +38,7 @@ void main() async {
     return;
   }
 
-  List<UtxoWithAddress> utxos = base.transformUtxosFilterForTokenId(
-    electrumUTXOs,
-    senderBCHp2pkhwt,
-    bip44Sender,
-    MemoBitcoinBase.tokenId,
-  );
+  List<UtxoWithAddress> utxos = base.transformUtxosFilterForTokenId(electrumUTXOs, senderBCHp2pkhwt, bip44Sender, MemoBitcoinBase.tokenId);
 
   //TODO CHECK WHAT VALUE THE TOKEN UTXOS HAVE, DO THEY INFLUENCE TOTAL BALANCE?
   BigInt totalAmountInSatoshisAvailable = utxos.sumOfUtxosValue();

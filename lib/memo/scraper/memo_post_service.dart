@@ -205,7 +205,6 @@ class MemoPostService {
       age: age,
       popularityScore: tipsInSatoshi,
       created: created,
-      uniqueContentId: txHash,
       imgurUrl: imgurUrl,
       creator: creator,
       tagIds: [],
@@ -222,7 +221,7 @@ class MemoPostService {
 
       if (filterOn && post.imgurUrl == null && hasTextUrls) {
         // If no image, and has text URLs, skip.
-        _logInfo("Skipping post (no imgur, has text URLs): ${post.uniqueContentId}");
+        _logInfo("Skipping post (no imgur, has text URLs): ${post.id}");
         return null;
       }
 
@@ -237,7 +236,7 @@ class MemoPostService {
       // 1. It's text-only (no imgur, no text URLs).
       // 2. It has an imgurUrl and no OTHER text URLs.
     } catch (e, s) {
-      _logError("Error during post-processing (extractUrlsAndHashtags or filtering) for txHash: ${post.uniqueContentId}", e, s);
+      _logError("Error during post-processing (extractUrlsAndHashtags or filtering) for txHash: ${post.id}", e, s);
       return null; // Skip this post on error
     }
     return post;

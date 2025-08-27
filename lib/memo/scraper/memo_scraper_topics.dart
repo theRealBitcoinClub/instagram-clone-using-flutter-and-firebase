@@ -123,7 +123,6 @@ class MemoScraperTopic {
         likeCounter: likeCount,
         replyCounter: int.parse((item["replyCount"] ?? "0").toString()),
         created: item["created"].toString(),
-        uniqueContentId: id,
         imgurUrl: item["imgur"]?.toString(),
         creator: creator,
         tagIds: [],

@@ -29,7 +29,6 @@ class MemoModelPost {
   MemoModelPost({
     required this.id, // ID is now required
     this.text,
-    this.uniqueContentId,
     this.imgurUrl,
     this.youtubeId,
     this.creator, // Will not be serialized directly
@@ -55,7 +54,6 @@ class MemoModelPost {
   // Fields to be serialized
   final int? popularityScore;
   String? text;
-  String? uniqueContentId;
   final String? imgurUrl;
   String? youtubeId;
 
@@ -100,10 +98,9 @@ class MemoModelPost {
 
   static Future<MemoModelPost> createDummy(MemoModelCreator memoModelCreator) async {
     MemoModelTopic topic = MemoModelTopic.createDummy();
-    String newPostId = "dummyPost_${DateTime.now().millisecondsSinceEpoch}"; // Example ID generation
 
     MemoModelPost memoModelPost = MemoModelPost(
-      id: newPostId,
+      id: "3228faaa15d9512ee6ecc29b8808876a7680e6d7493c22014b942825c975c0ca",
       age: "11d", // Not serialized, kept for original logic if any
       created: "11.11.1911 11:11", // Not serialized
       createdDateTime: DateTime.now().subtract(const Duration(days: 5)), // Example DateTime
@@ -114,7 +111,6 @@ class MemoModelPost {
       replyCounter: 2,
       text: "SAFDHSF DSF HDSFHDSKJ HFDSKJ HFDSJHF DHSFKJH DSJFHDSKJ HFKJDSH",
       popularityScore: 123456,
-      uniqueContentId: "3228faaa15d9512ee6ecc29b8808876a7680e6d7493c22014b942825c975c0ca",
       topic: topic, // Not serialized
       topicId: topic.id, // Serialized
       tagIds: ["dummyTag1", "dummyTag2"],
@@ -179,7 +175,7 @@ class MemoModelPost {
 
   @override
   String toString() {
-    return 'MemoModelPost(id: $id, uniqueContentId: $uniqueContentId, text: $text, creatorId: $creatorId)';
+    return 'MemoModelPost(id: $id, text: $text, creatorId: $creatorId)';
   }
 
   void loadTopic() async {

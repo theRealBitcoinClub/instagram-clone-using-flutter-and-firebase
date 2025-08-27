@@ -55,10 +55,10 @@ class MemoScraperUtil {
   }
 
   static MemoModelPost linkReferencesAndSetId(MemoModelPost post, MemoModelTopic? topic, MemoModelCreator creator) {
-    if (post.uniqueContentId!.contains("post")) {
-      post.uniqueContentId = post.uniqueContentId!.substring("post/".length);
-    }
-    post.id = post.uniqueContentId!;
+    // if (post.uniqueContentId!.contains("post")) {
+    //   post.uniqueContentId = post.uniqueContentId!.substring("post/".length);
+    // }
+    // post.id = post.uniqueContentId!;
     post.topicId = topic != null ? topic.id : "";
     post.creatorId = creator.id;
     MemoScraperUtil.extractUrlsAndHashtags(post);
@@ -69,12 +69,12 @@ class MemoScraperUtil {
 
   static void printMemoModelPost(List<MemoModelPost> postList) {
     for (MemoModelPost p in postList) {
+      print(p.id);
       print(p.text ?? "");
       print(p.imgurUrl ?? "");
       print(p.youtubeId ?? "");
       print(p.creator!.name);
       print(p.creator!.id);
-      print(p.uniqueContentId);
       print(p.age);
       print(p.created);
     }

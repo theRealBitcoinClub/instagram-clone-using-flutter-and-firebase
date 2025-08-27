@@ -188,7 +188,7 @@ class _PostCardState extends State<PostCard> {
 
     if (widget.post.creator == null) {
       _refreshCreator();
-      _logError("Post creator is null for post ID: ${widget.post.uniqueContentId}");
+      _logError("Post creator is null for post ID: ${widget.post.id}");
       return Card(
         // Use Card for consistent error display
         color: theme.colorScheme.errorContainer,

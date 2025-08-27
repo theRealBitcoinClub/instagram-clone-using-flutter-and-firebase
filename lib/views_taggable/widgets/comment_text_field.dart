@@ -56,7 +56,7 @@ class CommentTextField extends StatelessWidget {
           // Commented out Emoji section remains unchanged
           // ...
           Row(
-            crossAxisAlignment: CrossAxisAlignment.end, // Align items to the bottom, especially the send button
+            crossAxisAlignment: CrossAxisAlignment.center, // Align items to the bottom, especially the send button
             children: [
               // Commented out User Avatar section remains unchanged
               // ...
@@ -88,11 +88,11 @@ class CommentTextField extends StatelessWidget {
               const SizedBox(width: 8), // Spacing between text field and send button
               IconButton(
                 iconSize: 30, // Adjusted icon size
-                padding: const EdgeInsets.all(12.0), // Ensure good tap target size
+                padding: const EdgeInsets.all(0.0), // Ensure good tap target size
                 visualDensity: VisualDensity.compact, // Slightly smaller visual footprint
                 // Use a themed color for the send icon.
                 // colorScheme.primary is a common choice for action buttons.
-                icon: Icon(Icons.send, color: onSend != null ? colorScheme.primary : theme.disabledColor),
+                icon: Icon(Icons.send, size: 50, color: onSend != null ? colorScheme.primary : theme.disabledColor),
                 tooltip: "Send",
                 onPressed: onSend, // onPressed can be null to disable the button
               ),

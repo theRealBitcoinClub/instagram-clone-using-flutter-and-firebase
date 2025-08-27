@@ -9,7 +9,7 @@ part 'memo_model_tag.g.dart'; // This file will be generated
 class MemoModelTag {
   // This static list is for application runtime state and not directly part
   // of the JSON serialization of individual MemoModelTag instances.
-  static List<MemoModelTag> tags = [];
+  // static List<MemoModelTag> tags = [];
 
   MemoModelTag({
     required this.id,
@@ -17,7 +17,7 @@ class MemoModelTag {
     this.lastPost, // Consider if this should be a DateTime for easier sorting/filtering
   });
 
-  final String id;
+  String id;
   final int? postCount;
   final String? lastPost; // Again, DateTime might be better for 'lastPost'
 

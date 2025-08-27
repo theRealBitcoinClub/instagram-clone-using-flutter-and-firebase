@@ -10,6 +10,28 @@ class PostService {
   // Choose a distinct collection name for posts
   static const String _postsCollection = 'posts'; // Or 'posts_v1', etc.
 
+  // In your PostService class:
+  Stream<List<MemoModelPost>> getPostsByCreatorIdStream(String creatorId, {String? orderByField, bool descending = false}) {
+    Query query = _firestore.collection(_postsCollection).where('creatorId', isEqualTo: creatorId); // Filter by creatorId
+
+    if (orderByField != null) {
+      query = query.orderBy(orderByField, descending: descending);
+    }
+    return query
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final data = doc.data()! as Map<String, dynamic>;
+            // Crucially, set the document ID on your model
+            return MemoModelPost.fromJson(data)..id = doc.id;
+          }).toList();
+        })
+        .handleError((error) {
+          print("Error fetching posts for creator $creatorId: $error. Check Firestore indexes (creatorId, $orderByField).");
+          return <MemoModelPost>[];
+        });
+  }
+
   /// Fetches a paginated list of posts.
   ///
   /// [limit]: The number of documents to retrieve.
@@ -162,11 +184,7 @@ class PostService {
   // --- Example Query Methods (add more as needed) ---
 
   /// Retrieves a stream of posts by a specific creator.
-  Stream<List<MemoModelPost>> getPostsByCreatorStream(
-    String creatorId, {
-    String? orderByField,
-    bool descending = true,
-  }) {
+  Stream<List<MemoModelPost>> getPostsByCreatorStream(String creatorId, {String? orderByField, bool descending = true}) {
     try {
       Query query = _firestore.collection(_postsCollection).where('creatorId', isEqualTo: creatorId);
 
@@ -226,9 +244,7 @@ class PostService {
   /// Note: Firestore 'array-contains' is good for one tag. For multiple, you might need more complex queries or data duplication.
   Stream<List<MemoModelPost>> getPostsByTagStream(String tagId, {String? orderByField, bool descending = true}) {
     try {
-      Query query = _firestore
-          .collection(_postsCollection)
-          .where('tagIds', arrayContains: tagId); // Assumes 'tagIds' is an array in Firestore
+      Query query = _firestore.collection(_postsCollection).where('tagIds', arrayContains: tagId); // Assumes 'tagIds' is an array in Firestore
 
       if (orderByField != null) {
         query = query.orderBy(orderByField, descending: descending);

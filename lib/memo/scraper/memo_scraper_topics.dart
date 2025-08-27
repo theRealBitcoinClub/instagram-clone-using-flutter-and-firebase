@@ -9,7 +9,7 @@ import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
 class MemoScraperTopic {
   Future<void> startScrapeTopics(String cacheId, int startOffset, int endOffset) async {
-    MemoModelTopic.topics.clear();
+    // MemoModelTopic.topics.clear();
     for (int off = startOffset; off >= endOffset; off -= 25) {
       Map<String, Object> topics = await MemoScraperUtil.createScraper(
         "topics/all?offset=$off&x=$cacheId",
@@ -18,7 +18,7 @@ class MemoScraperTopic {
 
       List<MemoModelTopic> topicList = createMemoModelTopicList(topics);
 
-      MemoModelTopic.topics.addAll(topicList);
+      // MemoModelTopic.topics.addAll(topicList);
       final config = createScraperConfigMemoModelPost();
 
       for (MemoModelTopic currentTopic in topicList) {
@@ -27,7 +27,7 @@ class MemoScraperTopic {
         Map<String, Object> posts = await MemoScraperUtil.createScraper("${currentTopic.url!}?x=$cacheId", config);
 
         var postList = await createTopicPostList(posts, currentTopic);
-        MemoModelPost.addToGlobalPostList(postList.toList());
+        // MemoModelPost.addToGlobalPostList(postList.toList());
 
         // printMemoModelPost(postList);
         // print("object");
@@ -112,10 +112,7 @@ class MemoScraperTopic {
         likeCount = int.parse(item["likeCount"].toString().split("\n")[0]);
       } catch (e) {}
 
-      MemoModelCreator creator = MemoModelCreator(
-        name: item["creatorName"].toString(),
-        id: item["profileUrl"].toString().substring(8),
-      );
+      MemoModelCreator creator = MemoModelCreator(name: item["creatorName"].toString(), id: item["profileUrl"].toString().substring(8));
       MemoModelPost post = MemoModelPost(
         topic: topic,
         text: item["msg"]?.toString(),

@@ -8,7 +8,7 @@ class MemoModelTopic {
   // This static list is part of your application's runtime state,
   // not typically part of the JSON serialization of individual topic instances.
   // If you need to save/load this list itself, you'd handle that separately.
-  static List<MemoModelTopic> topics = [];
+  // static List<MemoModelTopic> topics = [];
 
   // The logic to replace spaces in 'id' should ideally happen *before*
   // creating the MemoModelTopic instance if the raw ID (with spaces)
@@ -58,8 +58,7 @@ class MemoModelTopic {
   // It's good practice to implement equals and hashCode if you plan to store
   // these objects in Sets or use them as keys in Maps, especially if 'id' is unique.
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) || other is MemoModelTopic && runtimeType == other.runtimeType && id == other.id;
+  bool operator ==(Object other) => identical(this, other) || other is MemoModelTopic && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;

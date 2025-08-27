@@ -92,11 +92,11 @@ class MemoModelPost {
   Map<String, dynamic> toJson() => _$MemoModelPostToJson(this);
 
   // --- Static lists and methods (Not part of JSON serialization) ---
-  static final List<MemoModelPost> allPosts = [];
-  static final List<MemoModelPost> ytPosts = [];
-  static final List<MemoModelPost> imgurPosts = [];
-  static final List<MemoModelPost> hashTagPosts = [];
-  static final List<MemoModelPost> topicPosts = [];
+  // static final List<MemoModelPost> allPosts = [];
+  // static final List<MemoModelPost> ytPosts = [];
+  // static final List<MemoModelPost> imgurPosts = [];
+  // static final List<MemoModelPost> hashTagPosts = [];
+  // static final List<MemoModelPost> topicPosts = [];
 
   static Future<MemoModelPost> createDummy(MemoModelCreator memoModelCreator) async {
     MemoModelTopic topic = MemoModelTopic.createDummy();
@@ -126,20 +126,20 @@ class MemoModelPost {
     return memoModelPost;
   }
 
-  static void addToGlobalPostList(List<MemoModelPost> p) {
-    MemoModelPost.allPosts.addAll(p);
-    for (var element in p) {
-      if (element.imgurUrl != null && element.imgurUrl!.isNotEmpty) {
-        imgurPosts.add(element);
-      } else if (element.youtubeId != null && element.youtubeId!.isNotEmpty) {
-        ytPosts.add(element);
-      } else if (element.hashtags.isNotEmpty) {
-        hashTagPosts.add(element);
-      } else if (element.topic != null) {
-        topicPosts.add(element);
-      }
-    }
-  }
+  // static void addToGlobalPostList(List<MemoModelPost> p) {
+  //   MemoModelPost.allPosts.addAll(p);
+  //   for (var element in p) {
+  //     if (element.imgurUrl != null && element.imgurUrl!.isNotEmpty) {
+  //       imgurPosts.add(element);
+  //     } else if (element.youtubeId != null && element.youtubeId!.isNotEmpty) {
+  //       ytPosts.add(element);
+  //     } else if (element.hashtags.isNotEmpty) {
+  //       hashTagPosts.add(element);
+  //     } else if (element.topic != null) {
+  //       topicPosts.add(element);
+  //     }
+  //   }
+  // }
 
   // --- Publish methods (Remain the same) ---
   Future<dynamic> publishReplyTopic(String replyText) async {

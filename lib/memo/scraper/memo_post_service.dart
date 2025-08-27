@@ -32,13 +32,7 @@ class MemoPostService {
   ScraperConfig _buildPostsScraperConfig() {
     return ScraperConfig(
       parsers: [
-        Parser(
-          id: "posts",
-          parents: [_rootParserParent],
-          type: ParserType.element,
-          selectors: [".post"],
-          multiple: true,
-        ),
+        Parser(id: "posts", parents: [_rootParserParent], type: ParserType.element, selectors: [".post"], multiple: true),
         Parser(id: "msg", parents: ["posts"], type: ParserType.text, selectors: [".message"]),
         Parser(id: "profileUrl", parents: ["posts"], type: ParserType.url, selectors: [".profile"]),
         Parser(id: "age", parents: ["posts"], type: ParserType.text, selectors: [".time-ago"]),
@@ -85,7 +79,8 @@ class MemoPostService {
           // Assuming MemoModelPost.addToGlobalPostList is a desired side effect.
           // Consider if this global modification is the best approach or if
           // this service should just return the data.
-          MemoModelPost.addToGlobalPostList(newPosts);
+          // MemoModelPost.
+          // addToGlobalPostList(newPosts);
           allPosts.addAll(newPosts);
           _logInfo("Successfully scraped and processed ${newPosts.length} posts from offset $currentOffset.");
         } else {
@@ -145,9 +140,7 @@ class MemoPostService {
 
       final String? topicLink = item["topicLink"]?.toString();
       final String? topicHeader = item["topic"]?.toString();
-      final MemoModelTopic? topic = (topicLink != null && topicHeader != null)
-          ? MemoModelTopic(url: topicLink, id: topicHeader)
-          : null;
+      final MemoModelTopic? topic = (topicLink != null && topicHeader != null) ? MemoModelTopic(url: topicLink, id: topicHeader) : null;
 
       final String? text = item["msg"]?.toString();
       final String? age = item["age"]?.toString();
@@ -178,9 +171,7 @@ class MemoPostService {
 
       // Ensure essential fields are present before creating the post object
       if (text == null || age == null || created == null || txHash == null || creator == null) {
-        _logWarning(
-          "Skipping post due to missing essential data (text, age, created, txHash, or creator). Item: $item",
-        );
+        _logWarning("Skipping post due to missing essential data (text, age, created, txHash, or creator). Item: $item");
         continue;
       }
 
@@ -198,9 +189,7 @@ class MemoPostService {
       if (MemoScraperUtil.linkReferencesAndSetId(post, topic, creator)) continue;
 
       try {
-        bool hasTextUrls = post.urls.any(
-          (url) => url != post.imgurUrl,
-        ); // Check if any extracted URL is not the imgurUrl
+        bool hasTextUrls = post.urls.any((url) => url != post.imgurUrl); // Check if any extracted URL is not the imgurUrl
 
         if (post.imgurUrl == null && hasTextUrls) {
           // If no image, and has text URLs, skip.
@@ -219,11 +208,7 @@ class MemoPostService {
         // 1. It's text-only (no imgur, no text URLs).
         // 2. It has an imgurUrl and no OTHER text URLs.
       } catch (e, s) {
-        _logError(
-          "Error during post-processing (extractUrlsAndHashtags or filtering) for txHash: ${post.uniqueContentId}",
-          e,
-          s,
-        );
+        _logError("Error during post-processing (extractUrlsAndHashtags or filtering) for txHash: ${post.uniqueContentId}", e, s);
         continue; // Skip this post on error
       }
 

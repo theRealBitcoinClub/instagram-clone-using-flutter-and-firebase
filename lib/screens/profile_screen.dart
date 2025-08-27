@@ -1,34 +1,33 @@
+// [1]
 import 'package:clipboard/clipboard.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/firebase/creator_service.dart';
+// Assuming you have PostService, adjust the import path
+import 'package:mahakka/memo/firebase/post_service.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/scraper/memo_creator_service.dart';
 import 'package:mahakka/resources/auth_method.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
-// import 'package:mahakka/utils/colors.dart'; // REMOVE THIS
-import 'package:mahakka/widgets/profile_buttons.dart'; // Assumed themed SettingsButton
+import 'package:mahakka/widgets/profile_buttons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../sliver_app_bar_delegate.dart';
-import '../utils/snackbar.dart'; // Ensure this uses themed SnackBars
+import '../utils/snackbar.dart';
 import '../views_taggable/widgets/qr_code_dialog.dart';
-import '../widgets/textfield_input.dart'; // Ensure this is themed
+import '../widgets/textfield_input.dart';
+// Import your PostCard if you intend to reuse it for displaying posts,
+// otherwise, you'll build the UI directly as in your original _buildGenericPostListView etc.
+// import 'package:mahakka/widgets/post_card.dart';
 
-// Logging placeholders (remain the same)
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
   print('ERROR: ProfileScreen - $message');
   if (error != null) print('  Error: $error');
   if (stackTrace != null) print('  StackTrace: $stackTrace');
 }
-
-// void _logInfo(String message) {
-//   print('INFO: ProfileScreen - $message');
-// }
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -38,32 +37,51 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  // Services
+  final PostService _postService = PostService(); // Add PostService instance
+
+  // Profile Data
   MemoModelUser? _user;
   MemoModelCreator? _creator;
 
-  bool _isLoading = true;
-  bool _isRefreshing = false;
-  bool _showDefaultAvatar = false;
-  int _viewMode = 0; // 0: Images, 1: Videos, 2: Hashtags, 4: Topics
+  // Loading States
+  bool _isLoadingProfile = true; // For initial profile data
+  bool _isRefreshingProfile = false; // For profile refresh
+  // Note: Post loading state will be handled by StreamBuilder
+
+  // View Mode
+  int _viewMode = 0; // 0: Images, 1: Videos, 2: Tagged, 4: Topics
+
+  // Text Controllers for Edit Profile Dialog
   final TextEditingController _profileNameCtrl = TextEditingController();
   final TextEditingController _profileTextCtrl = TextEditingController();
   final TextEditingController _imgurCtrl = TextEditingController();
 
+  // YouTube Player Controllers
   final Map<String, YoutubePlayerController> _ytControllers = {};
+
+  // Scroll Controller
   final ScrollController _scrollController = ScrollController();
+
+  // Post Data
+  Stream<List<MemoModelPost>>? _profilePostsStream;
+  List<MemoModelPost> _allProfilePosts = [];
+  List<MemoModelPost> _imagePosts = [];
+  List<MemoModelPost> _videoPosts = [];
+  List<MemoModelPost> _taggedPosts = []; // Posts with one or more tags
+  List<MemoModelPost> _topicPostsData = []; // Posts associated with any topic
+
+  bool _showDefaultAvatar = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchProfileData();
+    _fetchProfileDataAndInitPostsStream();
   }
 
   @override
   void dispose() {
-    for (var controller in _ytControllers.values) {
-      controller.dispose();
-    }
-    _ytControllers.clear();
+    _disposeYouTubeControllers();
     _profileNameCtrl.dispose();
     _profileTextCtrl.dispose();
     _imgurCtrl.dispose();
@@ -71,15 +89,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
+  void _disposeYouTubeControllers() {
+    for (var controller in _ytControllers.values) {
+      controller.dispose();
+    }
+    _ytControllers.clear();
+  }
+
   bool get isOwnProfile {
+    if (_user == null || _creator == null) return false;
     return _user!.profileIdMemoBch == _creator!.id;
   }
 
-  Future<void> _fetchProfileData() async {
+  Future<void> _fetchProfileDataAndInitPostsStream() async {
     if (!mounted) return;
     setState(() {
-      _isLoading = _user == null;
-      _isRefreshing = true;
+      _isLoadingProfile = _user == null; // Only true initial loading
+      _isRefreshingProfile = true;
     });
 
     try {
@@ -87,123 +113,196 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
 
       String profileIdOfCreatorOrUser = MemoModelUser.profileIdGet(localUser);
-      // final initialCreator = MemoModelCreator(id: profileIdGet, name: "");
       MemoModelCreator? initialCreator = await CreatorService().getCreatorOnce(profileIdOfCreatorOrUser);
 
+      if (!mounted) return;
       setState(() {
         _user = localUser;
         _creator = initialCreator;
-        _isLoading = false;
+        _isLoadingProfile = false; // Profile skeleton loaded
       });
 
-      _creator!.refreshAvatar();
+      if (_creator == null) {
+        _logError("Failed to load initial creator data for ID: $profileIdOfCreatorOrUser");
+        if (mounted) {
+          showSnackBar("Could not load profile details. Creator not found.", context);
+          setState(() {
+            _isRefreshingProfile = false;
+          });
+        }
+        return;
+      }
 
-      final resultDetails = await Future.wait([MemoCreatorService().fetchCreatorDetails(initialCreator!, noCache: true)]);
+      // Initialize posts stream now that we have the creator ID
+      _initializeProfilePostsStream(_creator!.id);
+      if (mounted) setState(() {}); // To make StreamBuilder pick up the new stream
 
-      final resultBalances = await Future.wait([
-        localUser.refreshBalanceDevPath145(),
-        localUser.refreshBalanceTokens(),
-        localUser.refreshBalanceDevPath0(),
+      _creator!.refreshAvatar(); // Assuming this is non-critical for UI render
+
+      // Fetch further details in parallel
+      final results = await Future.wait([
+        MemoCreatorService().fetchCreatorDetails(_creator!, noCache: true),
+        if (isOwnProfile) localUser.refreshBalanceDevPath145(),
+        if (isOwnProfile) localUser.refreshBalanceTokens(),
+        if (isOwnProfile) localUser.refreshBalanceDevPath0(),
       ]);
 
       if (!mounted) return;
 
-      MemoModelCreator refreshedCreator = resultDetails[0];
-      //TODO update user details store them on firebase
-      CreatorService().saveCreator(refreshedCreator);
+      MemoModelCreator refreshedCreator = results[0] as MemoModelCreator;
+      // TODO: update user details store them on firebase (if MemoCreatorService().fetchCreatorDetails also returns user updatable info)
+      await CreatorService().saveCreator(refreshedCreator); // Save potentially updated creator info
 
-      String refreshBchStatus = resultBalances[0];
-      String refreshTokensStatus = resultBalances[1];
-      String refreshMemoStatus = resultBalances[2];
+      if (isOwnProfile) {
+        String refreshBchStatus = results[1] as String;
+        String refreshTokensStatus = results[2] as String;
+        String refreshMemoStatus = results[3] as String;
+        if (refreshBchStatus != "success" && mounted) {
+          showSnackBar("You haz no BCH...", context);
+        }
+        if (refreshTokensStatus != "success" && mounted) {
+          showSnackBar("You haz no Tokens...", context);
+        }
+        if (refreshMemoStatus != "success" && mounted) {
+          showSnackBar("You haz no Memo balance...", context);
+        }
+      }
 
       setState(() {
-        _creator = refreshedCreator;
-        _isRefreshing = false;
+        _creator = refreshedCreator; // Update with fully refreshed details
+        _isRefreshingProfile = false;
       });
-
-      if (refreshBchStatus != "success" && mounted) {
-        showSnackBar("You haz no BCH, please deposit if you want to publish and earn token", context);
-      }
-
-      if (refreshTokensStatus != "success" && mounted) {
-        showSnackBar("You haz no Tokens, you will miss out on the discount", context);
-      }
-
-      if (refreshMemoStatus != "success" && mounted) {
-        showSnackBar("You haz no Memo balance, your actions will not tip memo users", context);
-      }
     } catch (e, s) {
-      _logError("Error in _fetchProfileData", e, s);
+      _logError("Error in _fetchProfileDataAndInitPostsStream", e, s);
       if (mounted) {
         setState(() {
-          _isLoading = false;
-          _isRefreshing = false;
+          _isLoadingProfile = false;
+          _isRefreshingProfile = false;
         });
         showSnackBar("Failed to load profile data. Please try again.", context);
       }
     }
   }
 
+  void _initializeProfilePostsStream(String creatorId) {
+    if (creatorId.isEmpty) {
+      _logError("Cannot initialize posts stream: Creator ID is empty.");
+      setState(() {
+        _profilePostsStream = Stream.value([]); // Emit empty list if no ID
+      });
+      return;
+    }
+    _logError("Initializing posts stream for creator ID: $creatorId");
+    setState(() {
+      // Assuming PostService has a method to get posts by creatorId
+      // and order them, e.g., by createdDateTime descending
+      _profilePostsStream = _postService.getPostsByCreatorIdStream(
+        creatorId,
+        orderByField: 'createdDateTime', // Make sure this field exists on your posts
+        descending: true,
+      );
+    });
+  }
+
+  void _categorizePosts(List<MemoModelPost> allPosts) {
+    if (!mounted) return;
+
+    // Clear existing YT controllers before categorizing,
+    // as the video posts list will be repopulated.
+    _disposeYouTubeControllers();
+
+    final newImagePosts = <MemoModelPost>[];
+    final newVideoPosts = <MemoModelPost>[];
+    final newTaggedPosts = <MemoModelPost>[];
+    final newTopicPostsData = <MemoModelPost>[];
+
+    for (var post in allPosts) {
+      // Ensure creator data is attempted to be loaded if not present
+      // This is important if your post display logic relies on post.creator.name etc.
+      if (post.creator == null && post.creatorId.isNotEmpty) {
+        // Asynchronously refresh. The UI for individual posts will handle loading state.
+        post.creator = MemoModelCreator(id: post.creatorId);
+        post.creator!.refreshCreatorFirebase();
+      }
+
+      if (post.imgurUrl != null && post.imgurUrl!.isNotEmpty) {
+        newImagePosts.add(post);
+      }
+      if (post.youtubeId != null && post.youtubeId!.isNotEmpty) {
+        newVideoPosts.add(post);
+      }
+      // Assuming tagIds is the correct field from Firestore
+      if (post.tagIds.isNotEmpty) {
+        newTaggedPosts.add(post);
+      }
+      // Assuming topicId is the correct field from Firestore
+      if (post.topicId.isNotEmpty) {
+        newTopicPostsData.add(post);
+      }
+    }
+
+    setState(() {
+      _allProfilePosts = allPosts; // Keep the full list
+      _imagePosts = newImagePosts;
+      _videoPosts = newVideoPosts;
+      _taggedPosts = newTaggedPosts;
+      _topicPostsData = newTopicPostsData;
+    });
+  }
+
   Widget _buildStatColumn(ThemeData theme, String title, String count) {
-    // Pass Theme
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 15.0, bottom: 2.0),
-          child: Text(
-            count,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              // color: theme.colorScheme.onSurface, // Inherited by default
-            ),
-          ),
+          child: Text(count, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         ),
         Text(
           title,
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant, // For secondary text
-          ),
+          style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
       ],
     );
   }
 
-  // No longer needed if using themed IconButtons
-  // Color _activeOrNotColor(ThemeData theme, int index) =>
-  //     _viewMode == index ? theme.colorScheme.primary : theme.iconTheme.color ?? theme.colorScheme.onSurfaceVariant;
-
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context); // Get the current theme
+    final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
 
-    if (_isLoading) {
-      return _buildLoadingScaffold(theme);
+    if (_isLoadingProfile) {
+      return _buildLoadingScaffold(theme, "Loading Profile...");
     }
 
-    if (_user == null || _creator == null) {
-      return _buildErrorScaffold(theme, colorScheme);
+    if (_creator == null) {
+      // Changed from _user == null || _creator == null
+      // This state means initial creator fetch failed or creatorId was invalid.
+      return _buildErrorScaffold(theme, colorScheme, "Profile not found or failed to load.");
     }
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: _buildAppBar(context, theme, colorScheme),
       body: SafeArea(
-        child: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            SliverToBoxAdapter(child: _buildCollapsibleProfileHeader(theme, colorScheme)),
-            SliverPersistentHeader(delegate: SliverAppBarDelegate(minHeight: 60, maxHeight: 60, child: _buildTabSelector(theme)), pinned: true),
-
-            // If _isRefreshing for the content below the tabs,
-            // you might need another SliverToBoxAdapter for LinearProgressIndicator
-            // if (_isRefreshingForContent) // a new state variable if needed
-            //   const SliverToBoxAdapter(child: LinearProgressIndicator(minHeight: 2)),
-            _buildSliverContentView(theme), // Directly use the sliver-returning method
-          ],
+        child: RefreshIndicator(
+          // Added RefreshIndicator
+          onRefresh: _fetchProfileDataAndInitPostsStream,
+          color: theme.colorScheme.primary,
+          backgroundColor: theme.colorScheme.surface,
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              SliverToBoxAdapter(child: _buildCollapsibleProfileHeader(theme, colorScheme)),
+              SliverPersistentHeader(
+                delegate: SliverAppBarDelegate(minHeight: 60, maxHeight: 60, child: _buildTabSelector(theme)),
+                pinned: true,
+              ),
+              _buildSliverContentStreamView(theme), // Switched to stream-based content view
+            ],
+          ),
         ),
       ),
     );
@@ -211,53 +310,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   AppBar _buildAppBar(BuildContext context, ThemeData theme, ColorScheme colorScheme) {
     return AppBar(
-      // backgroundColor: theme.appBarTheme.backgroundColor, // From theme
-      // foregroundColor: theme.appBarTheme.foregroundColor, // From theme for icons/text
       toolbarHeight: 40,
-      centerTitle: false, // As per your original
+      centerTitle: false,
       title: TextButton(
         onPressed: () {
-          launchUrl(Uri.parse("https://memo.cash/profile/${_creator!.id}"));
-          //TODO LAUNCH PROFILE ON MEMO WITH THAT ID
-          // showSnackBar("Launch memo profile URL for ${_user!.profileIdMemoBch}", context);
+          if (_creator?.id != null && _creator!.id.isNotEmpty) {
+            launchUrl(Uri.parse("https://memo.cash/profile/${_creator!.id}"));
+          }
         },
-        style: TextButton.styleFrom(
-          padding: EdgeInsets.zero, // Remove default padding for tighter fit
-          // foregroundColor: theme.appBarTheme.foregroundColor?.withOpacity(0.8) ?? colorScheme.onPrimary.withOpacity(0.8),
-        ),
+        style: TextButton.styleFrom(padding: EdgeInsets.zero),
         child: Text(
-          _creator!.id,
+          _creator?.id ?? "Loading ID...",
           style: theme.textTheme.bodySmall?.copyWith(
-            // Smaller text for ID
-            color: (theme.appBarTheme.titleTextStyle?.color ?? colorScheme.onPrimary).withOpacity(0.7), // Subtler color
+            color: (theme.appBarTheme.titleTextStyle?.color ?? colorScheme.onPrimary).withOpacity(0.7),
           ),
           overflow: TextOverflow.ellipsis,
         ),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.currency_bitcoin_rounded), // Changed icon for clarity
-          tooltip: "Deposit BCH",
-          // color: theme.appBarTheme.foregroundColor, // From theme
-          onPressed: _showBchQRDialog,
-        ),
+        if (isOwnProfile) // Only show deposit if it's own profile
+          IconButton(icon: const Icon(Icons.currency_bitcoin_rounded), tooltip: "Deposit BCH", onPressed: _showBchQRDialog),
       ],
     );
   }
 
-  Scaffold _buildLoadingScaffold(ThemeData theme) {
+  Scaffold _buildLoadingScaffold(ThemeData theme, String message) {
     return Scaffold(
-      // Add Scaffold for consistent loading screen appearance
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: theme.appBarTheme.backgroundColor,
-        elevation: 0, // No shadow during loading
+      appBar: AppBar(backgroundColor: theme.appBarTheme.backgroundColor, elevation: 0),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text(message, style: theme.textTheme.titleMedium),
+          ],
+        ),
       ),
-      body: const Center(child: CircularProgressIndicator()), // Progress indicator will use theme color
     );
   }
 
-  Scaffold _buildErrorScaffold(ThemeData theme, ColorScheme colorScheme) {
+  Scaffold _buildErrorScaffold(ThemeData theme, ColorScheme colorScheme, String message) {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -273,17 +367,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Icon(Icons.error_outline, color: colorScheme.error, size: 48),
               const SizedBox(height: 16),
               Text(
-                "Could not load profile data.",
+                message,
                 style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onBackground),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.refresh),
-                label: const Text("Retry"),
-                onPressed: _fetchProfileData,
-                // Style will come from theme.elevatedButtonTheme
-              ),
+              ElevatedButton.icon(icon: const Icon(Icons.refresh), label: const Text("Retry"), onPressed: _fetchProfileDataAndInitPostsStream),
             ],
           ),
         ),
@@ -292,20 +381,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildCollapsibleProfileHeader(ThemeData theme, ColorScheme colorScheme) {
+    // Ensure _creator is not null before accessing its properties
+    if (_creator == null) {
+      return const SizedBox.shrink(); // Or a placeholder
+    }
     return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface, // Use surface color for the header background
-        // Optional: add a subtle border at the bottom
-        // border: Border(bottom: BorderSide(color: theme.dividerColor, width: 0.5)),
-      ),
+      decoration: BoxDecoration(color: theme.colorScheme.surface),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (_isRefreshing) const LinearProgressIndicator(minHeight: 2),
+          if (_isRefreshingProfile) const LinearProgressIndicator(minHeight: 2),
           _buildTopDetailsRow(theme, colorScheme),
           _buildNameRow(theme),
           _buildProfileText(colorScheme, theme),
-          Divider(color: theme.dividerColor, height: 1.0, thickness: 0.5), // Themed divider
+          Divider(color: theme.dividerColor, height: 1.0, thickness: 0.5),
         ],
       ),
     );
@@ -313,198 +402,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Padding _buildTabSelector(ThemeData theme) {
     return Padding(
-      // Add padding around the view mode icons
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildViewModeIconButton(theme, 0, Icons.image_outlined, Icons.image_rounded),
           _buildViewModeIconButton(theme, 1, Icons.video_library_outlined, Icons.video_library_rounded),
-          _buildViewModeIconButton(theme, 2, Icons.tag_outlined, Icons.tag_rounded), // Using different outline/filled
+          _buildViewModeIconButton(theme, 2, Icons.tag_outlined, Icons.tag_rounded),
           _buildViewModeIconButton(theme, 4, Icons.topic_outlined, Icons.topic_rounded),
         ],
       ),
     );
   }
 
-  Padding _buildProfileText(ColorScheme colorScheme, ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: AnimatedOpacity(
-          opacity: _creator!.profileText.trim().isNotEmpty ? 1.0 : 0.0, // Control opacity
-          duration: const Duration(milliseconds: 700), // Adjust duration as needed
-          child: ExpandableText(
-            _creator!.profileText,
-            expandText: 'show more',
-            collapseText: 'show less',
-            maxLines: 3,
-            linkColor: colorScheme.primary, // Use primary color for link
-            style: theme.textTheme.bodyMedium?.copyWith(height: 1.4), // Use themed text style
-            linkStyle: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.primary),
-            prefixStyle: theme.textTheme.bodyMedium, // Ensure prefix style also matches
-          ),
-        ),
-      ),
-    );
-  }
-
-  Padding _buildNameRow(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: AnimatedOpacity(
-          opacity: _creator!.profileText.trim().isNotEmpty ? 1.0 : 0.0, // Control opacity
-          duration: const Duration(milliseconds: 300), // Adjust duration as needed
-          child: Row(
-            children: [
-              Text(_creator!.name, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-              Text(" ${_creator!.profileIdShort}", style: theme.textTheme.titleSmall?.copyWith(letterSpacing: 2.0)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopDetailsRow(ThemeData theme, ColorScheme colorScheme) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () {
-              showImageDetail(colorScheme);
-            },
-            child: CircleAvatar(
-              radius: 40,
-              backgroundColor: colorScheme.surfaceVariant, // Fallback color
-              backgroundImage: _showDefaultAvatar || _creator!.profileImageAvatar().isEmpty
-                  ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                  : NetworkImage(_creator!.profileImageAvatar()),
-              onBackgroundImageError: _showDefaultAvatar
-                  ? null
-                  : (exception, stackTrace) {
-                      _logError("Error loading profile image", exception, stackTrace);
-                      if (mounted) {
-                        setState(() => _showDefaultAvatar = true);
-                      }
-                    },
-            ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+  Widget _buildSliverContentStreamView(ThemeData theme) {
+    // This StreamBuilder will listen for posts related to the _creator.
+    // Ensure _profilePostsStream is initialized when _creator data is available.
+    if (_creator == null || _profilePostsStream == null) {
+      // If creator isn't loaded yet, or stream isn't ready, show a loading indicator or placeholder
+      // This case should ideally be minimal if _initializeProfilePostsStream is called promptly.
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: _creator == null
+              ? Text("Loading creator data...", style: theme.textTheme.titleMedium)
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: isOwnProfile ? _buildStatColumn(theme, 'BCH', _user!.balanceBchDevPath145) : SizedBox(child: Text("Tip Level")),
-                    ),
-                    Expanded(child: isOwnProfile ? _buildStatColumn(theme, 'Token', _user!.balanceCashtokensDevPath145) : SizedBox()),
-                    Expanded(child: isOwnProfile ? _buildStatColumn(theme, 'Memo', _user!.balanceBchDevPath0Memo) : SizedBox()),
+                    CircularProgressIndicator(),
+                    SizedBox(height: 10),
+                    Text("Loading posts...", style: theme.textTheme.titleMedium),
                   ],
                 ),
-                const SizedBox(height: 12),
-                _buildEditProfileButton(theme), // Pass theme
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void showImageDetail(ColorScheme colorScheme) async {
-    bool hasDetail = await _creator!.refreshDetailScraper();
-
-    if (hasDetail && context.mounted) {
-      showDialog(
-        context: context,
-        builder: (ctx) {
-          return SimpleDialog(
-            contentPadding: EdgeInsetsGeometry.all(10),
-            children: [
-              CircleAvatar(
-                radius: 130,
-                backgroundColor: colorScheme.surfaceVariant, // Fallback color
-                backgroundImage: _showDefaultAvatar || _creator!.profileImageDetail().isEmpty
-                    ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                    : NetworkImage(_creator!.profileImageDetail()),
-                onBackgroundImageError: _showDefaultAvatar
-                    ? null
-                    : (exception, stackTrace) {
-                        _logError("Error loading profile image", exception, stackTrace);
-                        if (mounted) {
-                          setState(() => _showDefaultAvatar = true);
-                        }
-                      },
-              ),
-            ],
-          );
-        },
+        ),
       );
     }
-  }
-
-  Widget _buildEditProfileButton(ThemeData theme) {
-    // Pass theme
-    return SizedBox(
-      width: double.infinity,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0), // Reduced horizontal padding
-        child: SettingsButton(
-          // Assuming SettingsButton is themed (uses OutlinedButton or ElevatedButton style)
-          text: !isOwnProfile ? "Send Message" : 'Edit Profile',
-          onPressed: _onProfileSettings,
-          // If SettingsButton was refactored like Approach 2 (OutlinedButton style):
-          // No direct color props needed here, it picks from theme.outlinedButtonTheme
-          // If SettingsButton was refactored like Approach 3 (Custom Themed):
-          // You might pass a flag like `isPrimaryAction: false` if it supports it.
-        ),
-      ),
-    );
-  }
-
-  Widget _buildViewModeIconButton(ThemeData theme, int index, IconData inactiveIcon, IconData activeIcon) {
-    final bool isActive = _viewMode == index;
-    return IconButton(
-      iconSize: 28, // Adjusted size
-      visualDensity: VisualDensity.compact,
-      padding: const EdgeInsets.all(12), // Consistent padding
-      icon: Icon(isActive ? activeIcon : inactiveIcon, color: isActive ? theme.colorScheme.primary : theme.iconTheme.color?.withOpacity(0.7)),
-      tooltip: _getViewModeTooltip(index),
-      onPressed: () {
-        if (mounted) {
-          setState(() => _viewMode = index);
+    return StreamBuilder<List<MemoModelPost>>(
+      stream: _profilePostsStream,
+      builder: (context, snapshot) {
+        // Handle connection states and errors first, returning appropriate slivers
+        if (snapshot.hasError) {
+          _logError("Error in profile posts stream", snapshot.error, snapshot.stackTrace);
+          return SliverFillRemaining(hasScrollBody: false, child: Center(child: Text('Error loading posts. ${snapshot.error}')));
         }
+
+        if (snapshot.connectionState == ConnectionState.waiting && _allProfilePosts.isEmpty) {
+          return const SliverFillRemaining(hasScrollBody: false, child: Center(child: CircularProgressIndicator()));
+        }
+
+        // If we have new data from the stream
+        if (snapshot.hasData) {
+          // Schedule the state update for after the current build frame
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              // Check if the widget is still in the tree
+              _categorizePosts(snapshot.data!); // This will call setState
+            }
+          });
+        } else if (snapshot.connectionState != ConnectionState.waiting && !snapshot.hasData && _allProfilePosts.isNotEmpty) {
+          // Stream might have emitted null or closed, and we had previous data. Clear it.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _categorizePosts([]);
+            }
+          });
+        }
+
+        // Always build the view with the current categorized lists.
+        // _categorizePosts (called via addPostFrameCallback) will update these lists
+        // and trigger a rebuild for the *next* frame.
+        return _buildSliverCategorizedView(theme);
       },
     );
   }
 
-  String _getViewModeTooltip(int index) {
-    switch (index) {
-      case 0:
-        return "Images";
-      case 1:
-        return "Videos";
-      case 2:
-        return "Tagged Posts";
-      case 4:
-        return "Topic Posts";
-      default:
-        return "Empty";
-    }
-  }
-
-  Widget _buildSliverContentView(ThemeData theme) {
+  Widget _buildSliverCategorizedView(ThemeData theme) {
+    // This method now uses the categorized lists (_imagePosts, _videoPosts, etc.)
+    // which are updated by the StreamBuilder.
     Widget emptySliver(String message) {
       return SliverFillRemaining(
-        // Fills the remaining viewport space
         hasScrollBody: false,
         child: Center(
           child: Padding(
@@ -524,35 +500,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     switch (_viewMode) {
       case 0: // Grid View (Images)
-        final posts = MemoModelPost.imgurPosts;
-        if (posts.isEmpty) return emptySliver("No image posts yet.");
+        if (_imagePosts.isEmpty) return emptySliver("No image posts by this creator yet.");
         return SliverPadding(
-          // Add padding around the grid
           padding: const EdgeInsets.all(4),
           sliver: SliverGrid.builder(
-            itemCount: posts.length,
+            itemCount: _imagePosts.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 4, mainAxisSpacing: 4),
             itemBuilder: (context, index) {
-              final post = posts[index];
+              final post = _imagePosts[index];
               Widget imagePlaceholder = Container(
                 color: theme.colorScheme.surfaceVariant,
                 child: Icon(Icons.broken_image_outlined, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
               );
-
-              if (post.imgurUrl == null || post.imgurUrl!.isEmpty) {
-                return imagePlaceholder;
-              }
+              if (post.imgurUrl == null || post.imgurUrl!.isEmpty) return imagePlaceholder;
 
               final img = Image.network(
                 post.imgurUrl!,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  // ImgurUtils.errorLoadImage should ideally return a themed widget
                   _logError("Error loading grid image: ${post.imgurUrl}", error, stackTrace);
                   return imagePlaceholder;
                 },
                 loadingBuilder: (context, child, loadingProgress) {
-                  // ImgurUtils.loadingImage should ideally return a themed widget
                   if (loadingProgress == null) return child;
                   return Container(
                     color: theme.colorScheme.surfaceVariant,
@@ -568,41 +537,260 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 },
               );
               return GestureDetector(
-                onDoubleTap: () => _showPostDialog(theme, post, AspectRatio(aspectRatio: 1, child: img)), // Pass theme & wrapped image
-                child: AspectRatio(aspectRatio: 1, child: img), // Ensure square grid items
+                onDoubleTap: () => _showPostDialog(theme, post, AspectRatio(aspectRatio: 1, child: img)),
+                child: AspectRatio(aspectRatio: 1, child: img),
               );
             },
           ),
         );
       case 1: // YouTube Videos
-        final posts = MemoModelPost.ytPosts;
-        if (posts.isEmpty) return emptySliver("No video posts yet.");
-        return _buildYouTubeListView(theme, posts); // Pass theme
-      case 2: // Hashtag Posts
-        final posts = MemoModelPost.hashTagPosts;
-        if (posts.isEmpty) return emptySliver("No tagged posts yet.");
-        return _buildGenericPostListView(theme, posts); // Pass theme
+        if (_videoPosts.isEmpty) return emptySliver("No video posts by this creator yet.");
+        return _buildYouTubeListView(theme, _videoPosts);
+      case 2: // Tagged Posts
+        if (_taggedPosts.isEmpty) return emptySliver("No posts with tags by this creator yet.");
+        return _buildGenericPostListView(theme, _taggedPosts);
       case 4: // Topic Posts
-        final posts = MemoModelPost.topicPosts;
-        if (posts.isEmpty) return emptySliver("No topic posts yet.");
-        return _buildGenericPostListView(theme, posts); // Pass theme
+        if (_topicPostsData.isEmpty) return emptySliver("No posts in topics by this creator yet.");
+        return _buildGenericPostListView(theme, _topicPostsData);
       default:
         return emptySliver("Select a view mode.");
     }
   }
 
-  void _showPostDialog(ThemeData theme, MemoModelPost post, Widget imageWidget) {
-    // Pass theme
-    if (post.creator == null) {
-      showSnackBar("Cannot show post details: Creator data missing.", context);
-      return;
+  // --- Methods that remain largely the same but use instance fields or themed elements ---
+  // (e.g., _buildProfileText, _buildNameRow, _buildTopDetailsRow, showImageDetail,
+  // _buildEditProfileButton, _buildViewModeIconButton, _getViewModeTooltip,
+  // _showPostDialog, _buildYouTubeListView, _buildGenericPostListView,
+  // _onProfileSettings, _buildSettingsInput, _buildSettingsOption,
+  // _showBchQRDialog, _copyToClipboard, _hasInputData, _saveProfile)
+  // Ensure they correctly handle _creator being potentially null before it's fully loaded,
+  // or rely on data that is confirmed to be present.
+
+  Padding _buildProfileText(ColorScheme colorScheme, ThemeData theme) {
+    final profileText = _creator?.profileText ?? "";
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: AnimatedOpacity(
+          opacity: profileText.trim().isNotEmpty ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 700),
+          child: ExpandableText(
+            profileText,
+            expandText: 'show more',
+            collapseText: 'show less',
+            maxLines: 3,
+            linkColor: colorScheme.primary,
+            style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+            linkStyle: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.primary),
+            prefixStyle: theme.textTheme.bodyMedium,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Padding _buildNameRow(ThemeData theme) {
+    final creatorName = _creator?.name ?? "Loading name...";
+    final creatorProfileIdShort = _creator?.profileIdShort ?? "";
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: AnimatedOpacity(
+          opacity: creatorName != "Loading name..." ? 1.0 : 0.7,
+          duration: const Duration(milliseconds: 300),
+          child: Row(
+            children: [
+              Text(creatorName, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              if (creatorProfileIdShort.isNotEmpty)
+                Text(" $creatorProfileIdShort", style: theme.textTheme.titleSmall?.copyWith(letterSpacing: 2.0)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopDetailsRow(ThemeData theme, ColorScheme colorScheme) {
+    // Ensure _creator and _user are not null for certain parts
+    final creatorProfileImg = _creator?.profileImageAvatar() ?? "";
+    final balanceBch = _user?.balanceBchDevPath145 ?? "0";
+    final balanceTokens = _user?.balanceCashtokensDevPath145 ?? "0";
+    final balanceMemo = _user?.balanceBchDevPath0Memo ?? "0";
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () {
+              if (_creator != null) showImageDetail(colorScheme);
+            },
+            child: CircleAvatar(
+              radius: 40,
+              backgroundColor: colorScheme.surfaceVariant,
+              backgroundImage: _showDefaultAvatar || creatorProfileImg.isEmpty
+                  ? const AssetImage("assets/images/default_profile.png") as ImageProvider
+                  : NetworkImage(creatorProfileImg),
+              onBackgroundImageError: _showDefaultAvatar
+                  ? null
+                  : (exception, stackTrace) {
+                      _logError("Error loading profile image", exception, stackTrace);
+                      if (mounted) setState(() => _showDefaultAvatar = true);
+                    },
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Expanded(
+                      child: isOwnProfile
+                          ? _buildStatColumn(theme, 'BCH', balanceBch)
+                          : SizedBox(
+                              child: Center(child: Text("Followers: ${_creator?.followerCount ?? 0}", style: theme.textTheme.bodyMedium)),
+                            ),
+                    ), // Example for non-own profile
+                    Expanded(
+                      child: isOwnProfile
+                          ? _buildStatColumn(theme, 'Token', balanceTokens)
+                          : SizedBox(
+                              child: Center(child: Text("Last seen: ${_creator?.lastActionDate ?? 0}", style: theme.textTheme.bodyMedium)),
+                            ),
+                    ), // Example for non-own profile
+                    Expanded(child: isOwnProfile ? _buildStatColumn(theme, 'Memo', balanceMemo) : SizedBox()),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildEditProfileButton(theme),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void showImageDetail(ColorScheme colorScheme) async {
+    if (_creator == null) return;
+    bool hasDetail = await _creator!.refreshDetailScraper(); // Assuming this is defined in MemoModelCreator
+
+    if (hasDetail && context.mounted) {
+      showDialog(
+        context: context,
+        builder: (ctx) {
+          return SimpleDialog(
+            contentPadding: EdgeInsets.all(10),
+            children: [
+              CircleAvatar(
+                radius: 130,
+                backgroundColor: colorScheme.surfaceVariant,
+                backgroundImage: _showDefaultAvatar || _creator!.profileImageDetail().isEmpty
+                    ? const AssetImage("assets/images/default_profile.png") as ImageProvider
+                    : NetworkImage(_creator!.profileImageDetail()),
+                onBackgroundImageError: _showDefaultAvatar
+                    ? null
+                    : (exception, stackTrace) {
+                        _logError("Error loading profile image detail", exception, stackTrace);
+                        if (mounted) setState(() => _showDefaultAvatar = true);
+                      },
+              ),
+            ],
+          );
+        },
+      );
     }
+  }
+
+  Widget _buildEditProfileButton(ThemeData theme) {
+    return SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        child: SettingsButton(
+          text: !isOwnProfile ? (false ? "Unfollow" : "Follow") : 'Edit Profile', // Example for follow/unfollow
+          onPressed: _onProfileButtonPressed,
+        ),
+      ),
+    );
+  }
+
+  void _onProfileButtonPressed() {
+    if (isOwnProfile) {
+      _onProfileSettings();
+    } else {
+      // Handle Follow/Unfollow logic
+      _toggleFollowStatus();
+    }
+  }
+
+  void _toggleFollowStatus() async {
+    // if (_creator == null || _user == null) return;
+    // // For simplicity, directly toggling a local state and calling an action.
+    // // In a real app, this would involve API calls.
+    // final bool currentlyFollowing = _creator!.isFollowing; // Assuming isFollowing exists on MemoModelCreator
+    // print("Toggle follow for ${_creator!.id}. Currently following: $currentlyFollowing");
+    //
+    // // Placeholder for actual follow/unfollow logic
+    // // await UserService().toggleFollow(_user!.id, _creator!.id, !currentlyFollowing);
+    //
+    // if (mounted) {
+    //   setState(() {
+    //     _creator!.isFollowing = !currentlyFollowing; // Update local state for immediate UI feedback
+    //   });
+    //   showSnackBar(!currentlyFollowing ? "Followed ${_creator!.name}" : "Unfollowed ${_creator!.name}", context);
+    // }
+  }
+
+  Widget _buildViewModeIconButton(ThemeData theme, int index, IconData inactiveIcon, IconData activeIcon) {
+    final bool isActive = _viewMode == index;
+    return IconButton(
+      iconSize: 28,
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.all(12),
+      icon: Icon(isActive ? activeIcon : inactiveIcon, color: isActive ? theme.colorScheme.primary : theme.iconTheme.color?.withOpacity(0.7)),
+      tooltip: _getViewModeTooltip(index),
+      onPressed: () {
+        if (mounted) setState(() => _viewMode = index);
+      },
+    );
+  }
+
+  String _getViewModeTooltip(int index) {
+    switch (index) {
+      case 0:
+        return "Images";
+      case 1:
+        return "Videos";
+      case 2:
+        return "Tagged Posts";
+      case 4:
+        return "Topic Posts";
+      default:
+        return "Empty";
+    }
+  }
+
+  void _showPostDialog(ThemeData theme, MemoModelPost post, Widget imageWidget) {
+    // Attempt to ensure creator is loaded for the dialog.
+    // If post.creator is null but post.creatorId is available,
+    // the FutureBuilder in _PostCardHeader (if reused) or similar logic here would handle it.
+    // For simplicity, this dialog assumes creator might be available via post.creatorSync
+    // or you'd use a FutureBuilder here too.
+
+    // final postCreator = post.creatorSync; // Use the synchronous accessor
+    final postCreator = post.creator;
 
     showDialog(
       context: context,
       builder: (dialogCtx) {
         return SimpleDialog(
-          // Uses theme.dialogTheme for shape, backgroundColor, titleTextStyle, contentTextStyle
           titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
           contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
           title: Row(
@@ -610,14 +798,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: theme.colorScheme.surfaceVariant,
-                backgroundImage: post.creator!.profileImageAvatar().isEmpty
+                backgroundImage: postCreator?.profileImageAvatar().isEmpty ?? true
                     ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                    : NetworkImage(post.creator!.profileImageAvatar()),
+                    : NetworkImage(postCreator!.profileImageAvatar()),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  post.creator!.name,
+                  postCreator?.name ?? post.creatorId, // Fallback to creatorId if name not loaded
                   style: theme.dialogTheme.titleTextStyle ?? theme.textTheme.titleLarge,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -629,18 +817,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (post.text != null && post.text!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: ExpandableText(
-                  post.text!,
-                  expandText: 'show more',
-                  collapseText: 'show less',
-                  maxLines: 4,
-                  linkColor: theme.colorScheme.primary,
-                  style: theme.dialogTheme.contentTextStyle ?? theme.textTheme.bodyMedium,
-                  linkStyle: (theme.dialogTheme.contentTextStyle ?? theme.textTheme.bodyMedium)?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: Text(post.text!),
+                // ExpandableText(
+                //   post.text!,
+                //   expandText: 'show more',
+                //   collapseText: 'show less',
+                //   maxLines: 4,
+                //   linkColor: theme.colorScheme.primary,
+                //   style: theme.dialogTheme.contentTextStyle ?? theme.textTheme.bodyMedium,
+                //   linkStyle: (theme.dialogTheme.contentTextStyle ?? theme.textTheme.bodyMedium)?.copyWith(
+                //     color: theme.colorScheme.primary,
+                //     fontWeight: FontWeight.w600,
+                //   ),
+                // ),
               ),
           ],
         );
@@ -649,45 +838,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildYouTubeListView(ThemeData theme, List<MemoModelPost> posts) {
-    // Pass theme
     return SliverList(
       delegate: SliverChildBuilderDelegate(childCount: posts.length, (context, index) {
         final ytPost = posts[index];
-        if (ytPost.youtubeId == null || ytPost.youtubeId!.isEmpty) {
-          return const SizedBox.shrink();
-        }
+        if (ytPost.youtubeId == null || ytPost.youtubeId!.isEmpty) return const SizedBox.shrink();
 
+        // Ensure controller is created or reconfigured if necessary
         YoutubePlayerController controller = _ytControllers.putIfAbsent(
-          ytPost.youtubeId!,
+          ytPost.id, // Use post.id as key for YT controller for uniqueness
           () => YoutubePlayerController(
             initialVideoId: ytPost.youtubeId!,
-            flags: const YoutubePlayerFlags(
-              autoPlay: false,
-              mute: true, // Start muted for feed UX
-              hideControls: false,
-              hideThumbnail: false,
-            ),
+            flags: const YoutubePlayerFlags(autoPlay: false, mute: true, hideControls: false, hideThumbnail: false),
           ),
         );
+        // This simple putIfAbsent might not be enough if videoId within the same post.id changes.
+        // For profile view, this is usually fine.
+
+        // final postCreatorName = ytPost.creatorSync?.name ?? ytPost.creatorId; // Fallback
+        final postCreatorName = "fallback" + ytPost.creatorId;
 
         return Card(
-          // margin uses theme.cardTheme.margin or default
-          // elevation uses theme.cardTheme.elevation
-          // shape uses theme.cardTheme.shape
-          // color uses theme.cardTheme.color
           clipBehavior: Clip.antiAlias,
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Padding(
-            padding: const EdgeInsets.all(0), // Player can be edge-to-edge in card
+            padding: const EdgeInsets.all(0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 YoutubePlayer(
                   controller: controller,
                   showVideoProgressIndicator: true,
-                  progressIndicatorColor: theme.colorScheme.primary, // Themed
+                  progressIndicatorColor: theme.colorScheme.primary,
                   progressColors: ProgressBarColors(
-                    // Themed
                     playedColor: theme.colorScheme.primary,
                     handleColor: theme.colorScheme.secondary,
                     bufferedColor: theme.colorScheme.primary.withOpacity(0.4),
@@ -695,7 +877,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 Padding(
-                  // Add padding for text content below video
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -712,9 +893,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 8),
                       ],
-                      // Divider(color: theme.dividerColor),
                       Text(
-                        "Posted by: ${ytPost.creator?.name ?? 'Unknown'}",
+                        "Posted by: $postCreatorName",
                         style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       ),
                     ],
@@ -729,10 +909,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildGenericPostListView(ThemeData theme, List<MemoModelPost> posts) {
-    // Pass theme
     return SliverList(
       delegate: SliverChildBuilderDelegate(childCount: posts.length, (context, index) {
         final post = posts[index];
+        // final postCreatorName = post.creatorSync?.name ?? post.creatorId; // Fallback
+        final postCreatorName = "fb" + post.creatorId; // Fallback
+
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Padding(
@@ -744,13 +926,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        post.creator?.name ?? 'Unknown',
+                        postCreatorName,
                         style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(post.created ?? '', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    Text(post.created ?? post.age ?? '', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -774,15 +956,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _onProfileSettings() {
-    final ThemeData theme = Theme.of(context); // Get theme for dialog
+    final ThemeData theme = Theme.of(context);
+    _profileNameCtrl.text = _creator?.name ?? '';
+    _profileTextCtrl.text = _creator?.profileText ?? '';
+    _imgurCtrl.text = _creator?.profileImageAvatar() ?? ''; // Or a specific field for avatar URL input
 
     showDialog(
       context: context,
       builder: (ctxDialog) {
         return SimpleDialog(
-          // titlePadding will be from theme.dialogTheme or default
-          // shape from theme.dialogTheme
-          // backgroundColor from theme.dialogTheme
           title: Row(
             children: [
               Icon(Icons.settings_outlined, color: theme.dialogTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface),
@@ -791,19 +973,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           children: [
-            _buildSettingsInput(theme, Icons.badge_outlined, "Satoshi Nakamoto", TextInputType.text, _profileNameCtrl),
-            _buildSettingsInput(theme, Icons.notes_outlined, "I am a Sci-Fi Ponk", TextInputType.text, _profileTextCtrl),
-            _buildSettingsInput(theme, Icons.account_circle_outlined, "e.g. http://i.imgur.com/JF983F.png", TextInputType.url, _imgurCtrl),
+            _buildSettingsInput(theme, Icons.badge_outlined, "Display Name", TextInputType.text, _profileNameCtrl),
+            _buildSettingsInput(theme, Icons.notes_outlined, "Profile Bio/Text", TextInputType.multiline, _profileTextCtrl),
+            _buildSettingsInput(theme, Icons.account_circle_outlined, "Avatar Image URL (e.g. Imgur)", TextInputType.url, _imgurCtrl),
             Padding(
-              padding: EdgeInsetsGeometry.symmetric(vertical: 0, horizontal: 24),
-              child: ElevatedButton(
-                onPressed: () {
-                  if (_hasInputData()) {
-                    _saveProfile(ctxDialog);
-                  }
-                },
-                child: Text("SAVE"),
-              ),
+              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 24),
+              child: ElevatedButton(onPressed: () => _saveProfile(ctxDialog), child: Text("SAVE")),
             ),
             Divider(color: theme.dividerColor, height: 20, thickness: 0.5),
             _buildSettingsOption(theme, Icons.vpn_key_outlined, "BACKUP MNEMONIC", ctxDialog, () {
@@ -814,7 +989,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
             }),
             _buildSettingsOption(theme, Icons.logout, "LOGOUT", ctxDialog, () {
-              AuthChecker().logOut(context);
+              AuthChecker().logOut(context); // Assuming this navigates away
             }),
           ],
         );
@@ -822,15 +997,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSettingsInput(ThemeData theme, IconData icon, String hintText, type, TextEditingController ctrl) {
+  Widget _buildSettingsInput(ThemeData theme, IconData icon, String hintText, TextInputType type, TextEditingController ctrl) {
     return SimpleDialogOption(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8), // Adjusted padding
       child: Row(
         children: [
           Icon(icon, color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7) ?? theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 15),
           Expanded(
-            child: TextInputField(hintText: hintText, textEditingController: ctrl, textInputType: type),
+            child: TextInputField(
+              hintText: hintText,
+              textEditingController: ctrl,
+              textInputType: type,
+              //TODO check this maxline
+              // maxLines: type == TextInputType.multiline ? 3 : 1,
+            ),
           ),
         ],
       ),
@@ -841,27 +1022,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return SimpleDialogOption(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       onPressed: () {
-        Navigator.of(dialogCtx).pop();
-        onSelect();
+        Navigator.of(dialogCtx).pop(); // Close dialog first
+        onSelect(); // Then execute action
       },
       child: Row(
         children: [
           Icon(icon, color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7) ?? theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 15),
-          Text(text, style: theme.textTheme.bodyLarge /*?.copyWith(color: theme.colorScheme.onSurface)*/),
+          Text(text, style: theme.textTheme.bodyLarge),
         ],
       ),
     );
   }
 
+  bool _tempToggleAddressTypeForDialog = true;
   void _showBchQRDialog() {
-    // final ThemeData theme = Theme.of(context);
     if (_user == null) {
       showSnackBar("User data not available for QR code.", context);
       return;
     }
-    // QrCodeDialog should be refactored to be theme-aware.
-    // For now, it will inherit ambient theme.
     showDialog(
       context: context,
       builder: (dialogCtx) {
@@ -869,59 +1048,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
           user: _user!,
           initialToggleState: _tempToggleAddressTypeForDialog,
           onToggle: (newState) {
-            if (mounted) {
-              setState(() {
-                _tempToggleAddressTypeForDialog = newState;
-              });
-            }
+            // This setState is for the dialog's internal state if it rebuilds based on this toggle.
+            // If the dialog manages its own state for the toggle, this might not be needed here.
+            if (mounted) setState(() => _tempToggleAddressTypeForDialog = newState);
           },
-          // You might need to pass theme explicitly if QrCodeDialog cannot use Theme.of(context) effectively
-          // theme: theme,
         );
       },
     );
   }
 
-  bool _tempToggleAddressTypeForDialog = true; // State for QR dialog toggle
-
   Future<void> _copyToClipboard(String text, String successMessage) async {
-    // ... (logic remains the same, showSnackBar should be themed)
     if (text.isEmpty) {
       showSnackBar("Nothing to copy.", context);
       return;
     }
-    await FlutterClipboard.copyWithCallback(
-      text: text,
-      onSuccess: () {
-        if (mounted) showSnackBar(successMessage, context);
-      },
-      onError: (error) {
-        _logError("Copy to clipboard failed", error);
-        if (mounted) showSnackBar('Copy failed. See logs for details.', context);
-      },
-    );
+    try {
+      await FlutterClipboard.copy(text);
+      if (mounted) showSnackBar(successMessage, context);
+    } catch (e) {
+      _logError("Copy to clipboard failed", e);
+      if (mounted) showSnackBar('Copy failed: $e', context);
+    }
   }
 
-  bool _hasInputData() {
-    return _profileNameCtrl.text.trim().isNotEmpty || _profileTextCtrl.text.trim().isNotEmpty || _imgurCtrl.text.trim().isNotEmpty;
-  }
+  // _hasInputData removed as save is always enabled, validation/changes are checked in _saveProfile
 
-  void _saveProfile(dialogCtc) async {
-    var name = _profileNameCtrl.text.trim();
-    if (name.isNotEmpty) await MemoAccountant(_user!).profileSetName(name);
+  void _saveProfile(BuildContext dialogContext) async {
+    if (_creator == null || _user == null) {
+      showSnackBar("User or Creator data missing. Cannot save.", context);
+      Navigator.of(dialogContext).pop();
+      return;
+    }
 
-    var text = _profileTextCtrl.text.trim();
-    if (text.isNotEmpty) await MemoAccountant(_user!).profileSetText(text);
+    bool changed = false;
+    String newName = _profileNameCtrl.text.trim();
+    String newText = _profileTextCtrl.text.trim();
+    String newImgurUrl = _imgurCtrl.text.trim();
 
-    var imgur = _imgurCtrl.text.trim();
-    if (imgur.isNotEmpty) await MemoAccountant(_user!).profileSetAvatar(imgur);
+    // Update MemoModelCreator instance locally first for immediate UI reflection if desired
+    // This is optional, as _fetchProfileDataAndInitPostsStream will re-fetch
+    if (newName.isNotEmpty && newName != _creator!.name) {
+      // await MemoAccountant(_user!).profileSetName(newName); // Call backend
+      _creator!.name = newName; // Local update
+      changed = true;
+    }
+    if (newText.isNotEmpty && newText != _creator!.profileText) {
+      // await MemoAccountant(_user!).profileSetText(newText);
+      _creator!.profileText = newText;
+      changed = true;
+    }
+    if (newImgurUrl.isNotEmpty && newImgurUrl != _creator!.profileImageAvatar()) {
+      //TODO check this accountant sync data in background on dialog close?
+      // await MemoAccountant(_user!).profileSetAvatar(newImgurUrl);
+      // _creator!.setProfileImageAvatar(newImgurUrl); // Assuming a setter or way to update this
+      changed = true;
+    }
 
-    _user = await MemoModelUser.getUser();
-    setState(() {
-      if (dialogCtc.mounted) {
-        MemoConfetti().launch(context);
-        Navigator.of(dialogCtc).pop();
+    if (changed) {
+      try {
+        await CreatorService().saveCreator(_creator!); // Save the updated _creator to Firestore
+        if (mounted) {
+          MemoConfetti().launch(context);
+          showSnackBar("Profile updated!", context);
+          // Trigger a full refresh to get the latest from everywhere
+          // and ensure consistency if backend made further changes.
+          _fetchProfileDataAndInitPostsStream();
+        }
+      } catch (e) {
+        _logError("Error saving profile via CreatorService", e);
+        if (mounted) showSnackBar("Failed to save profile changes.", context);
       }
-    });
+    } else {
+      if (mounted) showSnackBar("No changes to save.", context);
+    }
+    if (Navigator.canPop(dialogContext)) {
+      // Check if dialog is still open
+      Navigator.of(dialogContext).pop();
+    }
   }
 }

@@ -11,15 +11,11 @@ class MemoScraperTag {
       for (int off = startOffset; off >= endOffset; off -= 25) {
         List<MemoModelTag> tags = await scrapeTags(order, off);
         for (MemoModelTag tag in tags) {
-          var list = await MemoPostService().scrapePostsPaginated(
-            baseUrl: "t/${tag.name}",
-            initialOffset: 0,
-            cacheId: cacheId,
-          );
+          var list = await MemoPostService().scrapePostsPaginated(baseUrl: "t/${tag.name}", initialOffset: 0, cacheId: cacheId);
           //TODO this already happens inside scrapepostspaginated
           // MemoModelPost.addToGlobalPostList(list);
         }
-        MemoModelTag.tags.addAll(tags);
+        // MemoModelTag.tags.addAll(tags);
         print("RUNNING SCRAPE:$order$off");
       }
     }

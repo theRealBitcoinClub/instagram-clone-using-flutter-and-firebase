@@ -7,6 +7,41 @@ class TagService {
   // Choose a distinct collection name for tags
   static const String _tagsCollection = 'tags'; // Or 'tags_v1', etc.
 
+  Future<List<MemoModelTag>> getAllTags() async {
+    try {
+      QuerySnapshot querySnapshot = await _firestore
+          .collection(_tagsCollection)
+          // .orderBy('name_lowercase') // Optionally order
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        return [];
+      }
+      return querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return MemoModelTag.fromJson(data)..id = doc.id; // Ensure ID is set
+      }).toList();
+    } catch (e, s) {
+      print("Error fetching all tags: $e");
+      print(s);
+      return []; // Return empty on error for caching robustness
+    }
+  }
+
+  // Your existing searchTags (on-demand)
+  Future<List<MemoModelTag>> searchTags(String query) async {
+    // ... (your existing on-demand search logic) ...
+    if (query.isEmpty) return [];
+    final String lowerQuery = query.toLowerCase();
+    QuerySnapshot snapshot = await _firestore
+        .collection(_tagsCollection)
+        .where('name_lowercase', isGreaterThanOrEqualTo: lowerQuery) // Assumes you have 'name_lowercase'
+        .where('name_lowercase', isLessThanOrEqualTo: lowerQuery + '\uf8ff')
+        .limit(10)
+        .get();
+    return snapshot.docs.map((doc) => MemoModelTag.fromJson(doc.data() as Map<String, dynamic>)..id = doc.id).toList();
+  }
+
   /// Saves a tag to Firestore.
   /// If a tag with the same ID already exists, it will be updated (merged).
   /// If it doesn't exist, it will be created.

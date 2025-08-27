@@ -139,4 +139,46 @@ class TopicService {
       return null;
     }
   }
+
+  Future<List<MemoModelTopic>> getAllTopics() async {
+    try {
+      QuerySnapshot querySnapshot = await _firestore
+          .collection(_topicsCollection)
+          // Optionally order them if needed for consistency, e.g., by header
+          // .orderBy('header_lowercase') // Add an index for this if you use it
+          .get(); // Consider adding .limit( énorme_nombre ) if your topics list is huge
+      // but for caching all, you'd fetch all or paginate if truly massive.
+
+      if (querySnapshot.docs.isEmpty) {
+        return [];
+      }
+      return querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return MemoModelTopic.fromJson(data)..id = doc.id; // Ensure ID is set
+      }).toList();
+    } catch (e, s) {
+      print("Error fetching all topics: $e");
+      print(s);
+      // Depending on your error strategy, you might rethrow or return empty list
+      // For caching, returning an empty list on error might be safer than crashing.
+      return [];
+    }
+  }
+
+  // Your existing searchTopics (on-demand) can remain if you want to switch strategies
+  // or for other parts of the app, but SearchViewModel will now primarily use the cache.
+  Future<List<MemoModelTopic>> searchTopics(String query) async {
+    // ... (your existing on-demand search logic) ...
+    // This will likely involve querying Firestore with a 'where' clause.
+    // Example:
+    if (query.isEmpty) return [];
+    final String lowerQuery = query.toLowerCase();
+    QuerySnapshot snapshot = await _firestore
+        .collection(_topicsCollection)
+        .where('header_lowercase', isGreaterThanOrEqualTo: lowerQuery) // Assumes you have 'header_lowercase'
+        .where('header_lowercase', isLessThanOrEqualTo: lowerQuery + '\uf8ff')
+        .limit(10) // Always limit on-demand searches
+        .get();
+    return snapshot.docs.map((doc) => MemoModelTopic.fromJson(doc.data() as Map<String, dynamic>)..id = doc.id).toList();
+  }
 }

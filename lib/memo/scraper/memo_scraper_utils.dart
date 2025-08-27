@@ -4,6 +4,9 @@ import 'package:mahakka/dart_web_scraper/dart_web_scraper/web_scraper.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../model/memo_model_creator.dart';
+import '../model/memo_model_topic.dart';
+
 class MemoScraperUtil {
   static Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg, {bool nocache = false}) async {
     String baseUrl = "https://memo.cash/";
@@ -41,6 +44,22 @@ class MemoScraperUtil {
       memoModelPost.youtubeId = text.substring(iStart + "', '".length - 1, iOptional == -1 ? iEnd : iOptional);
       memoModelPost.text = text.replaceRange(iTrigger, iEnd + 3, "");
     }
+  }
+
+  static bool linkReferencesAndSetId(MemoModelPost post, MemoModelTopic? topic, MemoModelCreator creator) {
+    if (post.uniqueContentId!.contains("post")) {
+      post.uniqueContentId = post.uniqueContentId!.substring("post/".length);
+    }
+    post.id = post.uniqueContentId!;
+    post.topicId = topic != null ? topic.id : "";
+    post.creatorId = creator.id;
+    MemoScraperUtil.extractUrlsAndHashtags(post);
+    post.tagIds = post.hashtags;
+    post.topic = topic;
+    if (MemoScraperUtil.isTextOnly(post)) {
+      return true;
+    }
+    return false;
   }
 
   static void printMemoModelPost(List<MemoModelPost> postList) {

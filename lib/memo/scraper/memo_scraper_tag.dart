@@ -1,15 +1,14 @@
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
-import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 import 'package:mahakka/memo/scraper/memo_post_service.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
 class MemoScraperTag {
-  Future<void> startScrapeTags(List<String> orderBy, int offset, String cacheId) async {
+  Future<void> startScrapeTags(List<String> orderBy, int startOffset, int endOffset, String cacheId) async {
     for (String order in orderBy) {
-      for (int off = offset; off >= 0; off -= 25) {
+      for (int off = startOffset; off >= endOffset; off -= 25) {
         List<MemoModelTag> tags = await scrapeTags(order, off);
         for (MemoModelTag tag in tags) {
           var list = await MemoPostService().scrapePostsPaginated(
@@ -17,7 +16,8 @@ class MemoScraperTag {
             initialOffset: 0,
             cacheId: cacheId,
           );
-          MemoModelPost.addToGlobalPostList(list);
+          //TODO this already happens inside scrapepostspaginated
+          // MemoModelPost.addToGlobalPostList(list);
         }
         MemoModelTag.tags.addAll(tags);
         print("RUNNING SCRAPE:$order$off");

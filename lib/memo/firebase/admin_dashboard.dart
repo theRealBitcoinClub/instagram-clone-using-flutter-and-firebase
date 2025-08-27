@@ -36,14 +36,14 @@ class AdminApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.indigo).copyWith(
           secondary: Colors.pinkAccent,
-          onPrimary: Colors.white, // Good for text/icons on primary color AppBar
+          onPrimary: Colors.redAccent, // Good for text/icons on primary color AppBar
         ),
         cardTheme: CardThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), elevation: 1.5),
         tabBarTheme: TabBarThemeData(
           // Optional: Centralized TabBar styling
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
+          labelColor: Colors.amber,
+          unselectedLabelColor: Colors.greenAccent,
+          indicatorColor: Colors.orange,
           // indicator: UnderlineTabIndicator( // More customization
           // borderSide: BorderSide(color: Colors.white, width: 2.0),
           // ),
@@ -54,8 +54,31 @@ class AdminApp extends StatelessWidget {
   }
 }
 
+// Define the callback type
+typedef CountCallback = void Function(int count);
+
 class _MainAdminDashboardState extends State<MainAdminDashboard> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _currentCount = 0; // State variable to hold the count
+  String _currentSectionName = 'Creators'; // Default section name
+
+  // Method to update the count and trigger a rebuild
+  void _updateCount(int count) {
+    if (mounted) {
+      // Ensure the widget is still in the tree
+      setState(() {
+        _currentCount = count;
+      });
+    }
+  }
+
+  void _updateSectionName(int index) {
+    if (mounted) {
+      setState(() {
+        _currentSectionName = _adminTabs[index].text ?? 'Items';
+      });
+    }
+  }
 
   final List<Tab> _adminTabs = const <Tab>[
     Tab(icon: Icon(Icons.people_alt_outlined), text: 'Creators'),
@@ -64,37 +87,58 @@ class _MainAdminDashboardState extends State<MainAdminDashboard> with SingleTick
     Tab(icon: Icon(Icons.sell_outlined), text: 'Tags'),
   ];
 
-  final List<Widget> _adminTabViews = const <Widget>[
-    AdminCreatorsListPage(),
-    AdminTopicsListPage(),
-    AdminPostsListPage(),
-    AdminTagsListPage(),
-  ];
+  late final List<Widget> _adminTabViews; // Declare here
 
   @override
   void initState() {
     super.initState();
+
+    // Initialize _adminTabViews here, passing the callback
+    _adminTabViews = <Widget>[
+      AdminCreatorsListPage(onCountChanged: _updateCount),
+      AdminTopicsListPage(onCountChanged: _updateCount),
+      AdminPostsListPage(onCountChanged: _updateCount),
+      AdminTagsListPage(onCountChanged: _updateCount),
+    ];
+
     _tabController = TabController(length: _adminTabs.length, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) {
+        // When tab changes, reset count visually or wait for new page to report
+        _updateSectionName(_tabController.index);
+        // _updateCount(0); // Optional: Reset count immediately on tab change
+        // The new page's StreamBuilder will soon report its count
+      } else {
+        // This handles the initial load and when a tab is settled on
+        _updateSectionName(_tabController.index);
+      }
+    });
+    // Initial name update
+    _updateSectionName(_tabController.index);
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(() {}); // Clean up listener
     _tabController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Construct the title dynamically
+    String appBarTitle = 'Admin - $_currentSectionName ($_currentCount)';
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+        title: Text(appBarTitle), // Dynamic title
         bottom: TabBar(
           controller: _tabController,
           tabs: _adminTabs,
-          isScrollable: false, // Set to true if you have many tabs that don't fit
-          indicatorColor: Theme.of(context).colorScheme.onPrimary, // Color of the underline
-          labelColor: Theme.of(context).colorScheme.onPrimary, // Color of the active tab's text/icon
-          unselectedLabelColor: Theme.of(context).colorScheme.onPrimary.withOpacity(0.7), // Color of inactive tabs
+          isScrollable: false,
+          indicatorColor: Theme.of(context).colorScheme.onPrimary,
+          labelColor: Theme.of(context).colorScheme.onPrimary,
+          unselectedLabelColor: Theme.of(context).colorScheme.onPrimary.withOpacity(0.7),
         ),
       ),
       body: TabBarView(controller: _tabController, children: _adminTabViews),

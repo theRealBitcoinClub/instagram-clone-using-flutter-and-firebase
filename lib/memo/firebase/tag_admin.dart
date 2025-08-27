@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-// Adjust these import paths to match your project structure
-import 'package:mahakka/memo/firebase/tag_service.dart'; // Your TagService path
-import 'package:mahakka/memo/model/memo_model_tag.dart'; // Your Tag Model
-// Remove if not running standalone
-// import 'package:firebase_core/firebase_core.dart';
-// import '../../firebase_options.dart';
+import 'package:mahakka/memo/firebase/tag_service.dart';
+import 'package:mahakka/memo/model/memo_model_tag.dart';
+
+// Callback type definition
+typedef CountChangedCallback = void Function(int count);
 
 class AdminTagsListPage extends StatefulWidget {
-  const AdminTagsListPage({super.key});
+  final CountChangedCallback onCountChanged;
+
+  const AdminTagsListPage({super.key, required this.onCountChanged});
 
   @override
   State<AdminTagsListPage> createState() => _AdminTagsListPageState();
@@ -45,7 +46,6 @@ class _AdminTagsListPageState extends State<AdminTagsListPage> {
             context,
           ).showSnackBar(SnackBar(content: Text('Tag "$tagId" deleted successfully'), backgroundColor: Colors.green));
         }
-        // The StreamBuilder will automatically rebuild the list
       } catch (e) {
         print("Error deleting tag: $e");
         if (mounted) {
@@ -59,86 +59,87 @@ class _AdminTagsListPageState extends State<AdminTagsListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Panel - All Tags'),
-        // You could add sorting options here later (e.g., by postCount)
-      ),
-      body: StreamBuilder<List<MemoModelTag>>(
-        stream: _tagService.getAllTagsStream(), // You might want to add ordering options to your service
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            print("Error in StreamBuilder (Tags): ${snapshot.error}");
-            return Center(child: Text('Error loading tags: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No tags found.'));
-          }
+    // Scaffold and AppBar are removed as they are handled by MainAdminDashboard
+    return StreamBuilder<List<MemoModelTag>>(
+      stream: _tagService.getAllTagsStream(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // widget.onCountChanged(0); // Optionally report 0
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          widget.onCountChanged(0);
+          print("Error in StreamBuilder (Tags): ${snapshot.error}");
+          return Center(child: Text('Error loading tags: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          widget.onCountChanged(0);
+          return const Center(child: Text('No tags found.'));
+        }
 
-          final List<MemoModelTag> tags = snapshot.data!;
-          // Example: Sort tags by postCount client-side if not done by service
-          // tags.sort((a, b) => (b.postCount ?? 0).compareTo(a.postCount ?? 0));
+        final List<MemoModelTag> tags = snapshot.data!;
+        // Call the callback with the current count
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            // Ensure widget is still mounted
+            widget.onCountChanged(tags.length);
+          }
+        });
 
-          return ListView.builder(
-            itemCount: tags.length,
-            itemBuilder: (context, index) {
-              final tag = tags[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center, // Center items vertically
-                    children: [
-                      // Tag Icon
-                      Padding(
-                        padding: const EdgeInsets.only(right: 16.0),
-                        child: Icon(
-                          Icons.sell_outlined, // Specific icon for tags
-                          size: 30,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+        // Example: Sort tags by postCount client-side if not done by service
+        // tags.sort((a, b) => (b.postCount ?? 0).compareTo(a.postCount ?? 0));
+
+        return ListView.builder(
+          itemCount: tags.length,
+          itemBuilder: (context, index) {
+            final tag = tags[index];
+            return Card(
+              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 16.0),
+                      child: Icon(Icons.sell_outlined, size: 30, color: Theme.of(context).colorScheme.primary),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${index + 1}. ${tag.id}", // Added index for clarity
+                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 6),
+                          _buildPropertyRow('Post Count:', tag.postCount?.toString() ?? '0'),
+                          _buildPropertyRow(
+                            'Last Used:',
+                            _formatDateSafe(tag.lastPost),
+                          ), // Assuming you have this field
+                        ],
                       ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              tag.id, // The tag ID is its name
-                              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 6),
-                            // Display relevant properties from MemoModelTag
-                            _buildPropertyRow('Post Count:', tag.postCount?.toString() ?? '0'),
-                            _buildPropertyRow('Last Used:', _formatDateSafe(tag.lastPost)), // Assuming 'createdDate'
-                            // Add any other relevant properties from your MemoModelTag
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red[700]),
-                        tooltip: 'Delete Tag',
-                        onPressed: () => _deleteTag(context, tag.id),
-                      ),
-                    ],
-                  ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red[700]),
+                      tooltip: 'Delete Tag',
+                      onPressed: () => _deleteTag(context, tag.id),
+                    ),
+                  ],
                 ),
-              );
-            },
-          );
-        },
-      ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
   Widget _buildPropertyRow(String label, String? value, {int? maxLines}) {
-    // Consistent property row builder
     if (value == null || value.isEmpty) {
-      return const SizedBox.shrink(); // Hide row if value is not significant
+      return const SizedBox.shrink();
     }
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
@@ -164,17 +165,15 @@ class _AdminTagsListPageState extends State<AdminTagsListPage> {
   }
 
   String _formatDateSafe(String? dateString) {
-    // Consistent date formatter
     if (dateString == null || dateString.isEmpty) return "N/A";
     try {
       final dateTime = DateTime.parse(dateString);
-      // Using local time for display
       final localDateTime = dateTime.toLocal();
       return "${localDateTime.year}-${localDateTime.month.toString().padLeft(2, '0')}-${localDateTime.day.toString().padLeft(2, '0')} "
           "${localDateTime.hour.toString().padLeft(2, '0')}:${localDateTime.minute.toString().padLeft(2, '0')}";
     } catch (e) {
       print("Error parsing date: $dateString, Error: $e");
-      return dateString; // Return original if parsing fails, or "Invalid Date"
+      return dateString;
     }
   }
 }

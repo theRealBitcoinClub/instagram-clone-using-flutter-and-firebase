@@ -1,13 +1,18 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 // Make sure this path is correct for your project
 import 'package:mahakka/memo/firebase/creator_service.dart'; // Your CreatorService path
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 
-import '../../firebase_options.dart'; // Your Creator Model
+// Callback type definition (can be defined in one place and imported if preferred)
+typedef CountChangedCallback = void Function(int count);
 
 class AdminCreatorsListPage extends StatefulWidget {
-  const AdminCreatorsListPage({super.key});
+  final CountChangedCallback onCountChanged; // Callback property
+
+  const AdminCreatorsListPage({
+    super.key,
+    required this.onCountChanged, // Make callback required
+  });
 
   @override
   State<AdminCreatorsListPage> createState() => _AdminCreatorsListPageState();
@@ -60,88 +65,98 @@ class _AdminCreatorsListPageState extends State<AdminCreatorsListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Admin Panel - All Creators')),
-      body: StreamBuilder<List<MemoModelCreator>>(
-        stream: _creatorService.getAllCreatorsStream(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            print("Error in StreamBuilder: ${snapshot.error}");
-            return Center(child: Text('Error loading creators: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No creators found.'));
-          }
+    // AppBar is now in MainAdminDashboard
+    return StreamBuilder<List<MemoModelCreator>>(
+      stream: _creatorService.getAllCreatorsStream(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Optionally report 0 or a loading state, or wait for data
+          // widget.onCountChanged(0); // Or handle more gracefully
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          widget.onCountChanged(0); // Report 0 on error
+          print("Error in StreamBuilder (Creators): ${snapshot.error}");
+          return Center(child: Text('Error loading creators: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          widget.onCountChanged(0); // Report 0 if no data or empty
+          return const Center(child: Text('No creators found.'));
+        }
 
-          final List<MemoModelCreator> creators = snapshot.data!;
+        final List<MemoModelCreator> creators = snapshot.data!;
+        // Call the callback with the current count
+        // Use WidgetsBinding.instance.addPostFrameCallback to ensure it's called after the build phase
+        // if you encounter setState issues during build. For simple count updates, this direct call is often fine.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            // Check if the widget is still mounted before calling callback
+            widget.onCountChanged(creators.length);
+          }
+        });
 
-          return ListView.builder(
-            itemCount: creators.length,
-            itemBuilder: (context, index) {
-              final creator = creators[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Creator Avatar (Optional)
-                      if (creator.profileImageAvatar.toString().isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 12.0),
-                          child: CircleAvatar(
-                            radius: 30,
-                            backgroundImage: NetworkImage(creator.profileImageAvatar.toString()),
-                            onBackgroundImageError: (e, s) {
-                              print("Error loading avatar for ${creator.id}: $e");
-                              return; // The CircleAvatar will show its child (Icon)
-                            },
-                            child: Icon(Icons.person, size: 30), // Fallback
+        return ListView.builder(
+          itemCount: creators.length,
+          itemBuilder: (context, index) {
+            final creator = creators[index];
+            return Card(
+              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Creator Avatar (Optional)
+                    if (creator.profileImageAvatar.toString().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12.0),
+                        child: CircleAvatar(
+                          radius: 30,
+                          backgroundImage: NetworkImage(creator.profileImageAvatar.toString()),
+                          onBackgroundImageError: (e, s) {
+                            print("Error loading avatar for ${creator.id}: $e");
+                            return; // The CircleAvatar will show its child (Icon)
+                          },
+                          child: Icon(Icons.person, size: 30), // Fallback
+                        ),
+                      )
+                    else
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12.0),
+                        child: CircleAvatar(radius: 30, child: Icon(Icons.person, size: 30)),
+                      ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${index + 1}. ${creator.name ?? 'N/A'}",
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
-                        )
-                      else
-                        Padding(
-                          padding: const EdgeInsets.only(right: 12.0),
-                          child: CircleAvatar(radius: 30, child: Icon(Icons.person, size: 30)),
-                        ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "$index. ${creator.name}" ?? 'N/A',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 4),
-                            Text('ID: ${creator.id}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                            const SizedBox(height: 6),
-                            _buildPropertyRow('Profile:', creator.profileText, maxLines: 2),
-                            _buildPropertyRow('Followers:', creator.followerCount?.toString() ?? 'N/A'),
-                            _buildPropertyRow('Actions:', creator.actions?.toString() ?? 'N/A'),
-                            _buildPropertyRow('Created:', _formatDateSafe(creator.created)),
-                            _buildPropertyRow('Last Action:', _formatDateSafe(creator.lastActionDate)),
-                            // Add more properties from MemoModelCreator as needed
-                          ],
-                        ),
+                          const SizedBox(height: 4),
+                          Text('ID: ${creator.id}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                          const SizedBox(height: 6),
+                          _buildPropertyRow('Profile:', creator.profileText, maxLines: 2),
+                          _buildPropertyRow('Followers:', creator.followerCount?.toString() ?? 'N/A'),
+                          _buildPropertyRow('Actions:', creator.actions?.toString() ?? 'N/A'),
+                          _buildPropertyRow('Created:', _formatDateSafe(creator.created)),
+                          _buildPropertyRow('Last Action:', _formatDateSafe(creator.lastActionDate)),
+                        ],
                       ),
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red[700]),
-                        tooltip: 'Delete Creator',
-                        onPressed: () => _deleteCreator(context, creator.id, creator.name),
-                      ),
-                    ],
-                  ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red[700]),
+                      tooltip: 'Delete Creator',
+                      onPressed: () => _deleteCreator(context, creator.id, creator.name),
+                    ),
+                  ],
                 ),
-              );
-            },
-          );
-        },
-      ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -176,23 +191,4 @@ class _AdminCreatorsListPageState extends State<AdminCreatorsListPage> {
       return dateString; // Return original if parsing fails
     }
   }
-}
-
-void main() async {
-  // You'd need to initialize Firebase here if running standalone
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform, // If using Firebase CLI setup
-  );
-  runApp(
-    MaterialApp(
-      title: 'Admin Panel Test (Stream)',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-        useMaterial3: true,
-        cardTheme: CardThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-      ),
-      home: const AdminCreatorsListPage(),
-    ),
-  );
 }

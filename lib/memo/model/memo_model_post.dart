@@ -51,7 +51,7 @@ class MemoModelPost {
   // Fields to be serialized
   final int? popularityScore;
   String? text;
-  final String? uniqueContentId;
+  String? uniqueContentId;
   final String? imgurUrl;
   String? youtubeId;
 
@@ -68,10 +68,10 @@ class MemoModelPost {
   final List<String> hashtags = [];
 
   @JsonKey(ignore: true) // Will not be included in JSON (only creatorId is serialized)
-  late final MemoModelCreator? creator;
+  MemoModelCreator? creator;
 
   @JsonKey(ignore: true) // Will not be included in JSON (only topicId is serialized)
-  late final MemoModelTopic? topic;
+  MemoModelTopic? topic;
 
   @JsonKey(ignore: true) // Will not be included in JSON
   final String? age;

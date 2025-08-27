@@ -8,9 +8,9 @@ import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
 class MemoScraperTopic {
-  Future<void> startScrapeTopics(String cacheId, int offset) async {
+  Future<void> startScrapeTopics(String cacheId, int startOffset, int endOffset) async {
     MemoModelTopic.topics.clear();
-    for (int off = offset; off >= 0; off -= 25) {
+    for (int off = startOffset; off >= endOffset; off -= 25) {
       Map<String, Object> topics = await MemoScraperUtil.createScraper(
         "topics/all?offset=$off&x=$cacheId",
         createScraperConfigMemoModelTopic(),
@@ -129,13 +129,7 @@ class MemoScraperTopic {
         creator: creator,
       );
 
-      post.topicId = topic.id;
-      post.creatorId = creator.id;
-      MemoScraperUtil.extractUrlsAndHashtags(post);
-      post.tagIds = post.hashtags;
-      if (MemoScraperUtil.isTextOnly(post)) {
-        continue;
-      }
+      if (MemoScraperUtil.linkReferencesAndSetId(post, topic, creator)) continue;
 
       postList.add(post);
     }

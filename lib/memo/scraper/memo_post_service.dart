@@ -195,28 +195,9 @@ class MemoPostService {
         creator: creator,
         // likeCounter and replyCounter were commented out, assuming they are not used.
       );
+      if (MemoScraperUtil.linkReferencesAndSetId(post, topic, creator)) continue;
 
-      // Assuming these utility methods are still relevant and safe.
-      // If they can throw errors, wrap them in try-catch.
       try {
-        MemoScraperUtil.extractUrlsAndHashtags(post);
-
-        post.topicId = topic != null ? topic.id : "";
-        post.creatorId = creator.id;
-        MemoScraperUtil.extractUrlsAndHashtags(post);
-        post.tagIds = post.hashtags;
-        post.topic = topic;
-
-        // Your existing filter logic:
-        // "TODO removing all posts that contain URLs in the text for now, high quality content"
-        // This condition seems to filter out posts that DO have URLs.
-        // If the goal is to keep ONLY text-only posts OR posts with image URLs (but no text URLs),
-        // the logic might need adjustment.
-        // Current logic: if (isTextOnly OR (hasImage AND noTextUrls))
-        // Your TODO implies you want to REMOVE posts with URLs in text.
-        // The original `if (MemoScraperUtil.isTextOnly(post) || post.urls.isNotEmpty)`
-        // would `continue` (skip) if it's textOnly OR if it has URLs. This seems to filter out almost everything.
-        // Let's assume you want to keep posts that are text-only OR have an imgurUrl but no other URLs in the text.
         bool hasTextUrls = post.urls.any(
           (url) => url != post.imgurUrl,
         ); // Check if any extracted URL is not the imgurUrl
@@ -226,11 +207,14 @@ class MemoPostService {
           _logInfo("Skipping post (no imgur, has text URLs): ${post.uniqueContentId}");
           continue;
         }
-        if (post.imgurUrl != null && hasTextUrls && !(post.urls.length == 1 && post.urls.first == post.imgurUrl)) {
-          // If has imgur, but also OTHER text URLs, skip.
-          _logInfo("Skipping post (has imgur and other text URLs): ${post.uniqueContentId}");
-          continue;
-        }
+
+        //TODO FILTER THIS OR NOT ??
+        // if (post.imgurUrl != null && hasTextUrls && !(post.urls.length == 1 && post.urls.first == post.imgurUrl)) {
+        //   // If has imgur, but also OTHER text URLs, skip.
+        //   _logInfo("Skipping post (has imgur and other text URLs): ${post.uniqueContentId}");
+        //   continue;
+        // }
+
         // If it reaches here:
         // 1. It's text-only (no imgur, no text URLs).
         // 2. It has an imgurUrl and no OTHER text URLs.

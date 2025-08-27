@@ -27,7 +27,7 @@ class MemoModelPost {
   String id;
 
   MemoModelPost({
-    this.id = '', // ID is now required
+    required this.id, // ID is now required
     this.text,
     this.uniqueContentId,
     this.imgurUrl,
@@ -41,9 +41,12 @@ class MemoModelPost {
     this.topic, // Will not be serialized directly
     this.creatorId = '',
     this.topicId = '',
-    this.tagIds = const [],
+    required this.tagIds,
     this.createdDateTime,
   }) {
+    if (createdDateTime == null && created != null && created!.isNotEmpty) {
+      createdDateTime = DateTime.parse(created!);
+    }
     // urls and hashtags are instance variables, initialized empty.
     // They are not part of the constructor parameters if they are always empty initially
     // and populated later.
@@ -57,7 +60,7 @@ class MemoModelPost {
   String? youtubeId;
 
   @JsonKey(fromJson: _dateTimeFromJson, toJson: _dateTimeToJson)
-  final DateTime? createdDateTime; // Serialized as Timestamp
+  DateTime? createdDateTime; // Serialized as Timestamp
 
   final int? likeCounter;
   final int? replyCounter;
@@ -74,13 +77,13 @@ class MemoModelPost {
   @JsonKey(ignore: true) // Will not be included in JSON
   final String? age;
 
+  @JsonKey(ignore: true) // Will not be included in JSON
   final String? created;
 
   // IDs for relationships - these will be serialized.
   String creatorId;
   String topicId;
-  @JsonKey(defaultValue: [])
-  List<String> tagIds;
+  List<String> tagIds = [];
 
   /// Factory constructor for creating a new MemoModelPost instance from a map.
   factory MemoModelPost.fromJson(Map<String, dynamic> json) => _$MemoModelPostFromJson(json);

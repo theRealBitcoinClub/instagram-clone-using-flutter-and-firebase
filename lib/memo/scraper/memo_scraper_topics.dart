@@ -113,7 +113,9 @@ class MemoScraperTopic {
       } catch (e) {}
 
       MemoModelCreator creator = MemoModelCreator(name: item["creatorName"].toString(), id: item["profileUrl"].toString().substring(8));
+      var id = item["txhash"].toString().substring("post/".length);
       MemoModelPost post = MemoModelPost(
+        id: id,
         topic: topic,
         text: item["msg"]?.toString(),
         age: item["age"].toString(),
@@ -121,12 +123,17 @@ class MemoScraperTopic {
         likeCounter: likeCount,
         replyCounter: int.parse((item["replyCount"] ?? "0").toString()),
         created: item["created"].toString(),
-        uniqueContentId: item["txhash"].toString().substring("/post".length),
+        uniqueContentId: id,
         imgurUrl: item["imgur"]?.toString(),
         creator: creator,
+        tagIds: [],
       );
 
-      if (MemoScraperUtil.linkReferencesAndSetId(post, topic, creator)) continue;
+      MemoScraperUtil.linkReferencesAndSetId(post, topic, creator);
+
+      if (MemoScraperUtil.isTextOnly(post)) {
+        continue;
+      }
 
       postList.add(post);
     }

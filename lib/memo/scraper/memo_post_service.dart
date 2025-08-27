@@ -24,7 +24,7 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
 class MemoPostService {
   // Renamed for clarity on its purpose
   static const String _rootParserParent = "_root";
-  static const String _txHashPrefix = "/post";
+  static const String _txHashPrefix = "post/";
   static const int _profileUrlPrefixLength = 8; // Length of "profile/" is 8, adjust if prefix changes
 
   // --- Configuration Method ---
@@ -110,111 +110,137 @@ class MemoPostService {
       return postList;
     }
 
-    final dynamic rawItems = scrapedData.values.first;
+    final dynamic postDataList = scrapedData.values.first;
 
     // Early exit if it's a known non-post page
-    if (rawItems.toString().contains("memo.cash")) {
+    if (postDataList.toString().contains("memo.cash")) {
       // This check might need refinement
       _logInfo("Detected a 'memo.cash' redirect or non-post page. Skipping parsing.");
       return postList;
     }
 
-    if (rawItems is! Iterable) {
-      _logWarning("Expected iterable post items, but got ${rawItems.runtimeType}. Data: $rawItems");
+    if (postDataList is! Iterable) {
+      _logWarning("Expected iterable post items, but got ${postDataList.runtimeType}. Data: $postDataList");
       return postList;
     }
 
-    for (final dynamic itemUntyped in rawItems) {
-      if (itemUntyped is! Map<String, Object?>) {
-        _logWarning("Expected post item to be a Map, but got ${itemUntyped.runtimeType}. Item: $itemUntyped");
-        continue;
-      }
-      final Map<String, Object?> item = itemUntyped;
+    for (final dynamic postData in postDataList) {
+      MemoModelPost? post = parsePost(postData);
 
-      // Skip replies based on text content
-      if (item["reply"]?.toString().contains("replied") ?? false) {
-        continue;
-      }
-
-      // --- Robust data extraction with type checks and defaults ---
-
-      final String? topicLink = item["topicLink"]?.toString();
-      final String? topicHeader = item["topic"]?.toString();
-      final MemoModelTopic? topic = (topicLink != null && topicHeader != null) ? MemoModelTopic(url: topicLink, id: topicHeader) : null;
-
-      final String? text = item["msg"]?.toString();
-      final String? age = item["age"]?.toString();
-      final String? tipsRaw = item["tipsInSatoshi"]?.toString();
-      final int tipsInSatoshi = int.tryParse(tipsRaw?.replaceAll(",", "") ?? "0") ?? 0;
-
-      final String? created = item["created"]?.toString();
-
-      final String? txHashRaw = item["txhash"]?.toString();
-      final String? txHash = (txHashRaw != null && txHashRaw.startsWith(_txHashPrefix))
-          ? txHashRaw.substring(_txHashPrefix.length)
-          : txHashRaw; // Or handle as error if prefix is mandatory
-
-      final String? imgurUrl = item["imgur"]?.toString();
-
-      final String? creatorName = item["creatorName"]?.toString();
-      final String? profileUrlRaw = item["profileUrl"]?.toString();
-      MemoModelCreator? creator;
-      if (creatorName != null && profileUrlRaw != null && profileUrlRaw.length > _profileUrlPrefixLength) {
-        // Assuming the ID is the part after the prefix (e.g., "profile/creatorId")
-        final String creatorId = profileUrlRaw.substring(_profileUrlPrefixLength);
-        creator = MemoModelCreator(name: creatorName, id: creatorId);
-      } else {
-        _logWarning("Missing creator name or valid profile URL for post item: $item");
-        // Decide how to handle missing creator: skip post, use a default, etc.
-        // For now, we allow creator to be null if MemoModelPost supports it.
-      }
-
-      // Ensure essential fields are present before creating the post object
-      if (text == null || age == null || created == null || txHash == null || creator == null) {
-        _logWarning("Skipping post due to missing essential data (text, age, created, txHash, or creator). Item: $item");
-        continue;
-      }
-
-      MemoModelPost post = MemoModelPost(
-        topic: topic,
-        text: text,
-        age: age,
-        popularityScore: tipsInSatoshi,
-        created: created,
-        uniqueContentId: txHash,
-        imgurUrl: imgurUrl,
-        creator: creator,
-        // likeCounter and replyCounter were commented out, assuming they are not used.
-      );
-      if (MemoScraperUtil.linkReferencesAndSetId(post, topic, creator)) continue;
-
-      try {
-        bool hasTextUrls = post.urls.any((url) => url != post.imgurUrl); // Check if any extracted URL is not the imgurUrl
-
-        if (post.imgurUrl == null && hasTextUrls) {
-          // If no image, and has text URLs, skip.
-          _logInfo("Skipping post (no imgur, has text URLs): ${post.uniqueContentId}");
-          continue;
-        }
-
-        //TODO FILTER THIS OR NOT ??
-        // if (post.imgurUrl != null && hasTextUrls && !(post.urls.length == 1 && post.urls.first == post.imgurUrl)) {
-        //   // If has imgur, but also OTHER text URLs, skip.
-        //   _logInfo("Skipping post (has imgur and other text URLs): ${post.uniqueContentId}");
-        //   continue;
-        // }
-
-        // If it reaches here:
-        // 1. It's text-only (no imgur, no text URLs).
-        // 2. It has an imgurUrl and no OTHER text URLs.
-      } catch (e, s) {
-        _logError("Error during post-processing (extractUrlsAndHashtags or filtering) for txHash: ${post.uniqueContentId}", e, s);
-        continue; // Skip this post on error
-      }
-
-      postList.add(post);
+      if (post != null) postList.add(post);
     }
     return postList;
+  }
+
+  Future<MemoModelPost?> fetchAndParsePost(String postId, {bool filterOn = true}) async {
+    final String scrapeUrl = "post/$postId";
+    _logInfo("Scraping post from: $scrapeUrl");
+
+    var postData = await MemoScraperUtil.createScraperObj(scrapeUrl, _buildPostsScraperConfig(), nocache: true);
+
+    MemoModelPost? post = parsePost(postData.values.first, filterOn: filterOn);
+    return post;
+  }
+
+  MemoModelPost? parsePost(postData, {bool filterOn = true}) {
+    var item = postData;
+    if (postData is! Map<String, Object?>) {
+      if (postData[0] is Map<String, Object?>)
+        item = postData[0];
+      else {
+        _logWarning("Expected post item to be a Map, but got ${postData.runtimeType}. Item: $postData");
+        return null;
+      }
+    }
+
+    // Skip replies based on text content
+    if (item["reply"]?.toString().contains("replied") ?? false) {
+      return null;
+    }
+
+    // --- Robust data extraction with type checks and defaults ---
+
+    final String? topicLink = item["topicLink"]?.toString();
+    final String? topicHeader = item["topic"]?.toString();
+    final MemoModelTopic? topic = (topicLink != null && topicHeader != null) ? MemoModelTopic(url: topicLink, id: topicHeader) : null;
+
+    final String? text = item["msg"]?.toString();
+    final String? age = item["age"]?.toString();
+    final String? tipsRaw = item["tipsInSatoshi"]?.toString();
+    final int tipsInSatoshi = int.tryParse(tipsRaw?.replaceAll(",", "") ?? "0") ?? 0;
+
+    final String? created = item["created"]?.toString();
+
+    final String? txHashRaw = item["txhash"]?.toString();
+    final String? txHash = (txHashRaw != null && txHashRaw.startsWith(_txHashPrefix))
+        ? txHashRaw.substring(_txHashPrefix.length)
+        : txHashRaw; // Or handle as error if prefix is mandatory
+
+    final String? imgurUrl = item["imgur"]?.toString();
+
+    final String? creatorName = item["creatorName"]?.toString();
+    final String? profileUrlRaw = item["profileUrl"]?.toString();
+    MemoModelCreator? creator;
+    if (creatorName != null && profileUrlRaw != null && profileUrlRaw.length > _profileUrlPrefixLength) {
+      // Assuming the ID is the part after the prefix (e.g., "profile/creatorId")
+      final String creatorId = profileUrlRaw.substring(_profileUrlPrefixLength);
+      creator = MemoModelCreator(name: creatorName, id: creatorId);
+    } else {
+      _logWarning("Missing creator name or valid profile URL for post item: $item");
+      // Decide how to handle missing creator: skip post, use a default, etc.
+      // For now, we allow creator to be null if MemoModelPost supports it.
+    }
+
+    // Ensure essential fields are present before creating the post object
+
+    if (age == null || created == null || txHash == null || creator == null) {
+      _logWarning("Skipping post due to missing essential data (text, age, created, txHash, or creator). Item: $item");
+      return null;
+    }
+
+    MemoModelPost post = MemoModelPost(
+      id: txHash,
+      topic: topic,
+      text: text,
+      age: age,
+      popularityScore: tipsInSatoshi,
+      created: created,
+      uniqueContentId: txHash,
+      imgurUrl: imgurUrl,
+      creator: creator,
+      tagIds: [],
+      // likeCounter and replyCounter were commented out, assuming they are not used.
+    );
+    MemoScraperUtil.linkReferencesAndSetId(post, topic, creator);
+
+    if (filterOn && MemoScraperUtil.isTextOnly(post)) {
+      return null;
+    }
+
+    try {
+      bool hasTextUrls = post.urls.any((url) => url != post.imgurUrl); // Check if any extracted URL is not the imgurUrl
+
+      if (filterOn && post.imgurUrl == null && hasTextUrls) {
+        // If no image, and has text URLs, skip.
+        _logInfo("Skipping post (no imgur, has text URLs): ${post.uniqueContentId}");
+        return null;
+      }
+
+      //TODO FILTER THIS OR NOT ??
+      // if (post.imgurUrl != null && hasTextUrls && !(post.urls.length == 1 && post.urls.first == post.imgurUrl)) {
+      //   // If has imgur, but also OTHER text URLs, skip.
+      //   _logInfo("Skipping post (has imgur and other text URLs): ${post.uniqueContentId}");
+      //   return null;
+      // }
+
+      // If it reaches here:
+      // 1. It's text-only (no imgur, no text URLs).
+      // 2. It has an imgurUrl and no OTHER text URLs.
+    } catch (e, s) {
+      _logError("Error during post-processing (extractUrlsAndHashtags or filtering) for txHash: ${post.uniqueContentId}", e, s);
+      return null; // Skip this post on error
+    }
+    return post;
   }
 }
 

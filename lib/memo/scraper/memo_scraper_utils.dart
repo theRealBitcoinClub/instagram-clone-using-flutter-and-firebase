@@ -9,6 +9,14 @@ import '../model/memo_model_topic.dart';
 
 class MemoScraperUtil {
   static Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg, {bool nocache = false}) async {
+    return await _createScraperAny(nocache, path, cfg);
+  }
+
+  static dynamic createScraperObj(String path, ScraperConfig cfg, {bool nocache = false}) async {
+    return await _createScraperAny(nocache, path, cfg);
+  }
+
+  static Future<Map<String, Object>> _createScraperAny(bool nocache, String path, ScraperConfig cfg) async {
     String baseUrl = "https://memo.cash/";
     WebScraper webScraper = WebScraper();
     String? cachedData = nocache ? null : await loadCachedData(path);
@@ -17,7 +25,7 @@ class MemoScraperUtil {
       concurrentParsing: true,
       url: Uri.parse(baseUrl + path),
       scraperConfig: cfg,
-      onCacheHtmlString: (data) => cacheData(path, data),
+      onCacheHtmlString: (data) => nocache ? null : cacheData(path, data),
     );
     return topics;
   }
@@ -46,7 +54,7 @@ class MemoScraperUtil {
     }
   }
 
-  static bool linkReferencesAndSetId(MemoModelPost post, MemoModelTopic? topic, MemoModelCreator creator) {
+  static MemoModelPost linkReferencesAndSetId(MemoModelPost post, MemoModelTopic? topic, MemoModelCreator creator) {
     if (post.uniqueContentId!.contains("post")) {
       post.uniqueContentId = post.uniqueContentId!.substring("post/".length);
     }
@@ -56,10 +64,7 @@ class MemoScraperUtil {
     MemoScraperUtil.extractUrlsAndHashtags(post);
     post.tagIds = post.tagIds;
     post.topic = topic;
-    if (MemoScraperUtil.isTextOnly(post)) {
-      return true;
-    }
-    return false;
+    return post;
   }
 
   static void printMemoModelPost(List<MemoModelPost> postList) {

@@ -4,6 +4,7 @@ import 'package:json_annotation/json_annotation.dart';
 // Your other imports
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
+import 'package:mahakka/memo/firebase/topic_service.dart';
 // Or if you directly use cloud_firestore package:
 // import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -176,5 +177,9 @@ class MemoModelPost {
   @override
   String toString() {
     return 'MemoModelPost(id: $id, uniqueContentId: $uniqueContentId, text: $text, creatorId: $creatorId)';
+  }
+
+  void loadTopic() async {
+    topic = await TopicService().getTopicOnce(topicId);
   }
 }

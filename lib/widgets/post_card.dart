@@ -90,6 +90,9 @@ class _PostCardState extends State<PostCard> {
     }
     widget.post.creator = await widget.post.creator!.refreshCreatorFirebase();
     widget.post.creator!.refreshAvatar();
+    if (widget.post.topic == null) {
+      widget.post.loadTopic();
+    }
   }
 
   void _initializeSelectedHashtags() {

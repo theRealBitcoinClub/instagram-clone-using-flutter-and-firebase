@@ -217,11 +217,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     for (var post in allPosts) {
       // Ensure creator data is attempted to be loaded if not present
       // This is important if your post display logic relies on post.creator.name etc.
-      if (post.creator == null && post.creatorId.isNotEmpty) {
-        // Asynchronously refresh. The UI for individual posts will handle loading state.
-        post.creator = MemoModelCreator(id: post.creatorId);
-        post.creator!.refreshCreatorFirebase();
-      }
+      // if (post.creator == null && post.creatorId.isNotEmpty) {
+      //   // Asynchronously refresh. The UI for individual posts will handle loading state.
+      //   post.creator = MemoModelCreator(id: post.creatorId);
+      //   post.creator!.refreshCreatorFirebase();
+      // }
 
       if (post.imgurUrl != null && post.imgurUrl!.isNotEmpty) {
         newImagePosts.add(post);
@@ -512,7 +512,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               final post = _imagePosts[index];
               Widget imagePlaceholder = Container(
                 color: theme.colorScheme.surfaceVariant,
-                child: Icon(Icons.broken_image_outlined, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
+                child: Icon(Icons.broken_image_outlined, size: 55, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
               );
               if (post.imgurUrl == null || post.imgurUrl!.isEmpty) return imagePlaceholder;
 
@@ -520,7 +520,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 post.imgurUrl!,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  _logError("Error loading grid image: ${post.imgurUrl}", error, stackTrace);
+                  // _logError("Error loading grid image: ${post.imgurUrl}", error, stackTrace);
                   return imagePlaceholder;
                 },
                 loadingBuilder: (context, child, loadingProgress) {
@@ -653,18 +653,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Expanded(
-                      child: isOwnProfile
-                          ? _buildStatColumn(theme, 'BCH', balanceBch)
-                          : SizedBox(
-                              child: Center(child: Text("Followers: ${_creator?.followerCount ?? 0}", style: theme.textTheme.bodyMedium)),
-                            ),
+                      child: isOwnProfile ? _buildStatColumn(theme, 'BCH', balanceBch) : SizedBox(),
+                      // SizedBox(
+                      //         child: Center(child: Text("Followers: ${_creator?.followerCount ?? 0}", style: theme.textTheme.bodyMedium)),
+                      //       ),
                     ), // Example for non-own profile
                     Expanded(
-                      child: isOwnProfile
-                          ? _buildStatColumn(theme, 'Token', balanceTokens)
-                          : SizedBox(
-                              child: Center(child: Text("Last seen: ${_creator?.lastActionDate ?? 0}", style: theme.textTheme.bodyMedium)),
-                            ),
+                      child: isOwnProfile ? _buildStatColumn(theme, 'Token', balanceTokens) : SizedBox(),
+                      // SizedBox(
+                      //         child: Center(child: Text("Last seen: ${_creator?.lastActionDate ?? 0}", style: theme.textTheme.bodyMedium)),
+                      //       ),
                     ), // Example for non-own profile
                     Expanded(child: isOwnProfile ? _buildStatColumn(theme, 'Memo', balanceMemo) : SizedBox()),
                   ],
@@ -716,7 +714,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4.0),
         child: SettingsButton(
-          text: !isOwnProfile ? (false ? "Unfollow" : "Follow") : 'Edit Profile', // Example for follow/unfollow
+          text: !isOwnProfile ? "Send Message" : 'Edit Profile', // Example for follow/unfollow
           onPressed: _onProfileButtonPressed,
         ),
       ),
@@ -727,8 +725,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (isOwnProfile) {
       _onProfileSettings();
     } else {
+      showSnackBar("Coming soon!", context);
       // Handle Follow/Unfollow logic
-      _toggleFollowStatus();
+      // _toggleFollowStatus();
     }
   }
 
@@ -904,34 +903,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildGenericPostListView(ThemeData theme, List<MemoModelPost> posts) {
-    // Assuming _creator is available in the scope of this widget, e.g., from _ProfileScreenState
-    // If not, you'd need to get creator info from 'post.creator' and handle its loading state.
-    // For this example, let's use the _creator from _ProfileScreenState for the header.
-    // Ensure _creator is not null before accessing its properties.
-
-    final String? creatorCreatedDate = _creator?.created;
-    // if (_creator?.createdDateTime !=
-    //     null) { // Assuming MemoModelCreator has createdDateTime
-    //   creatorCreatedDate =
-    //       DateFormat('MMM d, yyyy').format(_creator!.createdDateTime!);
-    // } else if (_creator?.created != null &&
-    //     _creator!.created!.isNotEmpty) { // Fallback to string if available
-    //   creatorCreatedDate = _creator!.created;
-    // } else {
-    //   creatorCreatedDate = null;
-    // }
-
     return SliverList(
       delegate: SliverChildBuilderDelegate(childCount: posts.length, (context, index) {
         final post = posts[index];
         final String postCreatorName = _creator!.name;
-        // final String postCreatorName = "dsfdsf";
-        // post.creator?.name ?? _creator?.name ?? post.creatorId; // Use post's creator first, then screen's _creator, then ID
         final String postTimestamp = "${post.createdDateTime}";
-        // post.createdDateTime != null
-        //     ? DateFormat('MMM d, yyyy HH:mm').format(post.createdDateTime!) // More detailed post timestamp
-        //     : (post.created ?? post.age ?? '');
-
         return Card(
           elevation: 2.0,
           // Add a bit of elevation for a nicer look
@@ -948,18 +924,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Optional: Creator Avatar (if available and desired)
-                    // if (post.creator?.profileImageAvatar().isNotEmpty ?? _creator?.profileImageAvatar().isNotEmpty ?? false)
-                    //   Padding(
-                    //     padding: const EdgeInsets.only(right: 12.0),
-                    //     child: CircleAvatar(
-                    //       radius: 20,
-                    //       backgroundImage: NetworkImage(
-                    //         post.creator?.profileImageAvatar() ?? _creator!.profileImageAvatar()
-                    //       ),
-                    //       backgroundColor: theme.colorScheme.surfaceVariant,
-                    //     ),
-                    //   ),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -970,15 +934,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                             overflow: TextOverflow.ellipsis,
                           ),
-                          if (creatorCreatedDate != null &&
-                              post.creator == null) // Show overall creator join date if post.creator isn't detailed
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2.0),
-                              child: Text(
-                                'Creator since: $creatorCreatedDate',
-                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
-                              ),
-                            ),
                         ],
                       ),
                     ),

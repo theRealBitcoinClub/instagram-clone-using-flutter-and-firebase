@@ -93,6 +93,7 @@ class _PostCardState extends State<PostCard> {
     if (widget.post.topic == null) {
       widget.post.loadTopic();
     }
+    if (mounted) setState(() {});
   }
 
   void _initializeSelectedHashtags() {
@@ -188,89 +189,90 @@ class _PostCardState extends State<PostCard> {
 
     if (widget.post.creator == null) {
       _refreshCreator();
-      _logError("Post creator is null for post ID: ${widget.post.id}");
+      // _logError("Post creator is null for post ID: ${widget.post.id}");
+      // return Card(
+      //   // Use Card for consistent error display
+      //   color: theme.colorScheme.errorContainer,
+      //   margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+      //   child: Padding(
+      //     padding: const EdgeInsets.all(16.0),
+      //     child: Text("Error: Post data incomplete. Cannot display this post.", style: TextStyle(color: theme.colorScheme.onErrorContainer)),
+      //   ),
+      // );
+      return SizedBox();
+    } else {
       return Card(
-        // Use Card for consistent error display
-        color: theme.colorScheme.errorContainer,
+        // Card properties will now use theme.cardTheme
         margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text("Error: Post data incomplete. Cannot display this post.", style: TextStyle(color: theme.colorScheme.onErrorContainer)),
+        // elevation: theme.cardTheme.elevation ?? 2.0, // Or set explicitly
+        // color: theme.cardTheme.color, // Handled by CardTheme
+        // shape: theme.cardTheme.shape, // Handled by CardTheme
+        clipBehavior: Clip.antiAlias, // Good practice for cards with images
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _PostCardHeader(
+              post: widget.post,
+              onOptionsMenuPressed: _sendTipToCreator,
+              navBarCallback: navBarCallback,
+              // _showPostOptionsMenu,
+              // Pass theme if _PostCardHeader needs it directly,
+              // but it should primarily use Theme.of(context) internally
+            ),
+            GestureDetector(
+              onDoubleTap: _isSendingTx ? null : _sendTipToCreator, // Disable if already sending
+              child: ZoomOverlay(
+                // key: ValueKey('zoom_${widget.post.id}'),
+                modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3), // Themed scrim
+                minScale: 0.5,
+                maxScale: 3.0,
+                twoTouchOnly: true,
+                animationDuration: const Duration(milliseconds: 200),
+                animationCurve: Curves.easeOut,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    _buildPostMedia(theme),
+                    // Assuming _SendingAnimation and _LikeSucceededAnimation are theme-aware
+                    // or their fixed colors are acceptable (e.g., white overlay icons).
+                    // If not, they also need to be refactored to use Theme.of(context).
+                    _SendingAnimation(
+                      isSending: _isSendingTx,
+                      mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null ? _altImageHeight : 150.0,
+                      onEnd: () {
+                        if (mounted) setState(() => _isSendingTx = false);
+                      },
+                      theme: theme, // Pass theme if it needs it directly for icons
+                    ),
+                    _LikeSucceededAnimation(
+                      isAnimating: _isAnimatingLike,
+                      mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null ? _altImageHeight : 150.0,
+                      onEnd: () {
+                        if (mounted) setState(() => _isAnimatingLike = false);
+                      },
+                      theme: theme, // Pass theme
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            _PostCardFooter(
+              post: widget.post,
+              textEditController: _textEditController,
+              showInput: _showInput,
+              showSend: _showSend,
+              hasSelectedTopic: _hasSelectedTopic,
+              selectedHashtags: _selectedHashtags,
+              onInputText: _onInputText,
+              onSelectHashtag: _onSelectHashtag,
+              onSelectTopic: _onSelectTopic,
+              onSend: _onSend,
+              onCancel: _onCancel,
+            ),
+          ],
         ),
       );
     }
-
-    return Card(
-      // Card properties will now use theme.cardTheme
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-      // elevation: theme.cardTheme.elevation ?? 2.0, // Or set explicitly
-      // color: theme.cardTheme.color, // Handled by CardTheme
-      // shape: theme.cardTheme.shape, // Handled by CardTheme
-      clipBehavior: Clip.antiAlias, // Good practice for cards with images
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _PostCardHeader(
-            post: widget.post,
-            onOptionsMenuPressed: _sendTipToCreator,
-            navBarCallback: navBarCallback,
-            // _showPostOptionsMenu,
-            // Pass theme if _PostCardHeader needs it directly,
-            // but it should primarily use Theme.of(context) internally
-          ),
-          GestureDetector(
-            onDoubleTap: _isSendingTx ? null : _sendTipToCreator, // Disable if already sending
-            child: ZoomOverlay(
-              // key: ValueKey('zoom_${widget.post.id}'),
-              modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3), // Themed scrim
-              minScale: 0.5,
-              maxScale: 3.0,
-              twoTouchOnly: true,
-              animationDuration: const Duration(milliseconds: 200),
-              animationCurve: Curves.easeOut,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  _buildPostMedia(theme),
-                  // Assuming _SendingAnimation and _LikeSucceededAnimation are theme-aware
-                  // or their fixed colors are acceptable (e.g., white overlay icons).
-                  // If not, they also need to be refactored to use Theme.of(context).
-                  _SendingAnimation(
-                    isSending: _isSendingTx,
-                    mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null ? _altImageHeight : 150.0,
-                    onEnd: () {
-                      if (mounted) setState(() => _isSendingTx = false);
-                    },
-                    theme: theme, // Pass theme if it needs it directly for icons
-                  ),
-                  _LikeSucceededAnimation(
-                    isAnimating: _isAnimatingLike,
-                    mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null ? _altImageHeight : 150.0,
-                    onEnd: () {
-                      if (mounted) setState(() => _isAnimatingLike = false);
-                    },
-                    theme: theme, // Pass theme
-                  ),
-                ],
-              ),
-            ),
-          ),
-          _PostCardFooter(
-            post: widget.post,
-            textEditController: _textEditController,
-            showInput: _showInput,
-            showSend: _showSend,
-            hasSelectedTopic: _hasSelectedTopic,
-            selectedHashtags: _selectedHashtags,
-            onInputText: _onInputText,
-            onSelectHashtag: _onSelectHashtag,
-            onSelectTopic: _onSelectTopic,
-            onSend: _onSend,
-            onCancel: _onCancel,
-          ),
-        ],
-      ),
-    );
   }
 
   // --- Interaction Logic Methods (Mostly unchanged, ensure SnackBars are themed) ---

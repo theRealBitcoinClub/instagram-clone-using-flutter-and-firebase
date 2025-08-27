@@ -35,7 +35,7 @@ class MemoModelCreator {
   static const String sizeDetail = "640x640";
   static const List<String> imageTypes = ["jpg", "png"];
   static const String imageBaseUrl = "https://memo.cash/img/profilepics/";
-  static int maxCheckImage = 1; // static fields are not serialized by default
+  static int maxCheckImage = 2; // static fields are not serialized by default
 
   // These fields are runtime state and should likely not be part of the JSON
   // If they were to be stored, they should probably be part of a different caching mechanism

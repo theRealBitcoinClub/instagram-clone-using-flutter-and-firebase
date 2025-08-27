@@ -123,6 +123,7 @@ class TopicService {
   /// Returns null if the topic doesn't exist or if there's an error.
   Future<MemoModelTopic?> getTopicOnce(String topicId) async {
     try {
+      topicId = topicId.toLowerCase();
       final String safeTopicId = sanitizeFirestoreId(topicId);
       final DocumentReference docRef = _firestore.collection(_topicsCollection).doc(safeTopicId);
       final DocumentSnapshot snapshot = await docRef.get();

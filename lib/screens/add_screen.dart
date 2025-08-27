@@ -306,9 +306,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
               else
                 _buildMediaInputSection(theme, colorScheme, textTheme),
 
-              if (!_isLoadingUser &&
-                  !_isCheckingClipboard &&
-                  (_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty))
+              if (!_isLoadingUser && !_isCheckingClipboard && (_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty))
                 Padding(
                   padding: EdgeInsets.only(
                     bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 12, // More padding at bottom
@@ -474,10 +472,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
                             children: [
                               Icon(Icons.broken_image_outlined, color: colorScheme.error, size: 36),
                               const SizedBox(height: 8),
-                              Text(
-                                "Error loading image",
-                                style: textTheme.bodyMedium?.copyWith(color: colorScheme.error),
-                              ),
+                              Text("Error loading image", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
                             ],
                           ),
                         );
@@ -514,10 +509,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
                               children: [
                                 Icon(Icons.videocam_off_outlined, color: colorScheme.error, size: 36),
                                 const SizedBox(height: 8),
-                                Text(
-                                  "Video player error",
-                                  style: textTheme.bodyMedium?.copyWith(color: colorScheme.error),
-                                ),
+                                Text("Video player error", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
                               ],
                             ),
                           )),
@@ -573,10 +565,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
                 // If TextInputField doesn't use theme.inputDecorationTheme, it will look out of place
               ),
               const SizedBox(height: 12),
-              Text(
-                "Tip: Paste a full URL from Imgur or YouTube.",
-                style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-              ),
+              Text("Tip: Paste a full URL from Imgur or YouTube.", style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
             ],
           ),
           actionsAlignment: MainAxisAlignment.end,
@@ -585,9 +574,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
             TextButton(
               // Style from theme.textButtonTheme
               onPressed: () => Navigator.of(dialogCtx).pop(),
-              child: Text(
-                'Cancel' /*, style: TextStyle(color: colorScheme.onSurfaceVariant)*/,
-              ), // Uses TextButton's foregroundColor
+              child: Text('Cancel' /*, style: TextStyle(color: colorScheme.onSurfaceVariant)*/), // Uses TextButton's foregroundColor
             ),
             TextButton(
               // Style from theme.textButtonTheme (or override for emphasis)
@@ -701,7 +688,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
         _clearInputsAfterPublish();
         _showSuccessSnackBar('Successfully published!');
       } else {
-        _showErrorSnackBar('Publish failed: ${response.name}. Please try again.');
+        _showErrorSnackBar('Publish failed: ${response.toString()}. Please try again.');
       }
     } catch (e, s) {
       _log("Error during publish: $e\n$s");

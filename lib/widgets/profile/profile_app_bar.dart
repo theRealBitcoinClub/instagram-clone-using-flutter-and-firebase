@@ -26,9 +26,7 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
         icon: const Icon(Icons.arrow_back),
         onPressed: () {
           ref.read(profileTargetIdProvider.notifier).state = null;
-          if (Navigator.canPop(context)) {
-            Navigator.pop(context);
-          }
+          ref.read(tabIndexProvider.notifier).setTab(0);
         },
       ),
       title: creator?.id != null && creator!.id.isNotEmpty

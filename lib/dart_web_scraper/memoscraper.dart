@@ -50,7 +50,7 @@ Future<void> runSequentialBatchJobDateCreated() async {
       //SKIP ALL THESE THAT HAVE BEEN PROCESSED
       if (post.createdDateTime != null) continue;
 
-      sleep(Duration(milliseconds: 100));
+      sleep(Duration(milliseconds: 1000)); //100ms worked well for some time then got me blocked
 
       MemoModelPost? p = await memoPostService.fetchAndParsePost(post.id, filterOn: false);
 

@@ -83,7 +83,7 @@ class _HomeSceenState extends State<HomeSceen> implements NavBarCallback {
 
   void _navigationPageSelected(int page) {
     if (page != 2) MemoModelUser.profileIdReset();
-    _pageController.jumpToPage(page);
+    _pageController.animateToPage(page, duration: const Duration(milliseconds: 300), curve: Curves.decelerate);
     // No need to call setState here, _onPageChanged will handle it
   }
 

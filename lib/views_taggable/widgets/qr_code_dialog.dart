@@ -51,7 +51,7 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext ctx) {
     final ThemeData theme = Theme.of(context); // Get the current theme
     final ColorScheme colorScheme = theme.colorScheme;
 
@@ -127,7 +127,7 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
           style: primaryButtonStyle,
           onPressed: () {
             _copyToClipboard(context, addressToShow, "Address copied!"); // Pass context
-            Navigator.of(context).pop();
+            Navigator.of(ctx).pop();
           },
           child: const Text("COPY ADDRESS"),
         ),
@@ -143,7 +143,7 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
           child: Text(toggleButtonText),
         ),
         const SizedBox(height: 8),
-        TextButton(style: dismissButtonStyle, onPressed: () => Navigator.of(context).pop(), child: const Text("CLOSE")),
+        TextButton(style: dismissButtonStyle, onPressed: () => Navigator.of(ctx).pop(), child: const Text("CLOSE")),
       ],
     );
   }

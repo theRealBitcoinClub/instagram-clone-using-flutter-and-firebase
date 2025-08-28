@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:provider/provider.dart';
 
@@ -10,34 +11,57 @@ import 'home.dart';
 
 enum PostFilterType { images, videos, hashtags, topics }
 
-class FeedScreen extends StatefulWidget {
-  // const FeedScreen({super.key});
+class ScrollUpIntent extends Intent {}
 
+class ScrollDownIntent extends Intent {}
+
+class PageUpIntent extends Intent {}
+
+class PageDownIntent extends Intent {}
+
+class HomeIntent extends Intent {}
+
+class EndIntent extends Intent {}
+
+class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key, required this.navBarCallback});
   final NavBarCallback navBarCallback;
 
   @override
-  State<FeedScreen> createState() => _FeedScreenState(); // Removed constructor argument here
+  State<FeedScreen> createState() => _FeedScreenState();
 }
 
 class _FeedScreenState extends State<FeedScreen> {
-  // No constructor needed here for widget.navBarCallback
-  final PostService _postService = PostService(); // Instance of your PostService
+  final PostService _postService = PostService();
   final Set<PostFilterType> _activeFilters = {};
 
-  // This will hold all posts fetched from Firebase before filtering
   List<MemoModelPost> _allFirebasePosts = [];
-  // This will hold the posts to be displayed after filtering
   List<MemoModelPost> _filteredPosts = [];
 
   Stream<List<MemoModelPost>>? _postsStream;
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _listViewFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    // Initialize the stream. You might want to order it, e.g., by creation date
     _postsStream = _postService.getAllPostsStream();
-    // Note: _applyFilters will now be called by the StreamBuilder
+    _activateKeyboardScrollingNoListClickNeeded();
+  }
+
+  void _activateKeyboardScrollingNoListClickNeeded() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        FocusScope.of(context).requestFocus(_listViewFocusNode);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _listViewFocusNode.dispose();
+    super.dispose();
   }
 
   bool hasFilter(PostFilterType filterType) {
@@ -51,16 +75,13 @@ class _FeedScreenState extends State<FeedScreen> {
       } else {
         _activeFilters.add(filterType);
       }
-      // _applyFilters will be called based on the StreamBuilder's new data
-      // or if you explicitly call it on the current _allFirebasePosts
-      _applyFiltersOnData(_allFirebasePosts); // Apply filters to the current set of all posts
+      _applyFiltersOnData(_allFirebasePosts);
     });
     _showFilterChangeSnackbar(filterType);
   }
 
-  // Modified to take a list of posts as input
   void _applyFiltersOnData(List<MemoModelPost> allPosts) {
-    if (!mounted) return; // Ensure widget is still in the tree
+    if (!mounted) return;
 
     if (_activeFilters.isEmpty) {
       _filteredPosts = List.from(allPosts);
@@ -73,25 +94,15 @@ class _FeedScreenState extends State<FeedScreen> {
         if (!matches && _activeFilters.contains(PostFilterType.videos) && post.youtubeId != null && post.youtubeId!.isNotEmpty) {
           matches = true;
         }
-        // Assuming post.tagIds is List<String> from Firestore for hashtags
         if (!matches && _activeFilters.contains(PostFilterType.hashtags) && post.tagIds.isNotEmpty) {
-          //Check post.tagIds
           matches = true;
         }
-        // Assuming post.topicId is a String from Firestore for topics
         if (!matches && _activeFilters.contains(PostFilterType.topics) && post.topicId.isNotEmpty) {
-          // Check post.topicId
           matches = true;
         }
         return matches;
       }).toList();
     }
-    // No direct setState here for _filteredPosts because this function is called
-    // from within StreamBuilder's builder or toggleFilter (which has setState).
-    // The StreamBuilder itself will handle rebuilding when its input stream changes,
-    // and toggleFilter has its own setState.
-    // However, if called from toggleFilter, we might need a setState if StreamBuilder isn't active.
-    // The setState in toggleFilter already covers this.
   }
 
   @override
@@ -115,75 +126,87 @@ class _FeedScreenState extends State<FeedScreen> {
           }
           if (snapshot.hasError) {
             print("Error in posts stream: ${snapshot.error}");
-            return Center(child: Text('Error loading posts: ${snapshot.error}. Check Firestore indexes.'));
+            return Center(child: Text('Error loading posts: ${snapshot.error}.'));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            _allFirebasePosts = []; // Clear if no data
-            _applyFiltersOnData(_allFirebasePosts); // Apply filters (will result in empty _filteredPosts)
-            // Still show "No posts match..." if filters are active but stream is empty
-            // Or show "No posts available." if stream is empty and no filters
+            _allFirebasePosts = [];
+            _applyFiltersOnData(_allFirebasePosts);
             if (_activeFilters.isNotEmpty && _filteredPosts.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Text(
-                    "No posts match the selected filters from the available feed.",
-                    style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              );
+              return _widgetNoMatch(theme);
             }
-            return Center(
-              child: Text(
-                'No posts available in the feed yet.',
-                style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                textAlign: TextAlign.center,
-              ),
-            );
+            return _widgetNoFeed(theme);
           }
 
+          //TODO filter out all video posts until video player works well
           // Store all posts from Firebase and then apply filters
-          _allFirebasePosts = snapshot.data!;
-          // .where((post) => post.id.isNotEmpty) // Filter out posts with empty IDs
-          // .toList();
+          _allFirebasePosts = snapshot.data!
+              .where((post) => post.youtubeId == null || post.youtubeId!.isNotEmpty) // Filter out posts with empty IDs
+              .toList();
           _applyFiltersOnData(_allFirebasePosts);
 
           if (_filteredPosts.isEmpty && _activeFilters.isNotEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Text(
-                  "No posts match the selected filters.",
-                  style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
+            return _widgetNoMatch(theme);
           }
           if (_filteredPosts.isEmpty && _activeFilters.isEmpty) {
-            // This case should ideally be covered by the (!snapshot.hasData || snapshot.data!.isEmpty)
-            // but as a safeguard if _applyFiltersOnData somehow results in empty for no filters.
-            return Center(
-              child: Text(
-                'No posts available to display.',
-                style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                textAlign: TextAlign.center,
-              ),
-            );
+            return _widgetNoFeed(theme);
           }
 
-          return ListView.builder(
-            itemCount: _filteredPosts.length,
-            itemBuilder: (context, index) {
-              return PostCard(
-                _filteredPosts[index],
-                widget.navBarCallback,
-                // key: ValueKey<String>("key${Random().nextInt(99999999)}$index"), // Use a unique ID from your post
-              );
+          return FocusableActionDetector(
+            autofocus: true, // Automatically request focus for the detector
+            focusNode: _listViewFocusNode,
+            shortcuts: _getKeyboardShortcuts(),
+            actions: <Type, Action<Intent>>{
+              ScrollUpIntent: CallbackAction<ScrollUpIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
+              ScrollDownIntent: CallbackAction<ScrollDownIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
+              PageUpIntent: CallbackAction<PageUpIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
+              PageDownIntent: CallbackAction<PageDownIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
+              HomeIntent: CallbackAction<HomeIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
+              EndIntent: CallbackAction<EndIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
             },
+            child: GestureDetector(
+              // Optional: to allow clicking on list to focus
+              onTap: () {
+                if (!_listViewFocusNode.hasFocus) {
+                  FocusScope.of(context).requestFocus(_listViewFocusNode);
+                }
+              },
+              child: ListView.builder(
+                controller: _scrollController,
+                // Optional: To ensure focus can be given to the ListView itself,
+                // you might need to ensure it's focusable, though FocusableActionDetector
+                // often handles this for its descendants.
+                // focusNode: _listViewFocusNode, // Can also be put here directly
+                itemCount: _filteredPosts.length,
+                itemBuilder: (context, index) {
+                  return PostCard(_filteredPosts[index], widget.navBarCallback, key: ValueKey(_filteredPosts[index].id));
+                },
+              ),
+            ),
           );
         },
+      ),
+    );
+  }
+
+  Center _widgetNoFeed(ThemeData theme) {
+    return Center(
+      child: Text(
+        'No posts available in the feed yet.',
+        style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Center _widgetNoMatch(ThemeData theme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Text(
+          "No posts match the selected filters.",
+          style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -199,18 +222,15 @@ class _FeedScreenState extends State<FeedScreen> {
         showDialog(
           context: context,
           builder: (dialogCtx) {
-            // Use StatefulBuilder if the dialog content itself needs to rebuild
-            // when filters are toggled *while the dialog is open*.
-            // For this example, we pop the dialog on selection, so SimpleDialog is fine.
             return SimpleDialog(
               title: Text("Filter by", style: theme.dialogTheme.titleTextStyle),
               shape: theme.dialogTheme.shape,
               backgroundColor: theme.dialogTheme.backgroundColor,
               children: [
-                _buildFilterOption(theme, PostFilterType.images, "IMAGES", Icons.image_search_outlined, Icons.image_rounded),
-                _buildFilterOption(theme, PostFilterType.videos, "VIDEOS", Icons.video_library_outlined, Icons.video_library_rounded),
-                _buildFilterOption(theme, PostFilterType.hashtags, "HASHTAGS", Icons.tag_outlined, Icons.tag_rounded),
-                _buildFilterOption(theme, PostFilterType.topics, "TOPICS", Icons.topic_outlined, Icons.topic_rounded),
+                _buildFilterOption(dialogCtx, theme, PostFilterType.images, "IMAGES", Icons.image_search_outlined, Icons.image_rounded),
+                // _buildFilterOption(theme, PostFilterType.videos, "VIDEOS", Icons.video_library_outlined, Icons.video_library_rounded),
+                _buildFilterOption(dialogCtx, theme, PostFilterType.hashtags, "HASHTAGS", Icons.tag_outlined, Icons.tag_rounded),
+                _buildFilterOption(dialogCtx, theme, PostFilterType.topics, "TOPICS", Icons.topic_outlined, Icons.topic_rounded),
               ],
             );
           },
@@ -229,12 +249,12 @@ class _FeedScreenState extends State<FeedScreen> {
     );
   }
 
-  Widget _buildFilterOption(ThemeData theme, PostFilterType filterType, String text, IconData icon, IconData activeIcon) {
+  Widget _buildFilterOption(dialogCtx, ThemeData theme, PostFilterType filterType, String text, IconData icon, IconData activeIcon) {
     final bool isSelected = hasFilter(filterType);
     return SimpleDialogOption(
       onPressed: () {
         toggleFilter(filterType);
-        Navigator.pop(context);
+        Navigator.pop(dialogCtx);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -259,7 +279,7 @@ class _FeedScreenState extends State<FeedScreen> {
               value: isSelected,
               onChanged: (value) {
                 toggleFilter(filterType);
-                Navigator.pop(context);
+                Navigator.pop(dialogCtx);
               },
               activeColor: theme.colorScheme.primary,
               checkColor: theme.colorScheme.onPrimary,
@@ -287,6 +307,60 @@ class _FeedScreenState extends State<FeedScreen> {
         return "TAGS";
       case PostFilterType.topics:
         return "TOPICS";
+    }
+  }
+
+  Map<ShortcutActivator, Intent> _getKeyboardShortcuts() {
+    return <ShortcutActivator, Intent>{
+      const SingleActivator(LogicalKeyboardKey.arrowUp): ScrollUpIntent(),
+      const SingleActivator(LogicalKeyboardKey.arrowDown): ScrollDownIntent(),
+      const SingleActivator(LogicalKeyboardKey.pageUp): PageUpIntent(),
+      const SingleActivator(LogicalKeyboardKey.pageDown): PageDownIntent(),
+      const SingleActivator(LogicalKeyboardKey.home): HomeIntent(),
+      const SingleActivator(LogicalKeyboardKey.end): EndIntent(),
+    };
+  }
+
+  void _handleScrollIntent(Intent intent, BuildContext context) {
+    if (!_scrollController.hasClients) return;
+
+    double scrollAmount = 0;
+    // Estimate item height - adjust this based on your average PostCard height
+    // Or, for more precision, you could try to get the height of visible items.
+    // This is a simpler approach.
+    const double estimatedItemHeight = 300.0; // Adjust this value!
+    final double viewportHeight = _scrollController.position.viewportDimension;
+
+    if (intent is ScrollUpIntent) {
+      scrollAmount = -estimatedItemHeight; // Scroll up by one item height
+    } else if (intent is ScrollDownIntent) {
+      scrollAmount = estimatedItemHeight; // Scroll down by one item height
+    } else if (intent is PageUpIntent) {
+      scrollAmount = -viewportHeight; // Scroll up by one viewport height
+    } else if (intent is PageDownIntent) {
+      scrollAmount = viewportHeight; // Scroll down by one viewport height
+    } else if (intent is HomeIntent) {
+      _scrollController.animateTo(
+        _scrollController.position.minScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+      return;
+    } else if (intent is EndIntent) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+      return;
+    }
+
+    if (scrollAmount != 0) {
+      _scrollController.animateTo(
+        (_scrollController.offset + scrollAmount).clamp(_scrollController.position.minScrollExtent, _scrollController.position.maxScrollExtent),
+        duration: const Duration(milliseconds: 200), // Adjust duration as needed
+        curve: Curves.easeOut,
+      );
     }
   }
 }

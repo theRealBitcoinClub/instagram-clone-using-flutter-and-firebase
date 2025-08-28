@@ -166,7 +166,7 @@ class _PostCardState extends ConsumerState<PostCard> {
         wrappedInAnimationWidget,
         SendingAnimation(
           isSending: _isSendingTx,
-          mediaHeight: widget.post.imgurUrl == null ? _altImageHeight : 150.0,
+          mediaHeight: widget.post.imgurUrl == null ? _altImageHeight * 2 : 150.0,
           onEnd: () {
             if (mounted) setState(() => _isSendingTx = false);
           },
@@ -174,7 +174,7 @@ class _PostCardState extends ConsumerState<PostCard> {
         ),
         LikeSucceededAnimation(
           isAnimating: _isAnimatingLike,
-          mediaHeight: widget.post.imgurUrl == null ? _altImageHeight : 150.0,
+          mediaHeight: widget.post.imgurUrl == null ? _altImageHeight * 2 : 150.0,
           onEnd: () {
             if (mounted) setState(() => _isAnimatingLike = false);
           },

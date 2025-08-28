@@ -36,7 +36,7 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateMixin {
   // Services
   final PostService _postService = PostService(); // Add PostService instance
 
@@ -90,10 +90,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _disposeYouTubeControllers() {
-    for (var controller in _ytControllers.values) {
-      controller.dispose();
+    if (mounted) {
+      for (var controller in _ytControllers.values) {
+        controller.pause();
+        controller.dispose();
+      }
+      _ytControllers.clear();
     }
-    _ytControllers.clear();
   }
 
   bool get isOwnProfile {
@@ -731,24 +734,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _toggleFollowStatus() async {
-    // if (_creator == null || _user == null) return;
-    // // For simplicity, directly toggling a local state and calling an action.
-    // // In a real app, this would involve API calls.
-    // final bool currentlyFollowing = _creator!.isFollowing; // Assuming isFollowing exists on MemoModelCreator
-    // print("Toggle follow for ${_creator!.id}. Currently following: $currentlyFollowing");
-    //
-    // // Placeholder for actual follow/unfollow logic
-    // // await UserService().toggleFollow(_user!.id, _creator!.id, !currentlyFollowing);
-    //
-    // if (mounted) {
-    //   setState(() {
-    //     _creator!.isFollowing = !currentlyFollowing; // Update local state for immediate UI feedback
-    //   });
-    //   showSnackBar(!currentlyFollowing ? "Followed ${_creator!.name}" : "Unfollowed ${_creator!.name}", context);
-    // }
-  }
-
   Widget _buildViewModeIconButton(ThemeData theme, int index, IconData inactiveIcon, IconData activeIcon) {
     final bool isActive = _viewMode == index;
     return IconButton(
@@ -761,21 +746,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (mounted) setState(() => _viewMode = index);
       },
     );
-  }
-
-  String _getViewModeTooltip(int index) {
-    switch (index) {
-      case 0:
-        return "Images";
-      case 1:
-        return "Videos";
-      case 2:
-        return "Tagged Posts";
-      case 4:
-        return "Topic Posts";
-      default:
-        return "Empty";
-    }
   }
 
   void _showPostDialog(ThemeData theme, MemoModelPost post, Widget imageWidget) {
@@ -858,7 +828,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 YoutubePlayer(
-                  // key: ValueKey("ytpost_" + ytPost.id),
+                  key: ValueKey("ytpost_profile_" + ytPost.id + controller.initialVideoId),
                   controller: controller,
                   showVideoProgressIndicator: true,
                   progressIndicatorColor: theme.colorScheme.primary,

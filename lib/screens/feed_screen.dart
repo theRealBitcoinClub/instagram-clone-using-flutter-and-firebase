@@ -181,7 +181,6 @@ class _FeedScreenState extends State<FeedScreen> {
                 widget.navBarCallback,
                 // key: ValueKey<String>("key${Random().nextInt(99999999)}$index"), // Use a unique ID from your post
               );
-              return SizedBox(height: 100, width: 100);
             },
           );
         },

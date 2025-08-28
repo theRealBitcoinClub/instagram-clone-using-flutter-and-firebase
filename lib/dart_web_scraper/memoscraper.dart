@@ -31,7 +31,7 @@ Future<void> runSequentialBatchJob() async {
   try {
     final QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('posts').get();
 
-    var postService = MemoPostService();
+    var memoPostService = MemoPostService();
     if (snapshot.docs.isEmpty) {
       print('No posts found to process.');
       return;
@@ -54,10 +54,10 @@ Future<void> runSequentialBatchJob() async {
 
       sleep(Duration(milliseconds: 700));
 
-      MemoModelPost? p = await postService.fetchAndParsePost(post.id, filterOn: false);
+      MemoModelPost? p = await memoPostService.fetchAndParsePost(post.id, filterOn: false);
 
       if (p != null)
-        await PostService().savePost(p);
+        await postService.savePost(p);
       else
         print("\n\nERROR NULL ON FETCH postId\n\n:" + post.id);
 

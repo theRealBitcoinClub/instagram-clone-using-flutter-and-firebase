@@ -15,7 +15,7 @@ import '../screens/home.dart';
 import 'memo_confetti.dart'; // Ensure this is theme-aware or neutral
 
 // Basic logging placeholder (remains the same)
-void _logInfo(String message) => print('INFO: PostCard - $message');
+// void _logInfo(String message) => print('INFO: PostCard - $message');
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
   print('ERROR: PostCard - $message');
   if (error != null) print('  Error: $error');
@@ -44,6 +44,21 @@ class _PostCardState extends State<PostCard> {
   static const int _minTextLength = 20;
   static const Duration _animationDuration = Duration(milliseconds: 500);
 
+  @override
+  void didUpdateWidget(covariant PostCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Check if the youtubeId in the post has changed
+    if (widget.post.youtubeId != oldWidget.post.youtubeId) {
+      _initOrUpdatePlayer(widget.post.youtubeId);
+    }
+    // You might also want to refresh other data if the post object changes significantly
+    if (widget.post.id != oldWidget.post.id) {
+      _refreshCreator(); // Example: if the whole post is different
+      _initializeSelectedHashtags(); // If tags depend on the post
+    }
+  }
+
   // State variables (remain the same)
   MemoModelUser? _user;
   bool _isAnimatingLike = false;
@@ -52,6 +67,7 @@ class _PostCardState extends State<PostCard> {
   bool _showSend = false;
   bool _hasSelectedTopic = false;
   late List<bool> _selectedHashtags;
+  String? _activeVideoId;
 
   // Controllers (remain the same)
   late TextEditingController _textEditController;
@@ -71,16 +87,70 @@ class _PostCardState extends State<PostCard> {
     _refreshCreator();
 
     if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
-      _ytController = YoutubePlayerController(
-        initialVideoId: widget.post.youtubeId!,
-        flags: const YoutubePlayerFlags(
-          autoPlay: false,
-          mute: false,
-          // Consider making controls visible by default or using themed colors
-          // hideControls: false,
-          // controlsTimeOut: Duration(seconds: 5),
-        ),
-      );
+      _initOrUpdatePlayer(widget.post.youtubeId); // Call the new method
+    }
+    // if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
+    //   _ytController = YoutubePlayerController(
+    //     initialVideoId: widget.post.youtubeId!,
+    //     flags: const YoutubePlayerFlags(
+    //       autoPlay: false,
+    //       mute: false,
+    //       // Consider making controls visible by default or using themed colors
+    //       // hideControls: false,
+    //       // controlsTimeOut: Duration(seconds: 5),
+    //     ),
+    //   );
+    // }
+  }
+
+  void _initOrUpdatePlayer(String? newVideoId) {
+    // If the new video ID is null or empty, and we have a controller, dispose of it.
+    if (newVideoId == null || newVideoId.isEmpty) {
+      if (_ytController != null) {
+        final oldController = _ytController;
+        _ytController = null; // Nullify the reference
+        _activeVideoId = null;
+        if (mounted) {
+          setState(() {}); // Update UI to remove player
+        }
+        oldController?.dispose();
+      }
+      return;
+    }
+
+    // If the controller exists and it's for the same video, do nothing.
+    if (_ytController != null && _activeVideoId == newVideoId) {
+      return;
+    }
+
+    // If there's an old controller (for a different video or if _activeVideoId was null),
+    // dispose of it carefully.
+    if (_ytController != null) {
+      final oldController = _ytController;
+      _ytController = null; // Nullify first
+      _activeVideoId = null;
+      // It's often safer to trigger a setState here if the UI might still be trying to
+      // use the old controller before it's fully disposed. This ensures the YoutubePlayer
+      // widget using the old controller is removed from the tree.
+      if (mounted) {
+        setState(() {});
+      }
+      oldController?.dispose();
+    }
+
+    // Create the new controller
+    _activeVideoId = newVideoId;
+    _ytController = YoutubePlayerController(
+      initialVideoId: _activeVideoId!,
+      flags: const YoutubePlayerFlags(
+        autoPlay: false,
+        mute: false, // Or true if you prefer, especially in lists
+      ),
+    );
+
+    // If the widget is still mounted, call setState to update the UI with the new player
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -113,7 +183,12 @@ class _PostCardState extends State<PostCard> {
   @override
   void dispose() {
     _textEditController.dispose();
-    _ytController?.dispose();
+    if (mounted) {
+      _ytController?.pause();
+      _ytController?.dispose();
+      _ytController = null; // <--- ADD THIS for clarity and safety
+      _activeVideoId = null;
+    }
     super.dispose();
   }
 
@@ -122,6 +197,7 @@ class _PostCardState extends State<PostCard> {
   Widget _buildPostMedia(ThemeData theme) {
     if (widget.post.youtubeId != null && _ytController != null) {
       return YoutubePlayer(
+        key: ValueKey("ytpost_postcard_${widget.post.id}_${widget.post.youtubeId}"),
         // key: ValueKey('youtube_${widget.post.id}'),
         controller: _ytController!,
         showVideoProgressIndicator: true,
@@ -219,43 +295,21 @@ class _PostCardState extends State<PostCard> {
               // Pass theme if _PostCardHeader needs it directly,
               // but it should primarily use Theme.of(context) internally
             ),
-            GestureDetector(
-              onDoubleTap: _isSendingTx ? null : _sendTipToCreator, // Disable if already sending
-              child: ZoomOverlay(
-                // key: ValueKey('zoom_${widget.post.id}'),
-                modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3), // Themed scrim
-                minScale: 0.5,
-                maxScale: 3.0,
-                twoTouchOnly: true,
-                animationDuration: const Duration(milliseconds: 200),
-                animationCurve: Curves.easeOut,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    _buildPostMedia(theme),
-                    // Assuming _SendingAnimation and _LikeSucceededAnimation are theme-aware
-                    // or their fixed colors are acceptable (e.g., white overlay icons).
-                    // If not, they also need to be refactored to use Theme.of(context).
-                    _SendingAnimation(
-                      isSending: _isSendingTx,
-                      mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null ? _altImageHeight : 150.0,
-                      onEnd: () {
-                        if (mounted) setState(() => _isSendingTx = false);
-                      },
-                      theme: theme, // Pass theme if it needs it directly for icons
+            widget.post.youtubeId == null
+                ? GestureDetector(
+                    onDoubleTap: _isSendingTx ? null : _sendTipToCreator, // Disable if already sending
+                    child: ZoomOverlay(
+                      // key: ValueKey('zoom_${widget.post.id}'),
+                      modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3), // Themed scrim
+                      minScale: 0.5,
+                      maxScale: 3.0,
+                      twoTouchOnly: true,
+                      animationDuration: const Duration(milliseconds: 200),
+                      animationCurve: Curves.easeOut,
+                      child: buildStackMediaWithAnimation(theme),
                     ),
-                    _LikeSucceededAnimation(
-                      isAnimating: _isAnimatingLike,
-                      mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null ? _altImageHeight : 150.0,
-                      onEnd: () {
-                        if (mounted) setState(() => _isAnimatingLike = false);
-                      },
-                      theme: theme, // Pass theme
-                    ),
-                  ],
-                ),
-              ),
-            ),
+                  )
+                : buildStackMediaWithAnimation(theme),
             _PostCardFooter(
               post: widget.post,
               textEditController: _textEditController,
@@ -273,6 +327,34 @@ class _PostCardState extends State<PostCard> {
         ),
       );
     }
+  }
+
+  Stack buildStackMediaWithAnimation(ThemeData theme) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        _buildPostMedia(theme),
+        // Assuming _SendingAnimation and _LikeSucceededAnimation are theme-aware
+        // or their fixed colors are acceptable (e.g., white overlay icons).
+        // If not, they also need to be refactored to use Theme.of(context).
+        _SendingAnimation(
+          isSending: _isSendingTx,
+          mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null ? _altImageHeight : 150.0,
+          onEnd: () {
+            if (mounted) setState(() => _isSendingTx = false);
+          },
+          theme: theme, // Pass theme if it needs it directly for icons
+        ),
+        _LikeSucceededAnimation(
+          isAnimating: _isAnimatingLike,
+          mediaHeight: widget.post.imgurUrl == null && widget.post.youtubeId == null ? _altImageHeight : 150.0,
+          onEnd: () {
+            if (mounted) setState(() => _isAnimatingLike = false);
+          },
+          theme: theme, // Pass theme
+        ),
+      ],
+    );
   }
 
   // --- Interaction Logic Methods (Mostly unchanged, ensure SnackBars are themed) ---

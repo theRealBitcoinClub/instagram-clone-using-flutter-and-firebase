@@ -491,6 +491,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
                     )
                   : (youtubeController != null
                         ? YoutubePlayer(
+                            key: ValueKey("yt_addpost_"),
                             controller: youtubeController,
                             showVideoProgressIndicator: true,
                             progressIndicatorColor: colorScheme.primary, // Themed

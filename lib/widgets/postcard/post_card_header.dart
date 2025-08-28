@@ -4,8 +4,6 @@ import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 // Import the new navigation provider
 import 'package:mahakka/provider/navigation_providers.dart';
-// Import your tab index provider (adjust path if it's elsewhere)
-import 'package:mahakka/tab_index_notifier.dart'; // Or wherever TabIndexNotifier/Provider is
 
 // Helper for logging (can be moved to a common utils file if used elsewhere)
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -27,6 +25,7 @@ class PostCardHeader extends ConsumerWidget {
     // Switch to the profile tab using Riverpod (assuming 2 is the profile tab index)
     // Ensure tabIndexProvider is correctly imported and defined
     ref.read(tabIndexProvider.notifier).setTab(2);
+    //TODO use enum force use enum for tab index
   }
 
   @override

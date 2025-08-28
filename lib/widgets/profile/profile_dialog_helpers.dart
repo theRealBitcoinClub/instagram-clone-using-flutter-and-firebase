@@ -24,9 +24,9 @@ void showCreatorImageDetail(
 ) async {
   // Assuming refreshDetailScraper is a method on MemoModelCreator
   // This logic seems specific to the creator model, so it can stay here or be part of the creator model.
-  bool hasDetail = await creator.refreshDetailScraper();
+  await creator.refreshImageDetail();
 
-  if (context.mounted && hasDetail) {
+  if (context.mounted) {
     showDialog(
       context: context,
       builder: (ctx) {
@@ -63,8 +63,6 @@ void showCreatorImageDetail(
         );
       },
     );
-  } else if (context.mounted && !hasDetail) {
-    showSnackBar("No detailed image available.", context);
   }
 }
 

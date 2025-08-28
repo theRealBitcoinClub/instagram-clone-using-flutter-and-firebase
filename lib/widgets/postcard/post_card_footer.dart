@@ -79,7 +79,7 @@ class PostCardFooter extends StatelessWidget {
             ),
             const SizedBox(height: 10),
           ],
-          if (post.topic != null) ...[_buildTopicCheckBoxWidget(theme), const SizedBox(height: 6)],
+          if (post.topicId.isNotEmpty) ...[_buildTopicCheckBoxWidget(theme), const SizedBox(height: 6)],
           if (post.tagIds.isNotEmpty) ...[_buildHashtagCheckboxesWidget(theme), const SizedBox(height: 8)],
           if (showSend) ...[
             const SizedBox(height: 4),
@@ -94,7 +94,7 @@ class PostCardFooter extends StatelessWidget {
   }
 
   Widget _buildTopicCheckBoxWidget(ThemeData theme) {
-    final bool topicTextIsEffectivelyEmpty = post.topic == null || post.topic!.header.trim().isEmpty;
+    final bool topicTextIsEffectivelyEmpty = post.topicId.isEmpty;
 
     return InkWell(
       onTap: onSelectTopic,
@@ -118,7 +118,7 @@ class PostCardFooter extends StatelessWidget {
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
-                    post.topic!.header,
+                    post.topicId,
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: hasSelectedTopic ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                       fontWeight: hasSelectedTopic ? FontWeight.bold : FontWeight.normal,

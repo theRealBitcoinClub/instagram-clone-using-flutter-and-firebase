@@ -16,7 +16,12 @@ class MemoModelCreator {
   int actions = 0;
   String created = "";
   String lastActionDate = "";
-  CreatorService _creatorService = CreatorService();
+  final CreatorService _creatorService = CreatorService();
+
+  @JsonKey(ignore: true)
+  bool isCheckingAvatar = false;
+  @JsonKey(ignore: true)
+  bool isCheckingDetail = false;
 
   String get profileIdShort => id.substring(0, 4);
 
@@ -35,15 +40,15 @@ class MemoModelCreator {
   static const String sizeDetail = "640x640";
   static const List<String> imageTypes = ["jpg", "png"];
   static const String imageBaseUrl = "https://memo.cash/img/profilepics/";
-  static int maxCheckImage = 2; // static fields are not serialized by default
+  static int maxCheckImage = 1; // static fields are not serialized by default
 
   // These fields are runtime state and should likely not be part of the JSON
   // If they were to be stored, they should probably be part of a different caching mechanism
   // or a user session, not the core creator model persisted in the DB.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  // @JsonKey(includeFromJson: false, includeToJson: false)
   String? _profileImageAvatar;
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  // @JsonKey(includeFromJson: false, includeToJson: false)
   String? _profileImageDetail;
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -60,12 +65,12 @@ class MemoModelCreator {
 
   // --- Your existing methods ---
 
-  void refreshAvatar() {
-    _checkProfileImageAvatar();
+  Future<bool> refreshAvatar() async {
+    return await _checkProfileImageAvatar();
   }
 
-  Future<bool> refreshDetailScraper() async {
-    return _checkProfileImageDetail();
+  Future<bool> refreshImageDetail() async {
+    return await _checkProfileImageDetail();
   }
 
   /// Fetches the creator using the id and updates the local `creator` field.
@@ -109,24 +114,24 @@ class MemoModelCreator {
     return _profileImageAvatar ?? "";
   }
 
-  Future<void> _checkProfileImageAvatar() async {
-    if (hasCheckedImgAvatar >= maxCheckImage) return; // Use >= for safety
-
-    // Simple optimization: if already set, don't re-check within this call
-    if (_profileImageAvatar != null) {
-      // If you want a refresh to always re-check, you'd clear _profileImageAvatar at the start of refreshAvatar()
-      return;
-    }
+  Future<bool> _checkProfileImageAvatar() async {
+    if (_profileImageAvatar != null || isCheckingAvatar) return true;
+    if (hasCheckedImgAvatar >= maxCheckImage) return false; // Use >= for safety
+    isCheckingAvatar = true;
 
     for (String t in imageTypes) {
       String avatarUrl = _profileImageUrl(sizeAvatar, t);
       // Assuming checkUrlReturns404 is available and works as intended
       if (!await checkUrlReturns404(avatarUrl)) {
         _profileImageAvatar = avatarUrl;
-        break; // Found one, no need to check other types
+        _creatorService.saveCreator(this);
+        hasCheckedImgAvatar = 0;
+        return true;
       }
     }
     hasCheckedImgAvatar++;
+    isCheckingAvatar = false;
+    return false;
   }
 
   String profileImageDetail() {
@@ -134,21 +139,26 @@ class MemoModelCreator {
   }
 
   Future<bool> _checkProfileImageDetail() async {
-    if (hasCheckedImgDetail >= maxCheckImage) return false;
-
-    if (_profileImageDetail != null) {
-      return true; // Already found and set
+    if (_profileImageDetail != null || isCheckingDetail) {
+      return true;
     }
+
+    isCheckingDetail = true;
+
+    if (hasCheckedImgDetail >= maxCheckImage) return false;
 
     for (String t in imageTypes) {
       String url = _profileImageUrl(sizeDetail, t);
       if (!await checkUrlReturns404(url)) {
         _profileImageDetail = url;
-        hasCheckedImgDetail++; // Increment only after success
+        _creatorService.saveCreator(this);
+        hasCheckedImgDetail = 0;
         return true;
       }
     }
-    hasCheckedImgDetail++; // Increment even if not found to prevent re-checking beyond maxCheckImage
+
+    hasCheckedImgDetail++;
+    isCheckingDetail = false;
     return false;
   }
 

@@ -80,13 +80,17 @@ class _PostCardState extends ConsumerState<PostCard> {
     if (widget.post.creator == null && widget.post.creatorId.isNotEmpty) {
       widget.post.creator = MemoModelCreator(id: widget.post.creatorId);
     }
-    if (widget.post.creator != null) {
+    // if (widget.post.creator != null) {
+    if (widget.post.creator!.name.isEmpty) {
       widget.post.creator = await widget.post.creator!.refreshCreatorFirebase();
-      widget.post.creator!.refreshAvatar();
+      if (widget.post.creator!.profileImageAvatar().isEmpty) {
+        refreshAvatarThenSetState();
+      }
     }
-    if (widget.post.topic == null && widget.post.topicId.isNotEmpty) {
-      widget.post.loadTopic();
-    }
+    // }
+    // if (widget.post.topic == null && widget.post.topicId.isNotEmpty) {
+    //   widget.post.loadTopic();
+    // }
     if (mounted) setState(() {});
   }
 
@@ -375,12 +379,15 @@ class _PostCardState extends ConsumerState<PostCard> {
     // ref is available here because this is ConsumerState
     final ThemeData theme = Theme.of(context);
 
-    if (widget.post.creator == null) {
-      _refreshCreator(); // Attempt to refresh if creator is null
-      return const SizedBox(
-        height: 100, // Placeholder height for loading state
-        child: Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
-      );
+    // if (widget.post.creator == null) {
+    //   _refreshCreator(); // Attempt to refresh if creator is null
+    //   return const SizedBox(
+    //     height: 100, // Placeholder height for loading state
+    //     child: Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
+    //   );
+    // }
+    if (widget.post.creator!.profileImageAvatar().isEmpty) {
+      refreshAvatarThenSetState();
     }
 
     return Card(
@@ -423,5 +430,10 @@ class _PostCardState extends ConsumerState<PostCard> {
         ],
       ),
     );
+  }
+
+  void refreshAvatarThenSetState() async {
+    await widget.post.creator!.refreshAvatar();
+    setState(() {});
   }
 }

@@ -32,58 +32,43 @@ class PostService {
   //   }).toList();
   // }
 
-  Future<List<MemoModelPost>> getPostsPaginated({
-    required int limit,
-    DocumentSnapshot? startAfterDoc,
-    PostFilterType? activeFilter, // Single active filter or null for all posts
-  }) async {
-    Query query = _firestore.collection(_postsCollection);
+  // Inside PostService
+  Future<List<MemoModelPost>> getPostsPaginated({required int limit, DocumentSnapshot? startAfterDoc, PostFilterType? activeFilter}) async {
+    Query query = _firestore.collection(_postsCollection); // Base query
 
     // Apply filter if one is active
     if (activeFilter != null) {
+      print("PostService: Applying filter: $activeFilter");
       switch (activeFilter) {
         case PostFilterType.images:
-          // Assumes you have an 'imgurUrl' field and want non-null/non-empty ones.
-          // Firestore doesn't directly support "is not empty".
-          // A common practice is to query for 'imgurUrl > ""' if empty strings are possible
-          // or rely on the fact that if the field exists, it's likely not empty.
-          // For simplicity, checking for non-null (which '!=' null does).
-          // You might need a dedicated boolean field like 'hasImage' for best performance.
-          query = query.where('imgurUrl', isNotEqualTo: null);
-          // Add .where('imgurUrl', isNotEqualTo: '') if you also store empty strings
+          query = query.where('imgurUrl', isNotEqualTo: "");
           break;
-        case PostFilterType.videos:
-          query = query.where('youtubeId', isNotEqualTo: null);
-          break;
-        case PostFilterType.hashtags:
-          // Query for posts where 'tagIds' array is not empty.
-          // Firestore doesn't have a direct "is not empty" for arrays.
-          // A common workaround is to have a boolean 'hasTags' field.
-          // Or, if you always have at least one tag if the array exists,
-          // you might fetch and filter client-side for "is empty".
-          // For true server-side, a 'tagCount > 0' or 'hasTags == true' field is better.
-          // For this example, we'll assume a 'hasTags': true field. If not, this filter won't work server-side.
-          query = query.where('hasTags', isEqualTo: true); // Requires 'hasTags' boolean field
-          break;
+        // case PostFilterType.videos:
+        //   query = query.where('youtubeId', isNotEqualTo: "");
+        //   break;
         case PostFilterType.topics:
-          query = query.where('topicId', isNotEqualTo: null).where('topicId', isNotEqualTo: '');
+          query = query.where('topicId', isNotEqualTo: "");
           break;
       }
+    } else {
+      print("PostService: No filter active.");
     }
 
-    // Always order, this must be the last field in equality checks or first in range/inequality
-    // If you have inequality filters (like isNotEqualTo null), orderBy must be on a different field
-    // OR if ordering by the same field, it must be the first orderBy.
-    // If activeFilter applies an inequality, and you order by createdDateTime, ensure createdDateTime is indexed with that field.
+    print("PostService: Applying orderBy: $orderByField, descending: $descendingOrder");
     query = query.orderBy(orderByField, descending: descendingOrder);
 
     if (startAfterDoc != null) {
       query = query.startAfterDocument(startAfterDoc);
     }
 
-    final querySnapshot = await query.limit(limit).get();
-    if (querySnapshot.docs.isEmpty && activeFilter != null) {
-      print("Query for filter $activeFilter with current pagination returned 0 docs. Check data and indexes.");
+    print("PostService: Applying limit: $limit");
+    final querySnapshot = await query.limit(limit).get(); // .limit(limit) also returns a new Query
+
+    // ... rest of your method
+    if (querySnapshot.docs.isEmpty) {
+      print("PostService: Query for filter $activeFilter with current pagination returned 0 docs. Check data and indexes.");
+    } else {
+      print("PostService: Query returned ${querySnapshot.docs.length} documents.");
     }
 
     return querySnapshot.docs.map((doc) => MemoModelPost.fromSnapshot(doc)).toList();

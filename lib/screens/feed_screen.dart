@@ -9,7 +9,12 @@ import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 import 'home.dart'; // For NavBarCallback, if still used by PostCard
 
 // Enum for filter types - this should be consistent with what PostService and FeedPostsNotifier expect
-enum PostFilterType { images, videos, hashtags, topics }
+enum PostFilterType {
+  images,
+  // videos,
+  //, hashtags
+  topics,
+}
 
 // Intents for keyboard scrolling (remains unchanged)
 class ScrollUpIntent extends Intent {}
@@ -121,7 +126,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         title: Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
         actions: [
           _buildMenuTheme(currentThemeState, theme),
-          _buildMenuFilter(theme, feedState.activeFilter), // Pass the single active filter
+          // _buildMenuFilter(theme, feedState.activeFilter), // Pass the single active filter
         ],
       ),
       body: RefreshIndicator(
@@ -292,8 +297,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.images, "IMAGES", Icons.image_outlined, Icons.image_rounded),
                 // Your videos filter was commented out, so I've kept it that way.
-                // _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.videos, "VIDEOS", Icons.video_library_outlined, Icons.video_library_rounded),
-                _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.hashtags, "HASHTAGS", Icons.tag_outlined, Icons.tag_rounded),
+                // _buildExclusiveFilterOption(
+                //   dialogCtx,
+                //   theme,
+                //   PostFilterType.videos,
+                //   "VIDEOS",
+                //   Icons.video_library_outlined,
+                //   Icons.video_library_rounded,
+                // ),
+                // _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.hashtags, "HASHTAGS", Icons.tag_outlined, Icons.tag_rounded),
                 _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.topics, "TOPICS", Icons.topic_outlined, Icons.topic_rounded),
               ],
             );
@@ -371,10 +383,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     switch (filterType) {
       case PostFilterType.images:
         return "IMAGES";
-      case PostFilterType.videos:
-        return "VIDEOS";
-      case PostFilterType.hashtags:
-        return "TAGS";
+      // case PostFilterType.videos:
+      //   return "VIDEOS";
+      // case PostFilterType.hashtags:
+      //   return "TAGS";
       case PostFilterType.topics:
         return "TOPICS";
     }

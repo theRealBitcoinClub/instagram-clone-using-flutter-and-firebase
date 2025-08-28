@@ -49,7 +49,7 @@ class FeedState {
 // --- StateNotifier ---
 class FeedPostsNotifier extends StateNotifier<FeedState> {
   final PostService _postService;
-  final int _pageSize = 10;
+  final int _pageSize = 50;
 
   FeedPostsNotifier(this._postService) : super(FeedState()) {
     fetchInitialPosts();
@@ -86,15 +86,15 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
   Future<void> _fetchPostsPage({required bool isInitial}) async {
     try {
       final DocumentSnapshot? cursorForThisFetch = isInitial ? null : state.lastDocument;
-      print("-----------------------------------------------------");
-      print("FeedPostsNotifier: Attempting to fetch posts page.");
-      print("  isInitial: $isInitial");
-      print("  startAfterDoc ID: ${cursorForThisFetch?.id}"); // Log the ID of the cursor document
-      if (cursorForThisFetch?.data() != null) {
-        print(
-          "  startAfterDoc Data (first few fields for check): ${(cursorForThisFetch!.data() as Map<String, dynamic>).entries.take(2).map((e) => '${e.key}: ${e.value}').join(', ')}",
-        );
-      }
+      // print("-----------------------------------------------------");
+      // print("FeedPostsNotifier: Attempting to fetch posts page.");
+      // print("  isInitial: $isInitial");
+      // print("  startAfterDoc ID: ${cursorForThisFetch?.id}"); // Log the ID of the cursor document
+      // if (cursorForThisFetch?.data() != null) {
+      //   print(
+      //     "  startAfterDoc Data (first few fields for check): ${(cursorForThisFetch!.data() as Map<String, dynamic>).entries.take(2).map((e) => '${e.key}: ${e.value}').join(', ')}",
+      //   );
+      // }
 
       final List<MemoModelPost> newPosts = await _postService.getPostsPaginated(
         limit: _pageSize,
@@ -104,25 +104,27 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 
       if (!mounted) return;
 
-      print("  Fetched ${newPosts.length} new posts.");
-      if (newPosts.isNotEmpty) {
-        print(
-          "  First new post ID: ${newPosts.first.id}, Text: ${newPosts.first.text?.substring(0, (newPosts.first.text?.length ?? 0) > 20 ? 20 : (newPosts.first.text?.length ?? 0))}",
-        );
-        print(
-          "  Last new post ID: ${newPosts.last.id}, Text: ${newPosts.last.text?.substring(0, (newPosts.last.text?.length ?? 0) > 20 ? 20 : (newPosts.last.text?.length ?? 0))}",
-        );
-      }
+      // print("  Fetched ${newPosts.length} new posts.");
+      // if (newPosts.isNotEmpty) {
+      //   print(
+      //     "  First new post ID: ${newPosts.first.id}, Text: ${newPosts.first.text?.substring(0, (newPosts.first.text?.length ?? 0) > 20 ? 20 : (newPosts.first.text?.length ?? 0))}",
+      //   );
+      //   print(
+      //     "  Last new post ID: ${newPosts.last.id}, Text: ${newPosts.last.text?.substring(0, (newPosts.last.text?.length ?? 0) > 20 ? 20 : (newPosts.last.text?.length ?? 0))}",
+      //   );
+      // }
 
       DocumentSnapshot? newLastDocumentForState = newPosts.isNotEmpty ? newPosts.last.docSnapshot : null;
 
-      print("  Updating state. Next lastDocument ID will be: ${newLastDocumentForState?.id}");
-      print("-----------------------------------------------------");
+      // print("  Updating state. Next lastDocument ID will be: ${newLastDocumentForState?.id}");
+      // print("-----------------------------------------------------");
 
       state = state.copyWith(
         posts: isInitial ? newPosts : [...state.posts, ...newPosts],
         isLoadingInitial: false,
         isLoadingMore: false,
+        activeFilter: state.activeFilter,
+        clearErrorMessage: true,
         // CRITICAL: Ensure lastDocument is correctly updated from the NEWLY fetched posts
         lastDocument: newLastDocumentForState ?? (isInitial ? null : state.lastDocument),
         hasMorePosts: newPosts.length == _pageSize,

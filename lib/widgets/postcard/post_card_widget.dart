@@ -83,6 +83,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     // if (widget.post.creator != null) {
     if (widget.post.creator!.name.isEmpty) {
       widget.post.creator = await widget.post.creator!.refreshCreatorFirebase();
+      if (widget.post.creator!.name.isEmpty) widget.post.creator!.name = widget.post.creatorId;
       if (widget.post.creator!.profileImageAvatar().isEmpty) {
         refreshAvatarThenSetState();
       }
@@ -434,6 +435,6 @@ class _PostCardState extends ConsumerState<PostCard> {
 
   void refreshAvatarThenSetState() async {
     await widget.post.creator!.refreshAvatar();
-    setState(() {});
+    if (context.mounted) setState(() {});
   }
 }

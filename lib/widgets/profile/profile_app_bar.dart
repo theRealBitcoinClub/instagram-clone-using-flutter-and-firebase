@@ -22,6 +22,15 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
       toolbarHeight: 40,
       centerTitle: false,
       titleSpacing: NavigationToolbar.kMiddleSpacing,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          ref.read(profileTargetIdProvider.notifier).state = null;
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        },
+      ),
       title: creator?.id != null && creator!.id.isNotEmpty
           ? TextButton(
               onPressed: () {

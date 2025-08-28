@@ -1,6 +1,7 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 
 // If _PostCardState constants like _maxTagsCounter were used, they need to be accessible
 // or passed down. For now, assuming they are either not critical or will be handled.
@@ -64,30 +65,50 @@ class PostCardFooter extends StatelessWidget {
             ),
             const SizedBox(height: 10),
           ],
-          if (showInput) ...[
-            TextField(
-              controller: textEditController,
-              onChanged: onInputText,
-              style: theme.textTheme.bodyMedium,
-              decoration: InputDecoration(
-                hintText: "Add a comment or reply...",
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              ),
-              maxLines: 4,
-              minLines: 1,
-              textInputAction: TextInputAction.newline,
+          // if (showInput)
+          AnimatedGrowFadeIn(
+            delay: const Duration(milliseconds: 200), // Optional: small delay
+            show: showInput,
+            child: Column(
+              // Wrap your original content in a single child
+              mainAxisSize: MainAxisSize.min, // Important for Column to not take infinite height
+              // crossAxisAlignment: CrossAxisAlignment.start, // Or your desired alignment
+              children: [
+                TextField(
+                  controller: textEditController,
+                  onChanged: onInputText,
+                  style: theme.textTheme.bodyMedium,
+                  decoration: InputDecoration(
+                    hintText: "Add a comment or reply...",
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  maxLines: 4,
+                  minLines: 1,
+                  textInputAction: TextInputAction.newline,
+                ),
+                const SizedBox(height: 10),
+              ],
             ),
-            const SizedBox(height: 10),
-          ],
+          ),
           if (post.topicId.isNotEmpty) ...[_buildTopicCheckBoxWidget(theme), const SizedBox(height: 6)],
           if (post.tagIds.isNotEmpty) ...[_buildHashtagCheckboxesWidget(theme), const SizedBox(height: 8)],
-          if (showSend) ...[
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [_buildCancelButtonWidget(theme), const SizedBox(width: 8), _buildSendButtonWidget(theme)],
+          AnimatedGrowFadeIn(
+            show: showSend,
+            delay: const Duration(milliseconds: 200), // Optional: small delay
+            child: Column(
+              // Wrap your original content in a single child
+              mainAxisSize: MainAxisSize.min, // Important for Column to not take infinite height
+              crossAxisAlignment: CrossAxisAlignment.start, // Or your desired alignment
+              children: [
+                const Divider(),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [_buildCancelButtonWidget(theme), const SizedBox(width: 8), _buildSendButtonWidget(theme)],
+                ),
+              ],
             ),
-          ],
+          ),
         ],
       ),
     );

@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
-import 'package:mahakka/provider/user_provider.dart'; // Ensure ProviderUser is correctly defined and provided
 import 'package:mahakka/screens/add_screen.dart'; // Ensure AddPost is themed
 import 'package:mahakka/screens/feed_screen.dart'; // Ensure FeedScreen is themed
 import 'package:mahakka/screens/profile_screen.dart'; // Ensure ProfileScreen is themed
 import 'package:mahakka/tab_item_data.dart';
-import 'package:provider/provider.dart' as legacy;
+
+// import 'package:provider/provider.dart' as legacy;
 
 import '../tab_index_notifier.dart';
 
@@ -90,20 +90,28 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   }
 
   Future<void> _initUser() async {
-    if (mounted) {
-      ProviderUser up = legacy.Provider.of<ProviderUser>(context, listen: false);
-      try {
-        await up.refreshUser();
-      } catch (e) {
-        // Handle error if refreshUser fails, e.g., show a SnackBar
-        print("Error refreshing user: $e");
-        if (mounted) {
-          // ScaffoldMessenger.of(context).showSnackBar(
-          //   SnackBar(content: Text("Failed to load user data.", style: TextStyle(color: Theme.of(context).colorScheme.onError)), backgroundColor: Theme.of(context).colorScheme.error),
-          // );
-        }
-      }
-    }
+    // (Uncomment and use the WidgetsBinding block if you want HomeSceen to explicitly trigger refreshUser when it initializes. Otherwise, if your UserNotifier constructor calls refreshUser, this line can be mostly commented out or removed).
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   if (mounted) {
+    //     ref.read(userNotifierProvider.notifier).refreshUser();
+    //   }
+    // });
+
+    // OLD CODE
+    // if (mounted) {
+    //   ProviderUser up = legacy.Provider.of<ProviderUser>(context, listen: false);
+    //   try {
+    //     await up.refreshUser();
+    //   } catch (e) {
+    //     // Handle error if refreshUser fails, e.g., show a SnackBar
+    //     print("Error refreshing user: $e");
+    //     if (mounted) {
+    //       // ScaffoldMessenger.of(context).showSnackBar(
+    //       //   SnackBar(content: Text("Failed to load user data.", style: TextStyle(color: Theme.of(context).colorScheme.onError)), backgroundColor: Theme.of(context).colorScheme.error),
+    //       // );
+    //     }
+    //   }
+    // }
   }
   //
   // void _onPageChanged(int page) {

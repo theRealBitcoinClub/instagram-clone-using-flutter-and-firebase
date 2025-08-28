@@ -1,46 +1,82 @@
+// lib/theme_provider.dart
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // For saving theme choice
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_themes.dart'; // Your theme definitions
 
-class ThemeProvider extends ChangeNotifier {
-  ThemeData _currentTheme = darkTheme; // Default to light theme
-  bool _isDarkMode = false;
+// State class for theme (optional but good for clarity if more state is added)
+class ThemeState {
+  final ThemeData currentTheme;
+  final bool isDarkMode;
 
-  static const String _themePrefKey = 'isDarkMode';
+  ThemeState({required this.currentTheme, required this.isDarkMode});
+}
 
-  ThemeProvider() {
+final ThemeState defaultThemeState = ThemeState(currentTheme: darkTheme, isDarkMode: true);
+
+class ThemeNotifier extends StateNotifier<AsyncValue<ThemeState>> {
+  ThemeNotifier() : super(const AsyncValue.loading()) {
     _loadThemePreference();
   }
 
-  ThemeData get currentTheme => _currentTheme;
-  bool get isDarkMode => _isDarkMode;
+  static const String _themePrefKey = 'isDarkMode';
 
   Future<void> _loadThemePreference() async {
-    final prefs = await SharedPreferences.getInstance();
-    _isDarkMode = prefs.getBool(_themePrefKey) ?? false; // Default to false (light mode)
-    _currentTheme = _isDarkMode ? darkTheme : lightTheme;
-    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isDarkModePref = prefs.getBool(_themePrefKey) ?? false; // Default to false (light mode)
+      state = AsyncValue.data(ThemeState(currentTheme: isDarkModePref ? darkTheme : lightTheme, isDarkMode: isDarkModePref));
+    } catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+      // Fallback to a default theme on error
+      state = AsyncValue.data(ThemeState(currentTheme: lightTheme, isDarkMode: false));
+      print("Error loading theme preference: $e");
+    }
   }
 
   Future<void> toggleTheme() async {
-    _isDarkMode = !_isDarkMode;
-    _currentTheme = _isDarkMode ? darkTheme : lightTheme;
-    notifyListeners();
+    // Only proceed if current state is data (not loading or error)
+    state.whenData((currentThemeState) async {
+      final newIsDarkMode = !currentThemeState.isDarkMode;
+      state = AsyncValue.data(ThemeState(currentTheme: newIsDarkMode ? darkTheme : lightTheme, isDarkMode: newIsDarkMode));
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_themePrefKey, _isDarkMode);
-  }
-
-  // Optional: Allow setting a specific theme
-  void setTheme(bool isDark) {
-    if (_isDarkMode == isDark) return; // No change needed
-    _isDarkMode = isDark;
-    _currentTheme = _isDarkMode ? darkTheme : lightTheme;
-    notifyListeners();
-
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool(_themePrefKey, _isDarkMode);
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(_themePrefKey, newIsDarkMode);
+      } catch (e) {
+        print("Error saving theme preference: $e");
+        // Optionally revert state or handle error
+      }
     });
   }
+
+  Future<void> setTheme(bool isDark) async {
+    state.whenData((currentThemeState) async {
+      if (currentThemeState.isDarkMode == isDark) return; // No change needed
+
+      state = AsyncValue.data(ThemeState(currentTheme: isDark ? darkTheme : lightTheme, isDarkMode: isDark));
+
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(_themePrefKey, isDark);
+      } catch (e) {
+        print("Error saving theme preference: $e");
+      }
+    });
+  }
+
+  // Getter for convenience, usable only when data is loaded
+  bool get isDarkMode {
+    return state.maybeWhen(
+      data: (themeState) => themeState.isDarkMode,
+      orElse: () => false, // Default or handle loading/error appropriately
+    );
+  }
 }
+
+// The global provider for ThemeNotifier
+// It will now provide AsyncValue<ThemeState>
+final themeNotifierProvider = StateNotifierProvider<ThemeNotifier, AsyncValue<ThemeState>>((ref) {
+  return ThemeNotifier();
+});

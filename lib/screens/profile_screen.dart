@@ -2,6 +2,7 @@
 import 'package:clipboard/clipboard.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/firebase/creator_service.dart';
 // Assuming you have PostService, adjust the import path
 import 'package:mahakka/memo/firebase/post_service.dart';
@@ -29,14 +30,14 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
   if (stackTrace != null) print('  StackTrace: $stackTrace');
 }
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateMixin {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProviderStateMixin {
   // Services
   final PostService _postService = PostService(); // Add PostService instance
 
@@ -1063,7 +1064,8 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
               }
             }),
             _buildSettingsOption(theme, Icons.logout, "LOGOUT", ctxDialog, () {
-              AuthChecker().logOut(context); // Assuming this navigates away
+              final authChecker = ref.read(authCheckerProvider);
+              authChecker.logOut(); // Assuming this navigates away
             }),
           ],
         );

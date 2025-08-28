@@ -1,20 +1,21 @@
 import 'package:bip39_mnemonic/bip39_mnemonic.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/resources/auth_method.dart';
 // import 'package:mahakka/utils/colors.dart'; // REMOVE THIS
 import 'package:mahakka/utils/snackbar.dart'; // Ensure this is themed
 import 'package:mahakka/widgets/textfield_input.dart'; // Ensure this is themed
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   final Function()? onToggle; // Assuming this is for toggling between Login/Signup
 
   const LoginScreen({Key? key, this.onToggle}) : super(key: key); // Use Key? and make onToggle optional
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _mnemonicController = TextEditingController();
   bool _isLoading = false; // Renamed for convention
 
@@ -48,7 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
     //   return;
     // }
 
-    String res = await AuthChecker().loginInWithMnemonic(_mnemonicController.text.trim(), context);
+    final authChecker = ref.read(authCheckerProvider);
+    String res = await authChecker.loginInWithMnemonic(_mnemonicController.text.trim());
 
     if (mounted) {
       // Check mounted again after await

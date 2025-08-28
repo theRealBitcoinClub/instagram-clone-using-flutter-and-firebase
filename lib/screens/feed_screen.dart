@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:provider/provider.dart';
 
 import '../memo/firebase/post_service.dart';
 import '../theme_provider.dart';
@@ -15,15 +15,15 @@ class ScrollUpIntent extends Intent {}
 
 class ScrollDownIntent extends Intent {}
 
-class FeedScreen extends StatefulWidget {
+class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key, required this.navBarCallback});
   final NavBarCallback navBarCallback;
 
   @override
-  State<FeedScreen> createState() => _FeedScreenState();
+  ConsumerState<FeedScreen> createState() => _FeedScreenState();
 }
 
-class _FeedScreenState extends State<FeedScreen> {
+class _FeedScreenState extends ConsumerState<FeedScreen> {
   final PostService _postService = PostService();
   final Set<PostFilterType> _activeFilters = {};
 
@@ -99,8 +99,14 @@ class _FeedScreenState extends State<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final asyncThemeState = ref.watch(themeNotifierProvider);
+    final ThemeState currentThemeState = asyncThemeState.maybeWhen(
+      data: (data) => data,
+      orElse: () {
+        return defaultThemeState;
+      },
+    );
+    final ThemeData theme = currentThemeState.currentTheme;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -108,7 +114,7 @@ class _FeedScreenState extends State<FeedScreen> {
         centerTitle: true,
         toolbarHeight: 50,
         title: Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
-        actions: [_buildMenuTheme(themeProvider, theme), _buildMenuFilter(theme)],
+        actions: [_buildMenuTheme(currentThemeState, theme), _buildMenuFilter(theme)],
       ),
       body: StreamBuilder<List<MemoModelPost>>(
         stream: _postsStream,
@@ -231,12 +237,12 @@ class _FeedScreenState extends State<FeedScreen> {
     );
   }
 
-  Widget _buildMenuTheme(ThemeProvider themeProvider, ThemeData theme) {
+  Widget _buildMenuTheme(ThemeState themeState, ThemeData theme) {
     return IconButton(
-      icon: Icon(themeProvider.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+      icon: Icon(themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
       // tooltip: "Toggle Theme",
       onPressed: () {
-        themeProvider.toggleTheme();
+        ref.read(themeNotifierProvider.notifier).toggleTheme();
       },
     );
   }

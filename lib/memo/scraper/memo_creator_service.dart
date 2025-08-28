@@ -154,7 +154,7 @@ class MemoCreatorService {
     final Map<String, Object> data = await MemoScraperUtil.createScraper(
       "profile/${creator.id}",
       _buildCreatorDetailsConfig(),
-      nocache: noCache, // Corrected parameter name
+      nocache: noCache,
     );
 
     if (data.values.isEmpty || data.values.first is! String) {

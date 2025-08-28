@@ -5,6 +5,7 @@ import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
+import 'package:mahakka/memo/scraper/memo_creator_service.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure path is correct
@@ -77,15 +78,21 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   Future<void> _refreshCreator() async {
-    if (widget.post.creator == null && widget.post.creatorId.isNotEmpty) {
+    if (_creator() == null && widget.post.creatorId.isNotEmpty) {
       widget.post.creator = MemoModelCreator(id: widget.post.creatorId);
     }
     // if (widget.post.creator != null) {
-    if (widget.post.creator!.name.isEmpty) {
-      widget.post.creator = await widget.post.creator!.refreshCreatorFirebase();
-      if (widget.post.creator!.name.isEmpty) widget.post.creator!.name = widget.post.creatorId;
-      if (widget.post.creator!.profileImageAvatar().isEmpty) {
+    if (_creator()!.name.isEmpty) {
+      widget.post.creator = await _creator()!.refreshCreatorFirebase();
+
+      if (_creator()!.profileImageAvatar().isEmpty) {
         refreshAvatarThenSetState();
+      }
+
+      if (_creator()!.name.isEmpty) {
+        _creator()!.name = _creator()!.profileIdShort;
+
+        widget.post.creator = await MemoCreatorService().fetchCreatorDetails(_creator()!);
       }
     }
     // }
@@ -94,6 +101,8 @@ class _PostCardState extends ConsumerState<PostCard> {
     // }
     if (mounted) setState(() {});
   }
+
+  MemoModelCreator? _creator() => widget.post.creator;
 
   void _initializeSelectedHashtags() {
     final int count = widget.post.tagIds.length > _maxTagsCounter ? _maxTagsCounter : widget.post.tagIds.length;
@@ -150,11 +159,11 @@ class _PostCardState extends ConsumerState<PostCard> {
     }
   }
 
-  Stack _buildStackMediaWithAnimation(ThemeData theme) {
+  Stack _wrapInAnimationStack(ThemeData theme, wrappedInAnimationWidget) {
     return Stack(
       alignment: Alignment.center,
       children: [
-        _buildPostMedia(theme),
+        wrappedInAnimationWidget,
         SendingAnimation(
           isSending: _isSendingTx,
           mediaHeight: widget.post.imgurUrl == null ? _altImageHeight : 150.0,
@@ -387,54 +396,59 @@ class _PostCardState extends ConsumerState<PostCard> {
     //     child: Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
     //   );
     // }
-    if (widget.post.creator!.profileImageAvatar().isEmpty) {
+    if (_creator()!.profileImageAvatar().isEmpty) {
       refreshAvatarThenSetState();
     }
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          PostCardHeader(
-            post: widget.post,
-            onOptionsMenuPressed: _sendTipToCreator,
-            // NavBarCallback removed
-          ),
-          GestureDetector(
-            onDoubleTap: _isSendingTx ? null : _sendTipToCreator,
-            child: ZoomOverlay(
-              modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3),
-              minScale: 0.5,
-              maxScale: 3.0,
-              twoTouchOnly: true,
-              animationDuration: const Duration(milliseconds: 200),
-              animationCurve: Curves.easeOut,
-              child: _buildStackMediaWithAnimation(theme),
+    return _wrapInAnimationStack(
+      theme,
+      Card(
+        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PostCardHeader(
+              post: widget.post,
+              onOptionsMenuPressed: _sendTipToCreator,
+              // NavBarCallback removed
             ),
-          ),
-          PostCardFooter(
-            post: widget.post,
-            textEditController: _textEditController,
-            showInput: _showInput,
-            showSend: _showSend,
-            hasSelectedTopic: _hasSelectedTopic,
-            selectedHashtags: _selectedHashtags,
-            onInputText: _onInputText,
-            onSelectHashtag: _onSelectHashtag,
-            onSelectTopic: _onSelectTopic,
-            onSend: _onSend,
-            onCancel: _onCancel,
-            maxTagsCounter: _maxTagsCounter, // Pass the constant
-          ),
-        ],
+            widget.post.imgurUrl != null && widget.post.imgurUrl!.isNotEmpty
+                ? GestureDetector(
+                    onDoubleTap: _isSendingTx ? null : _sendTipToCreator,
+                    child: ZoomOverlay(
+                      modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3),
+                      minScale: 0.5,
+                      maxScale: 3.0,
+                      twoTouchOnly: true,
+                      animationDuration: const Duration(milliseconds: 200),
+                      animationCurve: Curves.easeOut,
+                      child: _buildPostMedia(theme),
+                    ),
+                  )
+                : SizedBox(),
+            PostCardFooter(
+              post: widget.post,
+              textEditController: _textEditController,
+              showInput: _showInput,
+              showSend: _showSend,
+              hasSelectedTopic: _hasSelectedTopic,
+              selectedHashtags: _selectedHashtags,
+              onInputText: _onInputText,
+              onSelectHashtag: _onSelectHashtag,
+              onSelectTopic: _onSelectTopic,
+              onSend: _onSend,
+              onCancel: _onCancel,
+              maxTagsCounter: _maxTagsCounter, // Pass the constant
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void refreshAvatarThenSetState() async {
-    await widget.post.creator!.refreshAvatar();
+    await _creator()!.refreshAvatar();
     if (context.mounted) setState(() {});
   }
 }

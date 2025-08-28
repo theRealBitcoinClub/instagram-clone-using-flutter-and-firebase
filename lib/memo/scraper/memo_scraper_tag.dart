@@ -1,22 +1,39 @@
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
+import 'package:mahakka/memo/firebase/tag_service.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 import 'package:mahakka/memo/scraper/memo_post_service.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
+
+import '../firebase/post_service.dart';
+import '../model/memo_model_post.dart';
 
 class MemoScraperTag {
   Future<void> startScrapeTags(List<String> orderBy, int startOffset, int endOffset, String cacheId) async {
     for (String order in orderBy) {
       for (int off = startOffset; off >= endOffset; off -= 25) {
+        var posts = [];
         List<MemoModelTag> tags = await scrapeTags(order, off);
         for (MemoModelTag tag in tags) {
-          await MemoPostService().scrapePostsPaginated(baseUrl: "t/${tag.name}", initialOffset: 0, cacheId: cacheId);
+          posts.addAll(await MemoPostService().scrapePostsPaginated(baseUrl: "t/${tag.name}", initialOffset: 0, cacheId: cacheId));
           //TODO this already happens inside scrapepostspaginated
           // MemoModelPost.addToGlobalPostList(list);
         }
         // MemoModelTag.tags.addAll(tags);
-        print("RUNNING SCRAPE:$order$off");
+        var tagService = TagService();
+        var postService = PostService();
+        for (MemoModelTag t in tags) {
+          tagService.saveTag(t);
+          // indexTopics++;
+          for (MemoModelPost p in posts) {
+            postService.savePost(p);
+            // indexPosts++;
+          }
+          posts.clear();
+        }
+        tags.clear();
+        print("$off RUNNING SCRAPE:$order$off");
       }
     }
     print("FINISH SCRAPE TAGS");

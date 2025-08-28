@@ -4,25 +4,23 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:mahakka/memo/firebase/post_service.dart';
-import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/memo/scraper/memo_post_service.dart';
-import 'package:mahakka/provider/user_provider.dart';
-import 'package:mahakka/route%20handling/auth_page.dart';
-import 'package:mahakka/theme_provider.dart';
-import 'package:provider/provider.dart';
 
 import '../firebase_options.dart';
+import '../memo/firebase/post_service.dart';
+import '../memo/model/memo_model_post.dart';
+import '../memo/model/memo_model_topic.dart';
+import '../memo/scraper/memo_post_service.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runSequentialBatchJob();
+  // scrapeTopics("");
+  runSequentialBatchJobDateCreated();
 }
 
-Future<void> runSequentialBatchJob() async {
+Future<void> runSequentialBatchJobDateCreated() async {
   // 1. Instantiate your PostService
   final PostService postService = PostService();
 
@@ -52,7 +50,7 @@ Future<void> runSequentialBatchJob() async {
       //SKIP ALL THESE THAT HAVE BEEN PROCESSED
       if (post.createdDateTime != null) continue;
 
-      sleep(Duration(milliseconds: 700));
+      sleep(Duration(milliseconds: 100));
 
       MemoModelPost? p = await memoPostService.fetchAndParsePost(post.id, filterOn: false);
 
@@ -130,24 +128,32 @@ Future<void> runSequentialBatchJob() async {
 //   }
 // }
 
-// Future<void> scrapeTopics(String cacheId) async {
-//   int indexTopics = 0;
-//   int indexPosts = 0;
-//   await MemoScraperTopic().startScrapeTopics(cacheId, 125, 25);
-//
-//   for (MemoModelTopic t in MemoModelTopic.topics) {
-//     TopicService().saveTopic(t);
-//     indexTopics++;
-//   }
-//
-//   for (MemoModelPost p in MemoModelPost.allPosts) {
-//     PostService().savePost(p);
-//     indexPosts++;
-//   }
-//   print("TOTAL AMOUNT TOPICS $indexTopics");
-//   print("TOTAL AMOUNT POSTS $indexPosts");
-// }
-//
+Future<void> scrapeTopics(String cacheId) async {
+  int indexTopics = 0;
+  int indexPosts = 0;
+  List<MemoModelTopic> topics = [];
+  // try {
+  // await MemoScraperTopic().startScrapeTopics(topics, cacheId, 950, 200);
+  // await MemoScraperTag().startScrapeTags(["/most-posts"], 500, 100, cacheId);
+  // await MemoScraperTag().startScrapeTags(["/recent"], 500, 0, cacheId);
+  // await MemoScraperTag().startScrapeTags(["/popular"], 500, 0, cacheId);
+  // } finally {
+  //   var topicService = TopicService();
+  //   var postService = PostService();
+  //   for (MemoModelTopic t in topics) {
+  //     topicService.saveTopic(t);
+  //     indexTopics++;
+  //     for (MemoModelPost p in t.posts) {
+  //       postService.savePost(p);
+  //       indexPosts++;
+  //     }
+  //   }
+  //
+  //   print("TOTAL AMOUNT TOPICS $indexTopics");
+  //   print("TOTAL AMOUNT POSTS $indexPosts");
+  // }
+}
+
 // Future<void> scrapeTags(String cacheId) async {
 //   int indexTags = 0;
 //   int indexPosts = 0;
@@ -166,31 +172,3 @@ Future<void> runSequentialBatchJob() async {
 //   print("TOTAL AMOUNT TAGS $indexTags");
 //   print("TOTAL AMOUNT POSTS $indexPosts");
 // }
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ProviderUser()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-      ],
-      child: Consumer<ThemeProvider>(
-        // Use Consumer to access ThemeProvider for MaterialApp
-        builder: (context, themeProvider, child) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'Memogram',
-            theme: themeProvider.currentTheme,
-            // theme: ThemeData.dark()
-            //     .copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
-            home: const AuthPage(),
-          );
-        },
-      ),
-    );
-    // );
-  }
-}

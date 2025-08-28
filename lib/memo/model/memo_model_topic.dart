@@ -1,5 +1,6 @@
 // [1]
 import 'package:json_annotation/json_annotation.dart';
+import 'package:mahakka/memo/model/memo_model_post.dart';
 
 part 'memo_model_topic.g.dart'; // This file will be generated
 
@@ -29,6 +30,9 @@ class MemoModelTopic {
   final int? postCount;
   final int? followerCount;
   final String? lastPost; // Consider if this should be a DateTime for easier sorting/filtering
+
+  @JsonKey(ignore: true)
+  List<MemoModelPost> posts = [];
 
   /// Factory constructor for creating a new MemoModelTopic instance from a map.
   /// This map (json) usually comes from Firestore or other JSON sources.

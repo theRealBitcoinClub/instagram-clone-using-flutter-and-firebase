@@ -7,8 +7,11 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
+import '../firebase/post_service.dart';
+import '../firebase/topic_service.dart';
+
 class MemoScraperTopic {
-  Future<void> startScrapeTopics(String cacheId, int startOffset, int endOffset) async {
+  Future<List<MemoModelTopic>> startScrapeTopics(List<MemoModelTopic> results, String cacheId, int startOffset, int endOffset) async {
     // MemoModelTopic.topics.clear();
     for (int off = startOffset; off >= endOffset; off -= 25) {
       Map<String, Object> topics = await MemoScraperUtil.createScraper(
@@ -18,6 +21,8 @@ class MemoScraperTopic {
 
       List<MemoModelTopic> topicList = createMemoModelTopicList(topics);
 
+      results.addAll(topicList);
+
       // MemoModelTopic.topics.addAll(topicList);
       final config = createScraperConfigMemoModelPost();
 
@@ -26,16 +31,28 @@ class MemoScraperTopic {
 
         Map<String, Object> posts = await MemoScraperUtil.createScraper("${currentTopic.url!}?x=$cacheId", config);
 
-        await createTopicPostList(posts, currentTopic);
+        currentTopic.posts.addAll(await createTopicPostList(posts, currentTopic));
         // MemoModelPost.addToGlobalPostList(postList.toList());
 
         // printMemoModelPost(postList);
         // print("object");
-        print("RUNNING SCRAPE TOPICccccc POSTS: ${currentTopic.header}");
+        print("$off RUNNING SCRAPE TOPICccccc POSTS: ${currentTopic.header}");
       }
-
+      var topicService = TopicService();
+      var postService = PostService();
+      for (MemoModelTopic t in results) {
+        topicService.saveTopic(t);
+        // indexTopics++;
+        for (MemoModelPost p in t.posts) {
+          postService.savePost(p);
+          // indexPosts++;
+        }
+        t.posts.clear();
+      }
+      results.clear();
       print("FINISH SCRAPE TOPICS: $cacheId");
     }
+    return results;
   }
 
   ScraperConfig createScraperConfigMemoModelTopic() {

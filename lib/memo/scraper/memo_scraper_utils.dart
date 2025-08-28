@@ -8,11 +8,11 @@ import '../model/memo_model_creator.dart';
 import '../model/memo_model_topic.dart';
 
 class MemoScraperUtil {
-  static Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg, {bool nocache = false}) async {
+  static Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg, {bool nocache = true}) async {
     return await _createScraperAny(nocache, path, cfg);
   }
 
-  static dynamic createScraperObj(String path, ScraperConfig cfg, {bool nocache = false}) async {
+  static dynamic createScraperObj(String path, ScraperConfig cfg, {bool nocache = true}) async {
     return await _createScraperAny(nocache, path, cfg);
   }
 

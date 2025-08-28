@@ -135,7 +135,7 @@ class MemoScraperTopic {
         id: id,
         topic: topic,
         text: item["msg"]?.toString(),
-        age: item["age"].toString(),
+        // age: item["age"].toString(),
         popularityScore: int.parse((item["tipsInSatoshi"] ?? "0").toString().replaceAll(",", "")),
         likeCounter: likeCount,
         replyCounter: int.parse((item["replyCount"] ?? "0").toString()),

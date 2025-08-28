@@ -152,7 +152,7 @@ class ProfileContentList extends StatelessWidget {
                 ],
                 Text(
                   // Use the passed creatorName, as post.creator might not be populated here
-                  "Posted by: $creatorName, ${ytPost.ageCalc}",
+                  "Posted by: $creatorName, ${ytPost.age}",
                   style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
                 ),
               ],
@@ -165,7 +165,7 @@ class ProfileContentList extends StatelessWidget {
 
   Widget _buildGenericListItem(BuildContext context, ThemeData theme, MemoModelPost post) {
     // Use post.age or post.created as per your original logic for timestamp
-    final String postTimestamp = post.ageCalc;
+    final String postTimestamp = post.age;
 
     return Card(
       elevation: 1.0, // Subtle elevation

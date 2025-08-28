@@ -202,7 +202,7 @@ class MemoPostService {
       id: txHash,
       topic: topic,
       text: text,
-      age: age,
+      // age: age,
       popularityScore: tipsInSatoshi,
       created: created,
       imgurUrl: imgurUrl,

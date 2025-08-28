@@ -15,14 +15,6 @@ class ScrollUpIntent extends Intent {}
 
 class ScrollDownIntent extends Intent {}
 
-class PageUpIntent extends Intent {}
-
-class PageDownIntent extends Intent {}
-
-class HomeIntent extends Intent {}
-
-class EndIntent extends Intent {}
-
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key, required this.navBarCallback});
   final NavBarCallback navBarCallback;
@@ -158,10 +150,10 @@ class _FeedScreenState extends State<FeedScreen> {
             actions: <Type, Action<Intent>>{
               ScrollUpIntent: CallbackAction<ScrollUpIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
               ScrollDownIntent: CallbackAction<ScrollDownIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
-              PageUpIntent: CallbackAction<PageUpIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
-              PageDownIntent: CallbackAction<PageDownIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
-              HomeIntent: CallbackAction<HomeIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
-              EndIntent: CallbackAction<EndIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
+              // PageUpIntent: CallbackAction<PageUpIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
+              // PageDownIntent: CallbackAction<PageDownIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
+              // HomeIntent: CallbackAction<HomeIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
+              // EndIntent: CallbackAction<EndIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
             },
             child: GestureDetector(
               // Optional: to allow clicking on list to focus
@@ -314,10 +306,6 @@ class _FeedScreenState extends State<FeedScreen> {
     return <ShortcutActivator, Intent>{
       const SingleActivator(LogicalKeyboardKey.arrowUp): ScrollUpIntent(),
       const SingleActivator(LogicalKeyboardKey.arrowDown): ScrollDownIntent(),
-      const SingleActivator(LogicalKeyboardKey.pageUp): PageUpIntent(),
-      const SingleActivator(LogicalKeyboardKey.pageDown): PageDownIntent(),
-      const SingleActivator(LogicalKeyboardKey.home): HomeIntent(),
-      const SingleActivator(LogicalKeyboardKey.end): EndIntent(),
     };
   }
 
@@ -329,37 +317,19 @@ class _FeedScreenState extends State<FeedScreen> {
     // Or, for more precision, you could try to get the height of visible items.
     // This is a simpler approach.
     const double estimatedItemHeight = 300.0; // Adjust this value!
-    final double viewportHeight = _scrollController.position.viewportDimension;
+    // final double viewportHeight = _scrollController.position.viewportDimension;
 
     if (intent is ScrollUpIntent) {
       scrollAmount = -estimatedItemHeight; // Scroll up by one item height
     } else if (intent is ScrollDownIntent) {
       scrollAmount = estimatedItemHeight; // Scroll down by one item height
-    } else if (intent is PageUpIntent) {
-      scrollAmount = -viewportHeight; // Scroll up by one viewport height
-    } else if (intent is PageDownIntent) {
-      scrollAmount = viewportHeight; // Scroll down by one viewport height
-    } else if (intent is HomeIntent) {
-      _scrollController.animateTo(
-        _scrollController.position.minScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-      return;
-    } else if (intent is EndIntent) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-      return;
     }
 
     if (scrollAmount != 0) {
       _scrollController.animateTo(
         (_scrollController.offset + scrollAmount).clamp(_scrollController.position.minScrollExtent, _scrollController.position.maxScrollExtent),
-        duration: const Duration(milliseconds: 200), // Adjust duration as needed
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 500), // Adjust duration as needed
+        curve: Curves.decelerate,
       );
     }
   }

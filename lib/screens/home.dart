@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/screens/add_screen.dart'; // Ensure AddPost is themed
@@ -146,64 +145,46 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor, // Background of the screen itself
-      body: RawKeyboardListener(
-        focusNode: _scaffoldFocusNode,
-        autofocus: true,
-        onKey: (RawKeyEvent event) {
-          if (event is RawKeyDownEvent) {
-            final FocusNode? focusedNode = FocusManager.instance.primaryFocus;
-            bool isEditingText = focusedNode != null && focusedNode.context?.widget is EditableText;
-
-            if (event.logicalKey == LogicalKeyboardKey.arrowRight && !isEditingText) {
-              _navigateToNextTab();
-            } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft && !isEditingText) {
-              _navigateToPreviousTab();
-            }
+      body: GestureDetector(
+        onHorizontalDragEnd: (DragEndDetails details) {
+          if (details.primaryVelocity == 0) return;
+          if (details.primaryVelocity! < 0) {
+            _navigateToNextTab();
+          } else if (details.primaryVelocity! > 0) {
+            _navigateToPreviousTab();
           }
         },
-        child: Scaffold(
-          body: GestureDetector(
-            onHorizontalDragEnd: (DragEndDetails details) {
-              if (details.primaryVelocity == 0) return;
-              if (details.primaryVelocity! < 0) {
-                _navigateToNextTab();
-              } else if (details.primaryVelocity! > 0) {
-                _navigateToPreviousTab();
-              }
-            },
-            child: PageView(
-              controller: _pageController,
-              // onPageChanged: _onPageChanged,
-              physics: const NeverScrollableScrollPhysics(), // To disable swipe navigation
-              children: homeScreenItems,
-            ),
-          ),
-          bottomNavigationBar: CupertinoTabBar(
-            height: 70, // Keep custom height if desired
-            backgroundColor:
-                theme.bottomNavigationBarTheme.backgroundColor ?? // Use Material BottomNavTheme bg
-                (theme.brightness == Brightness.light ? Colors.grey[100] : Colors.grey[900]), // Fallback
-            activeColor: cupertinoActiveColor,
-            inactiveColor: cupertinoInactiveColor,
-            currentIndex: currentTabIndex, // Use index from Riverpod
-            onTap: (index) => ref.read(tabIndexProvider.notifier).setTab(index),
-            iconSize: 30.0, // Default is 30.0, adjust as needed
-            border: Border(
-              top: BorderSide(
-                color: theme.dividerColor.withOpacity(0.5), // Use theme divider color
-                width: 0.5, // Keep it subtle
-              ),
-            ),
-            items: appTabsData.map((tabData) {
-              // bool isSelected = currentAppTab == tabData.tab; // If using AppTab state
-              bool isSelected = appTabsData.indexOf(tabData) == currentTabIndex; // Or by index
-              return BottomNavigationBarItem(
-                icon: Icon(isSelected ? tabData.activeIcon : tabData.defaultIcon),
-                // label: tabData.label,
-              );
-            }).toList(),
+        child: PageView(
+          controller: _pageController,
+          // onPageChanged: _onPageChanged,
+          physics: const NeverScrollableScrollPhysics(), // To disable swipe navigation
+          children: homeScreenItems,
+        ),
+      ),
+      bottomNavigationBar: CupertinoTabBar(
+        height: 70, // Keep custom height if desired
+        backgroundColor:
+            theme.bottomNavigationBarTheme.backgroundColor ?? // Use Material BottomNavTheme bg
+            (theme.brightness == Brightness.light ? Colors.grey[100] : Colors.grey[900]), // Fallback
+        activeColor: cupertinoActiveColor,
+        inactiveColor: cupertinoInactiveColor,
+        currentIndex: currentTabIndex, // Use index from Riverpod
+        onTap: (index) => ref.read(tabIndexProvider.notifier).setTab(index),
+        iconSize: 30.0, // Default is 30.0, adjust as needed
+        border: Border(
+          top: BorderSide(
+            color: theme.dividerColor.withOpacity(0.5), // Use theme divider color
+            width: 0.5, // Keep it subtle
           ),
         ),
+        items: appTabsData.map((tabData) {
+          // bool isSelected = currentAppTab == tabData.tab; // If using AppTab state
+          bool isSelected = appTabsData.indexOf(tabData) == currentTabIndex; // Or by index
+          return BottomNavigationBarItem(
+            icon: Icon(isSelected ? tabData.activeIcon : tabData.defaultIcon),
+            // label: tabData.label,
+          );
+        }).toList(),
       ),
     );
   }

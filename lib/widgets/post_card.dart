@@ -529,6 +529,12 @@ class _PostCardState extends State<PostCard> {
     if (!mounted) return;
     setState(() {
       _hasSelectedTopic = !_hasSelectedTopic;
+      if (_hasSelectedTopic) {
+        _textEditController.text += " @${widget.post.topicId}";
+      } else {
+        _textEditController.text = _textEditController.text.replaceAll(" @${widget.post.topicId}", "");
+      }
+
       _showInput = _hasSelectedTopic || _selectedHashtags.any((selected) => selected);
       // Re-evaluate showSend based on current text and selections
       _evaluateShowSendButton(_textEditController.text);
@@ -538,6 +544,13 @@ class _PostCardState extends State<PostCard> {
   void _onInputText(String value) {
     if (!mounted) return;
     setState(() {
+      //TODO make sure topic is always first place and basically uneditable input
+      //make sure it works with hashtags and topic in combination too
+      // if (value.contains("@")) {
+      //   var split = value.split(" ");
+      //   split.where((e) => e.startsWith("@")).forEach((e) => e.replaceAll("@", ""));
+      //   _textEditController.text = split.join(" ");
+      // }
       // Update selectedHashtags based on text input
       final currentTextHashtags = MemoScraperUtil.extractHashtags(value);
       for (int i = 0; i < _selectedHashtags.length && i < widget.post.tagIds.length; i++) {

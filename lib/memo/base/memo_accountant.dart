@@ -74,7 +74,7 @@ class MemoAccountant {
 
   Future<MemoAccountantResponse> _tryPublishReplyTopic(String wif, MemoModelPost post, String postReply) async {
     var tip = MemoTip(_getTipReceiver(post.creator!), user.tipAmount);
-    return _publishToMemo(MemoCode.topicMessage, postReply, tip: tip, top: post.topic!.header);
+    return _publishToMemo(MemoCode.topicMessage, postReply, tip: tip, top: post.topicId);
   }
 
   Future<MemoAccountantResponse> _publishToMemo(MemoCode c, String text, {String? top, MemoTip? tip}) async {

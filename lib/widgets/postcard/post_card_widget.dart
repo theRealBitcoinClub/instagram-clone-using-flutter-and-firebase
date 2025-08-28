@@ -221,9 +221,9 @@ class _PostCardState extends ConsumerState<PostCard> {
     setState(() {
       _hasSelectedTopic = !_hasSelectedTopic;
       if (_hasSelectedTopic) {
-        _textEditController.text += " @${widget.post.topicId}";
+        _textEditController.text = "@${widget.post.topicId} ${_textEditController.text}";
       } else {
-        _textEditController.text = _textEditController.text.replaceAll(" @${widget.post.topicId}", "").trim();
+        _textEditController.text = _textEditController.text.replaceAll("@${widget.post.topicId}", "").trim();
       }
       _showInput = _hasSelectedTopic || _selectedHashtags.any((selected) => selected);
       _evaluateShowSendButton(_textEditController.text);

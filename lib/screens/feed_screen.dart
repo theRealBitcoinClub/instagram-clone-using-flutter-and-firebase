@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 
 import '../memo/firebase/post_service.dart';
 import '../theme_provider.dart';
 import '../utils/snackbar.dart';
-import '../widgets/post_card.dart';
 import 'home.dart';
 
 enum PostFilterType { images, videos, hashtags, topics }
@@ -68,6 +68,18 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         _activeFilters.add(filterType);
       }
       _applyFiltersOnData(_allFirebasePosts);
+
+      // Scroll to top after filters are applied and UI is scheduled to rebuild
+      if (_scrollController.hasClients) {
+        // Using jumpTo for an immediate jump, or animateTo for a smooth scroll
+        _scrollController.jumpTo(0.0);
+        // Alternatively, for a smooth scroll:
+        // _scrollController.animateTo(
+        //   0.0,
+        //   duration: const Duration(milliseconds: 300),
+        //   curve: Curves.easeOut,
+        // );
+      }
     });
     _showFilterChangeSnackbar(filterType);
   }
@@ -137,9 +149,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
           //TODO filter out all video posts until video player works well
           // Store all posts from Firebase and then apply filters
-          _allFirebasePosts = snapshot.data!
-              .where((post) => post.youtubeId == null || post.youtubeId!.isNotEmpty) // Filter out posts with empty IDs
-              .toList();
+          _allFirebasePosts = snapshot.data!.toList();
+          // .where((post) => post.youtubeId == null || post.youtubeId!.isNotEmpty) // Filter out posts with empty IDs
+          // .toList();
           _applyFiltersOnData(_allFirebasePosts);
 
           if (_filteredPosts.isEmpty && _activeFilters.isNotEmpty) {
@@ -176,7 +188,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 // focusNode: _listViewFocusNode, // Can also be put here directly
                 itemCount: _filteredPosts.length,
                 itemBuilder: (context, index) {
-                  return PostCard(_filteredPosts[index], widget.navBarCallback, key: ValueKey(_filteredPosts[index].id));
+                  return PostCard(_filteredPosts[index], key: ValueKey(_filteredPosts[index].id));
                 },
               ),
             ),

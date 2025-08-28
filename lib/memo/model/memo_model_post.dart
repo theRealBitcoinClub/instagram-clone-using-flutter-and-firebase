@@ -57,6 +57,52 @@ class MemoModelPost {
   final String? imgurUrl;
   String? youtubeId;
 
+  // Private member variable to cache the calculated age
+  @JsonKey(ignore: true) // Will not be included in JSON
+  String _age = "";
+
+  // / Getter for the 'age'
+  // This will calculate the age on first access and cache it.
+  String get ageCalc {
+    // If _age is already calculated and cached, return it
+    if (_age.isNotEmpty) {
+      return _age;
+    }
+    // If not cached, calculate, cache, and then return it
+    _age = _calculateAge();
+    return _age;
+  }
+
+  // Private method to perform the age calculation
+  String _calculateAge() {
+    if (createdDateTime == null) return "";
+
+    final DateTime now = DateTime.now();
+    final Duration difference = now.difference(createdDateTime!);
+
+    if (difference.inSeconds < 60) {
+      return "${difference.inSeconds}s ago";
+    } else if (difference.inMinutes < 60) {
+      return "${difference.inMinutes}m ago";
+    } else if (difference.inHours < 24) {
+      return "${difference.inHours}h ago";
+    } else if (difference.inDays < 7) {
+      return "${difference.inDays}d ago";
+    } else if (difference.inDays < 30) {
+      // For weeks, approximately
+      final weeks = (difference.inDays / 7).floor();
+      return "${weeks}w ago";
+    } else if (difference.inDays < 365) {
+      // For months, approximately
+      final months = (difference.inDays / 30).floor();
+      return "${months}mo ago";
+    } else {
+      // For years, approximately
+      final years = (difference.inDays / 365).floor();
+      return "${years}y ago";
+    }
+  }
+
   @JsonKey(fromJson: _dateTimeFromJson, toJson: _dateTimeToJson)
   DateTime? createdDateTime; // Serialized as Timestamp
 

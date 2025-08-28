@@ -4,12 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/screens/add_screen.dart'; // Ensure AddPost is themed
 import 'package:mahakka/screens/feed_screen.dart'; // Ensure FeedScreen is themed
-import 'package:mahakka/screens/profile_screen.dart'; // Ensure ProfileScreen is themed
 import 'package:mahakka/tab_item_data.dart';
 
 // import 'package:provider/provider.dart' as legacy;
 
-import '../tab_index_notifier.dart';
+import '../provider/navigation_providers.dart';
+import '../widgets/profile/profile_screen_new.dart';
 
 class NavBarCallback {
   switchToProfileTab() {}
@@ -28,10 +28,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   late TabController _tabController;
   final FocusNode _scaffoldFocusNode = FocusNode();
   final int _totalTabs = 3; // Keep this for bounds and controller lengths
-  final tabIndexProvider = StateNotifierProvider<TabIndexNotifier, int>((ref) {
-    const totalTabs = 3; // Or get this from a config provider
-    return TabIndexNotifier(totalTabs);
-  });
 
   @override
   void initState() {

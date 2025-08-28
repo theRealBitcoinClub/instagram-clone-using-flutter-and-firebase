@@ -1,0 +1,123 @@
+import 'package:flutter/material.dart';
+
+// Helper for logging errors consistently if needed within these placeholder widgets
+void _logPlaceholderError(String message, [dynamic error, StackTrace? stackTrace]) {
+  print('ERROR: ProfilePlaceholders - $message');
+  if (error != null) print('  Error: $error');
+  if (stackTrace != null) print('  StackTrace: $stackTrace');
+}
+
+class ProfileLoadingScaffold extends StatelessWidget {
+  final ThemeData theme;
+  final String message;
+
+  const ProfileLoadingScaffold({Key? key, required this.theme, this.message = "Loading..."}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
+        elevation: 0,
+        // Optional: Add a title if you want something more than a blank app bar
+        // title: Text(message, style: theme.appBarTheme.titleTextStyle),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 20),
+            Text(message, style: theme.textTheme.titleMedium),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ProfileErrorScaffold extends StatelessWidget {
+  final ThemeData theme;
+  final ColorScheme colorScheme;
+  final String message;
+  final VoidCallback? onRetry; // Make onRetry nullable
+
+  const ProfileErrorScaffold({Key? key, required this.theme, required this.colorScheme, this.message = "An error occurred.", this.onRetry})
+    : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: Text("Profile Error", style: theme.appBarTheme.titleTextStyle),
+        backgroundColor: theme.appBarTheme.backgroundColor ?? theme.colorScheme.errorContainer.withOpacity(0.1),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline_rounded, color: colorScheme.error, size: 60),
+              const SizedBox(height: 20),
+              Text(
+                message,
+                style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onErrorContainer.withOpacity(0.9)),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 28),
+              if (onRetry != null)
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text("Retry"),
+                  onPressed: onRetry,
+                  style: ElevatedButton.styleFrom(backgroundColor: colorScheme.errorContainer, foregroundColor: colorScheme.onErrorContainer),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Widget for empty content within a sliver list
+class EmptySliverContent extends StatelessWidget {
+  final String message;
+  final IconData icon;
+  final ThemeData theme;
+
+  const EmptySliverContent({
+    Key? key,
+    required this.message,
+    this.icon = Icons.layers_clear_outlined, // Default icon
+    required this.theme,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 48, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
+              const SizedBox(height: 16),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

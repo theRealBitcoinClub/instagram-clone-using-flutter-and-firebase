@@ -157,7 +157,7 @@ class MemoModelPost {
   }
 
   Future<dynamic> publishReplyTopic(MemoModelUser user, String replyText) async {
-    MemoVerificationResponse verifier = MemoVerifier(replyText).checkIsValidText();
+    MemoVerificationResponse verifier = MemoVerifier(replyText).checkAllPostValidations();
     if (verifier == MemoVerificationResponse.valid) {
       return MemoAccountant(user).publishReplyTopic(this, replyText);
     } else {
@@ -166,13 +166,13 @@ class MemoModelPost {
   }
 
   Future<dynamic> publishReplyHashtags(MemoModelUser user, String text) async {
-    MemoVerificationResponse verifier = MemoVerifier(text).checkIsValidText();
+    MemoVerificationResponse verifier = MemoVerifier(text).checkAllPostValidations();
     if (verifier != MemoVerificationResponse.valid) return verifier;
     return MemoAccountant(user).publishReplyHashtags(this, text);
   }
 
   static Future<dynamic> publishImageOrVideo(MemoModelUser user, String text, String? topic) async {
-    MemoVerificationResponse res = MemoVerifier(text).checkIsValidText();
+    MemoVerificationResponse res = MemoVerifier(text).checkAllPostValidations();
     if (res != MemoVerificationResponse.valid) return res;
     return MemoAccountant(user).publishImgurOrYoutube(topic, text);
   }

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'memo_model_tag.g.dart'; // This file will be generated
@@ -10,6 +11,20 @@ class MemoModelTag {
   // This static list is for application runtime state and not directly part
   // of the JSON serialization of individual MemoModelTag instances.
   // static List<MemoModelTag> tags = [];
+  DocumentSnapshot? docSnapshot;
+
+  // --- Factory to include DocumentSnapshot and ID ---
+  factory MemoModelTag.fromSnapshot(DocumentSnapshot snap) {
+    if (!snap.exists || snap.data() == null) {
+      throw Exception("Document ${snap.id} does not exist or has no data.");
+    }
+    final data = snap.data() as Map<String, dynamic>;
+    // The fromJson method correctly handles the JSON map.
+    // The id and docSnapshot are then manually assigned.
+    return MemoModelTag.fromJson(data)
+      ..id = snap.id
+      ..docSnapshot = snap;
+  }
 
   MemoModelTag({
     required this.id,

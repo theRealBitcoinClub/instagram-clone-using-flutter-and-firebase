@@ -28,6 +28,47 @@ class TagService {
     }
   }
 
+  // --- PAGINATION METHOD (Primary method for the feed) ---
+  Future<List<MemoModelTag>> getTagsPaginated({
+    required int limit,
+    DocumentSnapshot? startAfterDoc,
+    // activeFilters are not used for Firestore query here, filtering is client-side
+  }) async {
+    Query query = _firestore.collection(_tagsCollection);
+
+    if (startAfterDoc != null) {
+      query = query.startAfterDocument(startAfterDoc);
+    }
+
+    final querySnapshot = await query.limit(limit).get();
+
+    return querySnapshot.docs.map((doc) {
+      // Use the new factory constructor that includes the snapshot
+      return MemoModelTag.fromSnapshot(doc);
+    }).toList();
+  }
+
+  // Future<List<MemoModelTag>> getTagsPaginated({
+  //   required int limit,
+  //   DocumentSnapshot? startAfterDoc,
+  //   String orderByField = 'lastPost',
+  //   bool descendingOrder = true,
+  // }) async {
+  //   Query query = _firestore.collection(_tagsCollection).orderBy(orderByField, descending: descendingOrder);
+  //
+  //   if (startAfterDoc != null) {
+  //     query = query.startAfterDocument(startAfterDoc);
+  //   }
+  //
+  //   final querySnapshot = await query.limit(limit).get();
+  //
+  //   return querySnapshot.docs.map((doc) {
+  //     // Make sure your MemoModelTag has a fromSnapshot constructor
+  //     // that accepts a DocumentSnapshot.
+  //     return MemoModelTag.fromSnapshot(doc);
+  //   }).toList();
+  // }
+
   // Your existing searchTags (on-demand)
   Future<List<MemoModelTag>> searchTags(String query) async {
     // ... (your existing on-demand search logic) ...

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import for DocumentSnapshot
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/firebase/post_service.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
@@ -16,6 +17,75 @@ class AdminPostsListPage extends StatefulWidget {
 
 class _AdminPostsListPageState extends State<AdminPostsListPage> {
   final PostService _postService = PostService();
+  final int _postsPerPage = 20; // Number of posts to fetch per page
+
+  // State variables for pagination
+  List<MemoModelPost> _posts = [];
+  bool _isLoading = false;
+  bool _hasMorePosts = true;
+  DocumentSnapshot? _lastDocument;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNextPage(); // Initial fetch
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // Check if the user is at the end of the list and more posts are available
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent && !_isLoading && _hasMorePosts) {
+      _fetchNextPage();
+    }
+  }
+
+  Future<void> _fetchNextPage() async {
+    if (_isLoading) return; // Prevent multiple concurrent fetches
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Use the paginated method from your PostService
+      final newPosts = await _postService.getPostsPaginated(limit: _postsPerPage, startAfterDoc: _lastDocument);
+
+      // Check if we reached the end of the collection
+      _hasMorePosts = newPosts.length == _postsPerPage;
+
+      if (newPosts.isNotEmpty) {
+        // Update the last document for the next page
+        _lastDocument = newPosts.last.docSnapshot;
+
+        setState(() {
+          _posts.addAll(newPosts);
+          widget.onCountChanged(_posts.length); // Update the total count
+        });
+      } else {
+        setState(() {
+          _hasMorePosts = false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching posts page: $e");
+      // Handle error gracefully, perhaps show a snackbar
+      setState(() {
+        _hasMorePosts = false;
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   Future<void> _deletePost(BuildContext context, String postId, String? postTextSnippet) async {
     final confirmDelete = await showDialog<bool>(
@@ -41,6 +111,11 @@ class _AdminPostsListPageState extends State<AdminPostsListPage> {
     if (confirmDelete == true) {
       try {
         await _postService.deletePost(postId);
+        // Remove the post from the local list to update the UI
+        setState(() {
+          _posts.removeWhere((post) => post.id == postId);
+          widget.onCountChanged(_posts.length); // Update the total count
+        });
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -59,82 +134,70 @@ class _AdminPostsListPageState extends State<AdminPostsListPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Scaffold and AppBar are removed as they are handled by MainAdminDashboard
-    return StreamBuilder<List<MemoModelPost>>(
-      stream: _postService.getAllPostsStream(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          // widget.onCountChanged(0); // Optionally report 0
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          widget.onCountChanged(0);
-          print("Error in StreamBuilder (Posts): ${snapshot.error}");
-          return Center(child: Text('Error loading posts: ${snapshot.error}'));
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          widget.onCountChanged(0);
-          return const Center(child: Text('No posts found.'));
-        }
+    if (_posts.isEmpty && _isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-        final List<MemoModelPost> posts = snapshot.data!;
-        // Call the callback with the current count
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            // Ensure widget is still mounted
-            widget.onCountChanged(posts.length);
-          }
-        });
+    if (_posts.isEmpty && !_isLoading && !_hasMorePosts) {
+      return const Center(child: Text('No posts found.'));
+    }
 
-        return ListView.builder(
-          itemCount: posts.length,
-          itemBuilder: (context, index) {
-            final post = posts[index];
-            final postTextSnippet = post.text != null && post.text!.length > 20 ? "${post.text!.substring(0, 20)}..." : post.text;
+    return ListView.builder(
+      controller: _scrollController,
+      itemCount: _posts.length + (_isLoading ? 1 : 0), // Add 1 for the loading indicator
+      itemBuilder: (context, index) {
+        if (index < _posts.length) {
+          final post = _posts[index];
+          final postTextSnippet = post.text != null && post.text!.length > 20 ? "${post.text!.substring(0, 20)}..." : post.text;
 
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Post ID: ${post.id}',
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Post ID: ${post.id}',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red[700]),
-                          tooltip: 'Delete Post',
-                          onPressed: () => _deletePost(context, post.id!, postTextSnippet),
-                        ),
-                      ],
-                    ),
-                    const Divider(),
-                    _buildPropertyRow('Text:', post.text, maxLines: 3),
-                    _buildPropertyRow('Creator ID:', post.creatorId),
-                    _buildPropertyRow('Topic ID:', post.topicId),
-                    _buildPropertyRow('Imgur URL:', post.imgurUrl, isUrl: true),
-                    _buildPropertyRow('YouTube ID:', post.youtubeId),
-                    _buildPropertyRow('Popularity Score:', post.popularityScore?.toString()),
-                    _buildPropertyRow('Like Counter:', post.likeCounter?.toString()),
-                    _buildPropertyRow('Reply Counter:', post.replyCounter?.toString()),
-                    _buildPropertyRow('Created:', post.created),
-                    _buildPropertyRow('Created DateTime:', _formatDateTimeSafe(post.createdDateTime)),
-                    _buildPropertyRow('Tag IDs:', post.tagIds.join(', ')),
-                  ],
-                ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red[700]),
+                        tooltip: 'Delete Post',
+                        onPressed: () => _deletePost(context, post.id!, postTextSnippet),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  _buildPropertyRow('Text:', post.text, maxLines: 3),
+                  _buildPropertyRow('Creator ID:', post.creatorId),
+                  _buildPropertyRow('Topic ID:', post.topicId),
+                  _buildPropertyRow('Imgur URL:', post.imgurUrl, isUrl: true),
+                  _buildPropertyRow('YouTube ID:', post.youtubeId),
+                  _buildPropertyRow('Popularity Score:', post.popularityScore?.toString()),
+                  _buildPropertyRow('Like Counter:', post.likeCounter?.toString()),
+                  _buildPropertyRow('Reply Counter:', post.replyCounter?.toString()),
+                  _buildPropertyRow('Created:', post.created),
+                  _buildPropertyRow('Created DateTime:', _formatDateTimeSafe(post.createdDateTime)),
+                  _buildPropertyRow('Tag IDs:', post.tagIds.join(', ')),
+                ],
               ),
-            );
-          },
-        );
+            ),
+          );
+        } else {
+          // This is the loading indicator at the bottom
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
       },
     );
   }

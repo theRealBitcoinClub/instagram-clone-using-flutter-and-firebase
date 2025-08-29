@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 
-import '../../screens/feed_screen.dart';
-
 // Assuming PostFilterType is defined elsewhere and accessible if needed here
 // import 'package:mahakka/screens/feed_screen.dart'; // For PostFilterType
 
@@ -12,67 +10,67 @@ class PostService {
   static const String orderByField = "createdDateTime"; // Consistent field name
   static const bool descendingOrder = true;
 
-  // // --- PAGINATION METHOD (Primary method for the feed) ---
-  // Future<List<MemoModelPost>> getPostsPaginated({
-  //   required int limit,
-  //   DocumentSnapshot? startAfterDoc,
-  //   // activeFilters are not used for Firestore query here, filtering is client-side
-  // }) async {
-  //   Query query = _firestore.collection(_postsCollection).orderBy(orderByField, descending: descendingOrder);
-  //
-  //   if (startAfterDoc != null) {
-  //     query = query.startAfterDocument(startAfterDoc);
-  //   }
-  //
-  //   final querySnapshot = await query.limit(limit).get();
-  //
-  //   return querySnapshot.docs.map((doc) {
-  //     // Use the new factory constructor that includes the snapshot
-  //     return MemoModelPost.fromSnapshot(doc);
-  //   }).toList();
-  // }
-
-  // Inside PostService
-  Future<List<MemoModelPost>> getPostsPaginated({required int limit, DocumentSnapshot? startAfterDoc, PostFilterType? activeFilter}) async {
-    Query query = _firestore.collection(_postsCollection); // Base query
-
-    // Apply filter if one is active
-    if (activeFilter != null) {
-      print("PostService: Applying filter: $activeFilter");
-      switch (activeFilter) {
-        case PostFilterType.images:
-          query = query.where('imgurUrl', isNotEqualTo: "");
-          break;
-        // case PostFilterType.videos:
-        //   query = query.where('youtubeId', isNotEqualTo: "");
-        //   break;
-        case PostFilterType.topics:
-          query = query.where('topicId', isNotEqualTo: "");
-          break;
-      }
-    } else {
-      print("PostService: No filter active.");
-    }
-
-    print("PostService: Applying orderBy: $orderByField, descending: $descendingOrder");
-    query = query.orderBy(orderByField, descending: descendingOrder);
+  // --- PAGINATION METHOD (Primary method for the feed) ---
+  Future<List<MemoModelPost>> getPostsPaginated({
+    required int limit,
+    DocumentSnapshot? startAfterDoc,
+    // activeFilters are not used for Firestore query here, filtering is client-side
+  }) async {
+    Query query = _firestore.collection(_postsCollection).orderBy(orderByField, descending: descendingOrder);
 
     if (startAfterDoc != null) {
       query = query.startAfterDocument(startAfterDoc);
     }
 
-    print("PostService: Applying limit: $limit");
-    final querySnapshot = await query.limit(limit).get(); // .limit(limit) also returns a new Query
+    final querySnapshot = await query.limit(limit).get();
 
-    // ... rest of your method
-    if (querySnapshot.docs.isEmpty) {
-      print("PostService: Query for filter $activeFilter with current pagination returned 0 docs. Check data and indexes.");
-    } else {
-      print("PostService: Query returned ${querySnapshot.docs.length} documents.");
-    }
-
-    return querySnapshot.docs.map((doc) => MemoModelPost.fromSnapshot(doc)).toList();
+    return querySnapshot.docs.map((doc) {
+      // Use the new factory constructor that includes the snapshot
+      return MemoModelPost.fromSnapshot(doc);
+    }).toList();
   }
+
+  // Inside PostService
+  // Future<List<MemoModelPost>> getPostsPaginated({required int limit, DocumentSnapshot? startAfterDoc, PostFilterType? activeFilter}) async {
+  //   Query query = _firestore.collection(_postsCollection); // Base query
+  //
+  //   // Apply filter if one is active
+  //   if (activeFilter != null) {
+  //     print("PostService: Applying filter: $activeFilter");
+  //     switch (activeFilter) {
+  //       case PostFilterType.images:
+  //         query = query.where('imgurUrl', isNotEqualTo: "");
+  //         break;
+  //       // case PostFilterType.videos:
+  //       //   query = query.where('youtubeId', isNotEqualTo: "");
+  //       //   break;
+  //       case PostFilterType.topics:
+  //         query = query.where('topicId', isNotEqualTo: "");
+  //         break;
+  //     }
+  //   } else {
+  //     print("PostService: No filter active.");
+  //   }
+  //
+  //   print("PostService: Applying orderBy: $orderByField, descending: $descendingOrder");
+  //   query = query.orderBy(orderByField, descending: descendingOrder);
+  //
+  //   if (startAfterDoc != null) {
+  //     query = query.startAfterDocument(startAfterDoc);
+  //   }
+  //
+  //   print("PostService: Applying limit: $limit");
+  //   final querySnapshot = await query.limit(limit).get(); // .limit(limit) also returns a new Query
+  //
+  //   // ... rest of your method
+  //   if (querySnapshot.docs.isEmpty) {
+  //     print("PostService: Query for filter $activeFilter with current pagination returned 0 docs. Check data and indexes.");
+  //   } else {
+  //     print("PostService: Query returned ${querySnapshot.docs.length} documents.");
+  //   }
+  //
+  //   return querySnapshot.docs.map((doc) => MemoModelPost.fromSnapshot(doc)).toList();
+  // }
 
   // --- Your existing methods (ensure they use .fromSnapshot or .fromJson appropriately) ---
 

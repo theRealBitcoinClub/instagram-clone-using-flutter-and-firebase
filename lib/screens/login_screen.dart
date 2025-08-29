@@ -60,6 +60,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     }
   }
 
+  String _processedMnemonic = "";
+
   void _validateMnemonic() {
     var inputTrimmed = _mnemonicController.text.trim();
     if (inputTrimmed.isEmpty) {
@@ -70,9 +72,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
       return;
     }
 
-    final processedMnemonic = inputTrimmed.toLowerCase().split(RegExp(r'\s+')).join(' ');
+    _processedMnemonic = toLowCaseAndRemoveTooManySpaces(inputTrimmed);
 
-    String verifiedMnemonic = MemoVerifier(processedMnemonic).verifyMnemonic();
+    String verifiedMnemonic = MemoVerifier(_processedMnemonic).verifyMnemonic();
     if (verifiedMnemonic != "success") {
       setState(() {
         _isInputValid = false;
@@ -87,9 +89,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     });
   }
 
+  String toLowCaseAndRemoveTooManySpaces(String inputTrimmed) {
+    final processedMnemonic = inputTrimmed.toLowerCase().split(RegExp(r'\s+')).join(' ');
+    return processedMnemonic;
+  }
+
   Future<void> _loginUser() async {
     final authChecker = ref.read(authCheckerProvider);
-    String res = await authChecker.loginInWithMnemonic(_mnemonicController.text.trim());
+    String res = await authChecker.loginInWithMnemonic(_processedMnemonic);
 
     if (res != "success") {
       if (mounted) showSnackBar("Unexpected error despite on the fly check: $res", context);

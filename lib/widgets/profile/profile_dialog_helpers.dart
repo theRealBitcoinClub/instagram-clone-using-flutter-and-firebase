@@ -1,13 +1,11 @@
-import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/model/memo_model_creator.dart'; // Adjust path
-import 'package:mahakka/memo/model/memo_model_post.dart'; // Adjust path
-import 'package:mahakka/memo/model/memo_model_user.dart'; // Adjust path
-import 'package:mahakka/utils/snackbar.dart'; // Adjust path
-import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart'; // Adjust path
-import 'package:mahakka/widgets/textfield_input.dart'; // Adjust path
+import 'package:mahakka/memo/model/memo_model_creator.dart';
+import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/memo/model/memo_model_user.dart';
+import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 
-// Helper for logging errors consistently
+import '../../utils/snackbar.dart';
+
 void _logDialogError(String message, [dynamic error, StackTrace? stackTrace]) {
   print('ERROR: ProfileDialogHelpers - $message');
   if (error != null) print('  Error: $error');
@@ -19,18 +17,15 @@ void showCreatorImageDetail(
   BuildContext context,
   ThemeData theme,
   MemoModelCreator creator,
-  bool Function() getShowDefaultAvatar, // Getter for state
-  Function(bool) setShowDefaultAvatar, // Setter for state
+  bool Function() getShowDefaultAvatar,
+  Function(bool) setShowDefaultAvatar,
 ) async {
-  // Assuming refreshDetailScraper is a method on MemoModelCreator
-  // This logic seems specific to the creator model, so it can stay here or be part of the creator model.
   await creator.refreshImageDetail();
 
   if (context.mounted) {
     showDialog(
       context: context,
       builder: (ctx) {
-        // Use StatefulBuilder if the dialog content needs to rebuild based on showDefaultAvatar
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
             return SimpleDialog(
@@ -39,7 +34,7 @@ void showCreatorImageDetail(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               children: [
                 CircleAvatar(
-                  radius: 130, // Responsive radius could be better
+                  radius: 130,
                   backgroundColor: theme.colorScheme.surface,
                   backgroundImage: getShowDefaultAvatar() || creator.profileImageDetail().isEmpty
                       ? const AssetImage("assets/images/default_profile.png") as ImageProvider
@@ -48,11 +43,8 @@ void showCreatorImageDetail(
                       ? null
                       : (exception, stackTrace) {
                           _logDialogError("Error loading profile image detail in dialog", exception, stackTrace);
-                          // Use the passed setter to update parent state
                           if (context.mounted) {
-                            // Check original context
                             setShowDefaultAvatar(true);
-                            // Also update the dialog's local state if necessary for immediate reflection
                             setDialogState(() {});
                           }
                         },
@@ -71,7 +63,7 @@ void showPostDialog({
   required BuildContext context,
   required ThemeData theme,
   required MemoModelPost post,
-  required MemoModelCreator? creator, // Pass the displayed creator
+  required MemoModelCreator? creator,
   required Widget imageWidget,
 }) {
   showDialog(
@@ -102,10 +94,7 @@ void showPostDialog({
           ],
         ),
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12.0),
-            child: imageWidget, // The image widget passed from the grid
-          ),
+          Padding(padding: const EdgeInsets.symmetric(vertical: 12.0), child: imageWidget),
           if (post.text != null && post.text!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -122,22 +111,17 @@ void showBchQRDialog({
   required BuildContext context,
   required ThemeData theme,
   required MemoModelUser user,
-  required bool Function() getTempToggleState, // Getter for the toggle state
-  required Function(bool) setTempToggleState, // Setter for the toggle state
+  required bool Function() getTempToggleState,
+  required Function(bool) setTempToggleState,
 }) {
   showDialog(
     context: context,
     builder: (dialogCtx) {
-      // QrCodeDialog should ideally manage its own internal toggle state
-      // or use a StatefulBuilder if it needs to rebuild when the toggle changes.
       return QrCodeDialog(
-        // Assuming QrCodeDialog is already themed or adapts
         user: user,
         initialToggleState: getTempToggleState(),
         onToggle: (newState) {
-          // This callback updates the state in _ProfileScreenWidgetState
           setTempToggleState(newState);
-          // If QrCodeDialog itself needs to rebuild, it should use its own setState or StatefulBuilder
         },
       );
     },
@@ -149,26 +133,26 @@ void showProfileSettingsDialog({
   required BuildContext context,
   required ThemeData theme,
   required MemoModelCreator creator,
-  required MemoModelUser? loggedInUser, // For mnemonic and logout
+  required MemoModelUser? loggedInUser,
   required TextEditingController profileNameCtrl,
   required TextEditingController profileTextCtrl,
   required TextEditingController imgurCtrl,
-  required VoidCallback onSave, // Callback to _ProfileScreenWidgetState._saveProfile
+  required VoidCallback onSave,
   required VoidCallback onLogout,
   required VoidCallback onBackupMnemonic,
+  required bool isLogoutEnabled, // New parameter
 }) {
-  // Initialize controllers with current creator data
   profileNameCtrl.text = creator.name;
   profileTextCtrl.text = creator.profileText;
-  imgurCtrl.text = creator.profileImageAvatar(); // Or a specific field for avatar URL input
+  imgurCtrl.text = creator.profileImageAvatar();
 
   showDialog(
     context: context,
-    barrierDismissible: true, // Allow dismissing by tapping outside
+    barrierDismissible: true,
     builder: (dialogCtx) {
       return SimpleDialog(
         titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
-        contentPadding: const EdgeInsets.only(bottom: 8.0), // Reduced bottom padding
+        contentPadding: const EdgeInsets.only(bottom: 8.0),
         backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
         shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
@@ -192,18 +176,17 @@ void showProfileSettingsDialog({
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24).copyWith(top: 20),
             child: ElevatedButton(
               onPressed: () {
-                onSave(); // Call the save callback passed from _ProfileScreenWidgetState
-                Navigator.of(dialogCtx).pop(); // Close dialog after initiating save
+                onSave();
+                Navigator.of(dialogCtx).pop();
               },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 44), // Full width button
-              ),
+              style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 44)),
               child: const Text("SAVE CHANGES"),
             ),
           ),
           Divider(color: theme.dividerColor.withOpacity(0.5), height: 20, thickness: 0.5, indent: 20, endIndent: 20),
           _buildSettingsOption(theme, Icons.copy_all_outlined, "BACKUP MNEMONIC", dialogCtx, onBackupMnemonic),
-          _buildSettingsOption(theme, Icons.logout_rounded, "LOGOUT", dialogCtx, onLogout, isDestructive: true),
+          // Pass isLogoutEnabled to the logout option
+          _buildSettingsOption(theme, Icons.logout_rounded, "LOGOUT", dialogCtx, onLogout, isDestructive: true, isEnabled: isLogoutEnabled),
         ],
       );
     },
@@ -219,24 +202,28 @@ Widget _buildSettingsInput(
   int maxLines = 1,
 }) {
   return Padding(
-    // Changed from SimpleDialogOption for better layout control
     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
     child: Row(
       crossAxisAlignment: type == TextInputType.multiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
       children: [
         Padding(
-          padding: EdgeInsets.only(top: type == TextInputType.multiline ? 8.0 : 0.0), // Adjust icon for multiline
+          padding: EdgeInsets.only(top: type == TextInputType.multiline ? 8.0 : 0.0),
           child: Icon(icon, color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7) ?? theme.colorScheme.onSurfaceVariant, size: 20),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: TextInputField(
-            // Assuming TextInputField is themed
-            hintText: hintText,
-            textEditingController: ctrl,
-            textInputType: type,
-            // maxLines: maxLines, // Use passed maxLines
-            // Add any other necessary properties for TextInputField
+          child: TextField(
+            controller: ctrl,
+            keyboardType: type,
+            maxLines: maxLines,
+            decoration: InputDecoration(
+              hintText: hintText,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              border: const OutlineInputBorder(borderSide: BorderSide.none),
+              filled: true,
+              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+            ),
           ),
         ),
       ],
@@ -248,18 +235,24 @@ Widget _buildSettingsOption(
   ThemeData theme,
   IconData icon,
   String text,
-  BuildContext dialogCtx, // Keep for Navigator.pop
+  BuildContext dialogCtx,
   VoidCallback onSelect, {
   bool isDestructive = false,
+  bool isEnabled = true, // New parameter to control state
 }) {
-  final color = isDestructive ? theme.colorScheme.error : (theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface);
+  final baseColor = isDestructive ? theme.colorScheme.error : (theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface);
+  // Adjust color and onPressed based on isEnabled
+  final color = isEnabled ? baseColor : baseColor.withOpacity(0.4);
+  final onPressedCallback = isEnabled
+      ? () {
+          Navigator.of(dialogCtx).pop();
+          onSelect();
+        }
+      : () => showSnackBar("You haz to backup your mnemonic first.", dialogCtx);
 
   return SimpleDialogOption(
     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-    onPressed: () {
-      Navigator.of(dialogCtx).pop(); // Close dialog first
-      onSelect(); // Then execute action
-    },
+    onPressed: onPressedCallback,
     child: Row(
       children: [
         Icon(icon, color: color.withOpacity(0.8), size: 20),
@@ -268,19 +261,4 @@ Widget _buildSettingsOption(
       ],
     ),
   );
-}
-
-// --- Utility: Copy to Clipboard ---
-Future<void> copyToClipboard(String text, String successMessage, BuildContext context) async {
-  if (text.isEmpty) {
-    if (context.mounted) showSnackBar("Nothing to copy.", context);
-    return;
-  }
-  try {
-    await FlutterClipboard.copy(text);
-    if (context.mounted) showSnackBar(successMessage, context);
-  } catch (e) {
-    _logDialogError("Copy to clipboard failed", e);
-    if (context.mounted) showSnackBar('Copy failed: $e', context);
-  }
 }

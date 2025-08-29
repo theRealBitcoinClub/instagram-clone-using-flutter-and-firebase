@@ -8,11 +8,9 @@ import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/scraper/memo_creator_service.dart';
 import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/provider/user_provider.dart';
-// Assuming you might have a userProvider for the logged-in user's data (optional for now)
-// import 'package:mahakka/provider/user_provider.dart';
-import 'package:mahakka/resources/auth_method.dart'; // For authCheckerProvider
 import 'package:mahakka/sliver_app_bar_delegate.dart';
 import 'package:mahakka/utils/snackbar.dart';
+import 'package:mahakka/widgets/bch/mnemonic_backup_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
@@ -21,6 +19,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 // import 'package:url_launcher/url_launcher.dart';
 
 // Import the new sub-widget files
+import '../../resources/auth_method.dart';
 import 'profile_app_bar.dart';
 import 'profile_content_grid.dart';
 import 'profile_content_list.dart';
@@ -524,40 +523,51 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
         profileNameCtrl: _profileNameCtrl,
         profileTextCtrl: _profileTextCtrl,
         imgurCtrl: _imgurCtrl,
+        isLogoutEnabled: _hasBackedUpMnemonic,
         onSave: _saveProfile,
         // Pass the state method for saving
-        onLogout: () {
-          // Original logout logic
-          final authChecker = ref.read(authCheckerProvider);
-          authChecker
-              .logOut()
-              .then((result) {
-                if (result == "success" && mounted) {
-                  // Navigation to AuthPage is usually handled by a top-level listener on auth state
-                  // Forcing a clear of target here:
-                  ref.read(profileTargetIdProvider.notifier).state = null;
-                } else if (mounted) {
-                  showSnackBar("Logout failed: $result", context);
-                }
-              })
-              .catchError((e) {
-                if (mounted) showSnackBar("Logout error: $e", context);
-              });
-          setState(() {});
-        },
         onBackupMnemonic: () {
-          // Original backup logic
-          if (_loggedInUser?.mnemonic != null && _loggedInUser!.mnemonic.isNotEmpty) {
-            copyToClipboard(_loggedInUser!.mnemonic, "Mnemonic copied!", context);
-          } else {
-            showSnackBar("Mnemonic not available.", context);
-          }
+          showDialog(
+            context: context,
+            builder: (ctx) {
+              return MnemonicBackupWidget(
+                mnemonic: _loggedInUser!.mnemonic,
+                onVerificationComplete: () {
+                  setState(() {
+                    _hasBackedUpMnemonic = true;
+                  });
+                },
+              );
+            },
+          );
+        },
+        onLogout: () {
+          _logoutUser();
         },
       );
     } else {
       // Placeholder for Follow/Message functionality
       showSnackBar("Follow/Message functionality is coming soon!", context);
     }
+  }
+
+  bool _hasBackedUpMnemonic = false;
+
+  // New method to handle logout
+  void _logoutUser() {
+    final authChecker = ref.read(authCheckerProvider);
+    authChecker
+        .logOut()
+        .then((result) {
+          if (result == "success" && mounted) {
+            ref.read(profileTargetIdProvider.notifier).state = null;
+          } else if (mounted) {
+            showSnackBar("Logout failed: $result", context);
+          }
+        })
+        .catchError((e) {
+          if (mounted) showSnackBar("Logout error: $e", context);
+        });
   }
 
   // _saveProfile logic as per your original, called by the dialog

@@ -252,7 +252,7 @@ class MemoVerifier {
       return "Enter mnemonic of 12 words or generate a new one"; // Simplified message
     }
     if (!Bip39MnemonicValidator().isValid(text)) {
-      return "Check failed, 12-words needed, verify letter & spaces!";
+      return "Check failed, 12-words needed, verify every letter!";
     }
 
     return "success";

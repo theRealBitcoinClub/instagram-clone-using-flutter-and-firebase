@@ -61,8 +61,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   }
 
   void _validateMnemonic() {
-    final input = _mnemonicController.text.trim();
-    if (input.isEmpty) {
+    var inputTrimmed = _mnemonicController.text.trim();
+    if (inputTrimmed.isEmpty) {
       setState(() {
         _isInputValid = false;
         _errorMessage = null;
@@ -70,7 +70,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
       return;
     }
 
-    String verifiedMnemonic = MemoVerifier(input).verifyMnemonic();
+    final processedMnemonic = inputTrimmed.toLowerCase().split(RegExp(r'\s+')).join(' ');
+
+    String verifiedMnemonic = MemoVerifier(processedMnemonic).verifyMnemonic();
     if (verifiedMnemonic != "success") {
       setState(() {
         _isInputValid = false;

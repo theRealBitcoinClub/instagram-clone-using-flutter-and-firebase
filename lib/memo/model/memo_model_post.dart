@@ -196,7 +196,7 @@ class MemoModelPost {
 
   Future<void> loadTopic() async {
     if (topicId.isNotEmpty) {
-      topic = await TopicService().getOnce(topicId);
+      topic = await TopicService().getTopicOnce(topicId);
     }
   }
 }

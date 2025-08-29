@@ -87,7 +87,7 @@ class MemoModelCreator {
 
     try {
       print("MemoModelPost (ID: $id): Refreshing creator for ID: $id...");
-      final fetchedCreator = await _creatorService.getOnce(id);
+      final fetchedCreator = await _creatorService.getCreatorOnce(id);
       if (fetchedCreator != null) {
         print("MemoModelPost (ID: $id): Creator ${name} (ID: ${id}) refreshed successfully.");
         return fetchedCreator;
@@ -124,7 +124,7 @@ class MemoModelCreator {
       // Assuming checkUrlReturns404 is available and works as intended
       if (!await checkUrlReturns404(avatarUrl)) {
         _profileImageAvatar = avatarUrl;
-        _creatorService.save(this, id);
+        _creatorService.saveCreator(this);
         hasCheckedImgAvatar = 0;
         return true;
       }
@@ -151,7 +151,7 @@ class MemoModelCreator {
       String url = _profileImageUrl(sizeDetail, t);
       if (!await checkUrlReturns404(url)) {
         _profileImageDetail = url;
-        _creatorService.save(this, id);
+        _creatorService.saveCreator(this);
         hasCheckedImgDetail = 0;
         return true;
       }

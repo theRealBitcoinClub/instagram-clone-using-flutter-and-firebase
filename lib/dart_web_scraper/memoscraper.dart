@@ -55,7 +55,7 @@ Future<void> runSequentialBatchJobDateCreated() async {
       MemoModelPost? p = await memoPostService.fetchAndParsePost(post.id!, filterOn: false);
 
       if (p != null)
-        await postService.save(p, post.id!);
+        await postService.savePost(p);
       else
         print("\n\nERROR NULL ON FETCH postId\n\n:" + post.id!);
 

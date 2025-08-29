@@ -1,10 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/firebase/tag_service.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 
-// The callback now takes both fetched and total count.
-typedef CountChangedCallback = void Function(int fetchedCount, int totalCount);
+// Callback type definition
+typedef CountChangedCallback = void Function(int count);
 
 class AdminTagsListPage extends StatefulWidget {
   final CountChangedCallback onCountChanged;
@@ -17,76 +16,6 @@ class AdminTagsListPage extends StatefulWidget {
 
 class _AdminTagsListPageState extends State<AdminTagsListPage> {
   final TagService _tagService = TagService();
-  final int _tagsPerPage = 20;
-
-  List<MemoModelTag> _tags = [];
-  bool _isLoading = false;
-  bool _hasMoreTags = true;
-  DocumentSnapshot? _lastDocument;
-  final ScrollController _scrollController = ScrollController();
-
-  int _totalCount = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchNextPage();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent && !_isLoading && _hasMoreTags) {
-      _fetchNextPage();
-    }
-  }
-
-  Future<void> _fetchNextPage() async {
-    if (_isLoading) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final newTags = await _tagService.getPaginated(
-        limit: _tagsPerPage,
-        startAfterDoc: _lastDocument,
-        orderByField: 'createdDateTime',
-        descending: true,
-      );
-
-      _hasMoreTags = newTags.length == _tagsPerPage;
-
-      if (newTags.isNotEmpty) {
-        // Assuming your model has a docSnapshot or similar property
-        _lastDocument = (newTags.last as dynamic).docSnapshot;
-        setState(() {
-          _tags.addAll(newTags);
-          widget.onCountChanged(_tags.length, _totalCount);
-        });
-      } else {
-        setState(() {
-          _hasMoreTags = false;
-        });
-      }
-    } catch (e) {
-      print("Error fetching tags page: $e");
-      setState(() {
-        _hasMoreTags = false;
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
 
   Future<void> _deleteTag(BuildContext context, String tagId) async {
     final confirmDelete = await showDialog<bool>(
@@ -111,11 +40,7 @@ class _AdminTagsListPageState extends State<AdminTagsListPage> {
 
     if (confirmDelete == true) {
       try {
-        await _tagService.delete(tagId);
-        setState(() {
-          _tags.removeWhere((tag) => tag.id == tagId);
-          widget.onCountChanged(_tags.length, _totalCount - 1);
-        });
+        await _tagService.deleteTag(tagId);
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -132,68 +57,75 @@ class _AdminTagsListPageState extends State<AdminTagsListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<int>(
-      stream: _tagService.getTotalCountStream(),
+    // Scaffold and AppBar are removed as they are handled by MainAdminDashboard
+    return StreamBuilder<List<MemoModelTag>>(
+      stream: _tagService.getAllTagsStream(),
       builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          _totalCount = snapshot.data!;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            widget.onCountChanged(_tags.length, _totalCount);
-          });
-        }
-
-        if (_tags.isEmpty && _isLoading) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // widget.onCountChanged(0); // Optionally report 0
           return const Center(child: CircularProgressIndicator());
         }
-
-        if (_tags.isEmpty && !_isLoading && !_hasMoreTags) {
+        if (snapshot.hasError) {
+          widget.onCountChanged(0);
+          print("Error in StreamBuilder (Tags): ${snapshot.error}");
+          return Center(child: Text('Error loading tags: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          widget.onCountChanged(0);
           return const Center(child: Text('No tags found.'));
         }
 
+        final List<MemoModelTag> tags = snapshot.data!;
+        // Call the callback with the current count
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            // Ensure widget is still mounted
+            widget.onCountChanged(tags.length);
+          }
+        });
+
+        // Example: Sort tags by postCount client-side if not done by service
+        // tags.sort((a, b) => (b.postCount ?? 0).compareTo(a.postCount ?? 0));
+
         return ListView.builder(
-          controller: _scrollController,
-          itemCount: _tags.length + (_isLoading ? 1 : 0),
+          itemCount: tags.length,
           itemBuilder: (context, index) {
-            if (index < _tags.length) {
-              final tag = _tags[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 16.0),
-                        child: Icon(Icons.sell_outlined, size: 30, color: Theme.of(context).colorScheme.primary),
+            final tag = tags[index];
+            return Card(
+              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 16.0),
+                      child: Icon(Icons.sell_outlined, size: 30, color: Theme.of(context).colorScheme.primary),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${index + 1}. ${tag.id}", // Added index for clarity
+                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 6),
+                          _buildPropertyRow('Post Count:', tag.postCount?.toString() ?? '0'),
+                          _buildPropertyRow('Last Used:', _formatDateSafe(tag.lastPost)), // Assuming you have this field
+                        ],
                       ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("${index + 1}. ${tag.id}", style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 6),
-                            _buildPropertyRow('Post Count:', tag.postCount?.toString() ?? '0'),
-                            _buildPropertyRow('Last Used:', _formatDateSafe(tag.lastPost)),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red[700]),
-                        tooltip: 'Delete Tag',
-                        onPressed: () => _deleteTag(context, tag.id),
-                      ),
-                    ],
-                  ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red[700]),
+                      tooltip: 'Delete Tag',
+                      onPressed: () => _deleteTag(context, tag.id),
+                    ),
+                  ],
                 ),
-              );
-            } else {
-              return const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
+              ),
+            );
           },
         );
       },

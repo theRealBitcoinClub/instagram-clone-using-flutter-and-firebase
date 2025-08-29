@@ -141,7 +141,7 @@ class MemoModelUser {
   }
 
   Future<void> saveToFirebase() async {
-    await _userService.save(this, id);
+    await _userService.saveUser(this);
   }
 
   Future<String> refreshBalanceDevPath0() async {

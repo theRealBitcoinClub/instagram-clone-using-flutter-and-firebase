@@ -7,16 +7,22 @@ import 'package:mahakka/memo/firebase/topic_admin.dart';
 import 'package:mahakka/memo/firebase/user_admin.dart';
 
 import '../../firebase_options.dart';
-import 'creator_admin.dart';
+import 'creator_admin.dart'; // Adjust path
 
-// Define the callback type that accepts two integer arguments.
-typedef CountChangedCallback = void Function(int fetchedCount, int totalCount);
+// You can keep your main.dart separate or merge this into it.
+// For this example, I'll assume your main.dart will launch MainAdminDashboard.
 
 class MainAdminDashboard extends StatefulWidget {
   const MainAdminDashboard({super.key});
 
   @override
   State<MainAdminDashboard> createState() => _MainAdminDashboardState();
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(const AdminApp());
 }
 
 class AdminApp extends StatelessWidget {
@@ -27,29 +33,42 @@ class AdminApp extends StatelessWidget {
     return MaterialApp(
       title: 'App Admin Dashboard',
       theme: ThemeData(
-        primarySwatch: Colors.indigo,
+        primarySwatch: Colors.indigo, // Or your preferred admin theme color
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.indigo).copyWith(secondary: Colors.pinkAccent, onPrimary: Colors.redAccent),
+        colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.indigo).copyWith(
+          secondary: Colors.pinkAccent,
+          onPrimary: Colors.redAccent, // Good for text/icons on primary color AppBar
+        ),
         cardTheme: CardThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), elevation: 1.5),
-        tabBarTheme: TabBarThemeData(labelColor: Colors.amber, unselectedLabelColor: Colors.greenAccent, indicatorColor: Colors.orange),
+        tabBarTheme: TabBarThemeData(
+          // Optional: Centralized TabBar styling
+          labelColor: Colors.amber,
+          unselectedLabelColor: Colors.greenAccent,
+          indicatorColor: Colors.orange,
+          // indicator: UnderlineTabIndicator( // More customization
+          // borderSide: BorderSide(color: Colors.white, width: 2.0),
+          // ),
+        ),
       ),
-      home: const MainAdminDashboard(),
+      home: const MainAdminDashboard(), // Launch the main dashboard
     );
   }
 }
 
+// Define the callback type
+typedef CountCallback = void Function(int count);
+
 class _MainAdminDashboardState extends State<MainAdminDashboard> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int _currentFetchedCount = 0;
-  int _currentTotalCount = 0;
-  String _currentSectionName = 'Users';
+  int _currentCount = 0; // State variable to hold the count
+  String _currentSectionName = 'Users'; // Default section name
 
-  // Method to update both the fetched and total counts.
-  void _updateCounts(int fetchedCount, int totalCount) {
+  // Method to update the count and trigger a rebuild
+  void _updateCount(int count) {
     if (mounted) {
+      // Ensure the widget is still in the tree
       setState(() {
-        _currentFetchedCount = fetchedCount;
-        _currentTotalCount = totalCount;
+        _currentCount = count;
       });
     }
   }
@@ -70,50 +89,52 @@ class _MainAdminDashboardState extends State<MainAdminDashboard> with SingleTick
     Tab(icon: Icon(Icons.sell_outlined), text: 'Tags'),
   ];
 
-  late final List<Widget> _adminTabViews;
+  late final List<Widget> _adminTabViews; // Declare here
 
   @override
   void initState() {
     super.initState();
 
-    // Pass the new _updateCounts callback to each page.
+    // Initialize _adminTabViews here, passing the callback
     _adminTabViews = <Widget>[
-      AdminUsersListPage(onCountChanged: _updateCounts),
-      AdminCreatorsListPage(onCountChanged: _updateCounts),
-      AdminTopicsListPage(onCountChanged: _updateCounts),
-      AdminPostsListPage(onCountChanged: _updateCounts),
-      AdminTagsListPage(onCountChanged: _updateCounts),
+      AdminUsersListPage(onCountChanged: _updateCount),
+      AdminCreatorsListPage(onCountChanged: _updateCount),
+      AdminTopicsListPage(onCountChanged: _updateCount),
+      AdminPostsListPage(onCountChanged: _updateCount),
+      AdminTagsListPage(onCountChanged: _updateCount),
     ];
 
     _tabController = TabController(length: _adminTabs.length, vsync: this);
     _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
+      if (_tabController.indexIsChanging) {
+        // When tab changes, reset count visually or wait for new page to report
         _updateSectionName(_tabController.index);
-        // Reset counts when switching to a new tab.
-        setState(() {
-          _currentFetchedCount = 0;
-          _currentTotalCount = 0;
-        });
+        // _updateCount(0); // Optional: Reset count immediately on tab change
+        // The new page's StreamBuilder will soon report its count
+      } else {
+        // This handles the initial load and when a tab is settled on
+        _updateSectionName(_tabController.index);
       }
     });
-    // Initial name update for the first tab.
+    // Initial name update
     _updateSectionName(_tabController.index);
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(() {}); // Clean up listener
     _tabController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Construct the title to show both counts.
-    String appBarTitle = 'Admin - $_currentSectionName ($_currentFetchedCount / $_currentTotalCount)';
+    // Construct the title dynamically
+    String appBarTitle = 'Admin - $_currentSectionName ($_currentCount)';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(appBarTitle),
+        title: Text(appBarTitle), // Dynamic title
         bottom: TabBar(
           controller: _tabController,
           tabs: _adminTabs,
@@ -126,10 +147,4 @@ class _MainAdminDashboardState extends State<MainAdminDashboard> with SingleTick
       body: TabBarView(controller: _tabController, children: _adminTabViews),
     );
   }
-}
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const AdminApp());
 }

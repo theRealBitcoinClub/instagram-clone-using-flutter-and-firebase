@@ -52,7 +52,7 @@ class ProfileHeader extends StatelessWidget {
           _buildTopDetailsRow(theme, colorScheme, context), // Pass context if showImageDetail needs it indirectly
           _buildNameRow(theme),
           _buildProfileText(colorScheme, theme),
-          Divider(color: theme.dividerColor.withOpacity(0.5), height: 1.0, thickness: 0.5),
+          Divider(color: theme.dividerColor.withOpacity(0.5), height: 2.0, thickness: 0.5),
         ],
       ),
     );
@@ -65,7 +65,7 @@ class ProfileHeader extends StatelessWidget {
     final balanceMemo = loggedInUser?.balanceBchDevPath0Memo ?? "0";
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12), // Added top padding
+      padding: const EdgeInsets.fromLTRB(24, 16, 16, 12), // Added top padding
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start, // Align items to the top
         children: [
@@ -108,11 +108,14 @@ class ProfileHeader extends StatelessWidget {
                     ],
                   ),
                 const SizedBox(height: 12),
-                SettingsButton(
-                  // Your themed button
-                  text: !isOwnProfile ? "Follow" : 'Edit Profile', // Example
-                  onPressed: onProfileButtonPressed,
-                  // Add other styling as needed for SettingsButton
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
+                  child: SettingsButton(
+                    // Your themed button
+                    text: !isOwnProfile ? "Follow" : 'Edit Profile', // Example
+                    onPressed: onProfileButtonPressed,
+                    // Add other styling as needed for SettingsButton
+                  ),
                 ),
               ],
             ),
@@ -127,7 +130,7 @@ class ProfileHeader extends StatelessWidget {
     final creatorProfileIdShort = creator.profileIdShort;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0).copyWith(top: 0, bottom: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0).copyWith(top: 2, bottom: 4.0),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Wrap(
@@ -135,7 +138,7 @@ class ProfileHeader extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           spacing: 6.0, // Space between name and ID
           children: [
-            Text(creatorName, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            Text(creatorName, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             if (creatorProfileIdShort.isNotEmpty)
               Text(
                 creatorProfileIdShort,
@@ -153,7 +156,7 @@ class ProfileHeader extends StatelessWidget {
       return const Padding(padding: EdgeInsets.zero); // Return empty if no text
     }
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+      padding: const EdgeInsets.fromLTRB(21, 2, 20, 8),
       child: Align(
         alignment: Alignment.centerLeft,
         child: ExpandableText(

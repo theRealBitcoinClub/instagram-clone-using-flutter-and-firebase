@@ -63,7 +63,10 @@ class PostCardHeader extends ConsumerWidget {
                   onTap: () => _navigateToProfile(context, ref, creator.id), // Pass ref
                   child: Row(
                     children: [
-                      Text("${creator.profileIdShort}   ", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w300)),
+                      Text(
+                        "${creator.profileIdShort}  ",
+                        style: theme.textTheme.titleSmall?.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.w300),
+                      ),
                       Text(
                         creator.name,
                         style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),

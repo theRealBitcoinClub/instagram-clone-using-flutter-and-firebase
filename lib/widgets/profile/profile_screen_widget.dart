@@ -322,7 +322,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 15.0, bottom: 2.0),
+          padding: const EdgeInsets.only(top: 0.0, bottom: 2.0),
           child: Text(count, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         ),
         Text(

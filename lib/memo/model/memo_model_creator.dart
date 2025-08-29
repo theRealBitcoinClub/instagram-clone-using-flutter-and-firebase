@@ -23,7 +23,7 @@ class MemoModelCreator {
   @JsonKey(ignore: true)
   bool isCheckingDetail = false;
 
-  String get profileIdShort => id.substring(0, 4);
+  String get profileIdShort => id.substring(1, 5);
 
   MemoModelCreator({
     this.id = "",

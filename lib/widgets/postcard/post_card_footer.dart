@@ -100,7 +100,7 @@ class PostCardFooter extends StatelessWidget {
               mainAxisSize: MainAxisSize.min, // Important for Column to not take infinite height
               crossAxisAlignment: CrossAxisAlignment.start, // Or your desired alignment
               children: [
-                const Divider(),
+                Divider(color: theme.dividerColor.withOpacity(0.2)),
                 const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,

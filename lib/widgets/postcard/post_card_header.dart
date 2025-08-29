@@ -61,10 +61,15 @@ class PostCardHeader extends ConsumerWidget {
               children: [
                 GestureDetector(
                   onTap: () => _navigateToProfile(context, ref, creator.id), // Pass ref
-                  child: Text(
-                    creator.name,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
+                  child: Row(
+                    children: [
+                      Text("${creator.profileIdShort}   ", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w300)),
+                      Text(
+                        creator.name,
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
                 if (post.age != null || post.created != null)
@@ -82,6 +87,7 @@ class PostCardHeader extends ConsumerWidget {
             ),
           ),
           IconButton(
+            padding: EdgeInsets.all(10),
             icon: const Icon(Icons.thumb_up_alt_outlined),
             onPressed: onOptionsMenuPressed, // This is for the "Tip Creator" action
             iconSize: 22,

@@ -88,9 +88,10 @@ class MemoModelPost {
   @JsonKey(ignore: true) // The getter itself is not part of JSON
   String get age {
     // Your original 'age' property for display
-    if (_ageCache != null && _ageCache!.isNotEmpty) {
-      return _ageCache!;
-    }
+    // if (_ageCache != null && _ageCache!.isNotEmpty) {
+    //   return _ageCache!;
+    // }
+    //TODO no caching to have exact seconds and minutes
     _ageCache = _calculateAgeString();
     return _ageCache!;
   }

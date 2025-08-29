@@ -17,7 +17,8 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // scrapeTopics("");
-  runSequentialBatchJobDateCreated();
+  // runSequentialBatchJobDateCreated();
+  // MemoPostService().scrapePostsPaginated(baseUrl: , initialOffset: initialOffset, cacheId: cacheId)
 }
 
 Future<void> runSequentialBatchJobDateCreated() async {

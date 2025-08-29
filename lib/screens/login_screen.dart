@@ -38,27 +38,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       });
     }
 
-    // TODO: VERIFY MNEMONIC IS VALID locally before sending to AuthChecker if possible
-    // This could involve checking word count, checksum, etc. using the bip39_mnemonic package.
-    // Example (very basic, actual validation is more complex):
-    // if (!Mnemonic.isValid(_mnemonicController.text.trim())) {
-    //   if (mounted) {
-    //     showSnackBar("Invalid mnemonic phrase format.", context);
-    //     setState(() => _isLoading = false);
-    //   }
-    //   return;
-    // }
-
     final authChecker = ref.read(authCheckerProvider);
     String res = await authChecker.loginInWithMnemonic(_mnemonicController.text.trim());
 
     if (mounted) {
-      // Check mounted again after await
       if (res != 'success') {
         showSnackBar(res, context); // Ensure showSnackBar is themed
       }
-      // If login is successful, AuthChecker should handle navigation.
-      // If not, we just stop loading.
       setState(() {
         _isLoading = false;
       });
@@ -70,9 +56,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _mnemonicController.text = Mnemonic.generate(Language.english, length: MnemonicLength.words12).sentence;
     // Optionally move cursor to end if needed, though for a full phrase it might not matter
     // _mnemonicController.selection = TextSelection.fromPosition(TextPosition(offset: _mnemonicController.text.length));
-    if (mounted) {
-      showSnackBar("New mnemonic generated in the field.", context);
-    }
+    // if (mounted) {
+    //   showSnackBar("New mnemonic generated in the field.", context);
+    // }
   }
 
   @override
@@ -103,6 +89,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
 
               const SizedBox(height: 56),
+
               // Adjusted spacing
 
               // Mnemonic Input Field
@@ -117,11 +104,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 16),
 
-              // Generate Mnemonic Button (Addressing the TODO)
               TextButton.icon(
                 icon: Icon(Icons.refresh_rounded, color: colorScheme.secondary),
                 label: Text(
-                  "GENERATE NEW MNEMONIC",
+                  "GENERATE MNEMONIC",
                   style: textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colorScheme.secondary, // Use a secondary theme color
@@ -148,48 +134,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         onPressed: _loginUser,
                         // Style will be inherited from theme.elevatedButtonTheme
                         // You can override specific parts if needed:
-                        // style: ElevatedButton.styleFrom(
-                        //   backgroundColor: colorScheme.primary,
-                        //   foregroundColor: colorScheme.onPrimary,
-                        //   textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
-                        // ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: Colors.white70,
+                          textStyle: textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold),
+                        ),
                         child: Text(
                           "LOGIN",
-                          style: textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            // If your ElevatedButtonTheme doesn't set text color, you might need:
-                            // color: colorScheme.onPrimary,
-                          ),
+                          style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimary),
                         ),
                       ),
                     ),
 
               const Spacer(flex: 2),
-
-              // Toggle to Signup Screen (if `onToggle` is provided)
-              if (widget.onToggle != null)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("Are you a new user? ", style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
-                    GestureDetector(
-                      onTap: widget.onToggle,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
-                        // Add padding for better tap target
-                        child: Text(
-                          "SIGN UP",
-                          style: textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.primary, // Use primary color for the link
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-              const Spacer(flex: 1),
             ],
           ),
         ),

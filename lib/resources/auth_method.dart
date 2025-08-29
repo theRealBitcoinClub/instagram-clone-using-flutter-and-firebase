@@ -1,3 +1,4 @@
+import 'package:blockchain_utils/bip/bip.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,11 +30,14 @@ class AuthChecker {
     // Removed 'ctx' parameter, will use _ref to access UserNotifier
     try {
       if (mnemonic.isEmpty) {
-        return "Enter a mnemonic of twelve words."; // Simplified message
+        return "Enter a mnemonic of twelve words or generate a new one"; // Simplified message
       }
 
       // TODO: Implement actual mnemonic validation logic here
       // For now, we'll assume it's valid if not empty.
+      if (Bip39MnemonicValidator().isValid(mnemonic)) {
+        return "Mnemonic check failed, verify every letter, make sure there are not any additional spaces!";
+      }
 
       // Save to SharedPreferences
       final prefs = await SharedPreferences.getInstance();
@@ -42,7 +46,6 @@ class AuthChecker {
       // Trigger user refresh using the UserNotifier from Riverpod
       // This will update the UserState and any widgets watching it.
       await _ref.read(userNotifierProvider.notifier).refreshUser();
-
       return "success";
     } catch (err) {
       print("Error during loginInWithMnemonic: $err");

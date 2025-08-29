@@ -9,8 +9,17 @@ import 'memo_bitcoin_base.dart';
 
 enum MemoAccountType { tokens, bch, memo }
 
-enum MemoAccountantResponse { yes, noUtxo, lowBalance, dust }
+enum MemoAccountantResponse {
+  yes(""),
+  noUtxo("Transaction error (no UTXO)."),
+  lowBalance("Insufficient balance."),
+  dust("Transaction error (dust)."),
+  // New case for unexpected errors from a different context
+  failed("Transaction failed due to an unexpected error.");
 
+  const MemoAccountantResponse(this.message);
+  final String message;
+}
 //TODO TEST THIS CASE
 //USERS ONLY CARE ABOUT LOW BALANCE OR YES, ON LOW BALANCE SOMETHING WENT WRONG ALREADY
 // AS IT SHOULDNT BE POSSIBLE TO WRITE WITH LOW BALANCE, EXCEPT IF WALLET IS LOADED SOMEWHERE ELSE AND HAS SPENT WHILE WRITING

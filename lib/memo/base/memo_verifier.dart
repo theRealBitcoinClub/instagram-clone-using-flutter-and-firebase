@@ -2,18 +2,21 @@ import 'package:blockchain_utils/bip/bip/bip39/bip39_mnemonic_validator.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
 enum MemoVerificationResponse {
-  valid,
-  moreThanThreeTags,
-  zeroTags,
-  noTopicNorTag,
-  moreThanOneTopic,
-  tooLong,
-  tooShort,
-  minWordCountNotReached,
-  offensiveWords,
-  email,
-  urlThatsNotTgNorImageNorVideo,
-  noImageNorVideo,
+  valid(""),
+  moreThanThreeTags("Too many tags"),
+  zeroTags("Add at least one visible tag."),
+  noTopicNorTag("Must include a topic or a tag."),
+  moreThanOneTopic("Only one topic allowed"),
+  tooLong("Text is too long."),
+  tooShort("Too short. Tags count towards length."),
+  minWordCountNotReached("Write more words."),
+  offensiveWords("Offensive words detected."),
+  email("Email not allowed."),
+  urlThatsNotTgNorImageNorVideo("Invalid URL."),
+  noImageNorVideo("No image or video found.");
+
+  const MemoVerificationResponse(this.message);
+  final String message;
 }
 
 class MemoVerifier {

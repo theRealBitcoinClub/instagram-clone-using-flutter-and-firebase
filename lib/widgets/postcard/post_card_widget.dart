@@ -12,6 +12,7 @@ import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure path is correct
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
+import '../../memo/base/text_input_verifier.dart';
 import 'post_card_footer.dart';
 // Import the new split widget files
 import 'post_card_header.dart';
@@ -283,6 +284,23 @@ class _PostCardState extends ConsumerState<PostCard> {
   void _onSend() {
     if (!mounted) return;
     final String textToSend = _textEditController.text.trim();
+    // Use the new verifier class
+    final verifier = TextInputVerifier(textToSend)
+        .addValidator(InputValidators.verifyPostLength)
+        .addValidator(InputValidators.verifyMinWordCount)
+        .addValidator(InputValidators.verifyHashtags)
+        .addValidator(InputValidators.verifyTopics)
+        .addValidator(InputValidators.verifyUrl)
+        .addValidator(InputValidators.verifyOffensiveWords);
+
+    final result = verifier.getResult();
+
+    // Pass the verification result to the response handler
+    if (result != MemoVerificationResponse.valid) {
+      _showVerificationResponse(result, context);
+      return;
+    }
+
     if (_hasSelectedTopic) {
       _publishReplyTopic(textToSend);
     } else {
@@ -328,51 +346,14 @@ class _PostCardState extends ConsumerState<PostCard> {
     bool success = false;
 
     if (result is MemoVerificationResponse) {
-      switch (result) {
-        case MemoVerificationResponse.minWordCountNotReached:
-          message = "Write more words";
-          break;
-        case MemoVerificationResponse.email:
-          message = "Email not allowed";
-          break;
-        case MemoVerificationResponse.moreThanOneTopic:
-          message = "Only one topic allowed";
-          break;
-        case MemoVerificationResponse.moreThanThreeTags:
-          message = "Too many tags";
-          break;
-        case MemoVerificationResponse.urlThatsNotTgNorImageNorVideo:
-          message = "Invalid URL.";
-          break;
-        case MemoVerificationResponse.offensiveWords:
-          message = "Offensive words detected.";
-          break;
-        case MemoVerificationResponse.tooLong:
-          message = "Text is too long.";
-          break;
-        case MemoVerificationResponse.tooShort:
-          message = "Too short. Tags count towards length.";
-          break;
-        case MemoVerificationResponse.zeroTags:
-          message = "Add at least one visible tag.";
-          break;
-        default:
-          message = "Verification issue: ${result.name}";
+      message = result.message;
+      if (result == MemoVerificationResponse.valid) {
+        success = true;
       }
     } else if (result is MemoAccountantResponse) {
-      switch (result) {
-        case MemoAccountantResponse.lowBalance:
-          message = "Insufficient balance.";
-          break;
-        case MemoAccountantResponse.yes:
-          success = true;
-          break;
-        case MemoAccountantResponse.noUtxo:
-          message = "Transaction error (no UTXO).";
-          break;
-        case MemoAccountantResponse.dust:
-          message = "Transaction error (dust).";
-          break;
+      message = result.message;
+      if (result == MemoAccountantResponse.yes) {
+        success = true;
       }
     } else {
       message = "An unexpected error occurred during verification.";

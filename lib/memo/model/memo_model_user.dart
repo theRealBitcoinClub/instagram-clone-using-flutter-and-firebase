@@ -3,7 +3,6 @@ import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 //TODO tips go partially to app and creator on default, if user has registered on the app,
 // otherwise it all goes to the app to pay for marketing to get users on the app
@@ -186,16 +185,6 @@ class MemoModelUser {
 
     /// Output
     /// bitcoincash:zrpl3edslpz452czc2wyfz992qncyzdkdyvc8vzuev
-  }
-
-  static Future<MemoModelUser> getUser({MemoModelCreator? creator}) async {
-    if (_user == null) {
-      String? mne = await SharedPreferencesAsync().getString("mnemonic");
-      _user = MemoModelUser(mnemonic: mne ?? "", creator: creator);
-    } else {
-      _user!.creator = creator;
-    }
-    return _user!;
   }
 
   int get tipAmount {

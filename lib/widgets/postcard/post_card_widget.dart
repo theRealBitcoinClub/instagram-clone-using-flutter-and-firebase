@@ -7,6 +7,7 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/scraper/memo_creator_service.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
+import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure path is correct
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
@@ -67,7 +68,8 @@ class _PostCardState extends ConsumerState<PostCard> {
     super.initState();
     _textEditController = TextEditingController();
     _initializeSelectedHashtags();
-    _loadUser(); // Consider if this should use ref.read(userProvider) if _user becomes Riverpod state
+    _user = ref.read(userProvider);
+    // _loadUser(); // Consider if this should use ref.read(userProvider) if _user becomes Riverpod state
     _refreshCreator();
   }
 
@@ -108,16 +110,16 @@ class _PostCardState extends ConsumerState<PostCard> {
     final int count = widget.post.tagIds.length > _maxTagsCounter ? _maxTagsCounter : widget.post.tagIds.length;
     _selectedHashtags = List<bool>.filled(count, false);
   }
-
-  Future<void> _loadUser() async {
-    // If you have a userProvider in Riverpod for the logged-in user:
-    // _user = ref.read(userProvider); // Example: Assumes userProvider gives MemoModelUser?
-    // If not, and MemoModelUser.getUser() is static and okay:
-    _user = await MemoModelUser.getUser();
-    if (mounted) {
-      // setState(() {}); // Only if UI directly depends on _user synchronously
-    }
-  }
+  //
+  // Future<void> _loadUser() async {
+  //   // If you have a userProvider in Riverpod for the logged-in user:
+  //   // _user = ref.read(userProvider); // Example: Assumes userProvider gives MemoModelUser?
+  //   // If not, and MemoModelUser.getUser() is static and okay:
+  //   _user = await MemoModelUser.getUser();
+  //   if (mounted) {
+  //     // setState(() {}); // Only if UI directly depends on _user synchronously
+  //   }
+  // }
 
   Widget _buildPostMedia(ThemeData theme) {
     if (widget.post.imgurUrl != null && widget.post.imgurUrl!.isNotEmpty) {
@@ -185,11 +187,11 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   Future<void> _sendTipToCreator() async {
-    if (_user == null) {
-      showSnackBar("User data not loaded yet. Please try again.", context);
-      _loadUser(); // Attempt to reload
-      return;
-    }
+    // if (_user == null) {
+    //   showSnackBar("User data not loaded yet. Please try again.", context);
+    //   _loadUser(); // Attempt to reload
+    //   return;
+    // }
     if (!mounted) return;
     setState(() => _isSendingTx = true);
 
@@ -310,13 +312,13 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   Future<void> _publishReplyTopic(String text) async {
-    var result = await widget.post.publishReplyTopic(text);
+    var result = await widget.post.publishReplyTopic(_user!, text);
     if (!mounted) return;
     _showVerificationResponse(result, context);
   }
 
   Future<void> _publishReplyHashtags(String text) async {
-    var result = await widget.post.publishReplyHashtags(text);
+    var result = await widget.post.publishReplyHashtags(_user!, text);
     if (!mounted) return;
     _showVerificationResponse(result, context);
   }

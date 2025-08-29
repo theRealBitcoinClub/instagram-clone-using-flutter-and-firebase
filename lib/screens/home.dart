@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/screens/add_screen.dart'; // Ensure AddPost is themed
 import 'package:mahakka/screens/feed_screen.dart'; // Ensure FeedScreen is themed
 import 'package:mahakka/tab_item_data.dart';
@@ -116,7 +115,8 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   // }
 
   void _navigationPageSelected(int page) {
-    if (page != 2) MemoModelUser.profileIdReset();
+    // if (page != 2) MemoModelUser.profileIdReset();
+    //TODO reset profileId if page != 2
     _pageController.animateToPage(page, duration: const Duration(milliseconds: 300), curve: Curves.decelerate);
   }
 

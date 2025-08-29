@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
+import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure this is theme-neutral or adapts
 import 'package:mahakka/widgets/textfield_input.dart'; // CRITICAL: This MUST be themed internally
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -17,14 +19,14 @@ import '../views_taggable/widgets/search_result_overlay.dart'; // Ensure this is
 
 void _log(String message) => print('[AddPost] $message');
 
-class AddPost extends StatefulWidget {
+class AddPost extends ConsumerStatefulWidget {
   const AddPost({Key? key}) : super(key: key);
 
   @override
-  State<AddPost> createState() => _AddPostState();
+  ConsumerState<AddPost> createState() => _AddPostState();
 }
 
-class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
+class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin {
   // Controllers
   final TextEditingController _imgurCtrl = TextEditingController();
   final TextEditingController _youtubeCtrl = TextEditingController();
@@ -77,10 +79,12 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
     });
 
     try {
-      final userFuture = MemoModelUser.getUser();
+      final MemoModelUser? _user = ref.read(userProvider);
+      // userProvider.read(node)
+      // final userFuture = MemoModelUser.getUser();
       final clipboardFuture = _checkClipboard();
 
-      _user = await userFuture;
+      // _user = await userFuture;
       await clipboardFuture;
     } catch (e, s) {
       _log("Error during initial data load: $e\n$s");
@@ -104,7 +108,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
     try {
       if (await FlutterClipboard.hasData()) {
         final urlFromClipboard = await FlutterClipboard.paste();
-        _log("Clipboard data: $urlFromClipboard");
+        // _log("Clipboard data: $urlFromClipboard");
         final ytId = YoutubePlayer.convertUrlToId(urlFromClipboard);
 
         if (ytId != null && ytId.isNotEmpty) {
@@ -680,7 +684,7 @@ class _AddPostState extends State<AddPost> with TickerProviderStateMixin {
 
     try {
       // Assuming user.profileIdMemoBch is the correct parameter here
-      final response = await MemoModelPost.publishImageOrVideo(textContent, topic);
+      final response = await MemoModelPost.publishImageOrVideo(_user!, textContent, topic);
 
       if (!mounted) return;
 

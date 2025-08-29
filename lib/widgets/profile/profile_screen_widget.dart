@@ -7,6 +7,7 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/scraper/memo_creator_service.dart';
 import 'package:mahakka/provider/navigation_providers.dart';
+import 'package:mahakka/provider/user_provider.dart';
 // Assuming you might have a userProvider for the logged-in user's data (optional for now)
 // import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/resources/auth_method.dart'; // For authCheckerProvider
@@ -90,7 +91,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   }
 
   Future<void> _initializeProfileScreen() async {
-    _loggedInUser = await MemoModelUser.getUser(); // Your existing way to get logged-in user
+    _loggedInUser = ref.read(userProvider);
+    // _loggedInUser = await MemoModelUser.getUser(); // Your existing way to get logged-in user
     if (mounted) {
       setState(() {}); // Update UI with _loggedInUser availability
 
@@ -173,7 +175,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
     try {
       // _loggedInUser should be loaded by _initializeProfileScreen or subsequent state updates
-      _loggedInUser ??= await MemoModelUser.getUser();
+      // _loggedInUser ??= await MemoModelUser.getUser();
       if (!mounted) return;
 
       // Your original logic for getting creator
@@ -541,6 +543,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
               .catchError((e) {
                 if (mounted) showSnackBar("Logout error: $e", context);
               });
+          setState(() {});
         },
         onBackupMnemonic: () {
           // Original backup logic

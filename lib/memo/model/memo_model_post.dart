@@ -156,27 +156,24 @@ class MemoModelPost {
     );
   }
 
-  Future<dynamic> publishReplyTopic(String replyText) async {
+  Future<dynamic> publishReplyTopic(MemoModelUser user, String replyText) async {
     MemoVerificationResponse verifier = MemoVerifier(replyText).checkIsValidText();
     if (verifier == MemoVerificationResponse.valid) {
-      var user = await MemoModelUser.getUser();
       return MemoAccountant(user).publishReplyTopic(this, replyText);
     } else {
       return verifier;
     }
   }
 
-  Future<dynamic> publishReplyHashtags(String text) async {
+  Future<dynamic> publishReplyHashtags(MemoModelUser user, String text) async {
     MemoVerificationResponse verifier = MemoVerifier(text).checkIsValidText();
     if (verifier != MemoVerificationResponse.valid) return verifier;
-    var user = await MemoModelUser.getUser();
     return MemoAccountant(user).publishReplyHashtags(this, text);
   }
 
-  static Future<dynamic> publishImageOrVideo(String text, String? topic) async {
+  static Future<dynamic> publishImageOrVideo(MemoModelUser user, String text, String? topic) async {
     MemoVerificationResponse res = MemoVerifier(text).checkIsValidText();
     if (res != MemoVerificationResponse.valid) return res;
-    var user = await MemoModelUser.getUser();
     return MemoAccountant(user).publishImgurOrYoutube(topic, text);
   }
 

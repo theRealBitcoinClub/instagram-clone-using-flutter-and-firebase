@@ -80,6 +80,13 @@ class MemoScraperUtil {
     }
   }
 
+  static List<String> extractTopics(String? text) {
+    if (text == null || text.isEmpty) return [];
+
+    Iterable<RegExpMatch> matches = RegExp(r'(^|\s)@([A-z]+)\b', caseSensitive: false).allMatches(text);
+    return convertRegExpMatchesToList(matches);
+  }
+
   static List<String> extractUrls(String? text) {
     if (text == null || text.isEmpty) return [];
 

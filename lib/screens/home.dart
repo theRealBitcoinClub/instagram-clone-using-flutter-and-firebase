@@ -10,9 +10,9 @@ import 'package:mahakka/tab_item_data.dart';
 import '../provider/navigation_providers.dart';
 import '../widgets/profile/profile_screen_new.dart';
 
-class NavBarCallback {
-  switchToProfileTab() {}
-}
+// class NavBarCallback {
+//   switchToProfileTab() {}
+// }
 
 class HomeSceen extends ConsumerStatefulWidget {
   // Consider renaming to HomeScreen for convention
@@ -22,7 +22,7 @@ class HomeSceen extends ConsumerStatefulWidget {
   ConsumerState<HomeSceen> createState() => _HomeSceenState();
 }
 
-class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateMixin implements NavBarCallback {
+class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateMixin {
   late PageController _pageController; // Renamed for convention
   late TabController _tabController;
   final FocusNode _scaffoldFocusNode = FocusNode();
@@ -63,13 +63,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     super.dispose();
   }
 
-  // NavBarCallback can now just call the notifier
-  void _onNavigate(int tabIndex, {String? targetId}) {
-    if (!mounted) return;
-    // Handle targetId logic here if needed (e.g., update another provider for profile target)
-    ref.read(tabIndexProvider.notifier).setTab(tabIndex);
-  }
-
   void _navigateToNextTab() {
     ref.read(tabIndexProvider.notifier).nextTab();
   }
@@ -78,10 +71,10 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     ref.read(tabIndexProvider.notifier).previousTab();
   }
 
-  @override
-  switchToProfileTab() {
-    _navigationPageSelected(2);
-  }
+  // @override
+  // switchToProfileTab() {
+  //   _navigationPageSelected(2);
+  // }
 
   Future<void> _initUser() async {
     // (Uncomment and use the WidgetsBinding block if you want HomeSceen to explicitly trigger refreshUser when it initializes. Otherwise, if your UserNotifier constructor calls refreshUser, this line can be mostly commented out or removed).
@@ -114,11 +107,11 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   //   });
   // }
 
-  void _navigationPageSelected(int page) {
-    // if (page != 2) MemoModelUser.profileIdReset();
-    //TODO reset profileId if page != 2
-    _pageController.animateToPage(page, duration: const Duration(milliseconds: 300), curve: Curves.decelerate);
-  }
+  // void _navigationPageSelected(int page) {
+  //   // if (page != 2) MemoModelUser.profileIdReset();
+  //   //TODO reset profileId if page != 2
+  //   _pageController.animateToPage(page, duration: const Duration(milliseconds: 300), curve: Curves.decelerate);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +130,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     final Color cupertinoActiveColor = colorScheme.primary; // Use primary color for active items
     final Color cupertinoInactiveColor = colorScheme.onSurface.withOpacity(0.6); // Muted version of onSurface
 
-    final List<Widget> homeScreenItems = [FeedScreen(navBarCallback: this), const AddPost(), const ProfileScreen()];
+    final List<Widget> homeScreenItems = [FeedScreen(), const AddPost(), const ProfileScreen()];
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor, // Background of the screen itself

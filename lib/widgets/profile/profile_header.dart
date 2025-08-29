@@ -103,8 +103,8 @@ class ProfileHeader extends StatelessWidget {
                     // Placeholder for non-own profile stats if needed
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Expanded(child: buildStatColumn(theme, 'Followers', "${creator.followerCount ?? 0}")),
-                      Expanded(child: buildStatColumn(theme, 'Actions', "${creator.actions ?? 0}")),
+                      Expanded(child: buildStatColumn(theme, 'Followers', "${creator.followerCount}")),
+                      Expanded(child: buildStatColumn(theme, 'Actions', "${creator.actions}")),
                     ],
                   ),
                 const SizedBox(height: 12),

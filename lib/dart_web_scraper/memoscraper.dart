@@ -8,7 +8,6 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import '../firebase_options.dart';
 import '../memo/firebase/post_service.dart';
 import '../memo/model/memo_model_post.dart';
-import '../memo/model/memo_model_topic.dart';
 import '../memo/scraper/memo_post_service.dart';
 
 void main() async {
@@ -53,12 +52,12 @@ Future<void> runSequentialBatchJobDateCreated() async {
 
       sleep(Duration(milliseconds: 1000)); //100ms worked well for some time then got me blocked
 
-      MemoModelPost? p = await memoPostService.fetchAndParsePost(post.id, filterOn: false);
+      MemoModelPost? p = await memoPostService.fetchAndParsePost(post.id!, filterOn: false);
 
       if (p != null)
         await postService.savePost(p);
       else
-        print("\n\nERROR NULL ON FETCH postId\n\n:" + post.id);
+        print("\n\nERROR NULL ON FETCH postId\n\n:" + post.id!);
 
       print("\n\nINDEX: $index\n\n");
       print('Processed and saved post: ${post.id}');
@@ -130,9 +129,9 @@ Future<void> runSequentialBatchJobDateCreated() async {
 // }
 
 Future<void> scrapeTopics(String cacheId) async {
-  int indexTopics = 0;
-  int indexPosts = 0;
-  List<MemoModelTopic> topics = [];
+  // int indexTopics = 0;
+  // int indexPosts = 0;
+  // List<MemoModelTopic> topics = [];
   // try {
   // await MemoScraperTopic().startScrapeTopics(topics, cacheId, 950, 200);
   // await MemoScraperTag().startScrapeTags(["/most-posts"], 500, 100, cacheId);

@@ -113,7 +113,7 @@ class _AdminPostsListPageState extends State<AdminPostsListPage> {
                         IconButton(
                           icon: Icon(Icons.delete, color: Colors.red[700]),
                           tooltip: 'Delete Post',
-                          onPressed: () => _deletePost(context, post.id, postTextSnippet),
+                          onPressed: () => _deletePost(context, post.id!, postTextSnippet),
                         ),
                       ],
                     ),

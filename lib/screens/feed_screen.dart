@@ -3,10 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart'; // Your updated feed provider
 import 'package:mahakka/theme_provider.dart'; // Your theme provider
-import 'package:mahakka/utils/snackbar.dart';
+// import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
-
-import 'home.dart'; // For NavBarCallback, if still used by PostCard
 
 // Enum for filter types - this should be consistent with what PostService and FeedPostsNotifier expect
 enum PostFilterType {
@@ -22,8 +20,8 @@ class ScrollUpIntent extends Intent {}
 class ScrollDownIntent extends Intent {}
 
 class FeedScreen extends ConsumerStatefulWidget {
-  const FeedScreen({super.key, required this.navBarCallback});
-  final NavBarCallback navBarCallback;
+  const FeedScreen({super.key});
+  // final NavBarCallback navBarCallback;
 
   @override
   ConsumerState<FeedScreen> createState() => _FeedScreenState();
@@ -48,7 +46,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         }
       });
     });
-    // _activateKeyboardScrollingNoListClickNeeded();
+    _activateKeyboardScrollingNoListClickNeeded();
     // Initial data fetch is handled by the feedPostsProvider when it's first read/watched.
     // No explicit call needed here if the provider's constructor calls fetchInitialPosts.
   }
@@ -84,27 +82,27 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     return ref.watch(feedPostsProvider).activeFilter == filterType;
   }
 
-  // Sets or clears the single active filter
-  void _selectFilter(PostFilterType? filterType) {
-    final currentActiveFilterInState = ref.read(feedPostsProvider).activeFilter;
-
-    // If the user taps the currently active filter, treat it as an action to clear the filter (show all).
-    // Or, if they explicitly tap "ALL POSTS" (filterType == null).
-    if (filterType == currentActiveFilterInState) {
-      // Tapping the same active filter again clears it
-      ref.read(feedPostsProvider.notifier).clearFilter();
-      _showFilterChangeSnackbar(currentActiveFilterInState, isActive: false); // Show it was deactivated
-    } else {
-      // Set a new filter or clear if filterType is null (from "ALL POSTS" option)
-      ref.read(feedPostsProvider.notifier).setFilter(filterType);
-      _showFilterChangeSnackbar(filterType, isActive: filterType != null);
-    }
-
-    // Always scroll to top when a filter action is taken
-    if (_scrollController.hasClients) {
-      _scrollController.jumpTo(0.0);
-    }
-  }
+  // // Sets or clears the single active filter
+  // void _selectFilter(PostFilterType? filterType) {
+  //   final currentActiveFilterInState = ref.read(feedPostsProvider).activeFilter;
+  //
+  //   // If the user taps the currently active filter, treat it as an action to clear the filter (show all).
+  //   // Or, if they explicitly tap "ALL POSTS" (filterType == null).
+  //   if (filterType == currentActiveFilterInState) {
+  //     // Tapping the same active filter again clears it
+  //     ref.read(feedPostsProvider.notifier).clearFilter();
+  //     _showFilterChangeSnackbar(currentActiveFilterInState, isActive: false); // Show it was deactivated
+  //   } else {
+  //     // Set a new filter or clear if filterType is null (from "ALL POSTS" option)
+  //     ref.read(feedPostsProvider.notifier).setFilter(filterType);
+  //     _showFilterChangeSnackbar(filterType, isActive: filterType != null);
+  //   }
+  //
+  //   // Always scroll to top when a filter action is taken
+  //   if (_scrollController.hasClients) {
+  //     _scrollController.jumpTo(0.0);
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -279,104 +277,104 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
-  Widget _buildMenuFilter(ThemeData theme, PostFilterType? currentActiveFilter) {
-    return IconButton(
-      icon: Icon(currentActiveFilter != null ? Icons.filter_alt_rounded : Icons.filter_list_outlined),
-      tooltip: "Filter Posts",
-      onPressed: () {
-        showDialog(
-          context: context,
-          builder: (dialogCtx) {
-            return SimpleDialog(
-              title: Text("Filter by Content Type", style: theme.dialogTheme.titleTextStyle),
-              shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              backgroundColor: theme.dialogTheme.backgroundColor ?? theme.cardColor,
-              children: [
-                // Option to show all posts (clear filter)
-                _buildExclusiveFilterOption(dialogCtx, theme, null, "ALL POSTS", Icons.clear_all_outlined, Icons.clear_all_rounded),
-                const Divider(height: 1, indent: 16, endIndent: 16),
-                _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.images, "IMAGES", Icons.image_outlined, Icons.image_rounded),
-                // Your videos filter was commented out, so I've kept it that way.
-                // _buildExclusiveFilterOption(
-                //   dialogCtx,
-                //   theme,
-                //   PostFilterType.videos,
-                //   "VIDEOS",
-                //   Icons.video_library_outlined,
-                //   Icons.video_library_rounded,
-                // ),
-                // _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.hashtags, "HASHTAGS", Icons.tag_outlined, Icons.tag_rounded),
-                _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.topics, "TOPICS", Icons.topic_outlined, Icons.topic_rounded),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
+  // Widget _buildMenuFilter(ThemeData theme, PostFilterType? currentActiveFilter) {
+  //   return IconButton(
+  //     icon: Icon(currentActiveFilter != null ? Icons.filter_alt_rounded : Icons.filter_list_outlined),
+  //     tooltip: "Filter Posts",
+  //     onPressed: () {
+  //       showDialog(
+  //         context: context,
+  //         builder: (dialogCtx) {
+  //           return SimpleDialog(
+  //             title: Text("Filter by Content Type", style: theme.dialogTheme.titleTextStyle),
+  //             shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  //             backgroundColor: theme.dialogTheme.backgroundColor ?? theme.cardColor,
+  //             children: [
+  //               // Option to show all posts (clear filter)
+  //               _buildExclusiveFilterOption(dialogCtx, theme, null, "ALL POSTS", Icons.clear_all_outlined, Icons.clear_all_rounded),
+  //               const Divider(height: 1, indent: 16, endIndent: 16),
+  //               _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.images, "IMAGES", Icons.image_outlined, Icons.image_rounded),
+  //               // Your videos filter was commented out, so I've kept it that way.
+  //               // _buildExclusiveFilterOption(
+  //               //   dialogCtx,
+  //               //   theme,
+  //               //   PostFilterType.videos,
+  //               //   "VIDEOS",
+  //               //   Icons.video_library_outlined,
+  //               //   Icons.video_library_rounded,
+  //               // ),
+  //               // _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.hashtags, "HASHTAGS", Icons.tag_outlined, Icons.tag_rounded),
+  //               _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.topics, "TOPICS", Icons.topic_outlined, Icons.topic_rounded),
+  //             ],
+  //           );
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
 
-  Widget _buildExclusiveFilterOption(
-    BuildContext dialogCtx,
-    ThemeData theme,
-    PostFilterType? filterType,
-    String text,
-    IconData icon,
-    IconData activeIcon,
-  ) {
-    // Determine if this option represents the currently active filter (or no filter if filterType is null)
-    final bool isSelected =
-        (filterType == null && ref.read(feedPostsProvider).activeFilter == null) || (filterType != null && isFilterActive(filterType));
+  // Widget _buildExclusiveFilterOption(
+  //   BuildContext dialogCtx,
+  //   ThemeData theme,
+  //   PostFilterType? filterType,
+  //   String text,
+  //   IconData icon,
+  //   IconData activeIcon,
+  // ) {
+  //   // Determine if this option represents the currently active filter (or no filter if filterType is null)
+  //   final bool isSelected =
+  //       (filterType == null && ref.read(feedPostsProvider).activeFilter == null) || (filterType != null && isFilterActive(filterType));
+  //
+  //   return SimpleDialogOption(
+  //     onPressed: () {
+  //       _selectFilter(filterType); // This handles setting or clearing
+  //       Navigator.pop(dialogCtx);
+  //     },
+  //     child: Padding(
+  //       padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0), // Adjusted padding
+  //       child: Row(
+  //         children: [
+  //           Icon(
+  //             isSelected ? activeIcon : icon,
+  //             color: isSelected ? theme.colorScheme.primary : theme.iconTheme.color?.withOpacity(0.7),
+  //             size: 22,
+  //           ),
+  //           const SizedBox(width: 16),
+  //           Expanded(
+  //             child: Text(
+  //               text,
+  //               style: theme.textTheme.titleMedium?.copyWith(
+  //                 color: isSelected ? theme.colorScheme.primary : theme.textTheme.titleMedium?.color,
+  //                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+  //               ),
+  //             ),
+  //           ),
+  //           // Visual cue for selection (e.g., a check mark or radio button style)
+  //           if (isSelected)
+  //             Icon(Icons.check_circle_outline_rounded, color: theme.colorScheme.primary, size: 24)
+  //           else
+  //             const SizedBox(width: 24), // Placeholder for alignment
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
-    return SimpleDialogOption(
-      onPressed: () {
-        _selectFilter(filterType); // This handles setting or clearing
-        Navigator.pop(dialogCtx);
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0), // Adjusted padding
-        child: Row(
-          children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected ? theme.colorScheme.primary : theme.iconTheme.color?.withOpacity(0.7),
-              size: 22,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                text,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: isSelected ? theme.colorScheme.primary : theme.textTheme.titleMedium?.color,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-            ),
-            // Visual cue for selection (e.g., a check mark or radio button style)
-            if (isSelected)
-              Icon(Icons.check_circle_outline_rounded, color: theme.colorScheme.primary, size: 24)
-            else
-              const SizedBox(width: 24), // Placeholder for alignment
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showFilterChangeSnackbar(PostFilterType? filterType, {required bool isActive}) {
-    // Use Future.delayed to ensure the state has propagated and snackbar shows correctly
-    Future.delayed(const Duration(milliseconds: 50), () {
-      if (!mounted) return;
-      String message;
-      if (filterType == null) {
-        // This means "ALL POSTS" was selected
-        message = "Showing all posts.";
-      } else {
-        final filterName = _getFilterName(filterType);
-        message = isActive ? "Showing '$filterName' posts." : "Filter for '$filterName' removed. Showing all posts.";
-      }
-      showSnackBar(message, context);
-    });
-  }
+  // void _showFilterChangeSnackbar(PostFilterType? filterType, {required bool isActive}) {
+  //   // Use Future.delayed to ensure the state has propagated and snackbar shows correctly
+  //   Future.delayed(const Duration(milliseconds: 50), () {
+  //     if (!mounted) return;
+  //     String message;
+  //     if (filterType == null) {
+  //       // This means "ALL POSTS" was selected
+  //       message = "Showing all posts.";
+  //     } else {
+  //       final filterName = _getFilterName(filterType);
+  //       message = isActive ? "Showing '$filterName' posts." : "Filter for '$filterName' removed. Showing all posts.";
+  //     }
+  //     showSnackBar(message, context);
+  //   });
+  // }
 
   String _getFilterName(PostFilterType filterType) {
     // Your existing implementation

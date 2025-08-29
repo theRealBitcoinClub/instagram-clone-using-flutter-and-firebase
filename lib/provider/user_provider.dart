@@ -33,8 +33,11 @@ class UserNotifier extends StateNotifier<UserState> {
   Future<void> refreshUser() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final fetchedUser = await _authChecker.getUserFromDB();
-      state = state.copyWith(user: fetchedUser, isLoading: false);
+      if (state.user == null || !state.user!.hasInit) {
+        final fetchedUser = await _authChecker.getUserFromDB();
+        state = state.copyWith(user: fetchedUser, isLoading: false);
+      }
+      state = state.copyWith(isLoading: false);
     } catch (e, stackTrace) {
       print("Error refreshing user from DB: $e \n$stackTrace");
       state = state.copyWith(error: e.toString(), isLoading: false);

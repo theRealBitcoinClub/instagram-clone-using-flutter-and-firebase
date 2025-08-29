@@ -55,9 +55,7 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
     final ThemeData theme = Theme.of(context); // Get the current theme
     final ColorScheme colorScheme = theme.colorScheme;
 
-    final String addressToShow = _isCashtokenFormat
-        ? widget.user.bchAddressCashtokenAwareCtFormat
-        : widget.user.legacyAddressMemoBchAsCashaddress;
+    final String addressToShow = _isCashtokenFormat ? widget.user.bchAddressCashtokenAware : widget.user.legacyAddressMemoBchAsCashaddress;
     final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo-128x128";
     final String toggleButtonText = _isCashtokenFormat ? "SHOW MEMO QR" : "SHOW CASHTOKEN QR";
 

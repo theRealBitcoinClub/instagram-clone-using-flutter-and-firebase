@@ -20,10 +20,13 @@ class AuthChecker {
     String? mnemonic = prefs.getString("mnemonic");
 
     if (mnemonic == null || mnemonic.isEmpty) return null;
-    // Assuming MemoModelUser can be created with just a mnemonic
-    // If it requires other fields like id, email, username, those would need to be
-    // stored and retrieved as well, or your user model needs to be adapted.
-    return MemoModelUser(mnemonic: mnemonic /* add other fields if they were stored */);
+    var user = MemoModelUser.fromMnemonic(mnemonic: mnemonic);
+    if (user.hasInit) {
+      user.saveToFirebase();
+    } else {
+      throw Exception("MNEMONIC WRONG? : $mnemonic");
+    }
+    return user;
   }
 
   Future<String> loginInWithMnemonic(String mnemonic) async {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mahakka/memo/firebase/post_admin.dart';
 import 'package:mahakka/memo/firebase/tag_admin.dart';
 import 'package:mahakka/memo/firebase/topic_admin.dart';
+import 'package:mahakka/memo/firebase/user_admin.dart';
 
 import '../../firebase_options.dart';
 import 'creator_admin.dart'; // Adjust path
@@ -60,7 +61,7 @@ typedef CountCallback = void Function(int count);
 class _MainAdminDashboardState extends State<MainAdminDashboard> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _currentCount = 0; // State variable to hold the count
-  String _currentSectionName = 'Creators'; // Default section name
+  String _currentSectionName = 'Users'; // Default section name
 
   // Method to update the count and trigger a rebuild
   void _updateCount(int count) {
@@ -81,6 +82,7 @@ class _MainAdminDashboardState extends State<MainAdminDashboard> with SingleTick
   }
 
   final List<Tab> _adminTabs = const <Tab>[
+    Tab(icon: Icon(Icons.account_circle_outlined), text: 'Users'),
     Tab(icon: Icon(Icons.people_alt_outlined), text: 'Creators'),
     Tab(icon: Icon(Icons.topic_outlined), text: 'Topics'),
     Tab(icon: Icon(Icons.article_outlined), text: 'Posts'),
@@ -95,6 +97,7 @@ class _MainAdminDashboardState extends State<MainAdminDashboard> with SingleTick
 
     // Initialize _adminTabViews here, passing the callback
     _adminTabViews = <Widget>[
+      AdminUsersListPage(onCountChanged: _updateCount),
       AdminCreatorsListPage(onCountChanged: _updateCount),
       AdminTopicsListPage(onCountChanged: _updateCount),
       AdminPostsListPage(onCountChanged: _updateCount),

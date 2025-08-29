@@ -86,7 +86,7 @@ class ProfileContentList extends StatelessWidget {
     // Get or create the ValueNotifier for the controller
     // The parent (_ProfileScreenWidgetState) is responsible for creating/disposing these notifiers.
     // This widget just consumes them.
-    final controllerNotifier = ytControllerNotifiers!.putIfAbsent(ytPost.id, () => ValueNotifier(null));
+    final controllerNotifier = ytControllerNotifiers!.putIfAbsent(ytPost.id!, () => ValueNotifier(null));
 
     // Initialize or update controller if needed (e.g., if video ID changed for the same post ID, though rare for profiles)
     if (controllerNotifier.value == null || controllerNotifier.value!.initialVideoId != ytPost.youtubeId) {

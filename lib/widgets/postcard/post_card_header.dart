@@ -1,3 +1,4 @@
+import 'package:badges/badges.dart' as badges;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:mahakka/memo/model/memo_model_creator.dart';
@@ -42,15 +43,41 @@ class PostCardHeader extends ConsumerWidget {
         children: [
           GestureDetector(
             onTap: () => _navigateToProfile(context, ref, creator.id), // Pass ref
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: theme.colorScheme.surfaceVariant,
-              backgroundImage: creator.profileImageAvatar().isEmpty
-                  ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                  : NetworkImage(creator.profileImageAvatar()),
-              onBackgroundImageError: (exception, stackTrace) {
-                _logError("Error loading profile image for ${creator.name}", exception, stackTrace);
-              },
+            child: badges.Badge(
+              position: badges.BadgePosition.topEnd(top: -2, end: -6),
+              // showBadge: _hasRegisteredAsUser,
+              onTap: () {},
+              badgeContent: Icon(
+                Icons.currency_bitcoin_rounded,
+                color: Theme.of(context).colorScheme.onPrimary, // Example for theme-aware icon color
+                size: 15,
+              ),
+              badgeAnimation: badges.BadgeAnimation.fade(
+                animationDuration: Duration(milliseconds: 5000),
+                // colorChangeAnimationDuration: Duration(milliseconds: 100),
+                loopAnimation: true,
+                colorChangeAnimationCurve: Curves.fastOutSlowIn,
+              ),
+              badgeStyle: badges.BadgeStyle(
+                shape: badges.BadgeShape.circle,
+                badgeColor: Theme.of(context).colorScheme.primary, // Use a theme-aware color for the badge background
+                padding: EdgeInsets.all(1.5),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.onSurface, // Use theme-aware color for the border
+                  width: 0.8,
+                ),
+                elevation: 0,
+              ),
+              child: CircleAvatar(
+                radius: 24,
+                backgroundColor: theme.colorScheme.surfaceVariant,
+                backgroundImage: creator.profileImageAvatar().isEmpty
+                    ? const AssetImage("assets/images/default_profile.png") as ImageProvider
+                    : NetworkImage(creator.profileImageAvatar()),
+                onBackgroundImageError: (exception, stackTrace) {
+                  _logError("Error loading profile image for ${creator.name}", exception, stackTrace);
+                },
+              ),
             ),
           ),
           const SizedBox(width: 12),

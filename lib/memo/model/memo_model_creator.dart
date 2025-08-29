@@ -3,7 +3,8 @@
 // /home/pachamama/github/mahakka/lib/memo/model/memo_model_creator.dart.
 import 'package:json_annotation/json_annotation.dart';
 import 'package:mahakka/check_404.dart';
-import 'package:mahakka/memo/firebase/creator_service.dart'; // Assuming this is your utility function
+import 'package:mahakka/memo/firebase/creator_service.dart';
+import 'package:mahakka/memo/firebase/user_service.dart'; // Assuming this is your utility function
 
 part 'memo_model_creator.g.dart'; // This will be generated
 
@@ -172,4 +173,8 @@ class MemoModelCreator {
 
   @override
   int get hashCode => id.hashCode;
+
+  Future<bool> hasRegisteredAsUser() async {
+    return await UserService().getUserOnce(id) != null;
+  }
 }

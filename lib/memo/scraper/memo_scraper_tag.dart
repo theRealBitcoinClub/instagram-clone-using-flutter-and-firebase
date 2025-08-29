@@ -24,10 +24,10 @@ class MemoScraperTag {
         var tagService = TagService();
         var postService = PostService();
         for (MemoModelTag t in tags) {
-          tagService.saveTag(t);
+          tagService.save(t, t.id);
           // indexTopics++;
           for (MemoModelPost p in posts) {
-            postService.savePost(p);
+            postService.save(p, p.id!);
             // indexPosts++;
           }
           posts.clear();

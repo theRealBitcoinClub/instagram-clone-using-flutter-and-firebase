@@ -96,10 +96,11 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
       //   );
       // }
 
-      final List<MemoModelPost> newPosts = await _postService.getPostsPaginated(
+      final List<MemoModelPost> newPosts = await _postService.getPaginated(
         limit: _pageSize,
         startAfterDoc: cursorForThisFetch, // Pass the single active filter
-        activeFilter: state.activeFilter,
+        // activeFilter: state.activeFilter,
+        //TODO THE FILTERING WILL NOT WORK ANYMORE UNTIL THE ACTIVEFILTER PARAMETER IS PROCESSED IN THE SERVICE AGAIN
       );
 
       if (!mounted) return;

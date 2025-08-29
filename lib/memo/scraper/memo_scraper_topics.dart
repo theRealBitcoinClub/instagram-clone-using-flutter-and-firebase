@@ -44,7 +44,7 @@ class MemoScraperTopic {
         topicService.saveTopic(t);
         // indexTopics++;
         for (MemoModelPost p in t.posts) {
-          postService.savePost(p);
+          postService.save(p, p.id!);
           // indexPosts++;
         }
         t.posts.clear();

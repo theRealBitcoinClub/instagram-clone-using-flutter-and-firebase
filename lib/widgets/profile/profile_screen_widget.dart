@@ -178,7 +178,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       if (!mounted) return;
 
       // Your original logic for getting creator
-      MemoModelCreator? initialCreator = await _creatorService.getCreatorOnce(profileIdToLoad);
+      MemoModelCreator? initialCreator = await _creatorService.getOnce(profileIdToLoad);
       initialCreator ??= MemoModelCreator(id: profileIdToLoad); // Fallback as in original
 
       if (!mounted) return;
@@ -217,7 +217,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
       MemoModelCreator refreshedCreator = results[0] as MemoModelCreator;
       // TODO: update user details store them on firebase (if MemoCreatorService().fetchCreatorDetails also returns user updatable info)
-      await _creatorService.saveCreator(refreshedCreator); // Save potentially updated creator info
+      await _creatorService.save(refreshedCreator, refreshedCreator.id); // Save potentially updated creator info
 
       if (isOwnProfile) {
         // Your original snackbar logic for balance checks
@@ -612,7 +612,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     if (changed) {
       if (mounted) setState(() => _isRefreshingProfile = true); // Show loading
       try {
-        await _creatorService.saveCreator(_displayedCreator!); // Save the updated _displayedCreator
+        await _creatorService.save(_displayedCreator!, _displayedCreator!.id); // Save the updated _displayedCreator
         if (mounted) {
           MemoConfetti().launch(context);
           showSnackBar("Profile updated!", context);

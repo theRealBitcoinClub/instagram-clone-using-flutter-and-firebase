@@ -5,8 +5,7 @@ import 'package:mahakka/memo/model/memo_model_user.dart';
 // Import your Riverpod user providers
 import 'package:mahakka/provider/user_provider.dart'; // Ensure userProvider and userIsLoadingProvider are defined here
 import 'package:mahakka/screens/home.dart';
-
-import 'login_or_registed.dart';
+import 'package:mahakka/screens/login_screen.dart';
 
 class AuthPage extends ConsumerWidget {
   const AuthPage({super.key});
@@ -39,7 +38,7 @@ class AuthPage extends ConsumerWidget {
       if (user != null && user.mnemonic.isNotEmpty) {
         return const HomeSceen();
       } else {
-        return const LoginOrRegister();
+        return const LoginScreen();
       }
     }
   }

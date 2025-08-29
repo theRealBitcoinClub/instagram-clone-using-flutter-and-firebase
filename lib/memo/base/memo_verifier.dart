@@ -1,3 +1,4 @@
+import 'package:blockchain_utils/bip/bip/bip39/bip39_mnemonic_validator.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
 enum MemoVerificationResponse {
@@ -244,5 +245,16 @@ class MemoVerifier {
       // return MemoVerificationResponse.notADirectImgurImageOrVideoLink;
     }
     return MemoVerificationResponse.valid;
+  }
+
+  String verifyMnemonic() {
+    if (text.isEmpty) {
+      return "Enter mnemonic of 12 words or generate a new one"; // Simplified message
+    }
+    if (!Bip39MnemonicValidator().isValid(text)) {
+      return "Check failed, 12-words needed, verify letter & spaces!";
+    }
+
+    return "success";
   }
 }

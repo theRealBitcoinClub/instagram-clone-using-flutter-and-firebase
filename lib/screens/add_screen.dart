@@ -35,6 +35,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   late FlutterTaggerController _inputTagTopicController;
   late AnimationController _animationController;
   final FocusNode _focusNode = FocusNode();
+  // final FocusNode _keyboardFocusNode = FocusNode();
 
   // State for YouTube Player
   YoutubePlayerController? _ytPlayerController;
@@ -255,6 +256,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _inputTagTopicController.dispose();
     _animationController.dispose();
     _focusNode.dispose();
+    // _keyboardFocusNode.dispose();
     _disposeYtPlayerController();
     super.dispose();
   }
@@ -292,8 +294,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     return GestureDetector(
       onTap: () {
-        _focusNode.unfocus();
-        FocusScope.of(context).unfocus();
+        _unfocusNodes(context);
       },
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
@@ -333,6 +334,12 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         ),
       ),
     );
+  }
+
+  void _unfocusNodes(BuildContext context) {
+    _focusNode.unfocus();
+    // _keyboardFocusNode.unfocus();
+    FocusScope.of(context).unfocus();
   }
 
   Widget _buildMediaInputSection(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
@@ -603,15 +610,23 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   Widget _buildTaggableInput(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme, EdgeInsets viewInsets) {
     return Material(
       elevation: 4.0,
-      color: theme.cardColor, // Or theme.cardColor
+      color: theme.cardColor,
       shadowColor: theme.shadowColor,
-      borderRadius: BorderRadius.circular(8), // Optional: rounded corners for the input area
+      borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.all(12), // Consistent padding
+        padding: const EdgeInsets.all(12),
+        // child: RawKeyboardListener(
+        //   // Use a dedicated FocusNode for the keyboard listener.
+        //   focusNode: _keyboardFocusNode,
+        //   onKey: (RawKeyEvent event) {
+        //     // Only handle key downs, not key ups.
+        //     if (event is RawKeyDownEvent) {
+        //       _handleAutocompleteKeys(event);
+        //     }
+        //   },
         child: FlutterTagger(
           triggerStrategy: TriggerStrategy.eager,
           controller: _inputTagTopicController,
-          // focusNode: _focusNode,
           animationController: _animationController,
           onSearch: (query, triggerChar) {
             if (triggerChar == "@") {
@@ -621,50 +636,99 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
             }
           },
           triggerCharacterAndStyles: {
-            "@": textTheme.bodyLarge!.copyWith(
-              color: colorScheme.secondary, // E.g., your light green
-              fontWeight: FontWeight.bold,
-            ),
-            "#": textTheme.bodyLarge!.copyWith(
-              color: colorScheme.tertiary, // E.g., another accent from your theme
-              fontWeight: FontWeight.bold,
-            ),
+            "@": textTheme.bodyLarge!.copyWith(color: colorScheme.secondary, fontWeight: FontWeight.bold),
+            "#": textTheme.bodyLarge!.copyWith(color: colorScheme.tertiary, fontWeight: FontWeight.bold),
           },
           tagTextFormatter: (id, tag, triggerChar) {
             return "$triggerChar$id#$tag#";
           },
           overlayHeight: _taggerOverlayHeight,
-          // Ensure SearchResultOverlay is theme-aware or theme-neutral
-          overlay: SearchResultOverlay(
-            animation: _taggerOverlayAnimation,
-            tagController: _inputTagTopicController,
-            // Pass theme if needed: theme: theme,
-          ),
+          overlay: SearchResultOverlay(animation: _taggerOverlayAnimation, tagController: _inputTagTopicController),
           builder: (context, containerKey) {
-            // CRITICAL: CommentTextField must be themed internally
-            // It should use theme.inputDecorationTheme for its appearance
-            // and theme.textTheme for its text style.
             return CommentTextField(
+              // The main text field still uses its own focus node for input.
               focusNode: _focusNode,
               containerKey: containerKey,
-              insets: viewInsets, // Pass MediaQuery insets
+              insets: viewInsets,
               controller: _inputTagTopicController,
               hintText: "Add a caption... use @ for topics, # for tags",
-              onSend: _onPublish, // Disable button while publishing
-              // If CommentTextField takes styling parameters, pass themed values:
-              // e.g., hintStyle: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
-              // sendButtonColor: _isPublishing ? colorScheme.onSurface.withOpacity(0.38) : colorScheme.primary,
+              onSend: _onPublish,
             );
           },
         ),
       ),
+      // ),
     );
   }
 
+  // void _handleAutocompleteKeys(RawKeyEvent event) {
+  //   // Check if the pressed key is the space key.
+  //   if (event.isKeyPressed(LogicalKeyboardKey.space)) {
+  //     // Determine which list of results to use based on the current active view.
+  //     final List<dynamic> results;
+  //     if (searchViewModel.activeView.value == SearchResultView.topics) {
+  //       results = searchViewModel.topics.value;
+  //     } else if (searchViewModel.activeView.value == SearchResultView.hashtag) {
+  //       results = searchViewModel.hashtags.value;
+  //     } else {
+  //       // No active search, do nothing.
+  //       return;
+  //     }
+  //
+  //     // Only autocomplete if there is exactly one suggestion available.
+  //     if (results.length == 1) {
+  //       _doAutocomplete(results.first);
+  //     }
+  //   }
+  // }
+
+  // Place this method inside your _AddPostState class
+  // void _doAutocomplete(dynamic result) {
+  //   final TextEditingValue currentValue = _inputTagTopicController.value;
+  //   final String text = currentValue.text;
+  //   final int cursorPosition = currentValue.selection.baseOffset;
+  //
+  //   // Find the start of the current word by looking for the last trigger character.
+  //   final int queryStartIndex = text.lastIndexOf(RegExp(r'[@#]'), cursorPosition - 1);
+  //
+  //   if (queryStartIndex == -1) {
+  //     return; // No trigger character found, so do nothing.
+  //   }
+  //
+  //   // Extract the text that comes BEFORE the incomplete tag.
+  //   final String textBeforeTag = text.substring(0, queryStartIndex);
+  //
+  //   // Extract the text that comes AFTER the cursor.
+  //   final String textAfterCursor = text.substring(cursorPosition);
+  //
+  //   // Get the trigger character.
+  //   final String triggerChar = text[queryStartIndex];
+  //
+  //   // Generate the new, fully formatted tag text (e.g., "#id#bitcoinabc#").
+  //   final String newTagText = _formatTagText(result, triggerChar);
+  //
+  //   // Combine all three parts: text before, new tag, and text after.
+  //   // Add a space after the new tag to make it easier to continue typing.
+  //   final String newText = textBeforeTag + newTagText + "" + textAfterCursor;
+  //
+  //   // Update the controller with the new, corrected string.
+  //   _inputTagTopicController.value = TextEditingValue(
+  //     text: newText,
+  //     // Place the cursor at the end of the newly inserted tag.
+  //     selection: TextSelection.collapsed(offset: (textBeforeTag + newTagText + "").length),
+  //   );
+  // }
+  //
+  // // Helper method remains the same.
+  // String _formatTagText(dynamic result, String triggerChar) {
+  //   final id = result.id;
+  //   // final tagText = result.name;
+  //   return "$triggerChar$id";
+  // }
+
   Future<void> _onPublish() async {
     if (_isPublishing) return;
-    _focusNode.unfocus();
-    FocusScope.of(context).unfocus();
+    _unfocusNodes(context);
 
     // if (_user == null) {
     //   _showErrorSnackBar('User data not available. Cannot publish.');

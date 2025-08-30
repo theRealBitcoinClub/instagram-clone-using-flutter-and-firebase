@@ -5,63 +5,6 @@ import 'package:mahakka/memo/firebase/topic_service.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 
-// --- DUMMY SERVICES (Remove these and import your actual services) ---
-// class TopicService {
-//   // Method to get ALL topics for caching
-//   Future<List<MemoModelTopic>> getAllTopics() async {
-//     print("Dummy TopicService: Fetching all topics for cache...");
-//     await Future.delayed(const Duration(milliseconds: 800)); // Simulate network
-//     return [
-//       MemoModelTopic(id: 'topic1', header: 'Flutter Development'),
-//       MemoModelTopic(id: 'topic2', header: 'Advanced Flutter'),
-//       MemoModelTopic(id: 'topic3', header: 'State Management in Dart'),
-//       MemoModelTopic(id: 'topic4', header: 'Firebase Integration'),
-//     ];
-//   }
-//
-//   // This method might not be needed if searching on cached list,
-//   // but kept for compatibility with previous snippet if you switch strategy.
-//   Future<List<MemoModelTopic>> searchTopics(String query) async {
-//     print("Dummy TopicService: Searching ON DEMAND for '$query' (should use cache)");
-//     await Future.delayed(const Duration(milliseconds: 300));
-//     if (query.contains("flutter")) {
-//       return [
-//         MemoModelTopic(id: 'topic1', header: 'Flutter Development'),
-//         MemoModelTopic(id: 'topic2', header: 'Advanced Flutter'),
-//       ];
-//     }
-//     return [];
-//   }
-// }
-//
-// class TagService {
-//   // Method to get ALL tags for caching
-//   Future<List<MemoModelTag>> getAllTags() async {
-//     print("Dummy TagService: Fetching all tags for cache...");
-//     await Future.delayed(const Duration(milliseconds: 600)); // Simulate network
-//     return [
-//       MemoModelTag(id: 'tag1', name: '#dartlang'),
-//       MemoModelTag(id: 'tag2', name: '#dart'),
-//       MemoModelTag(id: 'tag3', name: '#flutterdev'),
-//       MemoModelTag(id: 'tag4', name: '#firebase'),
-//       MemoModelTag(id: 'tag5', name: '#mobileapps'),
-//     ];
-//   }
-//   // This method might not be needed if searching on cached list
-//   Future<List<MemoModelTag>> searchTags(String query) async {
-//     print("Dummy TagService: Searching ON DEMAND for '$query' (should use cache)");
-//     await Future.delayed(const Duration(milliseconds: 300));
-//     if (query.contains("dart")) {
-//       return [
-//         MemoModelTag(id: 'tag1', name: '#dartlang'),
-//         MemoModelTag(id: 'tag2', name: '#dart'),
-//       ];
-//     }
-//     return [];
-//   }
-// }
-// --- END DUMMY SERVICES ---
-
 final searchViewModel = SearchViewModel();
 
 enum SearchResultView { hashtag, topics, none }
@@ -188,7 +131,7 @@ class SearchViewModel {
     // Perform search on the cached list
     // The Future.delayed is just to simulate a slight processing delay for UX,
     // as local filtering is very fast. You can remove it.
-    // await Future.delayed(const Duration(milliseconds: 50));
+    await Future.delayed(const Duration(milliseconds: 50));
 
     final result = _allTopicsCache.where((topic) => topic.header.toLowerCase().startsWith(trimmedQuery)).toList();
 

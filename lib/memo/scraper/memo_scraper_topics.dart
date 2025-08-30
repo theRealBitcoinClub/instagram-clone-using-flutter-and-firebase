@@ -6,27 +6,38 @@ import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../firebase/post_service.dart';
 import '../firebase/topic_service.dart';
 
 class MemoScraperTopic {
-  Future<List<MemoModelTopic>> startScrapeTopics(List<MemoModelTopic> results, String cacheId, int startOffset, int endOffset) async {
+  Future<List<MemoModelTopic>> startScrapeTopics(List<MemoModelTopic> postsToPersist, String cacheId, int startOffset, int endOffset) async {
     // MemoModelTopic.topics.clear();
     for (int off = startOffset; off >= endOffset; off -= 25) {
       Map<String, Object> topics = await MemoScraperUtil.createScraper(
         "topics/all?offset=$off&x=$cacheId",
         createScraperConfigMemoModelTopic(),
       );
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      // var checkString = topics["tbody"].toString().substring(0, 50);
+      var key = "TopicScrape$cacheId";
 
-      List<MemoModelTopic> topicList = createMemoModelTopicList(topics);
+      List<MemoModelTopic> allTopics = createMemoModelTopicList(topics);
 
-      results.addAll(topicList);
+      for (MemoModelTopic t in allTopics) {
+        String check = t.postCount.toString();
+        var keyPerTopic = key + t.url!;
+        if (prefs.getString(keyPerTopic) == check) {
+          continue; //NO NEW POST ON THIS TOPIC
+        }
+        prefs.setString(keyPerTopic, check);
+        postsToPersist.add(t);
+      }
 
-      // MemoModelTopic.topics.addAll(topicList);
       final config = createScraperConfigMemoModelPost();
 
-      for (MemoModelTopic currentTopic in topicList) {
+      for (MemoModelTopic currentTopic in postsToPersist) {
         // printCurrentMemoModelTopic(currentTopic);
 
         Map<String, Object> posts = await MemoScraperUtil.createScraper("${currentTopic.url!}?x=$cacheId", config);
@@ -34,13 +45,14 @@ class MemoScraperTopic {
         currentTopic.posts.addAll(await createTopicPostList(posts, currentTopic));
         // MemoModelPost.addToGlobalPostList(postList.toList());
 
+        //TODO ONLY PERSIST THE POSTS THAT ARE NEW, difference last check count and current count, check order
         // printMemoModelPost(postList);
         // print("object");
         print("$off RUNNING SCRAPE TOPICccccc POSTS: ${currentTopic.header}");
       }
       var topicService = TopicService();
       var postService = PostService();
-      for (MemoModelTopic t in results) {
+      for (MemoModelTopic t in postsToPersist) {
         topicService.saveTopic(t);
         // indexTopics++;
         for (MemoModelPost p in t.posts) {
@@ -49,10 +61,10 @@ class MemoScraperTopic {
         }
         t.posts.clear();
       }
-      results.clear();
+      postsToPersist.clear();
       print("FINISH SCRAPE TOPICS: $cacheId");
     }
-    return results;
+    return postsToPersist;
   }
 
   ScraperConfig createScraperConfigMemoModelTopic() {

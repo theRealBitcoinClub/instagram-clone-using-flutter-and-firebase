@@ -5,6 +5,7 @@ import 'package:mahakka/memo/firebase/tag_service.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 import 'package:mahakka/memo/scraper/memo_post_service.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../firebase/post_service.dart';
 import '../model/memo_model_post.dart';
@@ -14,16 +15,37 @@ class MemoScraperTag {
     for (String order in orderBy) {
       for (int off = startOffset; off >= endOffset; off -= 25) {
         var posts = [];
-        List<MemoModelTag> tags = await scrapeTags(order, off);
-        for (MemoModelTag tag in tags) {
+        List<MemoModelTag> allTags = await scrapeTags(order, off);
+
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        var checkString = allTags[0].lastPost.toString() + allTags[0].postCount.toString();
+        var key = "lastTagScrape" + cacheId;
+        if (prefs.getString(key) == checkString) {
+          print("STOP SCRAPE TAGS: $checkString");
+          return;
+        }
+
+        List<MemoModelTag> tagsToPersist = [];
+
+        for (MemoModelTag t in allTags) {
+          String check = t.postCount.toString();
+          var keyPerTag = key + t.name;
+          if (prefs.getString(keyPerTag) == check) {
+            continue; //NO NEW POST ON THIS TOPIC
+          }
+          prefs.setString(keyPerTag, check);
+          tagsToPersist.add(t);
+        }
+
+        for (MemoModelTag tag in tagsToPersist) {
           posts.addAll(await MemoPostService().scrapePostsPaginated(baseUrl: "t/${tag.name}", initialOffset: 0, cacheId: cacheId));
           //TODO this already happens inside scrapepostspaginated
           // MemoModelPost.addToGlobalPostList(list);
         }
-        // MemoModelTag.tags.addAll(tags);
+        // MemoModelTag.tagsToPersist.addAll(tagsToPersist);
         var tagService = TagService();
         var postService = PostService();
-        for (MemoModelTag t in tags) {
+        for (MemoModelTag t in tagsToPersist) {
           tagService.saveTag(t);
           // indexTopics++;
           for (MemoModelPost p in posts) {
@@ -32,7 +54,7 @@ class MemoScraperTag {
           }
           posts.clear();
         }
-        tags.clear();
+        tagsToPersist.clear();
         print("$off RUNNING SCRAPE:$order$off");
       }
     }

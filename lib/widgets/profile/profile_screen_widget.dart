@@ -47,6 +47,11 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   bool _hasBackedUpMnemonic = false;
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   void dispose() {
     _disposeYouTubeControllers();
     _profileNameCtrl.dispose();

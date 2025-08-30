@@ -8,6 +8,7 @@ import 'package:mahakka/tab_item_data.dart';
 // import 'package:provider/provider.dart' as legacy;
 
 import '../provider/navigation_providers.dart';
+import '../provider/scraper_provider.dart';
 import '../widgets/profile/profile_screen_new.dart';
 
 // class NavBarCallback {
@@ -53,6 +54,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         }
       }
     });
+    ref.read(backgroundScraperManagerProvider);
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart'; // Your model path
 
 class CreatorService {
@@ -88,3 +89,5 @@ class CreatorService {
     }
   }
 }
+
+final creatorServiceProvider = Provider((ref) => CreatorService());

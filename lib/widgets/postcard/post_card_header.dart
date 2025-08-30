@@ -6,6 +6,8 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 // Import the new navigation provider
 import 'package:mahakka/provider/navigation_providers.dart';
 
+import '../../providers/creator_avatar_provider.dart';
+
 // Helper for logging (can be moved to a common utils file if used elsewhere)
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
   print('ERROR: PostCardHeader - $message');
@@ -17,9 +19,9 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
 class PostCardHeader extends ConsumerWidget {
   final MemoModelPost post;
   final VoidCallback onOptionsMenuPressed;
-  final bool hasRegisteredAsUser;
+  // final MemoModelCreator creator;
 
-  const PostCardHeader({super.key, required this.post, required this.onOptionsMenuPressed, this.hasRegisteredAsUser = false});
+  const PostCardHeader({super.key, required this.post, required this.onOptionsMenuPressed});
 
   void _navigateToProfile(BuildContext context, WidgetRef ref, String creatorId) {
     // Set the target profile ID using Riverpod
@@ -37,6 +39,29 @@ class PostCardHeader extends ConsumerWidget {
     // Creator null check should ideally happen before this widget is built,
     // or you can add a fallback here.
     final MemoModelCreator creator = post.creator ?? MemoModelCreator(id: 'unknown', name: 'Unknown'); // Fallback
+    // Watch the avatar provider to get the avatar URL.
+    final avatarAsyncValue = ref.watch(creatorAvatarProvider(post.creator!.id));
+
+    String avatarUrl = creator.profileImageAvatar();
+
+    // The when() method is called with a data, loading and error handler to return a widget.
+    // This allows for asynchronous UI updates.
+    avatarAsyncValue.when(
+      data: (url) {
+        // If the provider successfully fetched an avatar URL, update the local variable.
+        if (url != null) {
+          avatarUrl = url;
+        }
+      },
+      loading: () {
+        // We can just keep the existing avatar URL while loading.
+        // The UI will show whatever is already there.
+      },
+      error: (e, s) {
+        // Log the error but don't disrupt the rest of the UI.
+        print("Error fetching avatar for ${creator.id}: $e");
+      },
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16).copyWith(right: 8),
@@ -44,9 +69,9 @@ class PostCardHeader extends ConsumerWidget {
         children: [
           GestureDetector(
             onTap: () => _navigateToProfile(context, ref, creator.id), // Pass ref
-            child: hasRegisteredAsUser
-                ? wrapWithBadge(context, theme, creator, buildCircleAvatar(theme, creator))
-                : buildCircleAvatar(theme, creator),
+            child: creator.hasRegisteredAsUser
+                ? wrapWithBadge(context, theme, creator, buildCircleAvatar(theme, creator, avatarUrl))
+                : buildCircleAvatar(theme, creator, avatarUrl),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -98,13 +123,11 @@ class PostCardHeader extends ConsumerWidget {
     );
   }
 
-  CircleAvatar buildCircleAvatar(ThemeData theme, MemoModelCreator creator) {
+  CircleAvatar buildCircleAvatar(ThemeData theme, MemoModelCreator creator, String avatarUrl) {
     return CircleAvatar(
       radius: 24,
       backgroundColor: theme.colorScheme.surfaceVariant,
-      backgroundImage: creator.profileImageAvatar().isEmpty
-          ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-          : NetworkImage(creator.profileImageAvatar()),
+      backgroundImage: avatarUrl.isEmpty ? const AssetImage("assets/images/default_profile.png") as ImageProvider : NetworkImage(avatarUrl),
       onBackgroundImageError: (exception, stackTrace) {
         _logError("Error loading profile image for ${creator.name}", exception, stackTrace);
       },
@@ -114,7 +137,7 @@ class PostCardHeader extends ConsumerWidget {
   badges.Badge wrapWithBadge(BuildContext context, ThemeData theme, MemoModelCreator creator, wrappedItem) {
     return badges.Badge(
       position: badges.BadgePosition.topEnd(top: -2, end: -6),
-      showBadge: hasRegisteredAsUser,
+      showBadge: creator.hasRegisteredAsUser,
       onTap: () {},
       badgeContent: Icon(
         Icons.currency_bitcoin_rounded,

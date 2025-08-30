@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
-import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
-import 'package:mahakka/memo/scraper/memo_creator_service.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
@@ -13,6 +11,7 @@ import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure path is correct
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
 import '../../memo/base/text_input_verifier.dart';
+import '../../providers/post_creator_provider.dart';
 import 'post_card_footer.dart';
 // Import the new split widget files
 import 'post_card_header.dart';
@@ -73,7 +72,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     _initializeSelectedHashtags();
     _user = ref.read(userProvider);
     // _loadUser(); // Consider if this should use ref.read(userProvider) if _user becomes Riverpod state
-    _refreshCreator();
+    // _refreshCreator();
   }
 
   @override
@@ -82,32 +81,32 @@ class _PostCardState extends ConsumerState<PostCard> {
     super.dispose();
   }
 
-  Future<void> _refreshCreator() async {
-    if (_creator() == null && widget.post.creatorId.isNotEmpty) {
-      widget.post.creator = MemoModelCreator(id: widget.post.creatorId);
-    }
-    // if (widget.post.creator != null) {
-    if (_creator()!.name.isEmpty) {
-      widget.post.creator = await _creator()!.refreshCreatorFirebase();
-      hasRegisteredAsUser = await widget.post.creator!.refreshUserData();
-      if (_creator()!.profileImageAvatar().isEmpty) {
-        _creator()!.refreshAvatar();
-      }
+  // Future<void> _refreshCreator() async {
+  //   if (_creator() == null && widget.post.creatorId.isNotEmpty) {
+  //     widget.post.creator = MemoModelCreator(id: widget.post.creatorId);
+  //   }
+  //   // if (widget.post.creator != null) {
+  //   if (_creator()!.name.isEmpty) {
+  //     widget.post.creator = await _creator()!.refreshCreatorFirebase();
+  //     hasRegisteredAsUser = await widget.post.creator!.refreshUserData();
+  //     if (_creator()!.profileImageAvatar().isEmpty) {
+  //       _creator()!.refreshAvatar();
+  //     }
+  //
+  //     if (_creator()!.name.isEmpty) {
+  //       _creator()!.name = _creator()!.profileIdShort;
+  //
+  //       widget.post.creator = await MemoCreatorService().fetchCreatorDetails(_creator()!);
+  //     }
+  //   }
+  //   // }
+  //   // if (widget.post.topic == null && widget.post.topicId.isNotEmpty) {
+  //   //   widget.post.loadTopic();
+  //   // }
+  //   if (mounted) setState(() {});
+  // }
 
-      if (_creator()!.name.isEmpty) {
-        _creator()!.name = _creator()!.profileIdShort;
-
-        widget.post.creator = await MemoCreatorService().fetchCreatorDetails(_creator()!);
-      }
-    }
-    // }
-    // if (widget.post.topic == null && widget.post.topicId.isNotEmpty) {
-    //   widget.post.loadTopic();
-    // }
-    if (mounted) setState(() {});
-  }
-
-  MemoModelCreator? _creator() => widget.post.creator;
+  // MemoModelCreator? _creator() => widget.post.creator;
 
   void _initializeSelectedHashtags() {
     final int count = widget.post.tagIds.length > _maxTagsCounter ? _maxTagsCounter : widget.post.tagIds.length;
@@ -381,60 +380,81 @@ class _PostCardState extends ConsumerState<PostCard> {
     //     child: Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
     //   );
     // }
-    if (_creator()!.profileImageAvatar().isEmpty) {
-      refreshAvatarThenSetState();
-    }
+    // if (_creator()!.profileImageAvatar().isEmpty) {
+    //   refreshAvatarThenSetState();
+    // }
 
-    return _wrapInAnimationStack(
-      theme,
-      Card(
-        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            PostCardHeader(
-              post: widget.post,
-              onOptionsMenuPressed: _sendTipToCreator,
-              hasRegisteredAsUser: hasRegisteredAsUser,
-              // NavBarCallback removed
+    // Watch the provider to get the creator data.
+    // Riverpod handles the loading, error, and data states automatically.
+    final creatorAsyncValue = ref.watch(postCreatorProvider(widget.post.creatorId));
+
+    return creatorAsyncValue.when(
+      data: (creator) {
+        // We have the creator data! Update the post model.
+        widget.post.creator = creator;
+
+        return _wrapInAnimationStack(
+          theme,
+          Card(
+            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                PostCardHeader(
+                  post: widget.post,
+                  onOptionsMenuPressed: _sendTipToCreator,
+                  // hasRegisteredAsUser: hasRegisteredAsUser,
+                  // creator: creator == null ? wid,
+                  // NavBarCallback removed
+                ),
+                widget.post.imgurUrl != null && widget.post.imgurUrl!.isNotEmpty
+                    ? GestureDetector(
+                        onDoubleTap: _isSendingTx ? null : _sendTipToCreator,
+                        child: ZoomOverlay(
+                          modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3),
+                          minScale: 0.5,
+                          maxScale: 3.0,
+                          twoTouchOnly: true,
+                          animationDuration: const Duration(milliseconds: 200),
+                          animationCurve: Curves.easeOut,
+                          child: _buildPostMedia(theme),
+                        ),
+                      )
+                    : SizedBox(),
+                PostCardFooter(
+                  post: widget.post,
+                  textEditController: _textEditController,
+                  showInput: _showInput,
+                  showSend: _showSend,
+                  hasSelectedTopic: _hasSelectedTopic,
+                  selectedHashtags: _selectedHashtags,
+                  onInputText: _onInputText,
+                  onSelectHashtag: _onSelectHashtag,
+                  onSelectTopic: _onSelectTopic,
+                  onSend: _onSend,
+                  onCancel: _onCancel,
+                  maxTagsCounter: _maxTagsCounter, // Pass the constant
+                ),
+              ],
             ),
-            widget.post.imgurUrl != null && widget.post.imgurUrl!.isNotEmpty
-                ? GestureDetector(
-                    onDoubleTap: _isSendingTx ? null : _sendTipToCreator,
-                    child: ZoomOverlay(
-                      modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3),
-                      minScale: 0.5,
-                      maxScale: 3.0,
-                      twoTouchOnly: true,
-                      animationDuration: const Duration(milliseconds: 200),
-                      animationCurve: Curves.easeOut,
-                      child: _buildPostMedia(theme),
-                    ),
-                  )
-                : SizedBox(),
-            PostCardFooter(
-              post: widget.post,
-              textEditController: _textEditController,
-              showInput: _showInput,
-              showSend: _showSend,
-              hasSelectedTopic: _hasSelectedTopic,
-              selectedHashtags: _selectedHashtags,
-              onInputText: _onInputText,
-              onSelectHashtag: _onSelectHashtag,
-              onSelectTopic: _onSelectTopic,
-              onSend: _onSend,
-              onCancel: _onCancel,
-              maxTagsCounter: _maxTagsCounter, // Pass the constant
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
+      loading: () {
+        // This part runs while the data is loading.
+        return SizedBox();
+        Center(child: CircularProgressIndicator());
+      },
+      error: (error, stackTrace) {
+        // This part runs if an error occurs.
+        return Center(child: Text('An error occurred: $error'));
+      },
     );
   }
 
-  void refreshAvatarThenSetState() async {
-    await _creator()!.refreshAvatar();
-    if (context.mounted) setState(() {});
-  }
+  // void refreshAvatarThenSetState() async {
+  //   await _creator()!.refreshAvatar();
+  //   if (context.mounted) setState(() {});
+  // }
 }

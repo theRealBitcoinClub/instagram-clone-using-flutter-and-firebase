@@ -28,6 +28,9 @@ class MemoModelCreator {
   @JsonKey(ignore: true)
   MemoModelUser? _userData;
 
+  @JsonKey(ignore: true)
+  bool hasRegisteredAsUser = false;
+
   String get profileIdShort => id.substring(1, 5);
 
   MemoModelCreator({
@@ -178,12 +181,14 @@ class MemoModelCreator {
   @override
   int get hashCode => id.hashCode;
 
-  Future<bool> refreshUserData() async {
+  Future<void> refreshUserData() async {
     if (_userData == null) {
       _userData = await UserService().getUserOnce(id);
-      return _userData != null;
+      hasRegisteredAsUser = _userData != null;
+      // return _userData != null;
     } else {
-      return true; //TODO store the userdata in local cache same as creator to avoid repeating requests for each post
+      hasRegisteredAsUser = true;
+      // return true; //TODO store the userdata in local cache same as creator to avoid repeating requests for each post
     }
   }
 }

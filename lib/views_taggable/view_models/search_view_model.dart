@@ -188,9 +188,9 @@ class SearchViewModel {
     // Perform search on the cached list
     // The Future.delayed is just to simulate a slight processing delay for UX,
     // as local filtering is very fast. You can remove it.
-    await Future.delayed(const Duration(milliseconds: 50));
+    // await Future.delayed(const Duration(milliseconds: 50));
 
-    final result = _allTopicsCache.where((topic) => topic.header.toLowerCase().contains(trimmedQuery)).toList();
+    final result = _allTopicsCache.where((topic) => topic.header.toLowerCase().startsWith(trimmedQuery)).toList();
 
     _topicsSearchResults.value = result;
     _setSearchLoading(false);
@@ -233,7 +233,7 @@ class SearchViewModel {
 
     await Future.delayed(const Duration(milliseconds: 50));
 
-    final result = _allTagsCache.where((tag) => tag.name.toLowerCase().contains(trimmedQuery)).toList();
+    final result = _allTagsCache.where((tag) => tag.name.toLowerCase().startsWith(trimmedQuery)).toList();
 
     _hashtagsSearchResults.value = result;
     _setSearchLoading(false);

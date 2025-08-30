@@ -182,6 +182,7 @@ class MemoVerifier {
 
     // Condition: Must have at least one topic OR at least one hashtag
     if (topics.isEmpty && hashTags.isEmpty) {
+      return MemoVerificationResponse.noTopicNorTag;
       // This condition can be tricky. Does "noTopicNorTag" mean if BOTH are empty?
       // Or should there be a minimum content if tags/topics are also absent?
       // For now, let's assume it means if both are empty after other checks pass.

@@ -174,9 +174,11 @@ class MemoModelPost {
     return MemoAccountant(user).publishReplyHashtags(this, text);
   }
 
-  static Future<dynamic> publishImageOrVideo(MemoModelUser user, String text, String? topic) async {
-    MemoVerificationResponse res = MemoVerifier(text).checkAllPostValidations();
-    if (res != MemoVerificationResponse.valid) return res;
+  static Future<dynamic> publishImageOrVideo(MemoModelUser user, String text, String? topic, {bool validate = false}) async {
+    if (validate) {
+      MemoVerificationResponse res = MemoVerifier(text).checkAllPostValidations();
+      if (res != MemoVerificationResponse.valid) return res;
+    }
     return MemoAccountant(user).publishImgurOrYoutube(topic, text);
   }
 

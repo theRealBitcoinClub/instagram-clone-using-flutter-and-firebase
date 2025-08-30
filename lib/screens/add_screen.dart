@@ -13,6 +13,8 @@ import 'package:mahakka/widgets/textfield_input.dart'; // CRITICAL: This MUST be
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 // Assuming these exist and are correctly imported
+import '../memo/base/memo_verifier.dart';
+import '../memo/base/text_input_verifier.dart';
 import '../views_taggable/view_models/search_view_model.dart'; // Ensure SearchViewModel logic is sound
 import '../views_taggable/widgets/comment_text_field.dart'; // CRITICAL: This MUST be themed internally
 import '../views_taggable/widgets/search_result_overlay.dart'; // Ensure this is theme-aware or neutral
@@ -30,7 +32,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   // Controllers
   final TextEditingController _imgurCtrl = TextEditingController();
   final TextEditingController _youtubeCtrl = TextEditingController();
-  late FlutterTaggerController _tagController;
+  late FlutterTaggerController _inputTagTopicController;
   late AnimationController _animationController;
   final FocusNode _focusNode = FocusNode();
 
@@ -39,8 +41,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   String? _currentYouTubeVideoId;
 
   // UI State
-  bool _isLoadingUser = true;
-  bool _isCheckingClipboard = true;
+  // bool _isLoadingUser = true;
+  // bool _isCheckingClipboard = true;
   bool _isPublishing = false;
 
   String _validImgurUrl = "";
@@ -58,7 +60,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     super.initState();
     _log("initState started");
 
-    _tagController = FlutterTaggerController(
+    _inputTagTopicController = FlutterTaggerController(
       // Example text, consider making it empty or a placeholder
       text: "I like the topic @Bitcoin#Bitcoin# It's time to earn #bch#bch# and #cashtoken#cashtoken#!",
     );
@@ -67,37 +69,40 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _youtubeCtrl.addListener(_onYouTubeInputChanged);
 
     _initStateTagger();
-    _loadInitialData();
+    // _loadInitialData();
+    final clipboardFuture = _checkClipboard();
+    _user = ref.read(userProvider);
+
     _log("initState completed");
   }
 
-  Future<void> _loadInitialData() async {
-    if (!mounted) return;
-    setState(() {
-      _isLoadingUser = true;
-      _isCheckingClipboard = true;
-    });
-
-    try {
-      final MemoModelUser? _user = ref.read(userProvider);
-      // userProvider.read(node)
-      // final userFuture = MemoModelUser.getUser();
-      final clipboardFuture = _checkClipboard();
-
-      // _user = await userFuture;
-      await clipboardFuture;
-    } catch (e, s) {
-      _log("Error during initial data load: $e\n$s");
-      _showErrorSnackBar('Error loading initial data: ${e.toString()}');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoadingUser = false;
-          _isCheckingClipboard = false;
-        });
-      }
-    }
-  }
+  // Future<void> _loadInitialData() async {
+  //   if (!mounted) return;
+  //   setState(() {
+  //     _isLoadingUser = true;
+  //     _isCheckingClipboard = true;
+  //   });
+  //
+  //   try {
+  //     final MemoModelUser? _user = ref.read(userProvider);
+  //     // userProvider.read(node)
+  //     // final userFuture = MemoModelUser.getUser();
+  //     final clipboardFuture = _checkClipboard();
+  //
+  //     // _user = await userFuture;
+  //     await clipboardFuture;
+  //   } catch (e, s) {
+  //     _log("Error during initial data load: $e\n$s");
+  //     _showErrorSnackBar('Error loading initial data: ${e.toString()}');
+  //   } finally {
+  //     if (mounted) {
+  //       setState(() {
+  //         _isLoadingUser = false;
+  //         _isCheckingClipboard = false;
+  //       });
+  //     }
+  //   }
+  // }
 
   Future<void> _checkClipboard() async {
     _log("_checkClipboard started");
@@ -226,7 +231,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       begin: const Offset(0, 0.25),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOutSine));
-    _tagController.addListener(_onTagInputChanged);
+    _inputTagTopicController.addListener(_onTagInputChanged);
   }
 
   void _onTagInputChanged() {
@@ -244,10 +249,10 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _log("Dispose called");
     _imgurCtrl.removeListener(_onImgurInputChanged);
     _youtubeCtrl.removeListener(_onYouTubeInputChanged);
-    _tagController.removeListener(_onTagInputChanged);
+    _inputTagTopicController.removeListener(_onTagInputChanged);
     _imgurCtrl.dispose();
     _youtubeCtrl.dispose();
-    _tagController.dispose();
+    _inputTagTopicController.dispose();
     _animationController.dispose();
     _focusNode.dispose();
     _disposeYtPlayerController();
@@ -303,14 +308,15 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         body: SafeArea(
           child: Column(
             children: [
-              if (_isLoadingUser || _isCheckingClipboard)
-                const Expanded(
-                  child: Center(child: CircularProgressIndicator()), // Will use theme color
-                )
-              else
-                _buildMediaInputSection(theme, colorScheme, textTheme),
+              // if (_isLoadingUser || _isCheckingClipboard)
+              //   const Expanded(
+              //     child: Center(child: CircularProgressIndicator()), // Will use theme color
+              //   )
+              // else
+              _buildMediaInputSection(theme, colorScheme, textTheme),
 
-              if (!_isLoadingUser && !_isCheckingClipboard && (_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty))
+              // if (!_isLoadingUser && !_isCheckingClipboard && (_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty))
+              if ((_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty))
                 Padding(
                   padding: EdgeInsets.only(
                     bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 12, // More padding at bottom
@@ -319,9 +325,9 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
                     top: 8, // Add some horizontal padding too
                   ),
                   child: _buildTaggableInput(theme, colorScheme, textTheme, mediaQuery.viewInsets),
-                )
-              else if (!_isLoadingUser && !_isCheckingClipboard)
-                const Spacer(), // Pushes content up if no media and no tag input
+                ),
+              // else if (!_isLoadingUser && !_isCheckingClipboard)
+              //   const Spacer(), // Pushes content up if no media and no tag input
             ],
           ),
         ),
@@ -604,7 +610,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         padding: const EdgeInsets.all(12), // Consistent padding
         child: FlutterTagger(
           triggerStrategy: TriggerStrategy.eager,
-          controller: _tagController,
+          controller: _inputTagTopicController,
           // focusNode: _focusNode,
           animationController: _animationController,
           onSearch: (query, triggerChar) {
@@ -631,7 +637,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           // Ensure SearchResultOverlay is theme-aware or theme-neutral
           overlay: SearchResultOverlay(
             animation: _taggerOverlayAnimation,
-            tagController: _tagController,
+            tagController: _inputTagTopicController,
             // Pass theme if needed: theme: theme,
           ),
           builder: (context, containerKey) {
@@ -642,7 +648,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
               focusNode: _focusNode,
               containerKey: containerKey,
               insets: viewInsets, // Pass MediaQuery insets
-              controller: _tagController,
+              controller: _inputTagTopicController,
               hintText: "Add a caption... use @ for topics, # for tags",
               onSend: _onPublish, // Disable button while publishing
               // If CommentTextField takes styling parameters, pass themed values:
@@ -660,15 +666,16 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _focusNode.unfocus();
     FocusScope.of(context).unfocus();
 
-    if (_user == null) {
-      _showErrorSnackBar('User data not available. Cannot publish.');
-      return;
-    }
+    // if (_user == null) {
+    //   _showErrorSnackBar('User data not available. Cannot publish.');
+    //   return;
+    // }
     if (_validImgurUrl.isEmpty && _validYouTubeVideoId.isEmpty) {
       _showErrorSnackBar('Please add an image or video to share.');
       return;
     }
 
+    //TODO REMOVE DUPLICATE VERIFICATION
     final String? validationError = _validateTagsAndTopic();
     if (validationError != null) {
       _showErrorSnackBar(validationError);
@@ -678,13 +685,31 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     if (!mounted) return;
     setState(() => _isPublishing = true);
 
-    String textContent = _tagController.text;
+    String textContent = _inputTagTopicController.text;
+
+    //TODO remove duplicate verification
+    final verifier = TextInputVerifier(textContent)
+        .addValidator(InputValidators.verifyPostLength)
+        .addValidator(InputValidators.verifyMinWordCount)
+        .addValidator(InputValidators.verifyHashtags)
+        .addValidator(InputValidators.verifyTopics)
+        .addValidator(InputValidators.verifyUrl)
+        .addValidator(InputValidators.verifyOffensiveWords);
+
+    final result = verifier.getResult();
+
+    // Pass the verification result to the response handler
+    if (result != MemoVerificationResponse.valid) {
+      _showErrorSnackBar('Publish failed: ${result.toString()}. Please try again.');
+      return;
+    }
+
     textContent = _appendMediaUrlToText(textContent);
     final String? topic = _extractTopicFromTags(textContent);
 
     try {
       // Assuming user.profileIdMemoBch is the correct parameter here
-      final response = await MemoModelPost.publishImageOrVideo(_user!, textContent, topic);
+      final response = await MemoModelPost.publishImageOrVideo(_user!, textContent, topic, validate: false);
 
       if (!mounted) return;
 
@@ -708,7 +733,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   void _clearInputsAfterPublish() {
-    _tagController.clear();
+    _inputTagTopicController.clear();
     _imgurCtrl.clear();
     _youtubeCtrl.clear();
     if (mounted) {
@@ -721,7 +746,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   String? _extractTopicFromTags(String rawTextForTopicExtraction) {
-    for (Tag t in _tagController.tags) {
+    for (Tag t in _inputTagTopicController.tags) {
       if (t.triggerCharacter == "@") {
         return t.text;
       }
@@ -747,7 +772,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   String? _validateTagsAndTopic() {
-    final tags = _tagController.tags;
+    final tags = _inputTagTopicController.tags;
     int topicCount = tags.where((t) => t.triggerCharacter == "@").length;
     int hashtagCount = tags.where((t) => t.triggerCharacter == "#").length;
 
@@ -757,7 +782,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     if (hashtagCount > 3) {
       return "Maximum of 3 #hashtags allowed.";
     }
-    if (_tagController.text.trim().isEmpty && (_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty)) {
+    if (_inputTagTopicController.text.trim().isEmpty && (_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty)) {
       return "Please add a caption for your media.";
     }
     // Add other validations like text length if needed

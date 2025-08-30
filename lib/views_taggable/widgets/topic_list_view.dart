@@ -60,13 +60,22 @@ class TopicListView extends StatelessWidget {
         children: [
           Padding(
             // Add padding for the close button
-            padding: const EdgeInsets.only(top: 4.0, right: 4.0),
+            padding: const EdgeInsets.fromLTRB(20, 5, 5, 10),
             child: Align(
               alignment: Alignment.centerRight,
-              child: IconButton(
-                icon: Icon(Icons.close, color: colorScheme.onSurfaceVariant), // Themed icon color
-                // tooltip: "Close suggestions",
-                onPressed: tagController.dismissOverlay,
+              child: Row(
+                children: [
+                  Text(
+                    "Add to an existing topic or create a new one",
+                    style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant.withAlpha(171)),
+                  ),
+                  Spacer(),
+                  IconButton(
+                    icon: Icon(Icons.close, color: colorScheme.onSurfaceVariant), // Themed icon color
+                    // tooltip: "Close suggestions",
+                    onPressed: tagController.dismissOverlay,
+                  ),
+                ],
               ),
             ),
           ),
@@ -113,17 +122,21 @@ class TopicListView extends StatelessWidget {
                             //   // onBackgroundImageError: topic.avatar.isNotEmpty ? (_, __) {} : null,
                             // ),
                             title: Text(
-                              topic.header,
+                              overflow: TextOverflow.ellipsis,
+                              "@${topic.header}",
                               style: textTheme.titleMedium?.copyWith(
                                 color: colorScheme.onSurface, // Explicitly use onSurface
                               ),
                             ),
-                            subtitle: Text(
-                              "@${topic.header}", // Or a different property if available
-                              style: textTheme.bodyMedium?.copyWith(
-                                color: colorScheme.onSurfaceVariant, // Subtler color for subtitle
-                              ),
-                            ),
+                            subtitle: Divider(color: theme.primaryColor.withAlpha(33)),
+                            // subtitle: Text(
+                            //   overflow: TextOverflow.ellipsis,
+                            //   maxLines: 1,
+                            //   "@${topic.header}", // Or a different property if available
+                            //   style: textTheme.bodyMedium?.copyWith(
+                            //     color: colorScheme.onSurfaceVariant, // Subtler color for subtitle
+                            //   ),
+                            // ),
                             onTap: () {
                               tagController.addTag(id: topic.header, name: topic.header);
                               tagController.dismissOverlay(); // Dismiss overlay after selection

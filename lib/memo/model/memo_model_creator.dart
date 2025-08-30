@@ -18,6 +18,7 @@ class MemoModelCreator {
   int actions = 0;
   String created = "";
   String lastActionDate = "";
+  String profileImgurUrl = "";
   final CreatorService _creatorService = CreatorService();
 
   @JsonKey(ignore: true)

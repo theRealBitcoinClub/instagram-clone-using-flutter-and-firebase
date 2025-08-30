@@ -45,9 +45,9 @@ class MemoModelUser {
   final UserService _userService = UserService();
   // Ignored fields
   @JsonKey(ignore: true)
-  late ECPrivate _pkBchCashtoken;
+  late ECPrivate pkBchCashtoken;
   @JsonKey(ignore: true)
-  late ECPrivate _pkLegacy;
+  late ECPrivate pkLegacy;
   @JsonKey(ignore: true)
   late MemoModelCreator creator;
   @JsonKey(ignore: true)
@@ -109,8 +109,8 @@ class MemoModelUser {
 
     // 5. Initialize the rest of the instance fields
     user.mnemonic = mnemonic;
-    user._pkLegacy = pkLegacy;
-    user._pkBchCashtoken = pkBchCashtoken;
+    user.pkLegacy = pkLegacy;
+    user.pkBchCashtoken = pkBchCashtoken;
     user.wifLegacy = pkLegacy.toWif();
     user.wifBchCashtoken = pkBchCashtoken.toWif();
     user.hasInit = true;
@@ -128,19 +128,19 @@ class MemoModelUser {
     this.mnemonic = mnemonic;
     if (MemoVerifier(mnemonic).verifyMnemonic() != "success") return false;
 
-    _pkLegacy = MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoBch);
-    _pkBchCashtoken = MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathCashtoken);
+    pkLegacy = MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoBch);
+    pkBchCashtoken = MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathCashtoken);
 
-    final p2pkhWt = P2pkhAddress.fromHash160(addrHash: _pkBchCashtoken.getPublic().toHash160Hex(), type: P2pkhAddressType.p2pkhwt);
+    final p2pkhWt = P2pkhAddress.fromHash160(addrHash: pkBchCashtoken.getPublic().toHash160Hex(), type: P2pkhAddressType.p2pkhwt);
     bchAddressCashtokenAware = p2pkhWt.toAddress(BitcoinCashNetwork.mainnet);
 
-    legacyAddressMemoBch = _pkLegacy.getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
+    legacyAddressMemoBch = pkLegacy.getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
     id = legacyAddressMemoBch;
     creator = MemoModelCreator(id: id);
-    legacyAddressMemoBchAsCashaddress = _pkLegacy.getPublic().toAddress().toAddress(BitcoinCashNetwork.mainnet);
+    legacyAddressMemoBchAsCashaddress = pkLegacy.getPublic().toAddress().toAddress(BitcoinCashNetwork.mainnet);
 
-    wifLegacy = _pkLegacy.toWif();
-    wifBchCashtoken = _pkBchCashtoken.toWif();
+    wifLegacy = pkLegacy.toWif();
+    wifBchCashtoken = pkBchCashtoken.toWif();
     hasInit = true;
     return true;
   }
@@ -151,61 +151,58 @@ class MemoModelUser {
 
   Future<String> refreshBalanceDevPath0() async {
     MemoBitcoinBase base = await MemoBitcoinBase.create();
-    P2pkhAddress p2pkhwt = base.createAddressLegacy(_pkLegacy);
+    P2pkhAddress p2pkhwt = base.createAddressLegacy(pkLegacy);
     BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
-    // ECPublic pubKey = _pkLegacy.getPublic();
-    // P2pkhAddress legacy = P2pkhAddress.fromAddress(address: pubKey.toAddress().addressProgram, network: BitcoinNetwork.mainnet);
-    // String addr = legacyToBchAddress(addressProgram: legacy.addressProgram, network: network, type: P2pkhAddressType.p2pkh);
-    // BitcoinCashAddress bchAdd = BitcoinCashAddress.fromBaseAddress(legacy);
 
     List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress);
     if (utxos.isEmpty) {
-      balanceBchDevPath0Memo = "0";
-      return "noutxos";
+      balanceBchDevPath0Memo = "noutxo";
+      // return "noutxos";
     }
-    List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, _pkLegacy);
+    List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, pkLegacy);
     BigInt totalAmountInSatoshisAvailable = utxosWA.sumOfUtxosValue();
     if (totalAmountInSatoshisAvailable == BigInt.zero) {
-      balanceBchDevPath0Memo = "0";
-      return "nofunds";
+      balanceBchDevPath0Memo = "noMemo";
+      // return "nofunds";
     }
     balanceBchDevPath0Memo = totalAmountInSatoshisAvailable.toString();
-    return "success";
+    // return "success";
+    return balanceBchDevPath0Memo;
   }
 
   Future<String> refreshBalanceDevPath145() async {
     MemoBitcoinBase base = await MemoBitcoinBase.create();
-    P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(_pkBchCashtoken);
+    P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(pkBchCashtoken);
     BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
     List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress);
     if (utxos.isEmpty) {
-      balanceBchDevPath145 = "0";
-      return "noutxos";
+      balanceBchDevPath145 = "noutxo";
+      // return "noutxos";
     }
-    List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, _pkBchCashtoken);
+    List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, pkBchCashtoken);
     BigInt totalAmountInSatoshisAvailable = utxosWA.sumOfUtxosValue();
     if (totalAmountInSatoshisAvailable == BigInt.zero) {
-      balanceBchDevPath145 = "0";
-      return "nofunds";
+      balanceBchDevPath145 = "noBch";
+      // return "nofunds";
     }
     balanceBchDevPath145 = totalAmountInSatoshisAvailable.toString();
-    return "success";
+    return balanceBchDevPath145;
   }
 
   Future<String> refreshBalanceTokens() async {
     MemoBitcoinBase base = await MemoBitcoinBase.create();
-    P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(_pkBchCashtoken);
+    P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(pkBchCashtoken);
     p2pkhwt.toAddress(BitcoinCashNetwork.mainnet);
     BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
     List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress, includeCashtokens: true);
     if (utxos.isEmpty) {
-      balanceCashtokensDevPath145 = "0";
-      return "noutxos";
+      balanceCashtokensDevPath145 = "notokens";
+      // return "noutxos";
     }
-    List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, _pkBchCashtoken);
+    List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, pkBchCashtoken);
     BigInt totalAmountOfTokenAvailable = base.calculateTotalAmountOfThatToken(utxosWA, MemoBitcoinBase.tokenId);
     balanceCashtokensDevPath145 = totalAmountOfTokenAvailable.toString();
-    return "success";
+    return balanceCashtokensDevPath145;
   }
 
   String get profileIdMemoBch {
@@ -236,5 +233,65 @@ class MemoModelUser {
     MemoVerificationResponse response = MemoVerifier(imgur).verifyImgur();
     if (response != MemoVerificationResponse.valid) return response;
     return await MemoAccountant(this).profileSetAvatar(imgur);
+  }
+
+  MemoModelUser._({
+    required this.mnemonic,
+    required this.id,
+    required this.bchAddressCashtokenAware,
+    required this.legacyAddressMemoBch,
+    required this.legacyAddressMemoBchAsCashaddress,
+    TipReceiver tipReceiver = TipReceiver.both,
+    TipAmount tipAmount = TipAmount.zero,
+    // Add all ignored fields here as optional parameters
+    this.balanceCashtokensDevPath145 = "?",
+    this.balanceBchDevPath145 = "?",
+    this.balanceBchDevPath0Memo = "?",
+    required this.pkBchCashtoken,
+    required this.pkLegacy,
+    required this.creator,
+    required this.wifBchCashtoken,
+    required this.wifLegacy,
+    required this.hasInit,
+  }) : _tipReceiver = tipReceiver,
+       _tipAmount = tipAmount;
+
+  // The copyWith method
+  MemoModelUser copyWith({
+    String? id,
+    String? bchAddressCashtokenAware,
+    String? legacyAddressMemoBch,
+    String? legacyAddressMemoBchAsCashaddress,
+    TipReceiver? tipReceiver,
+    TipAmount? tipAmount,
+    String? balanceCashtokensDevPath145,
+    String? balanceBchDevPath145,
+    String? balanceBchDevPath0Memo,
+    ECPrivate? pkBchCashtoken,
+    ECPrivate? pkLegacy,
+    MemoModelCreator? creator,
+    String? mnemonic,
+    String? wifBchCashtoken,
+    String? wifLegacy,
+    bool? hasInit,
+  }) {
+    return MemoModelUser._(
+      id: id ?? this.id,
+      bchAddressCashtokenAware: bchAddressCashtokenAware ?? this.bchAddressCashtokenAware,
+      legacyAddressMemoBch: legacyAddressMemoBch ?? this.legacyAddressMemoBch,
+      legacyAddressMemoBchAsCashaddress: legacyAddressMemoBchAsCashaddress ?? this.legacyAddressMemoBchAsCashaddress,
+      tipReceiver: tipReceiver ?? this._tipReceiver,
+      tipAmount: tipAmount ?? this._tipAmount,
+      balanceCashtokensDevPath145: balanceCashtokensDevPath145 ?? this.balanceCashtokensDevPath145,
+      balanceBchDevPath145: balanceBchDevPath145 ?? this.balanceBchDevPath145,
+      balanceBchDevPath0Memo: balanceBchDevPath0Memo ?? this.balanceBchDevPath0Memo,
+      pkBchCashtoken: pkBchCashtoken ?? this.pkBchCashtoken,
+      pkLegacy: pkLegacy ?? this.pkLegacy,
+      creator: creator ?? this.creator,
+      mnemonic: mnemonic ?? this.mnemonic,
+      wifBchCashtoken: wifBchCashtoken ?? this.wifBchCashtoken,
+      wifLegacy: wifLegacy ?? this.wifLegacy,
+      hasInit: hasInit ?? this.hasInit,
+    );
   }
 }

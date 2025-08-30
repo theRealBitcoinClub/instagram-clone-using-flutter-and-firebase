@@ -4,15 +4,14 @@ import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/provider/user_provider.dart';
-import 'package:mahakka/providers/profile_providers.dart'; // New
 import 'package:mahakka/sliver_app_bar_delegate.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/bch/mnemonic_backup_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-import '../../repositories/creator_repository.dart'; // Import the repository
-// Import the new sub-widget files
+import '../../provider/profile_providers.dart';
+import '../../repositories/creator_repository.dart';
 import '../../resources/auth_method.dart';
 import 'profile_app_bar.dart';
 import 'profile_content_grid.dart';
@@ -22,9 +21,6 @@ import 'profile_header.dart';
 import 'profile_placeholders.dart';
 import 'profile_tab_selector.dart';
 
-// Remove the old service imports and state variables
-// No need for a global _logError function in Riverpod as it can be handled locally or with a logger provider
-
 class ProfileScreenWidget extends ConsumerStatefulWidget {
   const ProfileScreenWidget({Key? key}) : super(key: key);
 
@@ -33,8 +29,6 @@ class ProfileScreenWidget extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with TickerProviderStateMixin {
-  // All data fetching is now handled by Riverpod providers
-  // Local state for UI and controllers
   int _viewMode = 0;
   final TextEditingController _profileNameCtrl = TextEditingController();
   final TextEditingController _profileTextCtrl = TextEditingController();
@@ -42,7 +36,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   final Map<String, ValueNotifier<YoutubePlayerController?>> _ytControllerNotifiers = {};
   final ScrollController _scrollController = ScrollController();
 
-  // Local lists to hold categorized post data
   List<MemoModelPost> _allProfilePosts = [];
   List<MemoModelPost> _imagePosts = [];
   List<MemoModelPost> _videoPosts = [];
@@ -52,17 +45,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   bool _showDefaultAvatar = false;
   bool _tempToggleAddressTypeForDialog = true;
   bool _hasBackedUpMnemonic = false;
-
-  // Local state to hold the currently viewed profile ID
-  late String _currentProfileId;
-
-  @override
-  void initState() {
-    super.initState();
-    // Use the logged-in user or the target ID from the navigation provider
-    final loggedInUser = ref.read(userProvider);
-    _currentProfileId = ref.read(profileTargetIdProvider) ?? loggedInUser?.profileIdMemoBch ?? '';
-  }
 
   @override
   void dispose() {
@@ -83,33 +65,30 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     _ytControllerNotifiers.clear();
   }
 
-  bool get isOwnProfile {
-    final loggedInUser = ref.read(userProvider);
-    return loggedInUser?.profileIdMemoBch == _currentProfileId;
-  }
-
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
     final loggedInUser = ref.watch(userProvider);
 
-    // Watch the creator and posts providers for the current profile ID
-    final creatorAsyncValue = ref.watch(creatorStateProvider(_currentProfileId));
-    final postsAsyncValue = ref.watch(postsStreamProvider(_currentProfileId));
+    final creatorAsyncValue = ref.watch(creatorStateProvider);
+    final postsAsyncValue = ref.watch(postsStreamProvider);
 
-    // Listen to changes in the navigation provider to switch profiles
-    ref.listen<String?>(profileTargetIdProvider, (previousId, newId) {
-      if (newId != null && newId != _currentProfileId) {
-        setState(() {
-          _currentProfileId = newId;
-          _allProfilePosts = []; // Clear old data to show loading state
-          _disposeYouTubeControllers();
-        });
+    final currentProfileId = creatorAsyncValue.asData?.value?.id;
+    final isOwnProfile = loggedInUser?.profileIdMemoBch == currentProfileId;
+
+    // final currentTabIndex = ref.watch(tabIndexProvider);
+
+    // Use a ref.listen to trigger the refresh when the tab index changes.
+    // This is a more explicit and reliable way to handle side effects like this.
+    ref.listen<int>(tabIndexProvider, (previousIndex, newIndex) {
+      // Only refresh if the new tab is the profile tab (assuming it's tab 2)
+      // and if the user is authenticated.
+      if (newIndex == 2) {
+        ref.read(userNotifierProvider.notifier).refreshAllBalances();
       }
     });
 
-    // Use .when() on the AsyncValue to build the UI based on the state
     return creatorAsyncValue.when(
       data: (creator) {
         if (creator == null) {
@@ -117,7 +96,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
             theme: theme,
             colorScheme: colorScheme,
             message: "Profile not found or an error occurred.",
-            onRetry: () => ref.refresh(creatorStateProvider(_currentProfileId)),
+            onRetry: () => ref.refresh(creatorStateProvider),
           );
         }
         return Scaffold(
@@ -141,8 +120,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
           ),
           body: RefreshIndicator(
             onRefresh: () async {
-              ref.refresh(creatorStateProvider(_currentProfileId));
-              ref.refresh(postsStreamProvider(_currentProfileId));
+              ref.refresh(creatorStateProvider);
+              ref.refresh(postsStreamProvider);
             },
             color: theme.colorScheme.primary,
             backgroundColor: theme.colorScheme.surface,
@@ -186,12 +165,11 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
         theme: theme,
         colorScheme: colorScheme,
         message: "Error loading profile: $error",
-        onRetry: () => ref.refresh(creatorStateProvider(_currentProfileId)),
+        onRetry: () => ref.refresh(creatorStateProvider),
       ),
     );
   }
 
-  // This method now takes the posts AsyncValue as an argument
   Widget _buildSliverContentStreamView(ThemeData theme, AsyncValue<List<MemoModelPost>> postsAsyncValue) {
     return postsAsyncValue.when(
       data: (posts) {
@@ -244,7 +222,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       if (post.topicId.isNotEmpty) newTopicPostsData.add(post);
     }
 
-    // Only update if lists have actually changed to prevent unnecessary rebuilds
     if (_allProfilePosts.length != allPosts.length) {
       setState(() {
         _allProfilePosts = allPosts;
@@ -276,6 +253,9 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
   void _onProfileButtonPressed(MemoModelCreator creator) {
     final loggedInUser = ref.read(userProvider);
+    final creatorId = creator.id;
+    final isOwnProfile = loggedInUser?.profileIdMemoBch == creatorId;
+
     if (isOwnProfile) {
       showProfileSettingsDialog(
         context: context,
@@ -322,22 +302,17 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       creator.profileText = newText;
       changed = true;
     }
-    // Logic for updating the avatar
     if (newImgurUrl != creator.profileImageAvatar() && newImgurUrl.isNotEmpty) {
-      // Assuming your MemoModelCreator has a way to update this
-      // e.g., creator.profileImgurUrl = newImgurUrl;
-      // You'll need to adapt this part based on your model's implementation.
+      creator.profileImgurUrl = newImgurUrl;
       changed = true;
     }
 
-    // Call the repository to save the changes
     if (changed) {
       await creatorRepo.saveCreator(creator);
       if (mounted) {
         showSnackBar("Profile updated!", context);
         MemoConfetti().launch(context);
-        // Refresh the provider to show the updated data
-        ref.refresh(creatorStateProvider(creator.id));
+        ref.read(creatorStateProvider.notifier).refresh();
       }
     } else {
       if (mounted) showSnackBar("No changes to save.", context);

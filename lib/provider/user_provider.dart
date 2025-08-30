@@ -22,13 +22,12 @@ class UserState {
 }
 
 class UserNotifier extends StateNotifier<UserState> {
-  // Pass AuthChecker if it's stateless or provide it via ref.read if it's another provider
   UserNotifier(this._authChecker) : super(UserState(isLoading: true)) {
     // Initial load when the provider is first created
     refreshUser();
   }
 
-  final AuthChecker _authChecker; // Or ref.read(authCheckerProvider) if AuthChecker is a provider
+  final AuthChecker _authChecker;
 
   Future<void> refreshUser() async {
     state = state.copyWith(isLoading: true, clearError: true);
@@ -37,6 +36,9 @@ class UserNotifier extends StateNotifier<UserState> {
         final fetchedUser = await _authChecker.getUserFromDB();
         state = state.copyWith(user: fetchedUser, isLoading: false);
       }
+      // Call the new method to refresh all balances after the user is fetched
+      refreshAllBalances();
+
       state = state.copyWith(isLoading: false);
     } catch (e, stackTrace) {
       print("Error refreshing user from DB: $e \n$stackTrace");
@@ -44,19 +46,47 @@ class UserNotifier extends StateNotifier<UserState> {
     }
   }
 
-  // If you need a method to explicitly clear the user (e.g., on logout)
+  Future<void> refreshAllBalances() async {
+    MemoModelUser? user = state.user;
+    if (user == null) {
+      print("WARNING: Cannot refresh balances, user is null.");
+      return;
+    }
+
+    try {
+      // 1. Refresh BCH (Memo) balance
+      final request = await user.refreshBalanceDevPath0();
+      // if (request == "success") {
+      user = user.copyWith(balanceBchDevPath0Memo: request);
+      state = state.copyWith(user: user);
+      // }
+
+      // 2. Refresh BCH (Cashtoken) balance
+      final bchBalanceRequest = await user.refreshBalanceDevPath145();
+      // if (bchBalanceRequest == "success") {
+      user = user.copyWith(balanceBchDevPath145: bchBalanceRequest);
+      state = state.copyWith(user: user);
+      // }
+      // 3. Refresh Tokens balance
+      final tokenBalanceReq = await user.refreshBalanceTokens();
+      // if (tokenBalanceReq == "success") {
+      user = user.copyWith(balanceCashtokensDevPath145: tokenBalanceReq);
+      state = state.copyWith(user: user);
+      // }
+    } catch (e, stackTrace) {
+      print("Error refreshing balances: $e \n$stackTrace");
+      // Set an error state without clearing the user data
+      state = state.copyWith(error: "Failed to refresh balances.", isLoading: false);
+    }
+  }
+
   void clearUser() {
-    state = UserState(user: null, isLoading: false, error: null); // Reset to initial empty state, not loading
+    state = UserState(user: null, isLoading: false, error: null);
   }
 }
 
 // The global provider for UserNotifier
 final userNotifierProvider = StateNotifierProvider<UserNotifier, UserState>((ref) {
-  // If AuthChecker itself should be a provider (e.g., if it has its own dependencies or state)
-  // final authChecker = ref.watch(authCheckerProvider);
-  // return UserNotifier(authChecker);
-
-  // If AuthChecker is simple and stateless:
   return UserNotifier(AuthChecker(ref));
 });
 

@@ -49,6 +49,15 @@ class CreatorRepository {
     return null; // Return null if all sources fail
   }
 
+  /// Saves a creator's data to the database and updates the cache.
+  Future<void> saveCreator(MemoModelCreator creator) async {
+    // Delegate the save operation to the Firebase service
+    await ref.read(creatorServiceProvider).saveCreator(creator);
+
+    // Update the in-memory cache with the new data
+    _saveToCache(creator);
+  }
+
   // New method to refresh and cache the creator's avatar.
   Future<String?> refreshAndCacheAvatar(String creatorId) async {
     final creatorCache = ref.read(creatorCacheProvider);

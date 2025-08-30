@@ -1,8 +1,10 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/model/memo_model_creator.dart'; // Adjust path
-import 'package:mahakka/memo/model/memo_model_user.dart'; // Adjust path
-import 'package:mahakka/widgets/profile_buttons.dart'; // Adjust path
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
+import 'package:mahakka/memo/model/memo_model_creator.dart';
+import 'package:mahakka/memo/model/memo_model_user.dart';
+import 'package:mahakka/provider/user_provider.dart'; // Import the user provider
+import 'package:mahakka/widgets/profile_buttons.dart';
 
 // Helper for logging errors consistently
 void _logHeaderError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -13,13 +15,14 @@ void _logHeaderError(String message, [dynamic error, StackTrace? stackTrace]) {
 
 class ProfileHeader extends StatelessWidget {
   final MemoModelCreator creator;
-  final MemoModelUser? loggedInUser; // For displaying balances if own profile
+  // The loggedInUser is now a prop used for reference but balances are watched
+  final MemoModelUser? loggedInUser;
   final bool isOwnProfile;
   final bool isRefreshingProfile;
   final VoidCallback onProfileButtonPressed;
   final VoidCallback showImageDetail;
   final Widget Function(ThemeData theme, String title, String count) buildStatColumn;
-  final bool showDefaultAvatar; // To manage avatar fallback state
+  final bool showDefaultAvatar;
 
   const ProfileHeader({
     Key? key,
@@ -49,7 +52,13 @@ class ProfileHeader extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation(Colors.white70),
               backgroundColor: Colors.transparent,
             ),
-          _buildTopDetailsRow(theme, colorScheme, context), // Pass context if showImageDetail needs it indirectly
+          // Wrap the top section in a Consumer to watch the userProvider
+          Consumer(
+            builder: (context, ref, child) {
+              final updatedUser = ref.watch(userProvider);
+              return _buildTopDetailsRow(theme, colorScheme, context, updatedUser);
+            },
+          ),
           _buildNameRow(theme),
           _buildProfileText(colorScheme, theme),
           Divider(color: theme.dividerColor.withOpacity(0.5), height: 2.0, thickness: 0.5),
@@ -58,19 +67,25 @@ class ProfileHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildTopDetailsRow(ThemeData theme, ColorScheme colorScheme, BuildContext context) {
+  Widget _buildTopDetailsRow(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    BuildContext context,
+    MemoModelUser? updatedUser, // The updated user from the provider
+  ) {
     final creatorProfileImg = creator.profileImageAvatar();
-    final balanceBch = loggedInUser?.balanceBchDevPath145 ?? "0";
-    final balanceTokens = loggedInUser?.balanceCashtokensDevPath145 ?? "0";
-    final balanceMemo = loggedInUser?.balanceBchDevPath0Memo ?? "0";
+    // Use updatedUser to get the most recent balance values
+    final balanceBch = updatedUser?.balanceBchDevPath145 ?? "0";
+    final balanceTokens = updatedUser?.balanceCashtokensDevPath145 ?? "0";
+    final balanceMemo = updatedUser?.balanceBchDevPath0Memo ?? "0";
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 16, 12), // Added top padding
+      padding: const EdgeInsets.fromLTRB(24, 16, 16, 12),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start, // Align items to the top
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
-            onTap: showImageDetail, // Callback from parent
+            onTap: showImageDetail,
             child: CircleAvatar(
               radius: 40,
               backgroundColor: colorScheme.surfaceVariant,
@@ -78,7 +93,6 @@ class ProfileHeader extends StatelessWidget {
                   ? const AssetImage("assets/images/default_profile.png") as ImageProvider
                   : NetworkImage(creatorProfileImg),
               onBackgroundImageError: (exception, stackTrace) {
-                // This error is typically handled by the parent by setting showDefaultAvatar
                 _logHeaderError("Error loading profile image in header: ${creator.name}", exception, stackTrace);
               },
             ),
@@ -86,21 +100,20 @@ class ProfileHeader extends StatelessWidget {
           const SizedBox(width: 16),
           Expanded(
             child: Column(
-              mainAxisSize: MainAxisSize.min, // Ensure column doesn't take unnecessary space
-              crossAxisAlignment: CrossAxisAlignment.stretch, // Make children take full width
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (isOwnProfile && loggedInUser != null)
+                if (isOwnProfile && updatedUser != null)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       Expanded(child: buildStatColumn(theme, 'BCH', balanceBch)),
                       Expanded(child: buildStatColumn(theme, 'Tokens', balanceTokens)),
-                      Expanded(child: buildStatColumn(theme, 'Memo', balanceMemo)), // Assuming balanceMemo is post count
+                      Expanded(child: buildStatColumn(theme, 'Memo', balanceMemo)),
                     ],
                   )
                 else if (!isOwnProfile)
                   Row(
-                    // Placeholder for non-own profile stats if needed
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       Expanded(child: buildStatColumn(theme, 'Followers', "${creator.followerCount}")),
@@ -110,12 +123,7 @@ class ProfileHeader extends StatelessWidget {
                 const SizedBox(height: 12),
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
-                  child: SettingsButton(
-                    // Your themed button
-                    text: !isOwnProfile ? "Follow" : 'Edit Profile', // Example
-                    onPressed: onProfileButtonPressed,
-                    // Add other styling as needed for SettingsButton
-                  ),
+                  child: SettingsButton(text: !isOwnProfile ? "Follow" : 'Edit Profile', onPressed: onProfileButtonPressed),
                 ),
               ],
             ),
@@ -126,7 +134,7 @@ class ProfileHeader extends StatelessWidget {
   }
 
   Padding _buildNameRow(ThemeData theme) {
-    final creatorName = creator.name.isNotEmpty ? creator.name : "Anonymous"; // Fallback name
+    final creatorName = creator.name.isNotEmpty ? creator.name : "Anonymous";
     final creatorProfileIdShort = creator.profileIdShort;
 
     return Padding(
@@ -134,9 +142,8 @@ class ProfileHeader extends StatelessWidget {
       child: Align(
         alignment: Alignment.centerLeft,
         child: Wrap(
-          // Use Wrap for better handling of long names + ID
           crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 6.0, // Space between name and ID
+          spacing: 6.0,
           children: [
             Text(creatorName, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             if (creatorProfileIdShort.isNotEmpty)
@@ -153,7 +160,7 @@ class ProfileHeader extends StatelessWidget {
   Padding _buildProfileText(ColorScheme colorScheme, ThemeData theme) {
     final profileText = creator.profileText;
     if (profileText.trim().isEmpty) {
-      return const Padding(padding: EdgeInsets.zero); // Return empty if no text
+      return const Padding(padding: EdgeInsets.zero);
     }
     return Padding(
       padding: const EdgeInsets.fromLTRB(21, 2, 20, 8),
@@ -167,7 +174,7 @@ class ProfileHeader extends StatelessWidget {
           linkColor: colorScheme.primary,
           style: theme.textTheme.bodyMedium?.copyWith(height: 1.4, color: theme.colorScheme.onSurface.withOpacity(0.85)),
           linkStyle: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.primary),
-          prefixStyle: theme.textTheme.bodyMedium, // In case you add prefix text
+          prefixStyle: theme.textTheme.bodyMedium,
         ),
       ),
     );

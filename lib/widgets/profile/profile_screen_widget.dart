@@ -154,7 +154,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
                   ),
                   pinned: true,
                 ),
-                _buildSliverContentStreamView(theme, postsAsyncValue),
+                _buildSliverContentStreamView(theme, postsAsyncValue, creator),
               ],
             ),
           ),
@@ -170,13 +170,13 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     );
   }
 
-  Widget _buildSliverContentStreamView(ThemeData theme, AsyncValue<List<MemoModelPost>> postsAsyncValue) {
+  Widget _buildSliverContentStreamView(ThemeData theme, AsyncValue<List<MemoModelPost>> postsAsyncValue, creator) {
     return postsAsyncValue.when(
       data: (posts) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _categorizePosts(posts);
         });
-        return _buildSliverCategorizedView(theme);
+        return _buildSliverCategorizedView(theme, creator);
       },
       loading: () {
         return SliverFillRemaining(
@@ -190,7 +190,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     );
   }
 
-  Widget _buildSliverCategorizedView(ThemeData theme) {
+  Widget _buildSliverCategorizedView(ThemeData theme, creator) {
     switch (_viewMode) {
       case 0: // Grid View (Images)
         return ProfileContentGrid(
@@ -199,11 +199,11 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
               showPostDialog(context: context, theme: theme, post: post, creator: null, imageWidget: imageWidget),
         );
       case 1: // YouTube Videos
-        return ProfileContentList.youTube(posts: _videoPosts, ytControllerNotifiers: _ytControllerNotifiers, creatorName: "Creator");
+        return ProfileContentList.youTube(posts: _videoPosts, ytControllerNotifiers: _ytControllerNotifiers, creatorName: creator.name);
       case 2: // Tagged Posts
-        return ProfileContentList.generic(posts: _taggedPosts, creatorName: "Creator");
+        return ProfileContentList.generic(posts: _taggedPosts, creatorName: creator.name);
       case 4: // Topic Posts
-        return ProfileContentList.generic(posts: _topicPostsData, creatorName: "Creator");
+        return ProfileContentList.generic(posts: _topicPostsData, creatorName: creator.name);
       default:
         return EmptySliverContent(message: "Select a view to see posts.", theme: theme);
     }

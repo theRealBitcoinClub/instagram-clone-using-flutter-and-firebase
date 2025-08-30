@@ -207,6 +207,8 @@ class ProfileContentList extends StatelessWidget {
               maxLines: 5, // Or your preferred max lines
               linkColor: theme.colorScheme.primary.withOpacity(0.85),
               style: theme.textTheme.bodyMedium?.copyWith(
+                fontFamily: "Open Sans",
+                fontSize: 14,
                 height: 1.4, // Line height
                 color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
               ),
@@ -259,10 +261,10 @@ class ProfileContentList extends StatelessWidget {
                 }
               },
               // --- Prefix for Topic ID (from original) ---
-              prefixText: post.topicId.isNotEmpty ? "Topic: ${post.topicId}\n" : null, // Removed extra newline
+              prefixText: post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null, // Removed extra newline
               prefixStyle: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.tertiary, // Using tertiary for topic emphasis
-                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface, // Using tertiary for topic emphasis
+                fontWeight: FontWeight.w400,
                 // fontStyle: FontStyle.italic,
               ),
               onPrefixTap: () {

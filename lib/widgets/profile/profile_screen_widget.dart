@@ -556,18 +556,18 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   // New method to handle logout
   void _logoutUser() {
     final authChecker = ref.read(authCheckerProvider);
-    authChecker
-        .logOut()
-        .then((result) {
-          if (result == "success" && mounted) {
-            ref.read(profileTargetIdProvider.notifier).state = null;
-          } else if (mounted) {
-            showSnackBar("Logout failed: $result", context);
-          }
-        })
-        .catchError((e) {
-          if (mounted) showSnackBar("Logout error: $e", context);
-        });
+    authChecker.logOut();
+    // .then((result) {
+    //   if (result == "success" && mounted) {
+    //     ref.read(profileTargetIdProvider.notifier).state = null;
+    //     ref.read(tabIndexProvider.notifier).setTab(0);
+    //   } else if (mounted) {
+    //     showSnackBar("Logout failed: $result", context);
+    //   }
+    // })
+    // .catchError((e) {
+    //   if (mounted) showSnackBar("Logout error: $e", context);
+    // });
   }
 
   // _saveProfile logic as per your original, called by the dialog

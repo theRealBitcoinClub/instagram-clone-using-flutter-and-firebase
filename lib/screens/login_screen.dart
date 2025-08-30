@@ -17,12 +17,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   final TextEditingController _mnemonicController = TextEditingController();
   bool _isInputValid = false;
   String? _errorMessage;
+  bool _isLoading = false; // Added loading state variable
 
   @override
   void initState() {
     super.initState();
     _mnemonicController.addListener(_validateMnemonic);
-    // Add the observer for app lifecycle changes
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -30,7 +30,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   void dispose() {
     _mnemonicController.removeListener(_validateMnemonic);
     _mnemonicController.dispose();
-    // Remove the observer
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -38,7 +37,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // The app has just been resumed from the background.
       _checkClipboardForMnemonic();
     }
   }
@@ -48,12 +46,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     final clipboardText = clipboardData?.text?.trim();
 
     if (clipboardText != null && clipboardText.isNotEmpty) {
-      // Check if the clipboard content is a valid mnemonic
       try {
         Mnemonic.fromSentence(clipboardText, Language.english);
-        // It's a valid mnemonic, so update the text field
         _mnemonicController.text = clipboardText;
-        // The listener will automatically validate and update the UI
       } on MnemonicException {
         // Not a valid mnemonic, do nothing.
       }
@@ -94,12 +89,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     return processedMnemonic;
   }
 
-  Future<void> _loginUser() async {
-    final authChecker = ref.read(authCheckerProvider);
-    String res = await authChecker.loginInWithMnemonic(_processedMnemonic);
+  void _loginUser() {
+    // Set the loading state to true and disable the button
+    setState(() {
+      _isLoading = true;
+    });
+    // Add a small delay to allow the UI to rebuild and show the loading indicator.
+    // await Future.delayed(Duration(milliseconds: 100));
+    doHeavyWork();
+  }
 
-    if (res != "success") {
-      if (mounted) showSnackBar("Unexpected error despite on the fly check: $res", context);
+  Future<void> doHeavyWork() async {
+    try {
+      final authChecker = ref.read(authCheckerProvider);
+      String res = await authChecker.loginInWithMnemonic(_processedMnemonic);
+
+      if (res != "success") {
+        if (mounted) showSnackBar("Unexpected error despite on the fly check: $res", context);
+      }
+    } catch (e) {
+      if (mounted) showSnackBar("Login failed: $e", context);
+    } finally {
+      // Always set loading state to false, even on success or error
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -128,16 +144,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
 
               const SizedBox(height: 56),
 
-              // Corrected TextField implementation
               TextField(
                 minLines: 3,
                 maxLines: 3,
                 controller: _mnemonicController,
                 keyboardType: TextInputType.text,
-                // maxLines: null, // Allows for multiline input
                 decoration: InputDecoration(
                   hintText: 'Write, paste or generate 12-word mnemonic',
-                  errorText: _errorMessage, // Passed the error message
+                  errorText: _errorMessage,
                   border: OutlineInputBorder(borderSide: Divider.createBorderSide(context)),
                   focusedBorder: OutlineInputBorder(
                     borderSide: Divider.createBorderSide(context, color: _isInputValid ? Colors.green : theme.colorScheme.primary),
@@ -165,17 +179,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  // The onPressed callback is conditionally set
-                  onPressed: _isInputValid ? _loginUser : null,
+                  onPressed: (_isInputValid && !_isLoading) ? _loginUser : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _isInputValid ? colorScheme.primary : colorScheme.primary.withOpacity(0.5),
+                    backgroundColor: (_isInputValid && !_isLoading) ? colorScheme.primary : colorScheme.primary.withOpacity(0.5),
                     foregroundColor: colorScheme.onPrimary,
                     textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  child: Text(
-                    "LOGIN",
-                    style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimary),
-                  ),
+                  child: _isLoading
+                      ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: colorScheme.onPrimary, strokeWidth: 2))
+                      : Text(
+                          "LOGIN",
+                          style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimary),
+                        ),
                 ),
               ),
 

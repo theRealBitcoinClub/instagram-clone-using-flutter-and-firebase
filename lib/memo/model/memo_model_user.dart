@@ -92,6 +92,11 @@ class MemoModelUser {
     final legacyAddressAsCash = pkLegacy.getPublic().toAddress().toAddress(BitcoinCashNetwork.mainnet);
     final userId = legacyAddress;
 
+    // ECPublic pubKey = pkLegacy.getPublic();
+    // P2pkhAddress legacy = P2pkhAddress.fromAddress(address: pubKey.toAddress().toString(), network: BitcoinNetwork.mainnet);
+    // String addr = legacyToBchAddress(addressProgram: legacy.addressProgram, network: network, type: P2pkhAddressType.p2pkh);
+    // BitcoinCashAddress bchAdd = BitcoinCashAddress.fromBaseAddress(legacy);
+
     // 4. Return a new instance using the main constructor
     final user = MemoModelUser(
       id: userId,
@@ -148,6 +153,11 @@ class MemoModelUser {
     MemoBitcoinBase base = await MemoBitcoinBase.create();
     P2pkhAddress p2pkhwt = base.createAddressLegacy(_pkLegacy);
     BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
+    // ECPublic pubKey = _pkLegacy.getPublic();
+    // P2pkhAddress legacy = P2pkhAddress.fromAddress(address: pubKey.toAddress().addressProgram, network: BitcoinNetwork.mainnet);
+    // String addr = legacyToBchAddress(addressProgram: legacy.addressProgram, network: network, type: P2pkhAddressType.p2pkh);
+    // BitcoinCashAddress bchAdd = BitcoinCashAddress.fromBaseAddress(legacy);
+
     List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress);
     if (utxos.isEmpty) {
       balanceBchDevPath0Memo = "0";

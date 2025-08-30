@@ -16,9 +16,10 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
 // Changed to ConsumerWidget to use ref
 class PostCardHeader extends ConsumerWidget {
   final MemoModelPost post;
-  final VoidCallback onOptionsMenuPressed; // This is for the "Tip" button
+  final VoidCallback onOptionsMenuPressed;
+  final bool hasRegisteredAsUser;
 
-  const PostCardHeader({super.key, required this.post, required this.onOptionsMenuPressed});
+  const PostCardHeader({super.key, required this.post, required this.onOptionsMenuPressed, this.hasRegisteredAsUser = false});
 
   void _navigateToProfile(BuildContext context, WidgetRef ref, String creatorId) {
     // Set the target profile ID using Riverpod
@@ -43,42 +44,9 @@ class PostCardHeader extends ConsumerWidget {
         children: [
           GestureDetector(
             onTap: () => _navigateToProfile(context, ref, creator.id), // Pass ref
-            child: badges.Badge(
-              position: badges.BadgePosition.topEnd(top: -2, end: -6),
-              // showBadge: _hasRegisteredAsUser,
-              onTap: () {},
-              badgeContent: Icon(
-                Icons.currency_bitcoin_rounded,
-                color: Theme.of(context).colorScheme.onPrimary, // Example for theme-aware icon color
-                size: 15,
-              ),
-              badgeAnimation: badges.BadgeAnimation.fade(
-                animationDuration: Duration(milliseconds: 5000),
-                // colorChangeAnimationDuration: Duration(milliseconds: 100),
-                loopAnimation: true,
-                colorChangeAnimationCurve: Curves.fastOutSlowIn,
-              ),
-              badgeStyle: badges.BadgeStyle(
-                shape: badges.BadgeShape.circle,
-                badgeColor: Theme.of(context).colorScheme.primary, // Use a theme-aware color for the badge background
-                padding: EdgeInsets.all(1.5),
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.onSurface, // Use theme-aware color for the border
-                  width: 0.8,
-                ),
-                elevation: 0,
-              ),
-              child: CircleAvatar(
-                radius: 24,
-                backgroundColor: theme.colorScheme.surfaceVariant,
-                backgroundImage: creator.profileImageAvatar().isEmpty
-                    ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                    : NetworkImage(creator.profileImageAvatar()),
-                onBackgroundImageError: (exception, stackTrace) {
-                  _logError("Error loading profile image for ${creator.name}", exception, stackTrace);
-                },
-              ),
-            ),
+            child: hasRegisteredAsUser
+                ? wrapWithBadge(context, theme, creator, buildCircleAvatar(theme, creator))
+                : buildCircleAvatar(theme, creator),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -127,6 +95,49 @@ class PostCardHeader extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  CircleAvatar buildCircleAvatar(ThemeData theme, MemoModelCreator creator) {
+    return CircleAvatar(
+      radius: 24,
+      backgroundColor: theme.colorScheme.surfaceVariant,
+      backgroundImage: creator.profileImageAvatar().isEmpty
+          ? const AssetImage("assets/images/default_profile.png") as ImageProvider
+          : NetworkImage(creator.profileImageAvatar()),
+      onBackgroundImageError: (exception, stackTrace) {
+        _logError("Error loading profile image for ${creator.name}", exception, stackTrace);
+      },
+    );
+  }
+
+  badges.Badge wrapWithBadge(BuildContext context, ThemeData theme, MemoModelCreator creator, wrappedItem) {
+    return badges.Badge(
+      position: badges.BadgePosition.topEnd(top: -2, end: -6),
+      showBadge: hasRegisteredAsUser,
+      onTap: () {},
+      badgeContent: Icon(
+        Icons.currency_bitcoin_rounded,
+        color: Theme.of(context).colorScheme.onPrimary, // Example for theme-aware icon color
+        size: 15,
+      ),
+      badgeAnimation: badges.BadgeAnimation.fade(
+        animationDuration: Duration(milliseconds: 5000),
+        // colorChangeAnimationDuration: Duration(milliseconds: 100),
+        loopAnimation: true,
+        colorChangeAnimationCurve: Curves.fastOutSlowIn,
+      ),
+      badgeStyle: badges.BadgeStyle(
+        shape: badges.BadgeShape.circle,
+        badgeColor: Theme.of(context).colorScheme.primary, // Use a theme-aware color for the badge background
+        padding: EdgeInsets.all(1.5),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.onSurface, // Use theme-aware color for the border
+          width: 0.8,
+        ),
+        elevation: 0,
+      ),
+      child: wrappedItem,
     );
   }
 }

@@ -95,7 +95,7 @@ class ProfileHeader extends StatelessWidget {
                     children: [
                       Expanded(child: buildStatColumn(theme, 'BCH', balanceBch)),
                       Expanded(child: buildStatColumn(theme, 'Tokens', balanceTokens)),
-                      Expanded(child: buildStatColumn(theme, 'Posts', balanceMemo)), // Assuming balanceMemo is post count
+                      Expanded(child: buildStatColumn(theme, 'Memo', balanceMemo)), // Assuming balanceMemo is post count
                     ],
                   )
                 else if (!isOwnProfile)

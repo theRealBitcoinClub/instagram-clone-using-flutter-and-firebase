@@ -4,7 +4,8 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:mahakka/check_404.dart';
 import 'package:mahakka/memo/firebase/creator_service.dart';
-import 'package:mahakka/memo/firebase/user_service.dart'; // Assuming this is your utility function
+import 'package:mahakka/memo/firebase/user_service.dart';
+import 'package:mahakka/memo/model/memo_model_user.dart'; // Assuming this is your utility function
 
 part 'memo_model_creator.g.dart'; // This will be generated
 
@@ -23,6 +24,9 @@ class MemoModelCreator {
   bool isCheckingAvatar = false;
   @JsonKey(ignore: true)
   bool isCheckingDetail = false;
+
+  @JsonKey(ignore: true)
+  MemoModelUser? _userData;
 
   String get profileIdShort => id.substring(1, 5);
 
@@ -174,7 +178,12 @@ class MemoModelCreator {
   @override
   int get hashCode => id.hashCode;
 
-  Future<bool> hasRegisteredAsUser() async {
-    return await UserService().getUserOnce(id) != null;
+  Future<bool> refreshUserData() async {
+    if (_userData == null) {
+      _userData = await UserService().getUserOnce(id);
+      return _userData != null;
+    } else {
+      return true; //TODO store the userdata in local cache same as creator to avoid repeating requests for each post
+    }
   }
 }

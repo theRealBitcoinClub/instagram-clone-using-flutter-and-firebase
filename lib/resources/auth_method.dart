@@ -3,6 +3,7 @@ import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../provider/navigation_providers.dart';
 import '../provider/user_provider.dart';
 
 // 1. (Optional but good practice) Define a provider for AuthChecker itself
@@ -56,13 +57,9 @@ class AuthChecker {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove("mnemonic");
-
-      // Clear the user state and trigger a refresh/update
-      // You might have a specific 'clearUser' method in your UserNotifier
-      // or refreshUser will handle the null state from getUserFromDB.
       _ref.read(userNotifierProvider.notifier).clearUser(); // Ideal if you have this
-      // OR if clearUser also calls refreshUser or updates state appropriately:
-      // await _ref.read(userNotifierProvider.notifier).refreshUser();
+      _ref.read(profileTargetIdProvider.notifier).state = null;
+      _ref.read(tabIndexProvider.notifier).setTab(0);
 
       return "success";
     } catch (err) {

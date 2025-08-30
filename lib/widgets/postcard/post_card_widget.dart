@@ -61,6 +61,8 @@ class _PostCardState extends ConsumerState<PostCard> {
   // Controllers
   late TextEditingController _textEditController;
 
+  bool hasRegisteredAsUser = false;
+
   // NavBarCallback removed
   // _PostCardState(); // Default constructor or pass ref if needed by _loadUser
 
@@ -87,9 +89,9 @@ class _PostCardState extends ConsumerState<PostCard> {
     // if (widget.post.creator != null) {
     if (_creator()!.name.isEmpty) {
       widget.post.creator = await _creator()!.refreshCreatorFirebase();
-
+      hasRegisteredAsUser = await widget.post.creator!.refreshUserData();
       if (_creator()!.profileImageAvatar().isEmpty) {
-        refreshAvatarThenSetState();
+        _creator()!.refreshAvatar();
       }
 
       if (_creator()!.name.isEmpty) {
@@ -394,6 +396,7 @@ class _PostCardState extends ConsumerState<PostCard> {
             PostCardHeader(
               post: widget.post,
               onOptionsMenuPressed: _sendTipToCreator,
+              hasRegisteredAsUser: hasRegisteredAsUser,
               // NavBarCallback removed
             ),
             widget.post.imgurUrl != null && widget.post.imgurUrl!.isNotEmpty

@@ -46,7 +46,7 @@ class UserNotifier extends StateNotifier<UserState> {
 
   // If you need a method to explicitly clear the user (e.g., on logout)
   void clearUser() {
-    state = UserState(isLoading: false); // Reset to initial empty state, not loading
+    state = UserState(user: null, isLoading: false, error: null); // Reset to initial empty state, not loading
   }
 }
 

@@ -8,6 +8,7 @@ class CreatorService {
 
   Future<void> saveCreator(MemoModelCreator creator) async {
     try {
+      // MemoModelCreator c = creator.copyWith(id: creator.id, name: creator.name);
       final DocumentReference docRef = _firestore.collection(_creatorsCollection).doc(creator.id);
       final Map<String, dynamic> creatorJson = creator.toJson(); // Still works
       await docRef.set(creatorJson, SetOptions(merge: true));

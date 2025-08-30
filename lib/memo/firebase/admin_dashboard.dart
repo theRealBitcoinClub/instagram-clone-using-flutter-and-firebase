@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Import your admin panel pages
 import 'package:mahakka/memo/firebase/post_admin.dart';
 import 'package:mahakka/memo/firebase/tag_admin.dart';
@@ -22,7 +23,10 @@ class MainAdminDashboard extends StatefulWidget {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const AdminApp());
+  runApp(
+    // Add ProviderScope here
+    const ProviderScope(child: AdminApp()),
+  );
 }
 
 class AdminApp extends StatelessWidget {

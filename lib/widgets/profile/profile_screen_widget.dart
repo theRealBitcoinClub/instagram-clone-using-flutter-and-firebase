@@ -65,6 +65,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     _ytControllerNotifiers.clear();
   }
 
+  bool isUpdatingCache = false;
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -78,6 +80,13 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     final isOwnProfile = loggedInUser?.profileIdMemoBch == currentProfileId;
 
     // final currentTabIndex = ref.watch(tabIndexProvider);
+    if (isOwnProfile && !isUpdatingCache) {
+      isUpdatingCache = true;
+      final creatorRepo = ref.read(creatorRepositoryProvider);
+      creatorRepo.refreshCreatorCache(currentProfileId!, () {
+        isUpdatingCache = false;
+      });
+    }
 
     // Use a ref.listen to trigger the refresh when the tab index changes.
     // This is a more explicit and reliable way to handle side effects like this.
@@ -262,9 +271,9 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
         theme: Theme.of(context),
         creator: creator,
         loggedInUser: loggedInUser,
-        profileNameCtrl: _profileNameCtrl..text = creator.name ?? '',
-        profileTextCtrl: _profileTextCtrl..text = creator.profileText ?? '',
-        imgurCtrl: _imgurCtrl..text = creator.profileImageAvatar() ?? '',
+        profileNameCtrl: _profileNameCtrl,
+        profileTextCtrl: _profileTextCtrl,
+        imgurCtrl: _imgurCtrl,
         isLogoutEnabled: _hasBackedUpMnemonic,
         onSave: () => _saveProfile(creator),
         onBackupMnemonic: () {
@@ -286,36 +295,72 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       showSnackBar("Follow/Message functionality is coming soon!", context);
     }
   }
+  // Inside _ProfileScreenWidgetState
 
   void _saveProfile(MemoModelCreator creator) async {
     final creatorRepo = ref.read(creatorRepositoryProvider);
-    bool changed = false;
+    final user = ref.read(userProvider);
+    if (user == null) {
+      if (mounted) showSnackBar("User data not available for profile update.", context);
+      return;
+    }
+
     String newName = _profileNameCtrl.text.trim();
     String newText = _profileTextCtrl.text.trim();
     String newImgurUrl = _imgurCtrl.text.trim();
 
+    // Use a Map to store futures and their corresponding field names.
+    final Map<String, Future<dynamic>> updateFutures = {};
+    bool changesMade = false;
+
+    // Check and add futures for each changed field.
     if (newName.isNotEmpty && newName != creator.name) {
-      creator.name = newName;
-      changed = true;
+      updateFutures['name'] = creatorRepo.profileSetName(newName, user);
+      changesMade = true;
     }
     if (newText != creator.profileText) {
-      creator.profileText = newText;
-      changed = true;
+      updateFutures['text'] = creatorRepo.profileSetText(newText, user);
+      changesMade = true;
     }
-    if (newImgurUrl != creator.profileImageAvatar() && newImgurUrl.isNotEmpty) {
-      creator.profileImgurUrl = newImgurUrl;
-      changed = true;
+    if (newImgurUrl.isNotEmpty) {
+      updateFutures['avatar'] = creatorRepo.profileSetAvatar(newImgurUrl, user);
+      changesMade = true;
     }
 
-    if (changed) {
-      await creatorRepo.saveCreator(creator);
+    if (changesMade) {
+      // Wait for all updates to complete and collect their results.
+      final List<MapEntry<String, dynamic>> results = await Future.wait(
+        updateFutures.entries.map((entry) async {
+          final result = await entry.value;
+          return MapEntry(entry.key, result);
+        }),
+      );
+
+      // Build the success and failure messages.
+      final List<String> successfulUpdates = [];
+      final List<String> failedUpdates = [];
+
+      for (var result in results) {
+        if (result.value == "success") {
+          successfulUpdates.add(result.key);
+        } else {
+          failedUpdates.add('${result.key}: ${result.value}');
+        }
+      }
+
       if (mounted) {
-        showSnackBar("Profile updated!", context);
-        MemoConfetti().launch(context);
+        if (failedUpdates.isNotEmpty) {
+          final String failMessage = failedUpdates.join(', ');
+          final String successMessage = successfulUpdates.isNotEmpty ? ' | Successfully updated: ${successfulUpdates.join(', ')}' : '';
+          showSnackBar("Update failed for: $failMessage$successMessage", context);
+        } else {
+          showSnackBar("Profile updated successfully! ✨", context);
+          MemoConfetti().launch(context);
+        }
         ref.read(creatorStateProvider.notifier).refresh();
       }
     } else {
-      if (mounted) showSnackBar("No changes to save.", context);
+      if (mounted) showSnackBar("No changes to save. 🤔", context);
     }
   }
 }

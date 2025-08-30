@@ -18,7 +18,6 @@ class MemoModelCreator {
   int actions = 0;
   String created = "";
   String lastActionDate = "";
-  String profileImgurUrl = "";
   final CreatorService _creatorService = CreatorService();
 
   @JsonKey(ignore: true)
@@ -191,5 +190,27 @@ class MemoModelCreator {
       hasRegisteredAsUser = true;
       // return true; //TODO store the userdata in local cache same as creator to avoid repeating requests for each post
     }
+  }
+
+  MemoModelCreator copyWith({
+    String? id,
+    String? name,
+    String? profileText,
+    String? profileImgurUrl,
+    int? followerCount,
+    int? actions,
+    String? created,
+    String? lastActionDate,
+  }) {
+    return MemoModelCreator(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      profileText: profileText ?? this.profileText,
+      // profileImgurUrl: profileImgurUrl ?? this.profileImgurUrl,
+      followerCount: followerCount ?? this.followerCount,
+      actions: actions ?? this.actions,
+      created: created ?? this.created,
+      lastActionDate: lastActionDate ?? this.lastActionDate,
+    );
   }
 }

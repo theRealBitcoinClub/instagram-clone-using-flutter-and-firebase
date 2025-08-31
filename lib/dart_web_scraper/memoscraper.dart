@@ -8,14 +8,17 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import '../firebase_options.dart';
 import '../memo/firebase/post_service.dart';
 import '../memo/model/memo_model_post.dart';
+import '../memo/model/memo_model_topic.dart';
 import '../memo/scraper/memo_post_service.dart';
+import '../memo/scraper/memo_scraper_tag.dart';
+import '../memo/scraper/memo_scraper_topics.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // scrapeTopics("");
+  scrapeTopics("X");
   // runSequentialBatchJobDateCreated();
   // MemoPostService().scrapePostsPaginated(baseUrl: , initialOffset: initialOffset, cacheId: cacheId)
 }
@@ -131,12 +134,12 @@ Future<void> runSequentialBatchJobDateCreated() async {
 Future<void> scrapeTopics(String cacheId) async {
   // int indexTopics = 0;
   // int indexPosts = 0;
-  // List<MemoModelTopic> topics = [];
+  List<MemoModelTopic> topics = [];
   // try {
-  // await MemoScraperTopic().startScrapeTopics(topics, cacheId, 950, 200);
-  // await MemoScraperTag().startScrapeTags(["/most-posts"], 500, 100, cacheId);
-  // await MemoScraperTag().startScrapeTags(["/recent"], 500, 0, cacheId);
-  // await MemoScraperTag().startScrapeTags(["/popular"], 500, 0, cacheId);
+  await MemoScraperTopic().startScrapeTopics(topics, cacheId, 0, 0);
+  // await MemoScraperTag().startScrapeTags(["/most-posts"], 0, 0, cacheId);
+  await MemoScraperTag().startScrapeTags(["/recent"], 0, 0, cacheId);
+  // await MemoScraperTag().startScrapeTags(["/popular"], 0, 0, cacheId);
   // } finally {
   //   var topicService = TopicService();
   //   var postService = PostService();

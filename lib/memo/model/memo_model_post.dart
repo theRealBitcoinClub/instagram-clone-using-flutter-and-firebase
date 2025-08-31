@@ -122,14 +122,20 @@ class MemoModelPost {
 
   @JsonKey(ignore: true)
   String get age {
+    return _calculateAgeString();
     _ageCache = _calculateAgeString();
     return _ageCache!;
   }
 
   String _calculateAgeString() {
     if (createdDateTime == null) return "";
-    final DateTime now = DateTime.now();
-    final Duration difference = now.difference(createdDateTime!);
+
+    // Convert both DateTime objects to UTC for a correct comparison.
+    final DateTime nowUtc = DateTime.now().toUtc();
+    final DateTime createdUtc = createdDateTime!.subtract(Duration(hours: 4));
+
+    // Calculate the difference between the two UTC times.
+    final Duration difference = nowUtc.difference(createdUtc);
 
     if (difference.inSeconds < 60) return "${difference.inSeconds}s";
     if (difference.inMinutes < 60) return "${difference.inMinutes}m";
@@ -199,6 +205,19 @@ class MemoModelPost {
   Future<void> loadTopic() async {
     if (topicId.isNotEmpty) {
       topic = await TopicService().getTopicOnce(topicId);
+    }
+  }
+
+  String dateTimeFormattedSafe() {
+    if (createdDateTime == null) return "N/A";
+    try {
+      final localDateTime = createdDateTime!.toLocal();
+      String date = "${localDateTime.year}-${localDateTime.month.toString().padLeft(2, '0')}-${localDateTime.day.toString().padLeft(2, '0')}";
+      String time = "${localDateTime.hour.toString().padLeft(2, '0')}:${localDateTime.minute.toString().padLeft(2, '0')}";
+      return date;
+    } catch (e) {
+      print("Error parsing DateTime: $createdDateTime, Error: $e");
+      return "Invalid Date";
     }
   }
 }

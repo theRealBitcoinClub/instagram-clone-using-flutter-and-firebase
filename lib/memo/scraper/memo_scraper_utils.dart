@@ -64,6 +64,14 @@ class MemoScraperUtil {
     MemoScraperUtil.extractUrlsAndHashtags(post);
     post.tagIds = post.tagIds;
     post.topic = topic;
+    try {
+      // Attempt to parse the date string.
+      post.createdDateTime = DateTime.parse(post.created!);
+    } catch (e) {
+      // If parsing fails, set the current time as a fallback.
+      print("${post.created} is not a valid date string. Error parsing created string: $e. Using current time as fallback.");
+      post.createdDateTime = DateTime.now();
+    }
     return post;
   }
 

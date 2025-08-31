@@ -6,7 +6,7 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 
 class PostService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static const String _postsCollection = 'posts';
+  static const String _postsCollection = '_posts';
   static const String orderByField = "createdDateTime"; // Consistent field name
   static const bool descendingOrder = true;
 

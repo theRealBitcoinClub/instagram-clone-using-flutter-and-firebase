@@ -50,8 +50,9 @@ class BackgroundScraperManager extends StateNotifier<bool> {
     print("BackgroundScraper: Starting scraping process...");
     // final creatorRepo = ref.read(creatorRepositoryProvider);
 
-    await MemoScraperTopic().startScrapeTopics([], "fdsfsfiuuhf939", 0, 0);
-    await MemoScraperTag().startScrapeTags(["/recent"], 0, 0, "dfdsfdsfdsf");
+    var cacheId = "AX";
+    await MemoScraperTopic().startScrapeTopics([], cacheId, 0, 0);
+    await MemoScraperTag().startScrapeTags(["/recent"], 0, 0, cacheId);
     // try {
     //   // You'll need a way to get the list of creators to scrape.
     //   // For example, from a local cache or a list of followed creators.

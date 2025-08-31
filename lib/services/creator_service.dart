@@ -7,7 +7,7 @@
 // // Your existing CreatorService class, now managed by a provider.
 // class CreatorService {
 //   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-//   static const String _creatorsCollection = 'creators';
+//   static const String _creatorsCollection = '_creators';
 //
 //   Future<void> saveCreator(MemoModelCreator creator) async {
 //     // ... existing implementation ...

@@ -3,7 +3,7 @@ import 'package:mahakka/memo/model/memo_model_user.dart'; // Your model path
 
 class UserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static const String _usersCollection = 'users';
+  static const String _usersCollection = '_users';
 
   Future<void> saveUser(MemoModelUser user) async {
     try {

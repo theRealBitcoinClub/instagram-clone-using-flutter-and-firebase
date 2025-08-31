@@ -97,15 +97,15 @@ class PostCardHeader extends ConsumerWidget {
                 ),
                 Row(
                   children: [
-                    if (post.age.isNotEmpty)
-                      Text(post.age, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-                    if (post.age.isNotEmpty && post.createdDateTime != null)
-                      Text(" - ", style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                     if (post.createdDateTime != null)
                       Text(
-                        post.createdDateTime!.toIso8601String(),
-                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        post.dateTimeFormattedSafe(),
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(111)),
                       ),
+                    if (post.age.isNotEmpty && post.createdDateTime != null)
+                      Text(" - ", style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    if (post.age.isNotEmpty)
+                      Text(post.age, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                   ],
                 ),
               ],

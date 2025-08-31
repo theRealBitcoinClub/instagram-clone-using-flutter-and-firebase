@@ -3,6 +3,51 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 
 import 'socket/electrum_websocket_service.dart';
 
+class Balance {
+  final BigInt _bch;
+  final BigInt _token;
+
+  const Balance({required BigInt bch, required BigInt token}) : _bch = bch, _token = token;
+
+  /// Public getter to retrieve the BCH balance as an int.
+  /// This may result in an overflow if the value is too large.
+  int get bch => _bch.toInt();
+
+  /// Public getter to retrieve the token balance as an int.
+  /// This may result in an overflow if the value is too large.
+  int get token => _token.toInt();
+
+  @override
+  String toString() {
+    return 'Balance(BCH: $_bch, Token: $_token)';
+  }
+}
+
+void main() async {
+  const address = 'bitcoincash:zzh0nugxc8qvzxec7yx2077sujy6xv3kz5r0yptyf9';
+
+  try {
+    var name = await MemoBitcoinBase.create();
+    final balances = await name.getBalances(address);
+    print('Balances for address $address:');
+    print('BCH Balance: ${balances.bch} sats');
+    print('Token Balance: ${balances.token} tokens');
+  } catch (e) {
+    print('An error occurred in the main function: $e');
+  }
+  const addressLegacy = '128HZC9RuAceY1QbYu6x3S9gnW8btYSyUP';
+
+  try {
+    var name = await MemoBitcoinBase.create();
+    final balances = await name.getBalances(addressLegacy);
+    print('Balances for address $addressLegacy:');
+    print('BCH Balance: ${balances.bch} sats');
+    print('Token Balance: ${balances.token} tokens');
+  } catch (e) {
+    print('An error occurred in the main function: $e');
+  }
+}
+
 class MemoBitcoinBase {
   static const String tokenId = "d44bf7822552d522802e7076dc9405f5e43151f0ac12b9f6553bda1ce8560002";
 
@@ -37,6 +82,87 @@ class MemoBitcoinBase {
     ElectrumWebSocketService service = await ElectrumWebSocketService.connect("wss://${mainnetServers[2]}:50004");
     instance.provider = ElectrumProvider(service);
     return instance;
+  }
+
+  Future<Balance> getBalances(String address) async {
+    const tokenId = MemoBitcoinBase.tokenId;
+    final memoBitcoinBase = await MemoBitcoinBase.create();
+    // Determine the address type and create the appropriate object
+    final isLegacy = !address.startsWith('bitcoincash:');
+    final hasToken = address.startsWith('bitcoincash:z');
+
+    try {
+      BitcoinCashAddress typedAddress;
+      if (isLegacy) {
+        typedAddress = BitcoinCashAddress.fromBaseAddress(
+          P2pkhAddress.fromAddress(address: address, network: BitcoinNetwork.mainnet, type: P2pkhAddressType.p2pkh),
+        );
+      } else {
+        typedAddress = BitcoinCashAddress(address);
+      }
+
+      final electrumUtxos = await memoBitcoinBase.requestElectrumUtxos(typedAddress, includeCashtokens: hasToken);
+
+      print('Found ${electrumUtxos.length} UTXOs for the address.');
+
+      BigInt bchBalance = BigInt.zero;
+      BigInt tokenBalance = BigInt.zero;
+
+      // Separate BCH and token balances in a single loop
+      for (final utxo in electrumUtxos) {
+        if (utxo.token != null && utxo.token!.category == tokenId) {
+          // This UTXO holds our specific token
+          tokenBalance += utxo.token!.amount;
+        } else {
+          // This UTXO holds only BCH
+          bchBalance += utxo.value;
+        }
+      }
+
+      return Balance(bch: bchBalance, token: tokenBalance);
+    } catch (e) {
+      print('An error occurred while checking balances: $e');
+      return Balance(bch: BigInt.zero, token: BigInt.zero);
+    } finally {
+      memoBitcoinBase.service?.discounnect();
+    }
+  }
+
+  Future<int> getTokenBalance(String tokenAwareAddressString) async {
+    // Define the token-aware address and the token ID.
+    const tokenId = MemoBitcoinBase.tokenId;
+    final memoBitcoinBase = await MemoBitcoinBase.create();
+
+    try {
+      final BitcoinCashAddress typedAddress = BitcoinCashAddress(tokenAwareAddressString);
+
+      // print('Successfully parsed address: ${typedAddress.toAddress()}');
+
+      final electrumUtxos = await memoBitcoinBase.requestElectrumUtxos(
+        typedAddress, // Pass the typed address object here
+        includeCashtokens: true,
+      );
+
+      print('Found ${electrumUtxos.length} UTXOs for the address.');
+
+      if (electrumUtxos.isEmpty) {
+        print('No UTXOs found. The token balance is 0.');
+        return 0;
+      }
+
+      final totalTokenAmount = electrumUtxos
+          .where((utxo) => utxo.token?.category == tokenId)
+          .fold(BigInt.zero, (previousValue, utxo) => previousValue + utxo.token!.amount);
+
+      return totalTokenAmount.toInt();
+      // print('Total token balance: $totalTokenAmount');
+    } catch (e) {
+      print('An error occurred while checking the token balance: $e');
+    } finally {
+      // 5. Always close the service when you're done to free up resources.
+      memoBitcoinBase.service?.discounnect();
+    }
+    return 0;
   }
 
   ForkedTransactionBuilder buildTxToTransferTokens(

@@ -35,7 +35,7 @@ class CreatorRepository {
       return firebaseCreator;
     }
 
-    if (!scrapeIfNotFound) return MemoModelCreator(id: "no creator found in cache nor fb");
+    if (!scrapeIfNotFound) return MemoModelCreator(id: creatorId, name: "not found in cache");
 
     print("INFO: Creator $creatorId not found. Scraping from website.");
     final scrapedCreator = await _getFreshScrapedCreator(creatorId);
@@ -76,7 +76,7 @@ class CreatorRepository {
   Future<void> refreshCreatorCache(String creatorId, hasUpdatedCallback, nothingChangedCallback) async {
     final scrapedCreator = await _getFreshScrapedCreator(creatorId);
     MemoModelCreator? cachedCreator = _getCreatorFromCache(creatorId);
-    MemoModelCreator updatedCreator = MemoModelCreator(id: "update failed", name: "update failed", profileText: "please retry");
+    MemoModelCreator updatedCreator = MemoModelCreator(id: creatorId, name: "update failed", profileText: "please retry");
     bool hasSameData = false;
 
     if (cachedCreator != null && scrapedCreator != null) {
@@ -97,7 +97,7 @@ class CreatorRepository {
   }
 
   Future<MemoModelCreator?> _getFreshScrapedCreator(String creatorId) async {
-    var cachedCreator = await getCreator(creatorId, saveToFirebase: false);
+    var cachedCreator = await getCreator(creatorId, saveToFirebase: false, scrapeIfNotFound: false);
     final scraperService = MemoCreatorService();
     final scrapedCreator = await scraperService.fetchCreatorDetails(cachedCreator!, noCache: true);
     return scrapedCreator;

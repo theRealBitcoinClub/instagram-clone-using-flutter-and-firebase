@@ -1,11 +1,13 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
-import 'package:mahakka/provider/user_provider.dart'; // Import the user provider
+import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/widgets/profile/profile_dialog_helpers.dart';
 import 'package:mahakka/widgets/profile_buttons.dart';
+
+import '../../provider/profile_providers.dart';
 
 // Helper for logging errors consistently
 void _logHeaderError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -41,7 +43,6 @@ class ProfileHeader extends StatefulWidget {
 }
 
 class _ProfileHeaderState extends State<ProfileHeader> {
-  // Persistent state for the QR code format
   bool _isCashtokenFormat = true;
 
   @override
@@ -60,10 +61,21 @@ class _ProfileHeaderState extends State<ProfileHeader> {
               valueColor: AlwaysStoppedAnimation(Colors.white70),
               backgroundColor: Colors.transparent,
             ),
+          // We wrap the whole top section in a Consumer to get the latest data.
           Consumer(
             builder: (context, ref, child) {
-              final updatedUser = ref.watch(userProvider);
-              return _buildTopDetailsRow(theme, colorScheme, context, updatedUser);
+              final loggedInUser = ref.watch(userProvider);
+              // Watch the creator provider directly here to get the updated values.
+              final creatorAsyncValue = ref.watch(creatorStateProvider);
+              final updatedCreator = creatorAsyncValue.asData?.value;
+
+              return _buildTopDetailsRow(
+                theme,
+                colorScheme,
+                context,
+                loggedInUser,
+                updatedCreator ?? widget.creator, // Use updated data or fallback to initial
+              );
             },
           ),
           _buildNameRow(theme),
@@ -74,14 +86,22 @@ class _ProfileHeaderState extends State<ProfileHeader> {
     );
   }
 
-  Widget _buildTopDetailsRow(ThemeData theme, ColorScheme colorScheme, BuildContext context, MemoModelUser? updatedUser) {
-    final creatorProfileImg = widget.creator.profileImageAvatar();
+  Widget _buildTopDetailsRow(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    BuildContext context,
+    MemoModelUser? updatedUser,
+    MemoModelCreator creatorToDisplay, // The updated creator data is now passed in
+  ) {
+    final creatorProfileImg = creatorToDisplay.profileImageAvatar();
     final balanceBch = updatedUser?.balanceBchDevPath145 ?? "?";
     final balanceTokens = updatedUser?.balanceCashtokensDevPath145 ?? "?";
     final balanceMemo = updatedUser?.balanceBchDevPath0Memo ?? "?";
-    String balanceBchCreator = widget.creator.balanceBch == -1 ? "?" : widget.creator.balanceBch.toString();
-    String balanceTokensCreator = widget.creator.balanceToken == -1 ? "?" : widget.creator.balanceToken.toString();
-    String balanceMemoCreator = widget.creator.balanceMemo == -1 ? "?" : widget.creator.balanceMemo.toString();
+
+    // Now get the creator's balances from the updated creatorToDisplay object
+    String balanceBchCreator = creatorToDisplay.balanceBch == -1 ? "?" : creatorToDisplay.balanceBch.toString();
+    String balanceTokensCreator = creatorToDisplay.balanceToken == -1 ? "?" : creatorToDisplay.balanceToken.toString();
+    String balanceMemoCreator = creatorToDisplay.balanceMemo == -1 ? "?" : creatorToDisplay.balanceMemo.toString();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 16, 12),
@@ -97,7 +117,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                   ? const AssetImage("assets/images/default_profile.png") as ImageProvider
                   : NetworkImage(creatorProfileImg),
               onBackgroundImageError: (exception, stackTrace) {
-                _logHeaderError("Error loading profile image in header: ${widget.creator.name}", exception, stackTrace);
+                _logHeaderError("Error loading profile image in header: ${creatorToDisplay.name}", exception, stackTrace);
               },
             ),
           ),
@@ -132,14 +152,10 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                     text: !widget.isOwnProfile ? "Send Tip" : 'Edit Profile',
                     onPressed: () {
                       if (!widget.isOwnProfile) {
-                        // This is the "Send Tip" button on a creator's profile.
-                        // We need the creator's addresses to show the QR code.
-                        // The creator object already contains the address information
-                        // as a part of its model. We should use that.
                         showQrCodeDialog(
                           theme: theme,
                           context: context,
-                          creator: widget.creator, // Assuming a conversion method exists
+                          creator: creatorToDisplay,
                           getTempToggleState: () => _isCashtokenFormat,
                           setTempToggleState: (newState) {
                             setState(() {
@@ -148,7 +164,6 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                           },
                         );
                       } else {
-                        // This is the "Edit Profile" button on the user's own profile.
                         widget.onProfileButtonPressed();
                       }
                     },

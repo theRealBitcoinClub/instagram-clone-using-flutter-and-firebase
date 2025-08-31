@@ -26,7 +26,13 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
       // Return null or throw a specific error if no ID is available
       return null;
     }
-    return ref.read(creatorRepositoryProvider).getCreator(creatorId);
+    //TODO WHERE AND WHEN MUST I REFRESH WHAT
+    CreatorRepository creatorRepository = ref.read(creatorRepositoryProvider);
+    // await creatorRepository.refreshCreatorCache(creatorId, () {}, () {});
+    MemoModelCreator? creator = await creatorRepository.getCreator(creatorId);
+    // if (creator!.hasRegisteredAsUser) await creator.refreshBalanceMahakka();
+    // await creator.refreshBalanceMemo();
+    return creator;
   }
 
   // A public method to refresh the creator data

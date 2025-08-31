@@ -63,6 +63,8 @@ class MemoBitcoinBase {
     "bitcoincash.stackwallet.com", // Rehrar / Stack Wallet official
     "node.minisatoshi.cash", // minisatoshi
   ];
+  // A static list to keep track of servers that have failed to connect.
+  static final Set<String> _badServers = {};
 
   static const derivationPathMemoBch = "m/44'/0'/0'/0/0";
   static const derivationPathMemoSlp = "m/44'/245'/0'/0/0";
@@ -77,11 +79,44 @@ class MemoBitcoinBase {
     network = BitcoinCashNetwork.mainnet;
   }
 
-  static Future<MemoBitcoinBase> create() async {
+  static Future<MemoBitcoinBase> createOld() async {
     MemoBitcoinBase instance = MemoBitcoinBase._create();
     ElectrumWebSocketService service = await ElectrumWebSocketService.connect("wss://${mainnetServers[2]}:50004");
     instance.provider = ElectrumProvider(service);
     return instance;
+  }
+
+  static Future<MemoBitcoinBase> create() async {
+    MemoBitcoinBase instance = MemoBitcoinBase._create();
+
+    // Create a list of servers to try, excluding any from the bad servers list.
+    final serversToTry = mainnetServers.where((server) => !_badServers.contains(server)).toList();
+
+    for (final server in serversToTry) {
+      try {
+        final ElectrumWebSocketService service = await ElectrumWebSocketService.connect(
+          "wss://$server:50004",
+        ).timeout(const Duration(seconds: 3));
+
+        instance.service = service;
+        instance.provider = ElectrumProvider(service);
+        print("Connected to Electrum server: $server");
+        return instance;
+      } catch (e) {
+        print("Failed to connect to Electrum server $server. Error: $e");
+        // Add the failed server to the bad servers set.
+        _badServers.add(server);
+      }
+    }
+
+    clearBadServers();
+    // If no servers are left to try or none connected.
+    throw Exception("Failed to connect to any available Electrum servers.");
+  }
+
+  // Optional: A method to clear the bad servers list, useful for a retry mechanism.
+  static void clearBadServers() {
+    _badServers.clear();
   }
 
   Future<Balance> getBalances(String address) async {

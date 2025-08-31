@@ -5,9 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
-import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/memo/model/memo_model_user.dart';
-import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure this is theme-neutral or adapts
 import 'package:mahakka/widgets/textfield_input.dart'; // CRITICAL: This MUST be themed internally
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -15,6 +12,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 // Assuming these exist and are correctly imported
 import '../memo/base/memo_verifier.dart';
 import '../memo/base/text_input_verifier.dart';
+import '../repositories/post_repository.dart';
 import '../views_taggable/view_models/search_view_model.dart'; // Ensure SearchViewModel logic is sound
 import '../views_taggable/widgets/comment_text_field.dart'; // CRITICAL: This MUST be themed internally
 import '../views_taggable/widgets/search_result_overlay.dart'; // Ensure this is theme-aware or neutral
@@ -49,7 +47,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   String _validImgurUrl = "";
   String _validYouTubeVideoId = "";
 
-  MemoModelUser? _user;
   late Animation<Offset> _taggerOverlayAnimation;
   final double _taggerOverlayHeight = 300;
 
@@ -72,7 +69,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _initStateTagger();
     // _loadInitialData();
     final clipboardFuture = _checkClipboard();
-    _user = ref.read(userProvider);
 
     _log("initState completed");
   }
@@ -772,8 +768,9 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final String? topic = _extractTopicFromTags(textContent);
 
     try {
+      final postRepository = ref.read(postRepositoryProvider);
       // Assuming user.profileIdMemoBch is the correct parameter here
-      final response = await MemoModelPost.publishImageOrVideo(_user!, textContent, topic, validate: false);
+      final response = await postRepository.publishImageOrVideo(textContent, topic, validate: false);
 
       if (!mounted) return;
 

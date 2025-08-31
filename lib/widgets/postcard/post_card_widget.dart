@@ -6,6 +6,7 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 import 'package:mahakka/provider/user_provider.dart';
+import 'package:mahakka/repositories/post_repository.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure path is correct
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
@@ -198,7 +199,8 @@ class _PostCardState extends ConsumerState<PostCard> {
     setState(() => _isSendingTx = true);
 
     try {
-      MemoAccountantResponse response = await MemoAccountant(_user!).publishLike(widget.post);
+      MemoAccountant account = ref.read(memoAccountantProvider);
+      MemoAccountantResponse response = await account.publishLike(widget.post);
       if (!mounted) return;
 
       setState(() {
@@ -331,13 +333,13 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   Future<void> _publishReplyTopic(String text) async {
-    var result = await widget.post.publishReplyTopic(_user!, text);
+    var result = await ref.read(postRepositoryProvider).publishReplyTopic(widget.post, text);
     if (!mounted) return;
     _showVerificationResponse(result, context);
   }
 
   Future<void> _publishReplyHashtags(String text) async {
-    var result = await widget.post.publishReplyHashtags(_user!, text);
+    var result = await ref.read(postRepositoryProvider).publishReplyHashtags(widget.post, text);
     if (!mounted) return;
     _showVerificationResponse(result, context);
   }

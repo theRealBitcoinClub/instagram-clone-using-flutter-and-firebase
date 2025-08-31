@@ -1,11 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart'; // For Timestamp and DocumentSnapshot
 import 'package:json_annotation/json_annotation.dart';
-import 'package:mahakka/memo/base/memo_accountant.dart';
-import 'package:mahakka/memo/base/memo_verifier.dart';
-import 'package:mahakka/memo/firebase/topic_service.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
-import 'package:mahakka/memo/model/memo_model_user.dart';
 
 part 'memo_model_post.g.dart';
 
@@ -165,29 +161,6 @@ class MemoModelPost {
     );
   }
 
-  Future<dynamic> publishReplyTopic(MemoModelUser user, String replyText) async {
-    MemoVerificationResponse verifier = MemoVerifier(replyText).checkAllPostValidations();
-    if (verifier == MemoVerificationResponse.valid) {
-      return MemoAccountant(user).publishReplyTopic(this, replyText);
-    } else {
-      return verifier;
-    }
-  }
-
-  Future<dynamic> publishReplyHashtags(MemoModelUser user, String text) async {
-    MemoVerificationResponse verifier = MemoVerifier(text).checkAllPostValidations();
-    if (verifier != MemoVerificationResponse.valid) return verifier;
-    return MemoAccountant(user).publishReplyHashtags(this, text);
-  }
-
-  static Future<dynamic> publishImageOrVideo(MemoModelUser user, String text, String? topic, {bool validate = false}) async {
-    if (validate) {
-      MemoVerificationResponse res = MemoVerifier(text).checkAllPostValidations();
-      if (res != MemoVerificationResponse.valid) return res;
-    }
-    return MemoAccountant(user).publishImgurOrYoutube(topic, text);
-  }
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -200,12 +173,6 @@ class MemoModelPost {
   @override
   String toString() {
     return 'MemoModelPost(id: $id, text: $text, creatorId: $creatorId)';
-  }
-
-  Future<void> loadTopic() async {
-    if (topicId.isNotEmpty) {
-      topic = await TopicService().getTopicOnce(topicId);
-    }
   }
 
   String dateTimeFormattedSafe() {

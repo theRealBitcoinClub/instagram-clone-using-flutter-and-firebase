@@ -22,12 +22,13 @@ class UserState {
 }
 
 class UserNotifier extends StateNotifier<UserState> {
-  UserNotifier(this._authChecker) : super(UserState(isLoading: true)) {
+  UserNotifier(this.ref, this._authChecker) : super(UserState(isLoading: true)) {
     // Initial load when the provider is first created
     refreshUser();
   }
 
   final AuthChecker _authChecker;
+  final Ref ref;
 
   Future<void> refreshUser() async {
     state = state.copyWith(isLoading: true, clearError: true);
@@ -55,20 +56,20 @@ class UserNotifier extends StateNotifier<UserState> {
 
     try {
       // 1. Refresh BCH (Memo) balance
-      final request = await user.refreshBalanceDevPath0();
+      final request = await user.refreshBalanceDevPath0(ref);
       // if (request == "success") {
       user = user.copyWith(balanceBchDevPath0Memo: request);
       state = state.copyWith(user: user);
       // }
 
       // 2. Refresh BCH (Cashtoken) balance
-      final bchBalanceRequest = await user.refreshBalanceDevPath145();
+      final bchBalanceRequest = await user.refreshBalanceDevPath145(ref);
       // if (bchBalanceRequest == "success") {
       user = user.copyWith(balanceBchDevPath145: bchBalanceRequest);
       state = state.copyWith(user: user);
       // }
       // 3. Refresh Tokens balance
-      final tokenBalanceReq = await user.refreshBalanceTokens();
+      final tokenBalanceReq = await user.refreshBalanceTokens(ref);
       // if (tokenBalanceReq == "success") {
       user = user.copyWith(balanceCashtokensDevPath145: tokenBalanceReq);
       state = state.copyWith(user: user);
@@ -87,7 +88,7 @@ class UserNotifier extends StateNotifier<UserState> {
 
 // The global provider for UserNotifier
 final userNotifierProvider = StateNotifierProvider<UserNotifier, UserState>((ref) {
-  return UserNotifier(AuthChecker(ref));
+  return UserNotifier(ref, AuthChecker(ref));
 });
 
 // Optional: A simpler provider just for the user model, derived from UserState

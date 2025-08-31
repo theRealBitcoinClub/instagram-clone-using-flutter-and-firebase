@@ -1,9 +1,11 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/memo/model/memo_tip.dart';
 
+import '../../provider/electrum_provider.dart';
 import 'memo_code.dart';
 import 'memo_transaction_builder.dart';
 
@@ -11,7 +13,8 @@ const int hash160DigestLength = QuickCrypto.hash160DigestSize;
 const network = BitcoinCashNetwork.mainnet;
 
 class MemoPublisher {
-  late MemoBitcoinBase base;
+  // Add a final Ref field to store the Riverpod ref.
+  final Ref ref;
   BigInt fee = BtcUtils.toSatoshi("0.000007");
   late String memoMessage;
   late MemoCode memoAction;
@@ -21,27 +24,29 @@ class MemoPublisher {
   late ECPublic publicKey;
   late ECPrivate privateKey;
 
-  MemoPublisher._create(this.memoMessage, this.memoAction, {this.pk, this.wif}) {
+  // Add the Ref to the constructor.
+  MemoPublisher._create(this.ref, this.memoMessage, this.memoAction, {this.pk, this.wif}) {
     privateKey = pk ?? (ECPrivate.fromWif(wif ?? "xxx", netVersion: network.wifNetVer));
     publicKey = privateKey.getPublic();
     p2pkhAddress = BitcoinCashAddress.fromBaseAddress(publicKey.toAddress());
   }
 
-  static Future<MemoPublisher> create(String msg, MemoCode code, {ECPrivate? pk, String? wif}) async {
-    MemoPublisher publisher = MemoPublisher._create(msg, code, pk: pk, wif: wif);
-
-    await publisher._initAsync();
-
+  // The create method must now accept a Ref and pass it to the private constructor.
+  static Future<MemoPublisher> create(Ref ref, String msg, MemoCode code, {ECPrivate? pk, String? wif}) async {
+    MemoPublisher publisher = MemoPublisher._create(ref, msg, code, pk: pk, wif: wif);
+    // Remove the redundant _initAsync call. The provider is ready to use.
     return publisher;
   }
 
-  _initAsync() async {
-    base = await MemoBitcoinBase.create();
-  }
+  // This method no longer needs to be async.
+  // _initAsync() async {
+  //   base = await MemoBitcoinBase.create();
+  // }
 
   Future<MemoAccountantResponse> doPublish({String topic = "", MemoTip? tip}) async {
-    // print("\n${memoAction.opCode}\n${memoAction.name}");
-    // print("https://bchblockexplorer.com/address/${p2pkhAddress.address}");
+    // Get the shared instance from the provider using the stored ref.
+    final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
+
     final List<ElectrumUtxo> elctrumUtxos = await base.requestElectrumUtxos(p2pkhAddress);
 
     if (elctrumUtxos.isEmpty) {
@@ -56,21 +61,15 @@ class MemoPublisher {
       return MemoAccountantResponse.lowBalance;
     }
     final BtcTransaction tx = createTransaction(walletBalance, utxos, memoTopic: topic, memoTip: tip);
-    // print(tx.txId());
-    // print("http://memo.cash/explore/tx/${tx.txId()}");
-    // print("https://bchblockexplorer.com/tx/${tx.txId()}");
-    //TODO TRY AGAIN ON TIMEOUT
-    //TODO TRY AGAIN ON REJECTED NETWORK RULES RAISE FEE
-    //TODO OPTIMIZE FEE COST FOR PAYING CUSTOMERS TRY TINY FIRST
     try {
       await base.broadcastTransaction(tx);
     } catch (e) {
-      //TODO dust can mean that balance is low but also if tip thats lower than dust is being sent
       return MemoAccountantResponse.dust;
     }
     return MemoAccountantResponse.yes;
   }
 
+  // Rest of your methods remain the same.
   BtcTransaction createTransaction(BigInt balance, List<UtxoWithAddress> utxos, {memoTopic = "", MemoTip? memoTip}) {
     final MemoTransactionBuilder txBuilder = createTxBuilder(balance, utxos, memoTopic, memoTip);
     final tx = txBuilder.buildTransaction((trDigest, utxo, publicKey, sighash) {

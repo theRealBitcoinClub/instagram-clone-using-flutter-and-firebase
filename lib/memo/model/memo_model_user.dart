@@ -1,8 +1,10 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
+import 'package:mahakka/provider/electrum_provider.dart';
 
 import '../firebase/user_service.dart';
 
@@ -148,8 +150,9 @@ class MemoModelUser {
     await _userService.saveUser(this);
   }
 
-  Future<String> refreshBalanceDevPath0() async {
-    MemoBitcoinBase base = await MemoBitcoinBase.create();
+  Future<String> refreshBalanceDevPath0(Ref ref) async {
+    MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
+    // MemoBitcoinBase base = await MemoBitcoinBase.create();
     P2pkhAddress p2pkhwt = base.createAddressLegacy(pkLegacy);
     BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
 
@@ -169,8 +172,8 @@ class MemoModelUser {
     return balanceBchDevPath0Memo;
   }
 
-  Future<String> refreshBalanceDevPath145() async {
-    MemoBitcoinBase base = await MemoBitcoinBase.create();
+  Future<String> refreshBalanceDevPath145(Ref ref) async {
+    MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
     P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(pkBchCashtoken);
     BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
     List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress);
@@ -188,8 +191,8 @@ class MemoModelUser {
     return balanceBchDevPath145;
   }
 
-  Future<String> refreshBalanceTokens() async {
-    MemoBitcoinBase base = await MemoBitcoinBase.create();
+  Future<String> refreshBalanceTokens(Ref ref) async {
+    MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
     P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(pkBchCashtoken);
     p2pkhwt.toAddress(BitcoinCashNetwork.mainnet);
     BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);

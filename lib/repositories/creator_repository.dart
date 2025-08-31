@@ -30,7 +30,7 @@ class CreatorRepository {
     final firebaseCreator = await ref.read(creatorServiceProvider).getCreatorOnce(creatorId);
     if (firebaseCreator != null) {
       print("INFO: Fetched creator $creatorId from Firebase. Saving to cache.");
-      await firebaseCreator.refreshUserData();
+      await firebaseCreator.refreshUserData(ref);
       _saveToCache(firebaseCreator);
       return firebaseCreator;
     }
@@ -113,7 +113,7 @@ class CreatorRepository {
       return verificationResponse;
     }
 
-    final accountant = MemoAccountant(user);
+    final accountant = ref.read(memoAccountantProvider);
     final response = await accountant.profileSetName(name);
 
     switch (response) {
@@ -147,7 +147,7 @@ class CreatorRepository {
       return verificationResponse;
     }
 
-    final accountant = MemoAccountant(user);
+    final accountant = ref.read(memoAccountantProvider);
     final response = await accountant.profileSetText(text);
 
     switch (response) {
@@ -174,7 +174,7 @@ class CreatorRepository {
       return verifiedUrl;
     }
 
-    final accountant = MemoAccountant(user);
+    final accountant = ref.read(memoAccountantProvider);
     final response = await accountant.profileSetAvatar(verifiedUrl);
 
     switch (response) {

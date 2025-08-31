@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_code.dart';
 import 'package:mahakka/memo/base/memo_publisher.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
@@ -5,6 +6,7 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/model/memo_tip.dart';
 
+import '../../provider/user_provider.dart';
 import 'memo_bitcoin_base.dart';
 
 enum MemoAccountType { tokens, bch, memo }
@@ -26,13 +28,25 @@ enum MemoAccountantResponse {
 
 //TODO Accountant checks balance before user starts writing to disable all functions related to publishing,
 // so then user can be redirected to the QR Code right away anytime he tries to publish
+// A provider for MemoAccountant
+final memoAccountantProvider = Provider<MemoAccountant>((ref) {
+  // You need a user provider here. Assuming one exists.
+  final user = ref.watch(userProvider);
+  if (user == null) {
+    // You could return null or throw an error if the user is not authenticated.
+    throw Exception('User data not available for MemoAccountant.');
+  }
+  // Create and return the MemoAccountant instance, passing ref and the user.
+  return MemoAccountant(ref, user);
+});
 
 class MemoAccountant {
   final MemoModelUser user;
+  final Ref ref;
 
-  MemoAccountant(this.user);
+  MemoAccountant(this.ref, this.user);
 
-  static MemoAccountantResponse checkAccount(MemoAccountType t, MemoModelUser user) {
+  static MemoAccountantResponse checkAccount(MemoAccountType t) {
     return MemoAccountantResponse.yes;
   }
 
@@ -74,7 +88,7 @@ class MemoAccountant {
   }
 
   Future<MemoAccountantResponse> _tryPublishLike(MemoModelPost post, String wif) async {
-    var mp = await MemoPublisher.create(MemoBitcoinBase.reOrderTxHash(post.id!), MemoCode.postLike, wif: wif);
+    var mp = await MemoPublisher.create(ref, MemoBitcoinBase.reOrderTxHash(post.id!), MemoCode.postLike, wif: wif);
     return mp.doPublish(tip: MemoTip(post.creator!.id, user.tipAmount));
   }
 
@@ -87,7 +101,7 @@ class MemoAccountant {
   }
 
   Future<MemoAccountantResponse> _publishToMemo(MemoCode c, String text, {String? top, MemoTip? tip}) async {
-    MemoPublisher mp = await MemoPublisher.create(text, c, wif: user.wifLegacy);
+    MemoPublisher mp = await MemoPublisher.create(ref, text, c, wif: user.wifLegacy);
     return mp.doPublish(topic: top ?? "", tip: tip);
   }
 

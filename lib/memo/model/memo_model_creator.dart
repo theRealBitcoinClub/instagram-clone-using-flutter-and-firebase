@@ -1,12 +1,16 @@
 // [1]
 // The user has this file open:
 // /home/pachamama/github/mahakka/lib/memo/model/memo_model_creator.dart.
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/firebase/user_service.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart'; // Assuming this is your utility function
 import 'package:mahakka/memo_data_checker.dart';
+
+import '../../provider/electrum_provider.dart';
 
 part 'memo_model_creator.g.dart'; // This will be generated
 
@@ -205,7 +209,7 @@ class MemoModelCreator {
   @override
   int get hashCode => id.hashCode;
 
-  Future<void> refreshUserData() async {
+  Future<void> refreshUserData(Ref ref) async {
     if (userData == null) {
       userData = await UserService().getUserOnce(id);
       hasRegisteredAsUser = userData != null;
@@ -215,22 +219,23 @@ class MemoModelCreator {
     }
 
     if (hasRegisteredAsUser) {
-      refreshBalanceMahakka();
-      refreshBalanceMemo();
+      refreshBalanceMahakka(ref);
+      refreshBalanceMemo(ref);
     } else {
-      refreshBalanceMemo();
+      refreshBalanceMemo(ref);
     }
   }
 
-  Future<void> refreshBalanceMahakka() async {
-    MemoBitcoinBase base = await MemoBitcoinBase.create();
+  Future<void> refreshBalanceMahakka(Ref ref) async {
+    final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
+
     Balance balances = await base.getBalances(userData!.bchAddressCashtokenAware);
     balanceBch = balances.bch;
     balanceToken = balances.token;
   }
 
-  Future<void> refreshBalanceMemo() async {
-    MemoBitcoinBase base = await MemoBitcoinBase.create();
+  Future<void> refreshBalanceMemo(Ref ref) async {
+    final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
     balanceMemo = await base.getBalances(id).then((value) => value.bch);
   }
 

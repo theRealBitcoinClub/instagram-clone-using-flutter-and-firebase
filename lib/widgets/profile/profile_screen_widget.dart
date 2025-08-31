@@ -101,6 +101,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       );
     }
 
+    // final WidgetRef widgetRef = ref;
+
     // Use a ref.listen to trigger the refresh when the tab index changes.
     // This is a more explicit and reliable way to handle side effects like this.
     ref.listen<int>(tabIndexProvider, (previousIndex, newIndex) {

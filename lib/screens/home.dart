@@ -5,15 +5,9 @@ import 'package:mahakka/screens/add_screen.dart'; // Ensure AddPost is themed
 import 'package:mahakka/screens/feed_screen.dart'; // Ensure FeedScreen is themed
 import 'package:mahakka/tab_item_data.dart';
 
-// import 'package:provider/provider.dart' as legacy;
-
 import '../provider/navigation_providers.dart';
 import '../provider/scraper_provider.dart';
 import '../widgets/profile/profile_screen_new.dart';
-
-// class NavBarCallback {
-//   switchToProfileTab() {}
-// }
 
 class HomeSceen extends ConsumerStatefulWidget {
   // Consider renaming to HomeScreen for convention
@@ -32,7 +26,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _initUser();
     final initialIndex = ref.read(tabIndexProvider); // Read initial index
     _pageController = PageController(initialPage: initialIndex);
     _tabController = TabController(length: _totalTabs, vsync: this, initialIndex: initialIndex);
@@ -72,48 +65,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   void _navigateToPreviousTab() {
     ref.read(tabIndexProvider.notifier).previousTab();
   }
-
-  // @override
-  // switchToProfileTab() {
-  //   _navigationPageSelected(2);
-  // }
-
-  Future<void> _initUser() async {
-    // (Uncomment and use the WidgetsBinding block if you want HomeSceen to explicitly trigger refreshUser when it initializes. Otherwise, if your UserNotifier constructor calls refreshUser, this line can be mostly commented out or removed).
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   if (mounted) {
-    //     ref.read(userNotifierProvider.notifier).refreshUser();
-    //   }
-    // });
-
-    // OLD CODE
-    // if (mounted) {
-    //   ProviderUser up = legacy.Provider.of<ProviderUser>(context, listen: false);
-    //   try {
-    //     await up.refreshUser();
-    //   } catch (e) {
-    //     // Handle error if refreshUser fails, e.g., show a SnackBar
-    //     print("Error refreshing user: $e");
-    //     if (mounted) {
-    //       // ScaffoldMessenger.of(context).showSnackBar(
-    //       //   SnackBar(content: Text("Failed to load user data.", style: TextStyle(color: Theme.of(context).colorScheme.onError)), backgroundColor: Theme.of(context).colorScheme.error),
-    //       // );
-    //     }
-    //   }
-    // }
-  }
-  //
-  // void _onPageChanged(int page) {
-  //   setState(() {
-  //     _page = page;
-  //   });
-  // }
-
-  // void _navigationPageSelected(int page) {
-  //   // if (page != 2) MemoModelUser.profileIdReset();
-  //   //TODO reset profileId if page != 2
-  //   _pageController.animateToPage(page, duration: const Duration(milliseconds: 300), curve: Curves.decelerate);
-  // }
 
   @override
   Widget build(BuildContext context) {

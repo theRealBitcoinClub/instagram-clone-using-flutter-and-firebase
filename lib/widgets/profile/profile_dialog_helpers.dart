@@ -107,10 +107,11 @@ void showPostDialog({
 }
 
 // --- BCH QR Code Dialog ---
-void showBchQRDialog({
+void showQrCodeDialog({
   required BuildContext context,
   required ThemeData theme,
-  required MemoModelUser user,
+  MemoModelUser? user,
+  MemoModelCreator? creator,
   required bool Function() getTempToggleState,
   required Function(bool) setTempToggleState,
 }) {
@@ -118,7 +119,16 @@ void showBchQRDialog({
     context: context,
     builder: (dialogCtx) {
       return QrCodeDialog(
-        user: user,
+        cashtokenAddress: user != null
+            ? user.bchAddressCashtokenAware
+            : creator!.hasRegisteredAsUser
+            ? creator.userData!.bchAddressCashtokenAware
+            : null,
+        legacyAddress: user != null
+            ? user.legacyAddressMemoBch
+            : creator!.hasRegisteredAsUser
+            ? creator.userData!.legacyAddressMemoBch
+            : creator.id,
         initialToggleState: getTempToggleState(),
         onToggle: (newState) {
           setTempToggleState(newState);

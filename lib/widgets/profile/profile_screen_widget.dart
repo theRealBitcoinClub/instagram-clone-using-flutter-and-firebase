@@ -128,7 +128,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
             isOwnProfile: isOwnProfile,
             onShowBchQrDialog: () {
               if (loggedInUser != null) {
-                showBchQRDialog(
+                showQrCodeDialog(
                   context: context,
                   theme: theme,
                   user: loggedInUser,

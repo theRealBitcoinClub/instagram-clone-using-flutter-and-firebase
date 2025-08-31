@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/provider/user_provider.dart'; // Import the user provider
+import 'package:mahakka/widgets/profile/profile_dialog_helpers.dart';
 import 'package:mahakka/widgets/profile_buttons.dart';
 
 // Helper for logging errors consistently
@@ -13,9 +14,8 @@ void _logHeaderError(String message, [dynamic error, StackTrace? stackTrace]) {
   if (stackTrace != null) print('  StackTrace: $stackTrace');
 }
 
-class ProfileHeader extends StatelessWidget {
+class ProfileHeader extends StatefulWidget {
   final MemoModelCreator creator;
-  // The loggedInUser is now a prop used for reference but balances are watched
   final MemoModelUser? loggedInUser;
   final bool isOwnProfile;
   final bool isRefreshingProfile;
@@ -37,6 +37,14 @@ class ProfileHeader extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _ProfileHeaderState createState() => _ProfileHeaderState();
+}
+
+class _ProfileHeaderState extends State<ProfileHeader> {
+  // Persistent state for the QR code format
+  bool _isCashtokenFormat = true;
+
+  @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
@@ -46,13 +54,12 @@ class ProfileHeader extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (isRefreshingProfile)
+          if (widget.isRefreshingProfile)
             const LinearProgressIndicator(
               minHeight: 2.5,
               valueColor: AlwaysStoppedAnimation(Colors.white70),
               backgroundColor: Colors.transparent,
             ),
-          // Wrap the top section in a Consumer to watch the userProvider
           Consumer(
             builder: (context, ref, child) {
               final updatedUser = ref.watch(userProvider);
@@ -67,20 +74,14 @@ class ProfileHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildTopDetailsRow(
-    ThemeData theme,
-    ColorScheme colorScheme,
-    BuildContext context,
-    MemoModelUser? updatedUser, // The updated user from the provider
-  ) {
-    final creatorProfileImg = creator.profileImageAvatar();
-    // Use updatedUser to get the most recent balance values
+  Widget _buildTopDetailsRow(ThemeData theme, ColorScheme colorScheme, BuildContext context, MemoModelUser? updatedUser) {
+    final creatorProfileImg = widget.creator.profileImageAvatar();
     final balanceBch = updatedUser?.balanceBchDevPath145 ?? "?";
     final balanceTokens = updatedUser?.balanceCashtokensDevPath145 ?? "?";
     final balanceMemo = updatedUser?.balanceBchDevPath0Memo ?? "?";
-    String balanceBchCreator = creator.balanceBch == -1 ? "?" : creator.balanceBch.toString();
-    String balanceTokensCreator = creator.balanceToken == -1 ? "?" : creator.balanceToken.toString();
-    String balanceMemoCreator = creator.balanceMemo == -1 ? "?" : creator.balanceMemo.toString();
+    String balanceBchCreator = widget.creator.balanceBch == -1 ? "?" : widget.creator.balanceBch.toString();
+    String balanceTokensCreator = widget.creator.balanceToken == -1 ? "?" : widget.creator.balanceToken.toString();
+    String balanceMemoCreator = widget.creator.balanceMemo == -1 ? "?" : widget.creator.balanceMemo.toString();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 16, 12),
@@ -88,15 +89,15 @@ class ProfileHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
-            onTap: showImageDetail,
+            onTap: widget.showImageDetail,
             child: CircleAvatar(
               radius: 40,
               backgroundColor: colorScheme.surfaceVariant,
-              backgroundImage: showDefaultAvatar || creatorProfileImg.isEmpty
+              backgroundImage: widget.showDefaultAvatar || creatorProfileImg.isEmpty
                   ? const AssetImage("assets/images/default_profile.png") as ImageProvider
                   : NetworkImage(creatorProfileImg),
               onBackgroundImageError: (exception, stackTrace) {
-                _logHeaderError("Error loading profile image in header: ${creator.name}", exception, stackTrace);
+                _logHeaderError("Error loading profile image in header: ${widget.creator.name}", exception, stackTrace);
               },
             ),
           ),
@@ -106,28 +107,52 @@ class ProfileHeader extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (isOwnProfile && updatedUser != null)
+                if (widget.isOwnProfile && updatedUser != null)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Expanded(child: buildStatColumn(theme, 'BCH', balanceBch)),
-                      Expanded(child: buildStatColumn(theme, 'Tokens', balanceTokens)),
-                      Expanded(child: buildStatColumn(theme, 'Memo', balanceMemo)),
+                      Expanded(child: widget.buildStatColumn(theme, 'BCH', balanceBch)),
+                      Expanded(child: widget.buildStatColumn(theme, 'Tokens', balanceTokens)),
+                      Expanded(child: widget.buildStatColumn(theme, 'Memo', balanceMemo)),
                     ],
                   )
-                else if (!isOwnProfile)
+                else if (!widget.isOwnProfile)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Expanded(child: buildStatColumn(theme, 'BCH', balanceBchCreator)),
-                      Expanded(child: buildStatColumn(theme, 'Tokens', balanceTokensCreator)),
-                      Expanded(child: buildStatColumn(theme, 'Memo', balanceMemoCreator)),
+                      Expanded(child: widget.buildStatColumn(theme, 'BCH', balanceBchCreator)),
+                      Expanded(child: widget.buildStatColumn(theme, 'Tokens', balanceTokensCreator)),
+                      Expanded(child: widget.buildStatColumn(theme, 'Memo', balanceMemoCreator)),
                     ],
                   ),
                 const SizedBox(height: 12),
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
-                  child: SettingsButton(text: !isOwnProfile ? "Send Tip" : 'Edit Profile', onPressed: onProfileButtonPressed),
+                  child: SettingsButton(
+                    text: !widget.isOwnProfile ? "Send Tip" : 'Edit Profile',
+                    onPressed: () {
+                      if (!widget.isOwnProfile) {
+                        // This is the "Send Tip" button on a creator's profile.
+                        // We need the creator's addresses to show the QR code.
+                        // The creator object already contains the address information
+                        // as a part of its model. We should use that.
+                        showQrCodeDialog(
+                          theme: theme,
+                          context: context,
+                          creator: widget.creator, // Assuming a conversion method exists
+                          getTempToggleState: () => _isCashtokenFormat,
+                          setTempToggleState: (newState) {
+                            setState(() {
+                              _isCashtokenFormat = newState;
+                            });
+                          },
+                        );
+                      } else {
+                        // This is the "Edit Profile" button on the user's own profile.
+                        widget.onProfileButtonPressed();
+                      }
+                    },
+                  ),
                 ),
               ],
             ),
@@ -138,8 +163,8 @@ class ProfileHeader extends StatelessWidget {
   }
 
   Padding _buildNameRow(ThemeData theme) {
-    final creatorName = creator.name.isNotEmpty ? creator.name : "Anonymous";
-    final creatorProfileIdShort = creator.profileIdShort;
+    final creatorName = widget.creator.name.isNotEmpty ? widget.creator.name : "Anonymous";
+    final creatorProfileIdShort = widget.creator.profileIdShort;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0).copyWith(top: 2, bottom: 4.0),
@@ -162,7 +187,7 @@ class ProfileHeader extends StatelessWidget {
   }
 
   Padding _buildProfileText(ColorScheme colorScheme, ThemeData theme) {
-    final profileText = creator.profileText;
+    final profileText = widget.creator.profileText;
     if (profileText.trim().isEmpty) {
       return const Padding(padding: EdgeInsets.zero);
     }

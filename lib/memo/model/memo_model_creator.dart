@@ -36,7 +36,7 @@ class MemoModelCreator {
   bool isCheckingDetail = false;
 
   @JsonKey(ignore: true)
-  MemoModelUser? _userData;
+  MemoModelUser? userData;
 
   @JsonKey(ignore: true)
   bool hasRegisteredAsUser = false;
@@ -206,9 +206,9 @@ class MemoModelCreator {
   int get hashCode => id.hashCode;
 
   Future<void> refreshUserData() async {
-    if (_userData == null) {
-      _userData = await UserService().getUserOnce(id);
-      hasRegisteredAsUser = _userData != null;
+    if (userData == null) {
+      userData = await UserService().getUserOnce(id);
+      hasRegisteredAsUser = userData != null;
     } else {
       hasRegisteredAsUser = true;
       // return true; //TODO store the userdata in local cache same as creator to avoid repeating requests for each post
@@ -224,7 +224,7 @@ class MemoModelCreator {
 
   Future<void> refreshBalanceMahakka() async {
     MemoBitcoinBase base = await MemoBitcoinBase.create();
-    Balance balances = await base.getBalances(_userData!.bchAddressCashtokenAware);
+    Balance balances = await base.getBalances(userData!.bchAddressCashtokenAware);
     balanceBch = balances.bch;
     balanceToken = balances.token;
   }

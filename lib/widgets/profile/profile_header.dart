@@ -75,9 +75,12 @@ class ProfileHeader extends StatelessWidget {
   ) {
     final creatorProfileImg = creator.profileImageAvatar();
     // Use updatedUser to get the most recent balance values
-    final balanceBch = updatedUser?.balanceBchDevPath145 ?? "0";
-    final balanceTokens = updatedUser?.balanceCashtokensDevPath145 ?? "0";
-    final balanceMemo = updatedUser?.balanceBchDevPath0Memo ?? "0";
+    final balanceBch = updatedUser?.balanceBchDevPath145 ?? "?";
+    final balanceTokens = updatedUser?.balanceCashtokensDevPath145 ?? "?";
+    final balanceMemo = updatedUser?.balanceBchDevPath0Memo ?? "?";
+    String balanceBchCreator = creator.balanceBch == -1 ? "?" : creator.balanceBch.toString();
+    String balanceTokensCreator = creator.balanceToken == -1 ? "?" : creator.balanceToken.toString();
+    String balanceMemoCreator = creator.balanceMemo == -1 ? "?" : creator.balanceMemo.toString();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 16, 12),
@@ -116,14 +119,15 @@ class ProfileHeader extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Expanded(child: buildStatColumn(theme, 'Followers', "${creator.followerCount}")),
-                      Expanded(child: buildStatColumn(theme, 'Actions', "${creator.actions}")),
+                      Expanded(child: buildStatColumn(theme, 'BCH', balanceBchCreator)),
+                      Expanded(child: buildStatColumn(theme, 'Tokens', balanceTokensCreator)),
+                      Expanded(child: buildStatColumn(theme, 'Memo', balanceMemoCreator)),
                     ],
                   ),
                 const SizedBox(height: 12),
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
-                  child: SettingsButton(text: !isOwnProfile ? "Follow" : 'Edit Profile', onPressed: onProfileButtonPressed),
+                  child: SettingsButton(text: !isOwnProfile ? "Send Tip" : 'Edit Profile', onPressed: onProfileButtonPressed),
                 ),
               ],
             ),

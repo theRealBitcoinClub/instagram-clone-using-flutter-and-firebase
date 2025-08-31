@@ -128,43 +128,6 @@ class MemoBitcoinBase {
     }
   }
 
-  Future<int> getTokenBalance(String tokenAwareAddressString) async {
-    // Define the token-aware address and the token ID.
-    const tokenId = MemoBitcoinBase.tokenId;
-    final memoBitcoinBase = await MemoBitcoinBase.create();
-
-    try {
-      final BitcoinCashAddress typedAddress = BitcoinCashAddress(tokenAwareAddressString);
-
-      // print('Successfully parsed address: ${typedAddress.toAddress()}');
-
-      final electrumUtxos = await memoBitcoinBase.requestElectrumUtxos(
-        typedAddress, // Pass the typed address object here
-        includeCashtokens: true,
-      );
-
-      print('Found ${electrumUtxos.length} UTXOs for the address.');
-
-      if (electrumUtxos.isEmpty) {
-        print('No UTXOs found. The token balance is 0.');
-        return 0;
-      }
-
-      final totalTokenAmount = electrumUtxos
-          .where((utxo) => utxo.token?.category == tokenId)
-          .fold(BigInt.zero, (previousValue, utxo) => previousValue + utxo.token!.amount);
-
-      return totalTokenAmount.toInt();
-      // print('Total token balance: $totalTokenAmount');
-    } catch (e) {
-      print('An error occurred while checking the token balance: $e');
-    } finally {
-      // 5. Always close the service when you're done to free up resources.
-      memoBitcoinBase.service?.discounnect();
-    }
-    return 0;
-  }
-
   ForkedTransactionBuilder buildTxToTransferTokens(
     int tokenAmountToSend,
     BitcoinCashAddress senderBCHp2pkhwt,

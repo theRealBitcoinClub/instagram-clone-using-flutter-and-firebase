@@ -121,14 +121,14 @@ class CreatorRepository {
         // Update the user's creator property and then save to Firebase and cache
         final updatedCreator = user.creator;
         // user.creator.copyWith()
-        if (updatedCreator != null) {
-          updatedCreator.name = name;
-          //the creator passed here is the up to date creator from previus method
-          //TODO needs some update method, retrieve from cache and update firebase and cache
-          await saveCreator(updatedCreator);
-          // await refreshCreatorCache(updatedCreator.id, hasUpdatedCallback)
-          // await refreshAndCacheAvatar(updatedCreator.id);
-        }
+        // if (updatedCreator != null) {
+        updatedCreator.name = name;
+        //the creator passed here is the up to date creator from previus method
+        //TODO needs some update method, retrieve from cache and update firebase and cache
+        await saveCreator(updatedCreator);
+        // await refreshCreatorCache(updatedCreator.id, hasUpdatedCallback)
+        // await refreshAndCacheAvatar(updatedCreator.id);
+        // }
         return "success";
       case MemoAccountantResponse.noUtxo:
         return response.message;
@@ -153,12 +153,12 @@ class CreatorRepository {
     switch (response) {
       case MemoAccountantResponse.yes:
         final updatedCreator = user.creator;
-        if (updatedCreator != null) {
-          updatedCreator.profileText = text;
-          //TODO needs some update method, retrieve from cache and update firebase and cache
-          await saveCreator(updatedCreator);
-          // await refreshAndCacheAvatar(updatedCreator.id);
-        }
+        // if (updatedCreator != null) {
+        updatedCreator.profileText = text;
+        //TODO needs some update method, retrieve from cache and update firebase and cache
+        await saveCreator(updatedCreator);
+        // await refreshAndCacheAvatar(updatedCreator.id);
+        // }
         return "success";
       case MemoAccountantResponse.noUtxo:
       case MemoAccountantResponse.lowBalance:
@@ -180,13 +180,13 @@ class CreatorRepository {
     switch (response) {
       case MemoAccountantResponse.yes:
         final updatedCreator = user.creator;
-        if (updatedCreator != null) {
-          //TODO better retrieve images from imgur than memo? but then what happens if user update image on memo
-          updatedCreator.profileImgurUrl = verifiedUrl;
-          //TODO needs some update method, retrieve from cache and update firebase and cache
-          await saveCreator(updatedCreator);
-          await refreshAndCacheAvatar(updatedCreator.id, forceRefreshAfterProfileUpdate: true, forceImageType: verifiedUrl.split('.').last);
-        }
+        // if (updatedCreator != null) {
+        //TODO better retrieve images from imgur than memo? but then what happens if user update image on memo
+        updatedCreator.profileImgurUrl = verifiedUrl;
+        //TODO needs some update method, retrieve from cache and update firebase and cache
+        await saveCreator(updatedCreator);
+        await refreshAndCacheAvatar(updatedCreator.id, forceRefreshAfterProfileUpdate: true, forceImageType: verifiedUrl.split('.').last);
+        // }
         return "success";
       case MemoAccountantResponse.noUtxo:
       case MemoAccountantResponse.lowBalance:

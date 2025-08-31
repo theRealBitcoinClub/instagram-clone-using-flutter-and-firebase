@@ -2,6 +2,7 @@
 // The user has this file open:
 // /home/pachamama/github/mahakka/lib/memo/model/memo_model_creator.dart.
 import 'package:json_annotation/json_annotation.dart';
+import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/firebase/user_service.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart'; // Assuming this is your utility function
@@ -19,6 +20,15 @@ class MemoModelCreator {
   String created = "";
   String lastActionDate = "";
   final CreatorService _creatorService = CreatorService();
+
+  @JsonKey(ignore: true)
+  int balanceBch = -1;
+
+  @JsonKey(ignore: true)
+  int balanceMemo = -1;
+
+  @JsonKey(ignore: true)
+  int balanceToken = -1;
 
   @JsonKey(ignore: true)
   bool isCheckingAvatar = false;
@@ -199,11 +209,29 @@ class MemoModelCreator {
     if (_userData == null) {
       _userData = await UserService().getUserOnce(id);
       hasRegisteredAsUser = _userData != null;
-      // return _userData != null;
     } else {
       hasRegisteredAsUser = true;
       // return true; //TODO store the userdata in local cache same as creator to avoid repeating requests for each post
     }
+
+    if (hasRegisteredAsUser) {
+      refreshBalanceMahakka();
+      refreshBalanceMemo();
+    } else {
+      refreshBalanceMemo();
+    }
+  }
+
+  Future<void> refreshBalanceMahakka() async {
+    MemoBitcoinBase base = await MemoBitcoinBase.create();
+    Balance balances = await base.getBalances(_userData!.bchAddressCashtokenAware);
+    balanceBch = balances.bch;
+    balanceToken = balances.token;
+  }
+
+  Future<void> refreshBalanceMemo() async {
+    MemoBitcoinBase base = await MemoBitcoinBase.create();
+    balanceMemo = await base.getBalances(id).then((value) => value.bch);
   }
 
   MemoModelCreator copyWith({

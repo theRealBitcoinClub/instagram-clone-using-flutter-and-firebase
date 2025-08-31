@@ -43,8 +43,8 @@ class MemoModelPost {
   @JsonKey(ignore: true)
   final String? created;
 
-  @JsonKey(ignore: true)
-  String? _ageCache;
+  // @JsonKey(ignore: true)
+  // String? _ageCache;
 
   @JsonKey(ignore: true)
   final List<String> urls = [];
@@ -123,8 +123,8 @@ class MemoModelPost {
   @JsonKey(ignore: true)
   String get age {
     return _calculateAgeString();
-    _ageCache = _calculateAgeString();
-    return _ageCache!;
+    // _ageCache = _calculateAgeString();
+    // return _ageCache!;
   }
 
   String _calculateAgeString() {

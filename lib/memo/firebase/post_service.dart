@@ -94,7 +94,7 @@ class PostService {
     try {
       // .id should be set on the post object before calling save
       await _firestore.collection(_postsCollection).doc(post.id).set(post.toJson(), SetOptions(merge: true));
-      print("Post ${post.id} saved successfully.");
+      print("${post.id} Post saved successfully. ${post.text}");
     } catch (e) {
       print("Error saving post ${post.id}: $e");
       rethrow;

@@ -1,6 +1,5 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
@@ -217,23 +216,24 @@ class MemoModelUser {
     return _tipReceiver;
   }
 
-  Future<dynamic> profileSetName(String name) async {
-    MemoVerificationResponse response = MemoVerifier(name).verifyUserName();
-    if (response != MemoVerificationResponse.valid) return response;
-    return await MemoAccountant(this).profileSetName(name);
-  }
-
-  Future<dynamic> profileSetText(String text) async {
-    MemoVerificationResponse response = MemoVerifier(text).verifyProfileText();
-    if (response != MemoVerificationResponse.valid) return response;
-    return await MemoAccountant(this).profileSetText(text);
-  }
-
-  Future<dynamic> profileSetAvatar(String imgur) async {
-    MemoVerificationResponse response = MemoVerifier(imgur).verifyImgur();
-    if (response != MemoVerificationResponse.valid) return response;
-    return await MemoAccountant(this).profileSetAvatar(imgur);
-  }
+  //THESE ARE IN USER REPOSITORY NOW
+  // Future<dynamic> profileSetName(String name) async {
+  //   MemoVerificationResponse response = MemoVerifier(name).verifyUserName();
+  //   if (response != MemoVerificationResponse.valid) return response;
+  //   return await MemoAccountant(this).profileSetName(name);
+  // }
+  //
+  // Future<dynamic> profileSetText(String text) async {
+  //   MemoVerificationResponse response = MemoVerifier(text).verifyProfileText();
+  //   if (response != MemoVerificationResponse.valid) return response;
+  //   return await MemoAccountant(this).profileSetText(text);
+  // }
+  //
+  // Future<dynamic> profileSetAvatar(String imgur) async {
+  //   MemoVerificationResponse response = MemoVerifier(imgur).verifyImgur();
+  //   if (response != MemoVerificationResponse.valid) return response;
+  //   return await MemoAccountant(this).profileSetAvatar(imgur);
+  // }
 
   MemoModelUser._({
     required this.mnemonic,

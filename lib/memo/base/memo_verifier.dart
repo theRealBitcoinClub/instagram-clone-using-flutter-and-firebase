@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:blockchain_utils/bip/bip/bip39/bip39_mnemonic_validator.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
+import 'package:mahakka/memo_data_checker.dart';
 
 enum MemoVerificationResponse {
   valid(""),
@@ -34,7 +37,8 @@ class MemoVerifier {
 
   static const int maxProfileNameLength = 30;
   static const int minProfileNameLength = 3;
-  static const int maxProfileTextLength = 160;
+  //memo has 217
+  static const int maxProfileTextLength = 200;
   static const int minProfileTextLength = 0; // Profile text can be empty
 
   MemoVerifier(this.text);
@@ -62,10 +66,30 @@ class MemoVerifier {
     return MemoVerificationResponse.valid;
   }
 
-  MemoVerificationResponse verifyImgur() {
-    if (!text.contains("i.imgur.com")) return MemoVerificationResponse.noImageNorVideo;
-
-    return MemoVerificationResponse.valid;
+  Future<String> verifyProfileAvatar() async {
+    String newText = text.replaceFirst("/i.imgur.com", "/imgur.com");
+    //TODO THESE DO NOT MATCH THE IMAGE URL MAYBE LATER FIND A WAY TO EXTRACT THE ACTUAL IMAGE URL FROM THAT LINK TOO
+    // if (newText == text) newText = text.replaceFirst("imgur.com/a/", "imgur.com/");
+    var checker = MemoDataChecker();
+    if (await checker.checkUrlReturns404(newText)) {
+      return MemoVerificationResponse.noImageNorVideo.toString();
+    }
+    if (!await checker.isImageValid(newText)) {
+      var url = newText + ".jpg";
+      if (!await checker.isImageValid(url)) {
+        url = newText + ".png";
+        if (!await checker.isImageValid(url)) {
+          url = newText + ".jpeg";
+          if (!await checker.isImageValid(url)) {
+            return MemoVerificationResponse.noImageNorVideo.toString();
+          } else
+            return url;
+        } else
+          return url;
+      } else
+        return url;
+    } else
+      return newText;
   }
 
   // --- Lazy Initializers for Scraped Data ---

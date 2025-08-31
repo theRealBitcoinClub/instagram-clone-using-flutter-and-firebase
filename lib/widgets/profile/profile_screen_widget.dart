@@ -88,9 +88,17 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     if (isOwnProfile && !isUpdatingCache) {
       isUpdatingCache = true;
       final creatorRepo = ref.read(creatorRepositoryProvider);
-      creatorRepo.refreshCreatorCache(currentProfileId!, () {
-        isUpdatingCache = false;
-      });
+      creatorRepo.refreshCreatorCache(
+        currentProfileId!,
+        () {
+          //TODO has updated
+          isUpdatingCache = false;
+        },
+        () {
+          //TODO nothing changed
+          isUpdatingCache = false;
+        },
+      );
     }
 
     // Use a ref.listen to trigger the refresh when the tab index changes.
@@ -305,10 +313,11 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   void _saveProfile(MemoModelCreator creator) async {
     final creatorRepo = ref.read(creatorRepositoryProvider);
     final user = ref.read(userProvider);
-    if (user == null) {
-      if (mounted) showSnackBar("User data not available for profile update.", context);
-      return;
-    }
+    user!.creator = creator;
+    // if (user == null) {
+    //   if (mounted) showSnackBar("User data not available for profile update.", context);
+    //   return;
+    // }
 
     String newName = _profileNameCtrl.text.trim();
     String newText = _profileTextCtrl.text.trim();

@@ -144,7 +144,7 @@ void showProfileSettingsDialog({
 }) {
   profileNameCtrl.text = creator.name;
   profileTextCtrl.text = creator.profileText;
-  imgurCtrl.text = "";
+  imgurCtrl.text = creator.profileImgurUrl ?? "";
 
   showDialog(
     context: context,
@@ -171,7 +171,7 @@ void showProfileSettingsDialog({
         children: [
           _buildSettingsInput(theme, Icons.badge_outlined, "Name", TextInputType.text, profileNameCtrl),
           _buildSettingsInput(theme, Icons.notes_outlined, "Bio/Text", TextInputType.multiline, profileTextCtrl, maxLines: 3),
-          _buildSettingsInput(theme, Icons.image_outlined, "e.g. https://i.imgur.com/X32JJS", TextInputType.url, imgurCtrl),
+          _buildSettingsInput(theme, Icons.image_outlined, "e.g. https://imgur.com/X32JJS", TextInputType.url, imgurCtrl),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24).copyWith(top: 20),
             child: ElevatedButton(

@@ -31,7 +31,7 @@ class MemoScraperTag {
           String check = t.postCount.toString();
           var keyPerTag = key + t.name;
           if (prefs.getString(keyPerTag) == check) {
-            continue; //NO NEW POST ON THIS TOPIC
+            continue; //NO NEW POST
           }
           prefs.setString(keyPerTag, check);
           tagsToPersist.add(t);

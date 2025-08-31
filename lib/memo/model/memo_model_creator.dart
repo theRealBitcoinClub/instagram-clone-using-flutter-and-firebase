@@ -2,10 +2,10 @@
 // The user has this file open:
 // /home/pachamama/github/mahakka/lib/memo/model/memo_model_creator.dart.
 import 'package:json_annotation/json_annotation.dart';
-import 'package:mahakka/check_404.dart';
 import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/firebase/user_service.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart'; // Assuming this is your utility function
+import 'package:mahakka/memo_data_checker.dart';
 
 part 'memo_model_creator.g.dart'; // This will be generated
 
@@ -33,6 +33,8 @@ class MemoModelCreator {
 
   String get profileIdShort => id.substring(1, 5);
 
+  String? profileImgurUrl;
+
   MemoModelCreator({
     this.id = "",
     this.name = "",
@@ -41,6 +43,7 @@ class MemoModelCreator {
     this.actions = 0,
     this.created = "",
     this.lastActionDate = "",
+    this.profileImgurUrl,
   });
 
   // Constants are not part of JSON serialization
@@ -73,8 +76,8 @@ class MemoModelCreator {
 
   // --- Your existing methods ---
 
-  Future<bool> refreshAvatar() async {
-    return await _checkProfileImageAvatar();
+  Future<bool> refreshAvatar({bool forceRefreshAfterProfileUpdate = false, String? forceImageType}) async {
+    return await _checkProfileImageAvatar(forceRefreshAfterProfileUpdate: forceRefreshAfterProfileUpdate, forcedImageType: forceImageType);
   }
 
   Future<bool> refreshImageDetail() async {
@@ -122,17 +125,28 @@ class MemoModelCreator {
     return _profileImageAvatar ?? "";
   }
 
-  Future<bool> _checkProfileImageAvatar() async {
+  Future<bool> _checkProfileImageAvatar({bool forceRefreshAfterProfileUpdate = false, String? forcedImageType}) async {
+    if (forceRefreshAfterProfileUpdate) {
+      _profileImageAvatar == null;
+      isCheckingAvatar = false;
+      hasCheckedImgAvatar = 0;
+    }
+
     if (_profileImageAvatar != null || isCheckingAvatar) return true;
     if (hasCheckedImgAvatar >= maxCheckImage) return false; // Use >= for safety
     isCheckingAvatar = true;
 
     for (String t in imageTypes) {
+      if (forcedImageType != null && forcedImageType.toLowerCase() != t) continue;
+      if (profileImgurUrl != null && profileImgurUrl!.split(".").last != t) continue;
+
       String avatarUrl = _profileImageUrl(sizeAvatar, t);
       // Assuming checkUrlReturns404 is available and works as intended
-      if (!await checkUrlReturns404(avatarUrl)) {
+      //we have to make this check to find out if image is jpg or png
+      if (!await MemoDataChecker().checkUrlReturns404(avatarUrl)) {
         _profileImageAvatar = avatarUrl;
-        _creatorService.saveCreator(this);
+        //TODO you mixing things here must separate concerns better
+        // _creatorService.saveCreator(this);
         hasCheckedImgAvatar = 0;
         return true;
       }
@@ -157,7 +171,7 @@ class MemoModelCreator {
 
     for (String t in imageTypes) {
       String url = _profileImageUrl(sizeDetail, t);
-      if (!await checkUrlReturns404(url)) {
+      if (!await MemoDataChecker().checkUrlReturns404(url)) {
         _profileImageDetail = url;
         _creatorService.saveCreator(this);
         hasCheckedImgDetail = 0;
@@ -206,7 +220,7 @@ class MemoModelCreator {
       id: id ?? this.id,
       name: name ?? this.name,
       profileText: profileText ?? this.profileText,
-      // profileImgurUrl: profileImgurUrl ?? this.profileImgurUrl,
+      profileImgurUrl: profileImgurUrl ?? this.profileImgurUrl,
       followerCount: followerCount ?? this.followerCount,
       actions: actions ?? this.actions,
       created: created ?? this.created,

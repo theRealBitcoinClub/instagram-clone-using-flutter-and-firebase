@@ -15,6 +15,7 @@ MemoModelCreator _$MemoModelCreatorFromJson(Map<String, dynamic> json) =>
       actions: (json['actions'] as num?)?.toInt() ?? 0,
       created: json['created'] as String? ?? "",
       lastActionDate: json['lastActionDate'] as String? ?? "",
+      profileImgurUrl: json['profileImgurUrl'] as String?,
     );
 
 Map<String, dynamic> _$MemoModelCreatorToJson(MemoModelCreator instance) =>
@@ -26,4 +27,5 @@ Map<String, dynamic> _$MemoModelCreatorToJson(MemoModelCreator instance) =>
       'actions': instance.actions,
       'created': instance.created,
       'lastActionDate': instance.lastActionDate,
+      'profileImgurUrl': instance.profileImgurUrl,
     };

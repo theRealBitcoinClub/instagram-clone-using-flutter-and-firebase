@@ -36,11 +36,15 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
   }
 
   // A public method to refresh the creator data
-  Future<void> refresh() async {
+  Future<void> refreshBalances() async {
     final creatorId = ref.read(_currentProfileIdProvider);
     if (creatorId != null && creatorId.isNotEmpty) {
       state = const AsyncValue.loading();
-      state = await AsyncValue.guard(() => ref.read(creatorRepositoryProvider).getCreator(creatorId));
+      state = await AsyncValue.guard(() async {
+        var creator = await ref.read(creatorRepositoryProvider).getCreator(creatorId);
+        await creator!.refreshUserData(ref);
+        return creator;
+      });
     }
   }
 }

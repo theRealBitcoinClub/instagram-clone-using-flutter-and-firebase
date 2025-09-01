@@ -9,6 +9,7 @@ import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/firebase/user_service.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo_data_checker.dart';
+import 'package:mahakka/providers/creator_cache_provider.dart';
 
 import '../../provider/electrum_provider.dart';
 
@@ -223,6 +224,7 @@ class MemoModelCreator {
     } else {
       _refreshBalanceMemo(ref);
     }
+    ref.read(creatorCacheRepositoryProvider).saveCreator(this);
   }
 
   Future<void> _refreshBalanceMahakka(Ref ref) async {

@@ -38,7 +38,8 @@ class UserNotifier extends StateNotifier<UserState> {
         state = state.copyWith(user: fetchedUser, isLoading: false);
       }
       // Call the new method to refresh all balances after the user is fetched
-      refreshAllBalances();
+      //the refresh balance is now done per creator
+      // refreshAllBalances();
 
       state = state.copyWith(isLoading: false);
     } catch (e, stackTrace) {
@@ -47,39 +48,40 @@ class UserNotifier extends StateNotifier<UserState> {
     }
   }
 
-  Future<void> refreshAllBalances() async {
-    MemoModelUser? user = state.user;
-    if (user == null) {
-      print("WARNING: Cannot refresh balances, user is null.");
-      return;
-    }
-
-    try {
-      // 1. Refresh BCH (Memo) balance
-      final request = await user.refreshBalanceDevPath0(ref);
-      // if (request == "success") {
-      user = user.copyWith(balanceBchDevPath0Memo: request);
-      state = state.copyWith(user: user);
-      // }
-
-      // 2. Refresh BCH (Cashtoken) balance
-      final bchBalanceRequest = await user.refreshBalanceDevPath145(ref);
-      // if (bchBalanceRequest == "success") {
-      user = user.copyWith(balanceBchDevPath145: bchBalanceRequest);
-      state = state.copyWith(user: user);
-      // }
-      // 3. Refresh Tokens balance
-      final tokenBalanceReq = await user.refreshBalanceTokens(ref);
-      // if (tokenBalanceReq == "success") {
-      user = user.copyWith(balanceCashtokensDevPath145: tokenBalanceReq);
-      state = state.copyWith(user: user);
-      // }
-    } catch (e, stackTrace) {
-      print("Error refreshing balances: $e \n$stackTrace");
-      // Set an error state without clearing the user data
-      state = state.copyWith(error: "Failed to refresh balances.", isLoading: false);
-    }
-  }
+  // THE REFRESH IS NOW DONE PER CREATOR WITH SIMPLE ADDRESSES NOT PRIVATE KEYS
+  // Future<void> refreshAllBalances() async {
+  //   MemoModelUser? user = state.user;
+  //   if (user == null) {
+  //     print("WARNING: Cannot refresh balances, user is null.");
+  //     return;
+  //   }
+  //
+  //   try {
+  //     // 1. Refresh BCH (Memo) balance
+  //     final request = await user.refreshBalanceDevPath0(ref);
+  //     // if (request == "success") {
+  //     user = user.copyWith(balanceBchDevPath0Memo: request);
+  //     state = state.copyWith(user: user);
+  //     // }
+  //
+  //     // 2. Refresh BCH (Cashtoken) balance
+  //     final bchBalanceRequest = await user.refreshBalanceDevPath145(ref);
+  //     // if (bchBalanceRequest == "success") {
+  //     user = user.copyWith(balanceBchDevPath145: bchBalanceRequest);
+  //     state = state.copyWith(user: user);
+  //     // }
+  //     // 3. Refresh Tokens balance
+  //     final tokenBalanceReq = await user.refreshBalanceTokens(ref);
+  //     // if (tokenBalanceReq == "success") {
+  //     user = user.copyWith(balanceCashtokensDevPath145: tokenBalanceReq);
+  //     state = state.copyWith(user: user);
+  //     // }
+  //   } catch (e, stackTrace) {
+  //     print("Error refreshing balances: $e \n$stackTrace");
+  //     // Set an error state without clearing the user data
+  //     state = state.copyWith(error: "Failed to refresh balances.", isLoading: false);
+  //   }
+  // }
 
   void clearUser() {
     state = UserState(user: null, isLoading: false, error: null);

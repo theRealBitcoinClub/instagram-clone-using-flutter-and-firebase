@@ -18,12 +18,14 @@ class CreatorRepository {
   Future<MemoModelCreator?> getCreator(String creatorId, {bool scrapeIfNotFound = true, bool saveToFirebase = true}) async {
     // Rely on the cache repository to get data from cache
     var cachedCreator = await _cacheRepository.getCreator(creatorId);
-    if (cachedCreator != null) return cachedCreator;
+    if (cachedCreator != null) {
+      return cachedCreator;
+    }
 
     final firebaseCreator = await ref.read(creatorServiceProvider).getCreatorOnce(creatorId);
     if (firebaseCreator != null) {
       print("INFO: Fetched creator $creatorId from Firebase. Saving to cache.");
-      await firebaseCreator.refreshUserData(ref);
+      // await firebaseCreator.refreshUserData(ref);
       _cacheRepository.saveCreator(firebaseCreator);
       return firebaseCreator;
     }

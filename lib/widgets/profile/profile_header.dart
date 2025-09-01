@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
-import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/widgets/profile/profile_dialog_helpers.dart';
 import 'package:mahakka/widgets/profile_buttons.dart';
 
@@ -64,7 +63,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
           // We wrap the whole top section in a Consumer to get the latest data.
           Consumer(
             builder: (context, ref, child) {
-              final loggedInUser = ref.watch(userProvider);
+              // final loggedInUser = ref.watch(userProvider);
               // Watch the creator provider directly here to get the updated values.
               final creatorAsyncValue = ref.watch(creatorStateProvider);
               final updatedCreator = creatorAsyncValue.asData?.value;
@@ -73,7 +72,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                 theme,
                 colorScheme,
                 context,
-                loggedInUser,
+                // loggedInUser,
                 updatedCreator ?? widget.creator, // Use updated data or fallback to initial
               );
             },
@@ -90,13 +89,13 @@ class _ProfileHeaderState extends State<ProfileHeader> {
     ThemeData theme,
     ColorScheme colorScheme,
     BuildContext context,
-    MemoModelUser? updatedUser,
+    // MemoModelUser? updatedUser,
     MemoModelCreator creatorToDisplay, // The updated creator data is now passed in
   ) {
     final creatorProfileImg = creatorToDisplay.profileImageAvatar();
-    final balanceBch = updatedUser?.balanceBchDevPath145 ?? "?";
-    final balanceTokens = updatedUser?.balanceCashtokensDevPath145 ?? "?";
-    final balanceMemo = updatedUser?.balanceBchDevPath0Memo ?? "?";
+    // final balanceBch = updatedUser?.balanceBchDevPath145 ?? "?";
+    // final balanceTokens = updatedUser?.balanceCashtokensDevPath145 ?? "?";
+    // final balanceMemo = updatedUser?.balanceBchDevPath0Memo ?? "?";
 
     // Now get the creator's balances from the updated creatorToDisplay object
     String balanceBchCreator = creatorToDisplay.balanceBch == -1 ? "?" : creatorToDisplay.balanceBch.toString();
@@ -127,24 +126,24 @@ class _ProfileHeaderState extends State<ProfileHeader> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (widget.isOwnProfile && updatedUser != null)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Expanded(child: widget.buildStatColumn(theme, 'BCH', balanceBch)),
-                      Expanded(child: widget.buildStatColumn(theme, 'Tokens', balanceTokens)),
-                      Expanded(child: widget.buildStatColumn(theme, 'Memo', balanceMemo)),
-                    ],
-                  )
-                else if (!widget.isOwnProfile)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Expanded(child: widget.buildStatColumn(theme, 'BCH', balanceBchCreator)),
-                      Expanded(child: widget.buildStatColumn(theme, 'Tokens', balanceTokensCreator)),
-                      Expanded(child: widget.buildStatColumn(theme, 'Memo', balanceMemoCreator)),
-                    ],
-                  ),
+                // if (widget.isOwnProfile && updatedUser != null)
+                //   Row(
+                //     mainAxisAlignment: MainAxisAlignment.spaceAround,
+                //     children: [
+                //       Expanded(child: widget.buildStatColumn(theme, 'BCH', balanceBch)),
+                //       Expanded(child: widget.buildStatColumn(theme, 'Tokens', balanceTokens)),
+                //       Expanded(child: widget.buildStatColumn(theme, 'Memo', balanceMemo)),
+                //     ],
+                //   )
+                // else if (!widget.isOwnProfile)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Expanded(child: widget.buildStatColumn(theme, 'BCH', balanceBchCreator)),
+                    Expanded(child: widget.buildStatColumn(theme, 'Tokens', balanceTokensCreator)),
+                    Expanded(child: widget.buildStatColumn(theme, 'Memo', balanceMemoCreator)),
+                  ],
+                ),
                 const SizedBox(height: 12),
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 0, horizontal: 15),

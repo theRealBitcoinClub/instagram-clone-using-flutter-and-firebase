@@ -72,6 +72,31 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
   bool isUpdatingCache = false;
 
+  DateTime _lastCacheUpdate = DateTime.now().subtract(const Duration(seconds: 16));
+
+  void updateCacheIfAllowed(WidgetRef ref, profileId) {
+    final now = DateTime.now();
+    if (isUpdatingCache || now.difference(_lastCacheUpdate).inSeconds < 15) {
+      return;
+    }
+
+    _lastCacheUpdate = now;
+    isUpdatingCache = true;
+
+    final creatorRepo = ref.read(creatorRepositoryProvider);
+    creatorRepo.refreshCreatorCache(
+      profileId!,
+      () {
+        ref.read(creatorStateProvider.notifier).refreshBalances();
+        isUpdatingCache = false;
+      },
+      () {
+        ref.read(creatorStateProvider.notifier).refreshBalances();
+        isUpdatingCache = false;
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -80,38 +105,19 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
     final creatorAsyncValue = ref.watch(creatorStateProvider);
     final postsAsyncValue = ref.watch(postsStreamProvider);
+    final currentTabIndex = ref.watch(tabIndexProvider); // Watch the tab index
 
-    final currentProfileId = creatorAsyncValue.asData?.value?.id;
+    final currentProfileId = creatorAsyncValue.asData?.value?.id ?? ref.read(userProvider)!.id;
     final isOwnProfile = loggedInUser?.profileIdMemoBch == currentProfileId;
 
-    // final currentTabIndex = ref.watch(tabIndexProvider);
-    if (isOwnProfile && !isUpdatingCache) {
-      isUpdatingCache = true;
-      final creatorRepo = ref.read(creatorRepositoryProvider);
-      creatorRepo.refreshCreatorCache(
-        currentProfileId!,
-        () {
-          //TODO has updated
-          isUpdatingCache = false;
-        },
-        () {
-          //TODO nothing changed
-          isUpdatingCache = false;
-        },
-      );
-    }
+    if (currentTabIndex == 2) updateCacheIfAllowed(ref, currentProfileId);
 
-    // final WidgetRef widgetRef = ref;
-
-    // Use a ref.listen to trigger the refresh when the tab index changes.
-    // This is a more explicit and reliable way to handle side effects like this.
-    ref.listen<int>(tabIndexProvider, (previousIndex, newIndex) {
-      // Only refresh if the new tab is the profile tab (assuming it's tab 2)
-      // and if the user is authenticated.
-      if (newIndex == 2) {
-        ref.read(userNotifierProvider.notifier).refreshAllBalances();
-      }
-    });
+    //THIS IS NOW DONE FOR ALL CREATORS BUT ONLY IF THE TAB PROFILE IS SELECTED
+    // ref.listen<int>(tabIndexProvider, (previousIndex, newIndex) {
+    //   if (newIndex == 2) {
+    //     ref.read(userNotifierProvider.notifier).refreshAllBalances();
+    //   }
+    // });
 
     return creatorAsyncValue.when(
       data: (creator) {
@@ -373,7 +379,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
           showSnackBar("Profile updated successfully! ✨", context);
           MemoConfetti().launch(context);
         }
-        ref.read(creatorStateProvider.notifier).refresh();
+        ref.read(creatorStateProvider.notifier).refreshBalances();
       }
     } else {
       if (mounted) showSnackBar("No changes to save. 🤔", context);

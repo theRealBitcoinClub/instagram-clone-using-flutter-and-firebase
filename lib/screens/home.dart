@@ -10,7 +10,6 @@ import '../provider/scraper_provider.dart';
 import '../widgets/profile/profile_screen_new.dart';
 
 class HomeSceen extends ConsumerStatefulWidget {
-  // Consider renaming to HomeScreen for convention
   const HomeSceen({Key? key}) : super(key: key);
 
   @override
@@ -18,45 +17,82 @@ class HomeSceen extends ConsumerStatefulWidget {
 }
 
 class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateMixin {
-  late PageController _pageController; // Renamed for convention
   late TabController _tabController;
-  final FocusNode _scaffoldFocusNode = FocusNode();
   final int _totalTabs = 3; // Keep this for bounds and controller lengths
 
-  @override
+  late AnimationController _animationController;
+
   void initState() {
     super.initState();
-    final initialIndex = ref.read(tabIndexProvider); // Read initial index
-    _pageController = PageController(initialPage: initialIndex);
+    final initialIndex = ref.read(tabIndexProvider);
+
+    // Initialize the TabController to sync with the BottomNavigationBar.
     _tabController = TabController(length: _totalTabs, vsync: this, initialIndex: initialIndex);
 
-    // Listener to update Riverpod state when PageController changes (e.g., due to swipe)
-    _pageController.addListener(() {
-      final currentPage = _pageController.page?.round();
-      if (currentPage != null && currentPage != ref.read(tabIndexProvider)) {
-        ref.read(tabIndexProvider.notifier).setTab(currentPage);
-      }
-    });
+    // Initialize the AnimationController for the FadeTransition.
+    _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+    _animationController.forward(from: 0.0); // Trigger the animation for the initial screen.
 
-    // Listener to update Riverpod state when TabController changes (e.g., due to tap on TabBar)
-    _tabController.addListener(() {
-      if (_tabController.indexIsChanging || _tabController.index != ref.read(tabIndexProvider)) {
-        // Check indexIsChanging to avoid issues during programmatic animations
-        if (_tabController.index != ref.read(tabIndexProvider)) {
-          ref.read(tabIndexProvider.notifier).setTab(_tabController.index);
-        }
-      }
-    });
+    // This listener updates the tab index in Riverpod when the user taps on the TabBar.
+    _tabController.addListener(_tabControllerListener);
+
+    // This is a one-time read for the background scraper, still correct here.
     ref.read(backgroundScraperManagerProvider);
+
+    // Note: The PageController and its listeners have been removed.
+  }
+
+  // A private method to hold the listener logic
+  void _tabControllerListener() {
+    if (_tabController.indexIsChanging || _tabController.index != ref.read(tabIndexProvider)) {
+      if (_tabController.index != ref.read(tabIndexProvider)) {
+        ref.read(tabIndexProvider.notifier).setTab(_tabController.index);
+      }
+    }
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _tabController.removeListener(_tabControllerListener);
     _tabController.dispose();
-    _scaffoldFocusNode.dispose();
+    _animationController.dispose(); // This is for the fade animation
     super.dispose();
   }
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   final initialIndex = ref.read(tabIndexProvider); // Read initial index
+  //   _pageController = PageController(initialPage: initialIndex);
+  //   _tabController = TabController(length: _totalTabs, vsync: this, initialIndex: initialIndex);
+  //
+  //   // Listener to update Riverpod state when PageController changes (e.g., due to swipe)
+  //   _pageController.addListener(() {
+  //     final currentPage = _pageController.page?.round();
+  //     if (currentPage != null && currentPage != ref.read(tabIndexProvider)) {
+  //       ref.read(tabIndexProvider.notifier).setTab(currentPage);
+  //     }
+  //   });
+  //
+  //   // Listener to update Riverpod state when TabController changes (e.g., due to tap on TabBar)
+  //   _tabController.addListener(() {
+  //     if (_tabController.indexIsChanging || _tabController.index != ref.read(tabIndexProvider)) {
+  //       // Check indexIsChanging to avoid issues during programmatic animations
+  //       if (_tabController.index != ref.read(tabIndexProvider)) {
+  //         ref.read(tabIndexProvider.notifier).setTab(_tabController.index);
+  //       }
+  //     }
+  //   });
+  //   ref.read(backgroundScraperManagerProvider);
+  // }
+  //
+  // @override
+  // void dispose() {
+  //   _pageController.dispose();
+  //   _tabController.dispose();
+  //   _scaffoldFocusNode.dispose();
+  //   super.dispose();
+  // }
 
   void _navigateToNextTab() {
     ref.read(tabIndexProvider.notifier).nextTab();
@@ -67,65 +103,157 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   }
 
   @override
+  // Widget build(BuildContext context) {
+  //   // Watch the current tab index from the provider.
+  //   final currentTabIndex = ref.watch(tabIndexProvider);
+  //   final ThemeData theme = Theme.of(context);
+  //   final ColorScheme colorScheme = theme.colorScheme;
+  //   final Color cupertinoActiveColor = colorScheme.primary;
+  //   final Color cupertinoInactiveColor = colorScheme.onSurface.withOpacity(0.6);
+  //
+  //   // The list of screens should be defined outside the build method if possible,
+  //   // but it's fine here as they don't depend on a changing state.
+  //   final List<Widget> homeScreenItems = [
+  //     // Use Keys to help Flutter identify and preserve the state of each widget.
+  //     // This is good practice when dealing with lists of widgets.
+  //     FeedScreen(key: PageStorageKey('FeedScreen')),
+  //     AddPost(key: PageStorageKey('AddPost')),
+  //     ProfileScreen(key: PageStorageKey('ProfileScreen')),
+  //   ];
+  //
+  //   return Scaffold(
+  //     backgroundColor: theme.scaffoldBackgroundColor,
+  //     body: IndexedStack(
+  //       index: currentTabIndex, // This will display the widget at this index.
+  //       children: homeScreenItems,
+  //     ),
+  //     bottomNavigationBar: CupertinoTabBar(
+  //       height: 70,
+  //       backgroundColor:
+  //           theme.bottomNavigationBarTheme.backgroundColor ?? (theme.brightness == Brightness.light ? Colors.grey[100] : Colors.grey[900]),
+  //       activeColor: cupertinoActiveColor,
+  //       inactiveColor: cupertinoInactiveColor,
+  //       currentIndex: currentTabIndex,
+  //       onTap: (index) => ref.read(tabIndexProvider.notifier).setTab(index),
+  //       iconSize: 30.0,
+  //       border: Border(top: BorderSide(color: theme.dividerColor.withOpacity(0.5), width: 0.5)),
+  //       items: appTabsData.map((tabData) {
+  //         bool isSelected = appTabsData.indexOf(tabData) == currentTabIndex;
+  //         return BottomNavigationBarItem(icon: Icon(isSelected ? tabData.activeIcon : tabData.defaultIcon));
+  //       }).toList(),
+  //     ),
+  //   );
+  // }
+  @override
+  // Widget build(BuildContext context) {
+  //   final currentTabIndex = ref.watch(tabIndexProvider);
+  //   final ThemeData theme = Theme.of(context);
+  //   final ColorScheme colorScheme = theme.colorScheme;
+  //   final Color cupertinoActiveColor = colorScheme.primary;
+  //   final Color cupertinoInactiveColor = colorScheme.onSurface.withOpacity(0.6);
+  //
+  //   // The list of screens should be defined with unique keys.
+  //   // This is crucial for AnimatedSwitcher to identify different widgets.
+  //   final List<Widget> homeScreenItems = [
+  //     FeedScreen(key: ValueKey('FeedScreen')),
+  //     AddPost(key: ValueKey('AddPost')),
+  //     ProfileScreen(key: ValueKey('ProfileScreen')),
+  //   ];
+  //
+  //   return Scaffold(
+  //     backgroundColor: theme.scaffoldBackgroundColor,
+  //     body: GestureDetector(
+  //       onHorizontalDragEnd: (DragEndDetails details) {
+  //         if (details.primaryVelocity == 0) return;
+  //         if (details.primaryVelocity! < 0) {
+  //           ref.read(tabIndexProvider.notifier).nextTab();
+  //         } else if (details.primaryVelocity! > 0) {
+  //           ref.read(tabIndexProvider.notifier).previousTab();
+  //         }
+  //       },
+  //       child: AnimatedSwitcher(
+  //         duration: const Duration(milliseconds: 300),
+  //         // Use a fade transition for a smooth animation between screens.
+  //         transitionBuilder: (Widget child, Animation<double> animation) {
+  //           return FadeTransition(opacity: animation, child: child);
+  //         },
+  //         child: homeScreenItems[currentTabIndex],
+  //       ),
+  //     ),
+  //     bottomNavigationBar: CupertinoTabBar(
+  //       height: 70,
+  //       backgroundColor:
+  //           theme.bottomNavigationBarTheme.backgroundColor ?? (theme.brightness == Brightness.light ? Colors.grey[100] : Colors.grey[900]),
+  //       activeColor: cupertinoActiveColor,
+  //       inactiveColor: cupertinoInactiveColor,
+  //       currentIndex: currentTabIndex,
+  //       onTap: (index) => ref.read(tabIndexProvider.notifier).setTab(index),
+  //       iconSize: 30.0,
+  //       border: Border(top: BorderSide(color: theme.dividerColor.withOpacity(0.5), width: 0.5)),
+  //       items: appTabsData.map((tabData) {
+  //         bool isSelected = appTabsData.indexOf(tabData) == currentTabIndex;
+  //         return BottomNavigationBarItem(icon: Icon(isSelected ? tabData.activeIcon : tabData.defaultIcon));
+  //       }).toList(),
+  //     ),
+  //   );
+  // }
+  @override
   Widget build(BuildContext context) {
-    // Listener to update PageController when Riverpod state changes
+    final currentTabIndex = ref.watch(tabIndexProvider);
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+    final Color cupertinoActiveColor = colorScheme.primary;
+    final Color cupertinoInactiveColor = colorScheme.onSurface.withOpacity(0.6);
+    // Define screens with unique keys for state preservation.
+    final List<Widget> homeScreenItems = [
+      FeedScreen(key: PageStorageKey('FeedScreen')),
+      AddPost(key: PageStorageKey('AddPost')),
+      ProfileScreen(key: PageStorageKey('ProfileScreen')),
+    ];
+
+    // This listener runs the fade animation whenever a tab is switched.
     ref.listen<int>(tabIndexProvider, (previous, next) {
-      if (_pageController.hasClients && _pageController.page?.round() != next) {
-        _pageController.animateToPage(next, duration: const Duration(milliseconds: 300), curve: Curves.ease);
-      }
-      if (_tabController.index != next) {
-        _tabController.animateTo(next);
+      if (previous != next) {
+        _animationController.forward(from: 0.0);
       }
     });
-    final currentTabIndex = ref.watch(tabIndexProvider);
-    final ThemeData theme = Theme.of(context); // Get the current theme
-    final ColorScheme colorScheme = theme.colorScheme;
-    final Color cupertinoActiveColor = colorScheme.primary; // Use primary color for active items
-    final Color cupertinoInactiveColor = colorScheme.onSurface.withOpacity(0.6); // Muted version of onSurface
-
-    final List<Widget> homeScreenItems = [FeedScreen(), const AddPost(), const ProfileScreen()];
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor, // Background of the screen itself
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: GestureDetector(
         onHorizontalDragEnd: (DragEndDetails details) {
           if (details.primaryVelocity == 0) return;
           if (details.primaryVelocity! < 0) {
-            _navigateToNextTab();
+            ref.read(tabIndexProvider.notifier).nextTab();
           } else if (details.primaryVelocity! > 0) {
-            _navigateToPreviousTab();
+            ref.read(tabIndexProvider.notifier).previousTab();
           }
         },
-        child: PageView(
-          controller: _pageController,
-          // onPageChanged: _onPageChanged,
-          physics: const NeverScrollableScrollPhysics(), // To disable swipe navigation
-          children: homeScreenItems,
+        child: Stack(
+          children: List.generate(homeScreenItems.length, (index) {
+            return Offstage(
+              offstage: index != currentTabIndex,
+              child: TickerMode(
+                enabled: index == currentTabIndex,
+                child: FadeTransition(opacity: _animationController, child: homeScreenItems[index]),
+              ),
+            );
+          }),
         ),
       ),
       bottomNavigationBar: CupertinoTabBar(
-        height: 70, // Keep custom height if desired
+        height: 70,
         backgroundColor:
-            theme.bottomNavigationBarTheme.backgroundColor ?? // Use Material BottomNavTheme bg
-            (theme.brightness == Brightness.light ? Colors.grey[100] : Colors.grey[900]), // Fallback
+            theme.bottomNavigationBarTheme.backgroundColor ?? (theme.brightness == Brightness.light ? Colors.grey[100] : Colors.grey[900]),
         activeColor: cupertinoActiveColor,
         inactiveColor: cupertinoInactiveColor,
-        currentIndex: currentTabIndex, // Use index from Riverpod
+        currentIndex: currentTabIndex,
         onTap: (index) => ref.read(tabIndexProvider.notifier).setTab(index),
-        iconSize: 30.0, // Default is 30.0, adjust as needed
-        border: Border(
-          top: BorderSide(
-            color: theme.dividerColor.withOpacity(0.5), // Use theme divider color
-            width: 0.5, // Keep it subtle
-          ),
-        ),
+        iconSize: 30.0,
+        border: Border(top: BorderSide(color: theme.dividerColor.withOpacity(0.5), width: 0.5)),
         items: appTabsData.map((tabData) {
-          // bool isSelected = currentAppTab == tabData.tab; // If using AppTab state
-          bool isSelected = appTabsData.indexOf(tabData) == currentTabIndex; // Or by index
-          return BottomNavigationBarItem(
-            icon: Icon(isSelected ? tabData.activeIcon : tabData.defaultIcon),
-            // label: tabData.label,
-          );
+          bool isSelected = appTabsData.indexOf(tabData) == currentTabIndex;
+          return BottomNavigationBarItem(icon: Icon(isSelected ? tabData.activeIcon : tabData.defaultIcon));
         }).toList(),
       ),
     );

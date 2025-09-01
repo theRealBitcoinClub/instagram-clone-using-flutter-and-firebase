@@ -25,12 +25,12 @@ class ThemeNotifier extends StateNotifier<AsyncValue<ThemeState>> {
   Future<void> _loadThemePreference() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final isDarkModePref = prefs.getBool(_themePrefKey) ?? false; // Default to false (light mode)
+      final isDarkModePref = prefs.getBool(_themePrefKey) ?? true; // Default to false (light mode)
       state = AsyncValue.data(ThemeState(currentTheme: isDarkModePref ? darkTheme : lightTheme, isDarkMode: isDarkModePref));
     } catch (e, stackTrace) {
       state = AsyncValue.error(e, stackTrace);
       // Fallback to a default theme on error
-      state = AsyncValue.data(ThemeState(currentTheme: lightTheme, isDarkMode: false));
+      state = AsyncValue.data(ThemeState(currentTheme: darkTheme, isDarkMode: true));
       print("Error loading theme preference: $e");
     }
   }

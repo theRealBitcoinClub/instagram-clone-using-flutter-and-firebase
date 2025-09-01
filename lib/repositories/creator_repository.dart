@@ -17,14 +17,14 @@ class CreatorRepository {
 
   Future<MemoModelCreator?> getCreator(String creatorId, {bool scrapeIfNotFound = true, bool saveToFirebase = true}) async {
     // Rely on the cache repository to get data from cache
-    var cachedCreator = await _cacheRepository.getCreatorFromCache(creatorId);
+    var cachedCreator = await _cacheRepository.getCreator(creatorId);
     if (cachedCreator != null) return cachedCreator;
 
     final firebaseCreator = await ref.read(creatorServiceProvider).getCreatorOnce(creatorId);
     if (firebaseCreator != null) {
       print("INFO: Fetched creator $creatorId from Firebase. Saving to cache.");
       await firebaseCreator.refreshUserData(ref);
-      _cacheRepository.saveToCache(firebaseCreator);
+      _cacheRepository.saveCreator(firebaseCreator);
       return firebaseCreator;
     }
 
@@ -36,7 +36,7 @@ class CreatorRepository {
     if (scrapedCreator != null) {
       print("INFO: Scraped data for creator $creatorId. Saving to Firebase and cache.");
       if (saveToFirebase) await ref.read(creatorServiceProvider).saveCreator(scrapedCreator);
-      _cacheRepository.saveToCache(scrapedCreator);
+      _cacheRepository.saveCreator(scrapedCreator);
       return scrapedCreator;
     }
 
@@ -46,12 +46,12 @@ class CreatorRepository {
 
   Future<void> saveCreator(MemoModelCreator creator) async {
     await ref.read(creatorServiceProvider).saveCreator(creator);
-    _cacheRepository.saveToCache(creator);
+    _cacheRepository.saveCreator(creator);
   }
 
   Future<String?> refreshAndCacheAvatar(String creatorId, {forceRefreshAfterProfileUpdate = false, String? forceImageType}) async {
     // Get a direct reference to the cached creator from the cache repository
-    final creator = await _cacheRepository.getCreatorFromCache(creatorId);
+    final creator = await _cacheRepository.getCreator(creatorId);
     if (creator == null) return null;
     String oldUrl = creator.profileImageAvatar();
 
@@ -59,7 +59,7 @@ class CreatorRepository {
 
     if (creator.profileImageAvatar().isNotEmpty && creator.profileImageAvatar() != oldUrl) {
       if (forceRefreshAfterProfileUpdate) await ref.read(creatorServiceProvider).saveCreator(creator);
-      _cacheRepository.saveToCache(creator);
+      _cacheRepository.saveCreator(creator);
       return creator.profileImageAvatar();
     }
     return oldUrl;
@@ -67,7 +67,7 @@ class CreatorRepository {
 
   Future<void> refreshCreatorCache(String creatorId, hasUpdatedCallback, nothingChangedCallback) async {
     final scrapedCreator = await _getFreshScrapedCreator(creatorId);
-    MemoModelCreator? cachedCreator = await _cacheRepository.getCreatorFromCache(creatorId);
+    MemoModelCreator? cachedCreator = await _cacheRepository.getCreator(creatorId);
     MemoModelCreator updatedCreator = MemoModelCreator(id: creatorId, name: "update failed", profileText: "please retry");
     bool hasSameData = false;
 
@@ -82,7 +82,7 @@ class CreatorRepository {
     if (scrapedCreator != null && !hasSameData) {
       print("INFO: Scraped data for creator $creatorId. Saving to Firebase and cache.");
       await ref.read(creatorServiceProvider).saveCreator(updatedCreator);
-      _cacheRepository.saveToCache(updatedCreator);
+      _cacheRepository.saveCreator(updatedCreator);
       hasUpdatedCallback();
     }
     nothingChangedCallback();

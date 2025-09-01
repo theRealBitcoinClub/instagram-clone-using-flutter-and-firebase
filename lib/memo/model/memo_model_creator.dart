@@ -7,7 +7,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/firebase/user_service.dart';
-import 'package:mahakka/memo/model/memo_model_user.dart'; // Assuming this is your utility function
+import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo_data_checker.dart';
 
 import '../../provider/electrum_provider.dart';
@@ -23,26 +23,23 @@ class MemoModelCreator {
   int actions = 0;
   String created = "";
   String lastActionDate = "";
-  final CreatorService _creatorService = CreatorService();
+  String bchAddressCashtokenAware = "";
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   int balanceBch = -1;
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   int balanceMemo = -1;
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   int balanceToken = -1;
 
-  @JsonKey(ignore: true)
-  bool isCheckingAvatar = false;
-  @JsonKey(ignore: true)
-  bool isCheckingDetail = false;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  bool _isCheckingAvatar = false;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  bool _isCheckingDetail = false;
 
-  @JsonKey(ignore: true)
-  MemoModelUser? userData;
-
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   bool hasRegisteredAsUser = false;
 
   String get profileIdShort => id.substring(1, 5);
@@ -77,10 +74,10 @@ class MemoModelCreator {
   String? _profileImageDetail;
 
   @JsonKey(includeFromJson: false, includeToJson: false)
-  int hasCheckedImgAvatar = 0;
+  int _hasCheckedUrlAvatarCount = 0;
 
   @JsonKey(includeFromJson: false, includeToJson: false)
-  int hasCheckedImgDetail = 0;
+  int _hasCheckedUrlDetailCount = 0;
 
   // Factory constructor for json_serializable to use for creating instances from JSON
   factory MemoModelCreator.fromJson(Map<String, dynamic> json) => _$MemoModelCreatorFromJson(json);
@@ -100,7 +97,7 @@ class MemoModelCreator {
 
   /// Fetches the creator using the id and updates the local `creator` field.
   /// Returns true if the creator was successfully fetched and updated, false otherwise.
-  Future<MemoModelCreator> refreshCreatorFirebase() async {
+  Future<MemoModelCreator> refreshCreatorFirebase(Ref ref) async {
     if (id.isEmpty) {
       print("MemoModelPost (ID: $id): id is empty, cannot refresh creator.");
       // Optionally set this.creator to null if it wasn't already
@@ -112,7 +109,7 @@ class MemoModelCreator {
 
     try {
       print("MemoModelPost (ID: $id): Refreshing creator for ID: $id...");
-      final fetchedCreator = await _creatorService.getCreatorOnce(id);
+      final fetchedCreator = await ref.read(creatorServiceProvider).getCreatorOnce(id);
       if (fetchedCreator != null) {
         print("MemoModelPost (ID: $id): Creator ${name} (ID: ${id}) refreshed successfully.");
         return fetchedCreator;
@@ -142,13 +139,13 @@ class MemoModelCreator {
   Future<bool> _checkProfileImageAvatar({bool forceRefreshAfterProfileUpdate = false, String? forcedImageType}) async {
     if (forceRefreshAfterProfileUpdate) {
       _profileImageAvatar == null;
-      isCheckingAvatar = false;
-      hasCheckedImgAvatar = 0;
+      _isCheckingAvatar = false;
+      _hasCheckedUrlAvatarCount = 0;
     }
 
-    if (_profileImageAvatar != null || isCheckingAvatar) return true;
-    if (hasCheckedImgAvatar >= maxCheckImage) return false; // Use >= for safety
-    isCheckingAvatar = true;
+    if (_profileImageAvatar != null || _isCheckingAvatar) return true;
+    if (_hasCheckedUrlAvatarCount >= maxCheckImage) return false; // Use >= for safety
+    _isCheckingAvatar = true;
 
     for (String t in imageTypes) {
       if (forcedImageType != null && forcedImageType.toLowerCase() != t) continue;
@@ -161,12 +158,12 @@ class MemoModelCreator {
         _profileImageAvatar = avatarUrl;
         //TODO you mixing things here must separate concerns better
         // _creatorService.saveCreator(this);
-        hasCheckedImgAvatar = 0;
+        _hasCheckedUrlAvatarCount = 0;
         return true;
       }
     }
-    hasCheckedImgAvatar++;
-    isCheckingAvatar = false;
+    _hasCheckedUrlAvatarCount++;
+    _isCheckingAvatar = false;
     return false;
   }
 
@@ -175,26 +172,26 @@ class MemoModelCreator {
   }
 
   Future<bool> _checkProfileImageDetail() async {
-    if (_profileImageDetail != null || isCheckingDetail) {
+    if (_profileImageDetail != null || _isCheckingDetail) {
       return true;
     }
 
-    isCheckingDetail = true;
+    _isCheckingDetail = true;
 
-    if (hasCheckedImgDetail >= maxCheckImage) return false;
+    if (_hasCheckedUrlDetailCount >= maxCheckImage) return false;
 
     for (String t in imageTypes) {
       String url = _profileImageUrl(sizeDetail, t);
       if (!await MemoDataChecker().checkUrlReturns404(url)) {
         _profileImageDetail = url;
-        _creatorService.saveCreator(this);
-        hasCheckedImgDetail = 0;
+        // ref.read(creatorServiceProvider).saveCreator(this);
+        _hasCheckedUrlDetailCount = 0;
         return true;
       }
     }
 
-    hasCheckedImgDetail++;
-    isCheckingDetail = false;
+    _hasCheckedUrlDetailCount++;
+    _isCheckingDetail = false;
     return false;
   }
 
@@ -210,31 +207,32 @@ class MemoModelCreator {
   int get hashCode => id.hashCode;
 
   Future<void> refreshUserData(Ref ref) async {
-    if (userData == null) {
+    MemoModelUser? userData = null;
+    if (bchAddressCashtokenAware.isEmpty) {
       userData = await UserService().getUserOnce(id);
       hasRegisteredAsUser = userData != null;
+      if (hasRegisteredAsUser) bchAddressCashtokenAware = userData!.bchAddressCashtokenAware;
     } else {
       hasRegisteredAsUser = true;
       // return true; //TODO store the userdata in local cache same as creator to avoid repeating requests for each post
     }
 
     if (hasRegisteredAsUser) {
-      refreshBalanceMahakka(ref);
-      refreshBalanceMemo(ref);
+      _refreshBalanceMahakka(ref);
+      _refreshBalanceMemo(ref);
     } else {
-      refreshBalanceMemo(ref);
+      _refreshBalanceMemo(ref);
     }
   }
 
-  Future<void> refreshBalanceMahakka(Ref ref) async {
+  Future<void> _refreshBalanceMahakka(Ref ref) async {
     final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-
-    Balance balances = await base.getBalances(userData!.bchAddressCashtokenAware);
+    Balance balances = await base.getBalances(bchAddressCashtokenAware);
     balanceBch = balances.bch;
     balanceToken = balances.token;
   }
 
-  Future<void> refreshBalanceMemo(Ref ref) async {
+  Future<void> _refreshBalanceMemo(Ref ref) async {
     final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
     balanceMemo = await base.getBalances(id).then((value) => value.bch);
   }

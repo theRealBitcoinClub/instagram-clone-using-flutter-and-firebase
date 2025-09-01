@@ -31,7 +31,7 @@ class MemoModelTopic {
   final int? followerCount;
   final String? lastPost; // Consider if this should be a DateTime for easier sorting/filtering
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   List<MemoModelPost> posts = [];
 
   /// Factory constructor for creating a new MemoModelTopic instance from a map.

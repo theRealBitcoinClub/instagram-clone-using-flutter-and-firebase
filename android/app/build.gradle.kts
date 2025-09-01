@@ -1,3 +1,6 @@
+import com.android.build.api.dsl.ApplicationExtension
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -8,10 +11,24 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Read flutter properties from local.properties
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
+val flutterCompileSdkVersion = localProperties.getProperty("flutter.compileSdkVersion")?.toInt() ?: 34
+val flutterMinSdkVersion = localProperties.getProperty("flutter.minSdkVersion")?.toInt() ?: 21
+val flutterTargetSdkVersion = localProperties.getProperty("flutter.targetSdkVersion")?.toInt() ?: 34
+val flutterNdkVersion = localProperties.getProperty("flutter.ndkVersion") ?: "25.1.8937393"
+val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toInt() ?: 1
+val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
+
 android {
     namespace = "com.mahakka"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = flutterCompileSdkVersion
+    ndkVersion = flutterNdkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -27,10 +44,10 @@ android {
         applicationId = "com.mahakka"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        minSdk = flutterMinSdkVersion
+        targetSdk = flutterTargetSdkVersion
+        versionCode = flutterVersionCode
+        versionName = flutterVersionName
     }
 
     buildTypes {

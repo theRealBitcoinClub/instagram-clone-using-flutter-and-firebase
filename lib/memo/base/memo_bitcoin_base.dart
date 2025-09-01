@@ -79,13 +79,6 @@ class MemoBitcoinBase {
     network = BitcoinCashNetwork.mainnet;
   }
 
-  static Future<MemoBitcoinBase> createOld() async {
-    MemoBitcoinBase instance = MemoBitcoinBase._create();
-    ElectrumWebSocketService service = await ElectrumWebSocketService.connect("wss://${mainnetServers[2]}:50004");
-    instance.provider = ElectrumProvider(service);
-    return instance;
-  }
-
   static Future<MemoBitcoinBase> create() async {
     MemoBitcoinBase instance = MemoBitcoinBase._create();
 
@@ -121,7 +114,7 @@ class MemoBitcoinBase {
 
   Future<Balance> getBalances(String address) async {
     const tokenId = MemoBitcoinBase.tokenId;
-    final memoBitcoinBase = await MemoBitcoinBase.create();
+    // final memoBitcoinBase = await MemoBitcoinBase.create();
     // Determine the address type and create the appropriate object
     final isLegacy = !address.startsWith('bitcoincash:');
     final hasToken = address.startsWith('bitcoincash:z');
@@ -136,7 +129,7 @@ class MemoBitcoinBase {
         typedAddress = BitcoinCashAddress(address);
       }
 
-      final electrumUtxos = await memoBitcoinBase.requestElectrumUtxos(typedAddress, includeCashtokens: hasToken);
+      final electrumUtxos = await requestElectrumUtxos(typedAddress, includeCashtokens: hasToken);
 
       print('Found ${electrumUtxos.length} UTXOs for the address.');
 
@@ -158,9 +151,11 @@ class MemoBitcoinBase {
     } catch (e) {
       print('An error occurred while checking balances: $e');
       return Balance(bch: BigInt.zero, token: BigInt.zero);
-    } finally {
-      memoBitcoinBase.service?.discounnect();
     }
+    //DISCONNECT IS HANDLED IN THE ELECTRUM PROVIDER
+    // finally {
+    //   service?.discounnect();
+    // }
   }
 
   ForkedTransactionBuilder buildTxToTransferTokens(

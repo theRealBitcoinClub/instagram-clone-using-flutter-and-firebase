@@ -122,12 +122,12 @@ void showQrCodeDialog({
         cashtokenAddress: user != null
             ? user.bchAddressCashtokenAware
             : creator!.hasRegisteredAsUser
-            ? creator.userData!.bchAddressCashtokenAware
+            ? creator.bchAddressCashtokenAware
             : null,
         legacyAddress: user != null
             ? user.legacyAddressMemoBch
             : creator!.hasRegisteredAsUser
-            ? creator.userData!.legacyAddressMemoBch
+            ? creator.id
             : creator.id,
         initialToggleState: getTempToggleState(),
         onToggle: (newState) {

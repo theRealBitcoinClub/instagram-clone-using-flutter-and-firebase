@@ -11,7 +11,7 @@ class MemoModelTag {
   // This static list is for application runtime state and not directly part
   // of the JSON serialization of individual MemoModelTag instances.
   // static List<MemoModelTag> tags = [];
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   DocumentSnapshot? docSnapshot;
 
   // --- Factory to include DocumentSnapshot and ID ---

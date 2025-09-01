@@ -35,19 +35,19 @@
 //   List<String> tagIds;
 //
 //   // --- Transient (Client-Side) Fields ---
-//   @JsonKey(ignore: true)
+//   @JsonKey(includeFromJson: false, includeToJson: false)
 //   MemoModelCreator? creator;
 //
-//   @JsonKey(ignore: true)
+//   @JsonKey(includeFromJson: false, includeToJson: false)
 //   MemoModelTopic? topic;
 //
-//   @JsonKey(ignore: true)
+//   @JsonKey(includeFromJson: false, includeToJson: false)
 //   final String? created; // Original string form, if needed for display
 //
-//   @JsonKey(ignore: true)
+//   @JsonKey(includeFromJson: false, includeToJson: false)
 //   String? _ageCache; // Renamed from _age to avoid conflict if 'age' field exists from Firestore
 //
-//   @JsonKey(ignore: true) // This is crucial for pagination
+//   @JsonKey(includeFromJson: false, includeToJson: false) // This is crucial for pagination
 //   DocumentSnapshot? docSnapshot;
 //
 //   // --- Constructor ---
@@ -80,7 +80,7 @@
 //   }
 //
 //   // --- Age Calculation (Lazy and Cached) ---
-//   @JsonKey(ignore: true) // The getter itself is not part of JSON
+//   @JsonKey(includeFromJson: false, includeToJson: false) // The getter itself is not part of JSON
 //   String get age {
 //     // Your original 'age' property for display
 //     if (_ageCache != null && _ageCache!.isNotEmpty) {

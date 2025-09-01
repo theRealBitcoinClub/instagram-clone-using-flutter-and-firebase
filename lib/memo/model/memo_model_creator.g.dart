@@ -16,7 +16,7 @@ MemoModelCreator _$MemoModelCreatorFromJson(Map<String, dynamic> json) =>
       created: json['created'] as String? ?? "",
       lastActionDate: json['lastActionDate'] as String? ?? "",
       profileImgurUrl: json['profileImgurUrl'] as String?,
-    );
+    )..bchAddressCashtokenAware = json['bchAddressCashtokenAware'] as String;
 
 Map<String, dynamic> _$MemoModelCreatorToJson(MemoModelCreator instance) =>
     <String, dynamic>{
@@ -27,5 +27,6 @@ Map<String, dynamic> _$MemoModelCreatorToJson(MemoModelCreator instance) =>
       'actions': instance.actions,
       'created': instance.created,
       'lastActionDate': instance.lastActionDate,
+      'bchAddressCashtokenAware': instance.bchAddressCashtokenAware,
       'profileImgurUrl': instance.profileImgurUrl,
     };

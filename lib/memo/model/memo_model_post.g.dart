@@ -27,14 +27,15 @@ MemoModelPost _$MemoModelPostFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$MemoModelPostToJson(MemoModelPost instance) =>
     <String, dynamic>{
-      'id': ?instance.id,
-      'text': ?instance.text,
-      'imgurUrl': ?instance.imgurUrl,
-      'youtubeId': ?instance.youtubeId,
-      'createdDateTime': ?_dateTimeToJson(instance.createdDateTime),
-      'popularityScore': ?instance.popularityScore,
-      'likeCounter': ?instance.likeCounter,
-      'replyCounter': ?instance.replyCounter,
+      if (instance.id case final value?) 'id': value,
+      if (instance.text case final value?) 'text': value,
+      if (instance.imgurUrl case final value?) 'imgurUrl': value,
+      if (instance.youtubeId case final value?) 'youtubeId': value,
+      if (_dateTimeToJson(instance.createdDateTime) case final value?)
+        'createdDateTime': value,
+      if (instance.popularityScore case final value?) 'popularityScore': value,
+      if (instance.likeCounter case final value?) 'likeCounter': value,
+      if (instance.replyCounter case final value?) 'replyCounter': value,
       'creatorId': instance.creatorId,
       'topicId': instance.topicId,
       'tagIds': instance.tagIds,

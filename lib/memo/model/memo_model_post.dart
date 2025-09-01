@@ -30,22 +30,22 @@ class MemoModelPost {
   List<String> tagIds;
 
   // --- Transient (Client-Side) Fields ---
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   MemoModelCreator? creator;
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   MemoModelTopic? topic;
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   final String? created;
 
-  // @JsonKey(ignore: true)
+  // @JsonKey(includeFromJson: false, includeToJson: false)
   // String? _ageCache;
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   final List<String> urls = [];
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   DocumentSnapshot? docSnapshot;
 
   // --- Private Constructor for json_serializable ---
@@ -116,7 +116,7 @@ class MemoModelPost {
 
   // Rest of your class methods...
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   String get age {
     return _calculateAgeString();
     // _ageCache = _calculateAgeString();

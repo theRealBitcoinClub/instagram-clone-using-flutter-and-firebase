@@ -169,6 +169,8 @@ class CreatorRepository {
         final updatedCreator = user.creator;
         updatedCreator.profileImgurUrl = verifiedUrl;
         await saveCreator(updatedCreator);
+        await refreshAndCacheAvatar(imgur.split(".").last);
+        //TODO refresh detail image too
         return "success";
       case MemoAccountantResponse.noUtxo:
       case MemoAccountantResponse.lowBalance:

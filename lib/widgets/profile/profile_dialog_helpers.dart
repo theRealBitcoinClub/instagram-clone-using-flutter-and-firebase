@@ -147,10 +147,11 @@ void showProfileSettingsDialog({
   required TextEditingController profileNameCtrl,
   required TextEditingController profileTextCtrl,
   required TextEditingController imgurCtrl,
-  required VoidCallback onSave,
+  required onSaveProfileSettings,
   required VoidCallback onLogout,
   required VoidCallback onBackupMnemonic,
-  required bool isLogoutEnabled, // New parameter
+  required bool isLogoutEnabled,
+  required bool isSavingProfile, // New parameter
 }) {
   profileNameCtrl.text = creator.name;
   profileTextCtrl.text = creator.profileText;
@@ -186,13 +187,23 @@ void showProfileSettingsDialog({
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24).copyWith(top: 20),
             child: ElevatedButton(
               onPressed: () {
-                onSave();
-                Navigator.of(dialogCtx).pop();
+                if (!isSavingProfile) {
+                  onSaveProfileSettings(
+                    () {
+                      Navigator.of(dialogCtx).pop();
+                    },
+                    () {
+                      //TODO print("failed for some or all fields, mark these in red?");
+                      showSnackBar("Failed to save profile.", dialogCtx);
+                    },
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 44)),
               child: const Text("SAVE CHANGES"),
             ),
           ),
+          isSavingProfile ? LinearProgressIndicator() : SizedBox(),
           Divider(color: theme.dividerColor.withOpacity(0.5), height: 20, thickness: 0.5, indent: 20, endIndent: 20),
           _buildSettingsOption(theme, Icons.copy_all_outlined, "BACKUP MNEMONIC", dialogCtx, onBackupMnemonic),
           // Pass isLogoutEnabled to the logout option

@@ -45,6 +45,11 @@ class _ProfileHeaderState extends State<ProfileHeader> {
   bool _isCashtokenFormat = true;
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
@@ -60,25 +65,21 @@ class _ProfileHeaderState extends State<ProfileHeader> {
               valueColor: AlwaysStoppedAnimation(Colors.white70),
               backgroundColor: Colors.transparent,
             ),
-          // We wrap the whole top section in a Consumer to get the latest data.
           Consumer(
             builder: (context, ref, child) {
-              // final loggedInUser = ref.watch(userProvider);
-              // Watch the creator provider directly here to get the updated values.
               final creatorAsyncValue = ref.watch(profileCreatorStateProvider);
-              final updatedCreator = creatorAsyncValue.asData?.value;
+              final updatedCreator = creatorAsyncValue.asData?.value ?? widget.creator;
+              //TODO is this executed with null value here ever?
 
-              return _buildTopDetailsRow(
-                theme,
-                colorScheme,
-                context,
-                // loggedInUser,
-                updatedCreator ?? widget.creator, // Use updated data or fallback to initial
+              return Column(
+                children: [
+                  _buildTopDetailsRow(theme, colorScheme, context, updatedCreator),
+                  _buildNameRow(updatedCreator, theme),
+                  _buildProfileText(updatedCreator, colorScheme, theme),
+                ],
               );
             },
           ),
-          _buildNameRow(theme),
-          _buildProfileText(colorScheme, theme),
           Divider(color: theme.dividerColor.withOpacity(0.5), height: 2.0, thickness: 0.5),
         ],
       ),
@@ -89,15 +90,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
     ThemeData theme,
     ColorScheme colorScheme,
     BuildContext context,
-    // MemoModelUser? updatedUser,
     MemoModelCreator creatorToDisplay, // The updated creator data is now passed in
   ) {
     final creatorProfileImg = creatorToDisplay.profileImageAvatar();
-    // final balanceBch = updatedUser?.balanceBchDevPath145 ?? "?";
-    // final balanceTokens = updatedUser?.balanceCashtokensDevPath145 ?? "?";
-    // final balanceMemo = updatedUser?.balanceBchDevPath0Memo ?? "?";
-
-    // Now get the creator's balances from the updated creatorToDisplay object
     String balanceBchCreator = creatorToDisplay.balanceBch == -1 ? "?" : creatorToDisplay.balanceBch.toString();
     String balanceTokensCreator = creatorToDisplay.balanceToken == -1 ? "?" : creatorToDisplay.balanceToken.toString();
     String balanceMemoCreator = creatorToDisplay.balanceMemo == -1 ? "?" : creatorToDisplay.balanceMemo.toString();
@@ -126,16 +121,6 @@ class _ProfileHeaderState extends State<ProfileHeader> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // if (widget.isOwnProfile && updatedUser != null)
-                //   Row(
-                //     mainAxisAlignment: MainAxisAlignment.spaceAround,
-                //     children: [
-                //       Expanded(child: widget.buildStatColumn(theme, 'BCH', balanceBch)),
-                //       Expanded(child: widget.buildStatColumn(theme, 'Tokens', balanceTokens)),
-                //       Expanded(child: widget.buildStatColumn(theme, 'Memo', balanceMemo)),
-                //     ],
-                //   )
-                // else if (!widget.isOwnProfile)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -176,9 +161,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
     );
   }
 
-  Padding _buildNameRow(ThemeData theme) {
-    final creatorName = widget.creator.name.isNotEmpty ? widget.creator.name : "Anonymous";
-    final creatorProfileIdShort = widget.creator.profileIdShort;
+  Padding _buildNameRow(MemoModelCreator c, ThemeData theme) {
+    final creatorName = c.name.isNotEmpty ? c.name : "Anonymous";
+    final creatorProfileIdShort = c.profileIdShort;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0).copyWith(top: 2, bottom: 4.0),
@@ -200,8 +185,8 @@ class _ProfileHeaderState extends State<ProfileHeader> {
     );
   }
 
-  Padding _buildProfileText(ColorScheme colorScheme, ThemeData theme) {
-    final profileText = widget.creator.profileText;
+  Padding _buildProfileText(MemoModelCreator c, ColorScheme colorScheme, ThemeData theme) {
+    final profileText = c.profileText;
     if (profileText.trim().isEmpty) {
       return const Padding(padding: EdgeInsets.zero);
     }

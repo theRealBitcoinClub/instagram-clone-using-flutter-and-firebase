@@ -40,6 +40,7 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
     return creator;
   }
 
+  //TODO MAKE SURE THIS IS ONLY TRIGGERED ON SUCCESS OF PROFILE SAVE
   Future<void> refreshCreatorCache(String creatorId) async {
     CreatorRepository creatorRepository = ref.read(creatorRepositoryProvider);
     creatorRepository.refreshCreatorCache(
@@ -56,20 +57,23 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
     );
   }
 
-  Future<void> refreshProfileImages(String forceImageType) async {
-    final creatorId = ref.read(_currentProfileIdProvider);
-    if (creatorId != null && creatorId.isNotEmpty) {
-      state = const AsyncValue.loading();
-      state = await AsyncValue.guard(() async {
-        var creator = await ref.read(creatorRepositoryProvider).getCreator(creatorId);
-        await creator!.refreshAvatar(forceImageType: forceImageType, forceRefreshAfterProfileUpdate: true);
-        //TODO also update the detail
-        // await creator!.refreshAvatarDetail(forceImageType: forceImageType, forceRefreshAfterProfileUpdate: true);
-        return creator;
-      });
-    }
-  }
+  //TODO this is triggered by the set methods
+  //TODO check if the set methods should be better placed in profile provider
+  // Future<void> refreshProfileImages(String forceImageType) async {
+  //   final creatorId = ref.read(_currentProfileIdProvider);
+  //   if (creatorId != null && creatorId.isNotEmpty) {
+  //     state = const AsyncValue.loading();
+  //     state = await AsyncValue.guard(() async {
+  //       var creator = await ref.read(creatorRepositoryProvider).getCreator(creatorId);
+  //       await creator!.refreshAvatar(forceImageType: forceImageType, forceRefreshAfterProfileUpdate: true);
+  //       //TODO also update the detail
+  //       // await creator!.refreshAvatarDetail(forceImageType: forceImageType, forceRefreshAfterProfileUpdate: true);
+  //       return creator;
+  //     });
+  //   }
+  // }
 
+  // TODO MAKE SURE THIS IS ONLY TRIGGERED ON SUCCESS OF PROFILE SAVE
   // TODO manually triggered by user refresh pull down in addition to current auto build method call? or just rebuild all on refresh?
   Future<void> refreshUserRegisteredFlag() async {
     final creatorId = ref.read(_currentProfileIdProvider);

@@ -37,6 +37,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<int> _viewMode = ValueNotifier(0);
   bool isRefreshingProfile = false;
+  bool isSavingProfile = false;
+  bool allowLogout = false;
 
   // Derived data - should not be stateful
   List<MemoModelPost> _imagePosts = [];
@@ -320,10 +322,11 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
         profileNameCtrl: _profileNameCtrl,
         profileTextCtrl: _profileTextCtrl,
         imgurCtrl: _imgurCtrl,
-        isLogoutEnabled: true,
-        onSave: () => _saveProfile(creator),
+        isLogoutEnabled: allowLogout,
+        onSaveProfileSettings: (onSuccess, onFail) => _saveProfile(creator, onSuccess, onFail),
         onBackupMnemonic: () => _showMnemonicBackupDialog(loggedInUser),
         onLogout: () => _logout(ref),
+        isSavingProfile: isSavingProfile,
       );
     } else {
       showSnackBar("Follow/Message functionality is coming soon!", context);
@@ -342,7 +345,13 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     if (loggedInUser != null) {
       showDialog(
         context: context,
-        builder: (ctx) => MnemonicBackupWidget(mnemonic: loggedInUser.mnemonic, onVerificationComplete: () {}),
+        builder: (ctx) => MnemonicBackupWidget(
+          mnemonic: loggedInUser.mnemonic,
+          onVerificationComplete: () {
+            //TODO DO NOT CLOSE DIALOG HERE UPDATE THE BUTTON RIGHT AWAY
+            allowLogout = true;
+          },
+        ),
       );
     }
   }
@@ -353,40 +362,42 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     ref.read(tabIndexProvider.notifier).setTab(0);
   }
 
-  void _saveProfile(MemoModelCreator creator) async {
-    final creatorRepo = ref.read(creatorRepositoryProvider);
-    final user = ref.read(userProvider);
-    if (user == null) return;
-
-    final newName = _profileNameCtrl.text.trim();
-    final newText = _profileTextCtrl.text.trim();
-    final newImgurUrl = _imgurCtrl.text.trim();
-
-    final updates = <String, Future<String>>{};
-    bool changesMade = false;
-
-    if (newName.isNotEmpty && newName != creator.name) {
-      updates['name'] = await creatorRepo.profileSetName(newName, user);
-      changesMade = true;
-    }
-    if (newText != creator.profileText) {
-      updates['text'] = await creatorRepo.profileSetText(newText, user);
-      changesMade = true;
-    }
-    if (newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl) {
-      updates['avatar'] = await creatorRepo.profileSetAvatar(newImgurUrl, user);
-      if ("success" == updates["avatar"]) ref.read(profileCreatorStateProvider.notifier).refreshProfileImages(newImgurUrl.split(".").last);
-      changesMade = true;
-    }
-
-    if (!changesMade) {
-      //   showSnackBar("No changes to save. 🤔", context);
-      return;
-    }
+  void _saveProfile(MemoModelCreator creator, onSuccess, onFail) async {
+    setState(() {
+      isSavingProfile = true;
+    });
 
     try {
+      final creatorRepo = ref.read(creatorRepositoryProvider);
+      final user = ref.read(userProvider);
+      if (user == null) return;
+
+      final newName = _profileNameCtrl.text.trim();
+      final newText = _profileTextCtrl.text.trim();
+      final newImgurUrl = _imgurCtrl.text.trim();
+
+      final Map<String, Future<dynamic>> updateFutures = {};
+      bool changesMade = false;
+
+      if (newName.isNotEmpty && newName != creator.name) {
+        updateFutures['name'] = creatorRepo.profileSetName(newName, user);
+        changesMade = true;
+      }
+      if (newText != creator.profileText) {
+        updateFutures['text'] = creatorRepo.profileSetText(newText, user);
+        changesMade = true;
+      }
+      if (newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl) {
+        updateFutures['avatar'] = creatorRepo.profileSetAvatar(newImgurUrl, user);
+        changesMade = true;
+      }
+
+      if (!changesMade) {
+        //   showSnackBar("No changes to save. 🤔", context);
+        return;
+      }
       final results = await Future.wait(
-        updates.entries.map((entry) async {
+        updateFutures.entries.map((entry) async {
           final result = await entry.value;
           return MapEntry(entry.key, result);
         }),
@@ -399,12 +410,19 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
         final failMessage = failedUpdates.join(', ');
         final successMessage = successfulUpdates.isNotEmpty ? ' | Successfully updated: ${successfulUpdates.join(', ')}' : '';
         showSnackBar("Update failed for: $failMessage$successMessage", context);
+        onFail();
       } else {
         showSnackBar("Profile updated successfully! ✨", context);
         MemoConfetti().launch(context);
+        ref.refresh(profileCreatorStateProvider);
+        onSuccess();
       }
     } catch (e) {
       showSnackBar("Profile update failed: $e", context);
+    } finally {
+      setState(() {
+        isSavingProfile = false;
+      });
     }
   }
 }

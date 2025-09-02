@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/screens/add_screen.dart'; // Ensure AddPost is themed
 import 'package:mahakka/screens/feed_screen.dart'; // Ensure FeedScreen is themed
 import 'package:mahakka/tab_item_data.dart';
+import 'package:mahakka/widgets/profile/profile_screen_widget.dart';
 
 import '../provider/navigation_providers.dart';
 import '../provider/scraper_provider.dart';
-import '../widgets/profile/profile_screen_new.dart';
 
 class HomeSceen extends ConsumerStatefulWidget {
   const HomeSceen({Key? key}) : super(key: key);
@@ -208,7 +208,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     final List<Widget> homeScreenItems = [
       FeedScreen(key: PageStorageKey('FeedScreen')),
       AddPost(key: PageStorageKey('AddPost')),
-      ProfileScreen(key: PageStorageKey('ProfileScreen')),
+      ProfileScreenWidget(key: PageStorageKey('ProfileScreen')),
     ];
 
     // This listener runs the fade animation whenever a tab is switched.

@@ -26,7 +26,7 @@ class TopDetailsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = theme.colorScheme;
-    final creatorProfileImg = creator.profileImageAvatar();
+    final creatorProfileImg = creator.profileImgurUrl ?? creator.profileImageAvatar();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 16, 12),

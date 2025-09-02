@@ -169,7 +169,8 @@ class CreatorRepository {
         final updatedCreator = user.creator;
         updatedCreator.profileImgurUrl = verifiedUrl;
         await saveCreator(updatedCreator);
-        await refreshAndCacheAvatar(imgur.split(".").last);
+        //TODO if user has profile from mahakka display that one
+        // await refreshAndCacheAvatar(imgur.split(".").last);
         //TODO refresh detail image too
         return "success";
       case MemoAccountantResponse.noUtxo:

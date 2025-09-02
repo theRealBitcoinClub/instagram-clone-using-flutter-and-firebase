@@ -248,24 +248,108 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   void _onSelectHashtag(int index) {
-    if (!mounted || index < 0 || index >= _selectedHashtags.length) return;
+    if (!mounted || index < 0 || index >= widget.post.tagIds.length) return;
+
     setState(() {
+      // 1. Toggle the selected state
       _selectedHashtags[index] = !_selectedHashtags[index];
-      String newText = _textEditController.text;
-      for (String tag in widget.post.tagIds) {
-        newText = newText.replaceAll(tag, "").replaceAll("  ", " ").trim();
-      }
-      for (int i = 0; i < _selectedHashtags.length && i < widget.post.tagIds.length; i++) {
-        if (_selectedHashtags[i]) {
-          newText = "$newText ${widget.post.tagIds[i]}".trim();
+
+      final String currentText = _textEditController.text;
+
+      // 2. Process all hashtags to build the new text
+      String newText = currentText;
+
+      // First, remove all hashtags that are no longer selected
+      for (int i = 0; i < widget.post.tagIds.length; i++) {
+        final String hashtag = widget.post.tagIds[i];
+        if (!_selectedHashtags[i]) {
+          // Remove this hashtag if it exists
+          final RegExp hashtagRegex = RegExp(r'(^|\s)' + RegExp.escape(hashtag) + r'(\s|$)', caseSensitive: false);
+          newText = newText.replaceAll(hashtagRegex, ' ');
         }
       }
+
+      // Clean up extra spaces
+      newText = newText.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+      // Then, add all selected hashtags that aren't already present
+      for (int i = 0; i < widget.post.tagIds.length; i++) {
+        final String hashtag = widget.post.tagIds[i];
+        if (_selectedHashtags[i]) {
+          // Check if the hashtag is already in the text
+          final RegExp hashtagRegex = RegExp(r'(^|\s)' + RegExp.escape(hashtag) + r'(\s|$)', caseSensitive: false);
+
+          if (!hashtagRegex.hasMatch(newText)) {
+            // Add the hashtag to the end
+            newText = newText.isEmpty ? hashtag : '$newText $hashtag';
+          }
+        }
+      }
+
       _textEditController.text = newText;
       _textEditController.selection = TextSelection.fromPosition(TextPosition(offset: _textEditController.text.length));
+
       _showInput = _hasSelectedTopic || _selectedHashtags.any((selected) => selected);
       _evaluateShowSendButton(_textEditController.text);
     });
   }
+  // void _onSelectHashtag(int index) {
+  //   if (!mounted || index < 0 || index >= widget.post.tagIds.length) return;
+  //
+  //   setState(() {
+  //     // 1. Toggle the selected state
+  //     _selectedHashtags[index] = !_selectedHashtags[index];
+  //
+  //     final String currentText = _textEditController.text;
+  //
+  //     // 2. Create a map of all hashtags with their selection state
+  //     final Map<String, bool> hashtagSelectionMap = {};
+  //     for (int i = 0; i < widget.post.tagIds.length; i++) {
+  //       hashtagSelectionMap[widget.post.tagIds[i]] = _selectedHashtags[i];
+  //     }
+  //
+  //     // 3. Build the new text by processing all hashtags
+  //     String newText = _buildTextWithSelectedHashtags(currentText, hashtagSelectionMap);
+  //
+  //     _textEditController.text = newText;
+  //     _textEditController.selection = TextSelection.fromPosition(TextPosition(offset: _textEditController.text.length));
+  //
+  //     _showInput = _hasSelectedTopic || _selectedHashtags.any((selected) => selected);
+  //     _evaluateShowSendButton(_textEditController.text);
+  //   });
+  // }
+  //
+  // String _buildTextWithSelectedHashtags(String currentText, Map<String, bool> hashtagSelectionMap) {
+  //   // Step 1: Remove all existing hashtags from the text
+  //   String processedText = currentText;
+  //
+  //   for (final hashtag in hashtagSelectionMap.keys) {
+  //     // Create a regex pattern that matches the exact hashtag with word boundaries
+  //     final RegExp hashtagRegex = RegExp(r'(^|\s)' + RegExp.escape(hashtag) + r'(\s|$)', caseSensitive: false);
+  //
+  //     // Replace the hashtag with a space (to maintain word separation)
+  //     processedText = processedText.replaceAll(hashtagRegex, ' ');
+  //   }
+  //
+  //   // Clean up extra spaces
+  //   processedText = processedText.replaceAll(RegExp(r'\s+'), ' ').trim();
+  //
+  //   // Step 2: Add back all selected hashtags
+  //   final List<String> selectedHashtags = [];
+  //   for (final entry in hashtagSelectionMap.entries) {
+  //     if (entry.value) {
+  //       selectedHashtags.add(entry.key);
+  //     }
+  //   }
+  //
+  //   if (selectedHashtags.isNotEmpty) {
+  //     // Add hashtags to the end of the text
+  //     final String hashtagsString = selectedHashtags.join(' ');
+  //     processedText = processedText.isEmpty ? hashtagsString : '$processedText $hashtagsString';
+  //   }
+  //
+  //   return processedText;
+  // }
 
   void _evaluateShowSendButton(String currentText) {
     String textWithoutKnownHashtags = currentText;

@@ -134,7 +134,7 @@ class MemoModelCreator {
   // If you need to persist profile image URLs that are *known* (not dynamically checked),
   // add separate String fields to the class for that purpose and include them in serialization.
   String profileImageAvatar() {
-    return _profileImageAvatar ?? "";
+    return profileImgurUrl ?? _profileImageAvatar ?? "";
   }
 
   Future<bool> _checkProfileImageAvatar({bool forceRefreshAfterProfileUpdate = false, String? forcedImageType}) async {
@@ -169,7 +169,7 @@ class MemoModelCreator {
   }
 
   String profileImageDetail() {
-    return _profileImageDetail ?? "";
+    return profileImgurUrl ?? _profileImageDetail ?? "";
   }
 
   Future<bool> _checkProfileImageDetail() async {

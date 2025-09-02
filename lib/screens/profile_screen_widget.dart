@@ -10,17 +10,17 @@ import 'package:mahakka/widgets/profile/posts_categorizer.dart';
 import 'package:mahakka/widgets/profile/settings_widget.dart';
 import 'package:mahakka/widgets/profile/youtube_controller_manager.dart';
 
-import '../../memo/model/memo_model_user.dart';
-import '../../provider/profile_providers.dart';
-import '../../views_taggable/widgets/qr_code_dialog.dart';
-import '../image_detail_dialog.dart';
-import '../post_dialog.dart';
-import 'profile_app_bar.dart';
-import 'profile_content_grid.dart';
-import 'profile_content_list.dart';
-import 'profile_header.dart';
-import 'profile_placeholders.dart';
-import 'profile_tab_selector.dart';
+import '../memo/model/memo_model_user.dart';
+import '../provider/profile_providers.dart';
+import '../views_taggable/widgets/qr_code_dialog.dart';
+import '../widgets/image_detail_dialog.dart';
+import '../widgets/post_dialog.dart';
+import '../widgets/profile/profile_app_bar.dart';
+import '../widgets/profile/profile_content_grid.dart';
+import '../widgets/profile/profile_content_list.dart';
+import '../widgets/profile/profile_header.dart';
+import '../widgets/profile/profile_placeholders.dart';
+import '../widgets/profile/profile_tab_selector.dart';
 
 class ProfileScreenWidget extends ConsumerStatefulWidget {
   const ProfileScreenWidget({Key? key}) : super(key: key);

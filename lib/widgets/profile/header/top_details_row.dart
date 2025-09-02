@@ -3,7 +3,7 @@ import 'package:mahakka/widgets/profile/header/stat_widget.dart';
 
 import '../../../memo/model/memo_model_creator.dart';
 import '../../../views_taggable/widgets/qr_code_dialog.dart';
-import '../../profile_buttons.dart';
+import '../profile_buttons.dart';
 
 class TopDetailsRow extends StatelessWidget {
   final MemoModelCreator creator;

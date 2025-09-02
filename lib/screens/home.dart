@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/screens/add_screen.dart'; // Ensure AddPost is themed
 import 'package:mahakka/screens/feed_screen.dart'; // Ensure FeedScreen is themed
+import 'package:mahakka/screens/profile_screen_widget.dart';
 import 'package:mahakka/tab_item_data.dart';
-import 'package:mahakka/widgets/profile/profile_screen_widget.dart';
 
 import '../provider/navigation_providers.dart';
 import '../provider/scraper_provider.dart';

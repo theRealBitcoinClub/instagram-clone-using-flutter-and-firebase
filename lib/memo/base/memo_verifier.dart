@@ -261,19 +261,19 @@ class MemoVerifier {
   }
 
   // --- Specific Context Verifications (like your original Imgur check) ---
-  MemoVerificationResponse verifyIsImgurLink() {
-    // Assuming 'text' is the URL here
-    if (!text.contains("i.imgur.com") && !text.contains("imgur.com")) {
-      // Broader Imgur check
-      return MemoVerificationResponse.noImageNorVideo; // Or a more specific "notAnImgurUrl"
-    }
-    // You might also want to check if it's a direct image link (ends with .jpg, .png, etc.)
-    final imgurImageRegex = RegExp(r'^https?://(i\.)?imgur\.com/.*\.(jpg|jpeg|png|gif|mp4|gifv)$');
-    if (!imgurImageRegex.hasMatch(text)) {
-      // return MemoVerificationResponse.notADirectImgurImageOrVideoLink;
-    }
-    return MemoVerificationResponse.valid;
-  }
+  // MemoVerificationResponse verifyIsImgurLink() {
+  //   // Assuming 'text' is the URL here
+  //   if (!text.contains("i.imgur.com") && !text.contains("imgur.com")) {
+  //     // Broader Imgur check
+  //     return MemoVerificationResponse.noImageNorVideo; // Or a more specific "notAnImgurUrl"
+  //   }
+  //   // You might also want to check if it's a direct image link (ends with .jpg, .png, etc.)
+  //   final imgurImageRegex = RegExp(r'^https?://(i\.)?imgur\.com/.*\.(jpg|jpeg|png|gif|mp4|gifv)$');
+  //   if (!imgurImageRegex.hasMatch(text)) {
+  //     // return MemoVerificationResponse.notADirectImgurImageOrVideoLink;
+  //   }
+  //   return MemoVerificationResponse.valid;
+  // }
 
   String verifyMnemonic() {
     if (text.isEmpty) {

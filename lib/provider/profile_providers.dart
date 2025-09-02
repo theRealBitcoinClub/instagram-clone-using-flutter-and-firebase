@@ -1,5 +1,7 @@
 // lib/providers/profile_providers.dart
 
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
@@ -19,6 +21,9 @@ final _currentProfileIdProvider = Provider<String?>((ref) {
 final creatorStateProvider = AsyncNotifierProvider<CreatorNotifier, MemoModelCreator?>(() => CreatorNotifier());
 
 class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
+  Timer? _balanceRefreshTimer;
+  Duration _refreshInterval = Duration(seconds: 3); // Check every 30 seconds
+
   @override
   Future<MemoModelCreator?> build() async {
     final creatorId = ref.watch(_currentProfileIdProvider);
@@ -45,6 +50,54 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
         await creator!.refreshUserData(ref);
         return creator;
       });
+    }
+  }
+
+  // Optional: Method to manually change refresh interval
+  void setRefreshInterval(Duration interval) {
+    _refreshInterval = interval;
+    _startBalanceRefreshTimer(); // Restart timer with new interval
+  }
+
+  // Optional: Method to stop automatic refreshing
+  void stopAutoRefreshBalance() {
+    _balanceRefreshTimer?.cancel();
+    _balanceRefreshTimer = null;
+  }
+
+  // Optional: Method to start automatic refreshing
+  void startAutoRefreshBalance() {
+    _startBalanceRefreshTimer();
+  }
+
+  void _startBalanceRefreshTimer() {
+    // Cancel any existing timer
+    _balanceRefreshTimer?.cancel();
+
+    // Start a new periodic timer
+    _balanceRefreshTimer = Timer.periodic(_refreshInterval, (_) async {
+      await _refreshBalancesPeriodically();
+    });
+  }
+
+  Future<void> _refreshBalancesPeriodically() async {
+    final creatorId = ref.read(_currentProfileIdProvider);
+    if (creatorId == null || creatorId.isEmpty || state.isLoading) {
+      return; // Skip if no creator ID or already loading
+    }
+
+    try {
+      // Get the current creator to check if we need to refresh
+      final currentCreator = state.value;
+      if (currentCreator != null) {
+        // Only refresh if the creator is a registered user
+        // if (currentCreator.hasRegisteredAsUser) {
+        await refreshBalances();
+        // }
+      }
+    } catch (e) {
+      print('Periodic balance refresh failed: $e');
+      // Don't update state on periodic refresh failures to avoid UI disruption
     }
   }
 }

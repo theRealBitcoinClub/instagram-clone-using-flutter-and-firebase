@@ -87,11 +87,11 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     creatorRepo.refreshCreatorCache(
       profileId!,
       () {
-        ref.read(creatorStateProvider.notifier).refreshBalances();
+        // ref.read(creatorStateProvider.notifier).refreshBalances();
         isUpdatingCache = false;
       },
       () {
-        ref.read(creatorStateProvider.notifier).refreshBalances();
+        // ref.read(creatorStateProvider.notifier).refreshBalances();
         isUpdatingCache = false;
       },
     );
@@ -111,6 +111,12 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     final isOwnProfile = loggedInUser?.profileIdMemoBch == currentProfileId;
 
     if (currentTabIndex == 2) updateCacheIfAllowed(ref, currentProfileId);
+
+    if (currentTabIndex == 2) {
+      ref.read(creatorStateProvider.notifier).startAutoRefreshBalance();
+    } else {
+      ref.read(creatorStateProvider.notifier).stopAutoRefreshBalance();
+    }
 
     //THIS IS NOW DONE FOR ALL CREATORS BUT ONLY IF THE TAB PROFILE IS SELECTED
     // ref.listen<int>(tabIndexProvider, (previousIndex, newIndex) {

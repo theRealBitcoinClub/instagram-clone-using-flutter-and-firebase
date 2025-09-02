@@ -10,6 +10,7 @@ import 'package:mahakka/widgets/bch/mnemonic_backup_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
+import '../../memo/model/memo_model_user.dart';
 import '../../provider/profile_providers.dart';
 import '../../repositories/creator_repository.dart';
 import '../../resources/auth_method.dart';
@@ -29,30 +30,32 @@ class ProfileScreenWidget extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with TickerProviderStateMixin {
-  int _viewMode = 0;
   final TextEditingController _profileNameCtrl = TextEditingController();
   final TextEditingController _profileTextCtrl = TextEditingController();
   final TextEditingController _imgurCtrl = TextEditingController();
   final Map<String, ValueNotifier<YoutubePlayerController?>> _ytControllerNotifiers = {};
   final ScrollController _scrollController = ScrollController();
+  final ValueNotifier<int> _viewMode = ValueNotifier(0);
 
-  List<MemoModelPost> _allProfilePosts = [];
+  // Derived data - should not be stateful
   List<MemoModelPost> _imagePosts = [];
   List<MemoModelPost> _videoPosts = [];
   List<MemoModelPost> _taggedPosts = [];
   List<MemoModelPost> _topicPostsData = [];
 
-  bool _showDefaultAvatar = false;
-  bool _tempToggleAddressTypeForDialog = true;
-  bool _hasBackedUpMnemonic = false;
+  DateTime _lastCacheUpdate = DateTime.now().subtract(const Duration(seconds: 16));
+  bool _isUpdatingCache = false;
 
   @override
   void initState() {
     super.initState();
+    _viewMode.addListener(_onViewModeChanged);
   }
 
   @override
   void dispose() {
+    _viewMode.removeListener(_onViewModeChanged);
+    _viewMode.dispose();
     _disposeYouTubeControllers();
     _profileNameCtrl.dispose();
     _profileTextCtrl.dispose();
@@ -66,153 +69,152 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       notifier.value?.pause();
       notifier.value?.dispose();
       notifier.value = null;
+      notifier.dispose();
     }
     _ytControllerNotifiers.clear();
   }
 
-  bool isUpdatingCache = false;
+  void _onViewModeChanged() {
+    // Pause all YouTube videos when changing view mode away from YouTube
+    if (_viewMode.value != 1) {
+      for (var notifier in _ytControllerNotifiers.values) {
+        notifier.value?.pause();
+      }
+    }
+  }
 
-  DateTime _lastCacheUpdate = DateTime.now().subtract(const Duration(seconds: 16));
+  void _cleanupUnusedYouTubeControllers(List<MemoModelPost> currentVideoPosts) {
+    final currentVideoIds = currentVideoPosts.map((post) => post.id).whereType<String>().toSet();
+    final controllersToRemove = _ytControllerNotifiers.keys.where((id) => !currentVideoIds.contains(id)).toList();
 
-  void updateCacheIfAllowed(WidgetRef ref, profileId) {
+    for (var id in controllersToRemove) {
+      final notifier = _ytControllerNotifiers.remove(id);
+      notifier?.value?.pause();
+      notifier?.value?.dispose();
+      notifier?.dispose();
+    }
+  }
+
+  void updateCacheIfAllowed(WidgetRef ref, String profileId) {
     final now = DateTime.now();
-    if (isUpdatingCache || now.difference(_lastCacheUpdate).inSeconds < 15) {
+    if (_isUpdatingCache || now.difference(_lastCacheUpdate).inSeconds < 15) {
       return;
     }
 
     _lastCacheUpdate = now;
-    isUpdatingCache = true;
+    _isUpdatingCache = true;
 
     final creatorRepo = ref.read(creatorRepositoryProvider);
-    creatorRepo.refreshCreatorCache(
-      profileId!,
-      () {
-        // ref.read(creatorStateProvider.notifier).refreshBalances();
-        isUpdatingCache = false;
-      },
-      () {
-        // ref.read(creatorStateProvider.notifier).refreshBalances();
-        isUpdatingCache = false;
-      },
-    );
+    creatorRepo.refreshCreatorCache(profileId, () => _isUpdatingCache = false, () => _isUpdatingCache = false);
   }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
     final loggedInUser = ref.watch(userProvider);
-
-    final creatorAsyncValue = ref.watch(creatorStateProvider);
+    final creatorAsyncValue = ref.read(creatorStateProvider);
     final postsAsyncValue = ref.watch(postsStreamProvider);
-    final currentTabIndex = ref.watch(tabIndexProvider); // Watch the tab index
+    final currentTabIndex = ref.watch(tabIndexProvider);
 
-    final currentProfileId = creatorAsyncValue.asData?.value?.id ?? ref.read(userProvider)!.id;
-    final isOwnProfile = loggedInUser?.profileIdMemoBch == currentProfileId;
+    // Use the creator data directly since we're reading it (not watching)
+    if (creatorAsyncValue is AsyncData<MemoModelCreator?>) {
+      final creator = creatorAsyncValue.value;
+      if (creator == null) {
+        return ProfileErrorScaffold(
+          theme: theme,
+          message: "Profile not found or an error occurred.",
+          onRetry: () => ref.refresh(creatorStateProvider),
+        );
+      }
 
-    if (currentTabIndex == 2) updateCacheIfAllowed(ref, currentProfileId);
+      final currentProfileId = creator.id;
+      final isOwnProfile = loggedInUser?.profileIdMemoBch == currentProfileId;
 
+      // Handle cache updates and balance refresh only when needed
+      _handleTabSpecificLogic(currentTabIndex, currentProfileId, ref);
+
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: ProfileAppBar(creator: creator, isOwnProfile: isOwnProfile, onShowBchQrDialog: () => _showBchQrDialog(loggedInUser, theme)),
+        body: RefreshIndicator(
+          onRefresh: () async {
+            ref.refresh(creatorStateProvider);
+            ref.refresh(postsStreamProvider);
+          },
+          color: theme.colorScheme.primary,
+          backgroundColor: theme.colorScheme.surface,
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              SliverToBoxAdapter(child: _buildProfileHeader(creator, loggedInUser, isOwnProfile, creatorAsyncValue.isLoading, theme)),
+              SliverPersistentHeader(
+                delegate: SliverAppBarDelegate(
+                  minHeight: 60,
+                  maxHeight: 60,
+                  child: ValueListenableBuilder<int>(
+                    valueListenable: _viewMode,
+                    builder: (context, viewMode, child) {
+                      return ProfileTabSelector(viewMode: viewMode, onViewModeChanged: (newMode) => _viewMode.value = newMode);
+                    },
+                  ),
+                ),
+                pinned: true,
+              ),
+              _buildSliverContent(theme, postsAsyncValue, creator),
+            ],
+          ),
+        ),
+      );
+    } else if (creatorAsyncValue is AsyncLoading) {
+      return ProfileLoadingScaffold(theme: theme, message: "Loading Profile...");
+    } else if (creatorAsyncValue is AsyncError) {
+      return ProfileErrorScaffold(
+        theme: theme,
+        message: "Error loading profile: ${creatorAsyncValue.error}",
+        onRetry: () => ref.refresh(creatorStateProvider),
+      );
+    }
+
+    // Fallback
+    return ProfileLoadingScaffold(theme: theme, message: "Loading Profile...");
+  }
+
+  void _handleTabSpecificLogic(int currentTabIndex, String currentProfileId, WidgetRef ref) {
     if (currentTabIndex == 2) {
+      updateCacheIfAllowed(ref, currentProfileId);
       ref.read(creatorStateProvider.notifier).startAutoRefreshBalance();
     } else {
       ref.read(creatorStateProvider.notifier).stopAutoRefreshBalance();
     }
+  }
 
-    //THIS IS NOW DONE FOR ALL CREATORS BUT ONLY IF THE TAB PROFILE IS SELECTED
-    // ref.listen<int>(tabIndexProvider, (previousIndex, newIndex) {
-    //   if (newIndex == 2) {
-    //     ref.read(userNotifierProvider.notifier).refreshAllBalances();
-    //   }
-    // });
-
-    return creatorAsyncValue.when(
-      data: (creator) {
-        if (creator == null) {
-          return ProfileErrorScaffold(
-            theme: theme,
-            colorScheme: colorScheme,
-            message: "Profile not found or an error occurred.",
-            onRetry: () => ref.refresh(creatorStateProvider),
-          );
-        }
-        return Scaffold(
-          backgroundColor: theme.scaffoldBackgroundColor,
-          appBar: ProfileAppBar(
-            creator: creator,
-            isOwnProfile: isOwnProfile,
-            onShowBchQrDialog: () {
-              if (loggedInUser != null) {
-                showQrCodeDialog(
-                  context: context,
-                  theme: theme,
-                  user: loggedInUser,
-                  getTempToggleState: () => _tempToggleAddressTypeForDialog,
-                  setTempToggleState: (val) => setState(() => _tempToggleAddressTypeForDialog = val),
-                );
-              } else {
-                showSnackBar("User data not available for QR code.", context);
-              }
-            },
-          ),
-          body: RefreshIndicator(
-            onRefresh: () async {
-              ref.refresh(creatorStateProvider);
-              ref.refresh(postsStreamProvider);
-            },
-            color: theme.colorScheme.primary,
-            backgroundColor: theme.colorScheme.surface,
-            child: CustomScrollView(
-              controller: _scrollController,
-              slivers: [
-                SliverToBoxAdapter(
-                  child: ProfileHeader(
-                    creator: creator,
-                    loggedInUser: loggedInUser,
-                    isOwnProfile: isOwnProfile,
-                    isRefreshingProfile: creatorAsyncValue.isLoading,
-                    onProfileButtonPressed: () => _onProfileButtonPressed(creator),
-                    showImageDetail: () => showCreatorImageDetail(
-                      context,
-                      theme,
-                      creator,
-                      () => _showDefaultAvatar,
-                      (val) => setState(() => _showDefaultAvatar = val),
-                    ),
-                    buildStatColumn: _buildStatColumn,
-                    showDefaultAvatar: _showDefaultAvatar,
-                  ),
-                ),
-                SliverPersistentHeader(
-                  delegate: SliverAppBarDelegate(
-                    minHeight: 60,
-                    maxHeight: 60,
-                    child: ProfileTabSelector(viewMode: _viewMode, onViewModeChanged: (newMode) => setState(() => _viewMode = newMode)),
-                  ),
-                  pinned: true,
-                ),
-                _buildSliverContentStreamView(theme, postsAsyncValue, creator),
-              ],
-            ),
-          ),
-        );
-      },
-      loading: () => ProfileLoadingScaffold(theme: theme, message: "Loading Profile..."),
-      error: (error, stack) => ProfileErrorScaffold(
-        theme: theme,
-        colorScheme: colorScheme,
-        message: "Error loading profile: $error",
-        onRetry: () => ref.refresh(creatorStateProvider),
-      ),
+  Widget _buildProfileHeader(MemoModelCreator creator, MemoModelUser? loggedInUser, bool isOwnProfile, bool isLoading, ThemeData theme) {
+    return ProfileHeader(
+      creator: creator,
+      loggedInUser: loggedInUser,
+      isOwnProfile: isOwnProfile,
+      isRefreshingProfile: isLoading,
+      onProfileButtonPressed: () => _onProfileButtonPressed(creator),
+      showImageDetail: () => showCreatorImageDetail(context, theme, creator, () => false, (_) {}),
+      buildStatColumn: _buildStatColumn,
+      showDefaultAvatar: false,
     );
   }
 
-  Widget _buildSliverContentStreamView(ThemeData theme, AsyncValue<List<MemoModelPost>> postsAsyncValue, creator) {
+  Widget _buildSliverContent(ThemeData theme, AsyncValue<List<MemoModelPost>> postsAsyncValue, MemoModelCreator creator) {
     return postsAsyncValue.when(
       data: (posts) {
+        // Categorize posts only when data actually changes
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _categorizePosts(posts);
         });
-        return _buildSliverCategorizedView(theme, creator);
+
+        return ValueListenableBuilder<int>(
+          valueListenable: _viewMode,
+          builder: (context, viewMode, child) {
+            return _buildSliverCategorizedView(theme, creator, viewMode);
+          },
+        );
       },
       loading: () {
         return SliverFillRemaining(
@@ -226,8 +228,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     );
   }
 
-  Widget _buildSliverCategorizedView(ThemeData theme, creator) {
-    switch (_viewMode) {
+  Widget _buildSliverCategorizedView(ThemeData theme, MemoModelCreator creator, int viewMode) {
+    switch (viewMode) {
       case 0: // Grid View (Images)
         return ProfileContentGrid(
           posts: _imagePosts,
@@ -258,15 +260,38 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       if (post.topicId.isNotEmpty) newTopicPostsData.add(post);
     }
 
-    if (_allProfilePosts.length != allPosts.length) {
+    // Clean up YouTube controllers for posts that are no longer in the video list
+    _cleanupUnusedYouTubeControllers(newVideoPosts);
+
+    // Only update if lists actually changed
+    if (_listsChanged(newImagePosts, newVideoPosts, newTaggedPosts, newTopicPostsData)) {
       setState(() {
-        _allProfilePosts = allPosts;
         _imagePosts = newImagePosts;
         _videoPosts = newVideoPosts;
         _taggedPosts = newTaggedPosts;
         _topicPostsData = newTopicPostsData;
       });
     }
+  }
+
+  bool _listsChanged(
+    List<MemoModelPost> newImagePosts,
+    List<MemoModelPost> newVideoPosts,
+    List<MemoModelPost> newTaggedPosts,
+    List<MemoModelPost> newTopicPostsData,
+  ) {
+    return !_listEquals(newImagePosts, _imagePosts) ||
+        !_listEquals(newVideoPosts, _videoPosts) ||
+        !_listEquals(newTaggedPosts, _taggedPosts) ||
+        !_listEquals(newTopicPostsData, _topicPostsData);
+  }
+
+  bool _listEquals(List<MemoModelPost> list1, List<MemoModelPost> list2) {
+    if (list1.length != list2.length) return false;
+    for (int i = 0; i < list1.length; i++) {
+      if (list1[i].id != list2[i].id) return false;
+    }
+    return true;
   }
 
   Widget _buildStatColumn(ThemeData theme, String title, String count) {
@@ -289,8 +314,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
   void _onProfileButtonPressed(MemoModelCreator creator) {
     final loggedInUser = ref.read(userProvider);
-    final creatorId = creator.id;
-    final isOwnProfile = loggedInUser?.profileIdMemoBch == creatorId;
+    final isOwnProfile = loggedInUser?.profileIdMemoBch == creator.id;
 
     if (isOwnProfile) {
       showProfileSettingsDialog(
@@ -301,94 +325,91 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
         profileNameCtrl: _profileNameCtrl,
         profileTextCtrl: _profileTextCtrl,
         imgurCtrl: _imgurCtrl,
-        isLogoutEnabled: _hasBackedUpMnemonic,
+        isLogoutEnabled: true,
         onSave: () => _saveProfile(creator),
-        onBackupMnemonic: () {
-          showDialog(
-            context: context,
-            builder: (ctx) => MnemonicBackupWidget(
-              mnemonic: loggedInUser!.mnemonic,
-              onVerificationComplete: () => setState(() => _hasBackedUpMnemonic = true),
-            ),
-          );
-        },
-        onLogout: () {
-          ref.read(authCheckerProvider).logOut();
-          ref.read(profileTargetIdProvider.notifier).state = null;
-          ref.read(tabIndexProvider.notifier).setTab(0);
-        },
+        onBackupMnemonic: () => _showMnemonicBackupDialog(loggedInUser),
+        onLogout: () => _logout(ref),
       );
     } else {
       showSnackBar("Follow/Message functionality is coming soon!", context);
     }
   }
-  // Inside _ProfileScreenWidgetState
+
+  void _showBchQrDialog(MemoModelUser? loggedInUser, ThemeData theme) {
+    if (loggedInUser != null) {
+      showQrCodeDialog(context: context, theme: theme, user: loggedInUser, getTempToggleState: () => true, setTempToggleState: (_) {});
+    } else {
+      showSnackBar("User data not available for QR code.", context);
+    }
+  }
+
+  void _showMnemonicBackupDialog(MemoModelUser? loggedInUser) {
+    if (loggedInUser != null) {
+      showDialog(
+        context: context,
+        builder: (ctx) => MnemonicBackupWidget(mnemonic: loggedInUser.mnemonic, onVerificationComplete: () {}),
+      );
+    }
+  }
+
+  void _logout(WidgetRef ref) {
+    ref.read(authCheckerProvider).logOut();
+    ref.read(profileTargetIdProvider.notifier).state = null;
+    ref.read(tabIndexProvider.notifier).setTab(0);
+  }
 
   void _saveProfile(MemoModelCreator creator) async {
     final creatorRepo = ref.read(creatorRepositoryProvider);
     final user = ref.read(userProvider);
-    user!.creator = creator;
-    // if (user == null) {
-    //   if (mounted) showSnackBar("User data not available for profile update.", context);
-    //   return;
-    // }
+    if (user == null) return;
 
-    String newName = _profileNameCtrl.text.trim();
-    String newText = _profileTextCtrl.text.trim();
-    String newImgurUrl = _imgurCtrl.text.trim();
+    final newName = _profileNameCtrl.text.trim();
+    final newText = _profileTextCtrl.text.trim();
+    final newImgurUrl = _imgurCtrl.text.trim();
 
-    // Use a Map to store futures and their corresponding field names.
-    final Map<String, Future<dynamic>> updateFutures = {};
+    final updates = <String, Future<String>>{};
     bool changesMade = false;
 
-    // Check and add futures for each changed field.
     if (newName.isNotEmpty && newName != creator.name) {
-      updateFutures['name'] = creatorRepo.profileSetName(newName, user);
+      updates['name'] = await creatorRepo.profileSetName(newName, user);
       changesMade = true;
     }
     if (newText != creator.profileText) {
-      updateFutures['text'] = creatorRepo.profileSetText(newText, user);
+      updates['text'] = await creatorRepo.profileSetText(newText, user);
       changesMade = true;
     }
-    if (newImgurUrl.isNotEmpty) {
-      updateFutures['avatar'] = creatorRepo.profileSetAvatar(newImgurUrl, user);
+    if (newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl) {
+      updates['avatar'] = await creatorRepo.profileSetAvatar(newImgurUrl, user);
       changesMade = true;
     }
 
-    if (changesMade) {
-      // Wait for all updates to complete and collect their results.
-      final List<MapEntry<String, dynamic>> results = await Future.wait(
-        updateFutures.entries.map((entry) async {
+    if (!changesMade) {
+      showSnackBar("No changes to save. 🤔", context);
+      return;
+    }
+
+    try {
+      final results = await Future.wait(
+        updates.entries.map((entry) async {
           final result = await entry.value;
           return MapEntry(entry.key, result);
         }),
       );
 
-      // Build the success and failure messages.
-      final List<String> successfulUpdates = [];
-      final List<String> failedUpdates = [];
+      final successfulUpdates = results.where((e) => e.value == "success").map((e) => e.key).toList();
+      final failedUpdates = results.where((e) => e.value != "success").map((e) => '${e.key}: ${e.value}').toList();
 
-      for (var result in results) {
-        if (result.value == "success") {
-          successfulUpdates.add(result.key);
-        } else {
-          failedUpdates.add('${result.key}: ${result.value}');
-        }
-      }
-
-      if (mounted) {
-        if (failedUpdates.isNotEmpty) {
-          final String failMessage = failedUpdates.join(', ');
-          final String successMessage = successfulUpdates.isNotEmpty ? ' | Successfully updated: ${successfulUpdates.join(', ')}' : '';
-          showSnackBar("Update failed for: $failMessage$successMessage", context);
-        } else {
-          showSnackBar("Profile updated successfully! ✨", context);
-          MemoConfetti().launch(context);
-        }
+      if (failedUpdates.isNotEmpty) {
+        final failMessage = failedUpdates.join(', ');
+        final successMessage = successfulUpdates.isNotEmpty ? ' | Successfully updated: ${successfulUpdates.join(', ')}' : '';
+        showSnackBar("Update failed for: $failMessage$successMessage", context);
+      } else {
+        showSnackBar("Profile updated successfully! ✨", context);
+        MemoConfetti().launch(context);
         ref.read(creatorStateProvider.notifier).refreshBalances();
       }
-    } else {
-      if (mounted) showSnackBar("No changes to save. 🤔", context);
+    } catch (e) {
+      showSnackBar("Profile update failed: $e", context);
     }
   }
 }

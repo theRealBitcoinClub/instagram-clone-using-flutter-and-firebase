@@ -4,6 +4,8 @@ import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/provider/navigation_providers.dart'; // Import for profileTargetIdProvider
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../provider/profile_providers.dart';
+
 class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
   // Changed to ConsumerWidget
   final MemoModelCreator? creator;
@@ -63,8 +65,9 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
             icon: const Icon(Icons.home_filled), // Or Icons.person_outline for "My Profile"
             tooltip: "View My Profile",
             onPressed: () {
-              // Set the profileTargetIdProvider to null to trigger navigation to own profile
               ref.read(profileTargetIdProvider.notifier).state = null;
+              ref.refresh(creatorStateProvider);
+              ref.refresh(postsStreamProvider);
             },
           ),
       ],

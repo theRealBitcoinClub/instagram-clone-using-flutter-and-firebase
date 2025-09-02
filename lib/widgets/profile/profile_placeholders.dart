@@ -39,12 +39,10 @@ class ProfileLoadingScaffold extends StatelessWidget {
 
 class ProfileErrorScaffold extends StatelessWidget {
   final ThemeData theme;
-  final ColorScheme colorScheme;
   final String message;
   final VoidCallback? onRetry; // Make onRetry nullable
 
-  const ProfileErrorScaffold({Key? key, required this.theme, required this.colorScheme, this.message = "An error occurred.", this.onRetry})
-    : super(key: key);
+  const ProfileErrorScaffold({Key? key, required this.theme, this.message = "An error occurred.", this.onRetry}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -61,11 +59,11 @@ class ProfileErrorScaffold extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline_rounded, color: colorScheme.error, size: 60),
+              Icon(Icons.error_outline_rounded, color: theme.colorScheme.error, size: 60),
               const SizedBox(height: 20),
               Text(
                 message,
-                style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onErrorContainer.withOpacity(0.9)),
+                style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onErrorContainer.withOpacity(0.9)),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 28),
@@ -74,7 +72,10 @@ class ProfileErrorScaffold extends StatelessWidget {
                   icon: const Icon(Icons.refresh_rounded),
                   label: const Text("Retry"),
                   onPressed: onRetry,
-                  style: ElevatedButton.styleFrom(backgroundColor: colorScheme.errorContainer, foregroundColor: colorScheme.onErrorContainer),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.errorContainer,
+                    foregroundColor: theme.colorScheme.onErrorContainer,
+                  ),
                 ),
             ],
           ),

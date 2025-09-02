@@ -65,7 +65,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
             builder: (context, ref, child) {
               // final loggedInUser = ref.watch(userProvider);
               // Watch the creator provider directly here to get the updated values.
-              final creatorAsyncValue = ref.watch(creatorStateProvider);
+              final creatorAsyncValue = ref.watch(profileCreatorStateProvider);
               final updatedCreator = creatorAsyncValue.asData?.value;
 
               return _buildTopDetailsRow(

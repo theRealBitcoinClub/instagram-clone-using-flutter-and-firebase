@@ -122,13 +122,14 @@ class PostCacheRepository {
 
     // Save to memory cache
     _addPageToMemoryCache(cacheKey, posts);
-
+    //TODO check how to avoid save twice to cache
     // Save individual posts to disk
     await savePosts(posts);
 
     // Save page metadata to disk (optional, for persistence across app restarts)
     final isar = await _isar;
-    await isar.writeTxn(() async {
+    //always silent because data that triggers an update is always from firebase after scraping
+    await isar.writeTxn(silent: true, () async {
       // You could store page metadata here if needed
     });
   }

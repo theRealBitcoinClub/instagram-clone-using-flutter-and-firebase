@@ -18,7 +18,7 @@ final _currentProfileIdProvider = Provider<String?>((ref) {
 
 // Provides the creator's data for the profile screen, automatically re-fetching
 // when the profile ID changes.
-final creatorStateProvider = AsyncNotifierProvider<CreatorNotifier, MemoModelCreator?>(() => CreatorNotifier());
+final profileCreatorStateProvider = AsyncNotifierProvider<CreatorNotifier, MemoModelCreator?>(() => CreatorNotifier());
 
 class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
   Timer? _balanceRefreshTimer;
@@ -40,14 +40,58 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
     return creator;
   }
 
-  // A public method to refresh the creator data
+  Future<void> refreshCreatorCache(String creatorId) async {
+    CreatorRepository creatorRepository = ref.read(creatorRepositoryProvider);
+    creatorRepository.refreshCreatorCache(
+      creatorId,
+      () {
+        print("refreshCreatorCache fresh scrape success for creatorId ${creatorId}");
+      },
+      () {
+        print("refreshCreatorCache no fresh data avaiable for creatorId ${creatorId}");
+      },
+      () {
+        print("refreshCreatorCache scrape failed for creatorId ${creatorId}");
+      },
+    );
+  }
+
+  Future<void> refreshProfileImages(String forceImageType) async {
+    final creatorId = ref.read(_currentProfileIdProvider);
+    if (creatorId != null && creatorId.isNotEmpty) {
+      state = const AsyncValue.loading();
+      state = await AsyncValue.guard(() async {
+        var creator = await ref.read(creatorRepositoryProvider).getCreator(creatorId);
+        await creator!.refreshAvatar(forceImageType: forceImageType, forceRefreshAfterProfileUpdate: true);
+        //TODO also update the detail
+        // await creator!.refreshAvatarDetail(forceImageType: forceImageType, forceRefreshAfterProfileUpdate: true);
+        return creator;
+      });
+    }
+  }
+
+  // TODO manually triggered by user refresh pull down in addition to current auto build method call? or just rebuild all on refresh?
+  Future<void> refreshUserRegisteredFlag() async {
+    final creatorId = ref.read(_currentProfileIdProvider);
+    if (creatorId != null && creatorId.isNotEmpty) {
+      //TODO  asyncvalue loading seems to triger the watch events cant be used inside build methods
+      // state = const AsyncValue.loading();
+      // state = await AsyncValue.guard(() async {
+      var creator = await ref.read(creatorRepositoryProvider).getCreator(creatorId);
+      await creator!.refreshUserHasRegistered(ref);
+      // return creator;
+      // });
+    }
+  }
+
+  // timer triggered
   Future<void> refreshBalances() async {
     final creatorId = ref.read(_currentProfileIdProvider);
     if (creatorId != null && creatorId.isNotEmpty) {
       state = const AsyncValue.loading();
       state = await AsyncValue.guard(() async {
         var creator = await ref.read(creatorRepositoryProvider).getCreator(creatorId);
-        await creator!.refreshUserData(ref);
+        await creator!.refreshBalances(ref);
         return creator;
       });
     }

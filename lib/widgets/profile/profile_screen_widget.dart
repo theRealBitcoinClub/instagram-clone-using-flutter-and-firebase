@@ -36,6 +36,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   final Map<String, ValueNotifier<YoutubePlayerController?>> _ytControllerNotifiers = {};
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<int> _viewMode = ValueNotifier(0);
+  bool isRefreshingProfile = false;
 
   // Derived data - should not be stateful
   List<MemoModelPost> _imagePosts = [];
@@ -43,8 +44,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   List<MemoModelPost> _taggedPosts = [];
   List<MemoModelPost> _topicPostsData = [];
 
-  DateTime _lastCacheUpdate = DateTime.now().subtract(const Duration(seconds: 16));
-  bool _isUpdatingCache = false;
+  // DateTime _lastCacheUpdate = DateTime.now().subtract(const Duration(seconds: 16));
+  // bool _isUpdatingCache = false;
 
   @override
   void initState() {
@@ -95,24 +96,18 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     }
   }
 
-  void updateCacheIfAllowed(WidgetRef ref, String profileId) {
-    final now = DateTime.now();
-    if (_isUpdatingCache || now.difference(_lastCacheUpdate).inSeconds < 15) {
-      return;
-    }
-
-    _lastCacheUpdate = now;
-    _isUpdatingCache = true;
-
-    final creatorRepo = ref.read(creatorRepositoryProvider);
-    creatorRepo.refreshCreatorCache(profileId, () => _isUpdatingCache = false, () => _isUpdatingCache = false);
+  void refreshCreatorProfile(String profileId) {
+    final profileProvider = ref.read(profileCreatorStateProvider.notifier);
+    profileProvider.refreshUserRegisteredFlag();
+    // profileProvider.refreshBalances(); TODO THESE CAN ONLY BE MANUALLY TRIGGERED NOT BY BUILD METHOD
+    profileProvider.refreshCreatorCache(profileId);
   }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final loggedInUser = ref.watch(userProvider);
-    final creatorAsyncValue = ref.read(creatorStateProvider);
+    final creatorAsyncValue = ref.read(profileCreatorStateProvider);
     final postsAsyncValue = ref.watch(postsStreamProvider);
     final currentTabIndex = ref.watch(tabIndexProvider);
 
@@ -123,7 +118,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
         return ProfileErrorScaffold(
           theme: theme,
           message: "Profile not found or an error occurred.",
-          onRetry: () => ref.refresh(creatorStateProvider),
+          onRetry: () => ref.refresh(profileCreatorStateProvider),
         );
       }
 
@@ -131,14 +126,23 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       final isOwnProfile = loggedInUser?.profileIdMemoBch == currentProfileId;
 
       // Handle cache updates and balance refresh only when needed
-      _handleTabSpecificLogic(currentTabIndex, currentProfileId, ref);
+      if (currentTabIndex == 2) {
+        if (!isRefreshingProfile) {
+          isRefreshingProfile = true;
+          refreshCreatorProfile(currentProfileId);
+          isRefreshingProfile = false;
+        }
+        ref.read(profileCreatorStateProvider.notifier).startAutoRefreshBalance();
+      } else {
+        ref.read(profileCreatorStateProvider.notifier).stopAutoRefreshBalance();
+      }
 
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: ProfileAppBar(creator: creator, isOwnProfile: isOwnProfile, onShowBchQrDialog: () => _showBchQrDialog(loggedInUser, theme)),
         body: RefreshIndicator(
           onRefresh: () async {
-            ref.refresh(creatorStateProvider);
+            ref.refresh(profileCreatorStateProvider);
             ref.refresh(postsStreamProvider);
           },
           color: theme.colorScheme.primary,
@@ -171,21 +175,12 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       return ProfileErrorScaffold(
         theme: theme,
         message: "Error loading profile: ${creatorAsyncValue.error}",
-        onRetry: () => ref.refresh(creatorStateProvider),
+        onRetry: () => ref.refresh(profileCreatorStateProvider),
       );
     }
 
     // Fallback
     return ProfileLoadingScaffold(theme: theme, message: "Loading Profile...");
-  }
-
-  void _handleTabSpecificLogic(int currentTabIndex, String currentProfileId, WidgetRef ref) {
-    if (currentTabIndex == 2) {
-      updateCacheIfAllowed(ref, currentProfileId);
-      ref.read(creatorStateProvider.notifier).startAutoRefreshBalance();
-    } else {
-      ref.read(creatorStateProvider.notifier).stopAutoRefreshBalance();
-    }
   }
 
   Widget _buildProfileHeader(MemoModelCreator creator, MemoModelUser? loggedInUser, bool isOwnProfile, bool isLoading, ThemeData theme) {
@@ -380,11 +375,12 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     }
     if (newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl) {
       updates['avatar'] = await creatorRepo.profileSetAvatar(newImgurUrl, user);
+      if ("success" == updates["avatar"]) ref.read(profileCreatorStateProvider.notifier).refreshProfileImages(newImgurUrl.split(".").last);
       changesMade = true;
     }
 
     if (!changesMade) {
-      showSnackBar("No changes to save. 🤔", context);
+      //   showSnackBar("No changes to save. 🤔", context);
       return;
     }
 
@@ -406,7 +402,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       } else {
         showSnackBar("Profile updated successfully! ✨", context);
         MemoConfetti().launch(context);
-        ref.read(creatorStateProvider.notifier).refreshBalances();
       }
     } catch (e) {
       showSnackBar("Profile update failed: $e", context);

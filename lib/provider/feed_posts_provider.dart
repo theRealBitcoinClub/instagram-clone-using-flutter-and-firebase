@@ -116,8 +116,9 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
       final DocumentSnapshot? cursorForThisFetch = isInitial ? null : state.lastDocument;
 
       // Calculate current page number
-      final currentPage = isInitial ? 1 : (state.posts.length ~/ _pageSize) + 1;
-      final cacheKey = _getCacheKey(currentPage);
+      var totalPostsLoadedCounter = state.posts.length;
+      final pageIndex = isInitial ? 1 : (totalPostsLoadedCounter ~/ _pageSize) + 1;
+      final cacheKey = _getCacheKey(pageIndex);
 
       List<MemoModelPost> newPosts;
       bool fromCache = false;
@@ -129,17 +130,17 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
           state = state.copyWith(totalPostCount: totalCount);
         }
         // Try cache first for initial load
-        final cachedPosts = await _cacheRepository.getPage(currentPage, filter: state.activeFilter?.name);
+        final cachedPosts = await _cacheRepository.getPage(pageIndex, filter: state.activeFilter?.name);
         if (cachedPosts != null && cachedPosts.isNotEmpty) {
           newPosts = cachedPosts;
           fromCache = true;
-          print("Using cached page $currentPage with ${newPosts.length} posts");
+          print("Using cached page $pageIndex with ${newPosts.length} posts");
         } else {
           // Fall back to network
           newPosts = await _postService.getPostsPaginated(limit: _pageSize, startAfterDoc: cursorForThisFetch);
           // Cache the new results
           if (newPosts.isNotEmpty) {
-            await _cacheRepository.savePage(newPosts, currentPage, filter: state.activeFilter?.name);
+            await _cacheRepository.savePage(newPosts, pageIndex, filter: state.activeFilter?.name);
           }
         }
       } else {
@@ -158,7 +159,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 
         // Cache the new results
         if (newPosts.isNotEmpty) {
-          await _cacheRepository.savePage(newPosts, currentPage, filter: state.activeFilter?.name);
+          await _cacheRepository.savePage(newPosts, pageIndex, filter: state.activeFilter?.name);
         }
       }
 

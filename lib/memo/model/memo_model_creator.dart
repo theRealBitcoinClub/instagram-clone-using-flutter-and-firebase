@@ -207,7 +207,7 @@ class MemoModelCreator {
   @override
   int get hashCode => id.hashCode;
 
-  Future<void> refreshUserData(Ref ref) async {
+  Future<void> refreshUserHasRegistered(Ref ref) async {
     MemoModelUser? userData = null;
     if (bchAddressCashtokenAware.isEmpty) {
       userData = await UserService().getUserOnce(id);
@@ -217,13 +217,20 @@ class MemoModelCreator {
       hasRegisteredAsUser = true;
       // return true; //TODO store the userdata in local cache same as creator to avoid repeating requests for each post
     }
+    //TODO check if data changed before save
+    ref.read(creatorCacheRepositoryProvider).saveCreator(this);
 
+    refreshBalances(ref);
+  }
+
+  Future<void> refreshBalances(Ref ref) async {
     if (hasRegisteredAsUser) {
-      _refreshBalanceMahakka(ref);
-      _refreshBalanceMemo(ref);
+      await _refreshBalanceMahakka(ref);
+      await _refreshBalanceMemo(ref);
     } else {
-      _refreshBalanceMemo(ref);
+      await _refreshBalanceMemo(ref);
     }
+    //TODO check if balance changed before save
     ref.read(creatorCacheRepositoryProvider).saveCreator(this);
   }
 

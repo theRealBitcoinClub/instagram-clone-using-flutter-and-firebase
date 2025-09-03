@@ -22,11 +22,21 @@ final profileCreatorStateProvider = AsyncNotifierProvider<CreatorNotifier, MemoM
 
 class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
   Timer? _balanceRefreshTimer;
-  Duration _refreshInterval = Duration(seconds: 3); // Check every 30 seconds
+  Duration _refreshBalanceInterval = Duration(seconds: 3);
 
-  @override
+  DateTime? _lastRefreshTime;
+
   Future<MemoModelCreator?> build() async {
     final creatorId = ref.watch(_currentProfileIdProvider);
+
+    // Debounce rapid rebuilds
+    final now = DateTime.now();
+    if (_lastRefreshTime != null && now.difference(_lastRefreshTime!) < Duration(seconds: 2)) {
+      return state.value; // Return current state if recently refreshed
+    }
+
+    _lastRefreshTime = now;
+
     if (creatorId == null || creatorId.isEmpty) {
       // Return null or throw a specific error if no ID is available
       return null;
@@ -103,7 +113,7 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
 
   // Optional: Method to manually change refresh interval
   void setRefreshInterval(Duration interval) {
-    _refreshInterval = interval;
+    _refreshBalanceInterval = interval;
     _startBalanceRefreshTimer(); // Restart timer with new interval
   }
 
@@ -123,7 +133,7 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
     _balanceRefreshTimer?.cancel();
 
     // Start a new periodic timer
-    _balanceRefreshTimer = Timer.periodic(_refreshInterval, (_) async {
+    _balanceRefreshTimer = Timer.periodic(_refreshBalanceInterval, (_) async {
       await _refreshBalancesPeriodically();
     });
   }

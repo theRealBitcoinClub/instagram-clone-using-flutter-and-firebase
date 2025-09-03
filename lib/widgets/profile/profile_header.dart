@@ -27,8 +27,18 @@ class ProfileHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final updatedCreator = ref.watch(profileCreatorStateProvider).asData?.value ?? creator;
+    final creatorAsync = ref.watch(profileCreatorStateProvider);
 
+    return creatorAsync.when(
+      skipLoadingOnRefresh: true,
+      skipLoadingOnReload: true,
+      data: (creator) => _buildHeaderContent(creator!, theme),
+      loading: () => LinearProgressIndicator(),
+      error: (error, stack) => Text("Please kill and restart the app"),
+    );
+  }
+
+  Widget _buildHeaderContent(MemoModelCreator creator, ThemeData theme) {
     return Container(
       decoration: BoxDecoration(color: theme.colorScheme.surface),
       child: Column(
@@ -36,20 +46,47 @@ class ProfileHeader extends ConsumerWidget {
         children: [
           if (isRefreshingProfile) _buildProgressIndicator(),
           TopDetailsRow(
-            creator: updatedCreator,
+            creator: creator, // Use the provider data directly
             theme: theme,
             showImageDetail: showImageDetail,
             showDefaultAvatar: showDefaultAvatar,
             isOwnProfile: isOwnProfile,
             onProfileButtonPressed: onProfileButtonPressed,
           ),
-          _buildNameRow(updatedCreator, theme),
-          _buildProfileText(updatedCreator, theme),
+          _buildNameRow(creator, theme),
+          _buildProfileText(creator, theme),
           const Divider(height: 2.0, thickness: 0.5),
         ],
       ),
     );
   }
+
+  // @override
+  // Widget build(BuildContext context, WidgetRef ref) {
+  //   final theme = Theme.of(context);
+  //   final updatedCreator = ref.watch(profileCreatorStateProvider).asData?.value ?? creator;
+  //
+  //   return Container(
+  //     decoration: BoxDecoration(color: theme.colorScheme.surface),
+  //     child: Column(
+  //       mainAxisSize: MainAxisSize.min,
+  //       children: [
+  //         if (isRefreshingProfile) _buildProgressIndicator(),
+  //         TopDetailsRow(
+  //           creator: updatedCreator,
+  //           theme: theme,
+  //           showImageDetail: showImageDetail,
+  //           showDefaultAvatar: showDefaultAvatar,
+  //           isOwnProfile: isOwnProfile,
+  //           onProfileButtonPressed: onProfileButtonPressed,
+  //         ),
+  //         _buildNameRow(updatedCreator, theme),
+  //         _buildProfileText(updatedCreator, theme),
+  //         const Divider(height: 2.0, thickness: 0.5),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildProgressIndicator() {
     return const LinearProgressIndicator(

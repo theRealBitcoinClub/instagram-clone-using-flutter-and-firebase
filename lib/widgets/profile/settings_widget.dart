@@ -193,7 +193,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
       } else {
         showSnackBar("Profile updated successfully! ✨", context);
         MemoConfetti().launch(context);
-        ref.refresh(profileCreatorStateProvider);
+        // ref.refresh(profileCreatorStateProvider);
+        ref.invalidate(profileCreatorStateProvider);
         onSuccess();
       }
     } catch (e) {

@@ -70,11 +70,14 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final loggedInUser = ref.watch(userProvider);
-    final creatorAsyncValue = ref.read(profileCreatorStateProvider);
+    // final creatorAsyncValue = ref.read(profileCreatorStateProvider);  // Always use the LATEST version from the provider
+    final creatorAsyncValue = ref.watch(profileCreatorStateProvider);
     final postsAsyncValue = ref.watch(postsStreamProvider);
     final currentTabIndex = ref.watch(tabIndexProvider);
 
     return creatorAsyncValue.when(
+      skipLoadingOnReload: true,
+      skipLoadingOnRefresh: true,
       data: (creator) => _buildProfileScreen(creator, loggedInUser, postsAsyncValue, currentTabIndex, theme),
       loading: () => ProfileLoadingScaffold(theme: theme, message: "Loading Profile..."),
       error: (error, stack) =>
@@ -137,6 +140,13 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   Future<void> _refreshData() async {
     ref.refresh(profileCreatorStateProvider);
     ref.refresh(postsStreamProvider);
+    // Invalidate to trigger background refresh
+    // ref.invalidate(profileCreatorStateProvider);
+    // ref.invalidate(postsStreamProvider);
+
+    // Optionally wait for the refresh to complete
+    // This keeps the RefreshIndicator visible until done
+    // await Future.wait([ref.read(profileCreatorStateProvider.future), ref.read(postsStreamProvider.future)]);
   }
 
   Widget _buildProfileHeader(MemoModelCreator creator, bool isOwnProfile, ThemeData theme) {

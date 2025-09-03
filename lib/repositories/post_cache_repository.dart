@@ -4,6 +4,7 @@ import 'dart:collection';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mahakka/memo/firebase/post_service_provider.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 
 import '../memo/isar/memo_model_post_db.dart';
@@ -28,21 +29,21 @@ class PostCacheRepository {
 
   Future<Isar> get _isar async => await ref.read(isarProvider.future);
 
-  Future<void> updatePopularityScore(String postId, int newScore) async {
+  Future<void> updatePopularityScore(String postId, int tipAmount) async {
     MemoModelPost post = (await getPost(postId))!;
 
     MemoModelPost? scrapedPost = await MemoPostScraper().fetchAndParsePost(postId, filterOn: false);
 
+    var newScore;
     if (scrapedPost == null) {
       print("UPDATE POPULARITY FETCH UP TO DATE SCORE FAILED");
-      return;
+      newScore = post.popularityScore + tipAmount;
     } else {
-      newScore += scrapedPost.popularityScore;
-      post.popularityScore += newScore;
-      await savePosts([post]);
-      // Update just the popularity score in the provider
-      ref.read(postPopularityProvider.notifier).updatePopularityScore(postId, post.popularityScore);
-    } // return post.popularityScore!.toString();
+      newScore = scrapedPost.popularityScore + tipAmount;
+    }
+    await ref.read(postServiceProvider).savePost(post);
+    await savePosts([post]);
+    ref.read(postPopularityProvider.notifier).updatePopularityScore(postId, newScore);
   }
 
   // --- Memory Cache Management ---

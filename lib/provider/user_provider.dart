@@ -1,7 +1,9 @@
 // lib/provider/user_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
-import 'package:mahakka/resources/auth_method.dart'; // Ensure AuthChecker is correctly defined
+import 'package:mahakka/resources/auth_method.dart';
+
+import '../memo/firebase/user_service.dart'; // Ensure AuthChecker is correctly defined
 
 // State class for user
 class UserState {
@@ -30,13 +32,57 @@ class UserNotifier extends StateNotifier<UserState> {
   final AuthChecker _authChecker;
   final Ref ref;
 
+  Future<String> updateTipReceiver(TipReceiver newReceiver) async {
+    if (state.user == null) return "user state is null";
+
+    try {
+      final updatedUser = state.user!.copyWith(tipReceiver: newReceiver);
+
+      // Save to Firebase
+      final userService = UserService();
+      await userService.saveUser(updatedUser);
+
+      // Update local state
+      state = state.copyWith(user: updatedUser);
+      return "success";
+    } catch (e) {
+      print("Error updating tip receiver: $e");
+      state = state.copyWith(error: "Failed to update tip receiver: $e");
+    }
+    return "fail updateTipReceiver";
+  }
+
+  Future<String> updateTipAmount(TipAmount newAmount) async {
+    if (state.user == null) return "user is null";
+
+    try {
+      final updatedUser = state.user!.copyWith(tipAmount: newAmount);
+
+      // Save to Firebase
+      final userService = UserService();
+      await userService.saveUser(updatedUser);
+
+      // Update local state
+      state = state.copyWith(user: updatedUser);
+      return "success";
+    } catch (e) {
+      print("Error updating tip amount: $e");
+      state = state.copyWith(error: "Failed to update tip amount: $e");
+    }
+    return "fail updateTipAmount";
+  }
+
   Future<void> refreshUser() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       if (state.user == null || !state.user!.hasInit) {
-        final fetchedUser = await _authChecker.getUserFromDB();
-        state = state.copyWith(user: fetchedUser, isLoading: false);
+        final fetchedUser = await _authChecker.createUserFromMnemonic();
+        state = state.copyWith(user: fetchedUser);
       }
+
+      MemoModelUser user = (await UserService().getUserOnce(state.user!.id))!;
+      MemoModelUser newUser = user.copyWith(tipAmount: user.tipAmountEnum, tipReceiver: user.tipReceiver);
+      state = state.copyWith(user: newUser);
       // Call the new method to refresh all balances after the user is fetched
       //the refresh balance is now done per creator
       // refreshAllBalances();
@@ -47,41 +93,6 @@ class UserNotifier extends StateNotifier<UserState> {
       state = state.copyWith(error: e.toString(), isLoading: false);
     }
   }
-
-  // THE REFRESH IS NOW DONE PER CREATOR WITH SIMPLE ADDRESSES NOT PRIVATE KEYS
-  // Future<void> refreshAllBalances() async {
-  //   MemoModelUser? user = state.user;
-  //   if (user == null) {
-  //     print("WARNING: Cannot refresh balances, user is null.");
-  //     return;
-  //   }
-  //
-  //   try {
-  //     // 1. Refresh BCH (Memo) balance
-  //     final request = await user.refreshBalanceDevPath0(ref);
-  //     // if (request == "success") {
-  //     user = user.copyWith(balanceBchDevPath0Memo: request);
-  //     state = state.copyWith(user: user);
-  //     // }
-  //
-  //     // 2. Refresh BCH (Cashtoken) balance
-  //     final bchBalanceRequest = await user.refreshBalanceDevPath145(ref);
-  //     // if (bchBalanceRequest == "success") {
-  //     user = user.copyWith(balanceBchDevPath145: bchBalanceRequest);
-  //     state = state.copyWith(user: user);
-  //     // }
-  //     // 3. Refresh Tokens balance
-  //     final tokenBalanceReq = await user.refreshBalanceTokens(ref);
-  //     // if (tokenBalanceReq == "success") {
-  //     user = user.copyWith(balanceCashtokensDevPath145: tokenBalanceReq);
-  //     state = state.copyWith(user: user);
-  //     // }
-  //   } catch (e, stackTrace) {
-  //     print("Error refreshing balances: $e \n$stackTrace");
-  //     // Set an error state without clearing the user data
-  //     state = state.copyWith(error: "Failed to refresh balances.", isLoading: false);
-  //   }
-  // }
 
   void clearUser() {
     state = UserState(user: null, isLoading: false, error: null);
@@ -101,9 +112,4 @@ final userProvider = Provider<MemoModelUser?>((ref) {
 // Optional: Provider for loading state
 final userIsLoadingProvider = Provider<bool>((ref) {
   return ref.watch(userNotifierProvider).isLoading;
-});
-
-// Optional: Provider for error state
-final userErrorProvider = Provider<String?>((ref) {
-  return ref.watch(userNotifierProvider).error;
 });

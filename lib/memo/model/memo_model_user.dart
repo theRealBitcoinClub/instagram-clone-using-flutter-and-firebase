@@ -215,6 +215,10 @@ class MemoModelUser {
     return _tipAmount.value;
   }
 
+  TipAmount get tipAmountEnum {
+    return _tipAmount;
+  }
+
   TipReceiver get tipReceiver {
     return _tipReceiver;
   }

@@ -16,7 +16,7 @@ class AuthChecker {
   final Ref _ref;
   AuthChecker(this._ref);
 
-  Future<MemoModelUser?> getUserFromDB() async {
+  Future<MemoModelUser?> createUserFromMnemonic() async {
     final prefs = await SharedPreferences.getInstance();
     String? mnemonic = prefs.getString("mnemonic");
 

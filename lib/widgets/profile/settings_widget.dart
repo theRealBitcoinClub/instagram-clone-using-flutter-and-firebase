@@ -30,6 +30,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
   final TextEditingController _profileTextCtrl = TextEditingController();
   final TextEditingController _imgurCtrl = TextEditingController();
   bool isSavingProfile = false;
+  TipReceiver? _selectedTipReceiver;
+  TipAmount? _selectedTipAmount;
 
   @override
   void initState() {
@@ -41,6 +43,12 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
     _profileNameCtrl.text = widget.creator.name;
     _profileTextCtrl.text = widget.creator.profileText;
     _imgurCtrl.text = widget.creator.profileImgurUrl ?? "";
+
+    // Initialize tip settings from logged in user
+    if (widget.loggedInUser != null) {
+      _selectedTipReceiver = widget.loggedInUser!.tipReceiver;
+      _selectedTipAmount = widget.loggedInUser!.tipAmountEnum;
+    }
   }
 
   @override
@@ -103,6 +111,10 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
         type: TextInputType.url,
         controller: _imgurCtrl,
       ),
+
+      // Tip Settings Section
+      _buildTipSettingsSection(theme),
+
       _buildSaveButton(theme),
       if (isSavingProfile) const LinearProgressIndicator(),
       Divider(color: theme.dividerColor.withOpacity(0.5), height: 20, thickness: 0.5, indent: 20, endIndent: 20),
@@ -123,6 +135,97 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
         isEnabled: widget.allowLogout,
       ),
     ];
+  }
+
+  Widget _buildTipSettingsSection(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "TIP SETTINGS",
+            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface.withOpacity(0.8)),
+          ),
+          const SizedBox(height: 12),
+
+          // Tip Receiver Selection
+          _buildTipReceiverDropdown(theme),
+          const SizedBox(height: 16),
+
+          // Tip Amount Selection
+          _buildTipAmountDropdown(theme),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTipReceiverDropdown(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Tip Receiver", style: theme.textTheme.bodyMedium),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<TipReceiver>(
+          value: _selectedTipReceiver,
+          onChanged: (TipReceiver? newValue) {
+            setState(() {
+              _selectedTipReceiver = newValue;
+            });
+          },
+          items: TipReceiver.values.map((TipReceiver receiver) {
+            return DropdownMenuItem<TipReceiver>(value: receiver, child: Text(_getTipReceiverDisplayName(receiver)));
+          }).toList(),
+          decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTipAmountDropdown(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Tip Amount", style: theme.textTheme.bodyMedium),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<TipAmount>(
+          value: _selectedTipAmount,
+          onChanged: (TipAmount? newValue) {
+            setState(() {
+              _selectedTipAmount = newValue;
+            });
+          },
+          items: TipAmount.values.map((TipAmount amount) {
+            return DropdownMenuItem<TipAmount>(value: amount, child: Text(_getTipAmountDisplayName(amount)));
+          }).toList(),
+          decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+        ),
+      ],
+    );
+  }
+
+  String _getTipReceiverDisplayName(TipReceiver receiver) {
+    switch (receiver) {
+      case TipReceiver.app:
+        return "App Only";
+      case TipReceiver.creator:
+        return "Creator Only";
+      case TipReceiver.both:
+        return "App & Creator";
+    }
+  }
+
+  String _getTipAmountDisplayName(TipAmount amount) {
+    switch (amount) {
+      case TipAmount.zero:
+        return "No Tip (0)";
+      case TipAmount.maintenance:
+        return "Maintenance (1,111 satoshis)";
+      case TipAmount.growth:
+        return "Growth (22,222 satoshis)";
+      case TipAmount.moon:
+        return "Moon (333,333 satoshis)";
+    }
   }
 
   Widget _buildSaveButton(ThemeData theme) {
@@ -158,6 +261,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
       final updates = <String, Future<dynamic>>{};
       bool changesMade = false;
 
+      // Profile updates
       if (newName.isNotEmpty && newName != widget.creator.name) {
         updates['name'] = creatorRepo.profileSetName(newName, user);
         changesMade = true;
@@ -168,6 +272,17 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
       }
       if (newImgurUrl.isNotEmpty && newImgurUrl != widget.creator.profileImgurUrl) {
         updates['avatar'] = creatorRepo.profileSetAvatar(newImgurUrl, user);
+        changesMade = true;
+      }
+
+      // Tip settings updates
+      if (_selectedTipReceiver != null && _selectedTipReceiver != user.tipReceiver) {
+        updates['tip_receiver'] = ref.read(userNotifierProvider.notifier).updateTipReceiver(_selectedTipReceiver!);
+        changesMade = true;
+      }
+
+      if (_selectedTipAmount != null && _selectedTipAmount != user.tipAmountEnum) {
+        updates['tip_amount'] = ref.read(userNotifierProvider.notifier).updateTipAmount(_selectedTipAmount!);
         changesMade = true;
       }
 
@@ -193,8 +308,11 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
       } else {
         showSnackBar("Profile updated successfully! ✨", context);
         MemoConfetti().launch(context);
-        // ref.refresh(profileCreatorStateProvider);
+
+        // Refresh user data
+        ref.invalidate(userProvider);
         ref.invalidate(profileCreatorStateProvider);
+
         onSuccess();
       }
     } catch (e) {

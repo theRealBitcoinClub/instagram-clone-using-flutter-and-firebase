@@ -13,7 +13,7 @@ MemoModelPost _$MemoModelPostFromJson(Map<String, dynamic> json) =>
       imgurUrl: json['imgurUrl'] as String?,
       youtubeId: json['youtubeId'] as String?,
       createdDateTime: _dateTimeFromJson(json['createdDateTime'] as Timestamp?),
-      popularityScore: (json['popularityScore'] as num?)?.toInt(),
+      popularityScore: (json['popularityScore'] as num?)?.toInt() ?? 0,
       likeCounter: (json['likeCounter'] as num?)?.toInt(),
       replyCounter: (json['replyCounter'] as num?)?.toInt(),
       creatorId: json['creatorId'] as String? ?? '',
@@ -33,7 +33,7 @@ Map<String, dynamic> _$MemoModelPostToJson(MemoModelPost instance) =>
       if (instance.youtubeId case final value?) 'youtubeId': value,
       if (_dateTimeToJson(instance.createdDateTime) case final value?)
         'createdDateTime': value,
-      if (instance.popularityScore case final value?) 'popularityScore': value,
+      'popularityScore': instance.popularityScore,
       if (instance.likeCounter case final value?) 'likeCounter': value,
       if (instance.replyCounter case final value?) 'replyCounter': value,
       'creatorId': instance.creatorId,

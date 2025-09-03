@@ -7,7 +7,9 @@ import 'package:isar_community/isar.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 
 import '../memo/isar/memo_model_post_db.dart';
+import '../memo/scraper/memo_post_service.dart';
 import '../provider/isar_provider.dart';
+import '../provider/post_update_provider.dart';
 
 final postCacheRepositoryProvider = Provider((ref) => PostCacheRepository(ref));
 
@@ -25,6 +27,23 @@ class PostCacheRepository {
   PostCacheRepository(this.ref);
 
   Future<Isar> get _isar async => await ref.read(isarProvider.future);
+
+  Future<void> updatePopularityScore(String postId, int newScore) async {
+    MemoModelPost post = (await getPost(postId))!;
+
+    MemoModelPost? scrapedPost = await MemoPostScraper().fetchAndParsePost(postId, filterOn: false);
+
+    if (scrapedPost == null) {
+      print("UPDATE POPULARITY FETCH UP TO DATE SCORE FAILED");
+      return;
+    } else {
+      newScore += scrapedPost.popularityScore;
+      post.popularityScore += newScore;
+      await savePosts([post]);
+      // Update just the popularity score in the provider
+      ref.read(postPopularityProvider.notifier).updatePopularityScore(postId, post.popularityScore);
+    } // return post.popularityScore!.toString();
+  }
 
   // --- Memory Cache Management ---
 

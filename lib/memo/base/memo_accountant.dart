@@ -7,6 +7,7 @@ import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/model/memo_tip.dart';
 
 import '../../provider/user_provider.dart';
+import '../../repositories/post_cache_repository.dart';
 import 'memo_bitcoin_base.dart';
 
 enum MemoAccountType { tokens, bch, memo }
@@ -58,6 +59,10 @@ class MemoAccountant {
 
   Future<MemoAccountantResponse> publishLike(MemoModelPost post) async {
     MemoAccountantResponse response = await _tryPublishLike(post, user.wifLegacy);
+
+    if (response == MemoAccountantResponse.yes) {
+      ref.read(postCacheRepositoryProvider).updatePopularityScore(post.id!, user.tipAmount);
+    }
 
     return _memoAccountantResponse(response);
   }

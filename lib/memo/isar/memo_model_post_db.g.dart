@@ -17,64 +17,20 @@ const MemoModelPostDbSchema = CollectionSchema(
   name: r'MemoModelPostDb',
   id: -1343087391362424624,
   properties: {
-    r'cachedAt': PropertySchema(
-      id: 0,
-      name: r'cachedAt',
-      type: IsarType.dateTime,
-    ),
-    r'createdDateTime': PropertySchema(
-      id: 1,
-      name: r'createdDateTime',
-      type: IsarType.dateTime,
-    ),
-    r'createdString': PropertySchema(
-      id: 2,
-      name: r'createdString',
-      type: IsarType.string,
-    ),
-    r'creatorId': PropertySchema(
-      id: 3,
-      name: r'creatorId',
-      type: IsarType.string,
-    ),
+    r'cachedAt': PropertySchema(id: 0, name: r'cachedAt', type: IsarType.dateTime),
+    r'createdDateTime': PropertySchema(id: 1, name: r'createdDateTime', type: IsarType.dateTime),
+    r'createdString': PropertySchema(id: 2, name: r'createdString', type: IsarType.string),
+    r'creatorId': PropertySchema(id: 3, name: r'creatorId', type: IsarType.string),
     r'id': PropertySchema(id: 4, name: r'id', type: IsarType.string),
-    r'imgurUrl': PropertySchema(
-      id: 5,
-      name: r'imgurUrl',
-      type: IsarType.string,
-    ),
-    r'isExpired': PropertySchema(
-      id: 6,
-      name: r'isExpired',
-      type: IsarType.bool,
-    ),
-    r'likeCounter': PropertySchema(
-      id: 7,
-      name: r'likeCounter',
-      type: IsarType.long,
-    ),
-    r'popularityScore': PropertySchema(
-      id: 8,
-      name: r'popularityScore',
-      type: IsarType.long,
-    ),
-    r'replyCounter': PropertySchema(
-      id: 9,
-      name: r'replyCounter',
-      type: IsarType.long,
-    ),
-    r'tagIds': PropertySchema(
-      id: 10,
-      name: r'tagIds',
-      type: IsarType.stringList,
-    ),
+    r'imgurUrl': PropertySchema(id: 5, name: r'imgurUrl', type: IsarType.string),
+    r'isExpired': PropertySchema(id: 6, name: r'isExpired', type: IsarType.bool),
+    r'likeCounter': PropertySchema(id: 7, name: r'likeCounter', type: IsarType.long),
+    r'popularityScore': PropertySchema(id: 8, name: r'popularityScore', type: IsarType.long),
+    r'replyCounter': PropertySchema(id: 9, name: r'replyCounter', type: IsarType.long),
+    r'tagIds': PropertySchema(id: 10, name: r'tagIds', type: IsarType.stringList),
     r'text': PropertySchema(id: 11, name: r'text', type: IsarType.string),
     r'topicId': PropertySchema(id: 12, name: r'topicId', type: IsarType.string),
-    r'youtubeId': PropertySchema(
-      id: 13,
-      name: r'youtubeId',
-      type: IsarType.string,
-    ),
+    r'youtubeId': PropertySchema(id: 13, name: r'youtubeId', type: IsarType.string),
   },
 
   estimateSize: _memoModelPostDbEstimateSize,
@@ -88,26 +44,14 @@ const MemoModelPostDbSchema = CollectionSchema(
       name: r'id',
       unique: true,
       replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'id',
-          type: IndexType.hash,
-          caseSensitive: true,
-        ),
-      ],
+      properties: [IndexPropertySchema(name: r'id', type: IndexType.hash, caseSensitive: true)],
     ),
     r'createdDateTime': IndexSchema(
       id: -7495820842331859050,
       name: r'createdDateTime',
       unique: false,
       replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'createdDateTime',
-          type: IndexType.value,
-          caseSensitive: false,
-        ),
-      ],
+      properties: [IndexPropertySchema(name: r'createdDateTime', type: IndexType.value, caseSensitive: false)],
     ),
     r'creatorId_createdDateTime': IndexSchema(
       id: -384750498084091462,
@@ -115,16 +59,8 @@ const MemoModelPostDbSchema = CollectionSchema(
       unique: false,
       replace: false,
       properties: [
-        IndexPropertySchema(
-          name: r'creatorId',
-          type: IndexType.hash,
-          caseSensitive: true,
-        ),
-        IndexPropertySchema(
-          name: r'createdDateTime',
-          type: IndexType.value,
-          caseSensitive: false,
-        ),
+        IndexPropertySchema(name: r'creatorId', type: IndexType.hash, caseSensitive: true),
+        IndexPropertySchema(name: r'createdDateTime', type: IndexType.value, caseSensitive: false),
       ],
     ),
     r'topicId_createdDateTime': IndexSchema(
@@ -133,16 +69,8 @@ const MemoModelPostDbSchema = CollectionSchema(
       unique: false,
       replace: false,
       properties: [
-        IndexPropertySchema(
-          name: r'topicId',
-          type: IndexType.hash,
-          caseSensitive: true,
-        ),
-        IndexPropertySchema(
-          name: r'createdDateTime',
-          type: IndexType.value,
-          caseSensitive: false,
-        ),
+        IndexPropertySchema(name: r'topicId', type: IndexType.hash, caseSensitive: true),
+        IndexPropertySchema(name: r'createdDateTime', type: IndexType.value, caseSensitive: false),
       ],
     ),
     r'tagIds': IndexSchema(
@@ -150,26 +78,14 @@ const MemoModelPostDbSchema = CollectionSchema(
       name: r'tagIds',
       unique: false,
       replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'tagIds',
-          type: IndexType.hash,
-          caseSensitive: true,
-        ),
-      ],
+      properties: [IndexPropertySchema(name: r'tagIds', type: IndexType.hash, caseSensitive: true)],
     ),
     r'cachedAt': IndexSchema(
       id: -699654806693614168,
       name: r'cachedAt',
       unique: false,
       replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'cachedAt',
-          type: IndexType.value,
-          caseSensitive: false,
-        ),
-      ],
+      properties: [IndexPropertySchema(name: r'cachedAt', type: IndexType.value, caseSensitive: false)],
     ),
   },
   links: {},
@@ -181,11 +97,7 @@ const MemoModelPostDbSchema = CollectionSchema(
   version: '3.3.0-dev.1',
 );
 
-int _memoModelPostDbEstimateSize(
-  MemoModelPostDb object,
-  List<int> offsets,
-  Map<Type, List<int>> allOffsets,
-) {
+int _memoModelPostDbEstimateSize(MemoModelPostDb object, List<int> offsets, Map<Type, List<int>> allOffsets) {
   var bytesCount = offsets.last;
   {
     final value = object.createdString;
@@ -224,12 +136,7 @@ int _memoModelPostDbEstimateSize(
   return bytesCount;
 }
 
-void _memoModelPostDbSerialize(
-  MemoModelPostDb object,
-  IsarWriter writer,
-  List<int> offsets,
-  Map<Type, List<int>> allOffsets,
-) {
+void _memoModelPostDbSerialize(MemoModelPostDb object, IsarWriter writer, List<int> offsets, Map<Type, List<int>> allOffsets) {
   writer.writeDateTime(offsets[0], object.cachedAt);
   writer.writeDateTime(offsets[1], object.createdDateTime);
   writer.writeString(offsets[2], object.createdString);
@@ -246,12 +153,7 @@ void _memoModelPostDbSerialize(
   writer.writeString(offsets[13], object.youtubeId);
 }
 
-MemoModelPostDb _memoModelPostDbDeserialize(
-  Id id,
-  IsarReader reader,
-  List<int> offsets,
-  Map<Type, List<int>> allOffsets,
-) {
+MemoModelPostDb _memoModelPostDbDeserialize(Id id, IsarReader reader, List<int> offsets, Map<Type, List<int>> allOffsets) {
   final object = MemoModelPostDb();
   object.cachedAt = reader.readDateTime(offsets[0]);
   object.createdDateTime = reader.readDateTimeOrNull(offsets[1]);
@@ -260,7 +162,7 @@ MemoModelPostDb _memoModelPostDbDeserialize(
   object.id = reader.readString(offsets[4]);
   object.imgurUrl = reader.readStringOrNull(offsets[5]);
   object.likeCounter = reader.readLongOrNull(offsets[7]);
-  object.popularityScore = reader.readLongOrNull(offsets[8]);
+  object.popularityScore = reader.readLong(offsets[8]);
   object.replyCounter = reader.readLongOrNull(offsets[9]);
   object.tagIds = reader.readStringList(offsets[10]) ?? [];
   object.text = reader.readStringOrNull(offsets[11]);
@@ -269,12 +171,7 @@ MemoModelPostDb _memoModelPostDbDeserialize(
   return object;
 }
 
-P _memoModelPostDbDeserializeProp<P>(
-  IsarReader reader,
-  int propertyId,
-  int offset,
-  Map<Type, List<int>> allOffsets,
-) {
+P _memoModelPostDbDeserializeProp<P>(IsarReader reader, int propertyId, int offset, Map<Type, List<int>> allOffsets) {
   switch (propertyId) {
     case 0:
       return (reader.readDateTime(offset)) as P;
@@ -317,11 +214,7 @@ List<IsarLinkBase<dynamic>> _memoModelPostDbGetLinks(MemoModelPostDb object) {
   return [];
 }
 
-void _memoModelPostDbAttach(
-  IsarCollection<dynamic> col,
-  Id id,
-  MemoModelPostDb object,
-) {}
+void _memoModelPostDbAttach(IsarCollection<dynamic> col, Id id, MemoModelPostDb object) {}
 
 extension MemoModelPostDbByIndex on IsarCollection<MemoModelPostDb> {
   Future<MemoModelPostDb?> getById(String id) {
@@ -372,94 +265,65 @@ extension MemoModelPostDbByIndex on IsarCollection<MemoModelPostDb> {
     return putAllByIndex(r'id', objects);
   }
 
-  List<Id> putAllByIdSync(
-    List<MemoModelPostDb> objects, {
-    bool saveLinks = true,
-  }) {
+  List<Id> putAllByIdSync(List<MemoModelPostDb> objects, {bool saveLinks = true}) {
     return putAllByIndexSync(r'id', objects, saveLinks: saveLinks);
   }
 }
 
-extension MemoModelPostDbQueryWhereSort
-    on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QWhere> {
+extension MemoModelPostDbQueryWhereSort on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QWhere> {
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhere> anyIsarId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhere>
-  anyCreatedDateTime() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhere> anyCreatedDateTime() {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'createdDateTime'),
-      );
+      return query.addWhereClause(const IndexWhereClause.any(indexName: r'createdDateTime'));
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhere> anyCachedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'cachedAt'),
-      );
+      return query.addWhereClause(const IndexWhereClause.any(indexName: r'cachedAt'));
     });
   }
 }
 
-extension MemoModelPostDbQueryWhere
-    on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QWhereClause> {
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  isarIdEqualTo(Id isarId) {
+extension MemoModelPostDbQueryWhere on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QWhereClause> {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> isarIdEqualTo(Id isarId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(lower: isarId, upper: isarId),
-      );
+      return query.addWhereClause(IdWhereClause.between(lower: isarId, upper: isarId));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  isarIdNotEqualTo(Id isarId) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> isarIdNotEqualTo(Id isarId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IdWhereClause.lessThan(upper: isarId, includeUpper: false),
-            )
-            .addWhereClause(
-              IdWhereClause.greaterThan(lower: isarId, includeLower: false),
-            );
+            .addWhereClause(IdWhereClause.lessThan(upper: isarId, includeUpper: false))
+            .addWhereClause(IdWhereClause.greaterThan(lower: isarId, includeLower: false));
       } else {
         return query
-            .addWhereClause(
-              IdWhereClause.greaterThan(lower: isarId, includeLower: false),
-            )
-            .addWhereClause(
-              IdWhereClause.lessThan(upper: isarId, includeUpper: false),
-            );
+            .addWhereClause(IdWhereClause.greaterThan(lower: isarId, includeLower: false))
+            .addWhereClause(IdWhereClause.lessThan(upper: isarId, includeUpper: false));
       }
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  isarIdGreaterThan(Id isarId, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> isarIdGreaterThan(Id isarId, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.greaterThan(lower: isarId, includeLower: include),
-      );
+      return query.addWhereClause(IdWhereClause.greaterThan(lower: isarId, includeLower: include));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  isarIdLessThan(Id isarId, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> isarIdLessThan(Id isarId, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.lessThan(upper: isarId, includeUpper: include),
-      );
+      return query.addWhereClause(IdWhereClause.lessThan(upper: isarId, includeUpper: include));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  isarIdBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> isarIdBetween(
     Id lowerIsarId,
     Id upperIsarId, {
     bool includeLower = true,
@@ -467,180 +331,83 @@ extension MemoModelPostDbQueryWhere
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerIsarId,
-          includeLower: includeLower,
-          upper: upperIsarId,
-          includeUpper: includeUpper,
-        ),
+        IdWhereClause.between(lower: lowerIsarId, includeLower: includeLower, upper: upperIsarId, includeUpper: includeUpper),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> idEqualTo(
-    String id,
-  ) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> idEqualTo(String id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'id', value: [id]),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(indexName: r'id', value: [id]));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  idNotEqualTo(String id) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> idNotEqualTo(String id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'id',
-                lower: [],
-                upper: [id],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'id',
-                lower: [id],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(indexName: r'id', lower: [], upper: [id], includeUpper: false))
+            .addWhereClause(IndexWhereClause.between(indexName: r'id', lower: [id], includeLower: false, upper: []));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'id',
-                lower: [id],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'id',
-                lower: [],
-                upper: [id],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(indexName: r'id', lower: [id], includeLower: false, upper: []))
+            .addWhereClause(IndexWhereClause.between(indexName: r'id', lower: [], upper: [id], includeUpper: false));
       }
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  createdDateTimeIsNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> createdDateTimeIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'createdDateTime', value: [null]),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(indexName: r'createdDateTime', value: [null]));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  createdDateTimeIsNotNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> createdDateTimeIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'createdDateTime',
-          lower: [null],
-          includeLower: false,
-          upper: [],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.between(indexName: r'createdDateTime', lower: [null], includeLower: false, upper: []));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  createdDateTimeEqualTo(DateTime? createdDateTime) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> createdDateTimeEqualTo(DateTime? createdDateTime) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'createdDateTime',
-          value: [createdDateTime],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(indexName: r'createdDateTime', value: [createdDateTime]));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  createdDateTimeNotEqualTo(DateTime? createdDateTime) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> createdDateTimeNotEqualTo(DateTime? createdDateTime) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'createdDateTime',
-                lower: [],
-                upper: [createdDateTime],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'createdDateTime',
-                lower: [createdDateTime],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(indexName: r'createdDateTime', lower: [], upper: [createdDateTime], includeUpper: false))
+            .addWhereClause(IndexWhereClause.between(indexName: r'createdDateTime', lower: [createdDateTime], includeLower: false, upper: []));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'createdDateTime',
-                lower: [createdDateTime],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'createdDateTime',
-                lower: [],
-                upper: [createdDateTime],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(indexName: r'createdDateTime', lower: [createdDateTime], includeLower: false, upper: []))
+            .addWhereClause(IndexWhereClause.between(indexName: r'createdDateTime', lower: [], upper: [createdDateTime], includeUpper: false));
       }
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  createdDateTimeGreaterThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> createdDateTimeGreaterThan(
     DateTime? createdDateTime, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'createdDateTime',
-          lower: [createdDateTime],
-          includeLower: include,
-          upper: [],
-        ),
+        IndexWhereClause.between(indexName: r'createdDateTime', lower: [createdDateTime], includeLower: include, upper: []),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  createdDateTimeLessThan(DateTime? createdDateTime, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> createdDateTimeLessThan(DateTime? createdDateTime, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'createdDateTime',
-          lower: [],
-          upper: [createdDateTime],
-          includeUpper: include,
-        ),
+        IndexWhereClause.between(indexName: r'createdDateTime', lower: [], upper: [createdDateTime], includeUpper: include),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  createdDateTimeBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> createdDateTimeBetween(
     DateTime? lowerCreatedDateTime,
     DateTime? upperCreatedDateTime, {
     bool includeLower = true,
@@ -659,101 +426,58 @@ extension MemoModelPostDbQueryWhere
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  creatorIdEqualToAnyCreatedDateTime(String creatorId) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> creatorIdEqualToAnyCreatedDateTime(String creatorId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'creatorId_createdDateTime',
-          value: [creatorId],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(indexName: r'creatorId_createdDateTime', value: [creatorId]));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  creatorIdNotEqualToAnyCreatedDateTime(String creatorId) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> creatorIdNotEqualToAnyCreatedDateTime(String creatorId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'creatorId_createdDateTime',
-                lower: [],
-                upper: [creatorId],
-                includeUpper: false,
-              ),
+              IndexWhereClause.between(indexName: r'creatorId_createdDateTime', lower: [], upper: [creatorId], includeUpper: false),
             )
             .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'creatorId_createdDateTime',
-                lower: [creatorId],
-                includeLower: false,
-                upper: [],
-              ),
+              IndexWhereClause.between(indexName: r'creatorId_createdDateTime', lower: [creatorId], includeLower: false, upper: []),
             );
       } else {
         return query
             .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'creatorId_createdDateTime',
-                lower: [creatorId],
-                includeLower: false,
-                upper: [],
-              ),
+              IndexWhereClause.between(indexName: r'creatorId_createdDateTime', lower: [creatorId], includeLower: false, upper: []),
             )
             .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'creatorId_createdDateTime',
-                lower: [],
-                upper: [creatorId],
-                includeUpper: false,
-              ),
+              IndexWhereClause.between(indexName: r'creatorId_createdDateTime', lower: [], upper: [creatorId], includeUpper: false),
             );
       }
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  creatorIdEqualToCreatedDateTimeIsNull(String creatorId) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> creatorIdEqualToCreatedDateTimeIsNull(String creatorId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(indexName: r'creatorId_createdDateTime', value: [creatorId, null]));
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> creatorIdEqualToCreatedDateTimeIsNotNull(String creatorId) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'creatorId_createdDateTime',
-          value: [creatorId, null],
-        ),
+        IndexWhereClause.between(indexName: r'creatorId_createdDateTime', lower: [creatorId, null], includeLower: false, upper: [creatorId]),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  creatorIdEqualToCreatedDateTimeIsNotNull(String creatorId) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> creatorIdCreatedDateTimeEqualTo(
+    String creatorId,
+    DateTime? createdDateTime,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'creatorId_createdDateTime',
-          lower: [creatorId, null],
-          includeLower: false,
-          upper: [creatorId],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(indexName: r'creatorId_createdDateTime', value: [creatorId, createdDateTime]));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  creatorIdCreatedDateTimeEqualTo(String creatorId, DateTime? createdDateTime) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'creatorId_createdDateTime',
-          value: [creatorId, createdDateTime],
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  creatorIdEqualToCreatedDateTimeNotEqualTo(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> creatorIdEqualToCreatedDateTimeNotEqualTo(
     String creatorId,
     DateTime? createdDateTime,
   ) {
@@ -798,8 +522,7 @@ extension MemoModelPostDbQueryWhere
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  creatorIdEqualToCreatedDateTimeGreaterThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> creatorIdEqualToCreatedDateTimeGreaterThan(
     String creatorId,
     DateTime? createdDateTime, {
     bool include = false,
@@ -816,8 +539,7 @@ extension MemoModelPostDbQueryWhere
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  creatorIdEqualToCreatedDateTimeLessThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> creatorIdEqualToCreatedDateTimeLessThan(
     String creatorId,
     DateTime? createdDateTime, {
     bool include = false,
@@ -834,8 +556,7 @@ extension MemoModelPostDbQueryWhere
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  creatorIdEqualToCreatedDateTimeBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> creatorIdEqualToCreatedDateTimeBetween(
     String creatorId,
     DateTime? lowerCreatedDateTime,
     DateTime? upperCreatedDateTime, {
@@ -855,101 +576,47 @@ extension MemoModelPostDbQueryWhere
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  topicIdEqualToAnyCreatedDateTime(String topicId) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> topicIdEqualToAnyCreatedDateTime(String topicId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'topicId_createdDateTime',
-          value: [topicId],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(indexName: r'topicId_createdDateTime', value: [topicId]));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  topicIdNotEqualToAnyCreatedDateTime(String topicId) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> topicIdNotEqualToAnyCreatedDateTime(String topicId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'topicId_createdDateTime',
-                lower: [],
-                upper: [topicId],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'topicId_createdDateTime',
-                lower: [topicId],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(indexName: r'topicId_createdDateTime', lower: [], upper: [topicId], includeUpper: false))
+            .addWhereClause(IndexWhereClause.between(indexName: r'topicId_createdDateTime', lower: [topicId], includeLower: false, upper: []));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'topicId_createdDateTime',
-                lower: [topicId],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'topicId_createdDateTime',
-                lower: [],
-                upper: [topicId],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(indexName: r'topicId_createdDateTime', lower: [topicId], includeLower: false, upper: []))
+            .addWhereClause(IndexWhereClause.between(indexName: r'topicId_createdDateTime', lower: [], upper: [topicId], includeUpper: false));
       }
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  topicIdEqualToCreatedDateTimeIsNull(String topicId) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> topicIdEqualToCreatedDateTimeIsNull(String topicId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(indexName: r'topicId_createdDateTime', value: [topicId, null]));
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> topicIdEqualToCreatedDateTimeIsNotNull(String topicId) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'topicId_createdDateTime',
-          value: [topicId, null],
-        ),
+        IndexWhereClause.between(indexName: r'topicId_createdDateTime', lower: [topicId, null], includeLower: false, upper: [topicId]),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  topicIdEqualToCreatedDateTimeIsNotNull(String topicId) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> topicIdCreatedDateTimeEqualTo(String topicId, DateTime? createdDateTime) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'topicId_createdDateTime',
-          lower: [topicId, null],
-          includeLower: false,
-          upper: [topicId],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(indexName: r'topicId_createdDateTime', value: [topicId, createdDateTime]));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  topicIdCreatedDateTimeEqualTo(String topicId, DateTime? createdDateTime) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'topicId_createdDateTime',
-          value: [topicId, createdDateTime],
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  topicIdEqualToCreatedDateTimeNotEqualTo(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> topicIdEqualToCreatedDateTimeNotEqualTo(
     String topicId,
     DateTime? createdDateTime,
   ) {
@@ -994,8 +661,7 @@ extension MemoModelPostDbQueryWhere
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  topicIdEqualToCreatedDateTimeGreaterThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> topicIdEqualToCreatedDateTimeGreaterThan(
     String topicId,
     DateTime? createdDateTime, {
     bool include = false,
@@ -1012,8 +678,7 @@ extension MemoModelPostDbQueryWhere
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  topicIdEqualToCreatedDateTimeLessThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> topicIdEqualToCreatedDateTimeLessThan(
     String topicId,
     DateTime? createdDateTime, {
     bool include = false,
@@ -1030,8 +695,7 @@ extension MemoModelPostDbQueryWhere
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  topicIdEqualToCreatedDateTimeBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> topicIdEqualToCreatedDateTimeBetween(
     String topicId,
     DateTime? lowerCreatedDateTime,
     DateTime? upperCreatedDateTime, {
@@ -1051,140 +715,59 @@ extension MemoModelPostDbQueryWhere
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  tagIdsEqualTo(List<String> tagIds) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> tagIdsEqualTo(List<String> tagIds) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'tagIds', value: [tagIds]),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(indexName: r'tagIds', value: [tagIds]));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  tagIdsNotEqualTo(List<String> tagIds) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> tagIdsNotEqualTo(List<String> tagIds) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'tagIds',
-                lower: [],
-                upper: [tagIds],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'tagIds',
-                lower: [tagIds],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(indexName: r'tagIds', lower: [], upper: [tagIds], includeUpper: false))
+            .addWhereClause(IndexWhereClause.between(indexName: r'tagIds', lower: [tagIds], includeLower: false, upper: []));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'tagIds',
-                lower: [tagIds],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'tagIds',
-                lower: [],
-                upper: [tagIds],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(indexName: r'tagIds', lower: [tagIds], includeLower: false, upper: []))
+            .addWhereClause(IndexWhereClause.between(indexName: r'tagIds', lower: [], upper: [tagIds], includeUpper: false));
       }
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  cachedAtEqualTo(DateTime cachedAt) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> cachedAtEqualTo(DateTime cachedAt) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'cachedAt', value: [cachedAt]),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(indexName: r'cachedAt', value: [cachedAt]));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  cachedAtNotEqualTo(DateTime cachedAt) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> cachedAtNotEqualTo(DateTime cachedAt) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'cachedAt',
-                lower: [],
-                upper: [cachedAt],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'cachedAt',
-                lower: [cachedAt],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(indexName: r'cachedAt', lower: [], upper: [cachedAt], includeUpper: false))
+            .addWhereClause(IndexWhereClause.between(indexName: r'cachedAt', lower: [cachedAt], includeLower: false, upper: []));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'cachedAt',
-                lower: [cachedAt],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'cachedAt',
-                lower: [],
-                upper: [cachedAt],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(indexName: r'cachedAt', lower: [cachedAt], includeLower: false, upper: []))
+            .addWhereClause(IndexWhereClause.between(indexName: r'cachedAt', lower: [], upper: [cachedAt], includeUpper: false));
       }
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  cachedAtGreaterThan(DateTime cachedAt, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> cachedAtGreaterThan(DateTime cachedAt, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'cachedAt',
-          lower: [cachedAt],
-          includeLower: include,
-          upper: [],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.between(indexName: r'cachedAt', lower: [cachedAt], includeLower: include, upper: []));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  cachedAtLessThan(DateTime cachedAt, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> cachedAtLessThan(DateTime cachedAt, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'cachedAt',
-          lower: [],
-          upper: [cachedAt],
-          includeUpper: include,
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.between(indexName: r'cachedAt', lower: [], upper: [cachedAt], includeUpper: include));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  cachedAtBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> cachedAtBetween(
     DateTime lowerCachedAt,
     DateTime upperCachedAt, {
     bool includeLower = true,
@@ -1204,45 +787,26 @@ extension MemoModelPostDbQueryWhere
   }
 }
 
-extension MemoModelPostDbQueryFilter
-    on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QFilterCondition> {
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  cachedAtEqualTo(DateTime value) {
+extension MemoModelPostDbQueryFilter on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QFilterCondition> {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> cachedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'cachedAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'cachedAt', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  cachedAtGreaterThan(DateTime value, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> cachedAtGreaterThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'cachedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(include: include, property: r'cachedAt', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  cachedAtLessThan(DateTime value, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> cachedAtLessThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'cachedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(include: include, property: r'cachedAt', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  cachedAtBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> cachedAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
@@ -1250,72 +814,42 @@ extension MemoModelPostDbQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'cachedAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
+        FilterCondition.between(property: r'cachedAt', lower: lower, includeLower: includeLower, upper: upper, includeUpper: includeUpper),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdDateTimeIsNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdDateTimeIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'createdDateTime'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(property: r'createdDateTime'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdDateTimeIsNotNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdDateTimeIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'createdDateTime'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(property: r'createdDateTime'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdDateTimeEqualTo(DateTime? value) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdDateTimeEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'createdDateTime', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'createdDateTime', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdDateTimeGreaterThan(DateTime? value, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdDateTimeGreaterThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'createdDateTime',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(include: include, property: r'createdDateTime', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdDateTimeLessThan(DateTime? value, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdDateTimeLessThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'createdDateTime',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(include: include, property: r'createdDateTime', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdDateTimeBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdDateTimeBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
@@ -1334,75 +868,49 @@ extension MemoModelPostDbQueryFilter
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringIsNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdStringIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'createdString'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(property: r'createdString'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringIsNotNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdStringIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'createdString'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(property: r'createdString'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringEqualTo(String? value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdStringEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'createdString',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'createdString', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringGreaterThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdStringGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'createdString',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.greaterThan(include: include, property: r'createdString', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringLessThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdStringLessThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'createdString',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.lessThan(include: include, property: r'createdString', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdStringBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -1423,127 +931,73 @@ extension MemoModelPostDbQueryFilter
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdStringStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'createdString',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(property: r'createdString', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdStringEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'createdString',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(property: r'createdString', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdStringContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'createdString',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(property: r'createdString', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdStringMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'createdString',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(property: r'createdString', wildcard: pattern, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringIsEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdStringIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'createdString', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'createdString', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringIsNotEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> createdStringIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'createdString', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(property: r'createdString', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  creatorIdEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> creatorIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'creatorId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'creatorId', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  creatorIdGreaterThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> creatorIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'creatorId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.greaterThan(include: include, property: r'creatorId', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  creatorIdLessThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> creatorIdLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'creatorId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.lessThan(include: include, property: r'creatorId', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  creatorIdBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> creatorIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1564,123 +1018,71 @@ extension MemoModelPostDbQueryFilter
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  creatorIdStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> creatorIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'creatorId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(property: r'creatorId', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  creatorIdEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> creatorIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'creatorId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(property: r'creatorId', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  creatorIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> creatorIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'creatorId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(property: r'creatorId', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  creatorIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> creatorIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'creatorId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(property: r'creatorId', wildcard: pattern, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  creatorIdIsEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> creatorIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'creatorId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'creatorId', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  creatorIdIsNotEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> creatorIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'creatorId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(property: r'creatorId', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> idEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'id',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'id', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idGreaterThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> idGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.greaterThan(include: include, property: r'id', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idLessThan(String value, {bool include = false, bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> idLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(include: include, property: r'id', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> idBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1701,145 +1103,85 @@ extension MemoModelPostDbQueryFilter
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> idStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'id',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(property: r'id', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> idEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'id',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(property: r'id', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> idContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'id',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(property: r'id', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> idMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'id',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(property: r'id', wildcard: pattern, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idIsEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> idIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'id', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idIsNotEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> idIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'id', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(property: r'id', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  imgurUrlIsNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> imgurUrlIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'imgurUrl'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(property: r'imgurUrl'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  imgurUrlIsNotNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> imgurUrlIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'imgurUrl'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(property: r'imgurUrl'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  imgurUrlEqualTo(String? value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> imgurUrlEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'imgurUrl',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'imgurUrl', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  imgurUrlGreaterThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> imgurUrlGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'imgurUrl',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.greaterThan(include: include, property: r'imgurUrl', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  imgurUrlLessThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> imgurUrlLessThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'imgurUrl',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.lessThan(include: include, property: r'imgurUrl', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  imgurUrlBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> imgurUrlBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -1860,122 +1202,67 @@ extension MemoModelPostDbQueryFilter
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  imgurUrlStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> imgurUrlStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'imgurUrl',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(property: r'imgurUrl', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  imgurUrlEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> imgurUrlEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'imgurUrl',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(property: r'imgurUrl', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  imgurUrlContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> imgurUrlContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'imgurUrl',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(property: r'imgurUrl', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  imgurUrlMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> imgurUrlMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'imgurUrl',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(property: r'imgurUrl', wildcard: pattern, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  imgurUrlIsEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> imgurUrlIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'imgurUrl', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'imgurUrl', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  imgurUrlIsNotEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> imgurUrlIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'imgurUrl', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(property: r'imgurUrl', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  isExpiredEqualTo(bool value) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> isExpiredEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'isExpired', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'isExpired', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  isarIdEqualTo(Id value) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> isarIdEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'isarId', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'isarId', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  isarIdGreaterThan(Id value, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> isarIdGreaterThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'isarId',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(include: include, property: r'isarId', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  isarIdLessThan(Id value, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> isarIdLessThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'isarId',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(include: include, property: r'isarId', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  isarIdBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> isarIdBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
@@ -1983,72 +1270,42 @@ extension MemoModelPostDbQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'isarId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
+        FilterCondition.between(property: r'isarId', lower: lower, includeLower: includeLower, upper: upper, includeUpper: includeUpper),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  likeCounterIsNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> likeCounterIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'likeCounter'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(property: r'likeCounter'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  likeCounterIsNotNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> likeCounterIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'likeCounter'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(property: r'likeCounter'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  likeCounterEqualTo(int? value) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> likeCounterEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'likeCounter', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'likeCounter', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  likeCounterGreaterThan(int? value, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> likeCounterGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'likeCounter',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(include: include, property: r'likeCounter', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  likeCounterLessThan(int? value, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> likeCounterLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'likeCounter',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(include: include, property: r'likeCounter', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  likeCounterBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> likeCounterBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
@@ -2056,72 +1313,42 @@ extension MemoModelPostDbQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'likeCounter',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
+        FilterCondition.between(property: r'likeCounter', lower: lower, includeLower: includeLower, upper: upper, includeUpper: includeUpper),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  popularityScoreIsNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> popularityScoreIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'popularityScore'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(property: r'popularityScore'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  popularityScoreIsNotNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> popularityScoreIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'popularityScore'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(property: r'popularityScore'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  popularityScoreEqualTo(int? value) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> popularityScoreEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'popularityScore', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'popularityScore', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  popularityScoreGreaterThan(int? value, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> popularityScoreGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'popularityScore',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(include: include, property: r'popularityScore', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  popularityScoreLessThan(int? value, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> popularityScoreLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'popularityScore',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(include: include, property: r'popularityScore', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  popularityScoreBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> popularityScoreBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
@@ -2140,61 +1367,37 @@ extension MemoModelPostDbQueryFilter
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  replyCounterIsNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> replyCounterIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'replyCounter'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(property: r'replyCounter'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  replyCounterIsNotNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> replyCounterIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'replyCounter'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(property: r'replyCounter'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  replyCounterEqualTo(int? value) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> replyCounterEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'replyCounter', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'replyCounter', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  replyCounterGreaterThan(int? value, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> replyCounterGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'replyCounter',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(include: include, property: r'replyCounter', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  replyCounterLessThan(int? value, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> replyCounterLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'replyCounter',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(include: include, property: r'replyCounter', value: value));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  replyCounterBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> replyCounterBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
@@ -2202,68 +1405,42 @@ extension MemoModelPostDbQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'replyCounter',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
+        FilterCondition.between(property: r'replyCounter', lower: lower, includeLower: includeLower, upper: upper, includeUpper: includeUpper),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsElementEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsElementEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'tagIds',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'tagIds', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsElementGreaterThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsElementGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'tagIds',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.greaterThan(include: include, property: r'tagIds', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsElementLessThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsElementLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'tagIds',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.lessThan(include: include, property: r'tagIds', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsElementBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsElementBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -2284,198 +1461,126 @@ extension MemoModelPostDbQueryFilter
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsElementStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsElementStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'tagIds',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(property: r'tagIds', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsElementEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsElementEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'tagIds',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(property: r'tagIds', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsElementContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsElementContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'tagIds',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(property: r'tagIds', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsElementMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsElementMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'tagIds',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(property: r'tagIds', wildcard: pattern, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsElementIsEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'tagIds', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'tagIds', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsElementIsNotEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'tagIds', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(property: r'tagIds', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsLengthEqualTo(int length) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsLengthEqualTo(int length) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(r'tagIds', length, true, length, true);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsIsEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(r'tagIds', 0, true, 0, true);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsIsNotEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(r'tagIds', 0, false, 999999, true);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsLengthLessThan(int length, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsLengthLessThan(int length, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(r'tagIds', 0, true, length, include);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsLengthGreaterThan(int length, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsLengthGreaterThan(int length, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(r'tagIds', length, include, 999999, true);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  tagIdsLengthBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> tagIdsLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'tagIds',
-        lower,
-        includeLower,
-        upper,
-        includeUpper,
-      );
+      return query.listLength(r'tagIds', lower, includeLower, upper, includeUpper);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  textIsNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> textIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'text'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(property: r'text'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  textIsNotNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> textIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'text'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(property: r'text'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  textEqualTo(String? value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> textEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'text',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'text', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  textGreaterThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> textGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'text',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.greaterThan(include: include, property: r'text', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  textLessThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> textLessThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'text',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.lessThan(include: include, property: r'text', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  textBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> textBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -2496,127 +1601,73 @@ extension MemoModelPostDbQueryFilter
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  textStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> textStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'text',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(property: r'text', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  textEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> textEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'text',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(property: r'text', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  textContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> textContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'text',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(property: r'text', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  textMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> textMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'text',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(property: r'text', wildcard: pattern, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  textIsEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> textIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'text', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'text', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  textIsNotEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> textIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'text', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(property: r'text', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  topicIdEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> topicIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'topicId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'topicId', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  topicIdGreaterThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> topicIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'topicId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.greaterThan(include: include, property: r'topicId', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  topicIdLessThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> topicIdLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'topicId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.lessThan(include: include, property: r'topicId', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  topicIdBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> topicIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -2637,145 +1688,85 @@ extension MemoModelPostDbQueryFilter
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  topicIdStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> topicIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'topicId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(property: r'topicId', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  topicIdEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> topicIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'topicId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(property: r'topicId', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  topicIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> topicIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'topicId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(property: r'topicId', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  topicIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> topicIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'topicId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(property: r'topicId', wildcard: pattern, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  topicIdIsEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> topicIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'topicId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'topicId', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  topicIdIsNotEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> topicIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'topicId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(property: r'topicId', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  youtubeIdIsNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> youtubeIdIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'youtubeId'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(property: r'youtubeId'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  youtubeIdIsNotNull() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> youtubeIdIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'youtubeId'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(property: r'youtubeId'));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  youtubeIdEqualTo(String? value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> youtubeIdEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'youtubeId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'youtubeId', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  youtubeIdGreaterThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> youtubeIdGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'youtubeId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.greaterThan(include: include, property: r'youtubeId', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  youtubeIdLessThan(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> youtubeIdLessThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'youtubeId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        FilterCondition.lessThan(include: include, property: r'youtubeId', value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  youtubeIdBetween(
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> youtubeIdBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -2796,136 +1787,91 @@ extension MemoModelPostDbQueryFilter
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  youtubeIdStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> youtubeIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'youtubeId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(property: r'youtubeId', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  youtubeIdEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> youtubeIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'youtubeId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(property: r'youtubeId', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  youtubeIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> youtubeIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'youtubeId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(property: r'youtubeId', value: value, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  youtubeIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> youtubeIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'youtubeId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(property: r'youtubeId', wildcard: pattern, caseSensitive: caseSensitive));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  youtubeIdIsEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> youtubeIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'youtubeId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(property: r'youtubeId', value: ''));
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  youtubeIdIsNotEmpty() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition> youtubeIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'youtubeId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(property: r'youtubeId', value: ''));
     });
   }
 }
 
-extension MemoModelPostDbQueryObject
-    on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QFilterCondition> {}
+extension MemoModelPostDbQueryObject on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QFilterCondition> {}
 
-extension MemoModelPostDbQueryLinks
-    on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QFilterCondition> {}
+extension MemoModelPostDbQueryLinks on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QFilterCondition> {}
 
-extension MemoModelPostDbQuerySortBy
-    on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QSortBy> {
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByCachedAt() {
+extension MemoModelPostDbQuerySortBy on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QSortBy> {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByCachedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'cachedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByCachedAtDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByCachedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'cachedAt', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByCreatedDateTime() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByCreatedDateTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdDateTime', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByCreatedDateTimeDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByCreatedDateTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdDateTime', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByCreatedString() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByCreatedString() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdString', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByCreatedStringDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByCreatedStringDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdString', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByCreatorId() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByCreatorId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'creatorId', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByCreatorIdDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByCreatorIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'creatorId', Sort.desc);
     });
@@ -2943,71 +1889,61 @@ extension MemoModelPostDbQuerySortBy
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByImgurUrl() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByImgurUrl() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'imgurUrl', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByImgurUrlDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByImgurUrlDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'imgurUrl', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByIsExpired() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByIsExpired() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isExpired', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByIsExpiredDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByIsExpiredDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isExpired', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByLikeCounter() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByLikeCounter() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'likeCounter', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByLikeCounterDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByLikeCounterDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'likeCounter', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByPopularityScore() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByPopularityScore() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'popularityScore', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByPopularityScoreDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByPopularityScoreDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'popularityScore', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByReplyCounter() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByReplyCounter() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'replyCounter', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByReplyCounterDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByReplyCounterDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'replyCounter', Sort.desc);
     });
@@ -3019,8 +1955,7 @@ extension MemoModelPostDbQuerySortBy
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByTextDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByTextDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'text', Sort.desc);
     });
@@ -3032,81 +1967,69 @@ extension MemoModelPostDbQuerySortBy
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByTopicIdDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByTopicIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'topicId', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByYoutubeId() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByYoutubeId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'youtubeId', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByYoutubeIdDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByYoutubeIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'youtubeId', Sort.desc);
     });
   }
 }
 
-extension MemoModelPostDbQuerySortThenBy
-    on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QSortThenBy> {
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByCachedAt() {
+extension MemoModelPostDbQuerySortThenBy on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QSortThenBy> {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByCachedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'cachedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByCachedAtDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByCachedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'cachedAt', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByCreatedDateTime() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByCreatedDateTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdDateTime', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByCreatedDateTimeDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByCreatedDateTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdDateTime', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByCreatedString() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByCreatedString() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdString', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByCreatedStringDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByCreatedStringDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdString', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByCreatorId() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByCreatorId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'creatorId', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByCreatorIdDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByCreatorIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'creatorId', Sort.desc);
     });
@@ -3124,29 +2047,25 @@ extension MemoModelPostDbQuerySortThenBy
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByImgurUrl() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByImgurUrl() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'imgurUrl', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByImgurUrlDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByImgurUrlDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'imgurUrl', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByIsExpired() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByIsExpired() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isExpired', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByIsExpiredDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByIsExpiredDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isExpired', Sort.desc);
     });
@@ -3158,50 +2077,43 @@ extension MemoModelPostDbQuerySortThenBy
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByIsarIdDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByIsarIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isarId', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByLikeCounter() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByLikeCounter() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'likeCounter', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByLikeCounterDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByLikeCounterDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'likeCounter', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByPopularityScore() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByPopularityScore() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'popularityScore', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByPopularityScoreDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByPopularityScoreDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'popularityScore', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByReplyCounter() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByReplyCounter() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'replyCounter', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByReplyCounterDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByReplyCounterDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'replyCounter', Sort.desc);
     });
@@ -3213,8 +2125,7 @@ extension MemoModelPostDbQuerySortThenBy
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByTextDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByTextDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'text', Sort.desc);
     });
@@ -3226,100 +2137,81 @@ extension MemoModelPostDbQuerySortThenBy
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByTopicIdDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByTopicIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'topicId', Sort.desc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByYoutubeId() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByYoutubeId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'youtubeId', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByYoutubeIdDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByYoutubeIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'youtubeId', Sort.desc);
     });
   }
 }
 
-extension MemoModelPostDbQueryWhereDistinct
-    on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> {
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
-  distinctByCachedAt() {
+extension MemoModelPostDbQueryWhereDistinct on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByCachedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'cachedAt');
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
-  distinctByCreatedDateTime() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByCreatedDateTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdDateTime');
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
-  distinctByCreatedString({bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByCreatedString({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(
-        r'createdString',
-        caseSensitive: caseSensitive,
-      );
+      return query.addDistinctBy(r'createdString', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
-  distinctByCreatorId({bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByCreatorId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'creatorId', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctById({
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctById({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'id', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByImgurUrl({
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByImgurUrl({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'imgurUrl', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
-  distinctByIsExpired() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByIsExpired() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isExpired');
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
-  distinctByLikeCounter() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByLikeCounter() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'likeCounter');
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
-  distinctByPopularityScore() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByPopularityScore() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'popularityScore');
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
-  distinctByReplyCounter() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByReplyCounter() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'replyCounter');
     });
@@ -3331,32 +2223,26 @@ extension MemoModelPostDbQueryWhereDistinct
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByText({
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByText({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'text', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByTopicId({
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByTopicId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'topicId', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
-  distinctByYoutubeId({bool caseSensitive = true}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByYoutubeId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'youtubeId', caseSensitive: caseSensitive);
     });
   }
 }
 
-extension MemoModelPostDbQueryProperty
-    on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QQueryProperty> {
+extension MemoModelPostDbQueryProperty on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QQueryProperty> {
   QueryBuilder<MemoModelPostDb, int, QQueryOperations> isarIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isarId');
@@ -3369,15 +2255,13 @@ extension MemoModelPostDbQueryProperty
     });
   }
 
-  QueryBuilder<MemoModelPostDb, DateTime?, QQueryOperations>
-  createdDateTimeProperty() {
+  QueryBuilder<MemoModelPostDb, DateTime?, QQueryOperations> createdDateTimeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdDateTime');
     });
   }
 
-  QueryBuilder<MemoModelPostDb, String?, QQueryOperations>
-  createdStringProperty() {
+  QueryBuilder<MemoModelPostDb, String?, QQueryOperations> createdStringProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdString');
     });
@@ -3413,8 +2297,7 @@ extension MemoModelPostDbQueryProperty
     });
   }
 
-  QueryBuilder<MemoModelPostDb, int?, QQueryOperations>
-  popularityScoreProperty() {
+  QueryBuilder<MemoModelPostDb, int?, QQueryOperations> popularityScoreProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'popularityScore');
     });
@@ -3426,8 +2309,7 @@ extension MemoModelPostDbQueryProperty
     });
   }
 
-  QueryBuilder<MemoModelPostDb, List<String>, QQueryOperations>
-  tagIdsProperty() {
+  QueryBuilder<MemoModelPostDb, List<String>, QQueryOperations> tagIdsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'tagIds');
     });

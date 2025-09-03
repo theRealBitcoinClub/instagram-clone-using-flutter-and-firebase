@@ -21,7 +21,7 @@ class MemoModelPostDb {
   @Index()
   late DateTime? createdDateTime;
 
-  late int? popularityScore;
+  late int popularityScore;
   late int? likeCounter;
   late int? replyCounter;
 

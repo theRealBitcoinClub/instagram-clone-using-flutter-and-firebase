@@ -38,7 +38,7 @@ class MemoScraperTag {
         }
 
         for (MemoModelTag tag in tagsToPersist) {
-          posts.addAll(await MemoPostService().scrapePostsPaginated(baseUrl: "t/${tag.name}", initialOffset: 0, cacheId: cacheId));
+          posts.addAll(await MemoPostScraper().scrapePostsPaginated(baseUrl: "t/${tag.name}", initialOffset: 0, cacheId: cacheId));
           //TODO this already happens inside scrapepostspaginated
           // MemoModelPost.addToGlobalPostList(list);
         }

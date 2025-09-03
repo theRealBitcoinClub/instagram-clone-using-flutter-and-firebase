@@ -139,11 +139,6 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   Future<void> _sendTipToCreator() async {
-    // if (_user == null) {
-    //   showSnackBar("User data not loaded yet. Please try again.", context);
-    //   _loadUser(); // Attempt to reload
-    //   return;
-    // }
     if (!mounted) return;
     setState(() => _isSendingTx = true);
 
@@ -156,7 +151,6 @@ class _PostCardState extends ConsumerState<PostCard> {
         _isSendingTx = false;
         if (response == MemoAccountantResponse.yes) {
           _isAnimatingLike = true;
-          // MemoConfetti().launch(context); // Optional
         } else {
           showSnackBar(response.name, context); // Or a more user-friendly message
           _logError("Accountant error during tip: ${response.name}", response);
@@ -392,7 +386,7 @@ class _PostCardState extends ConsumerState<PostCard> {
               children: [
                 PostCardHeader(
                   post: widget.post,
-                  onOptionsMenuPressed: _sendTipToCreator,
+                  onLikePostTipCreator: _sendTipToCreator,
                   // hasRegisteredAsUser: hasRegisteredAsUser,
                   // creator: creator == null ? wid,
                   // NavBarCallback removed

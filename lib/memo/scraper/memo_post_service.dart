@@ -21,7 +21,7 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
   }
 }
 
-class MemoPostService {
+class MemoPostScraper {
   // Renamed for clarity on its purpose
   static const String _rootParserParent = "_root";
   static const String _txHashPrefix = "post/";

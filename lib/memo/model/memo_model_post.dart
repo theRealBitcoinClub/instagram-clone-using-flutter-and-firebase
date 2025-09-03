@@ -21,7 +21,7 @@ class MemoModelPost {
   @JsonKey(fromJson: _dateTimeFromJson, toJson: _dateTimeToJson)
   DateTime? createdDateTime;
 
-  int? popularityScore;
+  int popularityScore = 0;
   int? likeCounter;
   int? replyCounter;
 
@@ -56,7 +56,7 @@ class MemoModelPost {
     this.imgurUrl,
     this.youtubeId,
     this.createdDateTime,
-    this.popularityScore,
+    this.popularityScore = 0,
     this.likeCounter,
     this.replyCounter,
     this.creatorId = '',
@@ -81,7 +81,7 @@ class MemoModelPost {
     this.imgurUrl,
     this.youtubeId,
     this.createdDateTime,
-    this.popularityScore,
+    this.popularityScore = 0,
     this.likeCounter,
     this.replyCounter,
     this.creatorId = '',

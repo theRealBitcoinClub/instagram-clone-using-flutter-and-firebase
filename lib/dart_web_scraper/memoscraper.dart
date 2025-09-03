@@ -32,7 +32,7 @@ Future<void> runSequentialBatchJobDateCreated() async {
   try {
     final QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('posts').get();
 
-    var memoPostService = MemoPostService();
+    var memoPostService = MemoPostScraper();
     if (snapshot.docs.isEmpty) {
       print('No posts found to process.');
       return;

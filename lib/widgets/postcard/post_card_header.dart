@@ -5,7 +5,9 @@ import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 // Import the new navigation provider
 import 'package:mahakka/provider/navigation_providers.dart';
+import 'package:mahakka/widgets/popularity_score_widget.dart';
 
+import '../../provider/post_update_provider.dart';
 import '../../providers/creator_avatar_provider.dart';
 
 // Helper for logging (can be moved to a common utils file if used elsewhere)
@@ -18,10 +20,10 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
 // Changed to ConsumerWidget to use ref
 class PostCardHeader extends ConsumerWidget {
   final MemoModelPost post;
-  final VoidCallback onOptionsMenuPressed;
+  final VoidCallback onLikePostTipCreator;
   // final MemoModelCreator creator;
 
-  const PostCardHeader({super.key, required this.post, required this.onOptionsMenuPressed});
+  const PostCardHeader({super.key, required this.post, required this.onLikePostTipCreator});
 
   void _navigateToProfile(BuildContext context, WidgetRef ref, String creatorId) {
     // Set the target profile ID using Riverpod
@@ -41,6 +43,12 @@ class PostCardHeader extends ConsumerWidget {
     final MemoModelCreator creator = post.creator ?? MemoModelCreator(id: 'unknown', name: 'Unknown'); // Fallback
     // Watch the avatar provider to get the avatar URL.
     final avatarAsyncValue = ref.watch(creatorAvatarProvider(post.creator!.id));
+    // Watch for popularity score updates for this specific post
+    final popularityUpdates = ref.watch(postPopularityProvider);
+    final updatedScore = popularityUpdates[post.id!];
+
+    // Use the updated score if available, otherwise use the original
+    final displayScore = updatedScore ?? post.popularityScore;
 
     String avatarUrl = creator.profileImageAvatar();
 
@@ -111,10 +119,13 @@ class PostCardHeader extends ConsumerWidget {
               ],
             ),
           ),
+          PopularityScoreWidget(score: post.popularityScore),
+          // Text("${post.popularityScore}", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400)),
+          SizedBox(width: 4),
           IconButton(
             padding: EdgeInsets.all(10),
             icon: const Icon(Icons.thumb_up_alt_outlined),
-            onPressed: onOptionsMenuPressed, // This is for the "Tip Creator" action
+            onPressed: onLikePostTipCreator, // This is for the "Tip Creator" action
             iconSize: 22,
             visualDensity: VisualDensity.compact,
           ),

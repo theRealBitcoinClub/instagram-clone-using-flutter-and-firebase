@@ -1,7 +1,10 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
+import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
+
+import '../characterlimitedtextfield.dart';
 
 // If _PostCardState constants like _maxTagsCounter were used, they need to be accessible
 // or passed down. For now, assuming they are either not critical or will be handled.
@@ -74,19 +77,14 @@ class PostCardFooter extends StatelessWidget {
               mainAxisSize: MainAxisSize.min, // Important for Column to not take infinite height
               // crossAxisAlignment: CrossAxisAlignment.start, // Or your desired alignment
               children: [
-                TextField(
+                CharacterLimitedTextField(
                   controller: textEditController,
+                  maxLength: MemoVerifier.maxPostLength, // Set your desired character limit
+                  hintText: 'Write your reply...',
                   onChanged: onInputText,
-                  style: theme.textTheme.bodyMedium,
-                  decoration: InputDecoration(
-                    hintText: "Add a comment or reply...",
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  ),
-                  maxLines: 4,
-                  minLines: 1,
-                  textInputAction: TextInputAction.newline,
+                  normalTextStyle: theme.textTheme.bodyMedium,
+                  exceededTextStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error),
                 ),
-                const SizedBox(height: 10),
               ],
             ),
           ),
@@ -100,7 +98,7 @@ class PostCardFooter extends StatelessWidget {
               mainAxisSize: MainAxisSize.min, // Important for Column to not take infinite height
               crossAxisAlignment: CrossAxisAlignment.start, // Or your desired alignment
               children: [
-                Divider(color: theme.dividerColor.withOpacity(0.2)),
+                Divider(color: theme.dividerColor.withOpacity(0.5)),
                 const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,

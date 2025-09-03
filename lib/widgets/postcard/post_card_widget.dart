@@ -18,10 +18,6 @@ import 'post_card_footer.dart';
 import 'post_card_header.dart';
 import 'postcard_animations.dart';
 
-// Import Riverpod providers if needed for _loadUser or other logic.
-// For now, _loadUser uses MemoModelUser.getUser() which might be static.
-// If MemoModelUser.getUser() itself becomes a Riverpod provider, that would change.
-
 // Logging helper (can be moved)
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
   print('ERROR: PostCardWidget - $message');
@@ -46,9 +42,6 @@ class _PostCardState extends ConsumerState<PostCard> {
   static const double _altImageHeight = 50.0;
   static const int _maxTagsCounter = 3; // This is now used by PostCardFooter
   static const int _minTextLength = 20;
-  // _animationDuration is used by postcard_animations.dart
-
-  // State variables
   MemoModelUser? _user; // This could potentially come from a Riverpod userProvider
   bool _isAnimatingLike = false;
   bool _isSendingTx = false;
@@ -56,15 +49,10 @@ class _PostCardState extends ConsumerState<PostCard> {
   bool _showSend = false;
   bool _hasSelectedTopic = false;
   late List<bool> _selectedHashtags;
-  // String? _activeVideoId; // YouTube player logic removed for brevity
-
   // Controllers
   late TextEditingController _textEditController;
 
   bool hasRegisteredAsUser = false;
-
-  // NavBarCallback removed
-  // _PostCardState(); // Default constructor or pass ref if needed by _loadUser
 
   @override
   void initState() {
@@ -72,8 +60,6 @@ class _PostCardState extends ConsumerState<PostCard> {
     _textEditController = TextEditingController();
     _initializeSelectedHashtags();
     _user = ref.read(userProvider);
-    // _loadUser(); // Consider if this should use ref.read(userProvider) if _user becomes Riverpod state
-    // _refreshCreator();
   }
 
   @override
@@ -82,47 +68,10 @@ class _PostCardState extends ConsumerState<PostCard> {
     super.dispose();
   }
 
-  // Future<void> _refreshCreator() async {
-  //   if (_creator() == null && widget.post.creatorId.isNotEmpty) {
-  //     widget.post.creator = MemoModelCreator(id: widget.post.creatorId);
-  //   }
-  //   // if (widget.post.creator != null) {
-  //   if (_creator()!.name.isEmpty) {
-  //     widget.post.creator = await _creator()!.refreshCreatorFirebase();
-  //     hasRegisteredAsUser = await widget.post.creator!.refreshUserData();
-  //     if (_creator()!.profileImageAvatar().isEmpty) {
-  //       _creator()!.refreshAvatar();
-  //     }
-  //
-  //     if (_creator()!.name.isEmpty) {
-  //       _creator()!.name = _creator()!.profileIdShort;
-  //
-  //       widget.post.creator = await MemoCreatorService().fetchCreatorDetails(_creator()!);
-  //     }
-  //   }
-  //   // }
-  //   // if (widget.post.topic == null && widget.post.topicId.isNotEmpty) {
-  //   //   widget.post.loadTopic();
-  //   // }
-  //   if (mounted) setState(() {});
-  // }
-
-  // MemoModelCreator? _creator() => widget.post.creator;
-
   void _initializeSelectedHashtags() {
     final int count = widget.post.tagIds.length > _maxTagsCounter ? _maxTagsCounter : widget.post.tagIds.length;
     _selectedHashtags = List<bool>.filled(count, false);
   }
-  //
-  // Future<void> _loadUser() async {
-  //   // If you have a userProvider in Riverpod for the logged-in user:
-  //   // _user = ref.read(userProvider); // Example: Assumes userProvider gives MemoModelUser?
-  //   // If not, and MemoModelUser.getUser() is static and okay:
-  //   _user = await MemoModelUser.getUser();
-  //   if (mounted) {
-  //     // setState(() {}); // Only if UI directly depends on _user synchronously
-  //   }
-  // }
 
   Widget _buildPostMedia(ThemeData theme) {
     if (widget.post.imgurUrl != null && widget.post.imgurUrl!.isNotEmpty) {
@@ -293,80 +242,45 @@ class _PostCardState extends ConsumerState<PostCard> {
       _evaluateShowSendButton(_textEditController.text);
     });
   }
-  // void _onSelectHashtag(int index) {
-  //   if (!mounted || index < 0 || index >= widget.post.tagIds.length) return;
-  //
-  //   setState(() {
-  //     // 1. Toggle the selected state
-  //     _selectedHashtags[index] = !_selectedHashtags[index];
-  //
-  //     final String currentText = _textEditController.text;
-  //
-  //     // 2. Create a map of all hashtags with their selection state
-  //     final Map<String, bool> hashtagSelectionMap = {};
-  //     for (int i = 0; i < widget.post.tagIds.length; i++) {
-  //       hashtagSelectionMap[widget.post.tagIds[i]] = _selectedHashtags[i];
-  //     }
-  //
-  //     // 3. Build the new text by processing all hashtags
-  //     String newText = _buildTextWithSelectedHashtags(currentText, hashtagSelectionMap);
-  //
-  //     _textEditController.text = newText;
-  //     _textEditController.selection = TextSelection.fromPosition(TextPosition(offset: _textEditController.text.length));
-  //
-  //     _showInput = _hasSelectedTopic || _selectedHashtags.any((selected) => selected);
-  //     _evaluateShowSendButton(_textEditController.text);
-  //   });
-  // }
-  //
-  // String _buildTextWithSelectedHashtags(String currentText, Map<String, bool> hashtagSelectionMap) {
-  //   // Step 1: Remove all existing hashtags from the text
-  //   String processedText = currentText;
-  //
-  //   for (final hashtag in hashtagSelectionMap.keys) {
-  //     // Create a regex pattern that matches the exact hashtag with word boundaries
-  //     final RegExp hashtagRegex = RegExp(r'(^|\s)' + RegExp.escape(hashtag) + r'(\s|$)', caseSensitive: false);
-  //
-  //     // Replace the hashtag with a space (to maintain word separation)
-  //     processedText = processedText.replaceAll(hashtagRegex, ' ');
-  //   }
-  //
-  //   // Clean up extra spaces
-  //   processedText = processedText.replaceAll(RegExp(r'\s+'), ' ').trim();
-  //
-  //   // Step 2: Add back all selected hashtags
-  //   final List<String> selectedHashtags = [];
-  //   for (final entry in hashtagSelectionMap.entries) {
-  //     if (entry.value) {
-  //       selectedHashtags.add(entry.key);
-  //     }
-  //   }
-  //
-  //   if (selectedHashtags.isNotEmpty) {
-  //     // Add hashtags to the end of the text
-  //     final String hashtagsString = selectedHashtags.join(' ');
-  //     processedText = processedText.isEmpty ? hashtagsString : '$processedText $hashtagsString';
-  //   }
-  //
-  //   return processedText;
-  // }
 
+  // Update the _evaluateShowSendButton method
   void _evaluateShowSendButton(String currentText) {
     String textWithoutKnownHashtags = currentText;
     for (String tag in widget.post.tagIds) {
       textWithoutKnownHashtags = textWithoutKnownHashtags.replaceAll(tag, "").trim();
     }
+
     bool hasAnySelectedOrOtherHashtagsInText = _selectedHashtags.any((s) => s);
     if (!hasAnySelectedOrOtherHashtagsInText) {
       hasAnySelectedOrOtherHashtagsInText = MemoScraperUtil.extractHashtags(currentText).isNotEmpty;
     }
 
+    final bool meetsLengthRequirement =
+        textWithoutKnownHashtags.length >= _minTextLength && currentText.length <= MemoVerifier.maxPostLength; // Add character limit check
+
     if (_hasSelectedTopic) {
-      _showSend = textWithoutKnownHashtags.length >= _minTextLength;
+      _showSend = meetsLengthRequirement;
     } else {
-      _showSend = hasAnySelectedOrOtherHashtagsInText && textWithoutKnownHashtags.length >= _minTextLength;
+      _showSend = hasAnySelectedOrOtherHashtagsInText && meetsLengthRequirement;
     }
   }
+
+  // void _evaluateShowSendButton(String currentText) {
+  //   String textWithoutKnownHashtags = currentText;
+  //   for (String tag in widget.post.tagIds) {
+  //     textWithoutKnownHashtags = textWithoutKnownHashtags.replaceAll(tag, "").trim();
+  //   }
+  //   bool hasAnySelectedOrOtherHashtagsInText = _selectedHashtags.any((s) => s);
+  //   if (!hasAnySelectedOrOtherHashtagsInText) {
+  //     hasAnySelectedOrOtherHashtagsInText = MemoScraperUtil.extractHashtags(currentText).isNotEmpty;
+  //   }
+  //
+  //   if (_hasSelectedTopic) {
+  //     _showSend = textWithoutKnownHashtags.length >= _minTextLength;
+  //   } else {
+  //     _showSend = hasAnySelectedOrOtherHashtagsInText && textWithoutKnownHashtags.length >= _minTextLength;
+  //   }
+  // }
 
   void _onSend() {
     if (!mounted) return;
@@ -459,17 +373,6 @@ class _PostCardState extends ConsumerState<PostCard> {
     // ref is available here because this is ConsumerState
     final ThemeData theme = Theme.of(context);
 
-    // if (widget.post.creator == null) {
-    //   _refreshCreator(); // Attempt to refresh if creator is null
-    //   return const SizedBox(
-    //     height: 100, // Placeholder height for loading state
-    //     child: Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
-    //   );
-    // }
-    // if (_creator()!.profileImageAvatar().isEmpty) {
-    //   refreshAvatarThenSetState();
-    // }
-
     // Watch the provider to get the creator data.
     // Riverpod handles the loading, error, and data states automatically.
     final creatorAsyncValue = ref.watch(postCreatorProvider(widget.post.creatorId));
@@ -538,9 +441,4 @@ class _PostCardState extends ConsumerState<PostCard> {
       },
     );
   }
-
-  // void refreshAvatarThenSetState() async {
-  //   await _creator()!.refreshAvatar();
-  //   if (context.mounted) setState(() {});
-  // }
 }

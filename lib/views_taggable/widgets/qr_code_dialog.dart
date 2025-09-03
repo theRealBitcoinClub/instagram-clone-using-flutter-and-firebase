@@ -45,7 +45,6 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
     // Ensure we don't try to use cashtoken format if it's not available
     if (_isCashtokenFormat && !isToggleEnabled) {
       _isCashtokenFormat = false;
-      await _saveToggleState(false);
     }
 
     if (mounted) {
@@ -106,19 +105,11 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
         final bool isToggleEnabled = widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty;
         final String addressToShow = _isCashtokenFormat ? widget.cashtokenAddress! : convertToBchFormat(widget.legacyAddress);
         final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo-128x128";
-        final String toggleButtonText = _isCashtokenFormat ? "SHOW MEMO QR" : "SHOW CASHTOKEN QR";
 
         final ButtonStyle primaryButtonStyle = ElevatedButton.styleFrom(
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
           textStyle: theme.textTheme.labelLarge,
-          minimumSize: const Size(double.infinity, 40),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-        );
-
-        final ButtonStyle secondaryButtonStyle = TextButton.styleFrom(
-          foregroundColor: colorScheme.primary,
-          textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
           minimumSize: const Size(double.infinity, 40),
           padding: const EdgeInsets.symmetric(vertical: 12),
         );
@@ -131,8 +122,13 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
         );
 
         return SimpleDialog(
-          contentPadding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+          contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
           children: [
+            // Tab-like selector
+            if (isToggleEnabled) _buildTabSelector(theme, colorScheme),
+
+            const SizedBox(height: 16),
+
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               transitionBuilder: (Widget child, Animation<double> animation) {
@@ -162,24 +158,82 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
               child: const Text("COPY ADDRESS"),
             ),
             const SizedBox(height: 12),
-            if (isToggleEnabled)
-              TextButton(
-                style: secondaryButtonStyle,
-                onPressed: () async {
-                  final newState = !_isCashtokenFormat;
-                  setState(() {
-                    _isCashtokenFormat = newState;
-                  });
-                  await _saveToggleState(newState);
-                },
-                child: Text(toggleButtonText),
-              ),
-            const SizedBox(height: 8),
             TextButton(style: dismissButtonStyle, onPressed: () => Navigator.of(context).pop(), child: const Text("CLOSE")),
           ],
         );
       },
     );
+  }
+
+  Widget _buildTabSelector(ThemeData theme, ColorScheme colorScheme) {
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(color: colorScheme.surfaceVariant.withOpacity(0.3), borderRadius: BorderRadius.circular(8)),
+      child: Row(
+        children: [
+          // Legacy Address Tab
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                if (_isCashtokenFormat) {
+                  _toggleFormat(false);
+                }
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: !_isCashtokenFormat ? colorScheme.primary : Colors.transparent,
+                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Center(
+                  child: Text(
+                    "MEMO",
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: !_isCashtokenFormat ? colorScheme.onPrimary : colorScheme.onSurface,
+                      fontWeight: !_isCashtokenFormat ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // CashToken Address Tab
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                if (!_isCashtokenFormat) {
+                  _toggleFormat(true);
+                }
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _isCashtokenFormat ? colorScheme.primary : Colors.transparent,
+                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Center(
+                  child: Text(
+                    "BCH & TOKEN",
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: _isCashtokenFormat ? colorScheme.onPrimary : colorScheme.onSurface,
+                      fontWeight: _isCashtokenFormat ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _toggleFormat(bool isCashtoken) async {
+    setState(() {
+      _isCashtokenFormat = isCashtoken;
+    });
+    await _saveToggleState(isCashtoken);
   }
 }
 

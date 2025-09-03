@@ -31,7 +31,7 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
 
     // Debounce rapid rebuilds
     final now = DateTime.now();
-    if (_lastRefreshTime != null && now.difference(_lastRefreshTime!) < Duration(seconds: 2)) {
+    if (_lastRefreshTime != null && now.difference(_lastRefreshTime!) < Duration(seconds: 1)) {
       return state.value; // Return current state if recently refreshed
     }
 

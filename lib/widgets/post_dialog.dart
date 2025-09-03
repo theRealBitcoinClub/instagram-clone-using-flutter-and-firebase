@@ -17,7 +17,9 @@ class PostDialog extends StatelessWidget {
       contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: _buildTitleRow(),
+      // title: _buildTitleRow(),
+      title: Row(children: [Text("${post.createdDateTime!.toString().split('.').first}"), Spacer(), Text("${post.age} ago")]),
+      titleTextStyle: theme.textTheme.titleSmall,
       children: _buildDialogContent(),
     );
   }

@@ -14,12 +14,12 @@ class FeedState {
   final bool isLoadingMore;
   final String? errorMessage;
   final DocumentSnapshot? lastDocument;
-  final bool hasMorePosts;
+  // final bool hasMorePosts;
   final PostFilterType? activeFilter;
   final bool isUsingCache;
   final int totalPostCount; // Add this field
   final bool isRefreshing;
-  final List? newPosts; // Add this field
+  // final List? newPosts; // Add this field
 
   FeedState({
     this.posts = const [],
@@ -27,12 +27,12 @@ class FeedState {
     this.isLoadingMore = false,
     this.errorMessage,
     this.lastDocument,
-    this.hasMorePosts = true,
+    // this.hasMorePosts = true,
     this.activeFilter,
     this.isUsingCache = false,
     this.totalPostCount = 0,
     this.isRefreshing = false,
-    this.newPosts, // Initialize to 0
+    // this.newPosts, // Initialize to 0
   });
 
   FeedState copyWith({
@@ -41,27 +41,31 @@ class FeedState {
     bool? isLoadingMore,
     String? errorMessage,
     DocumentSnapshot? lastDocument,
-    bool? hasMorePosts,
+    // bool? hasMorePosts,
     bool? isUsingCache,
     bool clearErrorMessage = false,
     PostFilterType? activeFilter,
     int? totalPostCount,
     bool? isRefreshing,
-    List? newPosts, // Add to copyWith
+    // List? newPosts, // Add to copyWith
   }) {
     return FeedState(
       posts: posts ?? this.posts,
       isLoadingInitial: isLoadingInitial ?? this.isLoadingInitial,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       errorMessage: clearErrorMessage ? null : errorMessage ?? this.errorMessage,
-      lastDocument: lastDocument,
-      hasMorePosts: hasMorePosts ?? this.hasMorePosts,
+      lastDocument: lastDocument ?? this.lastDocument,
+      // hasMorePosts: hasMorePosts ?? this.hasMorePosts,
       activeFilter: activeFilter ?? this.activeFilter,
       isUsingCache: isUsingCache ?? this.isUsingCache,
       isRefreshing: isRefreshing ?? this.isRefreshing,
-      newPosts: newPosts ?? this.newPosts, // Include in copy
+      // newPosts: newPosts ?? this.newPosts, // Include in copy
       totalPostCount: totalPostCount ?? this.totalPostCount, // Include in copy
     );
+  }
+
+  get hasMorePosts {
+    return posts.length < totalPostCount;
   }
 }
 
@@ -87,7 +91,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
       isLoadingInitial: true,
       activeFilter: state.activeFilter,
       lastDocument: null,
-      hasMorePosts: true,
+      // hasMorePosts: true,
       posts: [],
       isUsingCache: false,
     );
@@ -102,7 +106,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
       clearErrorMessage: true,
       isLoadingInitial: false,
       lastDocument: state.lastDocument,
-      hasMorePosts: state.hasMorePosts,
+      // hasMorePosts: state.hasMorePosts,
       posts: state.posts,
       activeFilter: state.activeFilter,
       errorMessage: null,
@@ -148,6 +152,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
         newPosts = await _postService.getPostsPaginated(limit: _pageSize, startAfterDoc: cursorForThisFetch);
 
         // **CRITICAL FIX: Check for duplicates before adding to state**
+        //TODO THIS SHOULDNT BE HAPPENING FIX THE ALGORITHM INSTEAD
         final existingPostIds = state.posts.map((post) => post.id).whereType<String>().toSet();
         final uniqueNewPosts = newPosts.where((post) => post.id != null && !existingPostIds.contains(post.id)).toList();
 
@@ -174,7 +179,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
         activeFilter: state.activeFilter,
         clearErrorMessage: true,
         lastDocument: newLastDocumentForState ?? (isInitial ? null : state.lastDocument),
-        hasMorePosts: newPosts.length == _pageSize, // Still check against original page size
+        // hasMorePosts: newPosts.length == _pageSize, // Still check against original page size
         errorMessage: null,
         isUsingCache: fromCache,
       );
@@ -187,6 +192,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
         final cachedPosts = await _cacheRepository.getPage(currentPage, filter: state.activeFilter?.name);
         if (cachedPosts != null && cachedPosts.isNotEmpty) {
           // **CHECK FOR DUPLICATES IN CACHE FALLBACK TOO**
+          //TODO THIS IS SO GAY NEEDS TO BE FIXED
           final existingPostIds = state.posts.map((post) => post.id).whereType<String>().toSet();
           final uniqueCachedPosts = cachedPosts.where((post) => post.id != null && !existingPostIds.contains(post.id)).toList();
 
@@ -194,7 +200,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
             posts: uniqueCachedPosts,
             isLoadingInitial: false,
             lastDocument: uniqueCachedPosts.isNotEmpty ? uniqueCachedPosts.last.docSnapshot : null,
-            hasMorePosts: uniqueCachedPosts.length == _pageSize,
+            // hasMorePosts: uniqueCachedPosts.length == _pageSize,
             isUsingCache: true,
             errorMessage: uniqueCachedPosts.length < cachedPosts.length
                 ? "Using cached data (some duplicates filtered)"
@@ -241,11 +247,11 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
     fetchInitialPosts();
   }
 
-  Future<void> _performRefresh([int? newTotalCount]) async {
-    // Clear cache for current filter and reload
-    _cacheRepository.clearPagesForFilter(state.activeFilter?.name);
-    fetchInitialPosts();
-  }
+  // Future<void> _performRefresh([int? newTotalCount]) async {
+  //   // Clear cache for current filter and reload
+  //   _cacheRepository.clearPagesForFilter(state.activeFilter?.name);
+  //   fetchInitialPosts();
+  // }
 
   Future<void> refreshFeed() async {
     try {
@@ -267,9 +273,14 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
         state = state.copyWith(totalPostCount: currentTotalCount, isRefreshing: false);
         return;
       }
+      // (!feedState.hasMorePosts &&
+      //     index == feedState.posts.length &&
+      //     feedState.posts.isNotEmpty &&
+      //     !feedState.isLoadingInitial && // Not in initial full-screen load
+      //     !feedState.isLoadingMore) {
 
       // Start refreshing state
-      state = state.copyWith(isRefreshing: true, newPosts: []);
+      state = state.copyWith(isRefreshing: true /*newPosts: []*/);
 
       print('Found $newPostsCount new posts, fetching all at once...');
 
@@ -299,6 +310,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
     }
 
     // Remove any duplicates (in case of overlap)
+    //TODO THERE CAN NOT BE ANY OVERLAP OR SOMETHING IS WRONG IN THE ALGORITHM
     final existingPostIds = existingPosts.map((post) => post.id).whereType<String>().toSet();
     final uniqueNewPosts = allNewPosts.where((post) => post.id != null && !existingPostIds.contains(post.id)).toList();
 
@@ -309,19 +321,28 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 
     // Merge new posts at the beginning (newest first)
     final List<MemoModelPost> mergedPosts = [...uniqueNewPosts, ...existingPosts];
+    //
+    if (allNewPosts.isEmpty) {
+      state = state.copyWith(isRefreshing: false, totalPostCount: currentTotalCount);
+      return;
+    }
 
+    // Merge new posts at the beginning (newest first)
+    // final List<MemoModelPost> mergedPosts = [...allNewPosts, ...existingPosts];
+
+    //TODO NOTHING CHANGED FOR HAS MORE WITH MERGING AS MERGE IS INSERTED AT THE TOP OF LIST
     // Recalculate pagination state
-    final bool hasMore = mergedPosts.length > _pageSize || (state.lastDocument != null && mergedPosts.isNotEmpty);
+    // final bool hasMore = mergedPosts.length > _pageSize || (state.lastDocument != null && mergedPosts.isNotEmpty);
 
     // Get the last document for pagination (should be the last post in the list)
-    final DocumentSnapshot? newLastDocument = mergedPosts.isNotEmpty ? mergedPosts.last.docSnapshot : null;
+    // final DocumentSnapshot? newLastDocument = mergedPosts.isNotEmpty ? mergedPosts.last.docSnapshot : null;
 
     state = state.copyWith(
       posts: mergedPosts,
       isRefreshing: false,
       totalPostCount: currentTotalCount,
-      lastDocument: newLastDocument,
-      hasMorePosts: hasMore,
+      // lastDocument: newLastDocument, //TODO check this, must not be updated at all as the end of the list remained unchanged and the endless scrolling continues where it was before
+      // hasMorePosts: hasMore,
     );
 
     // Update cache - we need to recache all pages since structure changed
@@ -353,27 +374,16 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
     state = state.copyWith(
       isLoadingInitial: true,
       lastDocument: null,
-      hasMorePosts: true,
+      // hasMorePosts: true,
       posts: [],
       isUsingCache: false,
       clearErrorMessage: true,
       totalPostCount: totalCount != -1 ? totalCount : state.totalPostCount,
       isRefreshing: false,
-      newPosts: [],
+      // newPosts: [],
     );
 
     await _fetchPostsPage(isInitial: true);
-  }
-
-  // New method to manually clear cache
-  void clearCache() {
-    _cacheRepository.clearPagesForFilter(state.activeFilter?.name);
-    state = state.copyWith(isUsingCache: false);
-  }
-
-  // New method to get cache statistics
-  Map<String, dynamic> getCacheStats() {
-    return _cacheRepository.getCacheStats();
   }
 }
 

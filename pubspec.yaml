@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '3.8.1'
+  sdk: '3.9.0'
 
 dependencies:
   flutter:
@@ -38,8 +38,8 @@ dependencies:
   json_path: ^0.7.6
   path: ^1.9.1
   json_annotation: ^4.9.0
-  firebase_core: ^2.27.0
-  cloud_firestore: ^4.15.8
+  firebase_core: ^4.1.0
+  cloud_firestore: ^6.0.1
   isar_community: ^3.2.0-dev.2  # Correct package name
   isar_community_flutter_libs: ^3.2.0-dev.2  # Correct package name
 

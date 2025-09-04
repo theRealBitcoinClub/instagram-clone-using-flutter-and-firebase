@@ -28,27 +28,26 @@ class MemoVerifier {
   final List<String> _topics = [];
   final List<String> _urls = [];
 
+  static const String super_tag = " #mahakka.com";
+  //TODO if users dont add their own topic, you add this topic invisibly
+  static const String super_topic = "mahakka.com";
   // --- Configuration Constants ---
   static const int maxHashtags = 3;
   static const int maxTopics = 1;
   static const int minPostLength = 5; // Example, adjust as needed
-  static const int maxPostLength = 280; // Example, adjust as needed
+  //TODO check if that max length works with attaching #mahakka to every post
+  //TODO posts with topics will have shorter length for mentioning @topic and in addition the additional OP_CODE,
+  //TODO but I could try to read the OP_CODE and build the visually appearing @topic on client side and give the user a character bonus for the textfield
+  static int maxPostLength = 207 - super_tag.length - super_topic.length; // Example, adjust as needed
   static const int minWordCount = 1; // Example for posts
 
-  static const int maxProfileNameLength = 30;
+  static const int maxProfileNameLength = 50;
   static const int minProfileNameLength = 3;
   //memo has 217
   static const int maxProfileTextLength = 200;
   static const int minProfileTextLength = 0; // Profile text can be empty
 
   MemoVerifier(this.text);
-
-  MemoVerificationResponse checkIsValidText() {
-    if (hashTags.length > 3) return MemoVerificationResponse.moreThanThreeTags;
-    // if (urls.length > 1 && !_urlMatchesTg() && post.imgurUrl.is) return MemoVerificationResponse.urlThatsNotTgNorImageNorVideo;
-
-    return MemoVerificationResponse.valid;
-  }
 
   MemoVerificationResponse verifyUserName() {
     if (text.length > maxProfileNameLength) return MemoVerificationResponse.tooLong;
@@ -159,6 +158,8 @@ class MemoVerifier {
     return MemoVerificationResponse.valid;
   }
 
+  //TODO verify that giphy, imgur and youtube can be posted but no other urls
+  //TODO verify that only one of these urls can be posted once per post
   MemoVerificationResponse verifyUrls() {
     if (urls.isEmpty) return MemoVerificationResponse.valid; // No URLs to check
 
@@ -177,7 +178,7 @@ class MemoVerifier {
   }
 
   MemoVerificationResponse verifyOffensiveWords() {
-    // This requires a dictionary of offensive words or an external service.
+    //TODO This requires a dictionary of offensive words or an external service.
     // Placeholder - implement your actual logic here.
     // List<String> offensiveDictionary = ["badword1", "badword2"];
     // for (String word in offensiveDictionary) {
@@ -198,26 +199,6 @@ class MemoVerifier {
     result = verifyMinWordCount();
     if (result != MemoVerificationResponse.valid) return result;
 
-    result = verifyHashtagCount();
-    if (result != MemoVerificationResponse.valid) return result;
-
-    result = verifyTopicCount();
-    if (result != MemoVerificationResponse.valid) return result;
-
-    // Condition: Must have at least one topic OR at least one hashtag
-    if (topics.isEmpty && hashTags.isEmpty) {
-      return MemoVerificationResponse.noTopicNorTag;
-      // This condition can be tricky. Does "noTopicNorTag" mean if BOTH are empty?
-      // Or should there be a minimum content if tags/topics are also absent?
-      // For now, let's assume it means if both are empty after other checks pass.
-      // It might conflict with zeroTags if zeroTags implies it's invalid on its own.
-      // Let's refine based on your exact rule for noTopicNorTag and zeroTags.
-      // If zeroTags means "invalid if hashtags are the only content type attempted and it's zero",
-      // then the logic would be different.
-      // Assuming for now: if a post is attempted, it should have a topic or a tag.
-      // This check might be better placed depending on how you score content length.
-    }
-
     result = verifyNoEmail();
     if (result != MemoVerificationResponse.valid) return result;
 
@@ -227,18 +208,15 @@ class MemoVerifier {
     result = verifyOffensiveWords();
     if (result != MemoVerificationResponse.valid) return result;
 
-    // Check for noTopicNorTag - this depends on your business rule.
-    // If a post MUST have either a topic or a tag:
-    // if (topics.isEmpty && hashtags.isEmpty) {
-    //   return MemoVerificationResponse.noTopicNorTag;
-    // }
+    result = verifyHashtagCount();
+    if (result != MemoVerificationResponse.valid) return result;
 
-    // Check for zeroTags if it's a specific requirement for a tag-based post
-    // This is tricky. If a user *intends* to post with tags, but provides zero, it's an error.
-    // But if they post with a topic, zero tags is fine.
-    // This check is probably better handled in the UI based on user intent or a specific post type.
-    // For a general verifier, verifyHashtagCount() already handles > max.
-    // Let's assume for now `zeroTags` is for a context where tags are mandatory.
+    result = verifyTopicCount();
+    if (result != MemoVerificationResponse.valid) return result;
+
+    if (topics.isEmpty && hashTags.isEmpty) {
+      return MemoVerificationResponse.noTopicNorTag;
+    }
 
     return MemoVerificationResponse.valid;
   }
@@ -248,32 +226,17 @@ class MemoVerifier {
     final trimmedText = text.trim();
     if (trimmedText.length > maxProfileNameLength) return MemoVerificationResponse.tooLong;
     if (trimmedText.length < minProfileNameLength) return MemoVerificationResponse.tooShort;
-    // Add other checks for profile name if needed (e.g., allowed characters)
+    //TODO Add other checks for profile name if needed (e.g., allowed characters, urls, emails, offensive words)
     return MemoVerificationResponse.valid;
   }
 
   MemoVerificationResponse verifyProfileBio() {
     final trimmedText = text.trim(); // Bio can often be empty
     if (trimmedText.length > maxProfileTextLength) return MemoVerificationResponse.tooLong;
-    // No 'tooShort' for bio if it can be empty, unless you have a min if not empty.
+    //TODO No 'tooShort' for bio if it can be empty, unless you have a min if not empty.
     // if (trimmedText.isNotEmpty && trimmedText.length < minProfileTextLengthIfNotEmpty) return MemoVerificationResponse.tooShort;
     return MemoVerificationResponse.valid;
   }
-
-  // --- Specific Context Verifications (like your original Imgur check) ---
-  // MemoVerificationResponse verifyIsImgurLink() {
-  //   // Assuming 'text' is the URL here
-  //   if (!text.contains("i.imgur.com") && !text.contains("imgur.com")) {
-  //     // Broader Imgur check
-  //     return MemoVerificationResponse.noImageNorVideo; // Or a more specific "notAnImgurUrl"
-  //   }
-  //   // You might also want to check if it's a direct image link (ends with .jpg, .png, etc.)
-  //   final imgurImageRegex = RegExp(r'^https?://(i\.)?imgur\.com/.*\.(jpg|jpeg|png|gif|mp4|gifv)$');
-  //   if (!imgurImageRegex.hasMatch(text)) {
-  //     // return MemoVerificationResponse.notADirectImgurImageOrVideoLink;
-  //   }
-  //   return MemoVerificationResponse.valid;
-  // }
 
   String verifyMnemonic() {
     if (text.isEmpty) {

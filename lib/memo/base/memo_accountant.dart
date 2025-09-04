@@ -92,6 +92,7 @@ class MemoAccountant {
     return _publishToMemo(MemoCode.profileText, text);
   }
 
+  //TODO ADD A RATE LIMITER TO THE LIKES BUTTON
   Future<MemoAccountantResponse> _tryPublishLike(MemoModelPost post, String wif) async {
     var mp = await MemoPublisher.create(ref, MemoBitcoinBase.reOrderTxHash(post.id!), MemoCode.postLike, wif: wif);
     return mp.doPublish(tip: MemoTip(post.creator!.id, user.tipAmount));

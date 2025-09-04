@@ -748,7 +748,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     String textContent = _inputTagTopicController.text;
 
     //TODO remove duplicate verification
-    final verifier = TextInputVerifier(textContent)
+    final verifier = MemoVerifierDecorator(textContent)
         .addValidator(InputValidators.verifyPostLength)
         .addValidator(InputValidators.verifyMinWordCount)
         .addValidator(InputValidators.verifyHashtags)

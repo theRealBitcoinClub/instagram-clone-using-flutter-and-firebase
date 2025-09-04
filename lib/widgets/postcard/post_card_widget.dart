@@ -280,7 +280,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     if (!mounted) return;
     final String textToSend = _textEditController.text.trim();
     // Use the new verifier class
-    final verifier = TextInputVerifier(textToSend)
+    final verifier = MemoVerifierDecorator(textToSend)
         .addValidator(InputValidators.verifyPostLength)
         .addValidator(InputValidators.verifyMinWordCount)
         .addValidator(InputValidators.verifyHashtags)

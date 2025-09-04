@@ -204,14 +204,16 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
     );
   }
 
+  //TODO if a post is made by a user with tokens in his BCH wallet and paid with that wallet (does that show up in memo?)
+
   String _getTipReceiverDisplayName(TipReceiver receiver) {
     switch (receiver) {
       case TipReceiver.app:
-        return "App Only";
+        return "Mahakka Only";
       case TipReceiver.creator:
         return "Creator Only";
       case TipReceiver.both:
-        return "App & Creator";
+        return "Mahakka & Creator";
     }
   }
 

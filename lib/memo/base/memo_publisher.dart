@@ -3,6 +3,7 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
+import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_tip.dart';
 
 import '../../provider/electrum_provider.dart';
@@ -14,21 +15,21 @@ const network = BitcoinCashNetwork.mainnet;
 
 class MemoPublisher {
   // Add a final Ref field to store the Riverpod ref.
-  final Ref ref;
-  BigInt fee = BtcUtils.toSatoshi("0.000007");
-  late String memoMessage;
-  late MemoCode memoAction;
-  ECPrivate? pk;
-  String? wif;
-  late BitcoinCashAddress p2pkhAddress;
-  late ECPublic publicKey;
-  late ECPrivate privateKey;
+  final Ref _ref;
+  static BigInt minerFeeDefault = BtcUtils.toSatoshi("0.000007");
+  late String _memoMessage;
+  late MemoCode _memoAction;
+  ECPrivate? _pk;
+  String? _wif;
+  late BitcoinCashAddress _p2pkhAddress;
+  late ECPublic _publicKey;
+  late ECPrivate _privateKey;
 
   // Add the Ref to the constructor.
-  MemoPublisher._create(this.ref, this.memoMessage, this.memoAction, {this.pk, this.wif}) {
-    privateKey = pk ?? (ECPrivate.fromWif(wif ?? "xxx", netVersion: network.wifNetVer));
-    publicKey = privateKey.getPublic();
-    p2pkhAddress = BitcoinCashAddress.fromBaseAddress(publicKey.toAddress());
+  MemoPublisher._create(this._ref, this._memoMessage, this._memoAction, {ECPrivate? pk, String? wif}) : _wif = wif, _pk = pk {
+    _privateKey = _pk ?? (ECPrivate.fromWif(_wif ?? "xxx", netVersion: network.wifNetVer));
+    _publicKey = _privateKey.getPublic();
+    _p2pkhAddress = BitcoinCashAddress.fromBaseAddress(_publicKey.toAddress());
   }
 
   // The create method must now accept a Ref and pass it to the private constructor.
@@ -43,17 +44,23 @@ class MemoPublisher {
   //   base = await MemoBitcoinBase.create();
   // }
 
-  Future<MemoAccountantResponse> doPublish({String topic = "", MemoTip? tip}) async {
-    // Get the shared instance from the provider using the stored ref.
-    final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
+  //TODO
 
-    final List<ElectrumUtxo> elctrumUtxos = await base.requestElectrumUtxos(p2pkhAddress);
+  Future<MemoAccountantResponse> doPublish({String topic = "", MemoTip? tip}) async {
+    topic = _addSuperTagAndSuperTopic(topic);
+
+    // Get the shared instance from the provider using the stored ref.
+    final MemoBitcoinBase base = await _ref.read(electrumServiceProvider.future);
+
+    final List<ElectrumUtxo> elctrumUtxos = await base.requestElectrumUtxos(_p2pkhAddress);
 
     if (elctrumUtxos.isEmpty) {
       return MemoAccountantResponse.noUtxo;
     }
 
     List<UtxoWithAddress> utxos = addUtxoAddressDetails(elctrumUtxos);
+    //TODO the remove dust utxo might be helpful in any case but shouldnt be required for non memo that dont have SLP
+    //TODO this removeSlp shouldnt be required in this app as the addresses dont use dev path 245
     utxos = removeSlpUtxos(utxos);
 
     final BigInt walletBalance = utxos.sumOfUtxosValue();
@@ -69,29 +76,40 @@ class MemoPublisher {
     return MemoAccountantResponse.yes;
   }
 
+  String _addSuperTagAndSuperTopic(String topic) {
+    _memoMessage += MemoVerifier.super_tag;
+
+    if (topic.isEmpty) {
+      if (_memoMessage.length + MemoVerifier.super_topic.length < MemoVerifier.maxPostLength) {
+        topic = MemoVerifier.super_topic;
+      }
+    }
+    return topic;
+  }
+
   // Rest of your methods remain the same.
   BtcTransaction createTransaction(BigInt balance, List<UtxoWithAddress> utxos, {memoTopic = "", MemoTip? memoTip}) {
     final MemoTransactionBuilder txBuilder = createTxBuilder(balance, utxos, memoTopic, memoTip);
     final tx = txBuilder.buildTransaction((trDigest, utxo, publicKey, sighash) {
-      return privateKey.signECDSA(trDigest, sighash: sighash);
+      return _privateKey.signECDSA(trDigest, sighash: sighash);
     });
     return tx;
   }
 
   MemoTransactionBuilder createTxBuilder(BigInt balance, List<UtxoWithAddress> utxos, String topic, MemoTip? tip) {
-    BigInt outputHome = balance - fee;
+    BigInt outputHome = balance - minerFeeDefault;
     var hasValidTip = tip != null && tip.amountInSats > MemoTip.dust;
     if (hasValidTip) {
       outputHome = outputHome - tip.amountAsBigInt;
     }
 
     final txBuilder = MemoTransactionBuilder(
-      outPuts: [BitcoinOutput(address: p2pkhAddress.baseAddress, value: outputHome)],
-      fee: fee,
+      outPuts: [BitcoinOutput(address: _p2pkhAddress.baseAddress, value: outputHome)],
+      fee: minerFeeDefault,
       network: network,
       utxos: utxos,
-      memo: memoMessage,
-      memoCode: memoAction,
+      memo: _memoMessage,
+      memoCode: _memoAction,
       memoTopic: topic,
     );
 
@@ -104,8 +122,8 @@ class MemoPublisher {
     List<UtxoWithAddress> utxos = elctrumUtxos
         .map(
           (e) => UtxoWithAddress(
-            utxo: e.toUtxo(p2pkhAddress.type),
-            ownerDetails: UtxoAddressDetails(publicKey: publicKey.toHex(), address: p2pkhAddress.baseAddress),
+            utxo: e.toUtxo(_p2pkhAddress.type),
+            ownerDetails: UtxoAddressDetails(publicKey: _publicKey.toHex(), address: _p2pkhAddress.baseAddress),
           ),
         )
         .toList();

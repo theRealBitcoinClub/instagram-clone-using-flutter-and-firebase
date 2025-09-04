@@ -6,9 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mahakka/memo/firebase/post_service_provider.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/memo/model/memo_model_user.dart';
+import 'package:mahakka/provider/user_provider.dart';
 
 import '../memo/isar/memo_model_post_db.dart';
-import '../memo/scraper/memo_post_service.dart';
 import '../provider/isar_provider.dart';
 import '../provider/post_update_provider.dart';
 
@@ -29,10 +30,14 @@ class PostCacheRepository {
 
   Future<Isar> get _isar async => await ref.read(isarProvider.future);
 
-  Future<void> updatePopularityScore(String postId, int tipAmount) async {
+  Future<void> updatePopularityScore(String postId, int tipAmount, MemoModelPost? scrapedPost) async {
     MemoModelPost post = (await getPost(postId))!;
 
-    MemoModelPost? scrapedPost = await MemoPostScraper().fetchAndParsePost(postId, filterOn: false);
+    var receiver = ref.read(userProvider)!.tipReceiver;
+    if (receiver == TipReceiver.app)
+      return;
+    else if (receiver == TipReceiver.both)
+      tipAmount = (tipAmount / 2).round();
 
     var newScore;
     if (scrapedPost == null) {

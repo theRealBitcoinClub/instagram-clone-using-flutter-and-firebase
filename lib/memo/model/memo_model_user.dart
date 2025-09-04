@@ -6,8 +6,6 @@ import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/provider/electrum_provider.dart';
 
-import '../firebase/user_service.dart';
-
 part 'memo_model_user.g.dart'; // Add this line
 
 @JsonEnum()
@@ -15,12 +13,10 @@ enum TipReceiver { app, creator, both }
 
 @JsonEnum()
 enum TipAmount {
-  @JsonValue(0)
-  zero(0),
-  @JsonValue(1111)
-  survival(1111),
   @JsonValue(2345)
-  nice(2345),
+  survival(2345),
+  @JsonValue(4567)
+  nice(4567),
   @JsonValue(7777)
   fren(7777),
   @JsonValue(9999)
@@ -48,8 +44,6 @@ class MemoModelUser {
   TipReceiver _tipReceiver;
   TipAmount _tipAmount;
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  final UserService _userService = UserService();
   // Ignored fields
   @JsonKey(includeFromJson: false, includeToJson: false)
   late ECPrivate pkBchCashtoken;
@@ -111,7 +105,7 @@ class MemoModelUser {
       legacyAddressMemoBch: legacyAddress,
       legacyAddressMemoBchAsCashaddress: legacyAddressAsCash,
       tipReceiver: TipReceiver.both, // Default value
-      tipAmount: TipAmount.zero, // Default value
+      tipAmount: TipAmount.survival, // Default value
     );
 
     // 5. Initialize the rest of the instance fields
@@ -251,7 +245,7 @@ class MemoModelUser {
     required this.legacyAddressMemoBch,
     required this.legacyAddressMemoBchAsCashaddress,
     TipReceiver tipReceiver = TipReceiver.both,
-    TipAmount tipAmount = TipAmount.zero,
+    TipAmount tipAmount = TipAmount.survival,
     // Add all ignored fields here as optional parameters
     this.balanceCashtokensDevPath145 = "?",
     this.balanceBchDevPath145 = "?",

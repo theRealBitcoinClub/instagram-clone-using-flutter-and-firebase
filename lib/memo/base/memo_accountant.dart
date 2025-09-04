@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_code.dart';
 import 'package:mahakka/memo/base/memo_publisher.dart';
-import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/model/memo_tip.dart';
+import 'package:mahakka/memo/scraper/memo_post_service.dart';
 
 import '../../provider/user_provider.dart';
 import '../../repositories/post_cache_repository.dart';
@@ -58,60 +58,90 @@ class MemoAccountant {
   }
 
   Future<MemoAccountantResponse> publishLike(MemoModelPost post) async {
+    MemoModelPost? scrapedPost = await MemoPostScraper().fetchAndParsePost(post.id!, filterOn: false);
+
     MemoAccountantResponse response = await _tryPublishLike(post, user.wifLegacy);
 
     if (response == MemoAccountantResponse.yes) {
-      ref.read(postCacheRepositoryProvider).updatePopularityScore(post.id!, user.tipAmount);
+      ref.read(postCacheRepositoryProvider).updatePopularityScore(post.id!, user.tipAmount, scrapedPost);
     }
 
     return _memoAccountantResponse(response);
   }
 
   Future<MemoAccountantResponse> publishReplyHashtags(MemoModelPost post, String text) async {
-    var tip = MemoTip(_getTipReceiver(post.creator!), user.tipAmount);
-    return _publishToMemo(MemoCode.profileMessage, text, tip: tip);
+    return _publishToMemo(MemoCode.profileMessage, text, tips: _parseTips());
   }
 
   Future<MemoAccountantResponse> publishImgurOrYoutube(String? topic, String text) {
     if (topic != null) {
-      return _publishToMemo(MemoCode.topicMessage, text, top: topic);
+      return _publishToMemo(MemoCode.topicMessage, text, top: topic, tips: _parseTips());
     } else {
-      return _publishToMemo(MemoCode.profileMessage, text);
+      return _publishToMemo(MemoCode.profileMessage, text, tips: _parseTips());
     }
   }
 
   Future<MemoAccountantResponse> profileSetAvatar(String imgur) async {
-    return _publishToMemo(MemoCode.profileImgUrl, imgur);
+    return _publishToMemo(MemoCode.profileImgUrl, imgur, tips: []);
   }
 
   Future<MemoAccountantResponse> profileSetName(String name) async {
-    return _publishToMemo(MemoCode.profileName, name);
+    return _publishToMemo(MemoCode.profileName, name, tips: []);
   }
 
   Future<MemoAccountantResponse> profileSetText(String text) async {
-    return _publishToMemo(MemoCode.profileText, text);
+    return _publishToMemo(MemoCode.profileText, text, tips: []);
   }
 
   //TODO ADD A RATE LIMITER TO THE LIKES BUTTON
   Future<MemoAccountantResponse> _tryPublishLike(MemoModelPost post, String wif) async {
     var mp = await MemoPublisher.create(ref, MemoBitcoinBase.reOrderTxHash(post.id!), MemoCode.postLike, wif: wif);
-    return mp.doPublish(tip: MemoTip(post.creator!.id, user.tipAmount));
+    List<MemoTip> tips = _parseTips(post: post);
+    return mp.doPublish(tips: tips);
   }
 
   MemoAccountantResponse _memoAccountantResponse(MemoAccountantResponse response) =>
       response != MemoAccountantResponse.yes ? MemoAccountantResponse.lowBalance : MemoAccountantResponse.yes;
 
   Future<MemoAccountantResponse> _tryPublishReplyTopic(String wif, MemoModelPost post, String postReply) async {
-    var tip = MemoTip(_getTipReceiver(post.creator!), user.tipAmount);
-    return _publishToMemo(MemoCode.topicMessage, postReply, tip: tip, top: post.topicId);
+    List<MemoTip> tips = _parseTips(post: post);
+
+    return _publishToMemo(MemoCode.topicMessage, postReply, tips: tips, top: post.topicId);
   }
 
-  Future<MemoAccountantResponse> _publishToMemo(MemoCode c, String text, {String? top, MemoTip? tip}) async {
+  List<MemoTip> _parseTips({MemoModelPost? post}) {
+    List<MemoTip> tips = [];
+    if (user.tipAmount == 0) return tips;
+
+    var tipReceiver = _getTipReceiver(post);
+    for (String receiver in tipReceiver) {
+      tips.add(MemoTip(receiver, (user.tipAmount / tipReceiver.length).round(), !receiver.startsWith("bitcoincash")));
+    }
+    return tips;
+  }
+
+  Future<MemoAccountantResponse> _publishToMemo(MemoCode c, String text, {String? top, required List<MemoTip> tips}) async {
     MemoPublisher mp = await MemoPublisher.create(ref, text, c, wif: user.wifLegacy);
-    return mp.doPublish(topic: top ?? "", tip: tip);
+    return mp.doPublish(topic: top ?? "", tips: tips);
   }
 
-  String _getTipReceiver(MemoModelCreator creator) {
-    return creator.id;
+  List<String> _getTipReceiver(MemoModelPost? post) {
+    TipReceiver receiver = ref.read(userProvider)!.tipReceiver;
+    List<String> receiverAddressess = [];
+
+    if (post == null) return [MemoBitcoinBase.bchBurnerAddress];
+
+    switch (receiver) {
+      case TipReceiver.creator:
+        receiverAddressess.add(post.creator!.id);
+        break;
+      case TipReceiver.app:
+        receiverAddressess.add(MemoBitcoinBase.bchBurnerAddress);
+        break;
+      case TipReceiver.both:
+        receiverAddressess.addAll([post.creator!.id, MemoBitcoinBase.bchBurnerAddress]);
+    }
+
+    return receiverAddressess;
   }
 }

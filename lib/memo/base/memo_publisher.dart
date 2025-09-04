@@ -46,8 +46,8 @@ class MemoPublisher {
 
   //TODO
 
-  Future<MemoAccountantResponse> doPublish({String topic = "", MemoTip? tip}) async {
-    topic = _addSuperTagAndSuperTopic(topic);
+  Future<MemoAccountantResponse> doPublish({String topic = "", tips}) async {
+    if (_memoAction == MemoCode.profileMessage || _memoAction == MemoCode.topicMessage) topic = _addSuperTagAndSuperTopic(topic);
 
     // Get the shared instance from the provider using the stored ref.
     final MemoBitcoinBase base = await _ref.read(electrumServiceProvider.future);
@@ -67,7 +67,7 @@ class MemoPublisher {
     if (walletBalance == BigInt.zero) {
       return MemoAccountantResponse.lowBalance;
     }
-    final BtcTransaction tx = createTransaction(walletBalance, utxos, memoTopic: topic, memoTip: tip);
+    final BtcTransaction tx = createTransaction(walletBalance, utxos, memoTopic: topic, memoTips: tips);
     try {
       await base.broadcastTransaction(tx);
     } catch (e) {
@@ -88,19 +88,25 @@ class MemoPublisher {
   }
 
   // Rest of your methods remain the same.
-  BtcTransaction createTransaction(BigInt balance, List<UtxoWithAddress> utxos, {memoTopic = "", MemoTip? memoTip}) {
-    final MemoTransactionBuilder txBuilder = createTxBuilder(balance, utxos, memoTopic, memoTip);
+  BtcTransaction createTransaction(BigInt balance, List<UtxoWithAddress> utxos, {memoTopic = "", required List<MemoTip> memoTips}) {
+    final MemoTransactionBuilder txBuilder = createTxBuilder(balance, utxos, memoTopic, memoTips);
     final tx = txBuilder.buildTransaction((trDigest, utxo, publicKey, sighash) {
       return _privateKey.signECDSA(trDigest, sighash: sighash);
     });
     return tx;
   }
 
-  MemoTransactionBuilder createTxBuilder(BigInt balance, List<UtxoWithAddress> utxos, String topic, MemoTip? tip) {
+  MemoTransactionBuilder createTxBuilder(BigInt balance, List<UtxoWithAddress> utxos, String topic, List<MemoTip> tips) {
     BigInt outputHome = balance - minerFeeDefault;
-    var hasValidTip = tip != null && tip.amountInSats > MemoTip.dust;
+    BigInt totalTips = BigInt.zero;
+
+    for (MemoTip tip in tips) {
+      totalTips += tip.amountAsBigInt;
+    }
+
+    var hasValidTip = totalTips != BigInt.zero;
     if (hasValidTip) {
-      outputHome = outputHome - tip.amountAsBigInt;
+      outputHome = outputHome - totalTips;
     }
 
     final txBuilder = MemoTransactionBuilder(
@@ -113,7 +119,11 @@ class MemoPublisher {
       memoTopic: topic,
     );
 
-    if (hasValidTip) txBuilder.outPuts.add(BitcoinOutput(address: tip.receiverAsBchAddress.baseAddress, value: tip.amountAsBigInt));
+    if (hasValidTip) {
+      for (MemoTip tip in tips) {
+        txBuilder.outPuts.add(BitcoinOutput(address: tip.receiverAsBchAddress.baseAddress, value: tip.amountAsBigInt));
+      }
+    }
 
     return txBuilder;
   }

@@ -38,8 +38,6 @@ class MemoTransactionBuilder implements BasedBitcoinTransacationBuilder {
   final String? memo;
   final MemoCode? memoCode;
   final String memoTopic;
-  final bool enableRBF;
-  final bool isFakeTransaction;
   @override
   final BitcoinOrdering inputOrdering;
   @override
@@ -55,8 +53,6 @@ class MemoTransactionBuilder implements BasedBitcoinTransacationBuilder {
     this.memo,
     this.memoCode,
     this.memoTopic = "",
-    this.enableRBF = false,
-    this.isFakeTransaction = false,
   }) : utxosInfo = utxos {
     _validateBuilder();
   }
@@ -264,9 +260,6 @@ that demonstrate the right to spend the bitcoins associated with the correspondi
         });
     }
     final inputs = sortedUtxos.map((e) => e.utxo.toInput()).toList();
-    if (enableRBF && inputs.isNotEmpty) {
-      inputs[0] = inputs[0].copyWith(sequence: BitcoinOpCodeConst.replaceByFeeSequence);
-    }
     return Tuple(List<TxInput>.unmodifiable(inputs), List<UtxoWithAddress>.unmodifiable(sortedUtxos));
   }
 
@@ -338,7 +331,6 @@ be retrieved by anyone who examines the blockchain's history.
     required BigInt sumUtxoAmount,
     required BigInt sumOutputAmounts,
   }) {
-    if (isFakeTransaction) return;
     if (sumAmountsWithFee != sumUtxoAmount) {
       throw DartBitcoinPluginException(
         'Sum value of utxo not spending',

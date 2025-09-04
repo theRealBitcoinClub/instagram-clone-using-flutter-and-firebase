@@ -209,11 +209,11 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
   String _getTipReceiverDisplayName(TipReceiver receiver) {
     switch (receiver) {
       case TipReceiver.app:
-        return "Mahakka Only";
+        return "100% Mahakka Only";
       case TipReceiver.creator:
-        return "Creator Only";
+        return "100% Creator Only";
       case TipReceiver.both:
-        return "Mahakka & Creator";
+        return "50% Mahakka & 50% Creator";
     }
   }
 

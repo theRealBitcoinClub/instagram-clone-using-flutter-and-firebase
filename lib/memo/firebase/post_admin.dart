@@ -181,7 +181,7 @@ class _AdminPostsListPageState extends State<AdminPostsListPage> {
                   _buildPropertyRow('Topic ID:', post.topicId),
                   _buildPropertyRow('Imgur URL:', post.imgurUrl, isUrl: true),
                   _buildPropertyRow('YouTube ID:', post.youtubeId),
-                  _buildPropertyRow('Popularity Score:', post.popularityScore?.toString()),
+                  _buildPropertyRow('Popularity Score:', post.popularityScore.toString()),
                   _buildPropertyRow('Like Counter:', post.likeCounter?.toString()),
                   _buildPropertyRow('Reply Counter:', post.replyCounter?.toString()),
                   _buildPropertyRow('Created:', post.created),

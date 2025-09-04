@@ -69,6 +69,9 @@ class MemoBitcoinBase {
   static const derivationPathMemoBch = "m/44'/0'/0'/0/0";
   static const derivationPathMemoSlp = "m/44'/245'/0'/0/0";
   static const derivationPathCashtoken = "m/44'/145'/0'/0/0";
+  //TODO create an address that is managed in a multi_sig wallet to buy and burn tokens every week
+  //TODO show the balance of that managed wallet on the top app_bar and make it increase on every action inside mahakka
+  static const bchBurnerAddress = "bitcoincash:zzsyjtd4fxrxzvmqwudzsasfg6lfrse49qaemzmtj6";
   static const tokenBurnerDotCashAddress = "bitcoincash:r0lxr93av56s6ja253zmg6tjgwclfryeardw6v427e74uv6nfkrlc2s5qtune";
 
   ElectrumWebSocketService? service;

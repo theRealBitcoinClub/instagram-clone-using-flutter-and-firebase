@@ -3,21 +3,17 @@ import 'package:flutter/material.dart';
 class PopularityScoreWidget extends StatelessWidget {
   final int score;
   final TextStyle? textStyle;
-  final TextStyle? smallNumberStyle; // Optional different style for small numbers
-  final TextStyle? mediumNumberStyle; // Optional different style for medium numbers
-  final TextStyle? largeNumberStyle; // Optional different style for large numbers
   final TextAlign textAlign;
   final int maxLines;
   final bool softWrap;
   final TextOverflow overflow;
+  final bool textStyleBalance;
 
   const PopularityScoreWidget({
     Key? key,
     required this.score,
     this.textStyle,
-    this.smallNumberStyle,
-    this.mediumNumberStyle,
-    this.largeNumberStyle,
+    this.textStyleBalance = false,
     this.textAlign = TextAlign.start,
     this.maxLines = 1,
     this.softWrap = false,
@@ -32,15 +28,18 @@ class PopularityScoreWidget extends StatelessWidget {
     // Determine which style to use based on the score magnitude
     TextStyle effectiveStyle;
 
-    if (score >= 1000000 && largeNumberStyle != null) {
-      effectiveStyle = largeNumberStyle!;
-    } else if (score >= 1000 && mediumNumberStyle != null) {
-      effectiveStyle = mediumNumberStyle!;
-    } else if (smallNumberStyle != null) {
-      effectiveStyle = smallNumberStyle!;
-    } else {
+    // if (score >= 1000000 && largeNumberStyle != null) {
+    //   effectiveStyle = largeNumberStyle!;
+    // } else if (score >= 1000 && mediumNumberStyle != null) {
+    //   effectiveStyle = mediumNumberStyle!;
+    // } else if (smallNumberStyle != null) {
+    //   effectiveStyle = smallNumberStyle!;
+    // } else {
+    if (textStyleBalance)
+      effectiveStyle = textStyle ?? theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w400) ?? const TextStyle();
+    else
       effectiveStyle = textStyle ?? theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400) ?? const TextStyle();
-    }
+    // }
 
     return Text(formattedScore, style: effectiveStyle, textAlign: textAlign, maxLines: maxLines, softWrap: softWrap, overflow: overflow);
   }
@@ -65,7 +64,7 @@ class PopularityScoreWidget extends StatelessWidget {
         return '${thousands.toStringAsFixed(2)}K'.replaceAll(RegExp(r'\.0+$'), '');
       }
     } else {
-      return score.toString();
+      return score == -1 ? "?" : score.toString();
     }
   }
 }

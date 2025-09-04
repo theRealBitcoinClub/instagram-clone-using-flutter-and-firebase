@@ -55,13 +55,13 @@ class TopDetailsRow extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Expanded(
-                      child: StatWidget(title: 'BCH', count: _formatBalance(creator.balanceBch), theme: theme),
+                      child: StatWidget(title: 'BCH', count: creator.balanceBch, theme: theme),
                     ),
                     Expanded(
-                      child: StatWidget(title: 'Tokens', count: _formatBalance(creator.balanceToken), theme: theme),
+                      child: StatWidget(title: 'Tokens', count: creator.balanceToken, theme: theme),
                     ),
                     Expanded(
-                      child: StatWidget(title: 'Memo', count: _formatBalance(creator.balanceMemo), theme: theme),
+                      child: StatWidget(title: 'Memo', count: creator.balanceMemo, theme: theme),
                     ),
                   ],
                 ),
@@ -80,10 +80,6 @@ class TopDetailsRow extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatBalance(int balance) {
-    return balance == -1 ? "?" : balance.toString();
   }
 
   void _showTipDialog(BuildContext context, ThemeData theme, MemoModelCreator creator) {

@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
-import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/repositories/post_repository.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure path is correct
@@ -42,7 +40,6 @@ class _PostCardState extends ConsumerState<PostCard> {
   static const double _altImageHeight = 50.0;
   static const int _maxTagsCounter = 3; // This is now used by PostCardFooter
   static const int _minTextLength = 20;
-  MemoModelUser? _user; // This could potentially come from a Riverpod userProvider
   bool _isAnimatingLike = false;
   bool _isSendingTx = false;
   bool _showInput = false;
@@ -59,7 +56,6 @@ class _PostCardState extends ConsumerState<PostCard> {
     super.initState();
     _textEditController = TextEditingController();
     _initializeSelectedHashtags();
-    _user = ref.read(userProvider);
   }
 
   @override
@@ -372,6 +368,8 @@ class _PostCardState extends ConsumerState<PostCard> {
     final creatorAsyncValue = ref.watch(postCreatorProvider(widget.post.creatorId));
 
     return creatorAsyncValue.when(
+      skipLoadingOnReload: true,
+      skipLoadingOnRefresh: true,
       data: (creator) {
         // We have the creator data! Update the post model.
         widget.post.creator = creator;
@@ -426,8 +424,8 @@ class _PostCardState extends ConsumerState<PostCard> {
       },
       loading: () {
         // This part runs while the data is loading.
-        return SizedBox();
-        Center(child: CircularProgressIndicator());
+        // return SizedBox();
+        return Center(child: CircularProgressIndicator());
       },
       error: (error, stackTrace) {
         // This part runs if an error occurs.

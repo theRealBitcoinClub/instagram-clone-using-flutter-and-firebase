@@ -3,8 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart'; // Your updated feed provider
 import 'package:mahakka/theme_provider.dart'; // Your theme provider
+import 'package:mahakka/widgets/popularity_score_widget.dart';
 // import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
+
+import '../provider/bch_burner_balance_provider.dart';
 
 // Enum for filter types - this should be consistent with what PostService and FeedPostsNotifier expect
 enum PostFilterType {
@@ -107,6 +110,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   Widget build(BuildContext context) {
     final asyncThemeState = ref.watch(themeNotifierProvider);
+    final asyncBurnerBalance = ref.watch(bchBurnerBalanceProvider);
     final ThemeState currentThemeState = asyncThemeState.maybeWhen(
       data: (data) => data,
       orElse: () => defaultThemeState, // Your default theme state
@@ -121,7 +125,23 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       appBar: AppBar(
         centerTitle: true,
         toolbarHeight: 50,
-        title: Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
+        title: Row(
+          children: [
+            asyncBurnerBalance.when(
+              skipLoadingOnRefresh: true,
+              skipLoadingOnReload: true,
+              data: (burnerBalance) => PopularityScoreWidget(score: burnerBalance.bch),
+              error: (e, s) {
+                return SizedBox();
+              },
+              loading: () {
+                return SizedBox();
+              },
+            ),
+            Spacer(),
+            Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
+          ],
+        ),
         actions: [
           _buildMenuTheme(currentThemeState, theme),
           // _buildMenuFilter(theme, feedState.activeFilter), // Pass the single active filter

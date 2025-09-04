@@ -36,7 +36,10 @@ const _$TipReceiverEnumMap = {
 
 const _$TipAmountEnumMap = {
   TipAmount.zero: 0,
-  TipAmount.maintenance: 1,
-  TipAmount.growth: 2,
-  TipAmount.moon: 3,
+  TipAmount.survival: 1111,
+  TipAmount.nice: 2345,
+  TipAmount.fren: 7777,
+  TipAmount.wagmi: 9999,
+  TipAmount.moon: 12345,
+  TipAmount.sohigh: 42069,
 };

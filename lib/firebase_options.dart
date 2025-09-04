@@ -62,4 +62,5 @@ class DefaultFirebaseOptions {
     projectId: 'pagoyayalla',
     storageBucket: 'pagoyayalla.firebasestorage.app',
   );
+
 }

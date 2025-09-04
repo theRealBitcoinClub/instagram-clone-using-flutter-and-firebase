@@ -17,12 +17,18 @@ enum TipReceiver { app, creator, both }
 enum TipAmount {
   @JsonValue(0)
   zero(0),
-  @JsonValue(1)
-  maintenance(1111),
-  @JsonValue(2)
-  growth(22222),
-  @JsonValue(3)
-  moon(333333);
+  @JsonValue(1111)
+  survival(1111),
+  @JsonValue(2345)
+  nice(2345),
+  @JsonValue(7777)
+  fren(7777),
+  @JsonValue(9999)
+  wagmi(9999),
+  @JsonValue(12345)
+  moon(12345),
+  @JsonValue(42069)
+  sohigh(42069);
 
   const TipAmount(this.value);
   final int value;
@@ -144,10 +150,6 @@ class MemoModelUser {
     wifBchCashtoken = pkBchCashtoken.toWif();
     hasInit = true;
     return true;
-  }
-
-  Future<void> saveToFirebase() async {
-    await _userService.saveUser(this);
   }
 
   Future<String> refreshBalanceDevPath0(Ref ref) async {

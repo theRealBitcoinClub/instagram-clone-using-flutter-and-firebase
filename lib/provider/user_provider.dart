@@ -76,20 +76,20 @@ class UserNotifier extends StateNotifier<UserState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       if (state.user == null || !state.user!.hasInit) {
-        final fetchedUser = await _authChecker.createUserFromMnemonic();
-        state = state.copyWith(user: fetchedUser);
-      }
+        final createdUser = await _authChecker.createUserFromMnemonic();
+        // state = state.copyWith(fetchedUser: createdUser);
 
-      MemoModelUser user = (await UserService().getUserOnce(state.user!.id))!;
-      MemoModelUser newUser = user.copyWith(tipAmount: user.tipAmountEnum, tipReceiver: user.tipReceiver);
-      state = state.copyWith(user: newUser);
-      // Call the new method to refresh all balances after the user is fetched
+        MemoModelUser fetchedUser = (await UserService().getUserOnce(createdUser!.id))!;
+        MemoModelUser newUser = createdUser.copyWith(tipAmount: fetchedUser.tipAmountEnum, tipReceiver: fetchedUser.tipReceiver);
+        state = state.copyWith(user: newUser, isLoading: false);
+      }
+      // Call the new method to refresh all balances after the fetchedUser is fetched
       //the refresh balance is now done per creator
       // refreshAllBalances();
 
-      state = state.copyWith(isLoading: false);
+      // state = state.copyWith(isLoading: false);
     } catch (e, stackTrace) {
-      print("Error refreshing user from DB: $e \n$stackTrace");
+      print("Error refreshing fetchedUser from DB: $e \n$stackTrace");
       state = state.copyWith(error: e.toString(), isLoading: false);
     }
   }

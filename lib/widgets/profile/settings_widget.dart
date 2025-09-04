@@ -216,16 +216,13 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
   }
 
   String _getTipAmountDisplayName(TipAmount amount) {
-    switch (amount) {
-      case TipAmount.zero:
-        return "No Tip (0)";
-      case TipAmount.maintenance:
-        return "Maintenance (1,111 satoshis)";
-      case TipAmount.growth:
-        return "Growth (22,222 satoshis)";
-      case TipAmount.moon:
-        return "Moon (333,333 satoshis)";
-    }
+    // Convert enum name to title case
+    final String name = amount.name[0].toUpperCase() + amount.name.substring(1);
+
+    // Format the number with commas for readability
+    final formattedValue = amount.value.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
+
+    return "$name ($formattedValue satoshis)";
   }
 
   Widget _buildSaveButton(ThemeData theme) {

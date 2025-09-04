@@ -22,11 +22,6 @@ class AuthChecker {
 
     if (mnemonic == null || mnemonic.isEmpty) return null;
     var user = MemoModelUser.fromMnemonic(mnemonic: mnemonic);
-    if (user.hasInit) {
-      user.saveToFirebase();
-    } else {
-      throw Exception("MNEMONIC WRONG? : $mnemonic");
-    }
     return user;
   }
 

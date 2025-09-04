@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/widgets/popularity_score_widget.dart';
 
 class PostDialog extends StatelessWidget {
   final ThemeData theme;
@@ -17,8 +18,7 @@ class PostDialog extends StatelessWidget {
       contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      // title: _buildTitleRow(),
-      title: Row(children: [Text("${post.createdDateTime!.toString().split('.').first}"), Spacer(), Text("${post.age} ago")]),
+      title: _buildTitleRow(),
       titleTextStyle: theme.textTheme.titleSmall,
       children: _buildDialogContent(),
     );
@@ -27,27 +27,20 @@ class PostDialog extends StatelessWidget {
   Widget _buildTitleRow() {
     return Row(
       children: [
-        CircleAvatar(
-          radius: 18,
-          backgroundColor: theme.colorScheme.surfaceVariant,
-          backgroundImage: creator?.profileImageAvatar().isEmpty ?? true
-              ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-              : NetworkImage(creator!.profileImageAvatar()),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            creator?.name ?? post.creatorId,
-            style: theme.dialogTheme.titleTextStyle ?? theme.textTheme.titleLarge,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
+        Text("${post.createdDateTime!.toString().split('.').first}"),
+        Spacer(),
+        PopularityScoreWidget(score: post.popularityScore),
+        Spacer(),
+        Text("${post.age} ago"),
       ],
     );
   }
 
   List<Widget> _buildDialogContent() {
     return [
+      //TODO ADD THE DOUBLE TAP AND LIKE ANIMATION WITH A CLOSE OF THE DIALOG AND CONFETTI
+      //TODO TRIGGER UPDATE POPULARITYSCORE
+      // GestureDetector(onDoubleTap: , child:
       Padding(padding: const EdgeInsets.symmetric(vertical: 12.0), child: imageWidget),
       if (post.text != null && post.text!.isNotEmpty)
         Padding(

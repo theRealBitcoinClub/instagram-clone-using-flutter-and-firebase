@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mahakka/widgets/like_animtion.dart'; // Assuming this path is correct
+import 'package:mahakka/widgets/centered_circle_animation.dart'; // Assuming this path is correct
 
 // Duration can be defined here or passed if it needs to be dynamic
 const Duration _postcardAnimationDuration = Duration(milliseconds: 500);
@@ -14,7 +14,7 @@ AnimatedOpacity buildCircledOpacityAnimation(IconData iconData, ThemeData theme,
   return AnimatedOpacity(
     duration: _postcardAnimationDuration,
     opacity: isAnimating ? 1 : 0,
-    child: LikeAnimation(
+    child: CenteredCircleAnimation(
       // Ensure LikeAnimation is correctly imported and works
       isAnimating: isAnimating,
       duration: _postcardAnimationDuration,

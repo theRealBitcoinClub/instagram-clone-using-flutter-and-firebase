@@ -4,7 +4,7 @@ import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 
-import '../characterlimitedtextfield.dart';
+import '../character_limited_textfield.dart';
 
 // If _PostCardState constants like _maxTagsCounter were used, they need to be accessible
 // or passed down. For now, assuming they are either not critical or will be handled.

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class LikeAnimation extends StatefulWidget {
+class CenteredCircleAnimation extends StatefulWidget {
   final Widget child;
   final bool isAnimating;
   final Duration duration;
   final VoidCallback? onEnd;
   final bool smallLike;
 
-  const LikeAnimation({
+  const CenteredCircleAnimation({
     Key? key,
     required this.child,
     required this.isAnimating,
@@ -17,10 +17,10 @@ class LikeAnimation extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _LikeAnimationState createState() => _LikeAnimationState();
+  _CenteredCircleAnimationState createState() => _CenteredCircleAnimationState();
 }
 
-class _LikeAnimationState extends State<LikeAnimation> with SingleTickerProviderStateMixin {
+class _CenteredCircleAnimationState extends State<CenteredCircleAnimation> with SingleTickerProviderStateMixin {
   late AnimationController controller;
   late Animation<double> scale;
 
@@ -35,7 +35,7 @@ class _LikeAnimationState extends State<LikeAnimation> with SingleTickerProvider
   }
 
   @override
-  void didUpdateWidget(covariant LikeAnimation oldWidget) {
+  void didUpdateWidget(covariant CenteredCircleAnimation oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (widget.isAnimating != oldWidget.isAnimating) {

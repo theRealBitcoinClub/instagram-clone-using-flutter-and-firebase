@@ -1,7 +1,7 @@
 name: mahakka
 description: An app using the memo protocol to publish content to the BCH blockchain.
 publish_to: 'none'
-version: 1.1.1-BCH+202509042
+version: 1.1.1-BCH+202509043
 
 environment:
   sdk: '>=3.8.0 <=3.9.2'
@@ -50,6 +50,18 @@ dev_dependencies:
   json_serializable: ^6.9.5
   flutter_lints: ^6.0.0
   isar_community_generator: ^3.3.0-dev.1  # Correct package name
+  flutter_launcher_icons: "^0.14.4"
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  web:
+    generate: true
+    image_path: "assets/icon.png"
+    background_color: "#6bfe82"
+    theme_color: "#6bfe82"
 
 flutter:
   uses-material-design: true
@@ -58,7 +70,7 @@ flutter:
     - shorebird.yaml
 
 flutter_native_splash:
-  color: "#ffffff"
+  color: "#6bfe82"
   image: assets/splash.png
   android: true
   web: true

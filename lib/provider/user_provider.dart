@@ -78,15 +78,19 @@ class UserNotifier extends StateNotifier<UserState> {
       if (state.user == null || !state.user!.hasInit) {
         final createdUser = await _authChecker.createUserFromMnemonic();
         // state = state.copyWith(fetchedUser: createdUser);
+        UserService service = UserService();
 
-        MemoModelUser? fetchedUser = await UserService().getUserOnce(createdUser!.id);
+        var memoModelUser = await service.getUserOnce(createdUser!.id);
+        MemoModelUser? fetchedUser = memoModelUser;
         if (fetchedUser != null) {
           state = state.copyWith(
             user: createdUser.copyWith(tipAmount: fetchedUser.tipAmountEnum, tipReceiver: fetchedUser.tipReceiver),
             isLoading: false,
           );
-        } else
+        } else {
+          await service.saveUser(createdUser);
           state = state.copyWith(user: createdUser, isLoading: false);
+        }
       }
       // Call the new method to refresh all balances after the fetchedUser is fetched
       //the refresh balance is now done per creator

@@ -33,6 +33,8 @@ class MemoModelTag {
     this.lastPost, // Consider if this should be a DateTime for easier sorting/filtering
   });
 
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  int? lastCount;
   String id;
   final int? postCount;
   final String? lastPost; // Again, DateTime might be better for 'lastPost'

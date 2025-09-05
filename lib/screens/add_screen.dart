@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
+import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure this is theme-neutral or adapts
 import 'package:mahakka/widgets/textfield_input.dart'; // CRITICAL: This MUST be themed internally
+import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 // Assuming these exist and are correctly imported
@@ -88,7 +90,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           newVideoId = ytId;
           clipboardTextForField = urlFromClipboard;
         } else {
-          final imgur = _extractValidImgurUrl(urlFromClipboard);
+          final imgur = _extractValidImgurOrGiphyUrl(urlFromClipboard);
           if (imgur.isNotEmpty) {
             newImgurUrl = imgur;
             clipboardTextForField = urlFromClipboard;
@@ -121,16 +123,23 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _log("_checkClipboard finished");
   }
 
-  String _extractValidImgurUrl(String url) {
+  String _extractValidImgurOrGiphyUrl(String url) {
     final RegExp exp = RegExp(r'^(https?:\/\/)?(i\.imgur\.com\/)([a-zA-Z0-9]+)\.(jpe?g|png|gif|mp4|webp)$');
     final match = exp.firstMatch(url.trim());
-    return match?.group(0) ?? ""; // Return the full matched URL or empty
+    if (match?.group(0) != null) {
+      return match!.group(0)!;
+    }
+
+    final RegExp expGiphy = RegExp(r'^(?:https?:\/\/)?(?:[^.]+\.)?giphy\.com(\/.*)?$');
+    final matchGiphy = expGiphy.firstMatch(url.trim());
+
+    return matchGiphy?.group(0) ?? ""; // Return the full matched URL or empty
   }
 
   void _onImgurInputChanged() {
     if (!mounted) return;
     final text = _imgurCtrl.text.trim();
-    final newImgurUrl = _extractValidImgurUrl(text);
+    final newImgurUrl = _extractValidImgurOrGiphyUrl(text);
 
     if (newImgurUrl != _validImgurUrl) {
       setState(() {
@@ -269,7 +278,16 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           // Properties like backgroundColor, foregroundColor, titleTextStyle, elevation
           // will be inherited from theme.appBarTheme.
           // Explicit overrides below are for fine-tuning if needed.
-          title: Text("Create New Post", style: theme.appBarTheme.titleTextStyle),
+          title: Row(
+            children: [
+              BurnerBalanceWidget(),
+              Spacer(),
+              GestureDetector(
+                onTap: () => launchUrl(Uri.parse('https://mahakka.com')),
+                child: Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
+              ),
+            ],
+          ),
           // backgroundColor: colorScheme.primary, // Or from theme
           // iconTheme: IconThemeData(color: colorScheme.onPrimary), // Or from theme
         ),

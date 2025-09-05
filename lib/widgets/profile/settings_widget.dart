@@ -105,7 +105,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 550),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 450),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -116,6 +116,9 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             Expanded(
               child: TabBarView(controller: _tabController, children: [_buildGeneralTab(theme), _buildTipsTab(theme), _buildUserTab(theme)]),
             ),
+
+            // Bottom buttons row (appears on all tabs)
+            _buildBottomButtons(theme),
           ],
         ),
       ),
@@ -138,26 +141,32 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
                 indicatorSize: TabBarIndicatorSize.tab,
                 labelColor: theme.colorScheme.primary,
                 unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
-                unselectedLabelStyle: theme.textTheme.titleMedium,
-                labelStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                unselectedLabelStyle: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w400),
+                labelStyle: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 indicator: BoxDecoration(
                   border: Border(bottom: BorderSide(color: theme.colorScheme.primary, width: 1.5)),
                 ),
                 tabs: tabs(),
               ),
             ),
-
-            // Close button
-            // IconButton(
-            //   icon: Icon(Icons.close, size: 22, color: theme.colorScheme.onSurface.withOpacity(0.8)),
-            //   onPressed: () => Navigator.of(context).pop(),
-            //   tooltip: "Close",
-            //   visualDensity: VisualDensity.compact,
-            //   padding: EdgeInsets.zero,
-            //   constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            // ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildBottomButtons(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: theme.dividerColor.withOpacity(0.3))),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _buildCloseButton(theme)),
+          const SizedBox(width: 12),
+          Expanded(child: _buildSaveButton(theme)),
+        ],
       ),
     );
   }
@@ -175,6 +184,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             dialogContext: context,
             onSelect: _showMnemonicBackupDialog,
           ),
+          const SizedBox(height: 8),
           SettingsOptionWidget(
             theme: theme,
             icon: Icons.logout_rounded,
@@ -202,6 +212,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             type: TextInputType.text,
             controller: _profileNameCtrl,
           ),
+          const SizedBox(height: 0),
           SettingsInputWidget(
             theme: theme,
             icon: Icons.notes_outlined,
@@ -210,6 +221,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             controller: _profileTextCtrl,
             maxLines: 3,
           ),
+          const SizedBox(height: 0),
           SettingsInputWidget(
             theme: theme,
             icon: Icons.image_outlined,
@@ -217,9 +229,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             type: TextInputType.url,
             controller: _imgurCtrl,
           ),
-          const SizedBox(height: 12),
-          if (isSavingProfile) const LinearProgressIndicator(),
-          Row(children: [_buildCloseButton(theme), _buildSaveButton(theme)]),
+          if (isSavingProfile) const Padding(padding: EdgeInsets.only(top: 16), child: LinearProgressIndicator()),
         ],
       ),
     );
@@ -237,10 +247,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
           // Tip Amount Selection
           _buildTipAmountDropdown(theme),
-          const SizedBox(height: 20),
-
-          _buildSaveButton(theme),
-          if (isSavingProfile) const LinearProgressIndicator(),
+          if (isSavingProfile) const Padding(padding: EdgeInsets.only(top: 16), child: LinearProgressIndicator()),
         ],
       ),
     );
@@ -297,31 +304,26 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   }
 
   Widget _buildCloseButton(ThemeData theme) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        //TODO make a has edited and has saved check before close warning
-        onPressed: () => Navigator.of(context).pop(),
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size(double.infinity, 44),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        ),
-        child: const Text("CANCEL"),
+    return OutlinedButton(
+      onPressed: () => Navigator.of(context).pop(),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        side: BorderSide(color: theme.colorScheme.outline),
+        foregroundColor: theme.colorScheme.onSurface, // Uses theme's error color (often red)
       ),
+      child: Text("CANCEL", style: TextStyle(color: theme.colorScheme.onSurface)),
     );
   }
 
   Widget _buildSaveButton(ThemeData theme) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: isSavingProfile ? null : _onSavePressed,
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size(double.infinity, 44),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        ),
-        child: const Text("SAVE"),
+    return ElevatedButton(
+      onPressed: isSavingProfile ? null : _onSavePressed,
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       ),
+      child: const Text("SAVE"),
     );
   }
 

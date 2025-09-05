@@ -70,7 +70,7 @@ class TopDetailsRow extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: SettingsButton(
-                    text: !isOwnProfile ? "Send Tip" : 'Edit Profile',
+                    text: !isOwnProfile ? "Send Tip" : 'Edit Profile & Settings',
                     onPressed: isOwnProfile ? onProfileButtonPressed : () => _showTipDialog(context, theme, creator),
                   ),
                 ),

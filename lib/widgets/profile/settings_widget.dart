@@ -38,10 +38,18 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   late TabController _tabController;
   int _currentTabIndex = 0;
 
+  List<Widget> tabs() {
+    return const [
+      Tab(icon: Icon(Icons.account_circle_outlined), text: 'Creator'),
+      Tab(icon: Icon(Icons.currency_bitcoin_rounded), text: 'Tips'),
+      Tab(icon: Icon(Icons.settings), text: 'User'),
+    ];
+  }
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: tabs().length, vsync: this);
     _tabController.addListener(_handleTabSelection);
     _initializeControllers();
     _initAllowLogout();
@@ -106,7 +114,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
             // Tab content with animation
             Expanded(
-              child: TabBarView(controller: _tabController, children: [_buildGeneralTab(theme), _buildTipsTab(theme)]),
+              child: TabBarView(controller: _tabController, children: [_buildGeneralTab(theme), _buildTipsTab(theme), _buildUserTab(theme)]),
             ),
           ],
         ),
@@ -130,29 +138,53 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
                 indicatorSize: TabBarIndicatorSize.tab,
                 labelColor: theme.colorScheme.primary,
                 unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
-                unselectedLabelStyle: theme.textTheme.titleLarge,
-                labelStyle: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                unselectedLabelStyle: theme.textTheme.titleMedium,
+                labelStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 indicator: BoxDecoration(
                   border: Border(bottom: BorderSide(color: theme.colorScheme.primary, width: 1.5)),
                 ),
-                tabs: const [
-                  Tab(icon: Icon(Icons.account_circle_outlined), text: 'General'),
-                  Tab(icon: Icon(Icons.currency_bitcoin_rounded), text: 'Tips'),
-                ],
+                tabs: tabs(),
               ),
             ),
 
             // Close button
-            IconButton(
-              icon: Icon(Icons.close, size: 20, color: theme.colorScheme.onSurface.withOpacity(0.7)),
-              onPressed: () => Navigator.of(context).pop(),
-              tooltip: "Close",
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            ),
+            // IconButton(
+            //   icon: Icon(Icons.close, size: 22, color: theme.colorScheme.onSurface.withOpacity(0.8)),
+            //   onPressed: () => Navigator.of(context).pop(),
+            //   tooltip: "Close",
+            //   visualDensity: VisualDensity.compact,
+            //   padding: EdgeInsets.zero,
+            //   constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            // ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildUserTab(ThemeData theme) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SettingsOptionWidget(
+            theme: theme,
+            icon: Icons.copy_all_outlined,
+            text: "BACKUP MNEMONIC",
+            dialogContext: context,
+            onSelect: _showMnemonicBackupDialog,
+          ),
+          SettingsOptionWidget(
+            theme: theme,
+            icon: Icons.logout_rounded,
+            text: "LOGOUT",
+            dialogContext: context,
+            onSelect: _logout,
+            isDestructive: true,
+            isEnabled: allowLogout,
+          ),
+        ],
       ),
     );
   }
@@ -186,27 +218,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             controller: _imgurCtrl,
           ),
           const SizedBox(height: 12),
-          _buildSaveButton(theme),
           if (isSavingProfile) const LinearProgressIndicator(),
-          const SizedBox(height: 12),
-          Divider(color: theme.dividerColor.withOpacity(0.5), height: 1, thickness: 0.5),
-          const SizedBox(height: 12),
-          SettingsOptionWidget(
-            theme: theme,
-            icon: Icons.copy_all_outlined,
-            text: "BACKUP MNEMONIC",
-            dialogContext: context,
-            onSelect: _showMnemonicBackupDialog,
-          ),
-          SettingsOptionWidget(
-            theme: theme,
-            icon: Icons.logout_rounded,
-            text: "LOGOUT",
-            dialogContext: context,
-            onSelect: _logout,
-            isDestructive: true,
-            isEnabled: allowLogout,
-          ),
+          Row(children: [_buildCloseButton(theme), _buildSaveButton(theme)]),
         ],
       ),
     );
@@ -283,6 +296,21 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     );
   }
 
+  Widget _buildCloseButton(ThemeData theme) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        //TODO make a has edited and has saved check before close warning
+        onPressed: () => Navigator.of(context).pop(),
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 44),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        ),
+        child: const Text("CANCEL"),
+      ),
+    );
+  }
+
   Widget _buildSaveButton(ThemeData theme) {
     return SizedBox(
       width: double.infinity,
@@ -292,7 +320,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
           minimumSize: const Size(double.infinity, 44),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
-        child: const Text("SAVE CHANGES"),
+        child: const Text("SAVE"),
       ),
     );
   }

@@ -4,6 +4,8 @@ workflows:
     environment:
       vars:
         BUNDLE: "false"
+      groups:
+        - keystore
     scripts:
       - name: Setup and Build
         script: |

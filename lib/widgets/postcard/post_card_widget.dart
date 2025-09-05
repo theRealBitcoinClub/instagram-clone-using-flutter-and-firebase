@@ -424,8 +424,8 @@ class _PostCardState extends ConsumerState<PostCard> {
       },
       loading: () {
         // This part runs while the data is loading.
-        // return SizedBox();
-        return Center(child: CircularProgressIndicator());
+        return SizedBox();
+        // return Center(child: CircularProgressIndicator());
       },
       error: (error, stackTrace) {
         // This part runs if an error occurs.

@@ -5,9 +5,8 @@ class MemoTip {
   final String receiverAddress;
   final int amountInSats;
   final BasedUtxoNetwork network;
-  final isLegacyAddress;
 
-  MemoTip(this.receiverAddress, this.amountInSats, this.isLegacyAddress, {this.network = BitcoinNetwork.mainnet});
+  MemoTip(this.receiverAddress, this.amountInSats, {this.network = BitcoinNetwork.mainnet});
 
   BigInt get amountAsBigInt {
     return BigInt.from(amountInSats);
@@ -18,7 +17,7 @@ class MemoTip {
   }
 
   BitcoinCashAddress get receiverAsBchAddress {
-    if (!isLegacyAddress) {
+    if (receiverAddress.startsWith("bitcoincash:")) {
       return BitcoinCashAddress(receiverAddress);
     }
 

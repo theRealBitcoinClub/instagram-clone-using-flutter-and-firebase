@@ -109,39 +109,57 @@ class MemoAccountant {
     return _publishToMemo(MemoCode.topicMessage, postReply, tips: tips, top: post.topicId);
   }
 
-  List<MemoTip> _parseTips({MemoModelPost? post}) {
-    List<MemoTip> tips = [];
-    if (user.tipAmount == 0) return tips;
-
-    var tipReceiver = _getTipReceiver(post);
-    for (String receiver in tipReceiver) {
-      tips.add(MemoTip(receiver, (user.tipAmount / tipReceiver.length).round(), !receiver.startsWith("bitcoincash")));
-    }
-    return tips;
-  }
-
   Future<MemoAccountantResponse> _publishToMemo(MemoCode c, String text, {String? top, required List<MemoTip> tips}) async {
     MemoPublisher mp = await MemoPublisher.create(ref, text, c, wif: user.wifLegacy);
     return mp.doPublish(topic: top ?? "", tips: tips);
   }
 
-  List<String> _getTipReceiver(MemoModelPost? post) {
+  List<MemoTip> _parseTips({MemoModelPost? post}) {
     TipReceiver receiver = ref.read(userProvider)!.tipReceiver;
-    List<String> receiverAddressess = [];
+    int burnAmount = 0;
+    int creatorAmount = 0;
 
-    if (post == null) return [MemoBitcoinBase.bchBurnerAddress];
+    if (user.tipAmount == 0) return [];
+
+    if (post == null) return [MemoTip(MemoBitcoinBase.bchBurnerAddress, user.tipAmount)];
 
     switch (receiver) {
       case TipReceiver.creator:
-        receiverAddressess.add(post.creator!.id);
+        creatorAmount = user.tipAmount;
         break;
       case TipReceiver.app:
-        receiverAddressess.add(MemoBitcoinBase.bchBurnerAddress);
+        burnAmount = user.tipAmount;
         break;
       case TipReceiver.both:
-        receiverAddressess.addAll([post.creator!.id, MemoBitcoinBase.bchBurnerAddress]);
+        burnAmount = (user.tipAmount / 2).round();
+        creatorAmount = (user.tipAmount / 2).round();
+        break;
+      case TipReceiver.burn20Creator80:
+        burnAmount = (user.tipAmount * 0.2).round();
+        creatorAmount = (user.tipAmount * 0.8).round();
+        break;
+      case TipReceiver.burn40Creator60:
+        burnAmount = (user.tipAmount * 0.4).round();
+        creatorAmount = (user.tipAmount * 0.6).round();
+        break;
+      case TipReceiver.burn60Creator40:
+        burnAmount = (user.tipAmount * 0.6).round();
+        creatorAmount = (user.tipAmount * 0.4).round();
+        break;
+      case TipReceiver.burn80Creator20:
+        burnAmount = (user.tipAmount * 0.8).round();
+        creatorAmount = (user.tipAmount * 0.2).round();
+        break;
     }
 
-    return receiverAddressess;
+    List<MemoTip> tips = [];
+    if (burnAmount != 0) {
+      tips.add(MemoTip(MemoBitcoinBase.bchBurnerAddress, burnAmount));
+    }
+    if (creatorAmount != 0) {
+      tips.add(MemoTip(post.creatorId, creatorAmount));
+    }
+
+    return tips;
   }
 }

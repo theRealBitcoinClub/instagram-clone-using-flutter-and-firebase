@@ -331,11 +331,19 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   String _getTipReceiverDisplayName(TipReceiver receiver) {
     switch (receiver) {
       case TipReceiver.app:
-        return "100% Mahakka Only";
+        return "100% Burn";
       case TipReceiver.creator:
-        return "100% Creator Only";
+        return "100% Creator";
       case TipReceiver.both:
-        return "50% Mahakka & 50% Creator";
+        return "50% Burn & 50% Creator";
+      case TipReceiver.burn20Creator80:
+        return "20% Burn & 80% Creator";
+      case TipReceiver.burn40Creator60:
+        return "40% Burn & 60% Creator";
+      case TipReceiver.burn60Creator40:
+        return "60% Burn & 40% Creator";
+      case TipReceiver.burn80Creator20:
+        return "80% Burn & 20% Creator";
     }
   }
 

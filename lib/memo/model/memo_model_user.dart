@@ -9,20 +9,20 @@ import 'package:mahakka/provider/electrum_provider.dart';
 part 'memo_model_user.g.dart'; // Add this line
 
 @JsonEnum()
-enum TipReceiver { app, creator, both }
+enum TipReceiver { app, creator, both, burn20Creator80, burn40Creator60, burn60Creator40, burn80Creator20 }
 
 @JsonEnum()
 enum TipAmount {
-  @JsonValue(2345)
-  survival(2345),
   @JsonValue(4567)
-  nice(4567),
+  survival(4567),
   @JsonValue(7777)
-  fren(7777),
+  nice(7777),
   @JsonValue(9999)
-  wagmi(9999),
+  fren(9999),
   @JsonValue(12345)
-  moon(12345),
+  wagmi(12345),
+  @JsonValue(21212)
+  moon(21212),
   @JsonValue(42069)
   sohigh(42069);
 

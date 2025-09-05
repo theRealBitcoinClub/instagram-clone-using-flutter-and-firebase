@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart'; // Your updated feed provider
 import 'package:mahakka/theme_provider.dart'; // Your theme provider
 import 'package:mahakka/widgets/popularity_score_widget.dart';
 // import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../provider/bch_burner_balance_provider.dart';
 
@@ -127,22 +129,33 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         toolbarHeight: 50,
         title: Row(
           children: [
-            asyncBurnerBalance.when(
-              skipLoadingOnRefresh: true,
-              skipLoadingOnReload: true,
-              data: (burnerBalance) => PopularityScoreWidget(
-                score: burnerBalance.bch,
-                textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: theme.colorScheme.onPrimary),
+            GestureDetector(
+              onTap: () => launchUrl(Uri.parse("https://bchblockexplorer.com/address/${MemoBitcoinBase.bchBurnerAddress}")),
+              child: Row(
+                children: [
+                  Icon(size: 22, Icons.local_fire_department_outlined),
+                  asyncBurnerBalance.when(
+                    skipLoadingOnRefresh: true,
+                    skipLoadingOnReload: true,
+                    data: (burnerBalance) => PopularityScoreWidget(
+                      score: burnerBalance.bch,
+                      textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: theme.colorScheme.onPrimary),
+                    ),
+                    error: (e, s) {
+                      return SizedBox();
+                    },
+                    loading: () {
+                      return SizedBox();
+                    },
+                  ),
+                ],
               ),
-              error: (e, s) {
-                return SizedBox();
-              },
-              loading: () {
-                return SizedBox();
-              },
             ),
             Spacer(),
-            Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
+            GestureDetector(
+              onTap: () => launchUrl(Uri.parse('https://mahakka.com')),
+              child: Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
+            ),
           ],
         ),
         actions: [

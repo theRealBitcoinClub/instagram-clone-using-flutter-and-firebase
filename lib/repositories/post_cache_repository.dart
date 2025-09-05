@@ -33,11 +33,28 @@ class PostCacheRepository {
   Future<void> updatePopularityScore(String postId, int tipAmount, MemoModelPost? scrapedPost) async {
     MemoModelPost post = (await getPost(postId))!;
 
-    var receiver = ref.read(userProvider)!.tipReceiver;
+    TipReceiver receiver = ref.read(userProvider)!.tipReceiver;
     if (receiver == TipReceiver.app)
       return;
     else if (receiver == TipReceiver.both)
       tipAmount = (tipAmount / 2).round();
+
+    switch (receiver) {
+      case TipReceiver.burn80Creator20:
+        tipAmount = (tipAmount * 0.2).round();
+        break;
+      case TipReceiver.burn60Creator40:
+        tipAmount = (tipAmount * 0.4).round();
+        break;
+      case TipReceiver.burn40Creator60:
+        tipAmount = (tipAmount * 0.6).round();
+        break;
+      case TipReceiver.burn20Creator80:
+        tipAmount = (tipAmount * 0.8).round();
+        break;
+      default:
+        ;
+    }
 
     var newScore;
     if (scrapedPost == null) {

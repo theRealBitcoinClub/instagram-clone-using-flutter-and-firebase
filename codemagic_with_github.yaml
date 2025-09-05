@@ -1,0 +1,216 @@
+workflows:
+  android-apk-free:
+    name: Android APK Build & GitHub Release
+    environment:
+      groups:
+        - keystore
+      vars:
+        BUNDLE: "false"
+        #GH_REPO: ""  # Optional: override target repository
+    scripts:
+      - name: Setup and Build
+        script: |
+          flutter packages pub get
+          
+          # Set signing environment variables for Gradle
+          if [ -f "android/app/mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
+          echo "🔐 Configuring signing for release build..."
+          export STORE_FILE="mahakka.keystore"
+          export STORE_PASSWORD="$CM_KEYSTORE_PASSWORD"
+          export KEY_ALIAS="mahakka"
+          export KEY_PASSWORD="${CM_KEY_PASSWORD:-$CM_KEYSTORE_PASSWORD}"
+          else
+          echo "⚠️ Building unsigned APK (no keystore or password)"
+          # Clear any previous signing environment variables
+          unset STORE_FILE
+          unset STORE_PASSWORD
+          unset KEY_ALIAS
+          unset KEY_PASSWORD
+          fi
+          
+          flutter build apk --release
+
+      - name: Create GitHub Release
+        script: |
+          # Create GitHub release using curl (no gh CLI needed)
+          APK_FILE=$(find build/app/outputs/flutter-apk -name "*.apk" | head -n 1)
+
+          if [ -z "$APK_FILE" ]; then
+            echo "❌ No APK file found for release!"
+            exit 1
+          fi
+
+          echo "📦 Creating GitHub release for: $APK_FILE"
+
+          # Auto-detect repository from git remote
+          AUTO_REPO=$(git remote -v | head -n 1 | sed -E 's/.*github.com[:\/]([^\.]+).*/\1/')
+
+          # Use override repo if provided, otherwise auto-detect
+          TARGET_REPO="${GH_REPO:-$AUTO_REPO}"
+
+          if [ -z "$TARGET_REPO" ]; then
+            echo "❌ Could not determine GitHub repository"
+            echo "   Either set GH_REPO environment variable or ensure git remote is configured"
+            exit 1
+          fi
+
+          echo "🏷️  Target repository: $TARGET_REPO"
+
+          # Get GitHub token (use provided token or try CodeMagic's token)
+          GITHUB_TOKEN="${CM_GH_TOKEN:-$GH_TOKEN}"
+
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "❌ GitHub token is required for creating releases with curl"
+            echo "   Please set CM_GH_TOKEN or GH_TOKEN environment variable in CodeMagic"
+            exit 1
+          fi
+
+          # Verify token format
+          if [[ ! "$GITHUB_TOKEN" =~ ^(ghp_|github_pat_) ]]; then
+            echo "❌ Invalid GitHub token format. Token should start with 'ghp_' or 'github_pat_'"
+            echo "   Current token: ${GITHUB_TOKEN:0:8}..."  # Show first 8 chars for debugging
+            exit 1
+          fi
+
+          # Test connectivity to GitHub API
+          echo "🔍 Testing connectivity to GitHub API..."
+          CONNECT_TEST=$(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/zen)
+          if [ "$CONNECT_TEST" != "200" ]; then
+            echo "❌ Cannot connect to GitHub API (HTTP $CONNECT_TEST). Check network connectivity."
+            echo "   Trying to resolve api.github.com..."
+            nslookup api.github.com || echo "DNS lookup failed"
+            echo "   Testing basic connectivity..."
+            ping -c 3 -W 2 api.github.com || echo "Ping test failed"
+            exit 1
+          fi
+          echo "✅ Connectivity test passed"
+
+          # Verify token permissions
+          echo "🔍 Verifying token permissions..."
+          AUTH_RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user)
+          if echo "$AUTH_RESPONSE" | grep -q "Bad credentials"; then
+            echo "❌ Invalid GitHub token - Bad credentials"
+            exit 1
+          fi
+          
+          # Check if token has repo scope
+          if echo "$AUTH_RESPONSE" | grep -q '"message": "Not Found"'; then
+            echo "❌ Token doesn't have required permissions or user not found"
+            exit 1
+          fi
+          
+          # Check if token has access to the target repository
+          REPO_ACCESS_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/$TARGET_REPO")
+          
+          if [ "$REPO_ACCESS_RESPONSE" != "200" ]; then
+            echo "❌ Token doesn't have access to repository $TARGET_REPO (HTTP $REPO_ACCESS_RESPONSE)"
+            echo "   Make sure the token has 'repo' scope permissions"
+            exit 1
+          fi
+          echo "✅ Token permissions verified"
+
+          # Define a fallback for the CM_BUILD_NUMBER
+          CM_BUILD_NUMBER=${CM_BUILD_NUMBER:-$(date +%Y%m%d%H%M%S)}
+
+          APK_NAME=$(basename "$APK_FILE")
+          RELEASE_TAG="v$CM_BUILD_NUMBER"
+          RELEASE_NAME="Release v$CM_BUILD_NUMBER"
+
+          # Create release
+          echo "🚀 Creating release $RELEASE_TAG..."
+          RELEASE_RESPONSE=$(curl -s -w "%{http_code}" -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/json" \
+            "https://api.github.com/repos/$TARGET_REPO/releases" \
+            -d "{
+              \"tag_name\": \"$RELEASE_TAG\",
+              \"name\": \"$RELEASE_NAME\",
+              \"body\": \"Automated build from CodeMagic\\n- Build Number: $CM_BUILD_NUMBER\\n- Commit: $(git log -1 --pretty=%B | head -n 1)\\n- Date: $(date -u +'%Y-%m-%d %H:%M:%S UTC')\",
+              \"draft\": false,
+              \"prerelease\": false
+            }")
+
+          # Extract HTTP status code and response body
+          HTTP_STATUS=${RELEASE_RESPONSE: -3}
+          RESPONSE_BODY=${RELEASE_RESPONSE%???}
+
+          if [ "$HTTP_STATUS" -eq 000 ]; then
+            echo "❌ Network error: Failed to connect to GitHub API"
+            echo "   This might be a temporary network issue"
+            exit 1
+          fi
+
+          if [ "$HTTP_STATUS" -ne 201 ]; then
+            echo "❌ Failed to create release (HTTP $HTTP_STATUS)"
+            if [ -n "$RESPONSE_BODY" ]; then
+              echo "Response: $RESPONSE_BODY"
+          
+              # Check for common errors
+              if echo "$RESPONSE_BODY" | grep -q "already exists"; then
+                echo "💡 Tip: Release tag already exists. You might need to delete it first or use a different build number"
+              fi
+          
+              if echo "$RESPONSE_BODY" | grep -q "rate limit"; then
+                echo "💡 Tip: GitHub API rate limit exceeded. Try again later"
+              fi
+          
+            else
+              echo "No response body received"
+            fi
+            exit 1
+          fi
+
+          UPLOAD_URL=$(echo "$RESPONSE_BODY" | grep -o '"upload_url": "[^"]*' | cut -d'"' -f4 | sed 's/{.*}//')
+          RELEASE_ID=$(echo "$RESPONSE_BODY" | grep -o '"id": [0-9]*' | cut -d' ' -f2)
+
+          if [ -z "$UPLOAD_URL" ] || [ -z "$RELEASE_ID" ]; then
+            echo "❌ Failed to parse release response"
+            echo "Response: $RESPONSE_BODY"
+            exit 1
+          fi
+
+          echo "✅ Release created successfully (ID: $RELEASE_ID)"
+
+          # Upload APK asset
+          echo "📤 Uploading APK asset..."
+          UPLOAD_RESPONSE=$(curl -s -w "%{http_code}" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary "@$APK_FILE" \
+            "$UPLOAD_URL?name=$APK_NAME")
+
+          UPLOAD_STATUS=${UPLOAD_RESPONSE: -3}
+          UPLOAD_BODY=${UPLOAD_RESPONSE%???}
+
+          if [ "$UPLOAD_STATUS" -ne 201 ]; then
+            echo "❌ Failed to upload asset (HTTP $UPLOAD_STATUS)"
+            echo "Response: $UPLOAD_BODY"
+            exit 1
+          fi
+
+          DOWNLOAD_URL=$(echo "$UPLOAD_BODY" | grep -o '"browser_download_url": "[^"]*' | cut -d'"' -f4)
+
+          if [ -n "$DOWNLOAD_URL" ]; then
+            echo "✅ Release created successfully!"
+            echo "📥 Download URL: $DOWNLOAD_URL"
+          
+            # Store download URL for potential use in other steps
+            echo "RELEASE_URL=$DOWNLOAD_URL" >> $CM_ENV
+          else
+            echo "⚠️  Release created but could not get download URL"
+            echo "Release page: https://github.com/$TARGET_REPO/releases/tag/$RELEASE_TAG"
+          fi
+
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+
+    publishing:
+      email:
+        recipients:
+          - bitcoinizado@proton.me
+        notify:
+          success: true
+          failure: true

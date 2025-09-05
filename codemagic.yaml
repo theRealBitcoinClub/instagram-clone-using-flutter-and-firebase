@@ -5,7 +5,7 @@ workflows:
       vars:
         BUNDLE: "false"
         #GH_REPO: ""  # Optional: override target repository
-        #GH_TOKEN: ""  # Optional: override GitHub token
+        #GH_TOKEN: ""  # Optional: GitHub token
     scripts:
       - name: Setup and Build
         script: |
@@ -27,15 +27,9 @@ workflows:
             flutter build apk --release
           fi
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release with curl
         script: |
-          # Install gh CLI
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          sudo apt update
-          sudo apt install gh -y
-          
-          # Create GitHub release
+          # Create GitHub release using curl (no gh CLI needed)
           APK_FILE=$(find build/app/outputs/flutter-apk -name "*.apk" | head -n 1)
           
           if [ -z "$APK_FILE" ]; then
@@ -59,30 +53,82 @@ workflows:
           
           echo "🏷️  Target repository: $TARGET_REPO"
           
-          # Set GitHub token (use provided token or auto-authenticate with CodeMagic's GitHub integration)
-          if [ -n "$GH_TOKEN" ]; then
-            echo "🔑 Using provided GH_TOKEN"
-            export GH_TOKEN="$GH_TOKEN"
-          elif [ -n "$CM_GH_TOKEN" ]; then
-            echo "🔑 Using CodeMagic's GitHub token"
-            export GH_TOKEN="$CM_GH_TOKEN"
-          else
-            echo "⚠️  No GitHub token provided - using CodeMagic's GitHub authentication"
-            # CodeMagic automatically authenticates gh CLI when GitHub integration is enabled
+          # Get GitHub token (use provided token or try CodeMagic's token)
+          GITHUB_TOKEN="${GH_TOKEN:-$CM_GH_TOKEN}"
+          
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "❌ GitHub token is required for creating releases with curl"
+            echo "   Please set GH_TOKEN environment variable in CodeMagic"
+            exit 1
           fi
           
-          # Create release
-          gh release create "v$CM_BUILD_NUMBER" "$APK_FILE" \
-            --title "Release v$CM_BUILD_NUMBER" \
-            --notes "Automated build from CodeMagic
-            - Build Number: $CM_BUILD_NUMBER
-            - Commit: $(git log -1 --pretty=%B | head -n 1)
-            - Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" \
-            --repo "$TARGET_REPO"
+          APK_NAME=$(basename "$APK_FILE")
+          RELEASE_TAG="v$CM_BUILD_NUMBER"
+          RELEASE_NAME="Release v$CM_BUILD_NUMBER"
           
-          # Get download URL
-          DOWNLOAD_URL=$(gh release view "v$CM_BUILD_NUMBER" --repo "$TARGET_REPO" --json assets --jq '.assets[0].browser_download_url')
-          echo "📥 Download URL: $DOWNLOAD_URL"
+          # Create release
+          echo "🚀 Creating release $RELEASE_TAG..."
+          RELEASE_RESPONSE=$(curl -s -w "%{http_code}" -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/json" \
+            "https://api.github.com/repos/$TARGET_REPO/releases" \
+            -d "{
+              \"tag_name\": \"$RELEASE_TAG\",
+              \"name\": \"$RELEASE_NAME\",
+              \"body\": \"Automated build from CodeMagic\\n- Build Number: $CM_BUILD_NUMBER\\n- Commit: $(git log -1 --pretty=%B | head -n 1)\\n- Date: $(date -u +'%Y-%m-%d %H:%M:%S UTC')\",
+              \"draft\": false,
+              \"prerelease\": false
+            }")
+          
+          # Extract HTTP status code and response body
+          HTTP_STATUS=${RELEASE_RESPONSE: -3}
+          RESPONSE_BODY=${RELEASE_RESPONSE%???}
+          
+          if [ "$HTTP_STATUS" -ne 201 ]; then
+            echo "❌ Failed to create release (HTTP $HTTP_STATUS)"
+            echo "Response: $RESPONSE_BODY"
+            exit 1
+          fi
+          
+          UPLOAD_URL=$(echo "$RESPONSE_BODY" | grep -o '"upload_url": "[^"]*' | cut -d'"' -f4 | sed 's/{.*}//')
+          RELEASE_ID=$(echo "$RESPONSE_BODY" | grep -o '"id": [0-9]*' | cut -d' ' -f2)
+          
+          if [ -z "$UPLOAD_URL" ] || [ -z "$RELEASE_ID" ]; then
+            echo "❌ Failed to parse release response"
+            echo "Response: $RESPONSE_BODY"
+            exit 1
+          fi
+          
+          echo "✅ Release created successfully (ID: $RELEASE_ID)"
+          
+          # Upload APK asset
+          echo "📤 Uploading APK asset..."
+          UPLOAD_RESPONSE=$(curl -s -w "%{http_code}" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary "@$APK_FILE" \
+            "$UPLOAD_URL?name=$APK_NAME")
+          
+          UPLOAD_STATUS=${UPLOAD_RESPONSE: -3}
+          UPLOAD_BODY=${UPLOAD_RESPONSE%???}
+          
+          if [ "$UPLOAD_STATUS" -ne 201 ]; then
+            echo "❌ Failed to upload asset (HTTP $UPLOAD_STATUS)"
+            echo "Response: $UPLOAD_BODY"
+            exit 1
+          fi
+          
+          DOWNLOAD_URL=$(echo "$UPLOAD_BODY" | grep -o '"browser_download_url": "[^"]*' | cut -d'"' -f4)
+          
+          if [ -n "$DOWNLOAD_URL" ]; then
+            echo "✅ Release created successfully!"
+            echo "📥 Download URL: $DOWNLOAD_URL"
+          else
+            echo "⚠️  Release created but could not get download URL"
+            echo "Release page: https://github.com/$TARGET_REPO/releases/tag/$RELEASE_TAG"
+          fi
 
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
@@ -93,4 +139,4 @@ workflows:
           - bitcoinizado@proton.me
         notify:
           success: true
-          failure: false
+          failure: true

@@ -4,8 +4,8 @@ workflows:
     environment:
       vars:
         BUNDLE: "false"
-        GH_REPO: ""  # Optional: override target repository
-        GH_TOKEN: ""  # Optional: override GitHub token
+        #GH_REPO: ""  # Optional: override target repository
+        #GH_TOKEN: ""  # Optional: override GitHub token
     scripts:
       - name: Setup and Build
         script: |

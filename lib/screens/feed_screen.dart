@@ -130,7 +130,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             asyncBurnerBalance.when(
               skipLoadingOnRefresh: true,
               skipLoadingOnReload: true,
-              data: (burnerBalance) => PopularityScoreWidget(score: burnerBalance.bch),
+              data: (burnerBalance) => PopularityScoreWidget(
+                score: burnerBalance.bch,
+                textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: theme.colorScheme.onPrimary),
+              ),
               error: (e, s) {
                 return SizedBox();
               },

@@ -25,7 +25,7 @@ class SettingsWidget extends ConsumerStatefulWidget {
   ConsumerState<SettingsWidget> createState() => _SettingsWidgetState();
 }
 
-class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
+class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTickerProviderStateMixin {
   final TextEditingController _profileNameCtrl = TextEditingController();
   final TextEditingController _profileTextCtrl = TextEditingController();
   final TextEditingController _imgurCtrl = TextEditingController();
@@ -35,19 +35,33 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
   bool allowLogout = false;
   String get key => 'mnemonic_backup_verified ${widget.loggedInUser!.id}';
 
+  late TabController _tabController;
+  int _currentTabIndex = 0;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleTabSelection);
     _initializeControllers();
     _initAllowLogout();
   }
 
+  void _handleTabSelection() {
+    if (_tabController.indexIsChanging) {
+      setState(() {
+        _currentTabIndex = _tabController.index;
+      });
+    }
+  }
+
   void _initAllowLogout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (mounted)
+    if (mounted) {
       setState(() {
         allowLogout = prefs.getBool(key) ?? false;
       });
+    }
   }
 
   void _initializeControllers() {
@@ -64,6 +78,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
 
   @override
   void dispose() {
+    _tabController.dispose();
     _profileNameCtrl.dispose();
     _profileTextCtrl.dispose();
     _imgurCtrl.dispose();
@@ -78,94 +93,141 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
   }
 
   Widget _buildSettingsDialog(ThemeData theme) {
-    return SimpleDialog(
-      titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
-      contentPadding: const EdgeInsets.only(bottom: 8.0),
+    return Dialog(
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: _buildDialogTitle(theme),
-      children: _buildDialogContent(theme),
-    );
-  }
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 550),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header with tabs and close button
+            _buildDialogHeader(theme),
 
-  Widget _buildDialogTitle(ThemeData theme) {
-    return Row(
-      children: [
-        Icon(Icons.settings_outlined, color: theme.dialogTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface),
-        const SizedBox(width: 12),
-        Expanded(child: Text("PROFILE SETTINGS", style: theme.dialogTheme.titleTextStyle ?? theme.textTheme.titleLarge)),
-        IconButton(
-          icon: Icon(Icons.close, color: theme.dialogTheme.titleTextStyle?.color?.withOpacity(0.7) ?? theme.colorScheme.onSurfaceVariant),
-          onPressed: () => Navigator.of(context).pop(),
-          tooltip: "Close",
-          visualDensity: VisualDensity.compact,
+            // Tab content with animation
+            Expanded(
+              child: TabBarView(controller: _tabController, children: [_buildGeneralTab(theme), _buildTipsTab(theme)]),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
-  List<Widget> _buildDialogContent(ThemeData theme) {
-    return [
-      SettingsInputWidget(theme: theme, icon: Icons.badge_outlined, hintText: "Name", type: TextInputType.text, controller: _profileNameCtrl),
-      SettingsInputWidget(
-        theme: theme,
-        icon: Icons.notes_outlined,
-        hintText: "Bio/Text",
-        type: TextInputType.multiline,
-        controller: _profileTextCtrl,
-        maxLines: 3,
+  Widget _buildDialogHeader(ThemeData theme) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: theme.dividerColor.withOpacity(0.3))),
       ),
-      SettingsInputWidget(
-        theme: theme,
-        icon: Icons.image_outlined,
-        hintText: "e.g. https://imgur.com/X32JJS",
-        type: TextInputType.url,
-        controller: _imgurCtrl,
-      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            // Tab selector
+            Expanded(
+              child: TabBar(
+                controller: _tabController,
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelColor: theme.colorScheme.primary,
+                unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
+                unselectedLabelStyle: theme.textTheme.titleLarge,
+                labelStyle: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                indicator: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: theme.colorScheme.primary, width: 1.5)),
+                ),
+                tabs: const [
+                  Tab(icon: Icon(Icons.account_circle_outlined), text: 'General'),
+                  Tab(icon: Icon(Icons.currency_bitcoin_rounded), text: 'Tips'),
+                ],
+              ),
+            ),
 
-      // Tip Settings Section
-      _buildTipSettingsSection(theme),
-
-      _buildSaveButton(theme),
-      if (isSavingProfile) const LinearProgressIndicator(),
-      Divider(color: theme.dividerColor.withOpacity(0.5), height: 20, thickness: 0.5, indent: 20, endIndent: 20),
-      SettingsOptionWidget(
-        theme: theme,
-        icon: Icons.copy_all_outlined,
-        text: "BACKUP MNEMONIC",
-        dialogContext: context,
-        onSelect: _showMnemonicBackupDialog,
+            // Close button
+            IconButton(
+              icon: Icon(Icons.close, size: 20, color: theme.colorScheme.onSurface.withOpacity(0.7)),
+              onPressed: () => Navigator.of(context).pop(),
+              tooltip: "Close",
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            ),
+          ],
+        ),
       ),
-      SettingsOptionWidget(
-        theme: theme,
-        icon: Icons.logout_rounded,
-        text: "LOGOUT",
-        dialogContext: context,
-        onSelect: _logout,
-        isDestructive: true,
-        isEnabled: allowLogout,
-      ),
-    ];
+    );
   }
 
-  Widget _buildTipSettingsSection(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+  Widget _buildGeneralTab(ThemeData theme) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            "TIP SETTINGS",
-            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface.withOpacity(0.8)),
+          SettingsInputWidget(
+            theme: theme,
+            icon: Icons.badge_outlined,
+            hintText: "Name",
+            type: TextInputType.text,
+            controller: _profileNameCtrl,
+          ),
+          SettingsInputWidget(
+            theme: theme,
+            icon: Icons.notes_outlined,
+            hintText: "Bio/Text",
+            type: TextInputType.multiline,
+            controller: _profileTextCtrl,
+            maxLines: 3,
+          ),
+          SettingsInputWidget(
+            theme: theme,
+            icon: Icons.image_outlined,
+            hintText: "e.g. https://imgur.com/X32JJS",
+            type: TextInputType.url,
+            controller: _imgurCtrl,
           ),
           const SizedBox(height: 12),
+          _buildSaveButton(theme),
+          if (isSavingProfile) const LinearProgressIndicator(),
+          const SizedBox(height: 12),
+          Divider(color: theme.dividerColor.withOpacity(0.5), height: 1, thickness: 0.5),
+          const SizedBox(height: 12),
+          SettingsOptionWidget(
+            theme: theme,
+            icon: Icons.copy_all_outlined,
+            text: "BACKUP MNEMONIC",
+            dialogContext: context,
+            onSelect: _showMnemonicBackupDialog,
+          ),
+          SettingsOptionWidget(
+            theme: theme,
+            icon: Icons.logout_rounded,
+            text: "LOGOUT",
+            dialogContext: context,
+            onSelect: _logout,
+            isDestructive: true,
+            isEnabled: allowLogout,
+          ),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildTipsTab(ThemeData theme) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
           // Tip Receiver Selection
           _buildTipReceiverDropdown(theme),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Tip Amount Selection
           _buildTipAmountDropdown(theme),
+          const SizedBox(height: 20),
+
+          _buildSaveButton(theme),
+          if (isSavingProfile) const LinearProgressIndicator(),
         ],
       ),
     );
@@ -175,7 +237,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Tip Receiver", style: theme.textTheme.bodyMedium),
+        Text("Tip Receiver", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         DropdownButtonFormField<TipReceiver>(
           value: _selectedTipReceiver,
@@ -187,7 +249,10 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
           items: TipReceiver.values.map((TipReceiver receiver) {
             return DropdownMenuItem<TipReceiver>(value: receiver, child: Text(_getTipReceiverDisplayName(receiver)));
           }).toList(),
-          decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+          decoration: InputDecoration(
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
         ),
       ],
     );
@@ -197,7 +262,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Tip Amount", style: theme.textTheme.bodyMedium),
+        Text("Tip Amount", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         DropdownButtonFormField<TipAmount>(
           value: _selectedTipAmount,
@@ -209,13 +274,28 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
           items: TipAmount.values.map((TipAmount amount) {
             return DropdownMenuItem<TipAmount>(value: amount, child: Text(_getTipAmountDisplayName(amount)));
           }).toList(),
-          decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
+          decoration: InputDecoration(
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
         ),
       ],
     );
   }
 
-  //TODO if a post is made by a user with tokens in his BCH wallet and paid with that wallet (does that show up in memo?)
+  Widget _buildSaveButton(ThemeData theme) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: isSavingProfile ? null : _onSavePressed,
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 44),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        ),
+        child: const Text("SAVE CHANGES"),
+      ),
+    );
+  }
 
   String _getTipReceiverDisplayName(TipReceiver receiver) {
     switch (receiver) {
@@ -229,24 +309,9 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
   }
 
   String _getTipAmountDisplayName(TipAmount amount) {
-    // Convert enum name to title case
     final String name = amount.name[0].toUpperCase() + amount.name.substring(1);
-
-    // Format the number with commas for readability
     final formattedValue = amount.value.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
-
     return "$name ($formattedValue satoshis)";
-  }
-
-  Widget _buildSaveButton(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24).copyWith(top: 20),
-      child: ElevatedButton(
-        onPressed: isSavingProfile ? null : _onSavePressed,
-        style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 44)),
-        child: const Text("SAVE CHANGES"),
-      ),
-    );
   }
 
   void _onSavePressed() {
@@ -342,10 +407,11 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
           onVerificationComplete: () {
             SharedPreferences.getInstance().then((prefs) {
               prefs.setBool(key, true);
-              if (mounted)
+              if (mounted) {
                 setState(() {
                   allowLogout = true;
                 });
+              }
             });
           },
         ),

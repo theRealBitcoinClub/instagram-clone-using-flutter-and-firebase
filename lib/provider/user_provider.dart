@@ -79,7 +79,7 @@ class UserNotifier extends StateNotifier<UserState> {
         final createdUser = await _authChecker.createUserFromMnemonic();
         // state = state.copyWith(fetchedUser: createdUser);
 
-        MemoModelUser fetchedUser = (await UserService().getUserOnce(createdUser!.id))!;
+        MemoModelUser? fetchedUser = await UserService().getUserOnce(createdUser!.id);
         if (fetchedUser != null) {
           state = state.copyWith(
             user: createdUser.copyWith(tipAmount: fetchedUser.tipAmountEnum, tipReceiver: fetchedUser.tipReceiver),

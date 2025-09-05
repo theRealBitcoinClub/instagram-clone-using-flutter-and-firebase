@@ -30,9 +30,11 @@ class MemoScraperTag {
         for (MemoModelTag t in allTags) {
           String check = t.postCount.toString();
           var keyPerTag = key + t.name;
-          if (prefs.getString(keyPerTag) == check) {
+          String? lastCount = prefs.getString(keyPerTag);
+          if (lastCount == check) {
             continue; //NO NEW POST
           }
+          t.lastCount = int.parse(lastCount ?? "0");
           prefs.setString(keyPerTag, check);
           tagsToPersist.add(t);
         }
@@ -46,9 +48,14 @@ class MemoScraperTag {
         var tagService = TagService();
         var postService = PostService();
         for (MemoModelTag t in tagsToPersist) {
-          tagService.saveTag(t);
+          //SAVE IF ITS A NEW TAG
+          if (t.lastCount == 0) tagService.saveTag(t);
           // indexTopics++;
+          int newPostsCount = t.postCount! - t.lastCount!;
+          int indexPosts = 0;
           for (MemoModelPost p in posts) {
+            if (indexPosts++ >= newPostsCount) break;
+
             postService.savePost(p);
             // indexPosts++;
           }

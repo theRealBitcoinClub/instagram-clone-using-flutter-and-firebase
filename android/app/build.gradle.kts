@@ -49,10 +49,23 @@ android {
     signingConfigs {
         create("release") {
             // Try to get from environment variables first (for CI/CD)
-            storeFile = file(System.getenv("STORE_FILE") ?: keystoreProperties.getProperty("storeFile") ?: "mahakka.keystore")
-            storePassword = System.getenv("STORE_PASSWORD") ?: keystoreProperties.getProperty("storePassword") ?: ""
-            keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProperties.getProperty("keyAlias") ?: "mahakka"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProperties.getProperty("keyPassword") ?: ""
+            val storeFileEnv = System.getenv("STORE_FILE") ?: keystoreProperties.getProperty("storeFile")
+            val storePasswordEnv = System.getenv("STORE_PASSWORD") ?: keystoreProperties.getProperty("storePassword")
+            val keyAliasEnv = System.getenv("KEY_ALIAS") ?: keystoreProperties.getProperty("keyAlias")
+            val keyPasswordEnv = System.getenv("KEY_PASSWORD") ?: keystoreProperties.getProperty("keyPassword")
+
+            if (storeFileEnv != null) {
+                storeFile = file(storeFileEnv)
+            }
+            if (storePasswordEnv != null) {
+                storePassword = storePasswordEnv
+            }
+            if (keyAliasEnv != null) {
+                keyAlias = keyAliasEnv
+            }
+            if (keyPasswordEnv != null) {
+                keyPassword = keyPasswordEnv
+            }
         }
     }
 
@@ -69,10 +82,13 @@ android {
 
     buildTypes {
         release {
-            // Use release signing config if keystore is available
-            signingConfig = if (file(signingConfigs.getByName("release").storeFile.absolutePath).exists() &&
-                !signingConfigs.getByName("release").storePassword.isNullOrEmpty()) {
-                signingConfigs.getByName("release")
+            // Use release signing config if properly configured
+            val releaseSigningConfig = signingConfigs.getByName("release")
+            signingConfig = if (releaseSigningConfig.storeFile != null &&
+                releaseSigningConfig.storePassword?.isNotEmpty() == true &&
+                releaseSigningConfig.keyAlias?.isNotEmpty() == true &&
+                releaseSigningConfig.keyPassword?.isNotEmpty() == true) {
+                releaseSigningConfig
             } else {
                 // Fallback to debug signing if release config is not available
                 signingConfigs.getByName("debug")

@@ -4,8 +4,7 @@ workflows:
     environment:
       vars:
         BUNDLE: "false"
-      groups:
-        - keystore
+        CM_GH_TOKEN: "${CM_GH_TOKEN:-TOKTOKTOK}"
     scripts:
       - name: Setup and Build
         script: |

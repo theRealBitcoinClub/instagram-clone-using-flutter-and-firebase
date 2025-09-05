@@ -201,10 +201,11 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
   Widget _buildGeneralTab(ThemeData theme) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const SizedBox(height: 16),
           SettingsInputWidget(
             theme: theme,
             icon: Icons.badge_outlined,

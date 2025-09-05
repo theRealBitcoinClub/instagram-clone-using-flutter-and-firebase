@@ -1,0 +1,96 @@
+workflows:
+  android-apk-free:
+    name: Android APK Build
+    environment:
+      vars:
+        BUNDLE: "false"
+        GH_REPO: ""  # Optional: override target repository
+        GH_TOKEN: ""  # Optional: override GitHub token
+    scripts:
+      - name: Setup and Build
+        script: |
+          flutter packages pub get
+          
+          # Decode keystore if available
+          if [ -f "android/keystore.base64" ]; then
+            base64 -d android/keystore.base64 > android/app/mahakka.keystore
+          fi
+          
+          # Build with signing if possible
+          if [ -f "mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
+            flutter build apk --release \
+              --keystore="android/app/mahakka.keystore" \
+              --store-password="$CM_KEYSTORE_PASSWORD" \
+              --key-alias="${CM_KEY_ALIAS:-mahakka}" \
+              --key-password="${CM_KEY_PASSWORD:-$CM_KEYSTORE_PASSWORD}"
+          else
+            flutter build apk --release
+          fi
+
+      - name: Create GitHub Release
+        script: |
+          # Install gh CLI
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh -y
+          
+          # Create GitHub release
+          APK_FILE=$(find build/app/outputs/flutter-apk -name "*.apk" | head -n 1)
+          
+          if [ -z "$APK_FILE" ]; then
+            echo "❌ No APK file found for release!"
+            exit 1
+          fi
+          
+          echo "📦 Creating GitHub release for: $APK_FILE"
+          
+          # Auto-detect repository from git remote
+          AUTO_REPO=$(git remote -v | head -n 1 | sed -E 's/.*github.com[:\/]([^\.]+).*/\1/')
+          
+          # Use override repo if provided, otherwise auto-detect
+          TARGET_REPO="${GH_REPO:-$AUTO_REPO}"
+          
+          if [ -z "$TARGET_REPO" ]; then
+            echo "❌ Could not determine GitHub repository"
+            echo "   Either set GH_REPO environment variable or ensure git remote is configured"
+            exit 1
+          fi
+          
+          echo "🏷️  Target repository: $TARGET_REPO"
+          
+          # Set GitHub token (use provided token or auto-authenticate with CodeMagic's GitHub integration)
+          if [ -n "$GH_TOKEN" ]; then
+            echo "🔑 Using provided GH_TOKEN"
+            export GH_TOKEN="$GH_TOKEN"
+          elif [ -n "$CM_GH_TOKEN" ]; then
+            echo "🔑 Using CodeMagic's GitHub token"
+            export GH_TOKEN="$CM_GH_TOKEN"
+          else
+            echo "⚠️  No GitHub token provided - using CodeMagic's GitHub authentication"
+            # CodeMagic automatically authenticates gh CLI when GitHub integration is enabled
+          fi
+          
+          # Create release
+          gh release create "v$CM_BUILD_NUMBER" "$APK_FILE" \
+            --title "Release v$CM_BUILD_NUMBER" \
+            --notes "Automated build from CodeMagic
+            - Build Number: $CM_BUILD_NUMBER
+            - Commit: $(git log -1 --pretty=%B | head -n 1)
+            - Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" \
+            --repo "$TARGET_REPO"
+          
+          # Get download URL
+          DOWNLOAD_URL=$(gh release view "v$CM_BUILD_NUMBER" --repo "$TARGET_REPO" --json assets --jq '.assets[0].browser_download_url')
+          echo "📥 Download URL: $DOWNLOAD_URL"
+
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+
+    publishing:
+      email:
+        recipients:
+          - bitcoinizado@proton.me
+        notify:
+          success: true
+          failure: false

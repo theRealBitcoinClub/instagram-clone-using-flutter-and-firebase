@@ -2,6 +2,8 @@ workflows:
   android-apk-free:
     name: Android APK Build
     environment:
+      groups:
+        - keystore
       vars:
         BUNDLE: "false"
         CM_GH_TOKEN: "${CM_GH_TOKEN:-TOKTOKTOK}"

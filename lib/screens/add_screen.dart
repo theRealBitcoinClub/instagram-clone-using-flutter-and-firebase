@@ -67,39 +67,10 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _youtubeCtrl.addListener(_onYouTubeInputChanged);
 
     _initStateTagger();
-    // _loadInitialData();
-    final clipboardFuture = _checkClipboard();
+    _checkClipboard();
 
     _log("initState completed");
   }
-
-  // Future<void> _loadInitialData() async {
-  //   if (!mounted) return;
-  //   setState(() {
-  //     _isLoadingUser = true;
-  //     _isCheckingClipboard = true;
-  //   });
-  //
-  //   try {
-  //     final MemoModelUser? _user = ref.read(userProvider);
-  //     // userProvider.read(node)
-  //     // final userFuture = MemoModelUser.getUser();
-  //     final clipboardFuture = _checkClipboard();
-  //
-  //     // _user = await userFuture;
-  //     await clipboardFuture;
-  //   } catch (e, s) {
-  //     _log("Error during initial data load: $e\n$s");
-  //     _showErrorSnackBar('Error loading initial data: ${e.toString()}');
-  //   } finally {
-  //     if (mounted) {
-  //       setState(() {
-  //         _isLoadingUser = false;
-  //         _isCheckingClipboard = false;
-  //       });
-  //     }
-  //   }
-  // }
 
   Future<void> _checkClipboard() async {
     _log("_checkClipboard started");

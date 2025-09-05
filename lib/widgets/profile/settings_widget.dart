@@ -5,6 +5,7 @@ import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/bch/mnemonic_backup_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../provider/navigation_providers.dart';
 import '../../provider/profile_providers.dart';
@@ -17,9 +18,8 @@ import 'header/settings_option_widget.dart';
 class SettingsWidget extends ConsumerStatefulWidget {
   final MemoModelCreator creator;
   final MemoModelUser? loggedInUser;
-  final bool allowLogout;
 
-  const SettingsWidget({Key? key, required this.creator, required this.loggedInUser, required this.allowLogout}) : super(key: key);
+  const SettingsWidget({Key? key, required this.creator, required this.loggedInUser}) : super(key: key);
 
   @override
   ConsumerState<SettingsWidget> createState() => _SettingsWidgetState();
@@ -32,11 +32,22 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
   bool isSavingProfile = false;
   TipReceiver? _selectedTipReceiver;
   TipAmount? _selectedTipAmount;
+  bool allowLogout = false;
+  String get key => 'mnemonic_backup_verified ${widget.loggedInUser!.id}';
 
   @override
   void initState() {
     super.initState();
     _initializeControllers();
+    _initAllowLogout();
+  }
+
+  void _initAllowLogout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (mounted)
+      setState(() {
+        allowLogout = prefs.getBool(key) ?? false;
+      })
   }
 
   void _initializeControllers() {
@@ -132,7 +143,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
         dialogContext: context,
         onSelect: _logout,
         isDestructive: true,
-        isEnabled: widget.allowLogout,
+        isEnabled: allowLogout,
       ),
     ];
   }
@@ -329,7 +340,13 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
         builder: (ctx) => MnemonicBackupWidget(
           mnemonic: widget.loggedInUser!.mnemonic,
           onVerificationComplete: () {
-            // This callback can be used to update the parent widget if needed
+            SharedPreferences.getInstance().then((prefs) {
+              prefs.setBool(key, true);
+              if (mounted)
+                setState(() {
+                  allowLogout = true;
+                });
+            });
           },
         ),
       );

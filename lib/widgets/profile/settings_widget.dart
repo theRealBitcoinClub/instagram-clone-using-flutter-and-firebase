@@ -47,7 +47,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> {
     if (mounted)
       setState(() {
         allowLogout = prefs.getBool(key) ?? false;
-      })
+      });
   }
 
   void _initializeControllers() {

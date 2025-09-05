@@ -80,8 +80,13 @@ class UserNotifier extends StateNotifier<UserState> {
         // state = state.copyWith(fetchedUser: createdUser);
 
         MemoModelUser fetchedUser = (await UserService().getUserOnce(createdUser!.id))!;
-        MemoModelUser newUser = createdUser.copyWith(tipAmount: fetchedUser.tipAmountEnum, tipReceiver: fetchedUser.tipReceiver);
-        state = state.copyWith(user: newUser, isLoading: false);
+        if (fetchedUser != null) {
+          state = state.copyWith(
+            user: createdUser.copyWith(tipAmount: fetchedUser.tipAmountEnum, tipReceiver: fetchedUser.tipReceiver),
+            isLoading: false,
+          );
+        } else
+          state = state.copyWith(user: createdUser, isLoading: false);
       }
       // Call the new method to refresh all balances after the fetchedUser is fetched
       //the refresh balance is now done per creator

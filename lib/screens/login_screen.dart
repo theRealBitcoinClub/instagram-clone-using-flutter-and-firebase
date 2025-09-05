@@ -175,6 +175,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
               ),
 
               const SizedBox(height: 24),
+              _isLoading ? LinearProgressIndicator() : SizedBox(),
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -185,12 +186,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                     foregroundColor: colorScheme.onPrimary,
                     textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  child: _isLoading
-                      ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: colorScheme.onPrimary, strokeWidth: 2))
-                      : Text(
-                          "LOGIN",
-                          style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimary),
-                        ),
+                  child: Text(
+                    "LOGIN",
+                    style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimary),
+                  ),
                 ),
               ),
 

@@ -4,8 +4,6 @@ workflows:
     environment:
       vars:
         BUNDLE: "false"
-        #GH_REPO: ""  # Optional: override target repository
-        GH_TOKEN: "${CM_GH_TOKEN}"  # Optional: GitHub token
     scripts:
       - name: Setup and Build
         script: |
@@ -54,13 +52,16 @@ workflows:
           echo "🏷️  Target repository: $TARGET_REPO"
           
           # Get GitHub token (use provided token or try CodeMagic's token)
-          GITHUB_TOKEN="${GH_TOKEN:-$CM_GH_TOKEN}"
+          GITHUB_TOKEN="${CM_GH_TOKEN}"
           
           if [ -z "$GITHUB_TOKEN" ]; then
             echo "❌ GitHub token is required for creating releases with curl"
-            echo "   Please set GH_TOKEN environment variable in CodeMagic"
+            echo "   Please set CM_GH_TOKEN environment variable in CodeMagic"
             exit 1
           fi
+          
+          # Define a fallback for the CM_BUILD_NUMBER
+          CM_BUILD_NUMBER=${CM_BUILD_NUMBER:-$(date +%Y%m%d%H%M%S)}
           
           APK_NAME=$(basename "$APK_FILE")
           RELEASE_TAG="v$CM_BUILD_NUMBER"

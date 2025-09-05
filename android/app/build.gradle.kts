@@ -18,6 +18,13 @@ if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
 
+// Read keystore properties from environment variables or local.properties
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(keystorePropertiesFile.inputStream())
+}
+
 val flutterCompileSdkVersion = localProperties.getProperty("flutter.compileSdkVersion")?.toInt() ?: 36
 val flutterMinSdkVersion = localProperties.getProperty("flutter.minSdkVersion")?.toInt() ?: 27
 val flutterTargetSdkVersion = localProperties.getProperty("flutter.targetSdkVersion")?.toInt() ?: 35
@@ -39,6 +46,16 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
+    signingConfigs {
+        create("release") {
+            // Try to get from environment variables first (for CI/CD)
+            storeFile = file(System.getenv("STORE_FILE") ?: keystoreProperties.getProperty("storeFile") ?: "mahakka.keystore")
+            storePassword = System.getenv("STORE_PASSWORD") ?: keystoreProperties.getProperty("storePassword") ?: ""
+            keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProperties.getProperty("keyAlias") ?: "mahakka"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProperties.getProperty("keyPassword") ?: ""
+        }
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.mahakka"
@@ -52,8 +69,21 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Use release signing config if keystore is available
+            signingConfig = if (file(signingConfigs.getByName("release").storeFile.absolutePath).exists() &&
+                !signingConfigs.getByName("release").storePassword.isNullOrEmpty()) {
+                signingConfigs.getByName("release")
+            } else {
+                // Fallback to debug signing if release config is not available
+                signingConfigs.getByName("debug")
+            }
+
+            // Optional: Add proguard rules for release build
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+        }
+
+        debug {
             signingConfig = signingConfigs.getByName("debug")
         }
     }

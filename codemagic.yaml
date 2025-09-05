@@ -12,19 +12,31 @@ workflows:
           
           # Decode keystore if available
           if [ -f "android/keystore.base64" ]; then
+            echo "🔐 Decoding keystore from base64..."
             base64 -d android/keystore.base64 > android/app/mahakka.keystore
           fi
           
-          # Build with signing if possible
-          if [ -f "mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
-            flutter build apk --release \
-              --keystore="android/app/mahakka.keystore" \
-              --store-password="$CM_KEYSTORE_PASSWORD" \
-              --key-alias="${CM_KEY_ALIAS:-mahakka}" \
-              --key-password="${CM_KEY_PASSWORD:-$CM_KEYSTORE_PASSWORD}"
+          # Set signing environment variables for Gradle
+          if [ -f "android/app/mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
+            echo "🔐 Configuring signing for release build..."
+            export STORE_FILE="mahakka.keystore"
+            export STORE_PASSWORD="$CM_KEYSTORE_PASSWORD"
+            export KEY_ALIAS="mahakka"
+            export KEY_PASSWORD="${CM_KEY_PASSWORD:-$CM_KEYSTORE_PASSWORD}"
+          
+            # Verify keystore file exists in the right location
+            if [ -f "android/app/mahakka.keystore" ]; then
+              echo "✅ Keystore found at android/app/mahakka.keystore"
+            else
+              echo "❌ Keystore not found at android/app/mahakka.keystore"
+            fi
           else
-            flutter build apk --release
+            echo "⚠️ Building unsigned APK (no keystore or password)"
           fi
+          
+          # Build release APK - Gradle will automatically use the environment variables
+          echo "🏗️ Building APK..."
+          flutter build apk --release
 
       - name: Create GitHub Release with curl
         script: |

@@ -52,7 +52,7 @@ workflows:
           echo "🏷️  Target repository: $TARGET_REPO"
           
           # Get GitHub token (use provided token or try CodeMagic's token)
-          GITHUB_TOKEN="${CM_GH_TOKEN}"
+          GITHUB_TOKEN="$CM_GH_TOKEN"
           
           if [ -z "$GITHUB_TOKEN" ]; then
             echo "❌ GitHub token is required for creating releases with curl"

@@ -136,7 +136,7 @@ Future<void> scrapeTopics(String cacheId) async {
   // int indexPosts = 0;
   List<MemoModelTopic> topics = [];
   // try {
-  await MemoScraperTopic().startScrapeTopics(topics, cacheId, 0, 0);
+  await MemoScraperTopic().startScrapeTopics(cacheId, 0, 0);
   // await MemoScraperTag().startScrapeTags(["/most-posts"], 0, 0, cacheId);
   await MemoScraperTag().startScrapeTags(["/recent"], 0, 0, cacheId);
   // await MemoScraperTag().startScrapeTags(["/popular"], 0, 0, cacheId);

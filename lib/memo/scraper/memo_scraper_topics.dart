@@ -1,4 +1,3 @@
-import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
@@ -12,62 +11,151 @@ import '../firebase/post_service.dart';
 import '../firebase/topic_service.dart';
 
 class MemoScraperTopic {
-  Future<List<MemoModelTopic>> startScrapeTopics(List<MemoModelTopic> postsToPersist, String cacheId, int startOffset, int endOffset) async {
-    // MemoModelTopic.topics.clear();
-    for (int off = startOffset; off >= endOffset; off -= 25) {
-      Map<String, Object> topics = await MemoScraperUtil.createScraper(
-        "topics/all?offset=$off&x=$cacheId",
-        createScraperConfigMemoModelTopic(),
-      );
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      // var checkString = topics["tbody"].toString().substring(0, 50);
-      var key = "TopicScrape$cacheId";
+  /// Main entry point for scraping topics and their posts
+  /// [postsToPersist]: List to accumulate posts that need to be persisted
+  /// [cacheId]: Unique identifier for caching purposes
+  /// [startOffset]: Starting offset for pagination
+  /// [endOffset]: Ending offset for pagination
+  Future<void> startScrapeTopics(String cacheId, int startOffset, int endOffset) async {
+    final prefs = await SharedPreferences.getInstance();
+    final topicService = TopicService();
+    final postService = PostService();
 
-      List<MemoModelTopic> allTopics = createMemoModelTopicList(topics);
+    for (int offset = startOffset; offset >= endOffset; offset -= 25) {
+      // Scrape topics for current offset
+      final List<MemoModelTopic> allTopics = await _scrapeTopics(offset, cacheId);
 
-      for (MemoModelTopic t in allTopics) {
-        String check = t.postCount.toString();
-        var keyPerTopic = key + t.url!;
-        if (prefs.getString(keyPerTopic) == check) {
-          continue; //NO NEW POST ON THIS TOPIC
-        }
-        prefs.setString(keyPerTopic, check);
-        postsToPersist.add(t);
+      if (allTopics.isEmpty) {
+        print("\nSCRAPER TOPICS\nNo topics found for offset $offset");
+        continue;
       }
 
-      final config = createScraperConfigMemoModelPost();
+      // Filter topics that have new posts
+      final List<MemoModelTopic> topicsWithNewPosts = await _filterTopicsWithNewPosts(prefs, allTopics, cacheId);
 
-      for (MemoModelTopic currentTopic in postsToPersist) {
-        // printCurrentMemoModelTopic(currentTopic);
-
-        Map<String, Object> posts = await MemoScraperUtil.createScraper("${currentTopic.url!}?x=$cacheId", config);
-
-        currentTopic.posts.addAll(await createTopicPostList(posts, currentTopic));
-        // MemoModelPost.addToGlobalPostList(postList.toList());
-
-        //TODO ONLY PERSIST THE POSTS THAT ARE NEW, difference last check count and current count, check order
-        // printMemoModelPost(postList);
-        // print("object");
-        print("$off RUNNING SCRAPE TOPICccccc POSTS: ${currentTopic.header}");
+      if (topicsWithNewPosts.isEmpty) {
+        print("\nSCRAPER TOPICS\nNo new posts found for offset $offset");
+        continue;
       }
-      var topicService = TopicService();
-      var postService = PostService();
-      for (MemoModelTopic t in postsToPersist) {
-        topicService.saveTopic(t);
-        // indexTopics++;
-        for (MemoModelPost p in t.posts) {
-          postService.savePost(p);
-          // indexPosts++;
-        }
-        t.posts.clear();
-      }
-      postsToPersist.clear();
-      print("FINISH SCRAPE TOPICS: $cacheId");
+
+      // Process each topic with new posts
+      await _processTopicsWithNewPosts(topicsWithNewPosts, cacheId, topicService, postService);
+      // await _processTopicsWithNewPosts(topicsWithNewPosts, cacheId, topicService, postService, postsToPersist);
+
+      print("\nSCRAPER TOPICS\nScraped offset $offset - Found ${topicsWithNewPosts.length} topics with new posts");
     }
-    return postsToPersist;
+
+    print("\nSCRAPER TOPICS\nFINISHED SCRAPING TOPICS: $cacheId");
+    // return postsToPersist;
   }
 
-  ScraperConfig createScraperConfigMemoModelTopic() {
+  /// Scrapes topics from the memo.cash website
+  Future<List<MemoModelTopic>> _scrapeTopics(int offset, String cacheId) async {
+    try {
+      final Map<String, Object> topicsData = await MemoScraperUtil.createScraper(
+        "topics/all?offset=$offset&x=$cacheId",
+        _createTopicScraperConfig(),
+      );
+
+      return _parseTopicsFromData(topicsData);
+    } catch (e) {
+      print("\nSCRAPER TOPICS\nError scraping topics: $e");
+      return [];
+    }
+  }
+
+  /// Filters topics to find only those with new posts using lastPostCount
+  Future<List<MemoModelTopic>> _filterTopicsWithNewPosts(SharedPreferences prefs, List<MemoModelTopic> allTopics, String cacheId) async {
+    final List<MemoModelTopic> topicsWithNewPosts = [];
+
+    for (final topic in allTopics) {
+      final topicKey = "TopicScrape$cacheId${topic.url}";
+      final lastPostCount = int.tryParse(prefs.getString(topicKey) ?? "0") ?? 0;
+
+      // Store the previous post count for later comparison
+      topic.lastPostCount = lastPostCount;
+
+      if (topic.postCount != null && topic.postCount! > lastPostCount) {
+        // This topic has new posts
+        topicsWithNewPosts.add(topic);
+
+        // Update cache for this topic
+        await prefs.setString(topicKey, topic.postCount.toString());
+      }
+    }
+
+    return topicsWithNewPosts;
+  }
+
+  /// Processes topics that have new posts by scraping their content
+  Future<void> _processTopicsWithNewPosts(
+    List<MemoModelTopic> topicsWithNewPosts,
+    String cacheId,
+    TopicService topicService,
+    PostService postService,
+    // List<MemoModelTopic> postsToPersist,
+  ) async {
+    for (final topic in topicsWithNewPosts) {
+      try {
+        // Scrape posts for this topic
+        final List<MemoModelPost> newPosts = await _scrapeTopicHarvestPosts(topic, cacheId);
+
+        if (newPosts.isNotEmpty) {
+          // Add posts to the topic
+          // topic.posts.addAll(newPosts);
+
+          // Save topic to Firebase
+          //TODO FOR NOW ONLY SAVE NEW TOPICS AS FIREBASE POSTCOUNT DATA IS NOT USED, only the scraped postcount is used for the scraper checks
+          if (topic.lastPostCount == 0) await topicService.saveTopic(topic);
+
+          // Save all new posts to Firebase
+          for (final post in newPosts) {
+            //TODO GET A CHECKSTRING FROM GITHUB THAT INCLUDES 100 MOST RECENTLY SAVED POST IDS AND AVOID DOUBLE PERSIST
+            await postService.savePost(post);
+          }
+
+          // Add to persist list if needed
+          // postsToPersist.add(topic);
+
+          print("\nSCRAPER TOPICS\nSaved ${newPosts.length} new posts for topic: ${topic.header}");
+        }
+
+        // Clear posts to free memory (they're already persisted)
+        // topic.posts.clear();
+      } catch (e) {
+        print("\nSCRAPER TOPICS\nError processing topic ${topic.header}: $e");
+        // Continue with other topics even if one fails
+      }
+    }
+  }
+
+  /// Scrapes posts for a specific topic, only fetching new posts
+  Future<List<MemoModelPost>> _scrapeTopicHarvestPosts(MemoModelTopic topic, String cacheId) async {
+    final int newPostsCount = topic.postCount! - (topic.lastPostCount ?? 0);
+
+    if (newPostsCount <= 0) {
+      return [];
+    }
+
+    try {
+      // Scrape all posts for this topic
+      final Map<String, Object> postsData = await MemoScraperUtil.createScraper("${topic.url!}?x=$cacheId", _createPostScraperConfig());
+
+      // Parse all posts
+      final List<MemoModelPost> allPosts = _parsePostsFromData(postsData, topic);
+
+      // Return only the new posts (most recent ones first)
+      // Since posts are typically ordered newest first, take the first N new posts
+      //TODO WHAT IF POSTS GET FILTERED BUT ANYWAY THE LAST NEW POST IS SAVED?
+      return allPosts.reversed.take(newPostsCount).toList();
+    } catch (e) {
+      print("\nSCRAPER TOPICS\nError scraping posts for topic ${topic.header}: $e");
+      return [];
+    }
+  }
+
+  /// Creates the scraper configuration for parsing topics
+  ScraperConfig _createTopicScraperConfig() {
     return ScraperConfig(
       parsers: [
         Parser(id: "topics", parents: ["_root"], type: ParserType.element, selectors: ["td"], multiple: true),
@@ -78,43 +166,47 @@ class MemoScraperTopic {
     );
   }
 
-  List<MemoModelTopic> createMemoModelTopicList(Map<String, Object> topics) {
-    List<MemoModelTopic> topicList = [];
+  /// Parses topic data from the scraped response
+  List<MemoModelTopic> _parseTopicsFromData(Map<String, Object> topicsData) {
+    final List<MemoModelTopic> topicList = [];
 
-    var tbody = topics.values.elementAt(1).toString().replaceAll(",", "").split("\n");
-    List<String> cleanBody = [];
+    try {
+      final String tbodyContent = topicsData["tbody"].toString();
+      final List<String> cleanBody = _cleanTbodyContent(tbodyContent);
 
-    for (String line in tbody.clone()) {
-      if (line.trim().isNotEmpty) {
-        cleanBody.add(line.trim());
-      }
-    }
+      final List topicItems = topicsData.values.first as List;
 
-    int itemIndex = 0;
-    for (Map<String, Object> value in topics.values.first as Iterable) {
-      topicList.add(
-        MemoModelTopic(
-          id: value["topic"].toString(),
-          url: value["topicURL"].toString(),
-          followerCount: int.parse(cleanBody[itemIndex + 3]),
+      int itemIndex = 0;
+      for (final Map<String, Object> topicData in topicItems) {
+        if (itemIndex + 3 >= cleanBody.length) {
+          break; // Prevent index out of bounds
+        }
+
+        final MemoModelTopic topic = MemoModelTopic(
+          id: topicData["topic"].toString(),
+          url: topicData["topicURL"].toString(),
+          followerCount: int.tryParse(cleanBody[itemIndex + 3]) ?? 0,
           lastPost: cleanBody[itemIndex + 1],
-          postCount: int.parse(cleanBody[itemIndex + 2]),
-        ),
-      );
-      itemIndex += 4;
+          postCount: int.tryParse(cleanBody[itemIndex + 2]) ?? 0,
+        );
+
+        topicList.add(topic);
+        itemIndex += 4;
+      }
+    } catch (e) {
+      print("\nSCRAPER TOPICS\nError parsing topics data: $e");
     }
+
     return topicList;
   }
 
-  void printCurrentMemoModelTopic(MemoModelTopic currentTopic) {
-    print(currentTopic.header);
-    print(currentTopic.url);
-    print(currentTopic.followerCount);
-    print(currentTopic.postCount);
-    print(currentTopic.lastPost);
+  /// Cleans and processes the tbody content
+  List<String> _cleanTbodyContent(String tbodyContent) {
+    return tbodyContent.replaceAll(",", "").split("\n").where((line) => line.trim().isNotEmpty).map((line) => line.trim()).toList();
   }
 
-  ScraperConfig createScraperConfigMemoModelPost() {
+  /// Creates the scraper configuration for parsing posts
+  ScraperConfig _createPostScraperConfig() {
     return ScraperConfig(
       parsers: [
         Parser(id: "posts", parents: ["_root"], type: ParserType.element, selectors: [".topic-post"], multiple: true),
@@ -132,40 +224,84 @@ class MemoScraperTopic {
     );
   }
 
-  List<MemoModelPost> createTopicPostList(Map<String, Object> posts, MemoModelTopic topic) {
-    List<MemoModelPost> postList = [];
+  /// Parses posts from the scraped response
+  List<MemoModelPost> _parsePostsFromData(Map<String, Object> postsData, MemoModelTopic topic) {
+    final List<MemoModelPost> postList = [];
 
-    for (Map<String, Object> item in posts.values.first as Iterable) {
-      var likeCount = 0;
-      try {
-        likeCount = int.parse(item["likeCount"].toString().split("\n")[0]);
-      } catch (e) {}
+    try {
+      final List postItems = postsData.values.first as List;
 
-      MemoModelCreator creator = MemoModelCreator(name: item["creatorName"].toString(), id: item["profileUrl"].toString().substring(8));
-      var id = item["txhash"].toString().substring("post/".length);
-      MemoModelPost post = MemoModelPost(
-        id: id,
-        topic: topic,
-        text: item["msg"]?.toString(),
-        // age: item["age"].toString(),
-        popularityScore: int.parse((item["tipsInSatoshi"] ?? "0").toString().replaceAll(",", "")),
-        likeCounter: likeCount,
-        replyCounter: int.parse((item["replyCount"] ?? "0").toString()),
-        created: item["created"].toString(),
-        imgurUrl: item["imgur"]?.toString(),
-        creator: creator,
-        tagIds: [],
-      );
+      //TODO CHECK FOR LAST POST COUNT ONLY PROCESS NEW POST (thats achieved by the take method after this parsing method)
+      //TODO WHAT IF POSTS GET FILTERED BUT ANYWAY THE LAST NEW POST IS SAVED?
+      for (final Map<String, Object> postData in postItems) {
+        try {
+          final MemoModelPost post = _createPostFromData(postData, topic);
 
-      MemoScraperUtil.linkReferencesAndSetId(post, topic, creator);
+          if (MemoScraperUtil.isTextOnly(post)) {
+            continue; // Skip text-only posts
+          }
 
-      if (MemoScraperUtil.isTextOnly(post)) {
-        continue;
+          postList.add(post);
+        } catch (e) {
+          print("\nSCRAPER TOPICS\nError parsing individual post: $e");
+        }
       }
-
-      postList.add(post);
+    } catch (e) {
+      print("\nSCRAPER TOPICS\nError parsing posts data: $e");
     }
 
     return postList;
+  }
+
+  /// Creates a MemoModelPost from scraped post data
+  MemoModelPost _createPostFromData(Map<String, Object> postData, MemoModelTopic topic) {
+    // Parse like count with error handling
+    int likeCount = 0;
+    try {
+      final String likeText = postData["likeCount"].toString();
+      likeCount = int.tryParse(likeText.split("\n")[0]) ?? 0;
+    } catch (e) {
+      print("\nSCRAPER TOPICS\nError parsing like count: $e");
+    }
+
+    // Create creator object
+    final String profileUrl = postData["profileUrl"].toString();
+    final MemoModelCreator creator = MemoModelCreator(
+      name: postData["creatorName"].toString(),
+      id: profileUrl.substring(8), // Remove "/profile/" prefix
+    );
+
+    // Parse transaction hash
+    final String txHashUrl = postData["txhash"].toString();
+    final String id = txHashUrl.substring("post/".length);
+
+    // Create post object
+    final MemoModelPost post = MemoModelPost(
+      id: id,
+      topic: topic,
+      text: postData["msg"]?.toString(),
+      popularityScore: int.tryParse((postData["tipsInSatoshi"] ?? "0").toString().replaceAll(",", "")) ?? 0,
+      likeCounter: likeCount,
+      replyCounter: int.tryParse((postData["replyCount"] ?? "0").toString()) ?? 0,
+      created: postData["created"].toString(),
+      imgurUrl: postData["imgur"]?.toString(),
+      creator: creator,
+      tagIds: [],
+    );
+
+    // Set up references and IDs
+    MemoScraperUtil.linkReferencesAndSetId(post, topic, creator);
+
+    return post;
+  }
+
+  /// Debug method to print topic information
+  void printCurrentMemoModelTopic(MemoModelTopic currentTopic) {
+    print("\nSCRAPER TOPICS\nTopic: ${currentTopic.header}");
+    print("\nSCRAPER TOPICS\nURL: ${currentTopic.url}");
+    print("\nSCRAPER TOPICS\nFollowers: ${currentTopic.followerCount}");
+    print("\nSCRAPER TOPICS\nPost Count: ${currentTopic.postCount}");
+    print("\nSCRAPER TOPICS\nLast Post Count: ${currentTopic.lastPostCount}");
+    print("\nSCRAPER TOPICS\nLast Post: ${currentTopic.lastPost}");
   }
 }

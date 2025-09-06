@@ -144,7 +144,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       body: RefreshIndicator(
         onRefresh: () async {
           // Tell the provider to refresh the feed (fetches first page with current filter)
-          ref.read(feedPostsProvider.notifier).refreshFeed();
+          await ref.read(feedPostsProvider.notifier).refreshFeed();
+          // ref.invalidate(feedPostsProvider);
         },
         color: theme.colorScheme.primary,
         backgroundColor: theme.colorScheme.surface,

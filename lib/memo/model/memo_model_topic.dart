@@ -25,6 +25,8 @@ class MemoModelTopic {
     this.lastPost,
   }) : this.id = id.replaceAll(" ", "_"); // Ensure 'id' is processed
 
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  int? lastPostCount;
   String id;
   final String? url;
   final int? postCount;

@@ -92,6 +92,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   void _loginUser() {
     // Set the loading state to true and disable the button
     setState(() {
+      //TODO WHY DOES THIS NOT HAVE ANY EFFECT< IS IT BEACAUSE THE USER SATE ITSELF ENTERS INTO LOADING STATE?
       _isLoading = true;
     });
     // Add a small delay to allow the UI to rebuild and show the loading indicator.
@@ -140,7 +141,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
             children: [
               const Spacer(flex: 2),
 
-              Image.asset('assets/images/cashtoken.png', height: 80),
+              Image.asset('assets/splash.png', height: 120),
 
               const SizedBox(height: 56),
 

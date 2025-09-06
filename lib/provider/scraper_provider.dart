@@ -12,7 +12,7 @@ final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraper
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
   final Duration _initialDelay = const Duration(seconds: 10);
-  final Duration _scrapeInterval = const Duration(seconds: 10);
+  final Duration _scrapeInterval = const Duration(seconds: 100);
 
   @override
   Future<void> build() async {
@@ -58,7 +58,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     try {
       // Execute the scraping tasks.
       var cacheId = "AX";
-      await MemoScraperTopic().startScrapeTopics([], cacheId, 0, 0);
+      await MemoScraperTopic().startScrapeTopics(cacheId, 0, 0);
       await MemoScraperTag().startScrapeTags(["/recent"], 0, 0, cacheId);
 
       // If the process succeeds, update the state to data with a null value.

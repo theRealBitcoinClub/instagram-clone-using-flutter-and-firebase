@@ -138,7 +138,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
         if (cachedPosts != null && cachedPosts.isNotEmpty) {
           newPosts = cachedPosts;
           fromCache = true;
-          print("Using cached page $pageIndex with ${newPosts.length} posts");
+          print("\nFEED POSTS PROVIDER\nUsing cached page $pageIndex with ${newPosts.length} posts");
         } else {
           // Fall back to network
           newPosts = await _postService.getPostsPaginated(limit: _pageSize, startAfterDoc: cursorForThisFetch);
@@ -158,7 +158,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 
         // If we filtered out duplicates, use the unique ones
         if (uniqueNewPosts.length != newPosts.length) {
-          print("Filtered out ${newPosts.length - uniqueNewPosts.length} duplicate posts");
+          print("\nFEED POSTS PROVIDER\nFiltered out ${newPosts.length - uniqueNewPosts.length} duplicate posts");
           newPosts = uniqueNewPosts;
         }
 
@@ -269,20 +269,15 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 
       if (newPostsCount <= 0) {
         // No new posts, just update the count
-        print('No new posts, total count unchanged: $currentTotalCount');
+        print('\nFEED POSTS PROVIDER\nNo new posts, total count unchanged: $currentTotalCount');
         state = state.copyWith(totalPostCount: currentTotalCount, isRefreshing: false);
         return;
       }
-      // (!feedState.hasMorePosts &&
-      //     index == feedState.posts.length &&
-      //     feedState.posts.isNotEmpty &&
-      //     !feedState.isLoadingInitial && // Not in initial full-screen load
-      //     !feedState.isLoadingMore) {
 
       // Start refreshing state
       state = state.copyWith(isRefreshing: true /*newPosts: []*/);
 
-      print('Found $newPostsCount new posts, fetching all at once...');
+      print('\nFEED POSTS PROVIDER\nFound $newPostsCount new posts, fetching all at once...');
 
       // Fetch ALL new posts in one go (limit = newPostsCount)
       final List<MemoModelPost> allNewPosts = await _postService.getPostsPaginated(
@@ -394,5 +389,7 @@ final feedPostsProvider = StateNotifierProvider<FeedPostsNotifier, FeedState>((r
 
 // Helper for logging
 void _logFeedError(String message, [dynamic error, StackTrace? stackTrace]) {
-  print('ERROR FeedPostsNotifier: $message ${error != null ? '- $error' : ''}${stackTrace != null ? '\n$stackTrace' : ''}');
+  print(
+    '\nFEED POSTS PROVIDER\nERROR FeedPostsNotifier: $message ${error != null ? '- $error' : ''}${stackTrace != null ? '\n$stackTrace' : ''}',
+  );
 }

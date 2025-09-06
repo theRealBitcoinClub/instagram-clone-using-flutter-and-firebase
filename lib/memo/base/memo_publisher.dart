@@ -71,7 +71,8 @@ class MemoPublisher {
     try {
       await base.broadcastTransaction(tx);
     } catch (e) {
-      return MemoAccountantResponse.dust;
+      //TODO CHECK RPC ERROR CODE AND RETURN LOWBALANCE OR DUST
+      return MemoAccountantResponse.lowBalance;
     }
     return MemoAccountantResponse.yes;
   }

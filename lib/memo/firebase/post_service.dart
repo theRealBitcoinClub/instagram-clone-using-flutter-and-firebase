@@ -69,7 +69,7 @@ class PostService {
 
   Future<int> getTotalPostCount() async {
     try {
-      final querySnapshot = await FirebaseFirestore.instance.collection('posts').count().get();
+      final querySnapshot = await FirebaseFirestore.instance.collection(_postsCollection).count().get();
       return querySnapshot.count!;
     } catch (e) {
       print('Error getting post count: $e');

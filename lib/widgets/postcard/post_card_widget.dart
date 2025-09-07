@@ -75,7 +75,7 @@ class _PostCardState extends ConsumerState<PostCard> {
         widget.post.imgurUrl!,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          _logError("Failed to load Imgur image: ${widget.post.imgurUrl}", error, stackTrace);
+          // _logError("Failed to load Imgur image: ${widget.post.imgurUrl}", error, stackTrace);
           return Container(
             height: _altImageHeight * 2,
             color: theme.colorScheme.surfaceVariant,

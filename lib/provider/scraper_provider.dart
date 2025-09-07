@@ -11,8 +11,8 @@ final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraper
 
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
-  final Duration _initialDelay = const Duration(seconds: 10);
-  final Duration _scrapeInterval = const Duration(seconds: 100);
+  Duration _initialDelay = Duration(seconds: 10);
+  Duration _scrapeInterval = Duration(seconds: 10);
 
   @override
   Future<void> build() async {

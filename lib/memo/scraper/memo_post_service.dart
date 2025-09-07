@@ -8,6 +8,7 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
+const scraperPageSize = 25;
 // Helper for logging - replace with your preferred logging solution
 void _logInfo(String message) => print('INFO: $message');
 void _logWarning(String message) => print('WARNING: $message');
@@ -60,7 +61,10 @@ class MemoPostScraper {
     required String baseUrl,
     required int initialOffset,
     required String cacheId,
-    int offsetStep = 25,
+    int offsetStep = scraperPageSize,
+    bool useRawUrl = false,
+    int newPostCount = -1,
+    onSkipPost,
   }) async {
     final config = _buildPostsScraperConfig();
     final List<MemoModelPost> allPosts = [];
@@ -68,12 +72,16 @@ class MemoPostScraper {
     _logInfo("Starting post scraping from URL: $baseUrl with initial offset: $initialOffset");
 
     for (int currentOffset = initialOffset; currentOffset >= 0; currentOffset -= offsetStep) {
-      final String scrapeUrl = "$baseUrl?offset=$currentOffset&x=$cacheId";
+      final String scrapeUrl = useRawUrl ? baseUrl : "$baseUrl?offset=$currentOffset&x=$cacheId";
       _logInfo("Scraping posts from: $scrapeUrl");
 
       try {
         final Map<String, Object> scrapedData = await MemoScraperUtil.createScraper(scrapeUrl, config);
-        final List<MemoModelPost> newPosts = await _parseScrapedPostData(scrapedData);
+        final List<MemoModelPost> newPosts = await _parseScrapedPostData(
+          scrapedData,
+          skippedPostWasFiltered: onSkipPost,
+          newPostCount: newPostCount,
+        );
 
         if (newPosts.isNotEmpty) {
           // Assuming MemoModelPost.addToGlobalPostList is a desired side effect.
@@ -102,7 +110,7 @@ class MemoPostScraper {
 
   // --- Data Parsing Logic ---
 
-  List<MemoModelPost> _parseScrapedPostData(Map<String, Object> scrapedData) {
+  List<MemoModelPost> _parseScrapedPostData(Map<String, Object> scrapedData, {skippedPostWasFiltered, newPostCount}) {
     final List<MemoModelPost> postList = [];
 
     if (scrapedData.values.isEmpty) {
@@ -124,10 +132,15 @@ class MemoPostScraper {
       return postList;
     }
 
+    int index = 0;
     for (final dynamic postData in postDataList) {
       MemoModelPost? post = parsePost(postData);
+      if (newPostCount != -1 && index++ >= newPostCount) return postList;
 
-      if (post != null) postList.add(post);
+      if (post != null)
+        postList.add(post);
+      else
+        skippedPostWasFiltered();
     }
     return postList;
   }

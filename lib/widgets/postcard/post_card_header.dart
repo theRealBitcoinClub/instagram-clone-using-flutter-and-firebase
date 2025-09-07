@@ -140,7 +140,7 @@ class PostCardHeader extends ConsumerWidget {
       backgroundColor: theme.colorScheme.surfaceVariant,
       backgroundImage: avatarUrl.isEmpty ? const AssetImage("assets/images/default_profile.png") as ImageProvider : NetworkImage(avatarUrl),
       onBackgroundImageError: (exception, stackTrace) {
-        _logError("Error loading profile image for ${creator.name}", exception, stackTrace);
+        // _logError("Error loading profile image for ${creator.name}", exception, stackTrace);
       },
     );
   }

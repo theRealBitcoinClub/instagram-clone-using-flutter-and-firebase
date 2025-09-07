@@ -129,6 +129,7 @@ class MemoScraperTag {
   /// Scrapes new posts for a specific tag
   Future<List<MemoModelPost>> _scrapeNewPostsForTag(MemoModelTag tag, String cacheId) async {
     final int newPostsCount = tag.postCount! - (tag.lastCount ?? 0);
+    int skippedCounter = 0;
 
     if (newPostsCount <= 0) {
       return [];
@@ -136,13 +137,19 @@ class MemoScraperTag {
 
     // Scrape posts for this tag
     final List<MemoModelPost> allPosts = await MemoPostScraper().scrapePostsPaginated(
-      baseUrl: "t/${tag.name}",
+      useRawUrl: true,
+      baseUrl: "t/${tag.name}?p=new",
       initialOffset: 0,
       cacheId: cacheId,
+      newPostCount: newPostsCount,
+      onSkipPost: () {
+        skippedCounter++;
+      },
     );
 
     // Return only the new posts (most recent ones first)
-    return allPosts.take(newPostsCount).toList();
+    //
+    return allPosts.take(newPostsCount - skippedCounter).toList();
   }
 
   /// Scrapes tags from the memo.cash website

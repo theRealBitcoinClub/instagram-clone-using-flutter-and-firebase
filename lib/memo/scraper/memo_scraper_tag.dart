@@ -10,21 +10,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../firebase/post_service.dart';
 import '../model/memo_model_post.dart';
 
+const prefskey = "lastTagScrape";
+
 class MemoScraperTag {
+  final String cacheId;
+  MemoScraperTag(this.cacheId);
+  final tagService = TagService();
+  final postService = PostService();
+
   /// Main entry point for scraping tags and their posts
   /// [orderBy]: List of sorting methods to scrape (e.g., ['popular', 'new'])
   /// [startOffset]: Starting offset for pagination
   /// [endOffset]: Ending offset for pagination
   /// [cacheId]: Unique identifier for caching purposes
-  Future<void> startScrapeTags(List<String> orderBy, int startOffset, int endOffset, String cacheId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final tagService = TagService();
-    final postService = PostService();
-
+  Future<void> startScrapeTags(List<String> orderBy, int startOffset, int endOffset) async {
     for (String order in orderBy) {
       for (int offset = startOffset; offset >= endOffset; offset -= 25) {
         // Check if we should stop scraping based on cache
-        if (await _shouldStopScraping(prefs, cacheId, offset, order)) {
+        if (await _shouldStopScraping(offset, order)) {
           //TODO MAYBE YOU CAN USE SOME HTTP HEADER CONTENT TO VERIFY THE LAST DATE CHANGED
           print("\nSCRAPER TAGS\nSTOP SCRAPE TAGS: No changes detected for $order$offset");
           return;
@@ -34,7 +37,7 @@ class MemoScraperTag {
         final List<MemoModelTag> allTags = await scrapeTags(order, offset);
 
         // Filter tags that have new posts
-        final List<MemoModelTag> tagsWithNewPosts = await _filterTagsWithNewPosts(prefs, allTags, cacheId);
+        final List<MemoModelTag> tagsWithNewPosts = await _filterTagsWithNewPosts(allTags);
 
         if (tagsWithNewPosts.isEmpty) {
           print("\nSCRAPER TAGS\nNo new posts found for $order$offset");
@@ -42,7 +45,7 @@ class MemoScraperTag {
         }
 
         // Process each tag with new posts
-        await _processTagsWithNewPosts(tagsWithNewPosts, cacheId, tagService, postService);
+        await _processTagsWithNewPosts(tagsWithNewPosts);
 
         print("\nSCRAPER TAGS\nScraped $order with offset $offset - Found ${tagsWithNewPosts.length} tags with new posts");
       }
@@ -52,12 +55,13 @@ class MemoScraperTag {
   }
 
   /// Checks if scraping should stop based on cached data
-  Future<bool> _shouldStopScraping(SharedPreferences prefs, String cacheId, int offset, String order) async {
+  Future<bool> _shouldStopScraping(int offset, String order) async {
+    final prefs = await SharedPreferences.getInstance();
     // check if the first tag has changed
     final sampleTags = await scrapeTags(order, offset);
     if (sampleTags.isEmpty) return true;
 
-    final key = "lastTagScrape$cacheId";
+    final key = "$prefskey$cacheId";
     final checkString = "${sampleTags[0].lastPost}${sampleTags[0].postCount}";
     final lastCheckString = prefs.getString(key);
 
@@ -72,33 +76,32 @@ class MemoScraperTag {
   }
 
   /// Filters tags to find only those with new posts
-  Future<List<MemoModelTag>> _filterTagsWithNewPosts(SharedPreferences prefs, List<MemoModelTag> allTags, String cacheId) async {
+  Future<List<MemoModelTag>> _filterTagsWithNewPosts(List<MemoModelTag> allTags) async {
+    final prefs = await SharedPreferences.getInstance();
+
     final List<MemoModelTag> tagsWithNewPosts = [];
 
     for (final tag in allTags) {
-      final tagKey = "lastTagScrape$cacheId${tag.name}";
+      final tagKey = "$prefskey$cacheId${tag.name}";
       final lastPostCount = int.tryParse(prefs.getString(tagKey) ?? "0") ?? 0;
 
       if (tag.postCount != null && tag.postCount! > lastPostCount) {
         // This tag has new posts
         tag.lastCount = lastPostCount;
         tagsWithNewPosts.add(tag);
-
-        // Update cache for this tag
-        await prefs.setString(tagKey, tag.postCount.toString());
       }
     }
 
     return tagsWithNewPosts;
   }
 
+  Future<void> persistPostcountAfterSuccessfulScrape(MemoModelTag tag) async {
+    var prefs = await SharedPreferences.getInstance();
+    await prefs.setString("$prefskey$cacheId${tag.name}", tag.postCount.toString());
+  }
+
   /// Processes tags that have new posts by scraping their content
-  Future<void> _processTagsWithNewPosts(
-    List<MemoModelTag> tagsWithNewPosts,
-    String cacheId,
-    TagService tagService,
-    PostService postService,
-  ) async {
+  Future<void> _processTagsWithNewPosts(List<MemoModelTag> tagsWithNewPosts) async {
     for (final tag in tagsWithNewPosts) {
       try {
         // Scrape new posts for this tag
@@ -123,6 +126,8 @@ class MemoScraperTag {
         print("\nSCRAPER TAGS\nError processing tag ${tag.name}: $e");
         // Continue with other tags even if one fails
       }
+
+      persistPostcountAfterSuccessfulScrape(tag);
     }
   }
 
@@ -131,9 +136,11 @@ class MemoScraperTag {
     final int newPostsCount = tag.postCount! - (tag.lastCount ?? 0);
     int skippedCounter = 0;
 
-    if (newPostsCount <= 0) {
-      return [];
-    }
+    //TODO WHY IS THIS CHECKED TWICE AS IT WAS ALREADY CHECKED WHEN THIS TAG WAS ADDED TO THE LIST THATS BEING PROCESSED
+    //TAG.LASTCOUNT IS NOT SET BY ANYONE ELSE BUT THE METHOD THAT PROCESSED THIS BEFORE
+    // if (newPostsCount <= 0) {
+    //   return [];
+    // }
 
     // Scrape posts for this tag
     final List<MemoModelPost> allPosts = await MemoPostScraper().scrapePostsPaginated(
@@ -147,8 +154,20 @@ class MemoScraperTag {
       },
     );
 
+    if (newPostsCount < skippedCounter || newPostsCount - skippedCounter < 0)
+      print("\nSCRAPER TAGS\nERROR POSTS FOR TAG: Skipped $skippedCounter posts for tag: ${tag.name} while newPostsCount was $newPostsCount");
+
+    if (newPostsCount - skippedCounter == 0) {
+      if (allPosts.length != 0) {
+        print("\nSCRAPER TAGS\nSKIPPED EQUALS NEW COUNTER BUT RESULTS ARE NOT EMPTY:");
+        return allPosts;
+      } else {
+        print("\nSCRAPER TAGS\nSKIPPED ALL TAGS: No new VALID posts found for tag: ${tag.name}");
+        return [];
+      }
+    }
     // Return only the new posts (most recent ones first)
-    //
+    //TODO WHY IS SKIPPED COUNTER ONE IF THERE WAS ONLY ONE NEWPOSTCOUNT BUT THATS CONTAINED IN THE RESULTSET APP POSTS?
     return allPosts.take(newPostsCount - skippedCounter).toList();
   }
 

@@ -59,7 +59,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
       // Execute the scraping tasks.
       var cacheId = "AX";
       await MemoScraperTopic().startScrapeTopics(cacheId, 0, 0);
-      await MemoScraperTag().startScrapeTags(["/recent"], 0, 0, cacheId);
+      await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 0, 0);
 
       // If the process succeeds, update the state to data with a null value.
       state = const AsyncValue.data(null);

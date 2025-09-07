@@ -84,11 +84,6 @@ class MemoPostScraper {
         );
 
         if (newPosts.isNotEmpty) {
-          // Assuming MemoModelPost.addToGlobalPostList is a desired side effect.
-          // Consider if this global modification is the best approach or if
-          // this service should just return the data.
-          // MemoModelPost.
-          // addToGlobalPostList(newPosts);
           allPosts.addAll(newPosts);
           _logInfo("Successfully scraped and processed ${newPosts.length} posts from offset $currentOffset.");
         } else {

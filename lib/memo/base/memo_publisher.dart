@@ -83,6 +83,7 @@ class MemoPublisher {
     if (topic.isEmpty) {
       if (_memoMessage.length + MemoVerifier.super_topic.length < MemoVerifier.maxPostLength) {
         topic = MemoVerifier.super_topic;
+        _memoAction = MemoCode.topicMessage;
       }
     }
     return topic;

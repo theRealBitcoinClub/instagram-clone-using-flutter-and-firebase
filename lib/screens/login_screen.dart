@@ -15,20 +15,21 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingObserver {
   final TextEditingController _mnemonicController = TextEditingController();
+  final List<String> _wordList = Language.english.list;
   bool _isInputValid = false;
   String? _errorMessage;
-  bool _isLoading = false; // Added loading state variable
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _mnemonicController.addListener(_validateMnemonic);
+    _mnemonicController.addListener(_handleInput);
     WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
-    _mnemonicController.removeListener(_validateMnemonic);
+    _mnemonicController.removeListener(_handleInput);
     _mnemonicController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -57,6 +58,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
 
   String _processedMnemonic = "";
 
+  void _handleInput() {
+    final text = _mnemonicController.text;
+    final words = text.split(' ');
+    final lastWord = words.last;
+
+    if (lastWord.isNotEmpty) {
+      final matchingWords = _wordList.where((word) => word.startsWith(lastWord)).toList();
+      if (matchingWords.length == 1) {
+        final newText = text.substring(0, text.length - lastWord.length) + matchingWords.first + ' ';
+        _mnemonicController.value = _mnemonicController.value.copyWith(
+          text: newText,
+          selection: TextSelection.collapsed(offset: newText.length),
+          composing: TextRange.empty,
+        );
+      }
+    }
+
+    _validateMnemonic();
+  }
+
   void _validateMnemonic() {
     var inputTrimmed = _mnemonicController.text.trim();
     if (inputTrimmed.isEmpty) {
@@ -68,7 +89,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     }
 
     _processedMnemonic = toLowCaseAndRemoveTooManySpaces(inputTrimmed);
-
     String verifiedMnemonic = MemoVerifier(_processedMnemonic).verifyMnemonic();
     if (verifiedMnemonic != "success") {
       setState(() {
@@ -90,13 +110,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   }
 
   void _loginUser() {
-    // Set the loading state to true and disable the button
     setState(() {
-      //TODO WHY DOES THIS NOT HAVE ANY EFFECT< IS IT BEACAUSE THE USER SATE ITSELF ENTERS INTO LOADING STATE?
       _isLoading = true;
     });
-    // Add a small delay to allow the UI to rebuild and show the loading indicator.
-    // await Future.delayed(Duration(milliseconds: 100));
     doHeavyWork();
   }
 
@@ -104,14 +120,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     try {
       final authChecker = ref.read(authCheckerProvider);
       String res = await authChecker.loginInWithMnemonic(_processedMnemonic);
-
       if (res != "success") {
         if (mounted) showSnackBar("Unexpected error despite on the fly check: $res", context);
       }
     } catch (e) {
       if (mounted) showSnackBar("Login failed: $e", context);
     } finally {
-      // Always set loading state to false, even on success or error
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -140,11 +154,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Spacer(flex: 2),
-
               Image.asset('assets/splash.png', height: 120),
-
               const SizedBox(height: 56),
-
               TextField(
                 minLines: 3,
                 maxLines: 3,
@@ -162,9 +173,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                   contentPadding: const EdgeInsets.all(8),
                 ),
               ),
-
               const SizedBox(height: 16),
-
               TextButton.icon(
                 icon: Icon(Icons.refresh_rounded, color: colorScheme.secondary),
                 label: Text(
@@ -174,7 +183,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                 onPressed: _generateMnemonic,
                 style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16)),
               ),
-
               const SizedBox(height: 24),
               _isLoading ? LinearProgressIndicator() : SizedBox(),
               SizedBox(
@@ -193,7 +201,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                   ),
                 ),
               ),
-
               const Spacer(flex: 2),
             ],
           ),

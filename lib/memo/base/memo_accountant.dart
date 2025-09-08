@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_code.dart';
 import 'package:mahakka/memo/base/memo_publisher.dart';
@@ -16,28 +18,40 @@ enum MemoAccountantResponse {
   yes(""),
   noUtxo("Transaction error (no UTXO)."),
   lowBalance("Insufficient balance."),
-  dust("Transaction error (dust)."),
-  // New case for unexpected errors from a different context
-  failed("Transaction failed due to an unexpected error.");
+  dust("Transaction error (dust).");
+  // failed("Transaction failed due to an unexpected error."),
+  // queued("Request queued for processing.");
 
   const MemoAccountantResponse(this.message);
   final String message;
 }
-//TODO TEST THIS CASE
-//USERS ONLY CARE ABOUT LOW BALANCE OR YES, ON LOW BALANCE SOMETHING WENT WRONG ALREADY
-// AS IT SHOULDNT BE POSSIBLE TO WRITE WITH LOW BALANCE, EXCEPT IF WALLET IS LOADED SOMEWHERE ELSE AND HAS SPENT WHILE WRITING
 
-//TODO Accountant checks balance before user starts writing to disable all functions related to publishing,
-// so then user can be redirected to the QR Code right away anytime he tries to publish
-// A provider for MemoAccountant
+// Request types for the queue
+enum MemoRequestType {
+  publishReplyTopic,
+  publishLike,
+  publishReplyHashtags,
+  publishImgurOrYoutube,
+  profileSetAvatar,
+  profileSetName,
+  profileSetText,
+}
+
+// Request class to hold all necessary data
+class MemoRequest {
+  final MemoRequestType type;
+  final Completer<MemoAccountantResponse> completer;
+  final Map<String, dynamic> data;
+
+  MemoRequest({required this.type, required this.completer, required this.data});
+}
+
+// Provider for MemoAccountant
 final memoAccountantProvider = Provider<MemoAccountant>((ref) {
-  // You need a user provider here. Assuming one exists.
   final user = ref.watch(userProvider);
   if (user == null) {
-    // You could return null or throw an error if the user is not authenticated.
     throw Exception('User data not available for MemoAccountant.');
   }
-  // Create and return the MemoAccountant instance, passing ref and the user.
   return MemoAccountant(ref, user);
 });
 
@@ -45,21 +59,132 @@ class MemoAccountant {
   final MemoModelUser user;
   final Ref ref;
 
-  MemoAccountant(this.ref, this.user);
+  // Request queue and processing state
+  final List<MemoRequest> _requestQueue = [];
+  bool _isProcessing = false;
+  StreamController<MemoRequest>? _queueController;
+  StreamSubscription<MemoRequest>? _queueSubscription;
 
-  static MemoAccountantResponse checkAccount(MemoAccountType t) {
-    return MemoAccountantResponse.yes;
+  MemoAccountant(this.ref, this.user) {
+    _initializeQueueProcessor();
   }
 
-  Future<MemoAccountantResponse> publishReplyTopic(MemoModelPost post, String postReply) async {
-    MemoAccountantResponse response = await _tryPublishReplyTopic(user.wifLegacy, post, postReply);
+  void _initializeQueueProcessor() {
+    _queueController = StreamController<MemoRequest>.broadcast();
+    _queueSubscription = _queueController!.stream.listen(
+      _processRequest,
+      onError: (error) {
+        print('Queue processor error: $error');
+        _isProcessing = false;
+        _processNextRequest();
+      },
+    );
+  }
 
+  // Add request to queue and return a future that completes when processed
+  Future<MemoAccountantResponse> _enqueueRequest(MemoRequestType type, {Map<String, dynamic> data = const {}}) {
+    final completer = Completer<MemoAccountantResponse>();
+    final request = MemoRequest(type: type, completer: completer, data: data);
+
+    _requestQueue.add(request);
+    _processNextRequest();
+
+    return completer.future;
+  }
+
+  void _processNextRequest() {
+    if (_isProcessing || _requestQueue.isEmpty || _queueController == null) return;
+
+    _isProcessing = true;
+    final nextRequest = _requestQueue.removeAt(0);
+    _queueController!.add(nextRequest);
+  }
+
+  Future<void> _processRequest(MemoRequest request) async {
+    try {
+      MemoAccountantResponse response;
+
+      switch (request.type) {
+        case MemoRequestType.publishReplyTopic:
+          response = await _executePublishReplyTopic(request.data['post'] as MemoModelPost, request.data['postReply'] as String);
+          break;
+
+        case MemoRequestType.publishLike:
+          response = await _executePublishLike(request.data['post'] as MemoModelPost);
+          break;
+
+        case MemoRequestType.publishReplyHashtags:
+          response = await _executePublishReplyHashtags(request.data['post'] as MemoModelPost, request.data['text'] as String);
+          break;
+
+        case MemoRequestType.publishImgurOrYoutube:
+          response = await _executePublishImgurOrYoutube(request.data['topic'] as String?, request.data['text'] as String);
+          break;
+
+        case MemoRequestType.profileSetAvatar:
+          response = await _executeProfileSetAvatar(request.data['imgur'] as String);
+          break;
+
+        case MemoRequestType.profileSetName:
+          response = await _executeProfileSetName(request.data['name'] as String);
+          break;
+
+        case MemoRequestType.profileSetText:
+          response = await _executeProfileSetText(request.data['text'] as String);
+          break;
+
+        // default:
+        //   response = MemoAccountantResponse.failed;
+      }
+
+      request.completer.complete(response);
+    } catch (error) {
+      print('Error processing request ${request.type}: $error');
+      request.completer.complete(MemoAccountantResponse.lowBalance);
+      // request.completer.complete(MemoAccountantResponse.failed);
+    } finally {
+      _isProcessing = false;
+      _processNextRequest();
+    }
+  }
+
+  // Public methods that now enqueue requests
+  Future<MemoAccountantResponse> publishReplyTopic(MemoModelPost post, String postReply) {
+    return _enqueueRequest(MemoRequestType.publishReplyTopic, data: {'post': post, 'postReply': postReply});
+  }
+
+  Future<MemoAccountantResponse> publishLike(MemoModelPost post) {
+    return _enqueueRequest(MemoRequestType.publishLike, data: {'post': post});
+  }
+
+  Future<MemoAccountantResponse> publishReplyHashtags(MemoModelPost post, String text) {
+    return _enqueueRequest(MemoRequestType.publishReplyHashtags, data: {'post': post, 'text': text});
+  }
+
+  Future<MemoAccountantResponse> publishImgurOrYoutube(String? topic, String text) {
+    return _enqueueRequest(MemoRequestType.publishImgurOrYoutube, data: {'topic': topic, 'text': text});
+  }
+
+  Future<MemoAccountantResponse> profileSetAvatar(String imgur) {
+    return _enqueueRequest(MemoRequestType.profileSetAvatar, data: {'imgur': imgur});
+  }
+
+  Future<MemoAccountantResponse> profileSetName(String name) {
+    return _enqueueRequest(MemoRequestType.profileSetName, data: {'name': name});
+  }
+
+  Future<MemoAccountantResponse> profileSetText(String text) {
+    return _enqueueRequest(MemoRequestType.profileSetText, data: {'text': text});
+  }
+
+  // Actual execution methods (moved from original public methods)
+  Future<MemoAccountantResponse> _executePublishReplyTopic(MemoModelPost post, String postReply) async {
+    MemoAccountantResponse response = await _tryPublishReplyTopic(user.wifLegacy, post, postReply);
     return _memoAccountantResponse(response);
   }
 
-  Future<MemoAccountantResponse> publishLike(MemoModelPost post) async {
+  Future<MemoAccountantResponse> _executePublishLike(MemoModelPost post) async {
     MemoModelPost? scrapedPost = await MemoPostScraper().fetchAndParsePost(post.id!, filterOn: false);
-
     MemoAccountantResponse response = await _tryPublishLike(post, user.wifLegacy);
 
     if (response == MemoAccountantResponse.yes) {
@@ -69,11 +194,11 @@ class MemoAccountant {
     return _memoAccountantResponse(response);
   }
 
-  Future<MemoAccountantResponse> publishReplyHashtags(MemoModelPost post, String text) async {
+  Future<MemoAccountantResponse> _executePublishReplyHashtags(MemoModelPost post, String text) async {
     return _publishToMemo(MemoCode.profileMessage, text, tips: _parseTips());
   }
 
-  Future<MemoAccountantResponse> publishImgurOrYoutube(String? topic, String text) {
+  Future<MemoAccountantResponse> _executePublishImgurOrYoutube(String? topic, String text) async {
     if (topic != null) {
       return _publishToMemo(MemoCode.topicMessage, text, top: topic, tips: _parseTips());
     } else {
@@ -81,19 +206,19 @@ class MemoAccountant {
     }
   }
 
-  Future<MemoAccountantResponse> profileSetAvatar(String imgur) async {
+  Future<MemoAccountantResponse> _executeProfileSetAvatar(String imgur) async {
     return _publishToMemo(MemoCode.profileImgUrl, imgur, tips: []);
   }
 
-  Future<MemoAccountantResponse> profileSetName(String name) async {
+  Future<MemoAccountantResponse> _executeProfileSetName(String name) async {
     return _publishToMemo(MemoCode.profileName, name, tips: []);
   }
 
-  Future<MemoAccountantResponse> profileSetText(String text) async {
+  Future<MemoAccountantResponse> _executeProfileSetText(String text) async {
     return _publishToMemo(MemoCode.profileText, text, tips: []);
   }
 
-  //TODO ADD A RATE LIMITER TO THE LIKES BUTTON
+  // Original helper methods (unchanged)
   Future<MemoAccountantResponse> _tryPublishLike(MemoModelPost post, String wif) async {
     var mp = await MemoPublisher.create(ref, MemoBitcoinBase.reOrderTxHash(post.id!), MemoCode.postLike, wif: wif);
     List<MemoTip> tips = _parseTips(post: post);
@@ -105,7 +230,6 @@ class MemoAccountant {
 
   Future<MemoAccountantResponse> _tryPublishReplyTopic(String wif, MemoModelPost post, String postReply) async {
     List<MemoTip> tips = _parseTips(post: post);
-
     return _publishToMemo(MemoCode.topicMessage, postReply, tips: tips, top: post.topicId);
   }
 
@@ -115,6 +239,7 @@ class MemoAccountant {
   }
 
   List<MemoTip> _parseTips({MemoModelPost? post}) {
+    // ... unchanged implementation
     TipReceiver receiver = ref.read(userProvider)!.tipReceiver;
     int burnAmount = 0;
     int creatorAmount = 0;
@@ -162,4 +287,16 @@ class MemoAccountant {
 
     return tips;
   }
+
+  // Cleanup method to dispose resources
+  void dispose() {
+    _queueSubscription?.cancel();
+    _queueController?.close();
+    _requestQueue.clear();
+  }
+
+  // Optional: Get queue status for UI feedback
+  int get queueLength => _requestQueue.length;
+  bool get isProcessing => _isProcessing;
+  bool get hasPendingRequests => _requestQueue.isNotEmpty || _isProcessing;
 }

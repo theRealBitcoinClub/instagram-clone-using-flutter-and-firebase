@@ -121,17 +121,18 @@ class CreatorRepository {
     switch (response) {
       case MemoAccountantResponse.yes:
         final updatedCreator = user.creator;
-        updatedCreator!.name = name;
+        updatedCreator.name = name;
         await saveCreator(updatedCreator);
         return "success";
       case MemoAccountantResponse.noUtxo:
       case MemoAccountantResponse.lowBalance:
       case MemoAccountantResponse.dust:
-      case MemoAccountantResponse.failed:
+        // case MemoAccountantResponse.failed:
         return response.message;
     }
   }
 
+  //TODO only save once if user updates text, name, even image same time
   Future<dynamic> profileSetText(String text, MemoModelUser user) async {
     final verificationResponse = MemoVerifier(text).verifyProfileText();
     if (verificationResponse != MemoVerificationResponse.valid) {
@@ -150,7 +151,7 @@ class CreatorRepository {
       case MemoAccountantResponse.noUtxo:
       case MemoAccountantResponse.lowBalance:
       case MemoAccountantResponse.dust:
-      case MemoAccountantResponse.failed:
+        // case MemoAccountantResponse.failed:
         return response.message;
     }
   }
@@ -176,7 +177,7 @@ class CreatorRepository {
       case MemoAccountantResponse.noUtxo:
       case MemoAccountantResponse.lowBalance:
       case MemoAccountantResponse.dust:
-      case MemoAccountantResponse.failed:
+        // case MemoAccountantResponse.failed:
         return response.message;
     }
   }

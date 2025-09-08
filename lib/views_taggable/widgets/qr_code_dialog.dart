@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../memo/model/memo_model_creator.dart';
 import '../../memo/model/memo_model_user.dart';
+import '../../provider/profile_providers.dart';
 import '../../utils/snackbar.dart';
 
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -14,19 +18,25 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
   if (stackTrace != null) print('  StackTrace: $stackTrace');
 }
 
-class QrCodeDialog extends StatefulWidget {
+class QrCodeDialog extends ConsumerStatefulWidget {
   final String legacyAddress;
   final String? cashtokenAddress;
+  final MemoModelCreator? creator;
+  final MemoModelUser? user;
+  final bool memoOnly;
 
-  const QrCodeDialog({Key? key, required this.legacyAddress, this.cashtokenAddress}) : super(key: key);
+  const QrCodeDialog({Key? key, required this.legacyAddress, this.cashtokenAddress, this.creator, this.user, this.memoOnly = false})
+    : super(key: key);
 
   @override
-  State<QrCodeDialog> createState() => _QrCodeDialogState();
+  ConsumerState<QrCodeDialog> createState() => _QrCodeDialogState();
 }
 
-class _QrCodeDialogState extends State<QrCodeDialog> {
+class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   late bool _isCashtokenFormat;
   late Future<void> _initFuture;
+  Timer? _balanceRefreshTimer;
+  final Duration _refreshInterval = Duration(seconds: 3);
 
   @override
   void initState() {
@@ -34,15 +44,20 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
     _initFuture = _loadToggleState();
   }
 
+  @override
+  void dispose() {
+    _balanceRefreshTimer?.cancel();
+    super.dispose();
+  }
+
   Future<void> _loadToggleState() async {
     final prefs = await SharedPreferences.getInstance();
-    // Default to cashtoken format if available, otherwise use legacy
-    final bool isToggleEnabled = widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty;
+    bool isToggleEnabled = widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty;
+    if (widget.memoOnly) isToggleEnabled = false;
     final bool defaultState = isToggleEnabled;
 
     _isCashtokenFormat = prefs.getBool('qr_code_toggle_state') ?? defaultState;
 
-    // Ensure we don't try to use cashtoken format if it's not available
     if (_isCashtokenFormat && !isToggleEnabled) {
       _isCashtokenFormat = false;
     }
@@ -87,10 +102,67 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
     );
   }
 
+  void _startBalanceRefresh(bool isCashtokenTab) {
+    _balanceRefreshTimer?.cancel();
+
+    final profileNotifier = ref.read(profileCreatorStateProvider.notifier);
+    final isAutoRefreshRunning = profileNotifier.isAutoRefreshRunning();
+
+    // Only start refresh timer if general auto-refresh isn't running
+    if (!isAutoRefreshRunning) {
+      _balanceRefreshTimer = Timer.periodic(_refreshInterval, (_) {
+        _refreshBalance(isCashtokenTab);
+      });
+    }
+  }
+
+  void _refreshBalance(bool isCashtokenTab) {
+    final profileNotifier = ref.read(profileCreatorStateProvider.notifier);
+
+    if (isCashtokenTab) {
+      profileNotifier.refreshMahakkaBalance();
+    } else {
+      profileNotifier.refreshMemoBalance();
+    }
+  }
+
+  void _toggleFormat(bool isCashtoken) async {
+    setState(() {
+      _isCashtokenFormat = isCashtoken;
+    });
+
+    // Immediately refresh the balance for the selected tab
+    _refreshBalance(isCashtoken);
+
+    // Start/restart the refresh timer for the selected tab
+    _startBalanceRefresh(isCashtoken);
+
+    await _saveToggleState(isCashtoken);
+  }
+
+  String _formatBalance(int balance) {
+    // Format with thousand separators (no decimals)
+    return balance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
+  }
+
+  String _getBalanceText(bool isCashtokenTab, MemoModelCreator? creator) {
+    if (isCashtokenTab) {
+      // Mahakka balance (BCH & Tokens)
+      final balance = creator?.balanceBch ?? 0;
+      return 'Balance: ${_formatBalance(balance)}';
+    } else {
+      // Memo balance
+      final balance = creator?.balanceMemo ?? 0;
+      return 'Balance: ${_formatBalance(balance)}';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
+    // Watch for creator updates
+    final creatorState = ref.watch(profileCreatorStateProvider);
 
     return FutureBuilder(
       future: _initFuture,
@@ -105,6 +177,7 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
         final bool isToggleEnabled = widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty;
         final String addressToShow = _isCashtokenFormat ? widget.cashtokenAddress! : convertToBchFormat(widget.legacyAddress);
         final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo-128x128";
+        final String balanceText = _getBalanceText(_isCashtokenFormat, creatorState.value);
 
         final ButtonStyle primaryButtonStyle = ElevatedButton.styleFrom(
           backgroundColor: colorScheme.primary,
@@ -128,6 +201,15 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
             if (isToggleEnabled) _buildTabSelector(theme, colorScheme),
 
             const SizedBox(height: 16),
+
+            // Balance display
+            Text(
+              balanceText,
+              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 8),
 
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
@@ -153,7 +235,7 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
               style: primaryButtonStyle,
               onPressed: () {
                 _copyToClipboard(context, addressToShow, "Address copied!");
-                Navigator.of(context).pop();
+                // Navigator.of(context).pop();
               },
               child: const Text("COPY ADDRESS"),
             ),
@@ -171,7 +253,7 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
       decoration: BoxDecoration(color: colorScheme.surfaceVariant.withOpacity(0.3), borderRadius: BorderRadius.circular(8)),
       child: Row(
         children: [
-          // Legacy Address Tab
+          // Legacy Address Tab (Memo)
           Expanded(
             child: GestureDetector(
               onTap: () {
@@ -198,7 +280,7 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
             ),
           ),
 
-          // CashToken Address Tab
+          // CashToken Address Tab (BCH & Token)
           Expanded(
             child: GestureDetector(
               onTap: () {
@@ -228,17 +310,16 @@ class _QrCodeDialogState extends State<QrCodeDialog> {
       ),
     );
   }
-
-  void _toggleFormat(bool isCashtoken) async {
-    setState(() {
-      _isCashtokenFormat = isCashtoken;
-    });
-    await _saveToggleState(isCashtoken);
-  }
 }
 
 // --- Simplified BCH QR Code Dialog Helper ---
-void showQrCodeDialog({required BuildContext context, required ThemeData theme, MemoModelUser? user, MemoModelCreator? creator}) {
+void showQrCodeDialog({
+  required BuildContext context,
+  required ThemeData theme,
+  MemoModelUser? user,
+  MemoModelCreator? creator,
+  bool memoOnly = false,
+}) {
   showDialog(
     context: context,
     builder: (dialogCtx) {
@@ -253,6 +334,9 @@ void showQrCodeDialog({required BuildContext context, required ThemeData theme, 
             : creator!.hasRegisteredAsUser
             ? creator.id
             : creator.id,
+        user: user,
+        creator: creator,
+        memoOnly: memoOnly,
       );
     },
   );

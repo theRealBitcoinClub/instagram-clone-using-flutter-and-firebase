@@ -55,12 +55,12 @@ class MemoModelUser {
   late String wifBchCashtoken;
   @JsonKey(includeFromJson: false, includeToJson: false)
   late String wifLegacy;
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  String balanceCashtokensDevPath145 = "?";
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  String balanceBchDevPath145 = "?";
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  String balanceBchDevPath0Memo = "?";
+  // @JsonKey(includeFromJson: false, includeToJson: false)
+  // String balanceCashtokensDevPath145 = "?";
+  // @JsonKey(includeFromJson: false, includeToJson: false)
+  // String balanceBchDevPath145 = "?";
+  // @JsonKey(includeFromJson: false, includeToJson: false)
+  // String balanceBchDevPath0Memo = "?";
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool hasInit = false;
 
@@ -245,9 +245,9 @@ class MemoModelUser {
     TipReceiver tipReceiver = TipReceiver.both,
     TipAmount tipAmount = TipAmount.survival,
     // Add all ignored fields here as optional parameters
-    this.balanceCashtokensDevPath145 = "?",
-    this.balanceBchDevPath145 = "?",
-    this.balanceBchDevPath0Memo = "?",
+    // this.balanceCashtokensDevPath145 = "?",
+    // this.balanceBchDevPath145 = "?",
+    // this.balanceBchDevPath0Memo = "?",
     required this.pkBchCashtoken,
     required this.pkLegacy,
     required this.creator,
@@ -283,9 +283,9 @@ class MemoModelUser {
       legacyAddressMemoBchAsCashaddress: legacyAddressMemoBchAsCashaddress ?? this.legacyAddressMemoBchAsCashaddress,
       tipReceiver: tipReceiver ?? this._tipReceiver,
       tipAmount: tipAmount ?? this._tipAmount,
-      balanceCashtokensDevPath145: balanceCashtokensDevPath145 ?? this.balanceCashtokensDevPath145,
-      balanceBchDevPath145: balanceBchDevPath145 ?? this.balanceBchDevPath145,
-      balanceBchDevPath0Memo: balanceBchDevPath0Memo ?? this.balanceBchDevPath0Memo,
+      // balanceCashtokensDevPath145: balanceCashtokensDevPath145 ?? this.balanceCashtokensDevPath145,
+      // balanceBchDevPath145: balanceBchDevPath145 ?? this.balanceBchDevPath145,
+      // balanceBchDevPath0Memo: balanceBchDevPath0Memo ?? this.balanceBchDevPath0Memo,
       pkBchCashtoken: pkBchCashtoken ?? this.pkBchCashtoken,
       pkLegacy: pkLegacy ?? this.pkLegacy,
       creator: creator ?? this.creator,

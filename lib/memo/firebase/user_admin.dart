@@ -144,9 +144,9 @@ class _AdminUsersListPageState extends ConsumerState<AdminUsersListPage> {
                         // _buildPropertyRow('Legacy WIF:', user.wifLegacy ?? 'N/A'),
                         _buildPropertyRow('Legacy Address:', user.legacyAddressMemoBch),
                         _buildPropertyRow('CashToken Address:', user.bchAddressCashtokenAware),
-                        _buildPropertyRow('Balance (BCH):', user.balanceBchDevPath145),
-                        _buildPropertyRow('Balance (Tokens):', user.balanceCashtokensDevPath145),
-                        _buildPropertyRow('Balance (Memo BCH):', user.balanceBchDevPath0Memo),
+                        // _buildPropertyRow('Balance (BCH):', user.balanceBchDevPath145),
+                        // _buildPropertyRow('Balance (Tokens):', user.balanceCashtokensDevPath145),
+                        // _buildPropertyRow('Balance (Memo BCH):', user.balanceBchDevPath0Memo),
                         _buildPropertyRow('Tip Amount:', user.tipAmount.toString()),
 
                         const SizedBox(height: 12),

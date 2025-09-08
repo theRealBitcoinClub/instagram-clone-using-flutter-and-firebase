@@ -4,8 +4,10 @@ import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
+import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/repositories/post_repository.dart';
 import 'package:mahakka/utils/snackbar.dart';
+import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure path is correct
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
@@ -345,6 +347,8 @@ class _PostCardState extends ConsumerState<PostCard> {
       message = result.message;
       if (result == MemoAccountantResponse.yes) {
         success = true;
+      } else {
+        showQrCodeDialog(context: ctx, theme: Theme.of(context), user: ref.read(userProvider));
       }
     } else {
       message = "An unexpected error occurred during verification.";

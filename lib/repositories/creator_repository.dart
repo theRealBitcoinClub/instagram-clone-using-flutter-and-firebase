@@ -128,7 +128,7 @@ class CreatorRepository {
       case MemoAccountantResponse.lowBalance:
       case MemoAccountantResponse.dust:
         // case MemoAccountantResponse.failed:
-        return response.message;
+        return MemoAccountantResponse.lowBalance;
     }
   }
 
@@ -152,7 +152,7 @@ class CreatorRepository {
       case MemoAccountantResponse.lowBalance:
       case MemoAccountantResponse.dust:
         // case MemoAccountantResponse.failed:
-        return response.message;
+        return MemoAccountantResponse.lowBalance;
     }
   }
 
@@ -178,7 +178,7 @@ class CreatorRepository {
       case MemoAccountantResponse.lowBalance:
       case MemoAccountantResponse.dust:
         // case MemoAccountantResponse.failed:
-        return response.message;
+        return MemoAccountantResponse.lowBalance;
     }
   }
 }

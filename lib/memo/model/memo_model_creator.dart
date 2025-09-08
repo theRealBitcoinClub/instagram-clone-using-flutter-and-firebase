@@ -225,23 +225,23 @@ class MemoModelCreator {
 
   Future<void> refreshBalances(Ref ref) async {
     if (hasRegisteredAsUser) {
-      await _refreshBalanceMahakka(ref);
-      await _refreshBalanceMemo(ref);
+      await refreshBalanceMahakka(ref);
+      await refreshBalanceMemo(ref);
     } else {
-      await _refreshBalanceMemo(ref);
+      await refreshBalanceMemo(ref);
     }
     //TODO check if balance changed before save
     ref.read(creatorCacheRepositoryProvider).saveCreator(this);
   }
 
-  Future<void> _refreshBalanceMahakka(Ref ref) async {
+  Future<void> refreshBalanceMahakka(Ref ref) async {
     final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
     Balance balances = await base.getBalances(bchAddressCashtokenAware);
     balanceBch = balances.bch;
     balanceToken = balances.token;
   }
 
-  Future<void> _refreshBalanceMemo(Ref ref) async {
+  Future<void> refreshBalanceMemo(Ref ref) async {
     final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
     balanceMemo = await base.getBalances(id).then((value) => value.bch);
   }

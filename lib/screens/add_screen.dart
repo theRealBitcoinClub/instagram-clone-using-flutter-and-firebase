@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
+import 'package:mahakka/provider/user_provider.dart';
+import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure this is theme-neutral or adapts
 import 'package:mahakka/widgets/textfield_input.dart'; // CRITICAL: This MUST be themed internally
@@ -768,7 +770,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         _clearInputsAfterPublish();
         _showSuccessSnackBar('Successfully published!');
       } else {
-        _showErrorSnackBar('Publish failed: ${response.toString()}. Please try again.');
+        showQrCodeDialog(context: context, theme: Theme.of(context), user: ref.read(userProvider), memoOnly: true);
+        _showErrorSnackBar('Publish failed: ${response.toString()}');
       }
     } catch (e, s) {
       _log("Error during publish: $e\n$s");

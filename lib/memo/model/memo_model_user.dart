@@ -1,10 +1,8 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
-import 'package:mahakka/provider/electrum_provider.dart';
 
 part 'memo_model_user.g.dart'; // Add this line
 
@@ -146,62 +144,62 @@ class MemoModelUser {
     return true;
   }
 
-  Future<String> refreshBalanceDevPath0(Ref ref) async {
-    MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-    // MemoBitcoinBase base = await MemoBitcoinBase.create();
-    P2pkhAddress p2pkhwt = base.createAddressLegacy(pkLegacy);
-    BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
-
-    List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress);
-    if (utxos.isEmpty) {
-      balanceBchDevPath0Memo = "noutxo";
-      // return "noutxos";
-    }
-    List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, pkLegacy);
-    BigInt totalAmountInSatoshisAvailable = utxosWA.sumOfUtxosValue();
-    if (totalAmountInSatoshisAvailable == BigInt.zero) {
-      balanceBchDevPath0Memo = "noMemo";
-      // return "nofunds";
-    }
-    balanceBchDevPath0Memo = totalAmountInSatoshisAvailable.toString();
-    // return "success";
-    return balanceBchDevPath0Memo;
-  }
-
-  Future<String> refreshBalanceDevPath145(Ref ref) async {
-    MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-    P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(pkBchCashtoken);
-    BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
-    List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress);
-    if (utxos.isEmpty) {
-      balanceBchDevPath145 = "noutxo";
-      // return "noutxos";
-    }
-    List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, pkBchCashtoken);
-    BigInt totalAmountInSatoshisAvailable = utxosWA.sumOfUtxosValue();
-    if (totalAmountInSatoshisAvailable == BigInt.zero) {
-      balanceBchDevPath145 = "noBch";
-      // return "nofunds";
-    }
-    balanceBchDevPath145 = totalAmountInSatoshisAvailable.toString();
-    return balanceBchDevPath145;
-  }
-
-  Future<String> refreshBalanceTokens(Ref ref) async {
-    MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-    P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(pkBchCashtoken);
-    p2pkhwt.toAddress(BitcoinCashNetwork.mainnet);
-    BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
-    List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress, includeCashtokens: true);
-    if (utxos.isEmpty) {
-      balanceCashtokensDevPath145 = "notokens";
-      // return "noutxos";
-    }
-    List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, pkBchCashtoken);
-    BigInt totalAmountOfTokenAvailable = base.calculateTotalAmountOfThatToken(utxosWA, MemoBitcoinBase.tokenId);
-    balanceCashtokensDevPath145 = totalAmountOfTokenAvailable.toString();
-    return balanceCashtokensDevPath145;
-  }
+  // Future<String> refreshBalanceDevPath0(Ref ref) async {
+  //   MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
+  //   // MemoBitcoinBase base = await MemoBitcoinBase.create();
+  //   P2pkhAddress p2pkhwt = base.createAddressLegacy(pkLegacy);
+  //   BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
+  //
+  //   List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress);
+  //   if (utxos.isEmpty) {
+  //     balanceBchDevPath0Memo = "noutxo";
+  //     // return "noutxos";
+  //   }
+  //   List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, pkLegacy);
+  //   BigInt totalAmountInSatoshisAvailable = utxosWA.sumOfUtxosValue();
+  //   if (totalAmountInSatoshisAvailable == BigInt.zero) {
+  //     balanceBchDevPath0Memo = "noMemo";
+  //     // return "nofunds";
+  //   }
+  //   balanceBchDevPath0Memo = totalAmountInSatoshisAvailable.toString();
+  //   // return "success";
+  //   return balanceBchDevPath0Memo;
+  // }
+  //
+  // Future<String> refreshBalanceDevPath145(Ref ref) async {
+  //   MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
+  //   P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(pkBchCashtoken);
+  //   BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
+  //   List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress);
+  //   if (utxos.isEmpty) {
+  //     balanceBchDevPath145 = "noutxo";
+  //     // return "noutxos";
+  //   }
+  //   List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, pkBchCashtoken);
+  //   BigInt totalAmountInSatoshisAvailable = utxosWA.sumOfUtxosValue();
+  //   if (totalAmountInSatoshisAvailable == BigInt.zero) {
+  //     balanceBchDevPath145 = "noBch";
+  //     // return "nofunds";
+  //   }
+  //   balanceBchDevPath145 = totalAmountInSatoshisAvailable.toString();
+  //   return balanceBchDevPath145;
+  // }
+  //
+  // Future<String> refreshBalanceTokens(Ref ref) async {
+  //   MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
+  //   P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(pkBchCashtoken);
+  //   p2pkhwt.toAddress(BitcoinCashNetwork.mainnet);
+  //   BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
+  //   List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress, includeCashtokens: true);
+  //   if (utxos.isEmpty) {
+  //     balanceCashtokensDevPath145 = "notokens";
+  //     // return "noutxos";
+  //   }
+  //   List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, pkBchCashtoken);
+  //   BigInt totalAmountOfTokenAvailable = base.calculateTotalAmountOfThatToken(utxosWA, MemoBitcoinBase.tokenId);
+  //   balanceCashtokensDevPath145 = totalAmountOfTokenAvailable.toString();
+  //   return balanceCashtokensDevPath145;
+  // }
 
   String get profileIdMemoBch {
     return legacyAddressMemoBch;

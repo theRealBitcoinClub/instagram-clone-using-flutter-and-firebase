@@ -42,15 +42,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     _scrollController.addListener(_scrollListener);
 
     // Experiment: Force a rebuild after the initial data should have arrived
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        // Small delay
-        if (mounted) {
-          print("Forcing a setState in FeedScreen after initial frame and delay");
-          setState(() {});
-        }
-      });
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   Future.delayed(const Duration(milliseconds: 100), () {
+    //     // Small delay
+    //     if (mounted) {
+    //       print("Forcing a setState in FeedScreen after initial frame and delay");
+    //       setState(() {});
+    //     }
+    //   });
+    // });
     _activateKeyboardScrollingNoListClickNeeded();
     // Initial data fetch is handled by the feedPostsProvider when it's first read/watched.
     // No explicit call needed here if the provider's constructor calls fetchInitialPosts.

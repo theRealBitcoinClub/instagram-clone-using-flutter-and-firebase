@@ -29,8 +29,8 @@ val flutterCompileSdkVersion = localProperties.getProperty("flutter.compileSdkVe
 val flutterMinSdkVersion = localProperties.getProperty("flutter.minSdkVersion")?.toInt() ?: 27
 val flutterTargetSdkVersion = localProperties.getProperty("flutter.targetSdkVersion")?.toInt() ?: 35
 val flutterNdkVersion = localProperties.getProperty("flutter.ndkVersion") ?: "27.0.12077973"
-val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toInt() ?: 2025090802
-val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.3.0-BCH"
+val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toInt() ?: 2025090901
+val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.3.1-BCH"
 
 android {
     namespace = "com.mahakka"
@@ -76,8 +76,8 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutterMinSdkVersion
         targetSdk = flutterTargetSdkVersion
-        versionCode = 2025090802
-        versionName = "1.3.0-BCH"
+        versionCode = 2025090901
+        versionName = "1.3.1-BCH"
     }
 
     buildTypes {

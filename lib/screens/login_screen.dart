@@ -113,7 +113,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     setState(() {
       _isLoading = true;
     });
-    doHeavyWork();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      doHeavyWork();
+    });
+    // doHeavyWork();
   }
 
   Future<void> doHeavyWork() async {

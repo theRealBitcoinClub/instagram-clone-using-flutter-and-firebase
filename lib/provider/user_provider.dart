@@ -119,6 +119,6 @@ final userProvider = Provider<MemoModelUser?>((ref) {
 });
 
 // Optional: Provider for loading state
-final userIsLoadingProvider = Provider<bool>((ref) {
-  return ref.watch(userNotifierProvider).isLoading;
-});
+// final userIsLoadingProvider = Provider<bool>((ref) {
+//   return ref.watch(userNotifierProvider).isLoading;
+// });

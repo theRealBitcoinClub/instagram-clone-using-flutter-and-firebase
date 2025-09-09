@@ -539,7 +539,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     );
   }
 
-  Future<void> _showImgurDialog() async {
+  //FILES THAT ARE UPLOADED SUCCESSFULLY ARE DISPLAYED ON https://free-bch.fullstack.cash/ipfs/view/${cid}
+  _showIpfsUploadScreen() {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -550,8 +551,10 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         ),
       ),
     );
+  }
 
-    // _showUrlInputDialog("Paste Imgur Image URL", _imgurCtrl, "e.g. https://i.imgur.com/image.jpeg");
+  Future<void> _showImgurDialog() async {
+    _showUrlInputDialog("Paste Imgur Image URL", _imgurCtrl, "e.g. https://i.imgur.com/image.jpeg");
   }
 
   Future<void> _showVideoDialog() async {

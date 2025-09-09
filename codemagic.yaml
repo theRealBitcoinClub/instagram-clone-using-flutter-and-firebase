@@ -30,6 +30,32 @@ workflows:
           
           flutter build apk --release
 
+      - name: Extract and Display Signing Information
+        script: |
+          echo "=== APK SIGNING CERTIFICATE INFORMATION ==="
+          echo "This information can be used to verify the APK authenticity"
+          echo ""
+          
+          # Extract signing certificate info
+          keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk
+          
+          # Save to build artifact for reference
+          keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk > signature_info.txt
+          
+          # Also extract with apksigner if available
+          if command -v apksigner &> /dev/null; then
+            echo ""
+            echo "=== APKSIGNER VERIFICATION ==="
+            apksigner verify --print-certs build/app/outputs/flutter-apk/app-release.apk
+          fi
+          
+          # Extract SHA-256 fingerprint for verification
+          SHA256_FINGERPRINT=$(keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk | grep "SHA256" | head -1 | sed 's/.*SHA256: //' | tr -d ':' | tr -d ' ')
+          echo ""
+          echo "=== QUICK VERIFICATION ==="
+          echo "SHA-256 Fingerprint: $SHA256_FINGERPRINT"
+          echo "Users can compare this with your published fingerprint to verify authenticity."
+
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
 

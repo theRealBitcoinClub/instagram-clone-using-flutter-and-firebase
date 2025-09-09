@@ -1,93 +1,29 @@
-import 'dart:async';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class PostCounterWidget extends StatefulWidget {
-  final VoidCallback onRefresh;
-  final ValueChanged<bool> onVisibilityChanged; // Add this callback
+import '../provider/feed_posts_provider.dart';
 
-  const PostCounterWidget({
-    super.key,
-    required this.onRefresh,
-    required this.onVisibilityChanged, // Add this parameter
-  });
+class PostCounterWidget extends ConsumerWidget {
+  const PostCounterWidget({super.key});
 
   @override
-  State<PostCounterWidget> createState() => _PostCounterWidgetState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final feedState = ref.watch(feedPostsProvider);
+    final notifier = ref.read(feedPostsProvider.notifier);
 
-class _PostCounterWidgetState extends State<PostCounterWidget> {
-  int _postCount = 0;
-  int _lastKnownCount = 0;
-  StreamSubscription? _subscription;
-  bool _isVisible = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _setupPostCounter();
-    _setupKeyboardListener();
-  }
-
-  void _setupPostCounter() {
-    _subscription = FirebaseFirestore.instance.collection('metadata').doc('posts').snapshots().listen((snapshot) {
-      if (snapshot.exists) {
-        final newCount = snapshot.data()?['count'] as int? ?? 0;
-
-        setState(() {
-          _postCount = newCount;
-          // Show widget if count increased since last check
-          final shouldBeVisible = newCount > _lastKnownCount && newCount > 1;
-          if (_isVisible != shouldBeVisible) {
-            _isVisible = shouldBeVisible;
-            widget.onVisibilityChanged(_isVisible); // Notify parent
-          }
-        });
+    // Listen for F5 key to trigger refresh
+    RawKeyboard.instance.addListener((event) {
+      if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.f5) {
+        notifier.refreshFeed();
       }
     });
-  }
 
-  void _setupKeyboardListener() {
-    RawKeyboard.instance.addListener(_handleKeyEvent);
-  }
+    if (!feedState.showPostCounter) return const SizedBox.shrink();
 
-  void _handleKeyEvent(RawKeyEvent event) {
-    if (event is RawKeyDownEvent) {
-      if (event.logicalKey == LogicalKeyboardKey.f5) {
-        _triggerRefresh();
-      }
-    }
-  }
-
-  void _triggerRefresh() {
-    widget.onRefresh();
-    setState(() {
-      _lastKnownCount = _postCount;
-      _isVisible = false;
-      widget.onVisibilityChanged(false); // Notify parent when hiding
-    });
-  }
-
-  void _dismissCounter() {
-    setState(() {
-      _lastKnownCount = _postCount;
-      _isVisible = false;
-      widget.onVisibilityChanged(false); // Notify parent when dismissing
-    });
-  }
-
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    RawKeyboard.instance.removeListener(_handleKeyEvent);
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_isVisible) return const SizedBox.shrink();
+    //TODO the last feed state must be persisted locally to make this check work well
+    //TODO lastPostCount of last refresh must be checked against the new totalPostCount
+    final newPostsCount = feedState.totalPostCount - feedState.posts.length;
 
     return Container(
       padding: const EdgeInsets.all(16.0),
@@ -99,13 +35,13 @@ class _PostCounterWidgetState extends State<PostCounterWidget> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'There are $_postCount new posts available, pull to refresh',
+              'There are $newPostsCount new posts available, pull to refresh',
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500),
             ),
           ),
           IconButton(
             icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
-            onPressed: _dismissCounter, // Use the new method
+            onPressed: () => notifier.hidePostCounter(),
             tooltip: 'Dismiss',
           ),
         ],

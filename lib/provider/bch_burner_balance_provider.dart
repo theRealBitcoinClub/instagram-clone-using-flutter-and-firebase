@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 
+import '../memo/base/debounced_balance_service.dart';
 import 'electrum_provider.dart';
 
 final bchBurnerBalanceProvider = StreamProvider.autoDispose<Balance>((ref) {
@@ -15,8 +16,7 @@ final bchBurnerBalanceProvider = StreamProvider.autoDispose<Balance>((ref) {
     streamController.add(balance);
   });
 
-  // Set up periodic updates every 5 seconds
-  timer = Timer.periodic(const Duration(seconds: 5), (_) async {
+  timer = Timer.periodic(const Duration(seconds: 10), (_) async {
     try {
       final balance = await _fetchBalance(ref);
       streamController.add(balance);
@@ -37,5 +37,6 @@ final bchBurnerBalanceProvider = StreamProvider.autoDispose<Balance>((ref) {
 
 Future<Balance> _fetchBalance(Ref ref) async {
   final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-  return await base.getBalances(MemoBitcoinBase.bchBurnerAddress);
+  DebouncedBalanceService debouncedBalanceService = DebouncedBalanceService(base);
+  return await debouncedBalanceService.getBalances(MemoBitcoinBase.bchBurnerAddress);
 }

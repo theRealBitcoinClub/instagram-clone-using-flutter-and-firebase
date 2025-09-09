@@ -130,10 +130,10 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
         isRefreshingProfile = false;
       }
       if (isOwnProfile) {
-        ref.read(profileCreatorStateProvider.notifier).startAutoRefreshBalance();
+        ref.read(profileCreatorStateProvider.notifier).startAutoRefreshBalanceProfile();
       }
     } else {
-      ref.read(profileCreatorStateProvider.notifier).stopAutoRefreshBalance();
+      ref.read(profileCreatorStateProvider.notifier).stopAutoRefreshBalanceProfile();
     }
   }
 

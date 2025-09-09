@@ -23,31 +23,6 @@ class Balance {
   }
 }
 
-void main() async {
-  const address = 'bitcoincash:zzh0nugxc8qvzxec7yx2077sujy6xv3kz5r0yptyf9';
-
-  try {
-    var name = await MemoBitcoinBase.create();
-    final balances = await name.getBalances(address);
-    print('Balances for address $address:');
-    print('BCH Balance: ${balances.bch} sats');
-    print('Token Balance: ${balances.token} tokens');
-  } catch (e) {
-    print('An error occurred in the main function: $e');
-  }
-  const addressLegacy = '128HZC9RuAceY1QbYu6x3S9gnW8btYSyUP';
-
-  try {
-    var name = await MemoBitcoinBase.create();
-    final balances = await name.getBalances(addressLegacy);
-    print('Balances for address $addressLegacy:');
-    print('BCH Balance: ${balances.bch} sats');
-    print('Token Balance: ${balances.token} tokens');
-  } catch (e) {
-    print('An error occurred in the main function: $e');
-  }
-}
-
 class MemoBitcoinBase {
   static const String tokenId = "d44bf7822552d522802e7076dc9405f5e43151f0ac12b9f6553bda1ce8560002";
 

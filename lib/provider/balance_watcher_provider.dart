@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../memo/base/debounced_balance_service.dart';
 import 'electrum_provider.dart';
 
 final balanceWatcherProvider = StreamProvider.autoDispose.family<Map<String, int>, String>((ref, String address) async* {
@@ -15,7 +16,8 @@ final balanceWatcherProvider = StreamProvider.autoDispose.family<Map<String, int
 
   while (true) {
     try {
-      final balance = await electrumService.getBalances(address);
+      DebouncedBalanceService debouncedBalanceService = DebouncedBalanceService(electrumService);
+      final balance = await debouncedBalanceService.getBalances(address);
 
       // Check if balance has changed
       if (balance.bch != previousBalance['bch'] || balance.token != previousBalance['token']) {

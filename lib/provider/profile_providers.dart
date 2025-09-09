@@ -24,7 +24,7 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
   Timer? _balanceRefreshTimer;
   Timer? _mahakkaBalanceRefreshTimer;
   Timer? _memoBalanceRefreshTimer;
-  Duration _refreshBalanceInterval = Duration(seconds: 3);
+  Duration _refreshBalanceInterval = Duration(seconds: 5);
 
   DateTime? _lastRefreshTime;
   bool _isAutoRefreshRunning = false;
@@ -35,7 +35,7 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
 
     // Debounce rapid rebuilds
     final now = DateTime.now();
-    if (_lastRefreshTime != null && now.difference(_lastRefreshTime!) < Duration(seconds: 1)) {
+    if (_lastRefreshTime != null && now.difference(_lastRefreshTime!) < Duration(seconds: 2)) {
       return state.value; // Return current state if recently refreshed
     }
 
@@ -151,80 +151,86 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
     _refreshBalanceInterval = interval;
     // Restart any active timers with new interval
     if (_balanceRefreshTimer != null) {
-      startAutoRefreshBalance();
+      startAutoRefreshBalanceProfile();
     } else if (_mahakkaBalanceRefreshTimer != null) {
-      startAutoRefreshMahakkaBalance();
+      startAutoRefreshMahakkaBalanceQrDialog();
     } else if (_memoBalanceRefreshTimer != null) {
-      startAutoRefreshMemoBalance();
+      startAutoRefreshMemoBalanceQrDialog();
     }
   }
 
   // Optional: Method to stop automatic refreshing
-  void stopAutoRefreshBalance() {
-    _stopAllBalanceTimers();
+  void stopAutoRefreshBalanceProfile() {
+    if (!_isAutoRefreshRunning) return; // Don't stop if not running
+    _stopAllBalanceTimers(stopProfileRefresh: true);
     _isAutoRefreshRunning = false;
   }
 
   // Optional: Method to start automatic refreshing (both balances)
-  void startAutoRefreshBalance() {
-    _stopAllBalanceTimers();
+  void startAutoRefreshBalanceProfile() {
+    if (_isAutoRefreshRunning) return; // Don't start if already running
+
+    _stopAllBalanceTimers(stopProfileRefresh: true);
     _isAutoRefreshRunning = true;
-    _startBalanceRefreshTimer();
+    _startBalanceRefreshTimerProfile();
   }
 
   // Auto-refresh for Mahakka balance only - for QR Code dialog
-  void startAutoRefreshMahakkaBalance() {
+  void startAutoRefreshMahakkaBalanceQrDialog() {
     // Only start if auto-refresh isn't already running (i.e., not on profile tab)
     if (!_isAutoRefreshRunning) {
       _stopAllBalanceTimers();
-      _startMahakkaBalanceRefreshTimer();
+      _startMahakkaBalanceRefreshTimerQrDialog();
     }
   }
 
   // Auto-refresh for Memo balance only - for QR Code dialog
-  void startAutoRefreshMemoBalance() {
+  void startAutoRefreshMemoBalanceQrDialog() {
     // Only start if auto-refresh isn't already running (i.e., not on profile tab)
     if (!_isAutoRefreshRunning) {
       _stopAllBalanceTimers();
-      _startMemoBalanceRefreshTimer();
+      _startMemoBalanceRefreshTimerQrDialog();
     }
   }
 
-  void _startBalanceRefreshTimer() {
+  void _startBalanceRefreshTimerProfile() {
     // Cancel any existing timer
     _balanceRefreshTimer?.cancel();
 
     // Start a new periodic timer
     _balanceRefreshTimer = Timer.periodic(_refreshBalanceInterval, (_) async {
-      await _refreshBalancesPeriodically();
+      await _refreshBalancesPeriodicallyOnProfile();
     });
   }
 
-  void _startMahakkaBalanceRefreshTimer() {
+  void _startMahakkaBalanceRefreshTimerQrDialog() {
     _mahakkaBalanceRefreshTimer?.cancel();
     _mahakkaBalanceRefreshTimer = Timer.periodic(_refreshBalanceInterval, (_) async {
-      await _refreshMahakkaBalancePeriodically();
+      await _refreshMahakkaBalancePeriodicallyOnQrDialog();
     });
   }
 
-  void _startMemoBalanceRefreshTimer() {
+  void _startMemoBalanceRefreshTimerQrDialog() {
     _memoBalanceRefreshTimer?.cancel();
     _memoBalanceRefreshTimer = Timer.periodic(_refreshBalanceInterval, (_) async {
-      await _refreshMemoBalancePeriodically();
+      await _refreshMemoBalancePeriodicallyOnQrDialog();
     });
   }
 
-  void _stopAllBalanceTimers() {
-    //TODO MAKE SURE BALANCE REFRESH IS STILL RUNNING WHILE ON PROFILE
-    // _balanceRefreshTimer?.cancel();
+  void _stopAllBalanceTimers({bool stopProfileRefresh = false}) {
+    if (stopProfileRefresh) {
+      _balanceRefreshTimer?.cancel();
+      _balanceRefreshTimer = null;
+    }
+
     _mahakkaBalanceRefreshTimer?.cancel();
     _memoBalanceRefreshTimer?.cancel();
-    // _balanceRefreshTimer = null;
+
     _mahakkaBalanceRefreshTimer = null;
     _memoBalanceRefreshTimer = null;
   }
 
-  Future<void> _refreshBalancesPeriodically() async {
+  Future<void> _refreshBalancesPeriodicallyOnProfile() async {
     final creatorId = ref.read(_currentProfileIdProvider);
     if (creatorId == null || creatorId.isEmpty || state.isLoading) {
       return; // Skip if no creator ID or already loading
@@ -245,7 +251,7 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
     }
   }
 
-  Future<void> _refreshMahakkaBalancePeriodically() async {
+  Future<void> _refreshMahakkaBalancePeriodicallyOnQrDialog() async {
     final creatorId = ref.read(_currentProfileIdProvider);
     if (creatorId == null || creatorId.isEmpty || state.isLoading) {
       return;
@@ -261,7 +267,7 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
     }
   }
 
-  Future<void> _refreshMemoBalancePeriodically() async {
+  Future<void> _refreshMemoBalancePeriodicallyOnQrDialog() async {
     final creatorId = ref.read(_currentProfileIdProvider);
     if (creatorId == null || creatorId.isEmpty || state.isLoading) {
       return;

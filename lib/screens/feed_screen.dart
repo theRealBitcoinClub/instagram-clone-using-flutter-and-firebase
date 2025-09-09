@@ -9,6 +9,7 @@ import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../provider/bch_burner_balance_provider.dart';
+import '../widgets/post_counter_widget.dart';
 
 // Enum for filter types - this should be consistent with what PostService and FeedPostsNotifier expect
 enum PostFilterType {
@@ -141,15 +142,25 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           // _buildMenuFilter(theme, feedState.activeFilter), // Pass the single active filter
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // Tell the provider to refresh the feed (fetches first page with current filter)
-          await ref.read(feedPostsProvider.notifier).refreshFeed();
-          // ref.invalidate(feedPostsProvider);
-        },
-        color: theme.colorScheme.primary,
-        backgroundColor: theme.colorScheme.surface,
-        child: _buildFeedBody(theme, feedState),
+      body: Column(
+        children: [
+          // Post counter at the top
+          const PostCounterWidget(),
+
+          // Your existing feed content
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                // Tell the provider to refresh the feed (fetches first page with current filter)
+                await ref.read(feedPostsProvider.notifier).refreshFeed();
+                // ref.invalidate(feedPostsProvider);
+              },
+              color: theme.colorScheme.primary,
+              backgroundColor: theme.colorScheme.surface,
+              child: _buildFeedBody(theme, feedState),
+            ),
+          ),
+        ],
       ),
     );
   }

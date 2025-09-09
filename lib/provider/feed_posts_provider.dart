@@ -14,12 +14,13 @@ class FeedState {
   final bool isLoadingMore;
   final String? errorMessage;
   final DocumentSnapshot? lastDocument;
-  // final bool hasMorePosts;
   final PostFilterType? activeFilter;
   final bool isUsingCache;
-  final int totalPostCount; // Add this field
+  final int totalPostCount;
   final bool isRefreshing;
-  // final List? newPosts; // Add this field
+  //TODO Post Counter is tricky because it must persist the last post count and
+  // there might be posts included in the total number that are not visible on the feed (videos)
+  final bool showPostCounter; // Add this field
 
   FeedState({
     this.posts = const [],
@@ -27,12 +28,12 @@ class FeedState {
     this.isLoadingMore = false,
     this.errorMessage,
     this.lastDocument,
-    // this.hasMorePosts = true,
     this.activeFilter,
     this.isUsingCache = false,
     this.totalPostCount = 0,
     this.isRefreshing = false,
-    // this.newPosts, // Initialize to 0
+    //TODO check that the feed_screen is repainted
+    this.showPostCounter = false, // Initialize to false
   });
 
   FeedState copyWith({
@@ -41,13 +42,12 @@ class FeedState {
     bool? isLoadingMore,
     String? errorMessage,
     DocumentSnapshot? lastDocument,
-    // bool? hasMorePosts,
     bool? isUsingCache,
     bool clearErrorMessage = false,
     PostFilterType? activeFilter,
     int? totalPostCount,
     bool? isRefreshing,
-    // List? newPosts, // Add to copyWith
+    bool? showPostCounter, // Add to copyWith
   }) {
     return FeedState(
       posts: posts ?? this.posts,
@@ -55,12 +55,11 @@ class FeedState {
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       errorMessage: clearErrorMessage ? null : errorMessage ?? this.errorMessage,
       lastDocument: lastDocument ?? this.lastDocument,
-      // hasMorePosts: hasMorePosts ?? this.hasMorePosts,
       activeFilter: activeFilter ?? this.activeFilter,
       isUsingCache: isUsingCache ?? this.isUsingCache,
       isRefreshing: isRefreshing ?? this.isRefreshing,
-      // newPosts: newPosts ?? this.newPosts, // Include in copy
-      totalPostCount: totalPostCount ?? this.totalPostCount, // Include in copy
+      totalPostCount: totalPostCount ?? this.totalPostCount,
+      showPostCounter: showPostCounter ?? this.showPostCounter, // Include in copy
     );
   }
 
@@ -75,8 +74,46 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
   final PostCacheRepository _cacheRepository;
   final int _pageSize = 10; // Changed from 50 to 10
 
+  int _lastKnownPostCount = 0; // Track last known count for comparison
+
   FeedPostsNotifier(this._postService, this._cacheRepository) : super(FeedState()) {
     fetchInitialPosts();
+    _setupPostCounterListener();
+  }
+
+  // Add post counter listener
+  void _setupPostCounterListener() {
+    // Listen to Firestore for post count changes
+    FirebaseFirestore.instance.collection('metadata').doc('posts').snapshots().listen((snapshot) {
+      if (snapshot.exists && mounted) {
+        final newCount = snapshot.data()?['count'] as int? ?? 0;
+
+        // Show counter if count increased since last check and we have posts loaded
+        if (newCount > _lastKnownPostCount && state.posts.isNotEmpty) {
+          state = state.copyWith(
+            showPostCounter: true,
+            totalPostCount: newCount, // Also update total count
+          );
+        }
+
+        // Update last known count
+        _lastKnownPostCount = newCount;
+      }
+    });
+  }
+
+  // Method to hide the post counter
+  void hidePostCounter() {
+    if (state.showPostCounter) {
+      state = state.copyWith(showPostCounter: false);
+    }
+  }
+
+  // Method to manually show the post counter (if needed)
+  void showPostCounter() {
+    if (!state.showPostCounter) {
+      state = state.copyWith(showPostCounter: true);
+    }
   }
 
   @override
@@ -252,14 +289,15 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
   //   _cacheRepository.clearPagesForFilter(state.activeFilter?.name);
   //   fetchInitialPosts();
   // }
-
   Future<void> refreshFeed() async {
     try {
+      // Hide counter when refresh starts
+      hidePostCounter();
+
       // First check the current total post count from Firebase
       final int currentTotalCount = await _postService.getTotalPostCount();
 
       if (currentTotalCount == -1) {
-        // Fallback to normal refresh if count fails
         await _performFullRefresh();
         return;
       }
@@ -268,30 +306,22 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
       final int newPostsCount = currentTotalCount - previousTotalCount;
 
       if (newPostsCount <= 0) {
-        // No new posts, just update the count
         print('\nFEED POSTS PROVIDER\nNo new posts, total count unchanged: $currentTotalCount');
         state = state.copyWith(totalPostCount: currentTotalCount, isRefreshing: false);
         return;
       }
 
-      // Start refreshing state
-      state = state.copyWith(isRefreshing: true /*newPosts: []*/);
+      state = state.copyWith(isRefreshing: true);
 
       print('\nFEED POSTS PROVIDER\nFound $newPostsCount new posts, fetching all at once...');
 
-      // Fetch ALL new posts in one go (limit = newPostsCount)
-      final List<MemoModelPost> allNewPosts = await _postService.getPostsPaginated(
-        limit: newPostsCount,
-        startAfterDoc: null, // Get the very latest posts
-      );
+      final List<MemoModelPost> allNewPosts = await _postService.getPostsPaginated(limit: newPostsCount, startAfterDoc: null);
 
       if (!mounted) return;
 
-      // Merge new posts with existing posts at the beginning
       await _mergeNewPostsWithExisting(allNewPosts, currentTotalCount);
     } catch (e, s) {
       _logFeedError("Error during refresh", e, s);
-      // Fall back to full refresh on error
       await _performFullRefresh();
     }
   }

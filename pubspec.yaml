@@ -42,6 +42,7 @@ dependencies:
   cloud_firestore: ^6.0.1
   isar_community: ^3.3.0-dev.1  # Correct package name
   isar_community_flutter_libs: ^3.3.0-dev.1  # Correct package name
+  file_picker: ^10.3.2
 
 dev_dependencies:
   flutter_test:

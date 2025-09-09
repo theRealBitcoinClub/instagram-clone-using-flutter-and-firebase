@@ -36,6 +36,7 @@ class AuthPage extends ConsumerWidget {
     // }
 
     if (user != null && user.mnemonic.isNotEmpty) {
+      // return
       return const HomeSceen();
     } else {
       return const LoginScreen();

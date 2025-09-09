@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/provider/user_provider.dart';
+import 'package:mahakka/screens/pin_claim_screen.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure this is theme-neutral or adapts
@@ -16,6 +17,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 // Assuming these exist and are correctly imported
 import '../memo/base/memo_verifier.dart';
 import '../memo/base/text_input_verifier.dart';
+import '../provider/electrum_provider.dart';
 import '../repositories/post_repository.dart';
 import '../views_taggable/view_models/search_view_model.dart'; // Ensure SearchViewModel logic is sound
 import '../views_taggable/widgets/comment_text_field.dart'; // CRITICAL: This MUST be themed internally
@@ -538,7 +540,18 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   Future<void> _showImgurDialog() async {
-    _showUrlInputDialog("Paste Imgur Image URL", _imgurCtrl, "e.g. https://i.imgur.com/image.jpeg");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PinClaimScreen(
+          wallet: ref.read(electrumServiceProvider).value!,
+          serverUrl: 'https://file-stage.fullstack.cash',
+          mnemonic: ref.read(userProvider)!.mnemonic,
+        ),
+      ),
+    );
+
+    // _showUrlInputDialog("Paste Imgur Image URL", _imgurCtrl, "e.g. https://i.imgur.com/image.jpeg");
   }
 
   Future<void> _showVideoDialog() async {

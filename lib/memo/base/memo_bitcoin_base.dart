@@ -258,4 +258,102 @@ class MemoBitcoinBase {
 
     return reversedHexString;
   }
+
+  Future<String> sendIpfs(List<Map<String, dynamic>> outputs, String mnemonic) async {
+    try {
+      // Validate outputs
+      if (outputs.isEmpty) {
+        throw Exception('No outputs provided for transaction');
+      }
+
+      // Get the private key for the default derivation path
+      // final mnemonic = await _getMnemonic();
+      final privateKey = createBip44PrivateKey(mnemonic, derivationPathMemoBch);
+
+      // Create sender address
+      final senderAddress = createAddressP2PKHWT(privateKey);
+      final cashAddress = BitcoinCashAddress.fromBaseAddress(senderAddress);
+
+      // Get UTXOs for the sender address
+      final electrumUtxos = await requestElectrumUtxos(cashAddress);
+      final utxosWithAddress = transformUtxosAddAddressDetails(electrumUtxos, cashAddress, privateKey);
+
+      // Calculate total available balance
+      final totalBalance = utxosWithAddress.fold(BigInt.zero, (previousValue, element) => previousValue + element.utxo.value);
+
+      // Convert outputs to BitcoinOutput objects and calculate total amount
+      final bitcoinOutputs = <BitcoinOutput>[];
+      BigInt totalOutputAmount = BigInt.zero;
+
+      for (final output in outputs) {
+        final address = output['address'];
+        final amountSat = output['amountSat'];
+        // final amountSat = BigInt.from(output['amountSat']);
+
+        bitcoinOutputs.add(BitcoinOutput(address: BitcoinCashAddress(address).baseAddress, value: amountSat));
+
+        totalOutputAmount += amountSat;
+      }
+
+      // Estimate transaction size for better fee calculation
+      final estimatedSize = ForkedTransactionBuilder.estimateTransactionSize(
+        utxos: utxosWithAddress,
+        outputs: bitcoinOutputs,
+        network: network!,
+      );
+
+      // Calculate fee based on estimated size (0.00001 BCH per 1000 bytes)
+      // final feePerByte = BtcUtils.toSatoshi("0.000001");
+      // final fee = BigInt.from(estimatedSize) * feePerByte ~/ BigInt.from(1000);
+      final fee = BtcUtils.toSatoshi("0.00001");
+      // final fee = BigInt.from(estimatedSize) * feePerByte ~/ BigInt.from(1000);
+
+      // Check if we have enough balance
+      if (totalBalance < totalOutputAmount + fee) {
+        throw Exception('Insufficient balance. Available: $totalBalance, Required: ${totalOutputAmount + fee}');
+      }
+
+      // Add change output if needed
+      final changeAmount = totalBalance - totalOutputAmount - fee;
+      if (changeAmount > BigInt.zero) {
+        bitcoinOutputs.add(BitcoinOutput(address: senderAddress, value: changeAmount));
+      }
+
+      // Build the transaction
+      final builder = ForkedTransactionBuilder(outPuts: bitcoinOutputs, fee: fee, network: network!, utxos: utxosWithAddress);
+
+      // Build and sign the transaction
+      final transaction = await builder.buildTransactionAsync((digest, utxo, publicKey, sighash) async {
+        // Use the proper ECDSA signing method from ECPrivate
+        return privateKey.signECDSA(digest, sighash: BitcoinOpCodeConst.sighashAll | BitcoinOpCodeConst.sighashForked);
+      });
+
+      // Broadcast the transaction
+      String result = await broadcastTransaction(transaction);
+
+      if (result == "success") {
+        //TODO SUCCESS CALLBACK CONFETTI
+      }
+      // Return the transaction ID in the expected format
+      return transaction.txId();
+      // return reOrderTxHash(transaction.txId());
+    } catch (error) {
+      print('Error in send method: $error');
+      rethrow;
+    }
+  }
+
+  // Helper method to convert BCH amount to satoshis
+  BigInt toSatoshi(double bchAmount) {
+    return BigInt.from((bchAmount * 100000000).round());
+  }
+
+  // Private method to get mnemonic from secure storage
+  Future<String> _getMnemonic() async {
+    // Implement this using your preferred secure storage method
+    // For example using flutter_secure_storage:
+    // final storage = FlutterSecureStorage();
+    // return await storage.read(key: 'mnemonic') ?? '';
+    throw UnimplementedError('_getMnemonic() needs to be implemented');
+  }
 }

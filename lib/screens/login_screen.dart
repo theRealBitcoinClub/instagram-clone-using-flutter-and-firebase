@@ -194,10 +194,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                 height: 50,
                 child: ElevatedButton(
                   onPressed: (_isInputValid && !_isLoading) ? _loginUser : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: (_isInputValid && !_isLoading) ? colorScheme.primary : colorScheme.primary.withOpacity(0.5),
-                    foregroundColor: colorScheme.onPrimary,
-                    textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.resolveWith<Color>((Set<MaterialState> states) {
+                      if (states.contains(MaterialState.disabled)) {
+                        return colorScheme.primary.withOpacity(0.5);
+                      }
+                      return colorScheme.primary;
+                    }),
+                    foregroundColor: MaterialStateProperty.resolveWith<Color>((Set<MaterialState> states) {
+                      if (states.contains(MaterialState.disabled)) {
+                        return colorScheme.onPrimary.withOpacity(0.5);
+                      }
+                      return colorScheme.onPrimary;
+                    }),
+                    textStyle: MaterialStateProperty.resolveWith<TextStyle>((Set<MaterialState> states) {
+                      if (states.contains(MaterialState.disabled)) {
+                        return textTheme.labelLarge!.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimary.withOpacity(0.5));
+                      }
+                      return textTheme.labelLarge!.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimary);
+                    }),
                   ),
                   child: Text(
                     "LOGIN",

@@ -46,6 +46,38 @@ class PostService {
   //   }
   // }
 
+  // Future<void> savePost(MemoModelPost post) async {
+  //   try {
+  //     final batch = _firestore.batch();
+  //     final postRef = _firestore.collection(FirestoreCollections.posts).doc(post.id);
+  //     final counterRef = _firestore.collection(FirestoreCollections.metadata).doc(FirestoreCollections.posts);
+  //
+  //     // First, set the post
+  //     batch.set(postRef, post.toJson());
+  //
+  //     // Check if counter exists and get current count if needed
+  //     final counterDoc = await counterRef.get();
+  //
+  //     if (!counterDoc.exists) {
+  //       // Counter doesn't exist yet - initialize it with count 1
+  //       batch.set(counterRef, {
+  //         'count': await _totalPostCount(),
+  //         'lastUpdated': FieldValue.serverTimestamp(),
+  //         'initializedAt': FieldValue.serverTimestamp(),
+  //       });
+  //     } else {
+  //       // Counter exists - increment it
+  //       batch.update(counterRef, {'count': FieldValue.increment(1), 'lastUpdated': FieldValue.serverTimestamp()});
+  //     }
+  //
+  //     await batch.commit();
+  //     print("${post.id} Post saved successfully. ${post.text}");
+  //   } catch (e) {
+  //     print("Error saving post ${post.id}: $e");
+  //     rethrow;
+  //   }
+  // }
+
   Future<void> savePost(MemoModelPost post) async {
     try {
       // .id should be set on the post object before calling save

@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 
-import '../../config.dart';
-
 // Assuming PostFilterType is defined elsewhere and accessible if needed here
 // import 'package:mahakka/screens/feed_screen.dart'; // For PostFilterType
 
@@ -50,29 +48,8 @@ class PostService {
 
   Future<void> savePost(MemoModelPost post) async {
     try {
-      final batch = _firestore.batch();
-      final postRef = _firestore.collection(FirestoreCollections.posts).doc(post.id);
-      final counterRef = _firestore.collection(FirestoreCollections.metadata).doc(FirestoreCollections.posts);
-
-      // First, set the post
-      batch.set(postRef, post.toJson());
-
-      // Check if counter exists and get current count if needed
-      final counterDoc = await counterRef.get();
-
-      if (!counterDoc.exists) {
-        // Counter doesn't exist yet - initialize it with count 1
-        batch.set(counterRef, {
-          'count': await getTotalPostCount(),
-          'lastUpdated': FieldValue.serverTimestamp(),
-          'initializedAt': FieldValue.serverTimestamp(),
-        });
-      } else {
-        // Counter exists - increment it
-        batch.update(counterRef, {'count': FieldValue.increment(1), 'lastUpdated': FieldValue.serverTimestamp()});
-      }
-
-      await batch.commit();
+      // .id should be set on the post object before calling save
+      await _firestore.collection(_postsCollection).doc(post.id).set(post.toJson(), SetOptions(merge: true));
       print("${post.id} Post saved successfully. ${post.text}");
     } catch (e) {
       print("Error saving post ${post.id}: $e");

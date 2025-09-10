@@ -6,6 +6,19 @@ source config.sh
 # -----------------
 # Generate Dart file
 # -----------------
+echo "// lib/config_ipfs.dart
+// This file is auto-generated. Do not edit.
+
+class IpfsConfig {
+  static const String metadataFile = '$IPFS_METADATA_FILE';
+  static const String mappingFile = '$IPFS_MAPPING_FILE';
+  static const String ghToken = '$IPFS_GH_TOKEN';
+  static const String ghRepo = '$IPFS_GH_REPO';
+}" > lib/config_ipfs.dart
+
+# -----------------
+# Generate Dart file
+# -----------------
 echo "// lib/config.dart
 // This file is auto-generated. Do not edit.
 

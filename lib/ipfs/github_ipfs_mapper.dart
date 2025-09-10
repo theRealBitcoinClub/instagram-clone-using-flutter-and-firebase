@@ -21,7 +21,8 @@ class GitHubIPFSMapper extends IPFSShortIDMapper {
   String getRawGithubUrl(String filename) {
     final cleanUrl = githubRepoUrl.replaceAll(RegExp(r'/$'), '');
     if (cleanUrl.contains('github.com')) {
-      return cleanUrl.replaceFirst('github.com', 'raw.githubusercontent.com') + '/refs/heads/master/$filename';
+      return cleanUrl.replaceFirst('github.com', 'raw.githubusercontent.com') +
+          '/refs/heads/master/$filename?t=${DateTime.now().millisecondsSinceEpoch}';
     }
     return '$cleanUrl/$filename';
   }
@@ -30,12 +31,17 @@ class GitHubIPFSMapper extends IPFSShortIDMapper {
   Future<Map<String, IPFSMappingEntry>> downloadMappingFile() async {
     try {
       final url = getRawGithubUrl(mappingFilename);
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final updatedHeaders = Map<String, String>.from(headers)
+        ..['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        ..['Pragma'] = 'no-cache'
+        ..['Expires'] = '0';
+
+      final response = await http.get(Uri.parse(url), headers: updatedHeaders);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonData = json.decode(response.body);
-        mapping = jsonData.map((key, value) => MapEntry(key, IPFSMappingEntry.fromJson(value)));
-        return mapping;
+        return jsonData.map((key, value) => MapEntry(key, IPFSMappingEntry.fromJson(value)));
+        // return mapping;
       } else {
         print('Failed to download mapping file: ${response.statusCode}');
         return {};
@@ -50,12 +56,18 @@ class GitHubIPFSMapper extends IPFSShortIDMapper {
   Future<Metadata?> downloadMetadataFile() async {
     try {
       final url = getRawGithubUrl(metadataFilename);
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final updatedHeaders = Map<String, String>.from(headers)
+        ..['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        ..['Pragma'] = 'no-cache'
+        ..['Expires'] = '0';
+
+      final response = await http.get(Uri.parse(url), headers: updatedHeaders);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonData = json.decode(response.body);
-        metadata = Metadata.fromJson(jsonData);
-        return metadata;
+        return Metadata.fromJson(jsonData);
+        // metadata = Metadata.fromJson(jsonData);
+        // return metadata;
       } else {
         print('Failed to download metadata file: ${response.statusCode}');
         return null;

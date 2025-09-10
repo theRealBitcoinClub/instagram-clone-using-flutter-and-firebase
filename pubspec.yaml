@@ -43,6 +43,7 @@ dependencies:
   isar_community: ^3.3.0-dev.1  # Correct package name
   isar_community_flutter_libs: ^3.3.0-dev.1  # Correct package name
   file_picker: ^10.3.2
+  video_player: ^2.10.0
 
 dev_dependencies:
   flutter_test:

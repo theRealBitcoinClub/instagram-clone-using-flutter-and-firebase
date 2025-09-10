@@ -5,22 +5,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
+import 'package:mahakka/odysee/video_providers.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/screens/pin_claim_screen.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
-import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure this is theme-neutral or adapts
-import 'package:mahakka/widgets/textfield_input.dart'; // CRITICAL: This MUST be themed internally
+import 'package:mahakka/widgets/memo_confetti.dart';
+import 'package:mahakka/widgets/textfield_input.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 // Assuming these exist and are correctly imported
 import '../memo/base/memo_verifier.dart';
 import '../memo/base/text_input_verifier.dart';
+// Import the Odysee widgets and providers
+import '../odysee/odysee_video_player.dart';
 import '../repositories/post_repository.dart';
-import '../views_taggable/view_models/search_view_model.dart'; // Ensure SearchViewModel logic is sound
-import '../views_taggable/widgets/comment_text_field.dart'; // CRITICAL: This MUST be themed internally
-import '../views_taggable/widgets/search_result_overlay.dart'; // Ensure this is theme-aware or neutral
+import '../views_taggable/view_models/search_view_model.dart';
+import '../views_taggable/widgets/comment_text_field.dart';
+import '../views_taggable/widgets/search_result_overlay.dart';
 
 void _log(String message) => print('[AddPost] $message');
 
@@ -36,6 +39,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   final TextEditingController _imgurCtrl = TextEditingController();
   final TextEditingController _youtubeCtrl = TextEditingController();
   final TextEditingController _ipfsCtrl = TextEditingController();
+  final TextEditingController _odyseeCtrl = TextEditingController(); // New controller for Odysee
   late FlutterTaggerController _inputTagTopicController;
   late AnimationController _animationController;
   final FocusNode _focusNode = FocusNode();
@@ -49,7 +53,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
   String _validImgurUrl = "";
   String _validYouTubeVideoId = "";
-  String _validIpfsCid = ""; // New state for IPFS CID
+  String _validIpfsCid = "";
+  String _validOdyseeUrl = ""; // New state for Odysee URL
 
   late Animation<Offset> _taggerOverlayAnimation;
   final double _taggerOverlayHeight = 300;
@@ -66,6 +71,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _imgurCtrl.addListener(_onImgurInputChanged);
     _youtubeCtrl.addListener(_onYouTubeInputChanged);
     _ipfsCtrl.addListener(_onIpfsInputChanged);
+    _odyseeCtrl.addListener(_onOdyseeInputChanged); // New listener
 
     _initStateTagger();
     _checkClipboard();
@@ -78,6 +84,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     String? newImgurUrl;
     String? newVideoId;
     String? newIpfsCid;
+    String? newOdyseeUrl; // New variable for Odysee
     String? clipboardTextForField;
 
     try {
@@ -99,6 +106,13 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
             if (ipfsCid.isNotEmpty) {
               newIpfsCid = ipfsCid;
               clipboardTextForField = urlFromClipboard;
+            } else {
+              // Check for Odysee URL format
+              final odyseeUrl = _extractOdyseeUrl(urlFromClipboard);
+              if (odyseeUrl.isNotEmpty) {
+                newOdyseeUrl = odyseeUrl;
+                clipboardTextForField = urlFromClipboard;
+              }
             }
           }
         }
@@ -113,25 +127,41 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           _validYouTubeVideoId = newVideoId;
           _validImgurUrl = "";
           _validIpfsCid = "";
+          _validOdyseeUrl = "";
           _youtubeCtrl.text = clipboardTextForField ?? _youtubeCtrl.text;
           _imgurCtrl.clear();
           _ipfsCtrl.clear();
+          _odyseeCtrl.clear();
           _rebuildYtPlayerController();
         } else if (newImgurUrl != null) {
           _validImgurUrl = newImgurUrl;
           _validYouTubeVideoId = "";
           _validIpfsCid = "";
+          _validOdyseeUrl = "";
           _imgurCtrl.text = clipboardTextForField ?? _imgurCtrl.text;
           _youtubeCtrl.clear();
           _ipfsCtrl.clear();
+          _odyseeCtrl.clear();
           _disposeYtPlayerController();
         } else if (newIpfsCid != null) {
           _validIpfsCid = newIpfsCid;
           _validImgurUrl = "";
           _validYouTubeVideoId = "";
+          _validOdyseeUrl = "";
           _ipfsCtrl.text = clipboardTextForField ?? _ipfsCtrl.text;
           _imgurCtrl.clear();
           _youtubeCtrl.clear();
+          _odyseeCtrl.clear();
+          _disposeYtPlayerController();
+        } else if (newOdyseeUrl != null) {
+          _validOdyseeUrl = newOdyseeUrl;
+          _validImgurUrl = "";
+          _validYouTubeVideoId = "";
+          _validIpfsCid = "";
+          _odyseeCtrl.text = clipboardTextForField ?? _odyseeCtrl.text;
+          _imgurCtrl.clear();
+          _youtubeCtrl.clear();
+          _ipfsCtrl.clear();
           _disposeYtPlayerController();
         }
       });
@@ -159,6 +189,13 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     return match?.group(0) ?? "";
   }
 
+  String _extractOdyseeUrl(String text) {
+    // Match Odysee URL format
+    final RegExp odyseeExp = RegExp(r'https?:\/\/(?:www\.)?odysee\.com\/@[^:]+:[a-f0-9]+\/[^:\s]+:[a-f0-9]+');
+    final match = odyseeExp.firstMatch(text);
+    return match?.group(0) ?? "";
+  }
+
   void _onImgurInputChanged() {
     if (!mounted) return;
     final text = _imgurCtrl.text.trim();
@@ -170,8 +207,10 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         if (newImgurUrl.isNotEmpty) {
           _validYouTubeVideoId = "";
           _validIpfsCid = "";
+          _validOdyseeUrl = "";
           _youtubeCtrl.clear();
           _ipfsCtrl.clear();
+          _odyseeCtrl.clear();
           _disposeYtPlayerController();
         }
       });
@@ -189,8 +228,10 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           _validYouTubeVideoId = newVideoId;
           _validImgurUrl = "";
           _validIpfsCid = "";
+          _validOdyseeUrl = "";
           _imgurCtrl.clear();
           _ipfsCtrl.clear();
+          _odyseeCtrl.clear();
           _rebuildYtPlayerController();
         } else {
           _validYouTubeVideoId = "";
@@ -211,8 +252,31 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         if (newIpfsCid.isNotEmpty) {
           _validImgurUrl = "";
           _validYouTubeVideoId = "";
+          _validOdyseeUrl = "";
           _imgurCtrl.clear();
           _youtubeCtrl.clear();
+          _odyseeCtrl.clear();
+          _disposeYtPlayerController();
+        }
+      });
+    }
+  }
+
+  void _onOdyseeInputChanged() {
+    if (!mounted) return;
+    final text = _odyseeCtrl.text.trim();
+    final newOdyseeUrl = _extractOdyseeUrl(text);
+
+    if (newOdyseeUrl != _validOdyseeUrl) {
+      setState(() {
+        _validOdyseeUrl = newOdyseeUrl;
+        if (newOdyseeUrl.isNotEmpty) {
+          _validImgurUrl = "";
+          _validYouTubeVideoId = "";
+          _validIpfsCid = "";
+          _imgurCtrl.clear();
+          _youtubeCtrl.clear();
+          _ipfsCtrl.clear();
           _disposeYtPlayerController();
         }
       });
@@ -228,12 +292,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       _disposeYtPlayerController();
       _ytPlayerController = YoutubePlayerController(
         initialVideoId: _validYouTubeVideoId,
-        flags: const YoutubePlayerFlags(
-          autoPlay: false,
-          mute: false,
-          // Consider theme for controls if YoutubePlayerFlutter supports it
-          // hideControls: false,
-        ),
+        flags: const YoutubePlayerFlags(autoPlay: false, mute: false),
       );
       _currentYouTubeVideoId = _validYouTubeVideoId;
     }
@@ -257,12 +316,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
   void _onTagInputChanged() {
     // TODO: Implement tag validation logic here
-    // This could update a validation message or directly interact with _tagController
-    // Example:
-    // final String? error = _validateTagsAndTopic();
-    // if (mounted) {
-    //   setState(() { /* update some error message state variable */ });
-    // }
   }
 
   @override
@@ -271,9 +324,11 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _imgurCtrl.removeListener(_onImgurInputChanged);
     _youtubeCtrl.removeListener(_onYouTubeInputChanged);
     _ipfsCtrl.removeListener(_onIpfsInputChanged);
+    _odyseeCtrl.removeListener(_onOdyseeInputChanged); // New listener removal
     _imgurCtrl.dispose();
     _youtubeCtrl.dispose();
     _ipfsCtrl.dispose();
+    _odyseeCtrl.dispose(); // New controller disposal
     _inputTagTopicController.removeListener(_onTagInputChanged);
     _inputTagTopicController.dispose();
     _animationController.dispose();
@@ -298,8 +353,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final theme = Theme.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: TextStyle(color: theme.colorScheme.onSecondaryContainer)), // Example color
-        backgroundColor: theme.colorScheme.secondaryContainer, // Example color
+        content: Text(message, style: TextStyle(color: theme.colorScheme.onSecondaryContainer)),
+        backgroundColor: theme.colorScheme.secondaryContainer,
       ),
     );
   }
@@ -335,7 +390,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           child: Column(
             children: [
               _buildMediaInputSection(theme, colorScheme, textTheme),
-              if ((_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty || _validIpfsCid.isNotEmpty))
+              if ((_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty || _validIpfsCid.isNotEmpty || _validOdyseeUrl.isNotEmpty))
                 Padding(
                   padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 12, left: 12, right: 12, top: 8),
                   child: _buildTaggableInput(theme, colorScheme, textTheme, mediaQuery.viewInsets),
@@ -402,38 +457,74 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       );
     }
 
-    // All are empty, show placeholders for all three options
+    if (_validOdyseeUrl.isNotEmpty) {
+      return Expanded(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: _buildOdyseeMediaDisplay(
+            theme: theme,
+            colorScheme: colorScheme,
+            textTheme: textTheme,
+            odyseeUrl: _validOdyseeUrl,
+            onTap: _showOdyseeDialog,
+          ),
+        ),
+      );
+    }
+
+    // All are empty, show placeholders for all four options in two rows
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
         children: [
-          _buildMediaPlaceholder(
-            theme: theme,
-            colorScheme: colorScheme,
-            textTheme: textTheme,
-            label: "ADD IMAGE",
-            iconData: Icons.add_photo_alternate_outlined,
-            onTap: _showImgurDialog,
+          // First row: IMGUR & YOUTUBE
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildMediaPlaceholder(
+                theme: theme,
+                colorScheme: colorScheme,
+                textTheme: textTheme,
+                label: "ADD IMAGE",
+                iconData: Icons.add_photo_alternate_outlined,
+                onTap: _showImgurDialog,
+              ),
+              const SizedBox(width: 8),
+              _buildMediaPlaceholder(
+                theme: theme,
+                colorScheme: colorScheme,
+                textTheme: textTheme,
+                label: "ADD VIDEO",
+                iconData: Icons.video_call_outlined,
+                onTap: _showVideoDialog,
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          _buildMediaPlaceholder(
-            theme: theme,
-            colorScheme: colorScheme,
-            textTheme: textTheme,
-            label: "ADD VIDEO",
-            iconData: Icons.video_call_outlined,
-            onTap: _showVideoDialog,
-          ),
-          const SizedBox(width: 8),
-          _buildMediaPlaceholder(
-            theme: theme,
-            colorScheme: colorScheme,
-            textTheme: textTheme,
-            label: "UPLOAD TO IPFS",
-            iconData: Icons.cloud_upload_outlined,
-            onTap: _showIpfsUploadScreen,
+          const SizedBox(height: 16),
+          // Second row: IPFS & ODYSEE
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildMediaPlaceholder(
+                theme: theme,
+                colorScheme: colorScheme,
+                textTheme: textTheme,
+                label: "UPLOAD TO IPFS",
+                iconData: Icons.cloud_upload_outlined,
+                onTap: _showIpfsUploadScreen,
+              ),
+              const SizedBox(width: 8),
+              _buildMediaPlaceholder(
+                theme: theme,
+                colorScheme: colorScheme,
+                textTheme: textTheme,
+                label: "ADD ODYSEE",
+                iconData: Icons.video_library_outlined,
+                onTap: _showOdyseeDialog,
+              ),
+            ],
           ),
         ],
       ),
@@ -648,6 +739,79 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     );
   }
 
+  Widget _buildOdyseeMediaDisplay({
+    required ThemeData theme,
+    required ColorScheme colorScheme,
+    required TextTheme textTheme,
+    required String odyseeUrl,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AspectRatio(
+          aspectRatio: 16 / 9,
+          child: Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(11.5),
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final streamUrlAsync = ref.watch(streamUrlProvider);
+
+                  return streamUrlAsync.when(
+                    loading: () => Center(child: CircularProgressIndicator(color: colorScheme.primary)),
+                    error: (error, stack) => Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.videocam_off_outlined, color: colorScheme.error, size: 36),
+                          const SizedBox(height: 8),
+                          Text("Error loading Odysee video", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+                        ],
+                      ),
+                    ),
+                    data: (streamUrl) {
+                      return OdyseeVideoPlayer(customVideoUrl: streamUrl, aspectRatio: 16 / 9, autoPlay: false);
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextButton.icon(
+          icon: Icon(Icons.edit_outlined, size: 18),
+          label: const Text("Change Odysee Video"),
+          onPressed: onTap,
+          style: TextButton.styleFrom(
+            foregroundColor: colorScheme.secondary,
+            textStyle: textTheme.labelLarge,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "Odysee URL: ${_shortenUrl(odyseeUrl)}",
+          style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  String _shortenUrl(String url) {
+    if (url.length <= 30) return url;
+    return '${url.substring(0, 15)}...${url.substring(url.length - 15)}';
+  }
+
   void _showIpfsUploadScreen() {
     Navigator.push(context, MaterialPageRoute(builder: (context) => const PinClaimScreen())).then((result) {
       // Handle the result when returning from PinClaimScreen
@@ -655,12 +819,13 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         final cid = result['cid'];
         if (cid != null && mounted) {
           setState(() {
-            _validIpfsCid = cid;
-            // _validImgurUrl = "https://free-bch.fullstack.cash/ipfs/view/${cid}";
+            _validIpfsCid = cid.toString().trim();
             _validImgurUrl = "";
             _validYouTubeVideoId = "";
+            _validOdyseeUrl = "";
             _imgurCtrl.clear();
             _youtubeCtrl.clear();
+            _odyseeCtrl.clear();
             _disposeYtPlayerController();
           });
         }
@@ -678,6 +843,10 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
   Future<void> _showIpfsDialog() async {
     _showUrlInputDialog("Paste IPFS CID", _ipfsCtrl, "e.g. QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco");
+  }
+
+  Future<void> _showOdyseeDialog() async {
+    _showUrlInputDialog("Paste Odysee Video URL", _odyseeCtrl, "e.g. https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73");
   }
 
   void _showUrlInputDialog(String title, TextEditingController controller, String hint) {
@@ -718,6 +887,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     return Material(
       elevation: 4.0,
       color: theme.cardColor,
+
       shadowColor: theme.shadowColor,
       borderRadius: BorderRadius.circular(8),
       child: Padding(

@@ -23,6 +23,7 @@ class _PinClaimScreenState extends ConsumerState<PinClaimScreen> {
   double? _pinClaimPrice;
   String? _cid;
   String? _pobTxid;
+  bool isPopping = false;
   String? _claimTxid;
   String? _error;
   bool _isLoading = false;
@@ -161,12 +162,9 @@ class _PinClaimScreenState extends ConsumerState<PinClaimScreen> {
   @override
   Widget build(BuildContext context) {
     // Auto-close the screen and return the CID after successful pinning
-    if (_claimTxid != null && _cid != null) {
-      Future.delayed(const Duration(milliseconds: 2500), () {
-        if (mounted) {
-          Navigator.of(context).pop({'cid': _cid});
-        }
-      });
+    if (_claimTxid != null && _cid != null && !isPopping) {
+      isPopping = true;
+      pop(context);
     }
 
     final theme = Theme.of(context);
@@ -314,6 +312,14 @@ class _PinClaimScreenState extends ConsumerState<PinClaimScreen> {
         ),
       ),
     );
+  }
+
+  void pop(BuildContext context) async {
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      if (context.mounted) {
+        Navigator.of(context).pop({'cid': _cid});
+      }
+    });
   }
 
   Widget _buildSuccessCard(String title, String content, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {

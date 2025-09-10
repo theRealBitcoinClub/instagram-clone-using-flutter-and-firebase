@@ -5,7 +5,7 @@ import '../../../memo/model/memo_model_creator.dart';
 import '../../../views_taggable/widgets/qr_code_dialog.dart';
 import '../profile_buttons.dart';
 
-class TopDetailsRow extends StatelessWidget {
+class ProfileAvatarBalancesButtonRow extends StatelessWidget {
   final MemoModelCreator creator;
   final ThemeData theme;
   final VoidCallback showImageDetail;
@@ -13,7 +13,7 @@ class TopDetailsRow extends StatelessWidget {
   final bool isOwnProfile;
   final VoidCallback onProfileButtonPressed;
 
-  const TopDetailsRow({
+  const ProfileAvatarBalancesButtonRow({
     Key? key,
     required this.creator,
     required this.theme,

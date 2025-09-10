@@ -46,7 +46,7 @@ class ProfileHeader extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isRefreshingProfile) _buildProgressIndicator(),
-          TopDetailsRow(
+          ProfileAvatarBalancesButtonRow(
             creator: creator, // Use the provider data directly
             theme: theme,
             showImageDetail: showImageDetail,
@@ -109,7 +109,7 @@ class ProfileHeader extends ConsumerWidget {
           children: [
             Text(
               maxLines: 1,
-              overflow: TextOverflow.fade,
+              overflow: TextOverflow.ellipsis,
               name.isNotEmpty ? name.substring(0, name.length < maxLength ? name.length : maxLength) : "Anonymous",
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),

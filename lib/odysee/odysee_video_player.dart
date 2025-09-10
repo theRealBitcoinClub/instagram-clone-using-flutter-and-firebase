@@ -5,26 +5,27 @@ import 'package:mahakka/odysee/video_providers.dart';
 import 'package:video_player/video_player.dart';
 
 class OdyseeVideoPlayer extends ConsumerStatefulWidget {
-  final String? customVideoUrl;
+  // final String? customVideoUrl;
   final double? aspectRatio;
   final bool autoPlay;
   final Widget? loadingWidget;
   final Widget? errorWidget;
 
-  const OdyseeVideoPlayer({super.key, this.customVideoUrl, this.aspectRatio, this.autoPlay = true, this.loadingWidget, this.errorWidget});
+  const OdyseeVideoPlayer({super.key, this.aspectRatio, this.autoPlay = true, this.loadingWidget, this.errorWidget});
 
   @override
   ConsumerState<OdyseeVideoPlayer> createState() => _OdyseeVideoPlayerState();
 }
 
 class _OdyseeVideoPlayerState extends ConsumerState<OdyseeVideoPlayer> {
-  late final StateProvider<String> _videoUrlProvider;
+  // late final StateProvider<String> _videoUrlProvider;
 
   @override
   void initState() {
     super.initState();
     // _videoUrlProvider = StateProvider<String>((ref) => widget.customVideoUrl ?? 'https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73');
-    _videoUrlProvider = StateProvider<String>((ref) => widget.customVideoUrl ?? 'https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73');
+    // _videoUrlProvider = StateProvider<String>((ref) => widget.customVideoUrl ?? '');
+    // ref.read(videoUrlProvider).state = widget.customVideoUrl ?? '';
   }
 
   @override

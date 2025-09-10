@@ -1,6 +1,7 @@
 // providers/video_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:mahakka/screens/add/add_post_providers.dart';
 import 'package:video_player/video_player.dart';
 
 import 'odysee_service.dart';
@@ -15,13 +16,13 @@ final odyseeServiceProvider = Provider<OdyseeService>((ref) {
 });
 
 // Provider for video URL
-final videoUrlProvider = StateProvider<String>((ref) => 'https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73');
+// final videoUrlProvider = StateProvider<String>((ref) => '');
 // final videoUrlProvider = StateProvider<String>((ref) => 'https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73');
 
 // Provider for stream URL
 final streamUrlProvider = FutureProvider<String>((ref) async {
   final odyseeService = ref.watch(odyseeServiceProvider);
-  final videoUrl = ref.watch(videoUrlProvider);
+  final videoUrl = ref.watch(odyseeUrlProvider);
   return await odyseeService.getVideoStreamUrl(videoUrl);
 });
 

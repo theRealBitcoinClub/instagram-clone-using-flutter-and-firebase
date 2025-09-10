@@ -22,7 +22,8 @@ class OdyseeService {
           final jsonData = jsonDecode(jsonText);
 
           // Return the contentUrl which is the direct link
-          return jsonData['contentUrl'];
+          var contentUrl = jsonData['contentUrl'];
+          return contentUrl;
         }
       }
     } catch (e) {

@@ -1,11 +1,10 @@
 import 'dart:async';
 
-import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
-import 'package:mahakka/odysee/video_providers.dart';
+import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/screens/pin_claim_screen.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
@@ -19,11 +18,16 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../memo/base/memo_verifier.dart';
 import '../memo/base/text_input_verifier.dart';
 // Import the Odysee widgets and providers
-import '../odysee/odysee_video_player.dart';
 import '../repositories/post_repository.dart';
 import '../views_taggable/view_models/search_view_model.dart';
 import '../views_taggable/widgets/comment_text_field.dart';
 import '../views_taggable/widgets/search_result_overlay.dart';
+import 'add/add_post_providers.dart';
+import 'add/clipboard_provider.dart';
+import 'add/imgur_media_widget.dart';
+import 'add/ipfs_media_widget.dart';
+import 'add/odysee_media_widget.dart';
+import 'add/youtube_media_widget.dart';
 
 void _log(String message) => print('[AddPost] $message');
 
@@ -35,27 +39,17 @@ class AddPost extends ConsumerStatefulWidget {
 }
 
 class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin {
+  bool hasInitialized = false;
   // Controllers
   final TextEditingController _imgurCtrl = TextEditingController();
   final TextEditingController _youtubeCtrl = TextEditingController();
   final TextEditingController _ipfsCtrl = TextEditingController();
-  final TextEditingController _odyseeCtrl = TextEditingController(); // New controller for Odysee
+  final TextEditingController _odyseeCtrl = TextEditingController();
   late FlutterTaggerController _inputTagTopicController;
   late AnimationController _animationController;
   final FocusNode _focusNode = FocusNode();
 
-  // State for YouTube Player
-  YoutubePlayerController? _ytPlayerController;
-  String? _currentYouTubeVideoId;
-
   // UI State
-  bool _isPublishing = false;
-
-  String _validImgurUrl = "";
-  String _validYouTubeVideoId = "";
-  String _validIpfsCid = "";
-  String _validOdyseeUrl = ""; // New state for Odysee URL
-
   late Animation<Offset> _taggerOverlayAnimation;
   final double _taggerOverlayHeight = 300;
 
@@ -64,157 +58,34 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     super.initState();
     _log("initState started");
 
-    _inputTagTopicController = FlutterTaggerController(
-      text: "I like the topic @Bitcoin#Bitcoin# It's time to earn #bch#bch# and #cashtoken#cashtoken#!",
-    );
+    _inputTagTopicController = FlutterTaggerController(text: "Me gusta @Bitcoin#Bitcoin# Es hora de ganar #bch#bch# y #cashtoken#cashtoken#!");
 
-    _imgurCtrl.addListener(_onImgurInputChanged);
     _youtubeCtrl.addListener(_onYouTubeInputChanged);
+    _imgurCtrl.addListener(_onImgurInputChanged);
     _ipfsCtrl.addListener(_onIpfsInputChanged);
-    _odyseeCtrl.addListener(_onOdyseeInputChanged); // New listener
+    _odyseeCtrl.addListener(_onOdyseeInputChanged);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(clipboardNotifierProvider.notifier).checkClipboard(ref);
+    });
 
     _initStateTagger();
-    _checkClipboard();
 
     _log("initState completed");
-  }
-
-  Future<void> _checkClipboard() async {
-    _log("_checkClipboard started");
-    String? newImgurUrl;
-    String? newVideoId;
-    String? newIpfsCid;
-    String? newOdyseeUrl; // New variable for Odysee
-    String? clipboardTextForField;
-
-    try {
-      if (await FlutterClipboard.hasData()) {
-        final urlFromClipboard = await FlutterClipboard.paste();
-        final ytId = YoutubePlayer.convertUrlToId(urlFromClipboard);
-
-        if (ytId != null && ytId.isNotEmpty) {
-          newVideoId = ytId;
-          clipboardTextForField = urlFromClipboard;
-        } else {
-          final imgur = _extractValidImgurOrGiphyUrl(urlFromClipboard);
-          if (imgur.isNotEmpty) {
-            newImgurUrl = imgur;
-            clipboardTextForField = urlFromClipboard;
-          } else {
-            // Check for IPFS CID format
-            final ipfsCid = _extractIpfsCid(urlFromClipboard);
-            if (ipfsCid.isNotEmpty) {
-              newIpfsCid = ipfsCid;
-              clipboardTextForField = urlFromClipboard;
-            } else {
-              // Check for Odysee URL format
-              final odyseeUrl = _extractOdyseeUrl(urlFromClipboard);
-              if (odyseeUrl.isNotEmpty) {
-                newOdyseeUrl = odyseeUrl;
-                clipboardTextForField = urlFromClipboard;
-              }
-            }
-          }
-        }
-      }
-    } catch (e, s) {
-      _log("Error checking clipboard: $e\n$s");
-    }
-
-    if (mounted) {
-      setState(() {
-        if (newVideoId != null) {
-          _validYouTubeVideoId = newVideoId;
-          _validImgurUrl = "";
-          _validIpfsCid = "";
-          _validOdyseeUrl = "";
-          _youtubeCtrl.text = clipboardTextForField ?? _youtubeCtrl.text;
-          _imgurCtrl.clear();
-          _ipfsCtrl.clear();
-          _odyseeCtrl.clear();
-          _rebuildYtPlayerController();
-        } else if (newImgurUrl != null) {
-          _validImgurUrl = newImgurUrl;
-          _validYouTubeVideoId = "";
-          _validIpfsCid = "";
-          _validOdyseeUrl = "";
-          _imgurCtrl.text = clipboardTextForField ?? _imgurCtrl.text;
-          _youtubeCtrl.clear();
-          _ipfsCtrl.clear();
-          _odyseeCtrl.clear();
-          _disposeYtPlayerController();
-        } else if (newIpfsCid != null) {
-          _validIpfsCid = newIpfsCid;
-          _validImgurUrl = "";
-          _validYouTubeVideoId = "";
-          _validOdyseeUrl = "";
-          _ipfsCtrl.text = clipboardTextForField ?? _ipfsCtrl.text;
-          _imgurCtrl.clear();
-          _youtubeCtrl.clear();
-          _odyseeCtrl.clear();
-          _disposeYtPlayerController();
-        } else if (newOdyseeUrl != null) {
-          _validOdyseeUrl = newOdyseeUrl;
-          _validImgurUrl = "";
-          _validYouTubeVideoId = "";
-          _validIpfsCid = "";
-          _odyseeCtrl.text = clipboardTextForField ?? _odyseeCtrl.text;
-          _imgurCtrl.clear();
-          _youtubeCtrl.clear();
-          _ipfsCtrl.clear();
-          _disposeYtPlayerController();
-        }
-      });
-    }
-    _log("_checkClipboard finished");
-  }
-
-  String _extractValidImgurOrGiphyUrl(String url) {
-    final RegExp exp = RegExp(r'^(https?:\/\/)?(i\.imgur\.com\/)([a-zA-Z0-9]+)\.(jpe?g|png|gif|mp4|webp)$');
-    final match = exp.firstMatch(url.trim());
-    if (match?.group(0) != null) {
-      return match!.group(0)!;
-    }
-
-    final RegExp expGiphy = RegExp(r'^(?:https?:\/\/)?(?:[^.]+\.)?giphy\.com(\/.*)?$');
-    final matchGiphy = expGiphy.firstMatch(url.trim());
-
-    return matchGiphy?.group(0) ?? "";
-  }
-
-  String _extractIpfsCid(String text) {
-    // Match IPFS CID format (Qm... or bafy...)
-    final RegExp ipfsExp = RegExp(r'(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[1-9A-HJ-NP-Za-km-z]{59})');
-    final match = ipfsExp.firstMatch(text);
-    return match?.group(0) ?? "";
-  }
-
-  String _extractOdyseeUrl(String text) {
-    // Match Odysee URL format
-    final RegExp odyseeExp = RegExp(r'https?:\/\/(?:www\.)?odysee\.com\/@[^:]+:[a-f0-9]+\/[^:\s]+:[a-f0-9]+');
-    final match = odyseeExp.firstMatch(text);
-    return match?.group(0) ?? "";
   }
 
   void _onImgurInputChanged() {
     if (!mounted) return;
     final text = _imgurCtrl.text.trim();
-    final newImgurUrl = _extractValidImgurOrGiphyUrl(text);
+    final newImgurUrl = MemoRegExp(text).extractValidImgurOrGiphyUrl();
 
-    if (newImgurUrl != _validImgurUrl) {
-      setState(() {
-        _validImgurUrl = newImgurUrl;
-        if (newImgurUrl.isNotEmpty) {
-          _validYouTubeVideoId = "";
-          _validIpfsCid = "";
-          _validOdyseeUrl = "";
-          _youtubeCtrl.clear();
-          _ipfsCtrl.clear();
-          _odyseeCtrl.clear();
-          _disposeYtPlayerController();
-        }
-      });
+    // var read = ref.read(imgurUrlProvider);
+    // if (newImgurUrl != read) {
+    if (newImgurUrl.isNotEmpty) {
+      ref.read(imgurUrlProvider.notifier).state = newImgurUrl;
+      _clearOtherMediaProviders(0);
     }
+    // }
   }
 
   void _onYouTubeInputChanged() {
@@ -222,87 +93,48 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final text = _youtubeCtrl.text.trim();
     final newVideoId = YoutubePlayer.convertUrlToId(text);
 
-    if ((newVideoId ?? "") != _validYouTubeVideoId) {
-      setState(() {
-        if (newVideoId != null && newVideoId.isNotEmpty) {
-          _validYouTubeVideoId = newVideoId;
-          _validImgurUrl = "";
-          _validIpfsCid = "";
-          _validOdyseeUrl = "";
-          _imgurCtrl.clear();
-          _ipfsCtrl.clear();
-          _odyseeCtrl.clear();
-          _rebuildYtPlayerController();
-        } else {
-          _validYouTubeVideoId = "";
-          _disposeYtPlayerController();
-        }
-      });
+    // if ((newVideoId ?? "") != ref.read(youtubeVideoIdProvider)) {
+    if (newVideoId != null && newVideoId.isNotEmpty) {
+      ref.read(youtubeVideoIdProvider.notifier).state = newVideoId;
+      _clearOtherMediaProviders(1);
     }
+    // else {
+    //   ref.read(youtubeVideoIdProvider.notifier).state = "";
+    // }
+    // }
   }
 
   void _onIpfsInputChanged() {
     if (!mounted) return;
     final text = _ipfsCtrl.text.trim();
-    final newIpfsCid = _extractIpfsCid(text);
+    final newIpfsCid = MemoRegExp(text).extractIpfsCid();
 
-    if (newIpfsCid != _validIpfsCid) {
-      setState(() {
-        _validIpfsCid = newIpfsCid;
-        if (newIpfsCid.isNotEmpty) {
-          _validImgurUrl = "";
-          _validYouTubeVideoId = "";
-          _validOdyseeUrl = "";
-          _imgurCtrl.clear();
-          _youtubeCtrl.clear();
-          _odyseeCtrl.clear();
-          _disposeYtPlayerController();
-        }
-      });
+    // if (newIpfsCid != ref.read(ipfsCidProvider)) {
+    if (newIpfsCid.isNotEmpty) {
+      ref.read(ipfsCidProvider.notifier).state = newIpfsCid;
+      _clearOtherMediaProviders(2);
     }
+    // }
   }
 
   void _onOdyseeInputChanged() {
     if (!mounted) return;
     final text = _odyseeCtrl.text.trim();
-    final newOdyseeUrl = _extractOdyseeUrl(text);
+    final newOdyseeUrl = MemoRegExp(text).extractOdyseeUrl();
 
-    if (newOdyseeUrl != _validOdyseeUrl) {
-      setState(() {
-        _validOdyseeUrl = newOdyseeUrl;
-        if (newOdyseeUrl.isNotEmpty) {
-          _validImgurUrl = "";
-          _validYouTubeVideoId = "";
-          _validIpfsCid = "";
-          _imgurCtrl.clear();
-          _youtubeCtrl.clear();
-          _ipfsCtrl.clear();
-          _disposeYtPlayerController();
-        }
-      });
+    // if (newOdyseeUrl != ref.read(odyseeUrlProvider)) {
+    if (newOdyseeUrl.isNotEmpty) {
+      ref.read(odyseeUrlProvider.notifier).state = newOdyseeUrl;
+      _clearOtherMediaProviders(3);
     }
+    // }
   }
 
-  void _rebuildYtPlayerController() {
-    if (_validYouTubeVideoId.isEmpty) {
-      _disposeYtPlayerController();
-      return;
-    }
-    if (_currentYouTubeVideoId != _validYouTubeVideoId || _ytPlayerController == null) {
-      _disposeYtPlayerController();
-      _ytPlayerController = YoutubePlayerController(
-        initialVideoId: _validYouTubeVideoId,
-        flags: const YoutubePlayerFlags(autoPlay: false, mute: false),
-      );
-      _currentYouTubeVideoId = _validYouTubeVideoId;
-    }
-  }
-
-  void _disposeYtPlayerController() {
-    _ytPlayerController?.pause();
-    _ytPlayerController?.dispose();
-    _ytPlayerController = null;
-    _currentYouTubeVideoId = null;
+  void _clearOtherMediaProviders(int index) {
+    if (index != 0) ref.read(imgurUrlProvider.notifier).state = "";
+    if (index != 1) ref.read(youtubeVideoIdProvider.notifier).state = "";
+    if (index != 2) ref.read(ipfsCidProvider.notifier).state = "";
+    if (index != 3) ref.read(odyseeUrlProvider.notifier).state = "";
   }
 
   void _initStateTagger() {
@@ -315,7 +147,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   void _onTagInputChanged() {
-    // TODO: Implement tag validation logic here
+    // Future(() {});
+    // if (hasInitialized) ref.read(tagTextProvider.notifier).state = _inputTagTopicController.text;
   }
 
   @override
@@ -324,16 +157,15 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _imgurCtrl.removeListener(_onImgurInputChanged);
     _youtubeCtrl.removeListener(_onYouTubeInputChanged);
     _ipfsCtrl.removeListener(_onIpfsInputChanged);
-    _odyseeCtrl.removeListener(_onOdyseeInputChanged); // New listener removal
+    _odyseeCtrl.removeListener(_onOdyseeInputChanged);
     _imgurCtrl.dispose();
     _youtubeCtrl.dispose();
     _ipfsCtrl.dispose();
-    _odyseeCtrl.dispose(); // New controller disposal
+    _odyseeCtrl.dispose();
     _inputTagTopicController.removeListener(_onTagInputChanged);
     _inputTagTopicController.dispose();
     _animationController.dispose();
     _focusNode.dispose();
-    _disposeYtPlayerController();
     super.dispose();
   }
 
@@ -367,6 +199,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final TextTheme textTheme = theme.textTheme;
     final MediaQueryData mediaQuery = MediaQuery.of(context);
     final bool isKeyboardVisible = mediaQuery.viewInsets.bottom > 0;
+    ref.read(clipboardNotifierProvider.notifier).checkClipboard(ref);
+    hasInitialized = true;
 
     return GestureDetector(
       onTap: () {
@@ -390,7 +224,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           child: Column(
             children: [
               _buildMediaInputSection(theme, colorScheme, textTheme),
-              if ((_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty || _validIpfsCid.isNotEmpty || _validOdyseeUrl.isNotEmpty))
+              if (_hasMediaSelected())
                 Padding(
                   padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 12, left: 12, right: 12, top: 8),
                   child: _buildTaggableInput(theme, colorScheme, textTheme, mediaQuery.viewInsets),
@@ -402,72 +236,58 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     );
   }
 
+  bool _hasMediaSelected() {
+    final imgurUrl = ref.read(imgurUrlProvider);
+    final youtubeId = ref.read(youtubeVideoIdProvider);
+    final ipfsCid = ref.read(ipfsCidProvider);
+    final odyseeUrl = ref.read(odyseeUrlProvider);
+
+    return imgurUrl.isNotEmpty || youtubeId.isNotEmpty || ipfsCid.isNotEmpty || odyseeUrl.isNotEmpty;
+  }
+
   void _unfocusNodes(BuildContext context) {
     _focusNode.unfocus();
     FocusScope.of(context).unfocus();
   }
 
   Widget _buildMediaInputSection(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
-    if (_validImgurUrl.isNotEmpty) {
+    final imgurUrl = ref.watch(imgurUrlProvider);
+    final youtubeId = ref.watch(youtubeVideoIdProvider);
+    final ipfsCid = ref.watch(ipfsCidProvider);
+    final odyseeUrl = ref.watch(odyseeUrlProvider);
+
+    if (imgurUrl.isNotEmpty) {
       return Expanded(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: _buildMediaDisplay(
-            theme: theme,
-            colorScheme: colorScheme,
-            textTheme: textTheme,
-            label: "SELECTED IMAGE",
-            mediaUrl: _validImgurUrl,
-            onTap: _showImgurDialog,
-            isNetworkImage: true,
-          ),
+          child: ImgurMediaWidget(theme: theme, colorScheme: colorScheme, textTheme: textTheme),
         ),
       );
     }
 
-    if (_validYouTubeVideoId.isNotEmpty && _ytPlayerController != null) {
+    if (youtubeId.isNotEmpty) {
       return Expanded(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: _buildMediaDisplay(
-            theme: theme,
-            colorScheme: colorScheme,
-            textTheme: textTheme,
-            label: "SELECTED VIDEO",
-            youtubeController: _ytPlayerController,
-            onTap: _showVideoDialog,
-            isNetworkImage: false,
-          ),
+          child: YouTubeMediaWidget(theme: theme, colorScheme: colorScheme, textTheme: textTheme),
         ),
       );
     }
 
-    if (_validIpfsCid.isNotEmpty) {
+    if (ipfsCid.isNotEmpty) {
       return Expanded(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: _buildIpfsMediaDisplay(
-            theme: theme,
-            colorScheme: colorScheme,
-            textTheme: textTheme,
-            cid: _validIpfsCid,
-            onTap: _showIpfsDialog,
-          ),
+          child: IpfsMediaWidget(theme: theme, colorScheme: colorScheme, textTheme: textTheme),
         ),
       );
     }
 
-    if (_validOdyseeUrl.isNotEmpty) {
+    if (odyseeUrl.isNotEmpty) {
       return Expanded(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: _buildOdyseeMediaDisplay(
-            theme: theme,
-            colorScheme: colorScheme,
-            textTheme: textTheme,
-            odyseeUrl: _validOdyseeUrl,
-            onTap: _showOdyseeDialog,
-          ),
+          child: OdyseeMediaWidget(theme: theme, colorScheme: colorScheme, textTheme: textTheme),
         ),
       );
     }
@@ -569,265 +389,13 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildMediaDisplay({
-    required ThemeData theme,
-    required ColorScheme colorScheme,
-    required TextTheme textTheme,
-    required String label,
-    String? mediaUrl,
-    YoutubePlayerController? youtubeController,
-    required VoidCallback onTap,
-    required bool isNetworkImage,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AspectRatio(
-          aspectRatio: 16 / 9,
-          child: Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(11.5),
-              child: isNetworkImage
-                  ? Image.network(
-                      mediaUrl!,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        _log("Error loading image: $error");
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) setState(() => _validImgurUrl = "");
-                        });
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.broken_image_outlined, color: colorScheme.error, size: 36),
-                              const SizedBox(height: 8),
-                              Text("Error loading image", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
-                            ],
-                          ),
-                        );
-                      },
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                                : null,
-                          ),
-                        );
-                      },
-                    )
-                  : (youtubeController != null
-                        ? YoutubePlayer(
-                            key: ValueKey("yt_addpost_"),
-                            controller: youtubeController,
-                            showVideoProgressIndicator: true,
-                            progressIndicatorColor: colorScheme.primary,
-                            progressColors: ProgressBarColors(
-                              playedColor: colorScheme.primary,
-                              handleColor: colorScheme.secondary,
-                              bufferedColor: colorScheme.primary.withOpacity(0.4),
-                              backgroundColor: colorScheme.onSurface.withOpacity(0.1),
-                            ),
-                          )
-                        : Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.videocam_off_outlined, color: colorScheme.error, size: 36),
-                                const SizedBox(height: 8),
-                                Text("Video player error", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
-                              ],
-                            ),
-                          )),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextButton.icon(
-          icon: Icon(Icons.edit_outlined, size: 18),
-          label: Text(isNetworkImage ? "Change Image" : "Change Video"),
-          onPressed: onTap,
-          style: TextButton.styleFrom(
-            foregroundColor: colorScheme.secondary,
-            textStyle: textTheme.labelLarge,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildIpfsMediaDisplay({
-    required ThemeData theme,
-    required ColorScheme colorScheme,
-    required TextTheme textTheme,
-    required String cid,
-    required VoidCallback onTap,
-  }) {
-    final ipfsUrl = 'https://free-bch.fullstack.cash/ipfs/view/$cid';
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AspectRatio(
-          aspectRatio: 16 / 9,
-          child: Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(11.5),
-              child: Image.network(
-                ipfsUrl,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  _log("Error loading IPFS image: $error");
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.cloud_off_outlined, color: colorScheme.error, size: 36),
-                        const SizedBox(height: 8),
-                        Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
-                        const SizedBox(height: 8),
-                        Text("CID: $cid", style: textTheme.bodySmall),
-                      ],
-                    ),
-                  );
-                },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                          : null,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextButton.icon(
-          icon: Icon(Icons.edit_outlined, size: 18),
-          label: const Text("Change IPFS Content"),
-          onPressed: onTap,
-          style: TextButton.styleFrom(
-            foregroundColor: colorScheme.secondary,
-            textStyle: textTheme.labelLarge,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          "IPFS CID: $cid",
-          style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOdyseeMediaDisplay({
-    required ThemeData theme,
-    required ColorScheme colorScheme,
-    required TextTheme textTheme,
-    required String odyseeUrl,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AspectRatio(
-          aspectRatio: 16 / 9,
-          child: Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(11.5),
-              child: Consumer(
-                builder: (context, ref, child) {
-                  final streamUrlAsync = ref.watch(streamUrlProvider);
-
-                  return streamUrlAsync.when(
-                    loading: () => Center(child: CircularProgressIndicator(color: colorScheme.primary)),
-                    error: (error, stack) => Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.videocam_off_outlined, color: colorScheme.error, size: 36),
-                          const SizedBox(height: 8),
-                          Text("Error loading Odysee video", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
-                        ],
-                      ),
-                    ),
-                    data: (streamUrl) {
-                      return OdyseeVideoPlayer(customVideoUrl: streamUrl, aspectRatio: 16 / 9, autoPlay: false);
-                    },
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextButton.icon(
-          icon: Icon(Icons.edit_outlined, size: 18),
-          label: const Text("Change Odysee Video"),
-          onPressed: onTap,
-          style: TextButton.styleFrom(
-            foregroundColor: colorScheme.secondary,
-            textStyle: textTheme.labelLarge,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          "Odysee URL: ${_shortenUrl(odyseeUrl)}",
-          style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-
-  String _shortenUrl(String url) {
-    if (url.length <= 30) return url;
-    return '${url.substring(0, 15)}...${url.substring(url.length - 15)}';
-  }
-
   void _showIpfsUploadScreen() {
     Navigator.push(context, MaterialPageRoute(builder: (context) => const PinClaimScreen())).then((result) {
-      // Handle the result when returning from PinClaimScreen
       if (result != null) {
         final cid = result['cid'];
         if (cid != null && mounted) {
-          setState(() {
-            _validIpfsCid = cid.toString().trim();
-            _validImgurUrl = "";
-            _validYouTubeVideoId = "";
-            _validOdyseeUrl = "";
-            _imgurCtrl.clear();
-            _youtubeCtrl.clear();
-            _odyseeCtrl.clear();
-            _disposeYtPlayerController();
-          });
+          ref.read(ipfsCidProvider.notifier).state = cid.toString().trim();
+          _clearOtherMediaProviders(2);
         }
       }
     });
@@ -853,7 +421,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final ThemeData theme = Theme.of(context);
     final TextTheme textTheme = theme.textTheme;
 
-    _checkClipboard();
+    ref.read(clipboardNotifierProvider.notifier).checkClipboard(ref);
 
     showDialog(
       context: context,
@@ -865,17 +433,23 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
             mainAxisSize: MainAxisSize.min,
             children: [
               TextInputField(textEditingController: controller, hintText: hint, textInputType: TextInputType.url),
-              const SizedBox(height: 12),
-              Text("Tip: Paste a full URL or CID", style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              const SizedBox(height: 8),
+              // Text("Tip: Paste an URL", style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
             ],
           ),
           actions: <Widget>[
-            TextButton(onPressed: () => Navigator.of(dialogCtx).pop(), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () {
+                _clearInputs();
+                Navigator.of(dialogCtx).pop();
+              },
+              child: Text('Cancel', style: textTheme.labelMedium!.copyWith(color: theme.colorScheme.error)),
+            ),
             TextButton(
               onPressed: () {
                 Navigator.of(dialogCtx).pop();
               },
-              child: const Text('Done'),
+              child: Text('Done', style: textTheme.labelLarge!.copyWith(color: theme.colorScheme.primary)),
             ),
           ],
         );
@@ -887,20 +461,10 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     return Material(
       elevation: 4.0,
       color: theme.cardColor,
-
       shadowColor: theme.shadowColor,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.all(12),
-        // child: RawKeyboardListener(
-        //   // Use a dedicated FocusNode for the keyboard listener.
-        //   focusNode: _keyboardFocusNode,
-        //   onKey: (RawKeyEvent event) {
-        //     // Only handle key downs, not key ups.
-        //     if (event is RawKeyDownEvent) {
-        //       _handleAutocompleteKeys(event);
-        //     }
-        //   },
         child: FlutterTagger(
           triggerStrategy: TriggerStrategy.eager,
           controller: _inputTagTopicController,
@@ -923,7 +487,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           overlay: SearchResultOverlay(animation: _taggerOverlayAnimation, tagController: _inputTagTopicController),
           builder: (context, containerKey) {
             return CommentTextField(
-              // The main text field still uses its own focus node for input.
               focusNode: _focusNode,
               containerKey: containerKey,
               insets: viewInsets,
@@ -934,101 +497,29 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           },
         ),
       ),
-      // ),
     );
   }
 
-  // void _handleAutocompleteKeys(RawKeyEvent event) {
-  //   // Check if the pressed key is the space key.
-  //   if (event.isKeyPressed(LogicalKeyboardKey.space)) {
-  //     // Determine which list of results to use based on the current active view.
-  //     final List<dynamic> results;
-  //     if (searchViewModel.activeView.value == SearchResultView.topics) {
-  //       results = searchViewModel.topics.value;
-  //     } else if (searchViewModel.activeView.value == SearchResultView.hashtag) {
-  //       results = searchViewModel.hashtags.value;
-  //     } else {
-  //       // No active search, do nothing.
-  //       return;
-  //     }
-  //
-  //     // Only autocomplete if there is exactly one suggestion available.
-  //     if (results.length == 1) {
-  //       _doAutocomplete(results.first);
-  //     }
-  //   }
-  // }
-
-  // Place this method inside your _AddPostState class
-  // void _doAutocomplete(dynamic result) {
-  //   final TextEditingValue currentValue = _inputTagTopicController.value;
-  //   final String text = currentValue.text;
-  //   final int cursorPosition = currentValue.selection.baseOffset;
-  //
-  //   // Find the start of the current word by looking for the last trigger character.
-  //   final int queryStartIndex = text.lastIndexOf(RegExp(r'[@#]'), cursorPosition - 1);
-  //
-  //   if (queryStartIndex == -1) {
-  //     return; // No trigger character found, so do nothing.
-  //   }
-  //
-  //   // Extract the text that comes BEFORE the incomplete tag.
-  //   final String textBeforeTag = text.substring(0, queryStartIndex);
-  //
-  //   // Extract the text that comes AFTER the cursor.
-  //   final String textAfterCursor = text.substring(cursorPosition);
-  //
-  //   // Get the trigger character.
-  //   final String triggerChar = text[queryStartIndex];
-  //
-  //   // Generate the new, fully formatted tag text (e.g., "#id#bitcoinabc#").
-  //   final String newTagText = _formatTagText(result, triggerChar);
-  //
-  //   // Combine all three parts: text before, new tag, and text after.
-  //   // Add a space after the new tag to make it easier to continue typing.
-  //   final String newText = textBeforeTag + newTagText + "" + textAfterCursor;
-  //
-  //   // Update the controller with the new, corrected string.
-  //   _inputTagTopicController.value = TextEditingValue(
-  //     text: newText,
-  //     // Place the cursor at the end of the newly inserted tag.
-  //     selection: TextSelection.collapsed(offset: (textBeforeTag + newTagText + "").length),
-  //   );
-  // }
-  //
-  // // Helper method remains the same.
-  // String _formatTagText(dynamic result, String triggerChar) {
-  //   final id = result.id;
-  //   // final tagText = result.name;
-  //   return "$triggerChar$id";
-  // }
-
   Future<void> _onPublish() async {
-    if (_isPublishing) return;
+    final isPublishing = ref.read(isPublishingProvider);
+    if (isPublishing) return;
     _unfocusNodes(context);
 
-    // if (_user == null) {
-    //   _showErrorSnackBar('User data not available. Cannot publish.');
-    //   return;
-    // }
-    if (_validImgurUrl.isEmpty && _validYouTubeVideoId.isEmpty) {
+    if (!_hasMediaSelected()) {
       _showErrorSnackBar('Please add an image or video to share.');
       return;
     }
 
-    //TODO REMOVE DUPLICATE VERIFICATION
     final String? validationError = _validateTagsAndTopic();
     if (validationError != null) {
       _showErrorSnackBar(validationError);
       return;
     }
 
-    if (!mounted) return;
-    setState(() => _isPublishing = true);
+    ref.read(isPublishingProvider.notifier).state = true;
 
     String textContent = _inputTagTopicController.text;
 
-    //TODO remove duplicate verification
     final verifier = MemoVerifierDecorator(textContent)
         .addValidator(InputValidators.verifyPostLength)
         .addValidator(InputValidators.verifyMinWordCount)
@@ -1039,9 +530,9 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     final result = verifier.getResult();
 
-    // Pass the verification result to the response handler
     if (result != MemoVerificationResponse.valid) {
       _showErrorSnackBar('Publish failed: ${result.toString()}. Please try again.');
+      ref.read(isPublishingProvider.notifier).state = false;
       return;
     }
 
@@ -1050,14 +541,13 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     try {
       final postRepository = ref.read(postRepositoryProvider);
-      // Assuming user.profileIdMemoBch is the correct parameter here
       final response = await postRepository.publishImageOrVideo(textContent, topic, validate: false);
 
       if (!mounted) return;
 
       if (response == MemoAccountantResponse.yes) {
         MemoConfetti().launch(context);
-        _clearInputsAfterPublish();
+        _clearInputs();
         _showSuccessSnackBar('Successfully published!');
       } else {
         showQrCodeDialog(context: context, theme: Theme.of(context), user: ref.read(userProvider), memoOnly: true);
@@ -1070,7 +560,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       }
     } finally {
       if (mounted) {
-        setState(() => _isPublishing = false);
+        ref.read(isPublishingProvider.notifier).state = false;
       }
     }
   }
@@ -1093,14 +583,20 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   String _appendMediaUrlToText(String text) {
-    if (_validYouTubeVideoId.isNotEmpty) {
-      return "$text https://youtu.be/$_validYouTubeVideoId";
-    } else if (_validImgurUrl.isNotEmpty) {
-      return "$text $_validImgurUrl";
+    final imgurUrl = ref.read(imgurUrlProvider);
+    final youtubeId = ref.read(youtubeVideoIdProvider);
+    final ipfsCid = ref.read(ipfsCidProvider);
+    final odyseeUrl = ref.read(odyseeUrlProvider);
+
+    if (youtubeId.isNotEmpty) {
+      return "$text https://youtu.be/$youtubeId";
+    } else if (imgurUrl.isNotEmpty) {
+      return "$text $imgurUrl";
+    } else if (ipfsCid.isNotEmpty) {
+      return "$text https://free-bch.fullstack.cash/ipfs/view/$ipfsCid";
+    } else if (odyseeUrl.isNotEmpty) {
+      return "$text $odyseeUrl";
     }
-    // else if (_validIpfsCid.isNotEmpty) {
-    //   return "$text https://free-bch.fullstack.cash/ipfs/view/$_validIpfsCid";
-    // }
     return text;
   }
 
@@ -1115,25 +611,22 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     if (hashtagCount > 3) {
       return "Maximum of 3 #hashtags allowed.";
     }
-    if (_inputTagTopicController.text.trim().isEmpty &&
-        (_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty || _validIpfsCid.isNotEmpty)) {
+    if (_inputTagTopicController.text.trim().isEmpty && _hasMediaSelected()) {
       return "Please add a caption for your media.";
     }
     return null;
   }
 
-  void _clearInputsAfterPublish() {
+  void _clearInputs() {
     _inputTagTopicController.clear();
     _imgurCtrl.clear();
     _youtubeCtrl.clear();
     _ipfsCtrl.clear();
-    if (mounted) {
-      setState(() {
-        _validImgurUrl = "";
-        _validYouTubeVideoId = "";
-        _validIpfsCid = "";
-        _disposeYtPlayerController();
-      });
-    }
+    _odyseeCtrl.clear();
+    ref.read(imgurUrlProvider.notifier).state = '';
+    ref.read(youtubeVideoIdProvider.notifier).state = '';
+    ref.read(ipfsCidProvider.notifier).state = '';
+    ref.read(odyseeUrlProvider.notifier).state = '';
+    // ref.read(youtubeControllerProvider.notifier).state = null;
   }
 }

@@ -3,24 +3,22 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 
 import '../ipfs/pin_claim_async.dart';
-import '../memo/base/memo_bitcoin_base.dart';
+import '../provider/electrum_provider.dart';
+import '../provider/user_provider.dart';
 
-class PinClaimScreen extends StatefulWidget {
-  final MemoBitcoinBase wallet;
-  final String serverUrl;
-  final String mnemonic;
-
-  const PinClaimScreen({Key? key, required this.wallet, required this.serverUrl, required this.mnemonic}) : super(key: key);
+class PinClaimScreen extends ConsumerStatefulWidget {
+  const PinClaimScreen({Key? key}) : super(key: key);
 
   @override
-  _PinClaimScreenState createState() => _PinClaimScreenState();
+  ConsumerState<PinClaimScreen> createState() => _PinClaimScreenState();
 }
 
-class _PinClaimScreenState extends State<PinClaimScreen> {
+class _PinClaimScreenState extends ConsumerState<PinClaimScreen> {
   File? _selectedFile;
   double? _pinClaimPrice;
   String? _cid;
@@ -32,10 +30,16 @@ class _PinClaimScreenState extends State<PinClaimScreen> {
   bool _isPinning = false;
 
   PinClaimAsync? _pinClaim;
+  final String _serverUrl = 'https://file-stage.fullstack.cash';
 
-  initState() {
+  @override
+  void initState() {
     super.initState();
-    _pinClaim = PinClaimAsync(wallet: widget.wallet, server: 'https://file-stage.fullstack.cash');
+    // Initialize PinClaimAsync with data from providers
+    final wallet = ref.read(electrumServiceProvider).value;
+    if (wallet != null) {
+      _pinClaim = PinClaimAsync(wallet: wallet, server: _serverUrl);
+    }
   }
 
   Future<void> _pickFile() async {
@@ -60,7 +64,7 @@ class _PinClaimScreenState extends State<PinClaimScreen> {
   }
 
   Future<void> _calculatePrice() async {
-    if (_selectedFile == null) return;
+    if (_selectedFile == null || _pinClaim == null) return;
 
     setState(() {
       _isLoading = true;
@@ -90,7 +94,7 @@ class _PinClaimScreenState extends State<PinClaimScreen> {
     });
 
     try {
-      final request = http.MultipartRequest('POST', Uri.parse('${widget.serverUrl}/ipfs/upload'));
+      final request = http.MultipartRequest('POST', Uri.parse('$_serverUrl/ipfs/upload'));
 
       request.files.add(await http.MultipartFile.fromPath('file', _selectedFile!.path, filename: basename(_selectedFile!.path)));
 
@@ -115,7 +119,7 @@ class _PinClaimScreenState extends State<PinClaimScreen> {
   }
 
   Future<void> _pinFile() async {
-    if (_selectedFile == null || _cid == null) return;
+    if (_selectedFile == null || _cid == null || _pinClaim == null) return;
 
     setState(() {
       _isPinning = true;
@@ -123,7 +127,7 @@ class _PinClaimScreenState extends State<PinClaimScreen> {
     });
 
     try {
-      final result = await _pinClaim!.pinClaimBCH(_selectedFile!, _cid!, widget.mnemonic);
+      final result = await _pinClaim!.pinClaimBCH(_selectedFile!, _cid!, ref.watch(userProvider)!.mnemonic);
       setState(() {
         _pobTxid = result['pobTxid'];
         _claimTxid = result['claimTxid'];
@@ -156,29 +160,59 @@ class _PinClaimScreenState extends State<PinClaimScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Auto-close the screen and return the CID after successful pinning
+    if (_claimTxid != null && _cid != null) {
+      Future.delayed(const Duration(milliseconds: 2500), () {
+        if (mounted) {
+          Navigator.of(context).pop({'cid': _cid});
+        }
+      });
+    }
+
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    // Check if we have all required data from providers
+    // final wallet = ref.watch(electrumServiceProvider).value;
+    //
+    // if (wallet == null) {
+    //   return Scaffold(
+    //     appBar: AppBar(title: const Text('Upload and Pin Content')),
+    //     body: Center(
+    //       child: Text('Wallet not available', style: textTheme.bodyLarge?.copyWith(color: colorScheme.error)),
+    //     ),
+    //   );
+    // }
+
+    if (_claimTxid != null && _cid != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pop({'cid': _cid});
+      });
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Upload and Pin Content'), backgroundColor: Colors.blue, foregroundColor: Colors.white),
+      appBar: AppBar(title: const Text('Upload and Pin Content'), backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Use this page to upload a file and pin it to the IPFS network. '
-              'Your wallet must have BCH to pay for the pinning of content. '
-              'Files must be less than 100MB in size.',
-              style: TextStyle(fontSize: 16, height: 1.5),
+            Text(
+              'Use this page to upload an image and pin it to the IPFS network. '
+              'Your wallet must have BCH to pay for the pinning of content. ',
+              style: textTheme.bodyMedium?.copyWith(height: 1.5),
             ),
+            // const SizedBox(height: 16),
+            // Text('Selected Server: $_serverUrl', style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
             const SizedBox(height: 16),
-            const Text('Selected Server: https://file-stage.fullstack.cash', style: TextStyle(fontSize: 14, color: Colors.grey)),
-            const SizedBox(height: 24),
 
             // File selection area
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300, width: 2),
+                border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 2),
                 borderRadius: BorderRadius.circular(8),
-                color: Colors.white,
+                color: colorScheme.surface,
               ),
               padding: const EdgeInsets.all(20),
               height: 200,
@@ -187,31 +221,35 @@ class _PinClaimScreenState extends State<PinClaimScreen> {
                     ? Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.cloud_upload, size: 48, color: Colors.grey),
+                          Icon(Icons.cloud_upload, size: 48, color: colorScheme.onSurfaceVariant),
                           const SizedBox(height: 8),
-                          const Text('Drag and drop your file here\nor', textAlign: TextAlign.center),
+                          Text(
+                            'Drag and drop your file here\nor',
+                            textAlign: TextAlign.center,
+                            style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                          ),
                           const SizedBox(height: 8),
-                          ElevatedButton(onPressed: _pickFile, child: const Text('Browse Files')),
+                          ElevatedButton(
+                            onPressed: _pickFile,
+                            style: ElevatedButton.styleFrom(backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
+                            child: const Text('Browse Files'),
+                          ),
                         ],
                       )
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            _selectedFile!.path.split('/').last,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
+                          Text(_selectedFile!.path.split('/').last, style: textTheme.titleSmall, textAlign: TextAlign.center),
+                          const SizedBox(height: 24),
                           if (_pinClaimPrice != null)
                             Text(
-                              'Pin claim price: ${_pinClaimPrice!.toStringAsFixed(8)} BCH',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              'Upload cost: ${(_pinClaimPrice! * 100000000).toStringAsFixed(0)} sats',
+                              style: textTheme.titleLarge?.copyWith(color: colorScheme.primary),
                             ),
                           const SizedBox(height: 16),
                           OutlinedButton(
                             onPressed: _removeFile,
-                            style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                            style: OutlinedButton.styleFrom(foregroundColor: colorScheme.error),
                             child: const Text('Remove File'),
                           ),
                         ],
@@ -219,30 +257,39 @@ class _PinClaimScreenState extends State<PinClaimScreen> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            // const SizedBox(height: 8),
 
             // Loading indicator for price calculation
-            if (_isLoading) const Center(child: CircularProgressIndicator()),
+            if (_isLoading)
+              Center(
+                child: Padding(
+                  padding: EdgeInsetsGeometry.only(top: 12),
+                  child: LinearProgressIndicator(color: colorScheme.primary),
+                ),
+              ),
 
             // Error message
             if (_error != null)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  border: Border.all(color: Colors.red.shade200),
-                  borderRadius: BorderRadius.circular(8),
+              Padding(
+                padding: EdgeInsetsGeometry.only(top: 12),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.errorContainer,
+                    border: Border.all(color: colorScheme.error),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(_error!, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onErrorContainer)),
                 ),
-                child: Text(_error!, style: const TextStyle(color: Colors.red)),
               ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // Success messages
-            if (_cid != null) _buildSuccessCard('Upload Success', 'CID: $_cid'),
-            if (_claimTxid != null) _buildSuccessCard('Pin Claim Success', 'Claim Txid: $_claimTxid'),
+            if (_cid != null) _buildSuccessCard('Upload Success', 'CID: $_cid', theme, colorScheme, textTheme),
+            if (_claimTxid != null) _buildSuccessCard('Pin Claim Success', 'Claim Txid: $_claimTxid', theme, colorScheme, textTheme),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 4),
 
             // Action buttons
             Center(
@@ -251,12 +298,14 @@ class _PinClaimScreenState extends State<PinClaimScreen> {
                   if (_selectedFile != null && _cid == null && _claimTxid == null)
                     ElevatedButton(
                       onPressed: _isUploading ? null : _uploadFile,
-                      child: _isUploading ? const CircularProgressIndicator() : const Text('Upload File'),
+                      style: ElevatedButton.styleFrom(backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
+                      child: _isUploading ? CircularProgressIndicator(color: colorScheme.onPrimary) : const Text('Upload File'),
                     ),
                   if (_cid != null && _claimTxid == null)
                     ElevatedButton(
                       onPressed: _isPinning ? null : _pinFile,
-                      child: _isPinning ? const CircularProgressIndicator() : const Text('Pin File'),
+                      style: ElevatedButton.styleFrom(backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
+                      child: _isPinning ? CircularProgressIndicator(color: colorScheme.onPrimary) : const Text('Pin File'),
                     ),
                 ],
               ),
@@ -267,12 +316,12 @@ class _PinClaimScreenState extends State<PinClaimScreen> {
     );
   }
 
-  Widget _buildSuccessCard(String title, String content) {
+  Widget _buildSuccessCard(String title, String content, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.green.shade50,
-        border: Border.all(color: Colors.green.shade200),
+        color: colorScheme.surface,
+        border: Border.all(color: colorScheme.primary, width: 2),
         borderRadius: BorderRadius.circular(8),
       ),
       margin: const EdgeInsets.only(bottom: 8),
@@ -281,10 +330,10 @@ class _PinClaimScreenState extends State<PinClaimScreen> {
         children: [
           Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+            style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimaryContainer),
           ),
           const SizedBox(height: 4),
-          Text(content, style: const TextStyle(color: Colors.green)),
+          Text(content, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onPrimaryContainer)),
         ],
       ),
     );

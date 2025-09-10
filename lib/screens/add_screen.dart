@@ -17,7 +17,6 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 // Assuming these exist and are correctly imported
 import '../memo/base/memo_verifier.dart';
 import '../memo/base/text_input_verifier.dart';
-import '../provider/electrum_provider.dart';
 import '../repositories/post_repository.dart';
 import '../views_taggable/view_models/search_view_model.dart'; // Ensure SearchViewModel logic is sound
 import '../views_taggable/widgets/comment_text_field.dart'; // CRITICAL: This MUST be themed internally
@@ -36,28 +35,24 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   // Controllers
   final TextEditingController _imgurCtrl = TextEditingController();
   final TextEditingController _youtubeCtrl = TextEditingController();
+  final TextEditingController _ipfsCtrl = TextEditingController();
   late FlutterTaggerController _inputTagTopicController;
   late AnimationController _animationController;
   final FocusNode _focusNode = FocusNode();
-  // final FocusNode _keyboardFocusNode = FocusNode();
 
   // State for YouTube Player
   YoutubePlayerController? _ytPlayerController;
   String? _currentYouTubeVideoId;
 
   // UI State
-  // bool _isLoadingUser = true;
-  // bool _isCheckingClipboard = true;
   bool _isPublishing = false;
 
   String _validImgurUrl = "";
   String _validYouTubeVideoId = "";
+  String _validIpfsCid = ""; // New state for IPFS CID
 
   late Animation<Offset> _taggerOverlayAnimation;
   final double _taggerOverlayHeight = 300;
-
-  // Assuming searchViewModel is provided or accessible
-  // final SearchViewModel searchViewModel = SearchViewModel(); // Replace with actual instance
 
   @override
   void initState() {
@@ -65,12 +60,12 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _log("initState started");
 
     _inputTagTopicController = FlutterTaggerController(
-      // Example text, consider making it empty or a placeholder
       text: "I like the topic @Bitcoin#Bitcoin# It's time to earn #bch#bch# and #cashtoken#cashtoken#!",
     );
 
     _imgurCtrl.addListener(_onImgurInputChanged);
     _youtubeCtrl.addListener(_onYouTubeInputChanged);
+    _ipfsCtrl.addListener(_onIpfsInputChanged);
 
     _initStateTagger();
     _checkClipboard();
@@ -82,12 +77,12 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _log("_checkClipboard started");
     String? newImgurUrl;
     String? newVideoId;
+    String? newIpfsCid;
     String? clipboardTextForField;
 
     try {
       if (await FlutterClipboard.hasData()) {
         final urlFromClipboard = await FlutterClipboard.paste();
-        // _log("Clipboard data: $urlFromClipboard");
         final ytId = YoutubePlayer.convertUrlToId(urlFromClipboard);
 
         if (ytId != null && ytId.isNotEmpty) {
@@ -98,13 +93,18 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           if (imgur.isNotEmpty) {
             newImgurUrl = imgur;
             clipboardTextForField = urlFromClipboard;
+          } else {
+            // Check for IPFS CID format
+            final ipfsCid = _extractIpfsCid(urlFromClipboard);
+            if (ipfsCid.isNotEmpty) {
+              newIpfsCid = ipfsCid;
+              clipboardTextForField = urlFromClipboard;
+            }
           }
         }
       }
     } catch (e, s) {
       _log("Error checking clipboard: $e\n$s");
-      // Optionally show a less intrusive error for clipboard issues
-      // _showErrorSnackBar('Could not read clipboard: ${e.toString()}');
     }
 
     if (mounted) {
@@ -112,13 +112,25 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         if (newVideoId != null) {
           _validYouTubeVideoId = newVideoId;
           _validImgurUrl = "";
+          _validIpfsCid = "";
           _youtubeCtrl.text = clipboardTextForField ?? _youtubeCtrl.text;
           _imgurCtrl.clear();
+          _ipfsCtrl.clear();
           _rebuildYtPlayerController();
         } else if (newImgurUrl != null) {
           _validImgurUrl = newImgurUrl;
           _validYouTubeVideoId = "";
+          _validIpfsCid = "";
           _imgurCtrl.text = clipboardTextForField ?? _imgurCtrl.text;
+          _youtubeCtrl.clear();
+          _ipfsCtrl.clear();
+          _disposeYtPlayerController();
+        } else if (newIpfsCid != null) {
+          _validIpfsCid = newIpfsCid;
+          _validImgurUrl = "";
+          _validYouTubeVideoId = "";
+          _ipfsCtrl.text = clipboardTextForField ?? _ipfsCtrl.text;
+          _imgurCtrl.clear();
           _youtubeCtrl.clear();
           _disposeYtPlayerController();
         }
@@ -137,7 +149,14 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final RegExp expGiphy = RegExp(r'^(?:https?:\/\/)?(?:[^.]+\.)?giphy\.com(\/.*)?$');
     final matchGiphy = expGiphy.firstMatch(url.trim());
 
-    return matchGiphy?.group(0) ?? ""; // Return the full matched URL or empty
+    return matchGiphy?.group(0) ?? "";
+  }
+
+  String _extractIpfsCid(String text) {
+    // Match IPFS CID format (Qm... or bafy...)
+    final RegExp ipfsExp = RegExp(r'(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[1-9A-HJ-NP-Za-km-z]{59})');
+    final match = ipfsExp.firstMatch(text);
+    return match?.group(0) ?? "";
   }
 
   void _onImgurInputChanged() {
@@ -148,9 +167,11 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     if (newImgurUrl != _validImgurUrl) {
       setState(() {
         _validImgurUrl = newImgurUrl;
-        if (newImgurUrl.isNotEmpty && _validYouTubeVideoId.isNotEmpty) {
+        if (newImgurUrl.isNotEmpty) {
           _validYouTubeVideoId = "";
+          _validIpfsCid = "";
           _youtubeCtrl.clear();
+          _ipfsCtrl.clear();
           _disposeYtPlayerController();
         }
       });
@@ -166,13 +187,32 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       setState(() {
         if (newVideoId != null && newVideoId.isNotEmpty) {
           _validYouTubeVideoId = newVideoId;
-          if (_validImgurUrl.isNotEmpty) {
-            _validImgurUrl = "";
-            _imgurCtrl.clear();
-          }
+          _validImgurUrl = "";
+          _validIpfsCid = "";
+          _imgurCtrl.clear();
+          _ipfsCtrl.clear();
           _rebuildYtPlayerController();
         } else {
           _validYouTubeVideoId = "";
+          _disposeYtPlayerController();
+        }
+      });
+    }
+  }
+
+  void _onIpfsInputChanged() {
+    if (!mounted) return;
+    final text = _ipfsCtrl.text.trim();
+    final newIpfsCid = _extractIpfsCid(text);
+
+    if (newIpfsCid != _validIpfsCid) {
+      setState(() {
+        _validIpfsCid = newIpfsCid;
+        if (newIpfsCid.isNotEmpty) {
+          _validImgurUrl = "";
+          _validYouTubeVideoId = "";
+          _imgurCtrl.clear();
+          _youtubeCtrl.clear();
           _disposeYtPlayerController();
         }
       });
@@ -230,13 +270,14 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _log("Dispose called");
     _imgurCtrl.removeListener(_onImgurInputChanged);
     _youtubeCtrl.removeListener(_onYouTubeInputChanged);
-    _inputTagTopicController.removeListener(_onTagInputChanged);
+    _ipfsCtrl.removeListener(_onIpfsInputChanged);
     _imgurCtrl.dispose();
     _youtubeCtrl.dispose();
+    _ipfsCtrl.dispose();
+    _inputTagTopicController.removeListener(_onTagInputChanged);
     _inputTagTopicController.dispose();
     _animationController.dispose();
     _focusNode.dispose();
-    // _keyboardFocusNode.dispose();
     _disposeYtPlayerController();
     super.dispose();
   }
@@ -279,9 +320,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
-          // Properties like backgroundColor, foregroundColor, titleTextStyle, elevation
-          // will be inherited from theme.appBarTheme.
-          // Explicit overrides below are for fine-tuning if needed.
           title: Row(
             children: [
               BurnerBalanceWidget(),
@@ -292,32 +330,16 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
               ),
             ],
           ),
-          // backgroundColor: colorScheme.primary, // Or from theme
-          // iconTheme: IconThemeData(color: colorScheme.onPrimary), // Or from theme
         ),
         body: SafeArea(
           child: Column(
             children: [
-              // if (_isLoadingUser || _isCheckingClipboard)
-              //   const Expanded(
-              //     child: Center(child: CircularProgressIndicator()), // Will use theme color
-              //   )
-              // else
               _buildMediaInputSection(theme, colorScheme, textTheme),
-
-              // if (!_isLoadingUser && !_isCheckingClipboard && (_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty))
-              if ((_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty))
+              if ((_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty || _validIpfsCid.isNotEmpty))
                 Padding(
-                  padding: EdgeInsets.only(
-                    bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 12, // More padding at bottom
-                    left: 12,
-                    right: 12,
-                    top: 8, // Add some horizontal padding too
-                  ),
+                  padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 12, left: 12, right: 12, top: 8),
                   child: _buildTaggableInput(theme, colorScheme, textTheme, mediaQuery.viewInsets),
                 ),
-              // else if (!_isLoadingUser && !_isCheckingClipboard)
-              //   const Spacer(), // Pushes content up if no media and no tag input
             ],
           ),
         ),
@@ -327,14 +349,10 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
   void _unfocusNodes(BuildContext context) {
     _focusNode.unfocus();
-    // _keyboardFocusNode.unfocus();
     FocusScope.of(context).unfocus();
   }
 
   Widget _buildMediaInputSection(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
-    bool showImgurPlaceholder = _validYouTubeVideoId.isEmpty;
-    bool showVideoPlaceholder = _validImgurUrl.isEmpty;
-
     if (_validImgurUrl.isNotEmpty) {
       return Expanded(
         child: Padding(
@@ -369,36 +387,54 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       );
     }
 
-    // Both are empty, show placeholders
+    if (_validIpfsCid.isNotEmpty) {
+      return Expanded(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: _buildIpfsMediaDisplay(
+            theme: theme,
+            colorScheme: colorScheme,
+            textTheme: textTheme,
+            cid: _validIpfsCid,
+            onTap: _showIpfsDialog,
+          ),
+        ),
+      );
+    }
+
+    // All are empty, show placeholders for all three options
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (showImgurPlaceholder)
-            Expanded(
-              child: _buildMediaPlaceholder(
-                theme: theme,
-                colorScheme: colorScheme,
-                textTheme: textTheme,
-                label: "ADD IMAGE",
-                iconData: Icons.add_photo_alternate_outlined,
-                onTap: _showImgurDialog,
-              ),
-            ),
-          if (showImgurPlaceholder && showVideoPlaceholder) const SizedBox(width: 16),
-          if (showVideoPlaceholder)
-            Expanded(
-              child: _buildMediaPlaceholder(
-                theme: theme,
-                colorScheme: colorScheme,
-                textTheme: textTheme,
-                label: "ADD VIDEO",
-                iconData: Icons.video_call_outlined,
-                onTap: _showVideoDialog,
-              ),
-            ),
+          _buildMediaPlaceholder(
+            theme: theme,
+            colorScheme: colorScheme,
+            textTheme: textTheme,
+            label: "ADD IMAGE",
+            iconData: Icons.add_photo_alternate_outlined,
+            onTap: _showImgurDialog,
+          ),
+          const SizedBox(width: 8),
+          _buildMediaPlaceholder(
+            theme: theme,
+            colorScheme: colorScheme,
+            textTheme: textTheme,
+            label: "ADD VIDEO",
+            iconData: Icons.video_call_outlined,
+            onTap: _showVideoDialog,
+          ),
+          const SizedBox(width: 8),
+          _buildMediaPlaceholder(
+            theme: theme,
+            colorScheme: colorScheme,
+            textTheme: textTheme,
+            label: "UPLOAD TO IPFS",
+            iconData: Icons.cloud_upload_outlined,
+            onTap: _showIpfsUploadScreen,
+          ),
         ],
       ),
     );
@@ -412,27 +448,30 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     required IconData iconData,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: AspectRatio(
-        aspectRatio: 4 / 3,
-        child: Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceVariant.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colorScheme.outline.withOpacity(0.5), width: 1.5),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(iconData, size: 50, color: colorScheme.primary),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                style: textTheme.titleSmall?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
-              ),
-            ],
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceVariant.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.outline.withOpacity(0.5), width: 1.5),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(iconData, size: 30, color: colorScheme.primary),
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  style: textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -467,13 +506,12 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
                       mediaUrl!,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
-                        _log("Error loading Imgur image: $error");
+                        _log("Error loading image: $error");
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           if (mounted) setState(() => _validImgurUrl = "");
                         });
                         return Center(
                           child: Column(
-                            // More informative error
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.broken_image_outlined, color: colorScheme.error, size: 36),
@@ -487,7 +525,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
                         if (loadingProgress == null) return child;
                         return Center(
                           child: CircularProgressIndicator(
-                            // valueColor from theme.progressIndicatorTheme
                             value: loadingProgress.expectedTotalBytes != null
                                 ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
                                 : null,
@@ -500,9 +537,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
                             key: ValueKey("yt_addpost_"),
                             controller: youtubeController,
                             showVideoProgressIndicator: true,
-                            progressIndicatorColor: colorScheme.primary, // Themed
+                            progressIndicatorColor: colorScheme.primary,
                             progressColors: ProgressBarColors(
-                              // Themed
                               playedColor: colorScheme.primary,
                               handleColor: colorScheme.secondary,
                               bufferedColor: colorScheme.primary.withOpacity(0.4),
@@ -511,7 +547,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
                           )
                         : Center(
                             child: Column(
-                              // More informative error
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(Icons.videocam_off_outlined, color: colorScheme.error, size: 36),
@@ -525,12 +560,11 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         ),
         const SizedBox(height: 12),
         TextButton.icon(
-          icon: Icon(Icons.edit_outlined, size: 18), // Icon color from TextButtonTheme or colorScheme.primary
+          icon: Icon(Icons.edit_outlined, size: 18),
           label: Text(isNetworkImage ? "Change Image" : "Change Video"),
           onPressed: onTap,
-          // Style from theme.textButtonTheme or direct styling using theme:
           style: TextButton.styleFrom(
-            foregroundColor: colorScheme.secondary, // Or colorScheme.primary
+            foregroundColor: colorScheme.secondary,
             textStyle: textTheme.labelLarge,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           ),
@@ -539,18 +573,99 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     );
   }
 
-  //FILES THAT ARE UPLOADED SUCCESSFULLY ARE DISPLAYED ON https://free-bch.fullstack.cash/ipfs/view/${cid}
-  _showIpfsUploadScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PinClaimScreen(
-          wallet: ref.read(electrumServiceProvider).value!,
-          serverUrl: 'https://file-stage.fullstack.cash',
-          mnemonic: ref.read(userProvider)!.mnemonic,
+  Widget _buildIpfsMediaDisplay({
+    required ThemeData theme,
+    required ColorScheme colorScheme,
+    required TextTheme textTheme,
+    required String cid,
+    required VoidCallback onTap,
+  }) {
+    final ipfsUrl = 'https://free-bch.fullstack.cash/ipfs/view/$cid';
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AspectRatio(
+          aspectRatio: 16 / 9,
+          child: Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(11.5),
+              child: Image.network(
+                ipfsUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  _log("Error loading IPFS image: $error");
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.cloud_off_outlined, color: colorScheme.error, size: 36),
+                        const SizedBox(height: 8),
+                        Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+                        const SizedBox(height: 8),
+                        Text("CID: $cid", style: textTheme.bodySmall),
+                      ],
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
         ),
-      ),
+        const SizedBox(height: 12),
+        TextButton.icon(
+          icon: Icon(Icons.edit_outlined, size: 18),
+          label: const Text("Change IPFS Content"),
+          onPressed: onTap,
+          style: TextButton.styleFrom(
+            foregroundColor: colorScheme.secondary,
+            textStyle: textTheme.labelLarge,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "IPFS CID: $cid",
+          style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
+  }
+
+  void _showIpfsUploadScreen() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const PinClaimScreen())).then((result) {
+      // Handle the result when returning from PinClaimScreen
+      if (result != null) {
+        final cid = result['cid'];
+        if (cid != null && mounted) {
+          setState(() {
+            _validIpfsCid = cid;
+            // _validImgurUrl = "https://free-bch.fullstack.cash/ipfs/view/${cid}";
+            _validImgurUrl = "";
+            _validYouTubeVideoId = "";
+            _imgurCtrl.clear();
+            _youtubeCtrl.clear();
+            _disposeYtPlayerController();
+          });
+        }
+      }
+    });
   }
 
   Future<void> _showImgurDialog() async {
@@ -561,48 +676,37 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _showUrlInputDialog("Paste YouTube Video URL", _youtubeCtrl, "e.g. https://youtu.be/video_id");
   }
 
+  Future<void> _showIpfsDialog() async {
+    _showUrlInputDialog("Paste IPFS CID", _ipfsCtrl, "e.g. QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco");
+  }
+
   void _showUrlInputDialog(String title, TextEditingController controller, String hint) {
     final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
     final TextTheme textTheme = theme.textTheme;
 
-    _checkClipboard(); // Ensure clipboard is checked before showing dialog
+    _checkClipboard();
 
     showDialog(
       context: context,
       builder: (dialogCtx) {
         return AlertDialog(
-          // shape, titleTextStyle, contentTextStyle, backgroundColor from theme.dialogTheme
-          title: Text(title /*, style: theme.dialogTheme.titleTextStyle ?? textTheme.titleLarge */),
+          title: Text(title),
           contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // CRITICAL: TextInputField must be themed internally
-              TextInputField(
-                textEditingController: controller,
-                hintText: hint,
-                textInputType: TextInputType.url,
-                // If TextInputField doesn't use theme.inputDecorationTheme, it will look out of place
-              ),
+              TextInputField(textEditingController: controller, hintText: hint, textInputType: TextInputType.url),
               const SizedBox(height: 12),
-              Text("Tip: Paste a full URL from Imgur or YouTube.", style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+              Text("Tip: Paste a full URL or CID", style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
             ],
           ),
-          actionsAlignment: MainAxisAlignment.end,
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
           actions: <Widget>[
+            TextButton(onPressed: () => Navigator.of(dialogCtx).pop(), child: const Text('Cancel')),
             TextButton(
-              // Style from theme.textButtonTheme
-              onPressed: () => Navigator.of(dialogCtx).pop(),
-              child: Text('Cancel' /*, style: TextStyle(color: colorScheme.onSurfaceVariant)*/), // Uses TextButton's foregroundColor
-            ),
-            TextButton(
-              // Style from theme.textButtonTheme (or override for emphasis)
               onPressed: () {
                 Navigator.of(dialogCtx).pop();
               },
-              child: Text('Done' /*, style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold)*/),
+              child: const Text('Done'),
             ),
           ],
         );
@@ -801,19 +905,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     }
   }
 
-  void _clearInputsAfterPublish() {
-    _inputTagTopicController.clear();
-    _imgurCtrl.clear();
-    _youtubeCtrl.clear();
-    if (mounted) {
-      setState(() {
-        _validImgurUrl = "";
-        _validYouTubeVideoId = "";
-        _disposeYtPlayerController();
-      });
-    }
-  }
-
   String? _extractTopicFromTags(String rawTextForTopicExtraction) {
     for (Tag t in _inputTagTopicController.tags) {
       if (t.triggerCharacter == "@") {
@@ -837,6 +928,9 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     } else if (_validImgurUrl.isNotEmpty) {
       return "$text $_validImgurUrl";
     }
+    // else if (_validIpfsCid.isNotEmpty) {
+    //   return "$text https://free-bch.fullstack.cash/ipfs/view/$_validIpfsCid";
+    // }
     return text;
   }
 
@@ -851,10 +945,25 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     if (hashtagCount > 3) {
       return "Maximum of 3 #hashtags allowed.";
     }
-    if (_inputTagTopicController.text.trim().isEmpty && (_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty)) {
+    if (_inputTagTopicController.text.trim().isEmpty &&
+        (_validImgurUrl.isNotEmpty || _validYouTubeVideoId.isNotEmpty || _validIpfsCid.isNotEmpty)) {
       return "Please add a caption for your media.";
     }
-    // Add other validations like text length if needed
     return null;
+  }
+
+  void _clearInputsAfterPublish() {
+    _inputTagTopicController.clear();
+    _imgurCtrl.clear();
+    _youtubeCtrl.clear();
+    _ipfsCtrl.clear();
+    if (mounted) {
+      setState(() {
+        _validImgurUrl = "";
+        _validYouTubeVideoId = "";
+        _validIpfsCid = "";
+        _disposeYtPlayerController();
+      });
+    }
   }
 }

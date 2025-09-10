@@ -74,7 +74,7 @@ class PinClaimAsync {
       print('txid: $txid');
 
       // Wait for the transaction delay
-      await Future.delayed(Duration(seconds: 10));
+      await Future.delayed(Duration(seconds: 1));
 
       // Generate a Pin Claim
       final pinObj = {

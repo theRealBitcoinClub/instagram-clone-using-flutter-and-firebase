@@ -21,7 +21,7 @@ class GitHubIPFSMapper extends IPFSShortIDMapper {
   String getRawGithubUrl(String filename) {
     final cleanUrl = githubRepoUrl.replaceAll(RegExp(r'/$'), '');
     if (cleanUrl.contains('github.com')) {
-      return cleanUrl.replaceFirst('github.com', 'raw.githubusercontent.com') + '/main/$filename';
+      return cleanUrl.replaceFirst('github.com', 'raw.githubusercontent.com') + '/refs/heads/master/$filename';
     }
     return '$cleanUrl/$filename';
   }

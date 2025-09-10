@@ -65,7 +65,7 @@ class MemoVerifier {
     return MemoVerificationResponse.valid;
   }
 
-  Future<String> verifyProfileAvatar() async {
+  Future<String> verifyAndBuildImgurUrl() async {
     String newText = text.replaceFirst("/imgur.com", "/i.imgur.com");
     //TODO THESE DO NOT MATCH THE IMAGE URL MAYBE LATER FIND A WAY TO EXTRACT THE ACTUAL IMAGE URL FROM THAT LINK TOO
     // if (newText == text) newText = text.replaceFirst("imgur.com/a/", "imgur.com/");

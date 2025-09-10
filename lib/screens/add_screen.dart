@@ -10,7 +10,6 @@ import 'package:mahakka/screens/pin_claim_screen.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
-import 'package:mahakka/widgets/textfield_input.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
@@ -23,6 +22,7 @@ import '../views_taggable/view_models/search_view_model.dart';
 import '../views_taggable/widgets/comment_text_field.dart';
 import '../views_taggable/widgets/search_result_overlay.dart';
 import 'add/add_post_providers.dart';
+import 'add/clipboard_monitoring_dialog.dart';
 import 'add/clipboard_provider.dart';
 import 'add/imgur_media_widget.dart';
 import 'add/ipfs_media_widget.dart';
@@ -62,7 +62,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     _youtubeCtrl.addListener(_onYouTubeInputChanged);
     _imgurCtrl.addListener(_onImgurInputChanged);
-    _ipfsCtrl.addListener(_onIpfsInputChanged);
+    // _ipfsCtrl.addListener(_onIpfsInputChanged);
     _odyseeCtrl.addListener(_onOdyseeInputChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -77,15 +77,27 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   void _onImgurInputChanged() {
     if (!mounted) return;
     final text = _imgurCtrl.text.trim();
-    final newImgurUrl = MemoRegExp(text).extractValidImgurOrGiphyUrl();
+    String newImgurUrl = MemoRegExp(text).extractValidImgurOrGiphyUrl();
 
     // var read = ref.read(imgurUrlProvider);
     // if (newImgurUrl != read) {
     if (newImgurUrl.isNotEmpty) {
       ref.read(imgurUrlProvider.notifier).state = newImgurUrl;
       _clearOtherMediaProviders(0);
+    } else {
+      tryAdvancedImgurCheck();
     }
     // }
+  }
+
+  Future<void> tryAdvancedImgurCheck() async {
+    final text = _imgurCtrl.text.trim();
+    final newImgurUrl = await MemoVerifier(text).verifyAndBuildImgurUrl();
+
+    if (newImgurUrl != MemoVerificationResponse.noImageNorVideo.toString()) {
+      ref.read(imgurUrlProvider.notifier).state = newImgurUrl;
+      _clearOtherMediaProviders(0);
+    }
   }
 
   void _onYouTubeInputChanged() {
@@ -104,18 +116,18 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     // }
   }
 
-  void _onIpfsInputChanged() {
-    if (!mounted) return;
-    final text = _ipfsCtrl.text.trim();
-    final newIpfsCid = MemoRegExp(text).extractIpfsCid();
-
-    // if (newIpfsCid != ref.read(ipfsCidProvider)) {
-    if (newIpfsCid.isNotEmpty) {
-      ref.read(ipfsCidProvider.notifier).state = newIpfsCid;
-      _clearOtherMediaProviders(2);
-    }
-    // }
-  }
+  // void _onIpfsInputChanged() {
+  //   if (!mounted) return;
+  //   final text = _ipfsCtrl.text.trim();
+  //   final newIpfsCid = MemoRegExp(text).extractIpfsCid();
+  //
+  //   // if (newIpfsCid != ref.read(ipfsCidProvider)) {
+  //   if (newIpfsCid.isNotEmpty) {
+  //     ref.read(ipfsCidProvider.notifier).state = newIpfsCid;
+  //     _clearOtherMediaProviders(2);
+  //   }
+  //   // }
+  // }
 
   void _onOdyseeInputChanged() {
     if (!mounted) return;
@@ -156,7 +168,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _log("Dispose called");
     _imgurCtrl.removeListener(_onImgurInputChanged);
     _youtubeCtrl.removeListener(_onYouTubeInputChanged);
-    _ipfsCtrl.removeListener(_onIpfsInputChanged);
+    // _ipfsCtrl.removeListener(_onIpfsInputChanged);
     _odyseeCtrl.removeListener(_onOdyseeInputChanged);
     _imgurCtrl.dispose();
     _youtubeCtrl.dispose();
@@ -421,39 +433,18 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final ThemeData theme = Theme.of(context);
     final TextTheme textTheme = theme.textTheme;
 
-    ref.read(clipboardNotifierProvider.notifier).checkClipboard(ref);
+    ref.watch(clipboardNotifierProvider.notifier).checkClipboard(ref);
 
     showDialog(
       context: context,
-      builder: (dialogCtx) {
-        return AlertDialog(
-          title: Text(title),
-          contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextInputField(textEditingController: controller, hintText: hint, textInputType: TextInputType.url),
-              const SizedBox(height: 8),
-              // Text("Tip: Paste an URL", style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                _clearInputs();
-                Navigator.of(dialogCtx).pop();
-              },
-              child: Text('Cancel', style: textTheme.labelMedium!.copyWith(color: theme.colorScheme.error)),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogCtx).pop();
-              },
-              child: Text('Done', style: textTheme.labelLarge!.copyWith(color: theme.colorScheme.primary)),
-            ),
-          ],
-        );
-      },
+      builder: (dialogCtx) => ClipboardMonitoringDialog(
+        title: title,
+        controller: controller,
+        hint: hint,
+        theme: theme,
+        textTheme: textTheme,
+        onClearInputs: _clearInputs,
+      ),
     );
   }
 

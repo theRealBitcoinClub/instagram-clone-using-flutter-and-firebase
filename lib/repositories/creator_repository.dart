@@ -157,7 +157,7 @@ class CreatorRepository {
   }
 
   Future<dynamic> profileSetAvatar(String imgur, MemoModelUser user) async {
-    String verifiedUrl = await MemoVerifier(imgur).verifyProfileAvatar();
+    String verifiedUrl = await MemoVerifier(imgur).verifyAndBuildImgurUrl();
     if (verifiedUrl == MemoVerificationResponse.noImageNorVideo.toString()) {
       return verifiedUrl;
     }

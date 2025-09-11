@@ -4,7 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/resources/auth_method.dart';
-import 'package:mahakka/utils/snackbar.dart';
+
+import '../utils/snackbar.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -19,6 +20,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   bool _isInputValid = false;
   String? _errorMessage;
   bool _isLoading = false;
+  String _processedMnemonic = "";
 
   @override
   void initState() {
@@ -55,8 +57,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
       }
     }
   }
-
-  String _processedMnemonic = "";
 
   void _handleInput() {
     final text = _mnemonicController.text;
@@ -105,8 +105,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   }
 
   String toLowCaseAndRemoveTooManySpaces(String inputTrimmed) {
-    final processedMnemonic = inputTrimmed.toLowerCase().split(RegExp(r'\s+')).join(' ');
-    return processedMnemonic;
+    return inputTrimmed.toLowerCase().split(RegExp(r'\s+')).join(' ');
   }
 
   void _loginUser() {
@@ -117,7 +116,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     WidgetsBinding.instance.addPostFrameCallback((_) {
       doHeavyWork();
     });
-    // doHeavyWork();
   }
 
   Future<void> doHeavyWork() async {
@@ -151,77 +149,100 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: Container(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32),
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Spacer(flex: 2),
-              Image.asset('assets/splash.png', height: 120),
-              const SizedBox(height: 56),
-              TextField(
-                minLines: 3,
-                maxLines: 3,
-                controller: _mnemonicController,
-                keyboardType: TextInputType.text,
-                decoration: InputDecoration(
-                  hintText: 'Write, paste or generate 12-word mnemonic',
-                  errorText: _errorMessage,
-                  border: OutlineInputBorder(borderSide: Divider.createBorderSide(context)),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: Divider.createBorderSide(context, color: _isInputValid ? Colors.green : theme.colorScheme.primary),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 40),
+                Image.asset('assets/splash.png', height: 120),
+                const SizedBox(height: 56),
+                TextField(
+                  minLines: 3,
+                  maxLines: 3,
+                  controller: _mnemonicController,
+                  keyboardType: TextInputType.text,
+                  decoration: InputDecoration(
+                    hintText: 'Write, paste or generate 12-word mnemonic',
+                    errorText: _errorMessage,
+                    border: OutlineInputBorder(borderSide: Divider.createBorderSide(context)),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: Divider.createBorderSide(context, color: _isInputValid ? Colors.green : theme.colorScheme.primary),
+                    ),
+                    enabledBorder: OutlineInputBorder(borderSide: Divider.createBorderSide(context)),
+                    filled: true,
+                    contentPadding: const EdgeInsets.all(8),
                   ),
-                  enabledBorder: OutlineInputBorder(borderSide: Divider.createBorderSide(context)),
-                  filled: true,
-                  contentPadding: const EdgeInsets.all(8),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextButton.icon(
-                icon: Icon(Icons.refresh_rounded, color: colorScheme.secondary),
-                label: Text(
-                  "GENERATE MNEMONIC",
-                  style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.secondary),
-                ),
-                onPressed: _generateMnemonic,
-                style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16)),
-              ),
-              const SizedBox(height: 24),
-              _isLoading ? LinearProgressIndicator() : SizedBox(),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: (_isInputValid && !_isLoading) ? _loginUser : null,
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.resolveWith<Color>((Set<MaterialState> states) {
-                      if (states.contains(MaterialState.disabled)) {
-                        return colorScheme.primary.withOpacity(0.5);
-                      }
-                      return colorScheme.primary;
-                    }),
-                    foregroundColor: MaterialStateProperty.resolveWith<Color>((Set<MaterialState> states) {
-                      if (states.contains(MaterialState.disabled)) {
-                        return colorScheme.onPrimary.withOpacity(0.5);
-                      }
-                      return colorScheme.onPrimary;
-                    }),
-                    textStyle: MaterialStateProperty.resolveWith<TextStyle>((Set<MaterialState> states) {
-                      if (states.contains(MaterialState.disabled)) {
-                        return textTheme.labelLarge!.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimary.withOpacity(0.5));
-                      }
-                      return textTheme.labelLarge!.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimary);
-                    }),
+                const SizedBox(height: 16),
+                // FIXED: TextButton with proper inherit handling
+                TextButton(
+                  onPressed: _generateMnemonic,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                    foregroundColor: colorScheme.secondary,
                   ),
                   child: Text(
-                    "LOGIN",
-                    style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimary),
+                    "GENERATE MNEMONIC",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.secondary,
+                      inherit: false, // ← CRITICAL FIX: Set inherit to false
+                    ),
                   ),
                 ),
-              ),
-              const Spacer(flex: 2),
-            ],
+                const SizedBox(height: 24),
+                if (_isLoading) LinearProgressIndicator(),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: (_isInputValid && !_isLoading) ? _loginUser : null,
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.resolveWith<Color>((Set<MaterialState> states) {
+                        if (states.contains(MaterialState.disabled)) {
+                          return colorScheme.primary.withOpacity(0.5);
+                        }
+                        return colorScheme.primary;
+                      }),
+                      foregroundColor: MaterialStateProperty.resolveWith<Color>((Set<MaterialState> states) {
+                        if (states.contains(MaterialState.disabled)) {
+                          return colorScheme.onPrimary.withOpacity(0.5);
+                        }
+                        return colorScheme.onPrimary;
+                      }),
+                      textStyle: MaterialStateProperty.resolveWith<TextStyle>((Set<MaterialState> states) {
+                        final baseStyle = textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onPrimary,
+                          inherit: false, // ← CONSISTENT: Set inherit to false
+                        );
+
+                        if (states.contains(MaterialState.disabled)) {
+                          return baseStyle?.copyWith(color: colorScheme.onPrimary.withOpacity(0.5)) ??
+                              TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onPrimary.withOpacity(0.5),
+                                inherit: false,
+                              );
+                        }
+                        return baseStyle ?? TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colorScheme.onPrimary, inherit: false);
+                      }),
+                    ),
+                    child: const Text("LOGIN"),
+                  ),
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
           ),
         ),
       ),

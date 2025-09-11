@@ -39,10 +39,10 @@ const _$TipReceiverEnumMap = {
 };
 
 const _$TipAmountEnumMap = {
-  TipAmount.survival: 2345,
-  TipAmount.nice: 4567,
-  TipAmount.fren: 7777,
-  TipAmount.wagmi: 9999,
-  TipAmount.moon: 12345,
+  TipAmount.survival: 4567,
+  TipAmount.nice: 7777,
+  TipAmount.fren: 9999,
+  TipAmount.wagmi: 12345,
+  TipAmount.moon: 21212,
   TipAmount.sohigh: 42069,
 };

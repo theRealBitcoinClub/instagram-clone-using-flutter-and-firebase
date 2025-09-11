@@ -15,8 +15,16 @@ class MemoModelPost {
   String? id;
 
   String? text;
+  //this is historically used because memo.cash treats imgur differently all imgur images are visible on memo too
   String? imgurUrl;
+  //all youtube videos are visible on memo.cash too
   String? youtubeId;
+  //this could be any image from any whitelisted domain, e.g. IPFS, not necessarily visible on memo.cash
+  String? imageUrl;
+  //this could be an odysee url or github if someone uploaded a video to github not necessarily visible on memo.cash
+  String? videoUrl;
+  //TODO SPECIAL FLAG FOR POSTS THAT SHALL BE SHOWNONFEED ALWAYS REGARDLESS OF CREATOR TOKEN BALANCE OR POPULARITY SCORE
+  bool? showOnFeed;
 
   @JsonKey(fromJson: _dateTimeFromJson, toJson: _dateTimeToJson)
   DateTime? createdDateTime;

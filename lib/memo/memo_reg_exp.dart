@@ -1,16 +1,5 @@
 import 'package:mahakka/config_whitelist.dart';
 
-const whitelistPatterns = [
-  WhitelistMediaDomains.imgur,
-  WhitelistMediaDomains.giphy,
-  WhitelistMediaDomains.domains,
-  WhitelistMediaDomains.psfIpfs,
-  WhitelistMediaDomains.odysee,
-  WhitelistMediaDomains.youtube,
-  WhitelistMediaDomains.github,
-  WhitelistMediaDomains.gitlab,
-];
-
 class MemoRegExp {
   final String text;
 

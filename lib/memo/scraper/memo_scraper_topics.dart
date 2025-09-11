@@ -52,10 +52,9 @@ class MemoScraperTopic {
   /// Scrapes topics from the memo.cash website
   Future<List<MemoModelTopic>> _scrapeTopics(int offset, String cacheId) async {
     try {
-      final Map<String, Object> topicsData = await MemoScraperUtil.createScraper(
-        "topics/all?offset=$offset&x=$cacheId",
-        _createTopicScraperConfig(),
-      );
+      var basePath = "topics/all?offset=$offset";
+      var path = cacheId.isNotEmpty ? "$basePath&x=$cacheId" : basePath;
+      final Map<String, Object> topicsData = await MemoScraperUtil.createScraper(path, _createTopicScraperConfig());
 
       return _parseTopicsFromData(topicsData);
     } catch (e) {

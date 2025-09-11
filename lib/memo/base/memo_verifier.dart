@@ -41,7 +41,7 @@ class MemoVerifier {
   static int maxPostLength = 207 - super_tag.length - super_topic.length; // Example, adjust as needed
   static const int minWordCount = 1; // Example for posts
 
-  static const int maxProfileNameLength = 40;
+  static const int maxProfileNameLength = 30;
   static const int minProfileNameLength = 3;
   //memo has 217
   static const int maxProfileTextLength = 200;

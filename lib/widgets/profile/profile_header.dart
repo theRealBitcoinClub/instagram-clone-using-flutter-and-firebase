@@ -1,7 +1,6 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/memo/base/memo_verifier.dart';
 
 import '../../memo/model/memo_model_creator.dart';
 import '../../provider/profile_providers.dart';
@@ -98,8 +97,7 @@ class ProfileHeader extends ConsumerWidget {
   }
 
   Widget _buildNameRow(MemoModelCreator creator, ThemeData theme) {
-    var name = creator.name;
-    var maxLength = MemoVerifier.maxProfileNameLength;
+    var name = creator.nameMaxLengthAware;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 2.0),
       child: Align(
@@ -110,7 +108,7 @@ class ProfileHeader extends ConsumerWidget {
             Text(
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              name.isNotEmpty ? name.substring(0, name.length < maxLength ? name.length : maxLength) : "Anonymous",
+              name.isNotEmpty ? name : "Anonymous",
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             Spacer(),

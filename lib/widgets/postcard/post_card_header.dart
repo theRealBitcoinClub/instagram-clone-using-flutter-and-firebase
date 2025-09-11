@@ -96,7 +96,7 @@ class PostCardHeader extends ConsumerWidget {
                         style: theme.textTheme.titleSmall?.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.w300),
                       ),
                       Text(
-                        creator.name,
+                        creator.nameMaxLengthAware,
                         style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                         overflow: TextOverflow.ellipsis,
                       ),

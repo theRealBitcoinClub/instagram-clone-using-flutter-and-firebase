@@ -21,11 +21,45 @@ class MemoScraperUtil {
     String baseUrl = "https://memo.cash/";
     WebScraper webScraper = WebScraper();
     String? cachedData = nocache ? null : await loadCachedData(path);
+
+    // Brave browser user-agent
+    const String braveUserAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+    // MANUALLY EXTRACTED COOKIES FROM BRAVE - REPLACE WITH YOUR COOKIES
+    // Get these from SQLiteBrowser by running:
+    // sqlite3 ~/.var/app/com.brave.Browser/config/BraveSoftware/Brave-Browser/Default/Cookies "SELECT name, value FROM cookies WHERE host_key LIKE '%memo.cash%';"
+    final Map<String, String> braveCookies = {
+      // Example cookies - REPLACE THESE WITH YOUR ACTUAL COOKIES
+      'memo_session_id': 'a364ea48847c334abec911a8635ba3afbc1c883b3b07691877a4d3ffb784ce9e',
+      // 'cf_clearance':
+      //     'Uq297M5c3k3Hi8dbGtYFWE4i8paNI.PdeMWRpAJiGSI-1757609001-1.2.1.1-d5pGOZe0d1YVPIJOTK6QnVbD0Qm9rVN5Ly0Rf5ZLTHP200AX5dFE946DC3xpXT6xjRJqX2uu56Uyhh9lg3EjTulHA6FKVFQNxerkQSk.pJGrTFvyqzAcpRVmD7Yx.EMavZPND8oBtOlQmgLdFDemJK3Vj98WlJlGMtxrLN5cceKMTXDuObFOtiwBk9mSLKSAm_.8xaus7a.gMq1OCfQhoyKPqW7mfifplCC2M_d_0as',
+      // 'remember_token': 'your_remember_token_here',
+      // Add other cookies you find for memo.cash
+    };
+
+    // Brave headers to mimic browser behavior
+    final Map<String, String> braveHeaders = {
+      'User-Agent': braveUserAgent,
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.5',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Connection': 'keep-alive',
+      'Upgrade-Insecure-Requests': '1',
+      'Sec-Fetch-Dest': 'document',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-Site': 'none',
+      'Sec-Fetch-User': '?1',
+      'Cache-Control': 'max-age=0',
+    };
+
     Map<String, Object> topics = await webScraper.scrape(
       html: cachedData == null ? null : Document.html(cachedData),
       concurrentParsing: true,
       url: Uri.parse(baseUrl + path),
       scraperConfig: cfg,
+      // headers: braveHeaders, // Add Brave headers
+      cookies: braveCookies, // Add manually extracted cookies
+      // userAgent: braveUserAgent, // Set Brave user-agent
       onCacheHtmlString: (data) => nocache ? null : cacheData(path, data),
     );
     return topics;

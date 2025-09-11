@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:mahakka/memo/base/debounced_balance_service.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
+import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/firebase/user_service.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
@@ -47,6 +48,12 @@ class MemoModelCreator {
   String get profileIdShort => id.substring(1, 5);
 
   String? profileImgurUrl;
+
+  String get nameMaxLengthAware {
+    return name.isNotEmpty
+        ? name.substring(0, name.length < MemoVerifier.maxProfileNameLength ? name.length : MemoVerifier.maxProfileNameLength)
+        : id;
+  }
 
   MemoModelCreator({
     this.id = "",

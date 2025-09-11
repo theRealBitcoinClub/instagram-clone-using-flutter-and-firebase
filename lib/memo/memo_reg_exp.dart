@@ -24,6 +24,118 @@ class MemoRegExp {
     return exp.allMatches(text.trim()).map((match) => match.group(group) ?? "").toList();
   }
 
+  // Static method to extract whitelisted image URLs from any text
+  static List<String> extractWhitelistedImageUrls(String text) {
+    final memoRegExp = MemoRegExp(text);
+    return memoRegExp.extractAllWhitelistedImageUrls();
+  }
+
+  // Static method to extract whitelisted video URLs from any text
+  static List<String> extractWhitelistedVideoUrls(String text) {
+    final memoRegExp = MemoRegExp(text);
+    return memoRegExp.extractAllWhitelistedVideoUrls();
+  }
+
+  // Member method that utilizes the text property to extract whitelisted image URLs
+  List<String> extractAllWhitelistedImageUrls() {
+    final List<String> allUrls = extractAllWhitelistedMediaUrls();
+
+    // Filter for URLs that are likely to be images (common image extensions)
+    final imageUrls = allUrls.where((url) {
+      // Check if URL ends with common image extensions
+      final lowerUrl = url.toLowerCase();
+      return lowerUrl.endsWith('.jpg') ||
+          lowerUrl.endsWith('.jpeg') ||
+          lowerUrl.endsWith('.png') ||
+          lowerUrl.endsWith('.gif') ||
+          lowerUrl.endsWith('.webp') ||
+          lowerUrl.endsWith('.bmp') ||
+          lowerUrl.endsWith('.svg') ||
+          // Check for common image URL patterns without extensions
+          lowerUrl.contains('/image/') ||
+          lowerUrl.contains('/images/') ||
+          lowerUrl.contains('/img/') ||
+          lowerUrl.contains('.giphy.com/media/') ||
+          lowerUrl.contains('.imgur.com/') ||
+          // Check for query parameters that indicate images
+          lowerUrl.contains('?image=') ||
+          lowerUrl.contains('&image=') ||
+          // Check for IPFS image patterns
+          (lowerUrl.contains('ipfs') &&
+              (lowerUrl.contains('/image/') ||
+                  lowerUrl.contains('/img/') ||
+                  lowerUrl.endsWith('.jpg') ||
+                  lowerUrl.endsWith('.png') ||
+                  lowerUrl.endsWith('.gif')));
+    }).toList();
+
+    return imageUrls;
+  }
+
+  // Member method that utilizes the text property to extract whitelisted video URLs
+  List<String> extractAllWhitelistedVideoUrls() {
+    final List<String> allUrls = extractAllWhitelistedMediaUrls();
+
+    // Filter for URLs that are likely to be videos (common video formats and platforms)
+    final videoUrls = allUrls.where((url) {
+      final lowerUrl = url.toLowerCase();
+
+      // Check for common video file extensions supported by video_player
+      final hasVideoExtension =
+          lowerUrl.endsWith('.mp4') ||
+          lowerUrl.endsWith('.mov') ||
+          lowerUrl.endsWith('.m4v') ||
+          lowerUrl.endsWith('.avi') ||
+          lowerUrl.endsWith('.wmv') ||
+          lowerUrl.endsWith('.flv') ||
+          lowerUrl.endsWith('.mkv') ||
+          lowerUrl.endsWith('.webm') ||
+          lowerUrl.endsWith('.3gp');
+
+      // Check for video-specific path patterns
+      final hasVideoPath =
+          lowerUrl.contains('/video/') ||
+          lowerUrl.contains('/videos/') ||
+          lowerUrl.contains('/v/') ||
+          lowerUrl.contains('/watch') ||
+          lowerUrl.contains('/embed/') ||
+          lowerUrl.contains('video=true') ||
+          lowerUrl.contains('type=video');
+
+      // Check for known video hosting platforms
+      final isVideoPlatform =
+          lowerUrl.contains('youtube.com') ||
+          lowerUrl.contains('youtu.be') ||
+          lowerUrl.contains('vimeo.com') ||
+          lowerUrl.contains('dailymotion.com') ||
+          lowerUrl.contains('twitch.tv') ||
+          lowerUrl.contains('odysee.com') ||
+          lowerUrl.contains('streamable.com') ||
+          lowerUrl.contains('giphy.com/media/') && lowerUrl.contains('/video/');
+
+      // Check for IPFS video patterns
+      final isIpfsVideo =
+          lowerUrl.contains('ipfs') &&
+          (lowerUrl.contains('/video/') || lowerUrl.endsWith('.mp4') || lowerUrl.endsWith('.mov') || lowerUrl.endsWith('.webm'));
+
+      return hasVideoExtension || hasVideoPath || isVideoPlatform || isIpfsVideo;
+    }).toList();
+
+    return videoUrls;
+  }
+
+  // Extract first whitelisted image URL (useful for previews)
+  String? extractFirstWhitelistedImageUrl() {
+    final imageUrls = extractAllWhitelistedImageUrls();
+    return imageUrls.isNotEmpty ? imageUrls.first : null;
+  }
+
+  // Extract first whitelisted video URL (useful for previews)
+  String? extractFirstWhitelistedVideoUrl() {
+    final videoUrls = extractAllWhitelistedVideoUrls();
+    return videoUrls.isNotEmpty ? videoUrls.first : null;
+  }
+
   // Specific domain methods
   String extractValidImgurOrGiphyUrl() {
     final imgurUrl = _extractUrlByPattern(WhitelistMediaDomains.imgur);
@@ -82,6 +194,16 @@ class MemoRegExp {
         hasGitlabImageUrl() ||
         hasPsfIpfsUrl() ||
         hasWhitelistedDomainUrl();
+  }
+
+  // Check if has any whitelisted image URL
+  bool hasAnyWhitelistedImageUrl() {
+    return extractAllWhitelistedImageUrls().isNotEmpty;
+  }
+
+  // Check if has any whitelisted video URL
+  bool hasAnyWhitelistedVideoUrl() {
+    return extractAllWhitelistedVideoUrls().isNotEmpty;
   }
 
   // Extract all whitelisted media URLs
@@ -168,5 +290,27 @@ class TextFilter {
   static List<String> findWhitelistedUrls(String text) {
     final matches = _urlRegex.allMatches(text);
     return matches.map((match) => match.group(0)!).where((url) => _isUrlWhitelisted(url)).toList();
+  }
+
+  /// Returns a list of all whitelisted image URLs found in the text
+  static List<String> findWhitelistedImageUrls(String text) {
+    return MemoRegExp.extractWhitelistedImageUrls(text);
+  }
+
+  /// Returns a list of all whitelisted video URLs found in the text
+  static List<String> findWhitelistedVideoUrls(String text) {
+    return MemoRegExp.extractWhitelistedVideoUrls(text);
+  }
+
+  /// Returns the first whitelisted image URL found in the text
+  static String? findFirstWhitelistedImageUrl(String text) {
+    final imageUrls = MemoRegExp.extractWhitelistedImageUrls(text);
+    return imageUrls.isNotEmpty ? imageUrls.first : null;
+  }
+
+  /// Returns the first whitelisted video URL found in the text
+  static String? findFirstWhitelistedVideoUrl(String text) {
+    final videoUrls = MemoRegExp.extractWhitelistedVideoUrls(text);
+    return videoUrls.isNotEmpty ? videoUrls.first : null;
   }
 }

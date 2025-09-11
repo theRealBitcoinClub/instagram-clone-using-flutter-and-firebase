@@ -28,7 +28,8 @@ MemoModelPost _$MemoModelPostFromJson(Map<String, dynamic> json) =>
       )
       ..imageUrl = json['imageUrl'] as String?
       ..videoUrl = json['videoUrl'] as String?
-      ..showOnFeed = json['showOnFeed'] as bool?;
+      ..showOnFeed = json['showOnFeed'] as bool
+      ..ipfsCid = json['ipfsCid'] as String?;
 
 Map<String, dynamic> _$MemoModelPostToJson(MemoModelPost instance) =>
     <String, dynamic>{
@@ -38,7 +39,8 @@ Map<String, dynamic> _$MemoModelPostToJson(MemoModelPost instance) =>
       if (instance.youtubeId case final value?) 'youtubeId': value,
       if (instance.imageUrl case final value?) 'imageUrl': value,
       if (instance.videoUrl case final value?) 'videoUrl': value,
-      if (instance.showOnFeed case final value?) 'showOnFeed': value,
+      'showOnFeed': instance.showOnFeed,
+      if (instance.ipfsCid case final value?) 'ipfsCid': value,
       if (_dateTimeToJson(instance.createdDateTime) case final value?)
         'createdDateTime': value,
       'popularityScore': instance.popularityScore,

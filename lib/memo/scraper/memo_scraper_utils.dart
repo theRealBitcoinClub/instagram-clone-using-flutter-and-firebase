@@ -90,6 +90,7 @@ class MemoScraperUtil {
   }
 
   static MemoModelPost linkReferencesAndSetId(MemoModelPost post, MemoModelTopic? topic, MemoModelCreator creator) {
+    post.text = post.text ?? "";
     // if (post.uniqueContentId!.contains("post")) {
     //   post.uniqueContentId = post.uniqueContentId!.substring("post/".length);
     // }
@@ -97,6 +98,9 @@ class MemoScraperUtil {
     post.topicId = topic != null ? topic.id : "";
     post.creatorId = creator.id;
     MemoScraperUtil.extractUrlsAndHashtags(post);
+    post.ipfsCid = MemoRegExp(post.text!).extractIpfsCid();
+    post.imageUrl = MemoRegExp(post.text!).extractFirstWhitelistedImageUrl();
+    post.videoUrl = MemoRegExp(post.text!).extractOdyseeUrl();
     post.tagIds = post.tagIds;
     post.topic = topic;
     try {

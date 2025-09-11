@@ -15,9 +15,25 @@ class PostsCategorizer {
     final topicPosts = <MemoModelPost>[];
 
     for (var post in allPosts) {
-      if (post.imgurUrl != null && post.imgurUrl!.isNotEmpty) imagePosts.add(post);
-      if (post.youtubeId != null && post.youtubeId!.isNotEmpty) videoPosts.add(post);
+      // Check for image content (imgurUrl OR imageUrl OR ipfsCid)
+      final hasImageContent =
+          (post.imgurUrl != null && post.imgurUrl!.isNotEmpty) ||
+          (post.imageUrl != null && post.imageUrl!.isNotEmpty) ||
+          (post.ipfsCid != null && post.ipfsCid!.isNotEmpty);
+
+      // Check for video content (youtubeId OR videoUrl)
+      final hasVideoContent = (post.youtubeId != null && post.youtubeId!.isNotEmpty) || (post.videoUrl != null && post.videoUrl!.isNotEmpty);
+
+      // Add to image category if it has image content
+      if (hasImageContent) imagePosts.add(post);
+
+      // Add to video category if it has video content
+      if (hasVideoContent) videoPosts.add(post);
+
+      // Add to tagged category if it has tags (independent of media)
       if (post.tagIds.isNotEmpty) taggedPosts.add(post);
+
+      // Add to topic category if it has a topic (independent of media)
       if (post.topicId.isNotEmpty) topicPosts.add(post);
     }
 

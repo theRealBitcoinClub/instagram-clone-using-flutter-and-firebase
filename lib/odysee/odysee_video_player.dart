@@ -5,31 +5,27 @@ import 'package:mahakka/odysee/video_providers.dart';
 import 'package:video_player/video_player.dart';
 
 class OdyseeVideoPlayer extends ConsumerStatefulWidget {
-  // final String? customVideoUrl;
   final double? aspectRatio;
   final bool autoPlay;
   final Widget? loadingWidget;
   final Widget? errorWidget;
+  final String? videoUrl; // Direct video URL from post
 
-  const OdyseeVideoPlayer({super.key, this.aspectRatio, this.autoPlay = true, this.loadingWidget, this.errorWidget});
+  const OdyseeVideoPlayer({super.key, this.aspectRatio, this.autoPlay = true, this.loadingWidget, this.errorWidget, this.videoUrl});
 
   @override
   ConsumerState<OdyseeVideoPlayer> createState() => _OdyseeVideoPlayerState();
 }
 
 class _OdyseeVideoPlayerState extends ConsumerState<OdyseeVideoPlayer> {
-  // late final StateProvider<String> _videoUrlProvider;
-
-  @override
-  void initState() {
-    super.initState();
-    // _videoUrlProvider = StateProvider<String>((ref) => widget.customVideoUrl ?? 'https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73');
-    // _videoUrlProvider = StateProvider<String>((ref) => widget.customVideoUrl ?? '');
-    // ref.read(videoUrlProvider).state = widget.customVideoUrl ?? '';
-  }
-
   @override
   Widget build(BuildContext context) {
+    // If videoUrl is provided directly, use it instead of watching the provider
+    if (widget.videoUrl != null && widget.videoUrl!.isNotEmpty) {
+      return _buildVideoFromUrl(widget.videoUrl!);
+    }
+
+    // Fall back to provider-based approach
     final streamUrlAsync = ref.watch(streamUrlProvider);
 
     return streamUrlAsync.when(
@@ -37,6 +33,19 @@ class _OdyseeVideoPlayerState extends ConsumerState<OdyseeVideoPlayer> {
       error: (error, stack) => widget.errorWidget ?? _buildError(error.toString()),
       data: (streamUrl) {
         return _VideoPlayerContent(streamUrl: streamUrl, aspectRatio: widget.aspectRatio, autoPlay: widget.autoPlay);
+      },
+    );
+  }
+
+  // NEW: Build video player from direct URL
+  Widget _buildVideoFromUrl(String videoUrl) {
+    final controllerAsync = ref.watch(videoControllerProvider((streamUrl: videoUrl, autoPlay: widget.autoPlay)));
+
+    return controllerAsync.when(
+      loading: () => widget.loadingWidget ?? _buildLoading(),
+      error: (error, stack) => widget.errorWidget ?? _buildError(error.toString()),
+      data: (controller) {
+        return AspectRatio(aspectRatio: widget.aspectRatio ?? controller.value.aspectRatio, child: VideoPlayer(controller));
       },
     );
   }

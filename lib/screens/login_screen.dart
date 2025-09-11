@@ -25,6 +25,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   bool _isLoading = false;
   String _processedMnemonic = "";
   Timer? _clipboardTimer;
+  final FocusNode _mnemonicFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -38,6 +39,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
 
   @override
   void dispose() {
+    _mnemonicFocusNode.dispose();
     _mnemonicController.removeListener(_handleInput);
     _mnemonicController.dispose();
     WidgetsBinding.instance.removeObserver(this);
@@ -101,6 +103,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
 
   void _handleInput() {
     final text = _mnemonicController.text;
+
+    // Check if we should clear on backspace
+    if (text.length < _previousTextLength && _isInputValid) {
+      _mnemonicController.clear();
+      _previousText = '';
+      _previousTextLength = 0;
+      _validateMnemonic();
+      return;
+    }
+
     final words = text.split(' ');
     final lastWord = words.last;
 
@@ -116,8 +128,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
       }
     }
 
+    // Store previous values for backspace detection
+    _previousText = text;
+    _previousTextLength = text.length;
+
     _validateMnemonic();
   }
+
+  // Add these variables to your class
+  String _previousText = '';
+  int _previousTextLength = 0;
 
   void _validateMnemonic() {
     var inputTrimmed = _mnemonicController.text.trim();
@@ -179,6 +199,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
 
   void _generateMnemonic() {
     _mnemonicController.text = Mnemonic.generate(Language.english, length: MnemonicLength.words12).sentence;
+
+    // Focus on the textfield and open keyboard
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _mnemonicFocusNode.requestFocus();
+
+      // Optional: Move cursor to the end
+      _mnemonicController.selection = TextSelection.fromPosition(TextPosition(offset: _mnemonicController.text.length));
+    });
+
+    _validateMnemonic();
   }
 
   @override
@@ -206,6 +236,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                 TextField(
                   minLines: 3,
                   maxLines: 3,
+                  focusNode: _mnemonicFocusNode,
                   controller: _mnemonicController,
                   keyboardType: TextInputType.text,
                   decoration: InputDecoration(

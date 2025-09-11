@@ -1,46 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/odysee/odysee_video_player.dart'; // Add this import
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/repositories/post_repository.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
-import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure path is correct
+import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
 import '../../memo/base/text_input_verifier.dart';
 import '../../memo/memo_reg_exp.dart';
 import '../../providers/post_creator_provider.dart';
 import 'post_card_footer.dart';
-// Import the new split widget files
 import 'post_card_header.dart';
 import 'postcard_animations.dart';
 
-// Logging helper (can be moved)
+// Logging helper
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
   print('ERROR: PostCardWidget - $message');
   if (error != null) print('  Error: $error');
   if (stackTrace != null) print('  StackTrace: $stackTrace');
 }
 
-// Changed to ConsumerStatefulWidget
 class PostCard extends ConsumerStatefulWidget {
   final MemoModelPost post;
-
-  // NavBarCallback removed from constructor
   const PostCard(this.post, {super.key});
 
   @override
-  ConsumerState<PostCard> createState() => _PostCardState(); // Changed
+  ConsumerState<PostCard> createState() => _PostCardState();
 }
 
-// Changed to ConsumerState
 class _PostCardState extends ConsumerState<PostCard> {
-  // Constants
   static const double _altImageHeight = 50.0;
-  static const int _maxTagsCounter = 3; // This is now used by PostCardFooter
+  static const int _maxTagsCounter = 3;
   static const int _minTextLength = 20;
   bool _isAnimatingLike = false;
   bool _isSendingTx = false;
@@ -48,9 +43,7 @@ class _PostCardState extends ConsumerState<PostCard> {
   bool _showSend = false;
   bool _hasSelectedTopic = false;
   late List<bool> _selectedHashtags;
-  // Controllers
   late TextEditingController _textEditController;
-
   bool hasRegisteredAsUser = false;
 
   @override
@@ -71,54 +64,162 @@ class _PostCardState extends ConsumerState<PostCard> {
     _selectedHashtags = List<bool>.filled(count, false);
   }
 
-  Widget _buildPostMedia(ThemeData theme) {
-    if (widget.post.imgurUrl != null && widget.post.imgurUrl!.isNotEmpty) {
-      return Image.network(
-        widget.post.imgurUrl!,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          // _logError("Failed to load Imgur image: ${widget.post.imgurUrl}", error, stackTrace);
-          return Container(
-            height: _altImageHeight * 2,
-            color: theme.colorScheme.surfaceVariant,
-            child: Center(child: Icon(Icons.broken_image_outlined, color: theme.colorScheme.onSurfaceVariant, size: 30)),
-          );
-        },
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            height: _altImageHeight * 2,
-            color: theme.colorScheme.surfaceVariant,
-            child: Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                    : null,
-                strokeWidth: 2.0,
-              ),
-            ),
-          );
-        },
-      );
+  // NEW: Build media widget based on available media types
+  Widget _buildPostMedia(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    // Priority: Video > Image > IPFS > Fallback
+    if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty) {
+      return _buildVideoWidget(theme, colorScheme, textTheme);
+    } else if (widget.post.imageUrl != null && widget.post.imageUrl!.isNotEmpty) {
+      return _buildImageWidget(theme, colorScheme, textTheme);
+    } else if (widget.post.ipfsCid != null && widget.post.ipfsCid!.isNotEmpty) {
+      return _buildIpfsWidget(theme, colorScheme, textTheme);
     } else {
-      return Container(
-        height: _altImageHeight,
-        color: theme.colorScheme.surfaceVariant,
-        child: Center(
-          child: Icon(Icons.article_outlined, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7), size: _altImageHeight * 0.6),
-        ),
-      );
+      return _buildFallbackWidget(theme, colorScheme);
     }
   }
 
-  Stack _wrapInAnimationStack(ThemeData theme, wrappedInAnimationWidget) {
+  // NEW: Build video widget for Odysee videos
+  Widget _buildVideoWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(11.5),
+          child: OdyseeVideoPlayer(
+            aspectRatio: 16 / 9,
+            autoPlay: false,
+            videoUrl: widget.post.videoUrl!, // Pass the video URL
+          ),
+        ),
+      ),
+    );
+  }
+
+  // NEW: Build image widget for extracted image URLs
+  Widget _buildImageWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    return GestureDetector(
+      onDoubleTap: _isSendingTx ? null : _sendTipToCreator,
+      child: ZoomOverlay(
+        modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3),
+        minScale: 0.5,
+        maxScale: 3.0,
+        twoTouchOnly: true,
+        animationDuration: const Duration(milliseconds: 200),
+        animationCurve: Curves.easeOut,
+        child: AspectRatio(
+          aspectRatio: 16 / 9,
+          child: Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(11.5),
+              child: Image.network(
+                widget.post.imageUrl!,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.broken_image_outlined, color: colorScheme.error, size: 36),
+                        const SizedBox(height: 8),
+                        Text("Error loading image", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+                      ],
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // NEW: Build IPFS widget for IPFS content
+  Widget _buildIpfsWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    final ipfsUrl = 'https://free-bch.fullstack.cash/ipfs/view/${widget.post.ipfsCid}';
+
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(11.5),
+          child: Image.network(
+            ipfsUrl,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.cloud_off_outlined, color: colorScheme.error, size: 36),
+                    const SizedBox(height: 8),
+                    Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+                    const SizedBox(height: 8),
+                    Text("CID: ${widget.post.ipfsCid}", style: textTheme.bodySmall),
+                  ],
+                ),
+              );
+            },
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                      : null,
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  // NEW: Fallback widget when no media is available
+  Widget _buildFallbackWidget(ThemeData theme, ColorScheme colorScheme) {
+    return Container(
+      height: _altImageHeight,
+      color: colorScheme.surfaceVariant,
+      child: Center(
+        child: Icon(Icons.article_outlined, color: colorScheme.onSurfaceVariant.withOpacity(0.7), size: _altImageHeight * 0.6),
+      ),
+    );
+  }
+
+  Stack _wrapInAnimationStack(ThemeData theme, Widget wrappedInAnimationWidget) {
     return Stack(
       alignment: Alignment.center,
       children: [
         wrappedInAnimationWidget,
         SendingAnimation(
           isSending: _isSendingTx,
-          mediaHeight: widget.post.imgurUrl == null ? _altImageHeight * 2 : 150.0,
+          mediaHeight: _getMediaHeight(),
           onEnd: () {
             if (mounted) setState(() => _isSendingTx = false);
           },
@@ -126,7 +227,7 @@ class _PostCardState extends ConsumerState<PostCard> {
         ),
         LikeSucceededAnimation(
           isAnimating: _isAnimatingLike,
-          mediaHeight: widget.post.imgurUrl == null ? _altImageHeight * 2 : 150.0,
+          mediaHeight: _getMediaHeight(),
           onEnd: () {
             if (mounted) setState(() => _isAnimatingLike = false);
           },
@@ -134,6 +235,16 @@ class _PostCardState extends ConsumerState<PostCard> {
         ),
       ],
     );
+  }
+
+  // NEW: Helper to determine media height based on content
+  double _getMediaHeight() {
+    if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty ||
+        widget.post.imageUrl != null && widget.post.imageUrl!.isNotEmpty ||
+        widget.post.ipfsCid != null && widget.post.ipfsCid!.isNotEmpty) {
+      return 200.0; // Height for media content
+    }
+    return _altImageHeight * 2; // Height for fallback
   }
 
   Future<void> _sendTipToCreator() async {
@@ -150,7 +261,7 @@ class _PostCardState extends ConsumerState<PostCard> {
         if (response == MemoAccountantResponse.yes) {
           _isAnimatingLike = true;
         } else {
-          showSnackBar(response.name, context); // Or a more user-friendly message
+          showSnackBar(response.name, context);
           _logError("Accountant error during tip: ${response.name}", response);
         }
       });
@@ -192,36 +303,25 @@ class _PostCardState extends ConsumerState<PostCard> {
     if (!mounted || index < 0 || index >= widget.post.tagIds.length) return;
 
     setState(() {
-      // 1. Toggle the selected state
       _selectedHashtags[index] = !_selectedHashtags[index];
-
       final String currentText = _textEditController.text;
-
-      // 2. Process all hashtags to build the new text
       String newText = currentText;
 
-      // First, remove all hashtags that are no longer selected
       for (int i = 0; i < widget.post.tagIds.length; i++) {
         final String hashtag = widget.post.tagIds[i];
         if (!_selectedHashtags[i]) {
-          // Remove this hashtag if it exists
           final RegExp hashtagRegex = RegExp(r'(^|\s)' + RegExp.escape(hashtag) + r'(\s|$)', caseSensitive: false);
           newText = newText.replaceAll(hashtagRegex, ' ');
         }
       }
 
-      // Clean up extra spaces
       newText = newText.replaceAll(RegExp(r'\s+'), ' ').trim();
 
-      // Then, add all selected hashtags that aren't already present
       for (int i = 0; i < widget.post.tagIds.length; i++) {
         final String hashtag = widget.post.tagIds[i];
         if (_selectedHashtags[i]) {
-          // Check if the hashtag is already in the text
           final RegExp hashtagRegex = RegExp(r'(^|\s)' + RegExp.escape(hashtag) + r'(\s|$)', caseSensitive: false);
-
           if (!hashtagRegex.hasMatch(newText)) {
-            // Add the hashtag to the end
             newText = newText.isEmpty ? hashtag : '$newText $hashtag';
           }
         }
@@ -235,7 +335,6 @@ class _PostCardState extends ConsumerState<PostCard> {
     });
   }
 
-  // Update the _evaluateShowSendButton method
   void _evaluateShowSendButton(String currentText) {
     String textWithoutKnownHashtags = currentText;
     for (String tag in widget.post.tagIds) {
@@ -247,8 +346,7 @@ class _PostCardState extends ConsumerState<PostCard> {
       hasAnySelectedOrOtherHashtagsInText = MemoRegExp.extractHashtags(currentText).isNotEmpty;
     }
 
-    final bool meetsLengthRequirement =
-        textWithoutKnownHashtags.length >= _minTextLength && currentText.length <= MemoVerifier.maxPostLength; // Add character limit check
+    final bool meetsLengthRequirement = textWithoutKnownHashtags.length >= _minTextLength && currentText.length <= MemoVerifier.maxPostLength;
 
     if (_hasSelectedTopic) {
       _showSend = meetsLengthRequirement;
@@ -257,27 +355,9 @@ class _PostCardState extends ConsumerState<PostCard> {
     }
   }
 
-  // void _evaluateShowSendButton(String currentText) {
-  //   String textWithoutKnownHashtags = currentText;
-  //   for (String tag in widget.post.tagIds) {
-  //     textWithoutKnownHashtags = textWithoutKnownHashtags.replaceAll(tag, "").trim();
-  //   }
-  //   bool hasAnySelectedOrOtherHashtagsInText = _selectedHashtags.any((s) => s);
-  //   if (!hasAnySelectedOrOtherHashtagsInText) {
-  //     hasAnySelectedOrOtherHashtagsInText = MemoScraperUtil.extractHashtags(currentText).isNotEmpty;
-  //   }
-  //
-  //   if (_hasSelectedTopic) {
-  //     _showSend = textWithoutKnownHashtags.length >= _minTextLength;
-  //   } else {
-  //     _showSend = hasAnySelectedOrOtherHashtagsInText && textWithoutKnownHashtags.length >= _minTextLength;
-  //   }
-  // }
-
   void _onSend() {
     if (!mounted) return;
     final String textToSend = _textEditController.text.trim();
-    // Use the new verifier class
     final verifier = MemoVerifierDecorator(textToSend)
         .addValidator(InputValidators.verifyPostLength)
         .addValidator(InputValidators.verifyMinWordCount)
@@ -287,8 +367,6 @@ class _PostCardState extends ConsumerState<PostCard> {
         .addValidator(InputValidators.verifyOffensiveWords);
 
     final result = verifier.getResult();
-
-    // Pass the verification result to the response handler
     if (result != MemoVerificationResponse.valid) {
       _showVerificationResponse(result, context);
       return;
@@ -309,7 +387,7 @@ class _PostCardState extends ConsumerState<PostCard> {
   void _clearAndConfetti() {
     if (!mounted) return;
     setState(() {
-      MemoConfetti().launch(context); // Ensure MemoConfetti is correctly implemented
+      MemoConfetti().launch(context);
       _clearInputs();
     });
   }
@@ -364,18 +442,16 @@ class _PostCardState extends ConsumerState<PostCard> {
 
   @override
   Widget build(BuildContext context) {
-    // ref is available here because this is ConsumerState
     final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+    final TextTheme textTheme = theme.textTheme;
 
-    // Watch the provider to get the creator data.
-    // Riverpod handles the loading, error, and data states automatically.
     final creatorAsyncValue = ref.watch(postCreatorProvider(widget.post.creatorId));
 
     return creatorAsyncValue.when(
       skipLoadingOnReload: true,
       skipLoadingOnRefresh: true,
       data: (creator) {
-        // We have the creator data! Update the post model.
         widget.post.creator = creator;
 
         return _wrapInAnimationStack(
@@ -386,27 +462,9 @@ class _PostCardState extends ConsumerState<PostCard> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                PostCardHeader(
-                  post: widget.post,
-                  onLikePostTipCreator: _sendTipToCreator,
-                  // hasRegisteredAsUser: hasRegisteredAsUser,
-                  // creator: creator == null ? wid,
-                  // NavBarCallback removed
-                ),
-                widget.post.imgurUrl != null && widget.post.imgurUrl!.isNotEmpty
-                    ? GestureDetector(
-                        onDoubleTap: _isSendingTx ? null : _sendTipToCreator,
-                        child: ZoomOverlay(
-                          modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3),
-                          minScale: 0.5,
-                          maxScale: 3.0,
-                          twoTouchOnly: true,
-                          animationDuration: const Duration(milliseconds: 200),
-                          animationCurve: Curves.easeOut,
-                          child: _buildPostMedia(theme),
-                        ),
-                      )
-                    : SizedBox(),
+                PostCardHeader(post: widget.post, onLikePostTipCreator: _sendTipToCreator),
+                // NEW: Media section that handles all three types
+                _buildPostMedia(theme, colorScheme, textTheme),
                 PostCardFooter(
                   post: widget.post,
                   textEditController: _textEditController,
@@ -419,22 +477,15 @@ class _PostCardState extends ConsumerState<PostCard> {
                   onSelectTopic: _onSelectTopic,
                   onSend: _onSend,
                   onCancel: _onCancel,
-                  maxTagsCounter: _maxTagsCounter, // Pass the constant
+                  maxTagsCounter: _maxTagsCounter,
                 ),
               ],
             ),
           ),
         );
       },
-      loading: () {
-        // This part runs while the data is loading.
-        return SizedBox();
-        // return Center(child: CircularProgressIndicator());
-      },
-      error: (error, stackTrace) {
-        // This part runs if an error occurs.
-        return Center(child: Text('An error occurred: $error'));
-      },
+      loading: () => SizedBox(),
+      error: (error, stackTrace) => Center(child: Text('An error occurred: $error')),
     );
   }
 }

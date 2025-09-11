@@ -80,7 +80,11 @@ class UserNotifier extends StateNotifier<UserState> {
         // state = state.copyWith(fetchedUser: createdUser);
         UserService service = UserService();
 
-        var memoModelUser = await service.getUserOnce(createdUser!.id);
+        if (createdUser == null) {
+          return; //first run after instalation
+        }
+
+        var memoModelUser = await service.getUserOnce(createdUser.id);
         MemoModelUser? fetchedUser = memoModelUser;
         if (fetchedUser != null) {
           state = state.copyWith(

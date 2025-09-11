@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 
 // Assuming PostFilterType is defined elsewhere and accessible if needed here
@@ -6,7 +7,7 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 
 class PostService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static const String _postsCollection = '_posts';
+  static const String _postsCollection = FirestoreCollections.posts;
   static const String orderByField = "createdDateTime"; // Consistent field name
   static const bool descendingOrder = true;
 

@@ -70,7 +70,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final loggedInUser = ref.watch(userProvider);
-    // final creatorAsyncValue = ref.read(profileCreatorStateProvider);  // Always use the LATEST version from the provider
     final creatorAsyncValue = ref.watch(profileCreatorStateProvider);
     final postsAsyncValue = ref.watch(postsStreamProvider);
     final currentTabIndex = ref.watch(tabIndexProvider);
@@ -140,13 +139,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   Future<void> _refreshData() async {
     ref.refresh(profileCreatorStateProvider);
     ref.refresh(postsStreamProvider);
-    // Invalidate to trigger background refresh
-    // ref.invalidate(profileCreatorStateProvider);
-    // ref.invalidate(postsStreamProvider);
-
-    // Optionally wait for the refresh to complete
-    // This keeps the RefreshIndicator visible until done
-    // await Future.wait([ref.read(profileCreatorStateProvider.future), ref.read(postsStreamProvider.future)]);
   }
 
   Widget _buildProfileHeader(MemoModelCreator creator, bool isOwnProfile, ThemeData theme) {
@@ -216,17 +208,17 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
   Widget _buildSliverCategorizedView(ThemeData theme, MemoModelCreator creator, int viewMode) {
     switch (viewMode) {
-      case 0:
+      case 0: // Images
         return ProfileContentGrid(posts: _postsCategorizer.imagePosts, onPostImageTap: _showPostDialog);
-      case 1:
+      case 1: // Videos
         return ProfileContentList.youTube(
           posts: _postsCategorizer.videoPosts,
           ytControllerNotifiers: _ytManager.controllers,
           creatorName: creator.name,
         );
-      case 2:
+      case 2: // Tagged (text only)
         return ProfileContentList.generic(posts: _postsCategorizer.taggedPosts, creatorName: creator.name);
-      case 4:
+      case 4: // Topics (text only)
         return ProfileContentList.generic(posts: _postsCategorizer.topicPosts, creatorName: creator.name);
       default:
         return EmptySliverContent(message: "Select a view to see posts.", theme: theme);

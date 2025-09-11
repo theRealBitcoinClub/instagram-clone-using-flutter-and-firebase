@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart'; // Your model path
 
 class CreatorService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static const String _creatorsCollection = '_creators'; // Using a new collection name or path for safety
+  static const String _creatorsCollection = FirestoreCollections.creator; // Using a new collection name or path for safety
 
   Future<void> saveCreator(MemoModelCreator creator) async {
     try {

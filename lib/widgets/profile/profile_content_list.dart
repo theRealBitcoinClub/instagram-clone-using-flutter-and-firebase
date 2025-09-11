@@ -1,11 +1,11 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/model/memo_model_post.dart'; // Adjust path
-import 'package:mahakka/widgets/profile/profile_placeholders.dart'; // For EmptySliverContent
+import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/odysee/odysee_video_player.dart';
+import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-// Helper for logging errors consistently if needed
 void _logListError(String message, [dynamic error, StackTrace? stackTrace]) {
   print('ERROR: ProfileContentList - $message');
   if (error != null) print('  Error: $error');
@@ -15,24 +15,23 @@ void _logListError(String message, [dynamic error, StackTrace? stackTrace]) {
 class ProfileContentList extends StatelessWidget {
   final List<MemoModelPost> posts;
   final bool isYouTubeList;
-  // Use ValueNotifier for YT controllers to allow parent to manage their lifecycle
   final Map<String, ValueNotifier<YoutubePlayerController?>>? ytControllerNotifiers;
-  final String creatorName; // For display purposes in list items
+  final String creatorName;
+  final bool showMedia; // NEW: Control whether to show media or just text
 
   const ProfileContentList._({
-    // Private constructor
     Key? key,
     required this.posts,
     required this.isYouTubeList,
     this.ytControllerNotifiers,
     required this.creatorName,
+    required this.showMedia, // NEW: Added parameter
   }) : super(key: key);
 
-  // Factory for YouTube list
+  // Factory for YouTube list (shows media)
   factory ProfileContentList.youTube({
     Key? key,
     required List<MemoModelPost> posts,
-    // Pass the map of ValueNotifiers from the parent (_ProfileScreenWidgetState)
     required Map<String, ValueNotifier<YoutubePlayerController?>> ytControllerNotifiers,
     required String creatorName,
   }) {
@@ -42,17 +41,19 @@ class ProfileContentList extends StatelessWidget {
       isYouTubeList: true,
       ytControllerNotifiers: ytControllerNotifiers,
       creatorName: creatorName,
+      showMedia: true, // Show media for video tab
     );
   }
 
-  // Factory for Generic posts list (Tagged, Topics)
+  // Factory for Generic posts list (Tagged, Topics - show only text)
   factory ProfileContentList.generic({Key? key, required List<MemoModelPost> posts, required String creatorName}) {
     return ProfileContentList._(
       key: key,
       posts: posts,
       isYouTubeList: false,
-      ytControllerNotifiers: null, // Not needed for generic list
+      ytControllerNotifiers: null,
       creatorName: creatorName,
+      showMedia: false, // Don't show media for tagged/topic tabs
     );
   }
 
@@ -69,120 +70,146 @@ class ProfileContentList extends StatelessWidget {
     return SliverList(
       delegate: SliverChildBuilderDelegate(childCount: posts.length, (context, index) {
         final post = posts[index];
-        if (isYouTubeList) {
-          return _buildYouTubeListItem(context, theme, post);
+        if (isYouTubeList && showMedia) {
+          return _buildVideoListItem(context, theme, post);
         } else {
-          return _buildGenericListItem(context, theme, post);
+          return _buildTextOnlyListItem(context, theme, post);
         }
       }),
     );
   }
 
-  Widget _buildYouTubeListItem(BuildContext context, ThemeData theme, MemoModelPost ytPost) {
-    if (ytPost.youtubeId == null || ytPost.youtubeId!.isEmpty || ytControllerNotifiers == null) {
-      return const SizedBox.shrink(); // Should not happen if data is filtered correctly
+  Widget _buildVideoListItem(BuildContext context, ThemeData theme, MemoModelPost videoPost) {
+    // Check for both YouTube and other video types
+    final bool hasYoutubeId = videoPost.youtubeId != null && videoPost.youtubeId!.isNotEmpty;
+    final bool hasVideoUrl = videoPost.videoUrl != null && videoPost.videoUrl!.isNotEmpty;
+
+    if ((!hasYoutubeId && !hasVideoUrl) || ytControllerNotifiers == null) {
+      return const SizedBox.shrink();
     }
 
-    // Get or create the ValueNotifier for the controller
-    // The parent (_ProfileScreenWidgetState) is responsible for creating/disposing these notifiers.
-    // This widget just consumes them.
-    final controllerNotifier = ytControllerNotifiers!.putIfAbsent(ytPost.id!, () => ValueNotifier(null));
+    // Handle YouTube videos
+    if (hasYoutubeId) {
+      final controllerNotifier = ytControllerNotifiers!.putIfAbsent(videoPost.id!, () => ValueNotifier(null));
 
-    // Initialize or update controller if needed (e.g., if video ID changed for the same post ID, though rare for profiles)
-    if (controllerNotifier.value == null || controllerNotifier.value!.initialVideoId != ytPost.youtubeId) {
-      controllerNotifier.value?.dispose(); // Dispose old one if it exists and is different
-      controllerNotifier.value = YoutubePlayerController(
-        initialVideoId: ytPost.youtubeId!,
-        flags: const YoutubePlayerFlags(
-          autoPlay: false, // Don't autoplay in a list
-          mute: true, // Mute by default in a list
-          hideControls: false,
-          hideThumbnail: false, // Show thumbnail initially
-          // disableDragSeek: true, // Consider this for lists
-          // loop: false,
+      if (controllerNotifier.value == null || controllerNotifier.value!.initialVideoId != videoPost.youtubeId) {
+        controllerNotifier.value?.dispose();
+        controllerNotifier.value = YoutubePlayerController(
+          initialVideoId: videoPost.youtubeId!,
+          flags: const YoutubePlayerFlags(autoPlay: false, mute: true, hideControls: false, hideThumbnail: false),
+        );
+      }
+      final YoutubePlayerController controller = controllerNotifier.value!;
+
+      return Card(
+        clipBehavior: Clip.antiAlias,
+        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        elevation: 1.5,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            YoutubePlayer(
+              key: ValueKey("yt_profile_${videoPost.id}_${controller.initialVideoId}"),
+              controller: controller,
+              showVideoProgressIndicator: true,
+              progressIndicatorColor: theme.colorScheme.primary,
+              progressColors: ProgressBarColors(
+                playedColor: theme.colorScheme.primary,
+                handleColor: theme.colorScheme.secondary,
+                bufferedColor: theme.colorScheme.primary.withOpacity(0.4),
+                backgroundColor: theme.colorScheme.onSurface.withOpacity(0.1),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
+                    ExpandableText(
+                      videoPost.text!,
+                      expandText: 'more',
+                      collapseText: 'less',
+                      maxLines: 3,
+                      linkColor: theme.colorScheme.primary,
+                      style: theme.textTheme.bodyMedium,
+                      linkStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  Text(
+                    "Posted by: $creatorName, ${videoPost.age}",
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       );
     }
-    // This should not be null now
-    final YoutubePlayerController controller = controllerNotifier.value!;
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      elevation: 1.5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: Column(
-        // Removed Padding wrapper, let Column be the direct child
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Ensure the YoutubePlayer widget is rebuilt if the controller instance changes.
-          // The ValueKey includes the initialVideoId to help with this.
-          YoutubePlayer(
-            key: ValueKey("yt_profile_${ytPost.id}_${controller.initialVideoId}"),
-            controller: controller,
-            showVideoProgressIndicator: true,
-            progressIndicatorColor: theme.colorScheme.primary,
-            progressColors: ProgressBarColors(
-              playedColor: theme.colorScheme.primary,
-              handleColor: theme.colorScheme.secondary,
-              bufferedColor: theme.colorScheme.primary.withOpacity(0.4),
-              backgroundColor: theme.colorScheme.onSurface.withOpacity(0.1),
-            ),
-            // onEnded: (metadata) { // Optional: reset video on end
-            //   controller.seekTo(Duration.zero);
-            //   controller.pause();
-            // },
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (ytPost.text != null && ytPost.text!.isNotEmpty) ...[
-                  ExpandableText(
-                    ytPost.text!, // Make sure ytPost.text is not null
-                    expandText: 'more',
-                    collapseText: 'less',
-                    maxLines: 3,
-                    linkColor: theme.colorScheme.primary,
-                    style: theme.textTheme.bodyMedium,
-                    linkStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+    // Handle other video URLs (Odysee, etc.)
+    if (hasVideoUrl) {
+      return Card(
+        clipBehavior: Clip.antiAlias,
+        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        elevation: 1.5,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            OdyseeVideoPlayer(aspectRatio: 16 / 9, autoPlay: false, videoUrl: videoPost.videoUrl!),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
+                    ExpandableText(
+                      videoPost.text!,
+                      expandText: 'more',
+                      collapseText: 'less',
+                      maxLines: 3,
+                      linkColor: theme.colorScheme.primary,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  Text(
+                    "Posted by: $creatorName, ${videoPost.age}",
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
                   ),
-                  const SizedBox(height: 8),
                 ],
-                Text(
-                  // Use the passed creatorName, as post.creator might not be populated here
-                  "Posted by: $creatorName, ${ytPost.age}",
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 
-  Widget _buildGenericListItem(BuildContext context, ThemeData theme, MemoModelPost post) {
-    // Use post.age or post.created as per your original logic for timestamp
+  Widget _buildTextOnlyListItem(BuildContext context, ThemeData theme, MemoModelPost post) {
     final String postTimestamp = post.age;
 
     return Card(
-      elevation: 1.0, // Subtle elevation
+      elevation: 1.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Consistent margin
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Padding(
         padding: const EdgeInsets.all(14.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- Header: Creator Name and Timestamp ---
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Text(
-                    creatorName, // Use the passed creator name
+                    creatorName,
                     style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -195,36 +222,28 @@ class ProfileContentList extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 4), // Reduced space
-            Divider(color: theme.dividerColor.withOpacity(0.3), height: 1), // Thinner divider
+            const SizedBox(height: 4),
+            Divider(color: theme.dividerColor.withOpacity(0.3), height: 1),
             const SizedBox(height: 10),
 
-            // --- Post Text Content with ExpandableText ---
             ExpandableText(
-              post.text ?? " ", // Ensure text is not null
+              post.text ?? " ",
               expandText: 'show more',
               collapseText: 'show less',
-              maxLines: 5, // Or your preferred max lines
+              maxLines: 5,
               linkColor: theme.colorScheme.primary.withOpacity(0.85),
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontFamily: "Open Sans",
                 fontSize: 14,
-                height: 1.4, // Line height
+                height: 1.4,
                 color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
               ),
-              linkStyle: theme.textTheme.bodySmall?.copyWith(
-                // For "show more/less"
-                color: theme.colorScheme.primary.withOpacity(0.85),
-                fontWeight: FontWeight.w600,
-              ),
-              // --- Hashtag Styling and Tap Handling (from original) ---
+              linkStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary.withOpacity(0.85), fontWeight: FontWeight.w600),
               hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary, fontWeight: FontWeight.w500),
               onHashtagTap: (String hashtag) {
                 _logListError('Hashtag tapped: $hashtag (Action not implemented in this widget)');
-                // Example action:
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on hashtag: $hashtag')));
               },
-              // --- URL Styling and Tap Handling (from original) ---
               urlStyle: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.primary.withOpacity(0.70),
                 decoration: TextDecoration.underline,
@@ -234,7 +253,6 @@ class ProfileContentList extends StatelessWidget {
                 _logListError('URL tapped: $url');
                 Uri? uri = Uri.tryParse(url);
                 if (uri != null) {
-                  // Attempt to add scheme if missing (e.g., for "www.example.com")
                   if (!uri.hasScheme && (url.startsWith('www.') || RegExp(r'^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(url))) {
                     uri = Uri.parse('http://$url');
                   }
@@ -260,13 +278,8 @@ class ProfileContentList extends StatelessWidget {
                   }
                 }
               },
-              // --- Prefix for Topic ID (from original) ---
-              prefixText: post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null, // Removed extra newline
-              prefixStyle: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface, // Using tertiary for topic emphasis
-                fontWeight: FontWeight.w400,
-                // fontStyle: FontStyle.italic,
-              ),
+              prefixText: post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null,
+              prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
               onPrefixTap: () {
                 _logListError("Topic prefix tapped: ${post.topicId} (Action not implemented in this widget)");
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on topic: ${post.topicId}')));

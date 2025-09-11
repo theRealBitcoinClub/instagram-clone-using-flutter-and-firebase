@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mahakka/config.dart';
 // Adjust the import path to where your MemoModelTag is located
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 
 class TagService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   // Choose a distinct collection name for tags
-  static const String _tagsCollection = '_tags'; // Or 'tags_v1', etc.
+  static const String _tagsCollection = FirestoreCollections.tag; // Or 'tags_v1', etc.
 
   Future<List<MemoModelTag>> getAllTags() async {
     try {

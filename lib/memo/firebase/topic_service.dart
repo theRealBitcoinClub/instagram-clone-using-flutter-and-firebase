@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mahakka/config.dart';
 // Adjust the import path to where your MemoModelTopic is located
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 
 class TopicService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   // Choose a distinct collection name for topics
-  static const String _topicsCollection = '_topics'; // Or 'topics_v1', etc.
+  static const String _topicsCollection = FirestoreCollections.topic; // Or 'topics_v1', etc.
 
   /// Saves a topic to Firestore.
   /// If a topic with the same ID already exists, it will be updated (merged).

@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mahakka/memo/model/memo_model_user.dart'; // Your model path
+import 'package:mahakka/memo/model/memo_model_user.dart';
+
+import '../../config.dart'; // Your model path
 
 class UserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static const String _usersCollection = '_users';
+  static const String _usersCollection = FirestoreCollections.user;
 
   Future<void> saveUser(MemoModelUser user) async {
     try {

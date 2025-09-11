@@ -24,7 +24,7 @@ class MemoModelPost {
   //this could be an odysee url or github if someone uploaded a video to github not necessarily visible on memo.cash
   String? videoUrl;
   //TODO SPECIAL FLAG FOR POSTS THAT SHALL BE SHOWNONFEED ALWAYS REGARDLESS OF CREATOR TOKEN BALANCE OR POPULARITY SCORE
-  bool showOnFeed = false;
+  bool? showOnFeed = false;
   //Interplanetary File System Content ID
   String? ipfsCid;
 

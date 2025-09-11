@@ -63,6 +63,10 @@ echo "// lib/config.dart
 // This file is auto-generated. Do not edit.
 
 class FirestoreCollections {
+  static const String topic = '$TOPIC_COLLECTION';
+  static const String user = '$USER_COLLECTION';
+  static const String tag = '$TAG_COLLECTION';
+  static const String creator = '$CREATOR_COLLECTION';
   static const String posts = '$POSTS_COLLECTION';
   static const String metadata = '$METADATA_COLLECTION';
 }" > lib/config.dart

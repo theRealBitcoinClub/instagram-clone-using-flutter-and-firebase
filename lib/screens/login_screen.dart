@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bip39_mnemonic/bip39_mnemonic.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,12 +23,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   String? _errorMessage;
   bool _isLoading = false;
   String _processedMnemonic = "";
+  Timer? _clipboardTimer;
 
   @override
   void initState() {
     super.initState();
     _mnemonicController.addListener(_handleInput);
     WidgetsBinding.instance.addObserver(this);
+
+    // Start clipboard checking timer
+    _startClipboardTimer();
   }
 
   @override
@@ -34,6 +40,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     _mnemonicController.removeListener(_handleInput);
     _mnemonicController.dispose();
     WidgetsBinding.instance.removeObserver(this);
+
+    // Cancel the timer to prevent memory leaks
+    _clipboardTimer?.cancel();
     super.dispose();
   }
 
@@ -41,19 +50,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _checkClipboardForMnemonic();
+      // Restart timer when app comes back to foreground
+      _startClipboardTimer();
+    } else if (state == AppLifecycleState.paused) {
+      // Stop timer when app goes to background
+      _clipboardTimer?.cancel();
     }
   }
 
+  void _startClipboardTimer() {
+    // Cancel existing timer if any
+    _clipboardTimer?.cancel();
+
+    // Create a new timer that checks clipboard every second
+    _clipboardTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _checkClipboardForMnemonic();
+    });
+  }
+
   Future<void> _checkClipboardForMnemonic() async {
+    // Don't check if already has valid input or loading
+    if (_isInputValid || _isLoading) {
+      return;
+    }
+
     final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
     final clipboardText = clipboardData?.text?.trim();
 
     if (clipboardText != null && clipboardText.isNotEmpty) {
       try {
-        Mnemonic.fromSentence(clipboardText, Language.english);
-        _mnemonicController.text = clipboardText;
+        // Validate if it's a proper mnemonic
+        final mnemonic = Mnemonic.fromSentence(clipboardText, Language.english);
+
+        // Only set if it's different from current text
+        if (_mnemonicController.text != mnemonic.sentence) {
+          if (mounted) {
+            setState(() {
+              _mnemonicController.text = mnemonic.sentence;
+            });
+          }
+        }
       } on MnemonicException {
         // Not a valid mnemonic, do nothing.
+      } catch (e) {
+        // Handle any other errors silently
       }
     }
   }
@@ -180,7 +220,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                   ),
                 ),
                 const SizedBox(height: 16),
-                // FIXED: TextButton with proper inherit handling
                 TextButton(
                   onPressed: _generateMnemonic,
                   style: TextButton.styleFrom(
@@ -189,12 +228,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                   ),
                   child: Text(
                     "GENERATE MNEMONIC",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.secondary,
-                      inherit: false, // ← CRITICAL FIX: Set inherit to false
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colorScheme.secondary, inherit: false),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -222,7 +256,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                         final baseStyle = textTheme.labelLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onPrimary,
-                          inherit: false, // ← CONSISTENT: Set inherit to false
+                          inherit: false,
                         );
 
                         if (states.contains(MaterialState.disabled)) {

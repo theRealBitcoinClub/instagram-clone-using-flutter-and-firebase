@@ -30,7 +30,7 @@ val flutterMinSdkVersion = localProperties.getProperty("flutter.minSdkVersion")?
 val flutterTargetSdkVersion = localProperties.getProperty("flutter.targetSdkVersion")?.toInt() ?: 35
 val flutterNdkVersion = localProperties.getProperty("flutter.ndkVersion") ?: "27.0.12077973"
 val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toInt() ?: 2025091101
-val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "2.0.1-BCH"
+val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "2.1.0-BCH"
 
 android {
     namespace = "com.mahakka"
@@ -77,7 +77,7 @@ android {
         minSdk = flutterMinSdkVersion
         targetSdk = flutterTargetSdkVersion
         versionCode = 2025091101
-        versionName = "2.0.1-BCH"
+        versionName = "2.1.0-BCH"
     }
 
     buildTypes {

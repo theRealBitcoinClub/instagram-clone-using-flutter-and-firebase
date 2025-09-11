@@ -8,6 +8,7 @@ import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/resources/auth_method.dart';
 
 import '../utils/snackbar.dart';
+import '../widgets/animations/animated_grow_fade_in.dart'; // Import your animation widget
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -220,17 +221,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                   ),
                 ),
                 const SizedBox(height: 16),
-                TextButton(
-                  onPressed: _generateMnemonic,
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                    foregroundColor: colorScheme.secondary,
-                  ),
-                  child: Text(
-                    "GENERATE MNEMONIC",
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colorScheme.secondary, inherit: false),
+
+                // REPLACED: TextButton with Animated ElevatedButton
+                AnimatedGrowFadeIn(
+                  show: !_isInputValid, // Show only when no valid mnemonic
+                  duration: const Duration(milliseconds: 300),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _generateMnemonic,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red, // Red background
+                        foregroundColor: Colors.white, // White text
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        textStyle: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          inherit: false, // Consistent with theme
+                        ),
+                      ),
+                      child: const Text("GENERATE MNEMONIC"),
+                    ),
                   ),
                 ),
+
                 const SizedBox(height: 24),
                 if (_isLoading) LinearProgressIndicator(),
                 const SizedBox(height: 16),

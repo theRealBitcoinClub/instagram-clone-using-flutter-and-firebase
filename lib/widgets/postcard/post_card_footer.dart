@@ -44,7 +44,7 @@ class PostCardFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     // Assuming creator null check is handled before this widget is built
-    final creatorName = post.creator?.name ?? "User"; // Fallback if creator is somehow null
+    final creatorName = post.creator?.profileIdShort ?? "User"; // Fallback if creator is somehow null
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),

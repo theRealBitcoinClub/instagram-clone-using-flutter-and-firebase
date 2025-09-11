@@ -142,25 +142,6 @@ class MemoModelPost {
     return "${(difference.inDays / 365).floor()}y";
   }
 
-  static Future<MemoModelPost> createDummy(MemoModelCreator memoModelCreator) async {
-    MemoModelTopic topic = MemoModelTopic.createDummy();
-    return MemoModelPost(
-      id: "3228faaa15d9512ee6ecc29b8808876a7680e6d7493c22014b942825c975c0ca",
-      created: "11.11.1911 11:11",
-      createdDateTime: DateTime.now().subtract(const Duration(days: 5)),
-      creator: memoModelCreator,
-      creatorId: memoModelCreator.id,
-      imgurUrl: "https://i.imgur.com/YbduTBp.png",
-      likeCounter: 33,
-      replyCounter: 2,
-      text: "SAFDHSF DSF HDSFHDSKJ HFDSKJ HFDSJHF DHSFKJH DSJFHDSKJ HFKJDSH",
-      popularityScore: 123456,
-      topic: topic,
-      topicId: topic.id,
-      tagIds: ["dummyTag1", "dummyTag2"],
-    );
-  }
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

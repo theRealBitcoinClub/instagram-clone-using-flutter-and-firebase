@@ -6,10 +6,10 @@ import 'package:mahakka/memo/base/memo_publisher.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/model/memo_tip.dart';
-import 'package:mahakka/memo/scraper/memo_post_service.dart';
 
 import '../../provider/user_provider.dart';
 import '../../repositories/post_cache_repository.dart';
+import '../scraper/memo_post_scraper.dart';
 import 'memo_bitcoin_base.dart';
 
 enum MemoAccountType { tokens, bch, memo }

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:blockchain_utils/bip/bip/bip39/bip39_mnemonic_validator.dart';
-import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
+import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo_data_checker.dart';
 
 enum MemoVerificationResponse {
@@ -93,19 +93,19 @@ class MemoVerifier {
 
   // --- Lazy Initializers for Scraped Data ---
   List<String> get hashTags {
-    if (_hashTags.isEmpty) _hashTags.addAll(MemoScraperUtil.extractHashtags(text));
+    if (_hashTags.isEmpty) _hashTags.addAll(MemoRegExp.extractHashtags(text));
 
     return _hashTags;
   }
 
   List<String> get topics {
-    if (_topics.isEmpty) _topics.addAll(MemoScraperUtil.extractTopics(text));
+    if (_topics.isEmpty) _topics.addAll(MemoRegExp.extractTopics(text));
 
     return _topics;
   }
 
   List<String> get urls {
-    if (_urls.isEmpty) _urls.addAll(MemoScraperUtil.extractUrls(text));
+    if (_urls.isEmpty) _urls.addAll(MemoRegExp.extractUrls(text));
 
     return _urls;
   }

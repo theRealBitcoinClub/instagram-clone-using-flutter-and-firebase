@@ -21,7 +21,7 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
   }
 }
 
-class MemoCreatorService {
+class MemoCreatorScraper {
   // Renamed for clarity on its purpose
   static const String _profileIdPrefix = "profile/";
   static const String _rootParserParent = "_root";

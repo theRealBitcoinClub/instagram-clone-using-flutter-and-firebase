@@ -8,6 +8,8 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
+import '../memo_reg_exp.dart';
+
 const scraperPageSize = 25;
 // Helper for logging - replace with your preferred logging solution
 void _logInfo(String message) => print('INFO: $message');
@@ -170,10 +172,11 @@ class MemoPostScraper {
 
     final String? topicLink = item["topicLink"]?.toString();
     final String? topicHeader = item["topic"]?.toString();
+    //TODO MAKE THIS COMPATIBLE WITH THE NEW @TOPIC
     final MemoModelTopic? topic = (topicLink != null && topicHeader != null) ? MemoModelTopic(url: topicLink, id: topicHeader) : null;
 
     final String? text = item["msg"]?.toString();
-    final String? age = item["age"]?.toString();
+    // final String? age = item["age"]?.toString();
     final String? tipsRaw = item["tipsInSatoshi"]?.toString();
     final int tipsInSatoshi = int.tryParse(tipsRaw?.replaceAll(",", "") ?? "0") ?? 0;
 
@@ -201,10 +204,11 @@ class MemoPostScraper {
 
     // Ensure essential fields are present before creating the post object
 
-    if (age == null || created == null || txHash == null || creator == null) {
-      _logWarning("Skipping post due to missing essential data (text, age, created, txHash, or creator). Item: $item");
-      return null;
-    }
+    //TODO the created is generated if missing, age is derived from that, txhash will always be present and creator anyway
+    // if (age == null || created == null || txHash == null || creator == null) {
+    //   _logWarning("Skipping post due to missing essential data (text, age, created, txHash, or creator). Item: $item");
+    //   return null;
+    // }
 
     MemoModelPost post = MemoModelPost(
       id: txHash,
@@ -218,31 +222,34 @@ class MemoPostScraper {
       tagIds: [],
       // likeCounter and replyCounter were commented out, assuming they are not used.
     );
-    MemoScraperUtil.linkReferencesAndSetId(post, topic, creator);
+    MemoScraperUtil.linkReferencesAndSetId(post, topic, creator!);
 
     if (filterOn && MemoScraperUtil.isTextOnly(post)) {
       return null;
     }
 
-    try {
-      bool hasTextUrls = post.urls.any((url) => url != post.imgurUrl); // Check if any extracted URL is not the imgurUrl
+    post.text = post.text ?? "";
 
-      if (filterOn && post.imgurUrl == null && hasTextUrls) {
-        // If no image, and has text URLs, skip.
-        _logInfo("Skipping post (no imgur, has text URLs): ${post.id}");
-        return null;
+    try {
+      // Alternatively, check if all URLs are whitelisted
+      //TODO boost this post on feed
+      bool hasOnlyWhitelistedUrls = MemoRegExp.hasOnlyWhitelistedUrls(post.urls);
+
+      bool hasAtleastWhitelistedDomain = MemoRegExp(post.text!).hasAnyWhitelistedMediaUrl();
+      if (hasAtleastWhitelistedDomain) {
+        post.text = TextFilter.replaceNonWhitelistedDomains(post.text!);
       }
 
-      //TODO FILTER THIS OR NOT ??
-      // if (post.imgurUrl != null && hasTextUrls && !(post.urls.length == 1 && post.urls.first == post.imgurUrl)) {
-      //   // If has imgur, but also OTHER text URLs, skip.
-      //   _logInfo("Skipping post (has imgur and other text URLs): ${post.uniqueContentId}");
-      //   return null;
-      // }
+      //TODO specific posts only appear on own profile if user has sufficient token
 
-      // If it reaches here:
-      // 1. It's text-only (no imgur, no text URLs).
-      // 2. It has an imgurUrl and no OTHER text URLs.
+      // Or if you want to be more specific about what constitutes "text URLs"
+      if (filterOn && post.imgurUrl == null && post.youtubeId == null && !hasAtleastWhitelistedDomain) {
+        // If no image, and has URLs that aren't from approved media domains, skip.
+        _logInfo(
+          "Skipping post (only text, no imgur (let imgur & youtube pass always), has zero whitelisted domains): ${post.urls.toString()}",
+        );
+        return null;
+      }
     } catch (e, s) {
       _logError("Error during post-processing (extractUrlsAndHashtags or filtering) for txHash: ${post.id}", e, s);
       return null; // Skip this post on error

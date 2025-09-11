@@ -66,4 +66,12 @@ class OdyseeMediaWidget extends ConsumerWidget {
       ],
     );
   }
+
+  // // Function to extract content name and claim ID
+  // Map<String, String?>? getOdyseeVideoInfo(String url) {
+  //   final match = MemoRegExp(url).firstMatch(url);
+  //   if (match == null) return null;
+  //
+  //   return {'contentName': match.group(1), 'claimId': match.group(2)};
+  // }
 }

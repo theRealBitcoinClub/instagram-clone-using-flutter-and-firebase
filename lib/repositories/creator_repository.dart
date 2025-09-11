@@ -6,8 +6,9 @@ import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
-import 'package:mahakka/memo/scraper/memo_creator_service.dart';
 import 'package:mahakka/providers/creator_cache_provider.dart';
+
+import '../memo/scraper/memo_creator_scraper.dart';
 
 class CreatorRepository {
   final Ref ref;
@@ -100,7 +101,7 @@ class CreatorRepository {
   Future<MemoModelCreator?> _getFreshScrapedCreator(String creatorId) async {
     // The `getCreator` method is still used here for the full data flow.
     var cachedCreator = await getCreator(creatorId, saveToFirebase: false, scrapeIfNotFound: false);
-    final scraperService = MemoCreatorService();
+    final scraperService = MemoCreatorScraper();
     final scrapedCreator = await scraperService.fetchCreatorDetails(cachedCreator!, noCache: true);
     return scrapedCreator;
   }

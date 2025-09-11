@@ -64,6 +64,7 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
     }
   }
 
+  //TODO VALIDATION IS ALREADY DONE BEFORE THE PROVIDERS ARE FILLED, THEY ONLY CONTAIN VALID URLS
   void _validateInput() {
     final text = widget.controller.text;
     final hasValidUrl = _isValidUrl(text);

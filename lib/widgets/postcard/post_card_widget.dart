@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/repositories/post_repository.dart';
 import 'package:mahakka/utils/snackbar.dart';
@@ -12,6 +11,7 @@ import 'package:mahakka/widgets/memo_confetti.dart'; // Ensure path is correct
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
 import '../../memo/base/text_input_verifier.dart';
+import '../../memo/memo_reg_exp.dart';
 import '../../providers/post_creator_provider.dart';
 import 'post_card_footer.dart';
 // Import the new split widget files
@@ -180,7 +180,7 @@ class _PostCardState extends ConsumerState<PostCard> {
   void _onInputText(String value) {
     if (!mounted) return;
     setState(() {
-      final currentTextHashtags = MemoScraperUtil.extractHashtags(value);
+      final currentTextHashtags = MemoRegExp.extractHashtags(value);
       for (int i = 0; i < _selectedHashtags.length && i < widget.post.tagIds.length; i++) {
         _selectedHashtags[i] = currentTextHashtags.contains(widget.post.tagIds[i]);
       }
@@ -244,7 +244,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     bool hasAnySelectedOrOtherHashtagsInText = _selectedHashtags.any((s) => s);
     if (!hasAnySelectedOrOtherHashtagsInText) {
-      hasAnySelectedOrOtherHashtagsInText = MemoScraperUtil.extractHashtags(currentText).isNotEmpty;
+      hasAnySelectedOrOtherHashtagsInText = MemoRegExp.extractHashtags(currentText).isNotEmpty;
     }
 
     final bool meetsLengthRequirement =

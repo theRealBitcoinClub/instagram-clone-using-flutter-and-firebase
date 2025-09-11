@@ -9,7 +9,7 @@ import '../firebase_options.dart';
 import '../memo/firebase/post_service.dart';
 import '../memo/model/memo_model_post.dart';
 import '../memo/model/memo_model_topic.dart';
-import '../memo/scraper/memo_post_service.dart';
+import '../memo/scraper/memo_post_scraper.dart';
 import '../memo/scraper/memo_scraper_tag.dart';
 import '../memo/scraper/memo_scraper_topics.dart';
 

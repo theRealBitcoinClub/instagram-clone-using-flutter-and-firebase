@@ -1,6 +1,7 @@
 import 'package:html/dom.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
 import 'package:mahakka/dart_web_scraper/dart_web_scraper/web_scraper.dart';
+import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -88,49 +89,13 @@ class MemoScraperUtil {
     }
   }
 
-  static List<String> extractTopics(String? text) {
-    if (text == null || text.isEmpty) return [];
-
-    Iterable<RegExpMatch> matches = RegExp(r'(^|\s)@([A-z]+)\b', caseSensitive: false).allMatches(text);
-    return convertRegExpMatchesToList(matches);
-  }
-
-  static List<String> extractUrls(String? text) {
-    if (text == null || text.isEmpty) return [];
-
-    Iterable<RegExpMatch> matches = RegExp(
-      r'/(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)',
-      caseSensitive: false,
-    ).allMatches(text);
-    return convertRegExpMatchesToList(matches);
-  }
-
-  static List<String> extractHashtags(String? text) {
-    if (text == null || text.isEmpty) return [];
-
-    //TODO WHY ARE SOME POSTS WITH HASHTAGS THAT HAVE MISSING SPACES NOT SHOWING AS REPLIEABLE
-    Iterable<RegExpMatch> matches = RegExp(r'(?:\s|^)(?:#(?!(?:\d+|\w+?_|_\w*?)(?:\s|$)))(\w+)(?=\s|$)', caseSensitive: false).allMatches(text);
-    return convertRegExpMatchesToList(matches);
-  }
-
-  static List<String> convertRegExpMatchesToList(Iterable<RegExpMatch> matches) {
-    if (matches.isEmpty) return [];
-
-    List<String> results = [];
-    for (var element in matches) {
-      String match = element.input.substring(element.start, element.end);
-      results.add(match.trim());
-    }
-    return results;
-  }
-
   static bool isTextOnly(MemoModelPost post) {
-    return post.youtubeId == null && post.imgurUrl == null && post.topic == null && post.tagIds.isEmpty;
+    return post.youtubeId == null && post.imgurUrl == null && post.topic == null && post.tagIds.isEmpty && post.urls.isEmpty;
   }
 
   static void extractUrlsAndHashtags(MemoModelPost post) {
     MemoScraperUtil.extractYouTubeUrlAndRemoveJavaScriptFromText(post);
-    post.tagIds.addAll(MemoScraperUtil.extractHashtags(post.text));
-    post.urls.addAll(MemoScraperUtil.extractUrls(post.text));
+    post.tagIds.addAll(MemoRegExp.extractHashtags(post.text));
+    post.urls.addAll(MemoRegExp.extractUrls(post.text));
   }
 }

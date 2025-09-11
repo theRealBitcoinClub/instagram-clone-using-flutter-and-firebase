@@ -3,12 +3,12 @@ import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
 import 'package:mahakka/memo/firebase/tag_service.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
-import 'package:mahakka/memo/scraper/memo_post_service.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../firebase/post_service.dart';
 import '../model/memo_model_post.dart';
+import 'memo_post_scraper.dart';
 
 const prefskey = "lastTagScrape";
 

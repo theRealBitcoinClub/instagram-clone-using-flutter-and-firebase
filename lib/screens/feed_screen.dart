@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/config_hide_on_feed_trigger.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart'; // Your updated feed provider
 import 'package:mahakka/theme_provider.dart'; // Your theme provider
 import 'package:mahakka/widgets/burner_balance_widget.dart';
@@ -269,6 +270,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               // Post item
               if (index < feedState.posts.length) {
                 final post = feedState.posts[index];
+
+                // Check if post.text exists and contains any hidden words
+                if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase()))) {
+                  return const SizedBox.shrink(); // Hide the post
+                }
+
                 // Ensure PostCard does not require filter-related logic from FeedScreen anymore
                 return PostCard(post, key: ValueKey(post.id) /*, navBarCallback: widget.navBarCallback */);
               }

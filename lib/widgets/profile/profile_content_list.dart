@@ -96,7 +96,7 @@ class ProfileContentList extends StatelessWidget {
         controllerNotifier.value?.dispose();
         controllerNotifier.value = YoutubePlayerController(
           initialVideoId: videoPost.youtubeId!,
-          flags: const YoutubePlayerFlags(autoPlay: false, mute: true, hideControls: false, hideThumbnail: false),
+          flags: const YoutubePlayerFlags(autoPlay: false, mute: false, hideControls: false, hideThumbnail: false),
         );
       }
       final YoutubePlayerController controller = controllerNotifier.value!;

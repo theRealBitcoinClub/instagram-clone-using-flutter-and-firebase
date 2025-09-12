@@ -25,6 +25,7 @@ class MemoModelPost {
   String? videoUrl;
   //TODO SPECIAL FLAG FOR POSTS THAT SHALL BE SHOWNONFEED ALWAYS REGARDLESS OF CREATOR TOKEN BALANCE OR POPULARITY SCORE
   bool? showOnFeed = false;
+  bool? hideOnFeed = false;
   //Interplanetary File System Content ID
   String? ipfsCid;
 

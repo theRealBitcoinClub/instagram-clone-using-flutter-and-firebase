@@ -4,7 +4,7 @@
 source config.sh
 
 # -----------------
-# Generate IPFS file
+# Generate WHITELIST DOMAIN file
 # -----------------
 echo "// lib/config_whitelist.dart
 // This file is auto-generated. Do not edit.
@@ -42,6 +42,18 @@ class WhitelistMediaDomains {
   static const String twitterImages = r'https?:\/\/pbs\.twimg\.com\/media\/[a-zA-Z0-9_-]+\.(?:jpg|png|gif|webp|jpeg)';
   static const String telegram = r'https?:\/\/(?:www\.)?(?:t\.me|telegram\.org|telegram\.me|telegram\.dog|telesco\.pe|web\.telegram\.org|api\.telegram\.org|core\.telegram\.org)\/?(?:[a-zA-Z0-9_-]+)?(?:\/\S+)?';
 }" > lib/config_whitelist.dart
+
+# -----------------
+# Generate bad word file
+# -----------------
+echo "// lib/config_hide_on_feed_trigger.dart
+// This file is auto-generated. Do not edit.
+
+const hideOnFeedTrigger = [
+  'skynet.ar.io'
+];
+
+" > lib/config_hide_on_feed_trigger.dart
 
 # -----------------
 # Generate IPFS file

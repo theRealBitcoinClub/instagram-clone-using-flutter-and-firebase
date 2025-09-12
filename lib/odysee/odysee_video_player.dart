@@ -1,8 +1,7 @@
-// widgets/odysee_video_player.dart
+import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/odysee/video_providers.dart';
-import 'package:video_player/video_player.dart';
 
 class OdyseeVideoPlayer extends ConsumerStatefulWidget {
   final double? aspectRatio;
@@ -37,15 +36,18 @@ class _OdyseeVideoPlayerState extends ConsumerState<OdyseeVideoPlayer> {
     );
   }
 
-  // NEW: Build video player from direct URL
+  // Build video player from direct URL using Chewie
   Widget _buildVideoFromUrl(String videoUrl) {
-    final controllerAsync = ref.watch(videoControllerProvider((streamUrl: videoUrl, autoPlay: widget.autoPlay)));
+    final chewieControllerAsync = ref.watch(chewieControllerProvider((streamUrl: videoUrl, autoPlay: widget.autoPlay, context: context)));
 
-    return controllerAsync.when(
+    return chewieControllerAsync.when(
       loading: () => widget.loadingWidget ?? _buildLoading(),
       error: (error, stack) => widget.errorWidget ?? _buildError(error.toString()),
-      data: (controller) {
-        return AspectRatio(aspectRatio: widget.aspectRatio ?? controller.value.aspectRatio, child: VideoPlayer(controller));
+      data: (chewieController) {
+        return AspectRatio(
+          aspectRatio: widget.aspectRatio ?? chewieController.videoPlayerController.value.aspectRatio,
+          child: Chewie(controller: chewieController),
+        );
       },
     );
   }
@@ -94,9 +96,11 @@ class _VideoPlayerContent extends ConsumerStatefulWidget {
 class _VideoPlayerContentState extends ConsumerState<_VideoPlayerContent> {
   @override
   Widget build(BuildContext context) {
-    final controllerAsync = ref.watch(videoControllerProvider((streamUrl: widget.streamUrl, autoPlay: widget.autoPlay)));
+    final chewieControllerAsync = ref.watch(
+      chewieControllerProvider((streamUrl: widget.streamUrl, autoPlay: widget.autoPlay, context: context)),
+    );
 
-    return controllerAsync.when(
+    return chewieControllerAsync.when(
       loading: () => Container(
         color: Colors.black,
         child: const Center(child: CircularProgressIndicator(color: Colors.white)),
@@ -107,8 +111,11 @@ class _VideoPlayerContentState extends ConsumerState<_VideoPlayerContent> {
           child: Text('Player Error: $error', style: const TextStyle(color: Colors.white)),
         ),
       ),
-      data: (controller) {
-        return AspectRatio(aspectRatio: widget.aspectRatio ?? controller.value.aspectRatio, child: VideoPlayer(controller));
+      data: (chewieController) {
+        return AspectRatio(
+          aspectRatio: widget.aspectRatio ?? chewieController.videoPlayerController.value.aspectRatio,
+          child: Chewie(controller: chewieController),
+        );
       },
     );
   }

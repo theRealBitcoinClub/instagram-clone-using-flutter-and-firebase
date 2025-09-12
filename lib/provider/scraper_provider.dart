@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../memo/scraper/memo_scraper_tag.dart';
 import '../memo/scraper/memo_scraper_topics.dart';
 
 // The AsyncNotifierProvider is the ideal provider for asynchronous state management.
@@ -11,7 +12,7 @@ final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraper
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
   Duration _initialDelay = Duration(seconds: 10);
-  Duration _scrapeInterval = Duration(seconds: 100);
+  Duration _scrapeInterval = Duration(seconds: 10);
 
   @override
   Future<void> build() async {
@@ -58,7 +59,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
       // Execute the scraping tasks.
       var cacheId = "";
       await MemoScraperTopic().startScrapeTopics(cacheId, 0, 0);
-      // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 0, 0);
+      await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 0, 0);
 
       // If the process succeeds, update the state to data with a null value.
       state = const AsyncValue.data(null);

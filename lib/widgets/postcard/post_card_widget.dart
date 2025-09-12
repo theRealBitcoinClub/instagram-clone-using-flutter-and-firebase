@@ -45,12 +45,16 @@ class _PostCardState extends ConsumerState<PostCard> {
   late List<bool> _selectedHashtags;
   late TextEditingController _textEditController;
   bool hasRegisteredAsUser = false;
+  bool _showYouTubePlayer = false; // Add this line
+  bool _isAnimatingYouTube = false; // Add this to track animation state
 
   @override
   void initState() {
     super.initState();
     _textEditController = TextEditingController();
     _initializeSelectedHashtags();
+    _showYouTubePlayer = false; // Initialize to false
+    _isAnimatingYouTube = false; // Add this to track animation state
   }
 
   @override
@@ -64,10 +68,11 @@ class _PostCardState extends ConsumerState<PostCard> {
     _selectedHashtags = List<bool>.filled(count, false);
   }
 
-  // NEW: Build media widget based on available media types
   Widget _buildPostMedia(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
-    // Priority: Video > Image > IPFS > Fallback
-    if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty) {
+    // Priority: YouTube Video > Other Video > Image > IPFS > Fallback
+    if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
+      return _buildYouTubeWidget(theme, colorScheme, textTheme);
+    } else if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty) {
       return _buildVideoWidget(theme, colorScheme, textTheme);
     } else if (widget.post.imageUrl != null && widget.post.imageUrl!.isNotEmpty) {
       return UnifiedImageWidget(
@@ -106,6 +111,138 @@ class _PostCardState extends ConsumerState<PostCard> {
     }
   }
 
+  Widget _buildYouTubeWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    return GestureDetector(
+      onDoubleTap: _toggleYouTubePlayer,
+      onLongPress: _toggleYouTubePlayer,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+        height: _showYouTubePlayer ? 200.0 : 50.0,
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(11.5),
+          child: _showYouTubePlayer
+              ? _buildYouTubePlayerWithOverlay(theme, colorScheme, textTheme)
+              : _buildYouTubePlaceholder(theme, colorScheme, textTheme),
+        ),
+      ),
+    );
+  }
+
+  // Add this variable to your state
+  bool _showOverlayHint = true;
+
+  // Add this method to hide overlay after delay
+  void _hideOverlayAfterDelay() {
+    Future.delayed(const Duration(seconds: 15), () {
+      if (mounted && _showYouTubePlayer) {
+        setState(() {
+          _showOverlayHint = false;
+        });
+      }
+    });
+  }
+
+  Widget _buildYouTubePlayerWithOverlay(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    return Stack(
+      children: [
+        // YouTube Player
+        UnifiedVideoPlayer(
+          type: VideoPlayerType.youtube,
+          videoId: widget.post.youtubeId!,
+          aspectRatio: 16 / 9,
+          autoPlay: true,
+          showControls: true,
+          theme: theme,
+          colorScheme: colorScheme,
+          textTheme: textTheme,
+        ),
+        Positioned(
+          top: 8,
+          left: 8,
+          child: AnimatedOpacity(
+            opacity: (_isAnimatingYouTube || !_showOverlayHint) ? 0.0 : 1.0,
+            duration: const Duration(milliseconds: 300),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.touch_app, color: Colors.white, size: 20),
+                  const SizedBox(width: 6),
+                  Text(
+                    "Long press near video corner to minimize",
+                    style: textTheme.bodySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildYouTubePlaceholder(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    return Container(
+      color: Colors.black.withOpacity(0.7),
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.play_circle_filled, color: Colors.white, size: 32),
+            const SizedBox(width: 8),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "YouTube Video",
+                  style: textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w500),
+                ),
+                Text("Double tap to play", style: textTheme.bodySmall?.copyWith(color: Colors.white70)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _toggleYouTubePlayer() {
+    if (_isAnimatingYouTube) return; // Prevent rapid toggling during animation
+
+    setState(() {
+      _isAnimatingYouTube = true;
+      _showYouTubePlayer = !_showYouTubePlayer;
+      _showOverlayHint = true; // Reset overlay visibility when toggling
+    });
+
+    if (_showYouTubePlayer) {
+      _hideOverlayAfterDelay(); // Start hiding timer
+    }
+
+    // Reset animation state after animation completes
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) {
+        setState(() {
+          _isAnimatingYouTube = false;
+        });
+      }
+    });
+  }
+
   // NEW: Build video widget for Odysee videos
   Widget _buildVideoWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     return AspectRatio(
@@ -128,107 +265,6 @@ class _PostCardState extends ConsumerState<PostCard> {
       ),
     );
   }
-
-  // // NEW: Build image widget for extracted image URLs
-  // Widget _buildImageWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
-  //   return GestureDetector(
-  //     onDoubleTap: _isSendingTx ? null : _sendTipToCreator,
-  //     child: ZoomOverlay(
-  //       modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3),
-  //       minScale: 0.5,
-  //       maxScale: 3.0,
-  //       twoTouchOnly: true,
-  //       animationDuration: const Duration(milliseconds: 200),
-  //       animationCurve: Curves.easeOut,
-  //       child: AspectRatio(
-  //         aspectRatio: 16 / 9,
-  //         child: Container(
-  //           decoration: BoxDecoration(
-  //             color: colorScheme.surface,
-  //             borderRadius: BorderRadius.circular(12),
-  //             border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-  //           ),
-  //           child: ClipRRect(
-  //             borderRadius: BorderRadius.circular(11.5),
-  //             child: Image.network(
-  //               widget.post.imageUrl!,
-  //               fit: BoxFit.contain,
-  //               errorBuilder: (context, error, stackTrace) {
-  //                 return Center(
-  //                   child: Column(
-  //                     mainAxisAlignment: MainAxisAlignment.center,
-  //                     children: [
-  //                       Icon(Icons.broken_image_outlined, color: colorScheme.error, size: 36),
-  //                       const SizedBox(height: 8),
-  //                       Text("Error loading image", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
-  //                     ],
-  //                   ),
-  //                 );
-  //               },
-  //               loadingBuilder: (context, child, loadingProgress) {
-  //                 if (loadingProgress == null) return child;
-  //                 return Center(
-  //                   child: CircularProgressIndicator(
-  //                     value: loadingProgress.expectedTotalBytes != null
-  //                         ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-  //                         : null,
-  //                   ),
-  //                 );
-  //               },
-  //             ),
-  //           ),
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-  //
-  // // NEW: Build IPFS widget for IPFS content
-  // Widget _buildIpfsWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
-  //   final ipfsUrl = 'https://free-bch.fullstack.cash/ipfs/view/${widget.post.ipfsCid}';
-  //
-  //   return AspectRatio(
-  //     aspectRatio: 16 / 9,
-  //     child: Container(
-  //       decoration: BoxDecoration(
-  //         color: colorScheme.surface,
-  //         borderRadius: BorderRadius.circular(12),
-  //         border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-  //       ),
-  //       child: ClipRRect(
-  //         borderRadius: BorderRadius.circular(11.5),
-  //         child: Image.network(
-  //           ipfsUrl,
-  //           fit: BoxFit.contain,
-  //           errorBuilder: (context, error, stackTrace) {
-  //             return Center(
-  //               child: Column(
-  //                 mainAxisAlignment: MainAxisAlignment.center,
-  //                 children: [
-  //                   Icon(Icons.cloud_off_outlined, color: colorScheme.error, size: 36),
-  //                   const SizedBox(height: 8),
-  //                   Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
-  //                   const SizedBox(height: 8),
-  //                   Text("CID: ${widget.post.ipfsCid}", style: textTheme.bodySmall),
-  //                 ],
-  //               ),
-  //             );
-  //           },
-  //           loadingBuilder: (context, child, loadingProgress) {
-  //             if (loadingProgress == null) return child;
-  //             return Center(
-  //               child: CircularProgressIndicator(
-  //                 value: loadingProgress.expectedTotalBytes != null
-  //                     ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-  //                     : null,
-  //               ),
-  //             );
-  //           },
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   // NEW: Fallback widget when no media is available
   Widget _buildFallbackWidget(ThemeData theme, ColorScheme colorScheme) {
@@ -266,13 +302,19 @@ class _PostCardState extends ConsumerState<PostCard> {
     );
   }
 
-  // NEW: Helper to determine media height based on content
   double _getMediaHeight() {
+    // For YouTube, use current height (animated between 50 and 200)
+    if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
+      return _showYouTubePlayer ? 200.0 : 50.0;
+    }
+
+    // For other media types, use fixed height
     if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty ||
         widget.post.imageUrl != null && widget.post.imageUrl!.isNotEmpty ||
         widget.post.ipfsCid != null && widget.post.ipfsCid!.isNotEmpty) {
-      return 200.0; // Height for media content
+      return 200.0;
     }
+
     return _altImageHeight * 2; // Height for fallback
   }
 

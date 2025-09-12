@@ -40,7 +40,7 @@ class MemoDataChecker {
   Future<bool> isImageValid(String url) async {
     Completer<bool> completer = Completer<bool>();
     final Image image = Image.network(url);
-    print("isImageValid height ${image.height} width ${image.width}");
+    print("URL: ${url} isImageValid height ${image.height} width ${image.width}");
     final ImageStream stream = image.image.resolve(const ImageConfiguration());
 
     ImageStreamListener? listener;

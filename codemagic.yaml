@@ -8,10 +8,21 @@ workflows:
         BUNDLE: "false"
         #GH_REPO: ""  # Optional: override target repository
     scripts:
-      - name: Setup and Build
+      - name: Setup and Get Dependencies
         script: |
           flutter packages pub get
+
+      - name: Run All Tests
+        script: |
+          echo "🧪 Running all tests..."
+          flutter test --coverage --test-randomize-ordering-seed random
           
+          # Generate test coverage report
+          genhtml coverage/lcov.info -o coverage/html
+          echo "✅ Test coverage report generated at coverage/html/"
+
+      - name: Build APK
+        script: |
           # Set signing environment variables for Gradle
           if [ -f "android/app/mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
           echo "🔐 Configuring signing for release build..."
@@ -58,6 +69,7 @@ workflows:
 
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
+      - coverage/html/**  # Include test coverage report
 
     publishing:
       email:

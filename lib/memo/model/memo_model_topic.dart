@@ -23,6 +23,7 @@ class MemoModelTopic {
     this.postCount,
     this.followerCount,
     this.lastPost,
+    this.lastPostCount,
   }) : this.id = id.replaceAll(" ", "_"); // Ensure 'id' is processed
 
   @JsonKey(includeFromJson: false, includeToJson: false)

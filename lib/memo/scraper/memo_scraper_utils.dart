@@ -9,18 +9,20 @@ import '../model/memo_model_creator.dart';
 import '../model/memo_model_topic.dart';
 
 class MemoScraperUtil {
-  static Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg, {bool nocache = true}) async {
-    return await _createScraperAny(nocache, path, cfg);
+  static Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg, {bool nocache = true, String? mockData}) async {
+    return await _createScraperAny(nocache, path, cfg, mockData: mockData);
   }
 
   static dynamic createScraperObj(String path, ScraperConfig cfg, {bool nocache = true}) async {
     return await _createScraperAny(nocache, path, cfg);
   }
 
-  static Future<Map<String, Object>> _createScraperAny(bool nocache, String path, ScraperConfig cfg) async {
+  static Future<Map<String, Object>> _createScraperAny(bool nocache, String path, ScraperConfig cfg, {mockData}) async {
     String baseUrl = "https://memo.cash/";
     WebScraper webScraper = WebScraper();
     String? cachedData = nocache ? null : await loadCachedData(path);
+
+    if (mockData != null) cachedData = mockData;
 
     // Brave browser user-agent
     const String braveUserAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';

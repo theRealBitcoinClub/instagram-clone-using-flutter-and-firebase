@@ -4,9 +4,12 @@ import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 
 class TopicService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  // Choose a distinct collection name for topics
-  static const String _topicsCollection = FirestoreCollections.topic; // Or 'topics_v1', etc.
+  final FirebaseFirestore _firestore;
+  final String _collectionName;
+
+  TopicService({FirebaseFirestore? firestore, String collectionName = FirestoreCollections.topic})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _collectionName = collectionName;
 
   /// Saves a topic to Firestore.
   /// If a topic with the same ID already exists, it will be updated (merged).
@@ -14,11 +17,11 @@ class TopicService {
   Future<void> saveTopic(MemoModelTopic topic) async {
     try {
       final String safeTopicId = sanitizeFirestoreId(topic.id);
-      final DocumentReference docRef = _firestore.collection(_topicsCollection).doc(safeTopicId);
+      final DocumentReference docRef = _firestore.collection(_collectionName).doc(safeTopicId);
       // Assuming MemoModelTopic has a toJson() method
       final Map<String, dynamic> topicJson = topic.toJson();
       await docRef.set(topicJson, SetOptions(merge: true));
-      print("Topic ${topic.id} saved successfully to Firestore in collection '$_topicsCollection'.");
+      print("Topic ${topic.id} saved successfully to Firestore in collection '$_collectionName'.");
     } catch (e) {
       print("Error saving topic ${topic.id} to Firestore: $e");
       rethrow; // Re-throw the error to be handled by the caller
@@ -36,7 +39,7 @@ class TopicService {
   /// Deletes a topic from Firestore based on its ID.
   Future<void> deleteTopic(String topicId) async {
     try {
-      await _firestore.collection(_topicsCollection).doc(topicId).delete();
+      await _firestore.collection(_collectionName).doc(topicId).delete();
       print("Topic ${topicId} deleted successfully from Firestore.");
     } catch (e) {
       print("Error deleting topic ${topicId} from Firestore: $e");
@@ -49,7 +52,7 @@ class TopicService {
   Stream<MemoModelTopic?> getTopicStream(String topicId) {
     try {
       final String safeTopicId = sanitizeFirestoreId(topicId);
-      final DocumentReference docRef = _firestore.collection(_topicsCollection).doc(safeTopicId);
+      final DocumentReference docRef = _firestore.collection(_collectionName).doc(safeTopicId);
 
       return docRef
           .snapshots()
@@ -82,7 +85,7 @@ class TopicService {
   }) {
     try {
       // Start with the base collection reference
-      Query query = _firestore.collection(_topicsCollection);
+      Query query = _firestore.collection(_collectionName);
 
       // Apply the ordering
       // Ensure the orderByField is not empty if you want to make it truly optional later
@@ -94,7 +97,7 @@ class TopicService {
       //   query = query.orderBy('name'); // Default to ordering by name if no field is specified
       // }
 
-      final CollectionReference colRef = _firestore.collection(_topicsCollection);
+      final CollectionReference colRef = _firestore.collection(_collectionName);
 
       // Apply the ordering to your query
       Query orderedQuery = colRef.orderBy(
@@ -126,7 +129,7 @@ class TopicService {
     try {
       topicId = topicId.toLowerCase();
       final String safeTopicId = sanitizeFirestoreId(topicId);
-      final DocumentReference docRef = _firestore.collection(_topicsCollection).doc(safeTopicId);
+      final DocumentReference docRef = _firestore.collection(_collectionName).doc(safeTopicId);
       final DocumentSnapshot snapshot = await docRef.get();
 
       if (snapshot.exists && snapshot.data() != null) {
@@ -145,7 +148,7 @@ class TopicService {
   Future<List<MemoModelTopic>> getAllTopics() async {
     try {
       QuerySnapshot querySnapshot = await _firestore
-          .collection(_topicsCollection)
+          .collection(_collectionName)
           // Optionally order them if needed for consistency, e.g., by header
           // .orderBy('header_lowercase') // Add an index for this if you use it
           .get(); // Consider adding .limit( énorme_nombre ) if your topics list is huge
@@ -176,7 +179,7 @@ class TopicService {
     if (query.isEmpty) return [];
     final String lowerQuery = query.toLowerCase();
     QuerySnapshot snapshot = await _firestore
-        .collection(_topicsCollection)
+        .collection(_collectionName)
         .where('header_lowercase', isGreaterThanOrEqualTo: lowerQuery) // Assumes you have 'header_lowercase'
         .where('header_lowercase', isLessThanOrEqualTo: lowerQuery + '\uf8ff')
         .limit(10) // Always limit on-demand searches

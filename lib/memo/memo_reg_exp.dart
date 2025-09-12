@@ -7,8 +7,8 @@ class MemoRegExp {
 
   // Generic method to extract URLs matching a given pattern
   String _extractUrlByPattern(String pattern, {int group = 0}) {
-    final RegExp exp = RegExp(pattern, caseSensitive: false);
-    final match = exp.firstMatch(text.trim());
+    final imgurRegExp = RegExp(pattern, caseSensitive: false);
+    final match = imgurRegExp.firstMatch(text.trim());
     return match?.group(group) ?? "";
   }
 
@@ -145,7 +145,7 @@ class MemoRegExp {
   }
 
   String extractIpfsCid() {
-    final RegExp ipfsExp = RegExp(r'(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[1-9A-HJ-NP-Za-km-z]{59})');
+    final RegExp ipfsExp = RegExp(r'b[A-Za-z2-7]{58,}');
     final match = ipfsExp.firstMatch(text);
     return match?.group(0) ?? "";
   }
@@ -247,7 +247,7 @@ class MemoRegExp {
 
 class TextFilter {
   static final _urlRegex = RegExp(
-    r'https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)',
+    r'https?:\/\/(?:www\.)?[-\w@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-\w()@:%_\+.~#?&\/=]*)(?=\s|$)',
     caseSensitive: false,
   );
 

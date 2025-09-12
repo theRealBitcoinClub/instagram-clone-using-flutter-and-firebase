@@ -23,7 +23,7 @@ class MemoScraperTopic {
 
     for (int offset = startOffset; offset >= endOffset; offset -= 25) {
       // Scrape topics for current offset
-      final List<MemoModelTopic> allTopics = await _scrapeTopics(offset, cacheId);
+      final List<MemoModelTopic> allTopics = await scrapeTopics(offset, cacheId);
 
       if (allTopics.isEmpty) {
         print("\nSCRAPER TOPICS\nNo topics found for offset $offset");
@@ -50,11 +50,11 @@ class MemoScraperTopic {
   }
 
   /// Scrapes topics from the memo.cash website
-  Future<List<MemoModelTopic>> _scrapeTopics(int offset, String cacheId) async {
+  Future<List<MemoModelTopic>> scrapeTopics(int offset, String cacheId, {mockData}) async {
     try {
       var basePath = "topics/all?offset=$offset";
       var path = cacheId.isNotEmpty ? "$basePath&x=$cacheId" : basePath;
-      final Map<String, Object> topicsData = await MemoScraperUtil.createScraper(path, _createTopicScraperConfig());
+      final Map<String, Object> topicsData = await MemoScraperUtil.createScraper(path, _createTopicScraperConfig(), mockData: mockData);
 
       return _parseTopicsFromData(topicsData);
     } catch (e) {
@@ -97,7 +97,7 @@ class MemoScraperTopic {
     for (final topic in topicsWithNewPosts) {
       try {
         // Scrape posts for this topic
-        final List<MemoModelPost> newPosts = await _scrapeTopicHarvestPosts(topic, cacheId);
+        final List<MemoModelPost> newPosts = await scrapeTopicHarvestPosts(topic, cacheId);
 
         if (newPosts.isNotEmpty) {
           // Add posts to the topic
@@ -129,7 +129,7 @@ class MemoScraperTopic {
   }
 
   /// Scrapes posts for a specific topic, only fetching new posts
-  Future<List<MemoModelPost>> _scrapeTopicHarvestPosts(MemoModelTopic topic, String cacheId) async {
+  Future<List<MemoModelPost>> scrapeTopicHarvestPosts(MemoModelTopic topic, String cacheId, {mockData}) async {
     final int newPostsCount = topic.postCount! - (topic.lastPostCount ?? 0);
 
     if (newPostsCount <= 0) {
@@ -138,7 +138,11 @@ class MemoScraperTopic {
 
     try {
       // Scrape all posts for this topic
-      final Map<String, Object> postsData = await MemoScraperUtil.createScraper("${topic.url!}?x=$cacheId", _createPostScraperConfig());
+      final Map<String, Object> postsData = await MemoScraperUtil.createScraper(
+        "${topic.url!}?x=$cacheId",
+        _createPostScraperConfig(),
+        mockData: mockData,
+      );
 
       // Parse all posts
       final List<MemoModelPost> allPosts = _parsePostsFromData(postsData, topic);

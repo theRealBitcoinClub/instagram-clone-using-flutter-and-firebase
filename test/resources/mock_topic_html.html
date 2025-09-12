@@ -1,0 +1,1167 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Memo - Topic - mahakka.com</title>
+    <meta name="description" content="Bitcoin social app. Your portal to the Bitcoin Cash blockchain."/>
+    <base href="/"/>
+    <meta name="google-play-app" content="app-id=com.memoapp">
+    <meta name="apple-itunes-app" content="app-id=1531917294">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="og:type" content="summary"/>
+    <meta name="og:title" content="Memo - Topic - mahakka.com"/>
+    <meta name="og:description" content="Bitcoin social app. Your portal to the Bitcoin Cash blockchain."/>
+    <meta name="og:image" content="https://memo.cash/img/memo-logo-large.png"/>
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Memo - Topic - mahakka.com" />
+    <meta name="twitter:description" content="Bitcoin social app. Your portal to the Bitcoin Cash blockchain." />
+    <meta name="twitter:image" content="https://memo.cash/img/memo-logo-large.png" />
+    <meta name="twitter:site" content="@memobch"/>
+
+    <meta name="apple-mobile-web-app-title" content="Memo">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#548d1d">
+    <link rel="apple-touch-icon" href="/img/memo-square.png">
+
+    <link rel="alternate" type="application/rss+xml" title="Memo Feed" href="rss/new" />
+    <link rel="shortcut icon" type="image/png" href="/logo.png"/>
+
+    <link rel="stylesheet" type="text/css" href="lib/jqueryui/1.12.1/jquery-ui.min.css"/>
+    <link rel="stylesheet" type="text/css" href="lib/twitter-bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="lib/flag-icon-css/0.8.2/css/flag-icon.min.css"/>
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker3.min.css"/>
+    <link rel="stylesheet" type="text/css" href="style.css?ver=56570"/>
+
+    <script type="text/javascript" src="lib/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="lib/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="lib/identicon.js/2.3.2/pnglib.min.js"></script>
+    <script type="text/javascript" src="lib/identicon.js/2.3.2/identicon.min.js"></script>
+    <script type="text/javascript" src="lib/jstimezonedetect/1.0.6/jstz.min.js"></script>
+    <script type="text/javascript" src="lib/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script type="text/javascript" src="js/min.js?ver=56570"></script>
+
+    <script type="text/javascript">
+        MemoApp.InitTimeZone();
+        MemoApp.InitCsrf("40f945a7a5091c4a4222888c78b576fccea34b93c5f7452a0ad9df0486076579");
+        MemoApp.SetBaseUrl("/");
+        MemoApp.Mobile.InitWeb();
+    </script>
+</head>
+<body class="">
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div id="mobile-app-banner"></div>
+    <div class="container">
+        <div class="navbar-header">
+            <a id="mobile-back-button" class="navbar-mobile-button navbar-brand navbar-left hidden">
+                <span class="glyphicon glyphicon-chevron-left"></span>
+            </a>
+            <a id="mobile-refresh-button" class="navbar-mobile-button navbar-brand navbar-left hidden">
+                <span class="glyphicon glyphicon-refresh"></span>
+            </a>
+            <script>
+                MemoApp.MobileWeb.iOSWebInit($("#mobile-back-button"), $("#mobile-refresh-button"));
+            </script>
+            <a class="navbar-brand navbar-left" href="">
+                Memo
+            </a>
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <div id="navbar-collapse">
+            <ul class="nav navbar-nav">
+
+                <li >
+                    <a href="" data-toggle="collapse" data-target=".navbar-collapse">Home</a>
+                </li>
+                <li >
+                    <a href="posts/ranked" data-toggle="collapse" data-target=".navbar-collapse">Posts</a>
+                </li>
+                <li >
+                    <a href="tokens"
+                       data-toggle="collapse" data-target=".navbar-collapse">Tokens</a>
+                </li>
+                <li class="active">
+                    <a href="topics" data-toggle="collapse" data-target=".navbar-collapse">Topics</a>
+                </li>
+                <!--<li ><a href="tags">Tags</a></li>-->
+                <li >
+                    <a href="profiles/most-actions" data-toggle="collapse" data-target=".navbar-collapse"
+                    >Profiles</a></li>
+                <!-- <li class="divider"></li> -->
+                <li >
+                    <a href="signup" data-toggle="collapse" data-target=".navbar-collapse">Signup</a>
+                </li>
+                <li >
+                    <a href="login" data-toggle="collapse" data-target=".navbar-collapse">Login</a>
+                </li>
+            </ul>
+        </div>
+        <script>
+            MemoApp.Mobile.InitNav($("#navbar-collapse"));
+        </script>
+    </div>
+    <div class="alert-banner">
+    </div>
+</nav>
+<div id="site-wrapper">
+    <div id="inner-site-wrapper">
+        <div class="site-header-spacer"></div>
+        <script type="text/javascript">
+            MemoApp.MobileWeb.AndroidBanner($("div#mobile-app-banner"), $("#inner-site-wrapper .site-header-spacer"));
+        </script>
+
+        <div class="wrapper">
+
+            <div class="container">
+
+
+                <div class="center">
+                    <h2 class="medium-header center">Topic - mahakka.com</h2>
+                    <p class="topic-view-nav">
+                        <a href="topics/all" class="btn btn-default">Back to topics</a>
+                        <a class="btn btn-default" href="topics/threads/mahakka.com">Threads</a>
+
+
+                    </p>
+                </div>
+                <div id="all-posts" style="position:relative;">
+
+
+
+
+
+
+
+                    <div class="topic-post"
+                         id="topic-post-d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699"
+                         data-tx-hash="d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699">
+                        <a class="pic-wrapper" href="profile/1vNJEDSkcqnAEA1oXV2h7pCoqZo9daHpL">
+
+
+                            <div id="mini-DQjuLz" class="inline">
+                                <div class="mini-profile-name" data-profile-hash="1vNJEDSkcqnAEA1oXV2h7pCoqZo9daHpL">
+
+
+
+        <span id="identicon-spRNLi" class="profile-pic-24">
+            <img class="identicon"/>
+        </span>
+                                    <script type="text/javascript">
+                                        MemoApp.SetIdenticon($("#identicon-spRNLi"), "1vNJEDSkcqnAEA1oXV2h7pCoqZo9daHpL", false, 24);
+                                    </script>
+
+
+
+                                </div>
+                            </div>
+
+                            <script type="text/javascript">
+                                MemoApp.MiniProfileNew($("#mini-DQjuLz"));
+                            </script>
+
+
+
+                        </a>
+                        <div class="post-wrapper">
+                            <div class="post-header">
+                                <div class="name">
+
+
+                                    <div id="mini-tilgss" class="inline">
+                                        <div class="mini-profile-name" data-profile-hash="1vNJEDSkcqnAEA1oXV2h7pCoqZo9daHpL">
+
+                                            <a class="profile profile-link"
+                                               href="profile/1vNJEDSkcqnAEA1oXV2h7pCoqZo9daHpL">1vNJEDSkcqnAEA1o</a>
+
+
+
+                                        </div>
+                                    </div>
+
+                                    <script type="text/javascript">
+                                        MemoApp.MiniProfileNew($("#mini-tilgss"));
+                                    </script>
+
+
+
+                                    <a class="time topic-link time-ago"
+                                       href="post/d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699"
+                                       title="2025-09-09 04:33:28">2d</a>
+                                    <div class="like" id="like-d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699">
+                                        <div class="like-info" id="like-info-d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699">
+
+
+
+                                            <script type="text/javascript">
+                                                $(function () {
+                                                    MemoApp.Form.PostLinkModal($("#thread-link-uaObYH"), "d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699");
+                                                })
+                                            </script>
+                                        </div>
+                                        <form class="like-form" id="like-form-d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699">
+                                            &nbsp;
+                                            <input id="tx-hash-d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699" type="hidden" name="tx-hash"
+                                                   value="d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699"/>
+                                            <label for="tip-d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699">Tip</label>
+                                            <input id="tip-d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699" type="text" name="tip"
+                                                   class="form-control input-sm"
+                                                   placeholder="0" value=""/>
+                                            <input class="btn btn-sm btn-primary" type="submit" value="Like">
+                                            <a class="btn btn-sm btn-default"
+                                               id="like-cancel-d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699">Cancel</a>
+                                        </form>
+                                        <span class="broadcasting hidden">Processing...</span>
+                                        <span class="creating hidden">Creating...</span>
+                                        <script type="text/javascript">
+                                            $(function () {
+
+                                                MemoApp.Form.LikesToggle("d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699", $("#like-d6823ed891683fc9421f98915dbaf71c122f305e21b6d3e8049e00006951e699"));
+
+                                            });
+                                        </script>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="message">
+                                <a href='t/steam' onclick='return MemoApp.LinkClick(this, event);'>#steam</a> <a href='t/bch' onclick='return MemoApp.LinkClick(this, event);'>#bch</a> y <a href='t/cashtoken' onclick='return MemoApp.LinkClick(this, event);'>#cashtoken</a> <div class='video-wrapper'><div class='video-container'><div id='DYrGUk'></div></div></div><script 'type=text/javascript'>MemoApp.YouTube.AddPlayer('DYrGUk', 'vc4vcX4HJfw');</script> <a href='t/mahakka' onclick='return MemoApp.LinkClick(this, event);'>#mahakka</a>.com
+                            </div>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+
+                    <script type="text/javascript">
+                        $(function () {
+                            MemoApp.SetLastPostId(847676);
+                        });
+                    </script>
+
+
+
+
+
+
+                    <div class="topic-post"
+                         id="topic-post-8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474"
+                         data-tx-hash="8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474">
+                        <a class="pic-wrapper" href="profile/17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">
+
+
+                            <div id="mini-rUVZxc" class="inline">
+                                <div class="mini-profile-name" data-profile-hash="17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">
+
+
+
+        <span id="identicon-ULzKAX" class="profile-pic-24">
+            <img class="identicon"/>
+        </span>
+                                    <script type="text/javascript">
+                                        MemoApp.SetIdenticon($("#identicon-ULzKAX"), "17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA", false, 24);
+                                    </script>
+
+
+
+                                </div>
+                            </div>
+
+                            <script type="text/javascript">
+                                MemoApp.MiniProfileNew($("#mini-rUVZxc"));
+                            </script>
+
+
+
+                        </a>
+                        <div class="post-wrapper">
+                            <div class="post-header">
+                                <div class="name">
+
+
+                                    <div id="mini-dcPKMu" class="inline">
+                                        <div class="mini-profile-name" data-profile-hash="17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">
+
+                                            <a class="profile profile-link"
+                                               href="profile/17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">17DbaD3x4T5MgZ2b</a>
+
+
+
+                                        </div>
+                                    </div>
+
+                                    <script type="text/javascript">
+                                        MemoApp.MiniProfileNew($("#mini-dcPKMu"));
+                                    </script>
+
+
+
+                                    <a class="time topic-link time-ago"
+                                       href="post/8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474"
+                                       title="2025-09-10 01:15:15">1d</a>
+                                    <div class="like" id="like-8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474">
+                                        <div class="like-info" id="like-info-8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474">
+                                            &nbsp;
+                                            <a id="like-link-8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474" class="topic-link"
+                                               href="post/8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474">
+                                <span class="glyphicon glyphicon-heart-empty"
+                                      aria-hidden="true"></span>
+                                                1
+                                            </a>
+                                            &nbsp;
+                                            <a class="tip-button" id="tip-button-8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474">
+                                <span class="glyphicon glyphicon-bitcoin"
+                                      aria-hidden="true"></span>
+                                                2,284
+                                            </a>
+
+                                            &nbsp;
+
+
+
+                                            <script type="text/javascript">
+                                                $(function () {
+                                                    MemoApp.Form.PostLinkModal($("#thread-link-TYqRdQ"), "8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474");
+                                                })
+                                            </script>
+                                        </div>
+                                        <form class="like-form" id="like-form-8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474">
+                                            &nbsp;
+                                            <input id="tx-hash-8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474" type="hidden" name="tx-hash"
+                                                   value="8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474"/>
+                                            <label for="tip-8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474">Tip</label>
+                                            <input id="tip-8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474" type="text" name="tip"
+                                                   class="form-control input-sm"
+                                                   placeholder="0" value=""/>
+                                            <input class="btn btn-sm btn-primary" type="submit" value="Like">
+                                            <a class="btn btn-sm btn-default"
+                                               id="like-cancel-8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474">Cancel</a>
+                                        </form>
+                                        <span class="broadcasting hidden">Processing...</span>
+                                        <span class="creating hidden">Creating...</span>
+                                        <script type="text/javascript">
+                                            $(function () {
+
+                                                MemoApp.Form.LikesToggle("8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474", $("#like-8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474"));
+
+                                                MemoApp.Form.LikesToggle("8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474", $("#tip-button-8d99abc7f691ff2ee8b1c1adaf4606153e54d65f5b02385795e5c7606749f474"));
+
+                                            });
+                                        </script>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="message">
+                                probando subir imágenes desde <a href='t/mahakka' onclick='return MemoApp.LinkClick(this, event);'>#mahakka</a>  <a class="imgur" href="https://i.imgur.com/hrS49gS.jpeg" onclick='return MemoApp.LinkClick(this, event);' rel='noreferrer noopener' target="_blank"><img src="https://i.imgur.com/hrS49gS.jpeg" referrerpolicy="no-referrer"/></a> <a href='t/mahakka' onclick='return MemoApp.LinkClick(this, event);'>#mahakka</a>.com
+                            </div>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+
+                    <script type="text/javascript">
+                        $(function () {
+                            MemoApp.SetLastPostId(847983);
+                        });
+                    </script>
+
+
+
+
+
+
+                    <div class="topic-post"
+                         id="topic-post-016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b"
+                         data-tx-hash="016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b">
+                        <a class="pic-wrapper" href="profile/17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">
+
+
+                            <div id="mini-UwbwfM" class="inline">
+                                <div class="mini-profile-name" data-profile-hash="17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">
+
+
+
+        <span id="identicon-wsIcZC" class="profile-pic-24">
+            <img class="identicon"/>
+        </span>
+                                    <script type="text/javascript">
+                                        MemoApp.SetIdenticon($("#identicon-wsIcZC"), "17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA", false, 24);
+                                    </script>
+
+
+
+                                </div>
+                            </div>
+
+                            <script type="text/javascript">
+                                MemoApp.MiniProfileNew($("#mini-UwbwfM"));
+                            </script>
+
+
+
+                        </a>
+                        <div class="post-wrapper">
+                            <div class="post-header">
+                                <div class="name">
+
+
+                                    <div id="mini-BXcmJH" class="inline">
+                                        <div class="mini-profile-name" data-profile-hash="17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">
+
+                                            <a class="profile profile-link"
+                                               href="profile/17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">17DbaD3x4T5MgZ2b</a>
+
+
+
+                                        </div>
+                                    </div>
+
+                                    <script type="text/javascript">
+                                        MemoApp.MiniProfileNew($("#mini-BXcmJH"));
+                                    </script>
+
+
+
+                                    <a class="time topic-link time-ago"
+                                       href="post/016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b"
+                                       title="2025-09-10 01:25:12">1d</a>
+                                    <div class="like" id="like-016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b">
+                                        <div class="like-info" id="like-info-016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b">
+                                            &nbsp;
+                                            <a id="like-link-016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b" class="topic-link"
+                                               href="post/016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b">
+                                <span class="glyphicon glyphicon-heart-empty"
+                                      aria-hidden="true"></span>
+                                                1
+                                            </a>
+                                            &nbsp;
+                                            <a class="tip-button" id="tip-button-016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b">
+                                <span class="glyphicon glyphicon-bitcoin"
+                                      aria-hidden="true"></span>
+                                                2,284
+                                            </a>
+
+                                            &nbsp;
+
+
+
+                                            <script type="text/javascript">
+                                                $(function () {
+                                                    MemoApp.Form.PostLinkModal($("#thread-link-AwDnCf"), "016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b");
+                                                })
+                                            </script>
+                                        </div>
+                                        <form class="like-form" id="like-form-016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b">
+                                            &nbsp;
+                                            <input id="tx-hash-016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b" type="hidden" name="tx-hash"
+                                                   value="016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b"/>
+                                            <label for="tip-016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b">Tip</label>
+                                            <input id="tip-016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b" type="text" name="tip"
+                                                   class="form-control input-sm"
+                                                   placeholder="0" value=""/>
+                                            <input class="btn btn-sm btn-primary" type="submit" value="Like">
+                                            <a class="btn btn-sm btn-default"
+                                               id="like-cancel-016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b">Cancel</a>
+                                        </form>
+                                        <span class="broadcasting hidden">Processing...</span>
+                                        <span class="creating hidden">Creating...</span>
+                                        <script type="text/javascript">
+                                            $(function () {
+
+                                                MemoApp.Form.LikesToggle("016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b", $("#like-016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b"));
+
+                                                MemoApp.Form.LikesToggle("016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b", $("#tip-button-016007701d824569586f63d0ced39d979086694ee6afd830f8acc130efa2035b"));
+
+                                            });
+                                        </script>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="message">
+                                somos del <a href='t/barrio' onclick='return MemoApp.LinkClick(this, event);'>#Barrio</a>  <a class="imgur" href="https://i.imgur.com/mJp6q8Y.jpeg" onclick='return MemoApp.LinkClick(this, event);' rel='noreferrer noopener' target="_blank"><img src="https://i.imgur.com/mJp6q8Y.jpeg" referrerpolicy="no-referrer"/></a> <a href='t/mahakka' onclick='return MemoApp.LinkClick(this, event);'>#mahakka</a>.com
+                            </div>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+
+                    <script type="text/javascript">
+                        $(function () {
+                            MemoApp.SetLastPostId(847987);
+                        });
+                    </script>
+
+
+
+
+
+
+                    <div class="topic-post"
+                         id="topic-post-31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960"
+                         data-tx-hash="31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960">
+                        <a class="pic-wrapper" href="profile/17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">
+
+
+                            <div id="mini-yDdqxI" class="inline">
+                                <div class="mini-profile-name" data-profile-hash="17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">
+
+
+
+        <span id="identicon-gZnlCs" class="profile-pic-24">
+            <img class="identicon"/>
+        </span>
+                                    <script type="text/javascript">
+                                        MemoApp.SetIdenticon($("#identicon-gZnlCs"), "17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA", false, 24);
+                                    </script>
+
+
+
+                                </div>
+                            </div>
+
+                            <script type="text/javascript">
+                                MemoApp.MiniProfileNew($("#mini-yDdqxI"));
+                            </script>
+
+
+
+                        </a>
+                        <div class="post-wrapper">
+                            <div class="post-header">
+                                <div class="name">
+
+
+                                    <div id="mini-anpnYc" class="inline">
+                                        <div class="mini-profile-name" data-profile-hash="17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">
+
+                                            <a class="profile profile-link"
+                                               href="profile/17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">17DbaD3x4T5MgZ2b</a>
+
+
+
+                                        </div>
+                                    </div>
+
+                                    <script type="text/javascript">
+                                        MemoApp.MiniProfileNew($("#mini-anpnYc"));
+                                    </script>
+
+
+
+                                    <a class="time topic-link time-ago"
+                                       href="post/31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960"
+                                       title="2025-09-10 01:25:12">1d</a>
+                                    <div class="like" id="like-31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960">
+                                        <div class="like-info" id="like-info-31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960">
+                                            &nbsp;
+                                            <a id="like-link-31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960" class="topic-link"
+                                               href="post/31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960">
+                                <span class="glyphicon glyphicon-heart-empty"
+                                      aria-hidden="true"></span>
+                                                1
+                                            </a>
+                                            &nbsp;
+                                            <a class="tip-button" id="tip-button-31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960">
+                                <span class="glyphicon glyphicon-bitcoin"
+                                      aria-hidden="true"></span>
+                                                2,284
+                                            </a>
+
+                                            &nbsp;
+
+
+
+                                            <script type="text/javascript">
+                                                $(function () {
+                                                    MemoApp.Form.PostLinkModal($("#thread-link-NCQKLD"), "31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960");
+                                                })
+                                            </script>
+                                        </div>
+                                        <form class="like-form" id="like-form-31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960">
+                                            &nbsp;
+                                            <input id="tx-hash-31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960" type="hidden" name="tx-hash"
+                                                   value="31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960"/>
+                                            <label for="tip-31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960">Tip</label>
+                                            <input id="tip-31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960" type="text" name="tip"
+                                                   class="form-control input-sm"
+                                                   placeholder="0" value=""/>
+                                            <input class="btn btn-sm btn-primary" type="submit" value="Like">
+                                            <a class="btn btn-sm btn-default"
+                                               id="like-cancel-31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960">Cancel</a>
+                                        </form>
+                                        <span class="broadcasting hidden">Processing...</span>
+                                        <span class="creating hidden">Creating...</span>
+                                        <script type="text/javascript">
+                                            $(function () {
+
+                                                MemoApp.Form.LikesToggle("31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960", $("#like-31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960"));
+
+                                                MemoApp.Form.LikesToggle("31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960", $("#tip-button-31fbd3fed3ae6d32d725c3ca5d4e829df4d842c756760ee8f64f9cc35e4da960"));
+
+                                            });
+                                        </script>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="message">
+                                <a href='t/mahakka' onclick='return MemoApp.LinkClick(this, event);'>#mahakka</a> <a class="imgur" href="https://i.imgur.com/lStqE2R.jpeg" onclick='return MemoApp.LinkClick(this, event);' rel='noreferrer noopener' target="_blank"><img src="https://i.imgur.com/lStqE2R.jpeg" referrerpolicy="no-referrer"/></a> <a href='t/mahakka' onclick='return MemoApp.LinkClick(this, event);'>#mahakka</a>.com
+                            </div>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+
+                    <script type="text/javascript">
+                        $(function () {
+                            MemoApp.SetLastPostId(847991);
+                        });
+                    </script>
+
+
+
+
+
+
+                    <div class="topic-post"
+                         id="topic-post-84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4"
+                         data-tx-hash="84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4">
+                        <a class="pic-wrapper" href="profile/17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">
+
+
+                            <div id="mini-MhGlnu" class="inline">
+                                <div class="mini-profile-name" data-profile-hash="17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">
+
+
+
+        <span id="identicon-TAXHQh" class="profile-pic-24">
+            <img class="identicon"/>
+        </span>
+                                    <script type="text/javascript">
+                                        MemoApp.SetIdenticon($("#identicon-TAXHQh"), "17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA", false, 24);
+                                    </script>
+
+
+
+                                </div>
+                            </div>
+
+                            <script type="text/javascript">
+                                MemoApp.MiniProfileNew($("#mini-MhGlnu"));
+                            </script>
+
+
+
+                        </a>
+                        <div class="post-wrapper">
+                            <div class="post-header">
+                                <div class="name">
+
+
+                                    <div id="mini-bvcArZ" class="inline">
+                                        <div class="mini-profile-name" data-profile-hash="17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">
+
+                                            <a class="profile profile-link"
+                                               href="profile/17DbaD3x4T5MgZ2bcq5YUAUbALw5qGAysA">17DbaD3x4T5MgZ2b</a>
+
+
+
+                                        </div>
+                                    </div>
+
+                                    <script type="text/javascript">
+                                        MemoApp.MiniProfileNew($("#mini-bvcArZ"));
+                                    </script>
+
+
+
+                                    <a class="time topic-link time-ago"
+                                       href="post/84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4"
+                                       title="2025-09-10 01:41:45">1d</a>
+                                    <div class="like" id="like-84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4">
+                                        <div class="like-info" id="like-info-84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4">
+                                            &nbsp;
+                                            <a id="like-link-84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4" class="topic-link"
+                                               href="post/84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4">
+                                <span class="glyphicon glyphicon-heart-empty"
+                                      aria-hidden="true"></span>
+                                                5
+                                            </a>
+                                            &nbsp;
+                                            <a class="tip-button" id="tip-button-84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4">
+                                <span class="glyphicon glyphicon-bitcoin"
+                                      aria-hidden="true"></span>
+                                                9,682
+                                            </a>
+
+                                            &nbsp;
+
+
+
+                                            <script type="text/javascript">
+                                                $(function () {
+                                                    MemoApp.Form.PostLinkModal($("#thread-link-BnGhvF"), "84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4");
+                                                })
+                                            </script>
+                                        </div>
+                                        <form class="like-form" id="like-form-84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4">
+                                            &nbsp;
+                                            <input id="tx-hash-84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4" type="hidden" name="tx-hash"
+                                                   value="84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4"/>
+                                            <label for="tip-84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4">Tip</label>
+                                            <input id="tip-84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4" type="text" name="tip"
+                                                   class="form-control input-sm"
+                                                   placeholder="0" value=""/>
+                                            <input class="btn btn-sm btn-primary" type="submit" value="Like">
+                                            <a class="btn btn-sm btn-default"
+                                               id="like-cancel-84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4">Cancel</a>
+                                        </form>
+                                        <span class="broadcasting hidden">Processing...</span>
+                                        <span class="creating hidden">Creating...</span>
+                                        <script type="text/javascript">
+                                            $(function () {
+
+                                                MemoApp.Form.LikesToggle("84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4", $("#like-84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4"));
+
+                                                MemoApp.Form.LikesToggle("84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4", $("#tip-button-84b2c1c96b4c825f65f55812682449b9d91b7b560deb0326ed1d920800be90e4"));
+
+                                            });
+                                        </script>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="message">
+                                <a href='t/mahakka' onclick='return MemoApp.LinkClick(this, event);'>#Mahakka</a> hace posible la integración de <a href='t/cashtoken' onclick='return MemoApp.LinkClick(this, event);'>#cashtoken</a> al protocolo de memo.cash <a href='t/cashtoken' onclick='return MemoApp.LinkClick(this, event);'>#cashtoken</a>! <a class="imgur" href="https://i.imgur.com/I793xhx.jpeg" onclick='return MemoApp.LinkClick(this, event);' rel='noreferrer noopener' target="_blank"><img src="https://i.imgur.com/I793xhx.jpeg" referrerpolicy="no-referrer"/></a> <a href='t/mahakka' onclick='return MemoApp.LinkClick(this, event);'>#mahakka</a>.com
+                            </div>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+
+                    <script type="text/javascript">
+                        $(function () {
+                            MemoApp.SetLastPostId(847996);
+                        });
+                    </script>
+
+
+
+
+
+
+                    <div class="topic-post"
+                         id="topic-post-c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0"
+                         data-tx-hash="c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0">
+                        <a class="pic-wrapper" href="profile/167JxAeBCPhbEfKUAadGjuT1BRz3d47Bw2">
+
+
+                            <div id="mini-nuKlqU" class="inline">
+                                <div class="mini-profile-name" data-profile-hash="167JxAeBCPhbEfKUAadGjuT1BRz3d47Bw2">
+
+
+
+        <span id="identicon-QSEmfB" class="profile-pic-24">
+            <img class="identicon"/>
+        </span>
+                                    <script type="text/javascript">
+                                        MemoApp.SetIdenticon($("#identicon-QSEmfB"), "167JxAeBCPhbEfKUAadGjuT1BRz3d47Bw2", false, 24);
+                                    </script>
+
+
+
+                                </div>
+                            </div>
+
+                            <script type="text/javascript">
+                                MemoApp.MiniProfileNew($("#mini-nuKlqU"));
+                            </script>
+
+
+
+                        </a>
+                        <div class="post-wrapper">
+                            <div class="post-header">
+                                <div class="name">
+
+
+                                    <div id="mini-tPiCaa" class="inline">
+                                        <div class="mini-profile-name" data-profile-hash="167JxAeBCPhbEfKUAadGjuT1BRz3d47Bw2">
+
+                                            <a class="profile profile-link"
+                                               href="profile/167JxAeBCPhbEfKUAadGjuT1BRz3d47Bw2">167JxAeBCPhbEfKU</a>
+
+
+
+                                        </div>
+                                    </div>
+
+                                    <script type="text/javascript">
+                                        MemoApp.MiniProfileNew($("#mini-tPiCaa"));
+                                    </script>
+
+
+
+                                    <a class="time topic-link time-ago"
+                                       href="post/c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0"
+                                       title="2025-09-10 23:34:17">23h</a>
+                                    <div class="like" id="like-c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0">
+                                        <div class="like-info" id="like-info-c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0">
+
+
+
+                                            <script type="text/javascript">
+                                                $(function () {
+                                                    MemoApp.Form.PostLinkModal($("#thread-link-CqUefa"), "c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0");
+                                                })
+                                            </script>
+                                        </div>
+                                        <form class="like-form" id="like-form-c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0">
+                                            &nbsp;
+                                            <input id="tx-hash-c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0" type="hidden" name="tx-hash"
+                                                   value="c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0"/>
+                                            <label for="tip-c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0">Tip</label>
+                                            <input id="tip-c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0" type="text" name="tip"
+                                                   class="form-control input-sm"
+                                                   placeholder="0" value=""/>
+                                            <input class="btn btn-sm btn-primary" type="submit" value="Like">
+                                            <a class="btn btn-sm btn-default"
+                                               id="like-cancel-c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0">Cancel</a>
+                                        </form>
+                                        <span class="broadcasting hidden">Processing...</span>
+                                        <span class="creating hidden">Creating...</span>
+                                        <script type="text/javascript">
+                                            $(function () {
+
+                                                MemoApp.Form.LikesToggle("c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0", $("#like-c774600e3be70ff29ed0af407aeade078256cd67d994e9fe9a50744d1d01fba0"));
+
+                                            });
+                                        </script>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="message">
+                                a ver <a href='t/odysee' onclick='return MemoApp.LinkClick(this, event);'>#odysee</a> <a href="https://odysee.com/@socrates:f/getty-la-mejor-app-de-live%E2%80%91stream-para-odysee.:c" onclick="return MemoApp.LinkClick(this, event);" rel='noreferrer noopener' target="_blank">https://odysee.com/@socrates:f/getty-la-mejor-app-de-live%E2%80%91stream-para-odysee.:c</a> <a href='t/mahakka' onclick='return MemoApp.LinkClick(this, event);'>#mahakka</a>.com
+                            </div>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+
+                    <script type="text/javascript">
+                        $(function () {
+                            MemoApp.SetLastPostId(848677);
+                        });
+                    </script>
+
+
+
+
+
+
+                    <div class="topic-post"
+                         id="topic-post-dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad"
+                         data-tx-hash="dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad">
+                        <a class="pic-wrapper" href="profile/167JxAeBCPhbEfKUAadGjuT1BRz3d47Bw2">
+
+
+                            <div id="mini-TmmTJZ" class="inline">
+                                <div class="mini-profile-name" data-profile-hash="167JxAeBCPhbEfKUAadGjuT1BRz3d47Bw2">
+
+
+
+        <span id="identicon-SpTyjJ" class="profile-pic-24">
+            <img class="identicon"/>
+        </span>
+                                    <script type="text/javascript">
+                                        MemoApp.SetIdenticon($("#identicon-SpTyjJ"), "167JxAeBCPhbEfKUAadGjuT1BRz3d47Bw2", false, 24);
+                                    </script>
+
+
+
+                                </div>
+                            </div>
+
+                            <script type="text/javascript">
+                                MemoApp.MiniProfileNew($("#mini-TmmTJZ"));
+                            </script>
+
+
+
+                        </a>
+                        <div class="post-wrapper">
+                            <div class="post-header">
+                                <div class="name">
+
+
+                                    <div id="mini-VZuaZP" class="inline">
+                                        <div class="mini-profile-name" data-profile-hash="167JxAeBCPhbEfKUAadGjuT1BRz3d47Bw2">
+
+                                            <a class="profile profile-link"
+                                               href="profile/167JxAeBCPhbEfKUAadGjuT1BRz3d47Bw2">167JxAeBCPhbEfKU</a>
+
+
+
+                                        </div>
+                                    </div>
+
+                                    <script type="text/javascript">
+                                        MemoApp.MiniProfileNew($("#mini-VZuaZP"));
+                                    </script>
+
+
+
+                                    <a class="time topic-link time-ago"
+                                       href="post/dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad"
+                                       title="2025-09-10 23:52:14">22h</a>
+                                    <div class="like" id="like-dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad">
+                                        <div class="like-info" id="like-info-dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad">
+
+
+
+                                            <script type="text/javascript">
+                                                $(function () {
+                                                    MemoApp.Form.PostLinkModal($("#thread-link-vXNwnR"), "dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad");
+                                                })
+                                            </script>
+                                        </div>
+                                        <form class="like-form" id="like-form-dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad">
+                                            &nbsp;
+                                            <input id="tx-hash-dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad" type="hidden" name="tx-hash"
+                                                   value="dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad"/>
+                                            <label for="tip-dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad">Tip</label>
+                                            <input id="tip-dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad" type="text" name="tip"
+                                                   class="form-control input-sm"
+                                                   placeholder="0" value=""/>
+                                            <input class="btn btn-sm btn-primary" type="submit" value="Like">
+                                            <a class="btn btn-sm btn-default"
+                                               id="like-cancel-dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad">Cancel</a>
+                                        </form>
+                                        <span class="broadcasting hidden">Processing...</span>
+                                        <span class="creating hidden">Creating...</span>
+                                        <script type="text/javascript">
+                                            $(function () {
+
+                                                MemoApp.Form.LikesToggle("dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad", $("#like-dbd60fb5df3a17480f12cbcacb054e62251479f1178219a94038e54798a567ad"));
+
+                                            });
+                                        </script>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="message">
+                                @mahakka.com <a href='t/cashtoken' onclick='return MemoApp.LinkClick(this, event);'>#cashtoken</a> <a href='t/mahakka' onclick='return MemoApp.LinkClick(this, event);'>#Mahakka</a> yes sir <a href='t/mahakka' onclick='return MemoApp.LinkClick(this, event);'>#mahakka</a>.com
+                            </div>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+
+                    <script type="text/javascript">
+                        $(function () {
+                            MemoApp.SetLastPostId(848683);
+                        });
+                    </script>
+
+
+
+
+
+                </div>
+
+
+
+                <input type="hidden" value="mahakka.com" id="topic-name" />
+
+                <script type="text/javascript">
+                    $(function () {
+                        MemoApp.SetLastLikeId(653209);
+                        MemoApp.SetLastPinId(0);
+                        setTopicHeight();
+                        $(window).resize(function() {
+                            setTopicHeight();
+                        });
+                        // handles html encoding
+                        var topicName = $("#topic-name").val();
+
+                        MemoApp.SetFirstPostId(847676);
+                        var $allPosts = $("#all-posts");
+                        $allPosts.scrollTop($allPosts[0].scrollHeight);
+                        MemoApp.AddTwitterOnload(function() {
+                            $allPosts.scrollTop($allPosts[0].scrollHeight);
+                        });
+                        MemoApp.WatchNewTopics(topicName, $allPosts);
+                        MemoApp.LoadMore(topicName, $allPosts);
+                    });
+                    function setTopicHeight() {
+                        var $allPosts = $("#all-posts");
+                        var height = $allPosts.height() - ($(document).height() - $(window).height());
+                        if (height < 250) {
+                            height = 250;
+                        }
+                        $allPosts.css("max-height", height);
+                    }
+                </script>
+
+                <br/>
+
+            </div>
+
+        </div>
+        <div class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6 links">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="about">About</a>
+                                <!--<a href="blog">Blog</a>-->
+                                <a href="privacy">Privacy</a>
+                                <a href="terms">Terms</a>
+                                <a href="stats">Stats</a>
+                            </div>
+                        </div>
+                        <div class="row hidden-xs hidden-sm">
+                            <div class="col-xs-12 copyright">
+                                &copy; 2024 Memo Technology, Inc.
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-right-large">
+                        <a class="android-link" href="https://play.google.com/store/apps/details?id=com.memoapp">
+                            <img src="img/google-play.png?2" />
+                        </a>
+                        <a class="ios-link" href="https://apps.apple.com/us/app/memo-cash/id1531917294">
+                            <img src="img/app-store.png" />
+                        </a>
+                        <div class="dropup" id="language-picker" style="display:inline-block">
+                            <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
+
+
+                                <span class="flag-icon flag-icon-us"></span> &nbsp; English
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                <span class="caret"></span></button>
+                            <ul class="dropdown-menu dropdown-menu-right">
+
+                                <li><a data-lang="en-US"><span class="flag-icon flag-icon-us"></span>
+                                    &nbsp; English</a></li>
+
+                                <li><a data-lang="es-LA"><span class="flag-icon flag-icon-es"></span>
+                                    &nbsp; Español</a></li>
+
+                                <li><a data-lang="zh-CN"><span class="flag-icon flag-icon-cn"></span>
+                                    &nbsp; 中文(简体)</a></li>
+
+                                <li><a data-lang="ja-JP"><span class="flag-icon flag-icon-jp"></span>
+                                    &nbsp; 日本語</a></li>
+
+                                <li><a data-lang="fr-FR"><span class="flag-icon flag-icon-fr"></span>
+                                    &nbsp; français</a></li>
+
+                                <li><a data-lang="sv-SE"><span class="flag-icon flag-icon-se"></span>
+                                    &nbsp; svenska</a></li>
+
+                                <li><a data-lang="ko-KR"><span class="flag-icon flag-icon-kr"></span>
+                                    &nbsp; 한국어</a></li>
+
+                                <li><a data-lang="el-GR"><span class="flag-icon flag-icon-gr"></span>
+                                    &nbsp; Ελληνικά</a></li>
+
+                                <li><a data-lang="pl-PL"><span class="flag-icon flag-icon-pl"></span>
+                                    &nbsp; Polski</a></li>
+
+                                <li><a data-lang="pt-BR"><span class="flag-icon flag-icon-br"></span>
+                                    &nbsp; Português</a></li>
+
+                                <li><a data-lang="cs-CZ"><span class="flag-icon flag-icon-cz"></span>
+                                    &nbsp; Čeština</a></li>
+
+                                <li><a data-lang="nl-NL"><span class="flag-icon flag-icon-nl"></span>
+                                    &nbsp; Nederlands</a></li>
+
+                                <li><a data-lang="ru-RU"><span class="flag-icon flag-icon-ru"></span>
+                                    &nbsp; Русский</a></li>
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="row hidden-md hidden-lg terms-xs">
+                    <div class="col-xs-12 copyright">
+                        &copy; 2024 Memo Technology, Inc.
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <script>
+            $(function () {
+                var $languagePicker = $("#language-picker");
+                $languagePicker.find("a").click(function (e) {
+                    var $this = $(this);
+                    e.preventDefault();
+                    $.ajax({
+                        type: "POST",
+                        url: MemoApp.URL.SetLanguage,
+                        data: {
+                            code: $this.attr("data-lang")
+                        },
+                        success: function () {
+                            window.location.reload();
+                        },
+                        error: function () {
+                            MemoApp.AddAlert("Error updating language.");
+                        }
+                    });
+                });
+            });
+        </script>
+
+        <script async onload="MemoApp.SetTwitter(true);MemoApp.InitTwitter();"
+                src="https://platform.twitter.com/widgets.js"></script>
+        <script type="text/javascript" src="lib/youtube/player_api.js"></script>
+
+
+
+
+    </div>
+</div>
+<div id="site-wrapper-cover"></div>
+<div id="site-modal-wrapper"></div>
+<div id="mini-profile-wrapper"></div>
+
+<script>
+    MemoApp.InitMiniProfile();
+</script>
+
+</body>
+</html>
+

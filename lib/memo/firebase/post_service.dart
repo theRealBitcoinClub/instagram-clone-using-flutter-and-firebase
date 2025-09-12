@@ -1,15 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+
+import '../../config.dart';
 
 // Assuming PostFilterType is defined elsewhere and accessible if needed here
 // import 'package:mahakka/screens/feed_screen.dart'; // For PostFilterType
 
 class PostService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static const String _postsCollection = FirestoreCollections.posts;
   static const String orderByField = "createdDateTime"; // Consistent field name
   static const bool descendingOrder = true;
+  final FirebaseFirestore _firestore;
+  final String _collectionName;
+
+  PostService({FirebaseFirestore? firestore, String collectionName = FirestoreCollections.posts})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _collectionName = collectionName;
 
   // --- PAGINATION METHOD (Primary method for the feed) ---
   Future<List<MemoModelPost>> getPostsPaginated({
@@ -17,7 +22,7 @@ class PostService {
     DocumentSnapshot? startAfterDoc,
     // activeFilters are not used for Firestore query here, filtering is client-side
   }) async {
-    Query query = _firestore.collection(_postsCollection).orderBy(orderByField, descending: descendingOrder);
+    Query query = _firestore.collection(_collectionName).orderBy(orderByField, descending: descendingOrder);
 
     if (startAfterDoc != null) {
       query = query.startAfterDocument(startAfterDoc);
@@ -30,22 +35,22 @@ class PostService {
       return MemoModelPost.fromSnapshot(doc);
     }).toList();
   }
-  //
-  // Future<MemoModelPost?> getPostOnce(String postId) async {
-  //   try {
-  //     final DocumentSnapshot snapshot = await _firestore.collection(_postsCollection).doc(postId).get();
-  //     if (snapshot.exists) {
-  //       // Use fromSnapshot here as well if you might need the docSnapshot later
-  //       return MemoModelPost.fromSnapshot(snapshot);
-  //     } else {
-  //       print("Post with ID $postId not found.");
-  //       return null;
-  //     }
-  //   } catch (e) {
-  //     print("Error fetching post $postId once: $e");
-  //     return null;
-  //   }
-  // }
+
+  Future<MemoModelPost?> getPostOnce(String postId) async {
+    try {
+      final DocumentSnapshot snapshot = await _firestore.collection(_collectionName).doc(postId).get();
+      if (snapshot.exists) {
+        // Use fromSnapshot here as well if you might need the docSnapshot later
+        return MemoModelPost.fromSnapshot(snapshot);
+      } else {
+        print("Post with ID $postId not found.");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching post $postId once: $e");
+      return null;
+    }
+  }
 
   // Future<void> savePost(MemoModelPost post) async {
   //   try {
@@ -82,7 +87,7 @@ class PostService {
   Future<void> savePost(MemoModelPost post) async {
     try {
       // .id should be set on the post object before calling save
-      await _firestore.collection(_postsCollection).doc(post.id).set(post.toJson(), SetOptions(merge: true));
+      await _firestore.collection(_collectionName).doc(post.id).set(post.toJson(), SetOptions(merge: true));
       print("${post.id} Post saved successfully. ${post.text}");
     } catch (e) {
       print("Error saving post ${post.id}: $e");
@@ -92,7 +97,7 @@ class PostService {
 
   Future<void> deletePost(String postId) async {
     try {
-      await _firestore.collection(_postsCollection).doc(postId).delete();
+      await _firestore.collection(_collectionName).doc(postId).delete();
       print("Post ${postId} deleted successfully.");
     } catch (e) {
       print("Error deleting post ${postId}: $e");
@@ -102,7 +107,7 @@ class PostService {
 
   Future<int> getTotalPostCount() async {
     try {
-      final querySnapshot = await FirebaseFirestore.instance.collection(_postsCollection).count().get();
+      final querySnapshot = await FirebaseFirestore.instance.collection(_collectionName).count().get();
       return querySnapshot.count!;
     } catch (e) {
       print('Error getting post count: $e');
@@ -112,7 +117,7 @@ class PostService {
 
   // Stream<MemoModelPost?> getPostStream(String postId) {
   //   return _firestore
-  //       .collection(_postsCollection)
+  //       .collection(postsCollection)
   //       .doc(postId)
   //       .snapshots()
   //       .map((snapshot) {
@@ -130,7 +135,7 @@ class PostService {
 
   Stream<List<MemoModelPost>> getPostsByCreatorIdStream(String creatorId) {
     return _firestore
-        .collection(_postsCollection)
+        .collection(_collectionName)
         .where('creatorId', isEqualTo: creatorId)
         .orderBy(orderByField, descending: descendingOrder)
         .snapshots()
@@ -145,7 +150,7 @@ class PostService {
   // // Your original getAllPostsStream - uses fromSnapshot
   // Stream<List<MemoModelPost>> getAllPostsStream() {
   //   return _firestore
-  //       .collection(_postsCollection)
+  //       .collection(postsCollection)
   //       .orderBy(orderByField, descending: descendingOrder)
   //       .snapshots()
   //       .map((snapshot) => snapshot.docs.map((doc) => MemoModelPost.fromSnapshot(doc)).toList())

@@ -1,8 +1,8 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/odysee/odysee_video_player.dart';
 import 'package:mahakka/widgets/profile/profile_placeholders.dart';
+import 'package:mahakka/widgets/unified_video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
@@ -160,7 +160,7 @@ class ProfileContentList extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            OdyseeVideoPlayer(aspectRatio: 16 / 9, autoPlay: false, videoUrl: videoPost.videoUrl!),
+            UnifiedVideoPlayer(type: VideoPlayerType.generic, aspectRatio: 16 / 9, autoPlay: false, videoUrl: videoPost.videoUrl!),
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(

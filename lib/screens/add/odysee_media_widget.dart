@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/odysee/odysee_video_player.dart';
+import 'package:mahakka/widgets/unified_video_player.dart';
 
 import 'add_post_providers.dart';
 
@@ -33,7 +33,13 @@ class OdyseeMediaWidget extends ConsumerWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(11.5),
-              child: OdyseeVideoPlayer(aspectRatio: 16 / 9, autoPlay: false),
+              child: UnifiedVideoPlayer(
+                showControls: true,
+                videoUrl: odyseeUrl,
+                type: VideoPlayerType.odysee,
+                aspectRatio: 16 / 9,
+                autoPlay: false,
+              ),
             ),
           ),
         ),

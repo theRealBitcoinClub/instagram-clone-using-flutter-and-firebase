@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/odysee/odysee_video_player.dart'; // Add this import
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/repositories/post_repository.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
+import 'package:mahakka/widgets/unified_video_player.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
 import '../../memo/base/text_input_verifier.dart';
@@ -90,7 +90,8 @@ class _PostCardState extends ConsumerState<PostCard> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(11.5),
-          child: OdyseeVideoPlayer(
+          child: UnifiedVideoPlayer(
+            type: VideoPlayerType.generic,
             aspectRatio: 16 / 9,
             autoPlay: false,
             videoUrl: widget.post.videoUrl!, // Pass the video URL

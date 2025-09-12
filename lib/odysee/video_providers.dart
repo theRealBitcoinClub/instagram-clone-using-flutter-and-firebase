@@ -4,6 +4,7 @@ import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/screens/add/add_post_providers.dart';
 import 'package:video_player/video_player.dart';
 
@@ -27,12 +28,15 @@ final streamUrlProvider = FutureProvider<String>((ref) async {
 
 // Provider for VideoPlayerController (auto-dispose)
 final videoPlayerControllerProvider = FutureProvider.autoDispose.family<VideoPlayerController, String>((ref, streamUrl) async {
-  // final controller = VideoPlayerController.networkUrl(Uri.parse(streamUrl));
-  final controller = VideoPlayerController.networkUrl(
-    Uri.parse(
-      "https://player.odycdn.com/api/v3/streams/free/Smurf---Rescue-in-Gargamel's-Castle---Atar/78b2edb9122b46552833dcf852a71d85591f31b4/9c90e4.mp4",
-    ),
-  );
+  if (MemoRegExp(streamUrl).hasOdyseeUrl()) //TODO CHECK HOW TO USE EXISTING FUNCTIONALITY TO AUTO TRANSLATE WITH STREAM URL PROVIDER
+    streamUrl = await ref.read(odyseeServiceProvider).getVideoStreamUrl(streamUrl);
+
+  final controller = VideoPlayerController.networkUrl(Uri.parse(streamUrl));
+  // final controller = VideoPlayerController.networkUrl(
+  //   Uri.parse(
+  //     "https://player.odycdn.com/api/v3/streams/free/Smurf---Rescue-in-Gargamel's-Castle---Atar/78b2edb9122b46552833dcf852a71d85591f31b4/9c90e4.mp4",
+  //   ),
+  // );
   await controller.initialize();
   await controller.setLooping(true);
 

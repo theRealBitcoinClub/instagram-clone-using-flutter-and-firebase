@@ -337,6 +337,7 @@ void main() {
       https://odysee.com/@CancelThisPodcast:a/S06E42--In-Memory-of-Charlie-Kirk--Is-American-Culture-At-a--Turning-Point--:4
       https://odysee.com/video-name:abc
       https://odysee.com/embed/video-name:abc
+      https://odysee.com/@videobuck:8/sole-survivor-%281983%29-la-muerte-no:c
       """;
 
       final memoRegExp = MemoRegExp(odyseeUrls);
@@ -350,7 +351,9 @@ void main() {
         contains("https://odysee.com/@CancelThisPodcast:a/S06E42--In-Memory-of-Charlie-Kirk--Is-American-Culture-At-a--Turning-Point--:4"),
       );
 
-      expect(result.length, 4);
+      expect(result[4], contains("https://odysee.com/@videobuck:8/sole-survivor-%281983%29-la-muerte-no:c"));
+
+      expect(result.length, 5);
     });
 
     test('Twitter regex should handle various Twitter URL formats', () {

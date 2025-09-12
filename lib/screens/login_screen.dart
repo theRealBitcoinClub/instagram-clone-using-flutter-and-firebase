@@ -113,13 +113,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
       return;
     }
 
-    final words = text.split(' ');
-    final lastWord = words.last;
+    final words = text.split(' ').where((word) => word.isNotEmpty).toList();
+    final lastWord = words.isNotEmpty ? words.last : '';
 
     if (lastWord.isNotEmpty) {
       final matchingWords = _wordList.where((word) => word.startsWith(lastWord)).toList();
-      if (matchingWords.length == 1) {
-        final newText = text.substring(0, text.length - lastWord.length) + matchingWords.first + ' ';
+      if (matchingWords.length == 1 && matchingWords.first != lastWord) {
+        // Calculate if this would complete a 12-word mnemonic
+        final wouldCompleteMnemonic = words.length == 12;
+
+        // Build the new text without adding space if it completes the mnemonic
+        final newText = text.substring(0, text.length - lastWord.length) + matchingWords.first + (wouldCompleteMnemonic ? '' : ' ');
+
         _mnemonicController.value = _mnemonicController.value.copyWith(
           text: newText,
           selection: TextSelection.collapsed(offset: newText.length),
@@ -159,6 +164,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
       return;
     }
 
+    // _mnemonicController.text = _mnemonicController.text.trim();
     setState(() {
       _isInputValid = true;
       _errorMessage = null;
@@ -230,7 +236,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 120),
                 Image.asset('assets/splash.png', height: 120),
                 const SizedBox(height: 56),
                 TextField(
@@ -276,9 +282,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
                 if (_isLoading) LinearProgressIndicator(),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
                   height: 50,

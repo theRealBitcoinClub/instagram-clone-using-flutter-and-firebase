@@ -149,117 +149,157 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
           // Your existing feed content
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                // Tell the provider to refresh the feed (fetches first page with current filter)
-                await ref.read(feedPostsProvider.notifier).refreshFeed();
-                // ref.invalidate(feedPostsProvider);
-              },
-              color: theme.colorScheme.primary,
-              backgroundColor: theme.colorScheme.surface,
-              child: _buildFeedBody(theme, feedState),
-            ),
+            // child:
+            // RefreshIndicator(
+            //   onRefresh: () async {
+            //     // Tell the provider to refresh the feed (fetches first page with current filter)
+            //     await ref.read(feedPostsProvider.notifier).refreshFeed();
+            //     // ref.invalidate(feedPostsProvider);
+            //   },
+            //   color: theme.colorScheme.primary,
+            //   backgroundColor: theme.colorScheme.surface,
+            child: _buildFeedBody(theme, feedState),
           ),
+          // ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRefreshableNoPostsWidget(ThemeData theme, Widget child) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        await ref.read(feedPostsProvider.notifier).refreshFeed();
+      },
+      color: theme.colorScheme.primary,
+      backgroundColor: theme.colorScheme.surface,
+      child: Stack(
+        children: [
+          ListView(
+            // This scrollable is necessary for RefreshIndicator to function
+            // It's "invisible" and only serves to enable the pull-to-refresh gesture.
+            // The content (child) is then layered on top using a Stack.
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              SizedBox(height: MediaQuery.of(context).size.height), // Fills the screen to enable scroll
+            ],
+          ),
+          Center(child: child), // Display your no-post widget here
         ],
       ),
     );
   }
 
   Widget _buildFeedBody(ThemeData theme, FeedState feedState) {
-    // Initial loading state (only when posts list is truly empty and initial fetch is happening)
-    if (feedState.isLoadingInitial && feedState.posts.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    // Error state (only if posts list is empty and an error message exists)
-    if (feedState.errorMessage != null && feedState.posts.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Error: ${feedState.errorMessage}',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.error),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(onPressed: () => ref.read(feedPostsProvider.notifier).fetchInitialPosts(), child: const Text('Retry')),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // No posts available (either no posts at all, or none match the active server-side filter)
-    // This check is done after isLoadingInitial is false and no error.
+    // Use a different widget for the "no feed" case that is still scrollable.
+    // This allows RefreshIndicator to work.
     if (feedState.posts.isEmpty && !feedState.isLoadingInitial && !feedState.isLoadingMore) {
       if (feedState.activeFilter != null) {
-        // A specific filter is active but returned no results
-        return _widgetNoMatch(theme, _getFilterName(feedState.activeFilter!));
+        return _buildRefreshableNoPostsWidget(theme, _widgetNoMatch(theme, _getFilterName(feedState.activeFilter!)));
       }
-      return _widgetNoFeed(theme); // No filter active, and still no posts
+      return _buildRefreshableNoPostsWidget(theme, _widgetNoFeed(theme));
     }
 
     // Display list of posts
-    return FocusableActionDetector(
-      autofocus: true,
-      focusNode: _listViewFocusNode,
-      shortcuts: _getKeyboardShortcuts(),
-      actions: <Type, Action<Intent>>{
-        ScrollUpIntent: CallbackAction<ScrollUpIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
-        ScrollDownIntent: CallbackAction<ScrollDownIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
-      },
-      child: GestureDetector(
-        onTap: () {
-          if (!_listViewFocusNode.hasFocus) {
-            FocusScope.of(context).requestFocus(_listViewFocusNode);
-          }
+    return RefreshIndicator(
+      onRefresh: () => ref.read(feedPostsProvider.notifier).refreshFeed(),
+      color: theme.colorScheme.primary,
+      backgroundColor: theme.colorScheme.surface,
+      child: FocusableActionDetector(
+        // // Initial loading state (only when posts list is truly empty and initial fetch is happening)
+        // if (feedState.isLoadingInitial && feedState.posts.isEmpty) {
+        //   return const Center(child: CircularProgressIndicator());
+        // }
+        //
+        // // Error state (only if posts list is empty and an error message exists)
+        // if (feedState.errorMessage != null && feedState.posts.isEmpty) {
+        //   return Center(
+        //     child: Padding(
+        //       padding: const EdgeInsets.all(16.0),
+        //       child: Column(
+        //         mainAxisAlignment: MainAxisAlignment.center,
+        //         children: [
+        //           Text(
+        //             'Error: ${feedState.errorMessage}',
+        //             textAlign: TextAlign.center,
+        //             style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.error),
+        //           ),
+        //           const SizedBox(height: 16),
+        //           ElevatedButton(onPressed: () => ref.read(feedPostsProvider.notifier).fetchInitialPosts(), child: const Text('Retry')),
+        //         ],
+        //       ),
+        //     ),
+        //   );
+        // }
+        //
+        // // No posts available (either no posts at all, or none match the active server-side filter)
+        // // This check is done after isLoadingInitial is false and no error.
+        // if (feedState.posts.isEmpty && !feedState.isLoadingInitial && !feedState.isLoadingMore) {
+        //   if (feedState.activeFilter != null) {
+        //     // A specific filter is active but returned no results
+        //     return _widgetNoMatch(theme, _getFilterName(feedState.activeFilter!));
+        //   }
+        //   return _widgetNoFeed(theme); // No filter active, and still no posts
+        // }
+        //
+        // // Display list of posts
+        autofocus: true,
+        focusNode: _listViewFocusNode,
+        shortcuts: _getKeyboardShortcuts(),
+        actions: <Type, Action<Intent>>{
+          ScrollUpIntent: CallbackAction<ScrollUpIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
+          ScrollDownIntent: CallbackAction<ScrollDownIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
         },
-        child: ListView.builder(
-          controller: _scrollController,
-          // itemExtent: 300,
-          itemCount:
-              feedState.posts.length +
-              (feedState.isLoadingMore ? 1 : 0) + // For loading indicator
-              (!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitial && !feedState.isLoadingMore
-                  ? 1
-                  : 0), // For end of feed message
-          itemBuilder: (context, index) {
-            // Post item
-            if (index < feedState.posts.length) {
-              final post = feedState.posts[index];
-              // Ensure PostCard does not require filter-related logic from FeedScreen anymore
-              return PostCard(post, key: ValueKey(post.id) /*, navBarCallback: widget.navBarCallback */);
+        child: GestureDetector(
+          onTap: () {
+            if (!_listViewFocusNode.hasFocus) {
+              FocusScope.of(context).requestFocus(_listViewFocusNode);
             }
-            // Loading more indicator
-            else if (feedState.isLoadingMore && index == feedState.posts.length) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20.0),
-                child: Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
-              );
-            }
-            // End of feed message
-            else if (!feedState.hasMorePosts &&
-                index == feedState.posts.length &&
-                feedState.posts.isNotEmpty &&
-                !feedState.isLoadingInitial && // Not in initial full-screen load
-                !feedState.isLoadingMore) {
-              // Not actively loading more
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
-                child: Center(
-                  child: Text(
-                    "You've reached the end of the feed${feedState.activeFilter != null ? ' for this filter' : ''}!",
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                ),
-              );
-            }
-            return const SizedBox.shrink(); // Should not be reached
           },
+          child: ListView.builder(
+            controller: _scrollController,
+            // itemExtent: 300,
+            itemCount:
+                feedState.posts.length +
+                (feedState.isLoadingMore ? 1 : 0) + // For loading indicator
+                (!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitial && !feedState.isLoadingMore
+                    ? 1
+                    : 0), // For end of feed message
+            itemBuilder: (context, index) {
+              // Post item
+              if (index < feedState.posts.length) {
+                final post = feedState.posts[index];
+                // Ensure PostCard does not require filter-related logic from FeedScreen anymore
+                return PostCard(post, key: ValueKey(post.id) /*, navBarCallback: widget.navBarCallback */);
+              }
+              // Loading more indicator
+              else if (feedState.isLoadingMore && index == feedState.posts.length) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                  child: Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
+                );
+              }
+              // End of feed message
+              else if (!feedState.hasMorePosts &&
+                  index == feedState.posts.length &&
+                  feedState.posts.isNotEmpty &&
+                  !feedState.isLoadingInitial && // Not in initial full-screen load
+                  !feedState.isLoadingMore) {
+                // Not actively loading more
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+                  child: Center(
+                    child: Text(
+                      "You've reached the end of the feed${feedState.activeFilter != null ? ' for this filter' : ''}!",
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink(); // Should not be reached
+            },
+          ),
         ),
       ),
     );

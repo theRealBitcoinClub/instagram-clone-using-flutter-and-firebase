@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 
+import '../unified_image_widget.dart';
+
 void _logGridError(String message, [dynamic error, StackTrace? stackTrace]) {
   print('ERROR: ProfileContentGrid - $message');
   if (error != null) print('  Error: $error');
@@ -46,29 +48,42 @@ class ProfileContentGrid extends StatelessWidget {
             return imagePlaceholder;
           }
 
-          final img = Image.network(
-            imageUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              _logGridError("Error loading grid image: $imageUrl", error, stackTrace);
-              return imagePlaceholder;
-            },
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Container(
-                color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
-                child: Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
-                    value: loadingProgress.expectedTotalBytes != null
-                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                        : null,
-                  ),
-                ),
-              );
-            },
+          final img = UnifiedImageWidget(
+            imageUrl: imageUrl,
+            sourceType: ImageSourceType.network,
+            fitMode: ImageFitMode.cover,
+            aspectRatio: 1.0,
+            borderRadius: BorderRadius.zero,
+            showLoadingProgress: true,
+            placeholder: Container(
+              color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+              child: Icon(Icons.broken_image_outlined, size: 40, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
+            ),
           );
+
+          // final img = Image.network(
+          //   imageUrl,
+          //   fit: BoxFit.cover,
+          //   errorBuilder: (context, error, stackTrace) {
+          //     _logGridError("Error loading grid image: $imageUrl", error, stackTrace);
+          //     return imagePlaceholder;
+          //   },
+          //   loadingBuilder: (context, child, loadingProgress) {
+          //     if (loadingProgress == null) return child;
+          //     return Container(
+          //       color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+          //       child: Center(
+          //         child: CircularProgressIndicator(
+          //           strokeWidth: 1.5,
+          //           valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+          //           value: loadingProgress.expectedTotalBytes != null
+          //               ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+          //               : null,
+          //         ),
+          //       ),
+          //     );
+          //   },
+          // );
 
           return GestureDetector(
             onTap: () => onPostImageTap(post, AspectRatio(aspectRatio: 1, child: img)),

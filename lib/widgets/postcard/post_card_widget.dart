@@ -9,11 +9,11 @@ import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:mahakka/widgets/unified_video_player.dart';
-import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 
 import '../../memo/base/text_input_verifier.dart';
 import '../../memo/memo_reg_exp.dart';
 import '../../providers/post_creator_provider.dart';
+import '../unified_image_widget.dart';
 import 'post_card_footer.dart';
 import 'post_card_header.dart';
 import 'postcard_animations.dart';
@@ -70,9 +70,37 @@ class _PostCardState extends ConsumerState<PostCard> {
     if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty) {
       return _buildVideoWidget(theme, colorScheme, textTheme);
     } else if (widget.post.imageUrl != null && widget.post.imageUrl!.isNotEmpty) {
-      return _buildImageWidget(theme, colorScheme, textTheme);
+      return UnifiedImageWidget(
+        imageUrl: widget.post.imageUrl!,
+        sourceType: ImageSourceType.network,
+        fitMode: ImageFitMode.contain,
+        aspectRatio: 16 / 9,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+        backgroundColor: colorScheme.surface,
+        showLoadingProgress: true,
+      );
     } else if (widget.post.ipfsCid != null && widget.post.ipfsCid!.isNotEmpty) {
-      return _buildIpfsWidget(theme, colorScheme, textTheme);
+      return UnifiedImageWidget(
+        imageUrl: widget.post.ipfsCid!,
+        sourceType: ImageSourceType.ipfs,
+        fitMode: ImageFitMode.contain,
+        aspectRatio: 16 / 9,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+        backgroundColor: colorScheme.surface,
+        showLoadingProgress: true,
+        errorWidget: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cloud_off_outlined, color: colorScheme.error, size: 36),
+            const SizedBox(height: 8),
+            Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+            const SizedBox(height: 8),
+            Text("CID: ${widget.post.ipfsCid}", style: textTheme.bodySmall),
+          ],
+        ),
+      );
     } else {
       return _buildFallbackWidget(theme, colorScheme);
     }
@@ -101,106 +129,106 @@ class _PostCardState extends ConsumerState<PostCard> {
     );
   }
 
-  // NEW: Build image widget for extracted image URLs
-  Widget _buildImageWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
-    return GestureDetector(
-      onDoubleTap: _isSendingTx ? null : _sendTipToCreator,
-      child: ZoomOverlay(
-        modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3),
-        minScale: 0.5,
-        maxScale: 3.0,
-        twoTouchOnly: true,
-        animationDuration: const Duration(milliseconds: 200),
-        animationCurve: Curves.easeOut,
-        child: AspectRatio(
-          aspectRatio: 16 / 9,
-          child: Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(11.5),
-              child: Image.network(
-                widget.post.imageUrl!,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.broken_image_outlined, color: colorScheme.error, size: 36),
-                        const SizedBox(height: 8),
-                        Text("Error loading image", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
-                      ],
-                    ),
-                  );
-                },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                          : null,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // NEW: Build IPFS widget for IPFS content
-  Widget _buildIpfsWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
-    final ipfsUrl = 'https://free-bch.fullstack.cash/ipfs/view/${widget.post.ipfsCid}';
-
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(11.5),
-          child: Image.network(
-            ipfsUrl,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.cloud_off_outlined, color: colorScheme.error, size: 36),
-                    const SizedBox(height: 8),
-                    Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
-                    const SizedBox(height: 8),
-                    Text("CID: ${widget.post.ipfsCid}", style: textTheme.bodySmall),
-                  ],
-                ),
-              );
-            },
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Center(
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                      : null,
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
+  // // NEW: Build image widget for extracted image URLs
+  // Widget _buildImageWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+  //   return GestureDetector(
+  //     onDoubleTap: _isSendingTx ? null : _sendTipToCreator,
+  //     child: ZoomOverlay(
+  //       modalBarrierColor: theme.colorScheme.scrim.withOpacity(0.3),
+  //       minScale: 0.5,
+  //       maxScale: 3.0,
+  //       twoTouchOnly: true,
+  //       animationDuration: const Duration(milliseconds: 200),
+  //       animationCurve: Curves.easeOut,
+  //       child: AspectRatio(
+  //         aspectRatio: 16 / 9,
+  //         child: Container(
+  //           decoration: BoxDecoration(
+  //             color: colorScheme.surface,
+  //             borderRadius: BorderRadius.circular(12),
+  //             border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+  //           ),
+  //           child: ClipRRect(
+  //             borderRadius: BorderRadius.circular(11.5),
+  //             child: Image.network(
+  //               widget.post.imageUrl!,
+  //               fit: BoxFit.contain,
+  //               errorBuilder: (context, error, stackTrace) {
+  //                 return Center(
+  //                   child: Column(
+  //                     mainAxisAlignment: MainAxisAlignment.center,
+  //                     children: [
+  //                       Icon(Icons.broken_image_outlined, color: colorScheme.error, size: 36),
+  //                       const SizedBox(height: 8),
+  //                       Text("Error loading image", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+  //                     ],
+  //                   ),
+  //                 );
+  //               },
+  //               loadingBuilder: (context, child, loadingProgress) {
+  //                 if (loadingProgress == null) return child;
+  //                 return Center(
+  //                   child: CircularProgressIndicator(
+  //                     value: loadingProgress.expectedTotalBytes != null
+  //                         ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+  //                         : null,
+  //                   ),
+  //                 );
+  //               },
+  //             ),
+  //           ),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
+  //
+  // // NEW: Build IPFS widget for IPFS content
+  // Widget _buildIpfsWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+  //   final ipfsUrl = 'https://free-bch.fullstack.cash/ipfs/view/${widget.post.ipfsCid}';
+  //
+  //   return AspectRatio(
+  //     aspectRatio: 16 / 9,
+  //     child: Container(
+  //       decoration: BoxDecoration(
+  //         color: colorScheme.surface,
+  //         borderRadius: BorderRadius.circular(12),
+  //         border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+  //       ),
+  //       child: ClipRRect(
+  //         borderRadius: BorderRadius.circular(11.5),
+  //         child: Image.network(
+  //           ipfsUrl,
+  //           fit: BoxFit.contain,
+  //           errorBuilder: (context, error, stackTrace) {
+  //             return Center(
+  //               child: Column(
+  //                 mainAxisAlignment: MainAxisAlignment.center,
+  //                 children: [
+  //                   Icon(Icons.cloud_off_outlined, color: colorScheme.error, size: 36),
+  //                   const SizedBox(height: 8),
+  //                   Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+  //                   const SizedBox(height: 8),
+  //                   Text("CID: ${widget.post.ipfsCid}", style: textTheme.bodySmall),
+  //                 ],
+  //               ),
+  //             );
+  //           },
+  //           loadingBuilder: (context, child, loadingProgress) {
+  //             if (loadingProgress == null) return child;
+  //             return Center(
+  //               child: CircularProgressIndicator(
+  //                 value: loadingProgress.expectedTotalBytes != null
+  //                     ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+  //                     : null,
+  //               ),
+  //             );
+  //           },
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   // NEW: Fallback widget when no media is available
   Widget _buildFallbackWidget(ThemeData theme, ColorScheme colorScheme) {

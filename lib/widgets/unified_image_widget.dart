@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_avif/flutter_avif.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 enum ImageSourceType {
@@ -58,16 +59,22 @@ class UnifiedImageWidget extends StatelessWidget {
     final ColorScheme effectiveColorScheme = colorScheme ?? effectiveTheme.colorScheme;
     final TextTheme effectiveTextTheme = textTheme ?? effectiveTheme.textTheme;
 
-    // Determine if the image is SVG
+    // Determine the image type
     final bool isSvg = imageUrl.toLowerCase().endsWith('.svg');
+    final bool isAvif = imageUrl.toLowerCase().endsWith('.avif');
 
     // Get the actual URL based on source type
     final String resolvedUrl = _resolveImageUrl(imageUrl, sourceType);
 
     // Build the image widget based on type
-    Widget imageWidget = isSvg
-        ? _buildSvgImage(resolvedUrl, effectiveColorScheme, effectiveTextTheme)
-        : _buildRasterImage(resolvedUrl, effectiveColorScheme, effectiveTextTheme);
+    Widget imageWidget;
+    if (isSvg) {
+      imageWidget = _buildSvgImage(resolvedUrl, effectiveColorScheme, effectiveTextTheme);
+    } else if (isAvif) {
+      imageWidget = _buildAvifImage(resolvedUrl, effectiveColorScheme, effectiveTextTheme);
+    } else {
+      imageWidget = _buildRasterImage(resolvedUrl, effectiveColorScheme, effectiveTextTheme);
+    }
 
     // Apply constraints and container styling
     return Container(
@@ -91,13 +98,54 @@ class UnifiedImageWidget extends StatelessWidget {
       return SvgPicture.network(
         url,
         fit: _getBoxFit(fitMode),
-        width: width, //set height first, for square SVGs set the width, only set height for correct aspect ratio
+        width: width,
         height: height ?? width ?? 48,
         placeholderBuilder: (context) => placeholder ?? _buildDefaultPlaceholder(colorScheme),
-        // colorFilter: ColorFilter.mode(colorScheme.onSurface, BlendMode.srcIn),
       );
     } catch (e) {
       return errorWidget ?? _buildErrorWidget('SVG Load Error: $e', colorScheme, textTheme);
+    }
+  }
+
+  Widget _buildAvifImage(String url, ColorScheme colorScheme, TextTheme textTheme) {
+    try {
+      return AvifImage.network(
+        url,
+        fit: _getBoxFit(fitMode),
+        width: width,
+        height: height,
+        errorBuilder: (context, error, stackTrace) {
+          return errorWidget ?? _buildErrorWidget('AVIF Load Error', colorScheme, textTheme);
+        },
+        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+          if (wasSynchronouslyLoaded) return child;
+          return AnimatedOpacity(
+            opacity: frame == null ? 0 : 1,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            child: child,
+          );
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+
+          if (!showLoadingProgress) {
+            return placeholder ?? _buildDefaultPlaceholder(colorScheme);
+          }
+
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                  : null,
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+              backgroundColor: colorScheme.surfaceVariant,
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      return errorWidget ?? _buildErrorWidget('AVIF Load Error: $e', colorScheme, textTheme);
     }
   }
 
@@ -189,9 +237,9 @@ class UnifiedImageWidget extends StatelessWidget {
       case ImageSourceType.network:
         return url;
       case ImageSourceType.asset:
-        return url; // For assets, use SvgPicture.asset or Image.asset directly
+        return url;
       case ImageSourceType.file:
-        return url; // For files, use SvgPicture.file or Image.file directly
+        return url;
     }
   }
 }

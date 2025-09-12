@@ -51,22 +51,23 @@ class MemoRegExp {
           lowerUrl.endsWith('.webp') ||
           lowerUrl.endsWith('.bmp') ||
           lowerUrl.endsWith('.svg') ||
-          // Check for common image URL patterns without extensions
-          lowerUrl.contains('/image/') ||
-          lowerUrl.contains('/images/') ||
-          lowerUrl.contains('/img/') ||
-          lowerUrl.contains('.giphy.com/media/') ||
-          lowerUrl.contains('.imgur.com/') ||
-          // Check for query parameters that indicate images
-          lowerUrl.contains('?image=') ||
-          lowerUrl.contains('&image=') ||
-          // Check for IPFS image patterns
-          (lowerUrl.contains('ipfs') &&
-              (lowerUrl.contains('/image/') ||
-                  lowerUrl.contains('/img/') ||
-                  lowerUrl.endsWith('.jpg') ||
-                  lowerUrl.endsWith('.png') ||
-                  lowerUrl.endsWith('.gif')));
+          lowerUrl.endsWith('.avif');
+      // Check for common image URL patterns without extensions
+      // lowerUrl.contains('/image/') ||
+      // lowerUrl.contains('/images/') ||
+      // lowerUrl.contains('/img/') ||
+      // lowerUrl.contains('.giphy.com/media/') ||
+      // lowerUrl.contains('.imgur.com/') ||
+      // Check for query parameters that indicate images
+      // lowerUrl.contains('?image=') ||
+      // lowerUrl.contains('&image=') ||
+      // Check for IPFS image patterns
+      // (lowerUrl.contains('ipfs') &&
+      //     (lowerUrl.contains('/image/') ||
+      //         lowerUrl.contains('/img/') ||
+      //         lowerUrl.endsWith('.jpg') ||
+      //         lowerUrl.endsWith('.png') ||
+      //         lowerUrl.endsWith('.gif')));
     }).toList();
 
     return imageUrls;
@@ -118,7 +119,7 @@ class MemoRegExp {
           lowerUrl.contains('ipfs') &&
           (lowerUrl.contains('/video/') || lowerUrl.endsWith('.mp4') || lowerUrl.endsWith('.mov') || lowerUrl.endsWith('.webm'));
 
-      return hasVideoExtension || hasVideoPath || isVideoPlatform || isIpfsVideo;
+      return hasVideoExtension; //|| hasVideoPath || isVideoPlatform || isIpfsVideo;
     }).toList();
 
     return videoUrls;

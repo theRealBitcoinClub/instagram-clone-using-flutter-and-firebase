@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  flutter_avif_linux
   isar_community_flutter_libs
   url_launcher_linux
 )

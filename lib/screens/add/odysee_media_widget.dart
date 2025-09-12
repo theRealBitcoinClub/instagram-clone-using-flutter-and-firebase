@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/widgets/red_action_button.dart';
 import 'package:mahakka/widgets/unified_video_player.dart';
 
 import 'add_post_providers.dart';
@@ -44,26 +45,14 @@ class OdyseeMediaWidget extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        TextButton.icon(
-          icon: Icon(Icons.edit_outlined, size: 18),
-          label: const Text("Change Odysee Video"),
+        ChangeVideoButton(
           onPressed: () {
-            // ref.read(imgurUrlProvider.notifier).state = '';
-            // ref.read(youtubeVideoIdProvider.notifier).state = '';
-            // ref.read(ipfsCidProvider.notifier).state = '';
             ref.read(odyseeUrlProvider.notifier).state = '';
-            // ref.read(youtubeControllerProvider.notifier).state = null;
-            // ref.read(clearMediaProvider);
           },
-          style: TextButton.styleFrom(
-            foregroundColor: colorScheme.secondary,
-            textStyle: textTheme.labelLarge,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          ),
         ),
         const SizedBox(height: 8),
         Text(
-          "Odysee URL: ${_shortenUrl(odyseeUrl)}",
+          "Odysee URL: ${odyseeUrl}",
           style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
           textAlign: TextAlign.center,
           maxLines: 1,

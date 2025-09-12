@@ -290,7 +290,8 @@ class _PostCardState extends ConsumerState<PostCard> {
         if (response == MemoAccountantResponse.yes) {
           _isAnimatingLike = true;
         } else {
-          showSnackBar(response.name, context);
+          showQrQuickDeposit(context);
+          showSnackBar(type: SnackbarType.info, response.message, context);
           _logError("Accountant error during tip: ${response.name}", response);
         }
       });
@@ -298,7 +299,7 @@ class _PostCardState extends ConsumerState<PostCard> {
       _logError("Error sending tip", e, s);
       if (mounted) {
         setState(() => _isSendingTx = false);
-        showSnackBar("Failed to send tip. Please check your connection.", context);
+        showSnackBar(type: SnackbarType.error, "Failed to send tip. Please check your connection.", context);
       }
     }
   }
@@ -455,7 +456,7 @@ class _PostCardState extends ConsumerState<PostCard> {
       if (result == MemoAccountantResponse.yes) {
         success = true;
       } else {
-        showQrCodeDialog(context: ctx, theme: Theme.of(context), user: ref.read(userProvider));
+        showQrQuickDeposit(ctx);
       }
     } else {
       message = "An unexpected error occurred during verification.";
@@ -464,9 +465,14 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     if (success) {
       _clearAndConfetti();
+      showSnackBar(type: SnackbarType.success, message, ctx);
     } else if (message.isNotEmpty && mounted) {
-      showSnackBar(message, ctx);
+      showSnackBar(type: SnackbarType.error, message, ctx);
     }
+  }
+
+  void showQrQuickDeposit(BuildContext ctx) {
+    showQrCodeDialog(context: ctx, theme: Theme.of(context), user: ref.read(userProvider), memoOnly: true);
   }
 
   @override

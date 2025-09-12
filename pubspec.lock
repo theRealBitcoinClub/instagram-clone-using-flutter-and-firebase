@@ -93,10 +93,10 @@ packages:
     dependency: "direct main"
     description:
       name: bitcoin_base
-      sha256: "7a5667b96f5550dd81f73517b0b431987a9e51a17d756955f2a9e1e2626dc8e7"
+      sha256: abc80891f654cc09c246d09eb9ad4331e061f8f9c796eab367545a8f61da909f
       url: "https://pub.dev"
     source: hosted
-    version: "6.8.0"
+    version: "6.9.0"
   blockchain_utils:
     dependency: "direct main"
     description:
@@ -413,10 +413,10 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: e7e16c9d15c36330b94ca0e2ad8cb61f93cd5282d0158c09805aed13b5452f22
+      sha256: f2d9f173c2c14635cc0e9b14c143c49ef30b4934e8d1d274d6206fcb0086a06f
       url: "https://pub.dev"
     source: hosted
-    version: "10.3.2"
+    version: "10.3.3"
   firebase_core:
     dependency: "direct main"
     description:

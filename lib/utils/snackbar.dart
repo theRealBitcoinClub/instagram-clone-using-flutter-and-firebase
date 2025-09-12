@@ -1,14 +1,49 @@
-// In your snackbar.dart
+// snackbar.dart
 import 'package:flutter/material.dart';
 
-void showSnackBar(String content, BuildContext context) {
+enum SnackbarType { success, error, info }
+
+void showSnackBar(String content, BuildContext context, {required SnackbarType type}) {
   final theme = Theme.of(context);
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(content, style: TextStyle(color: theme.snackBarTheme.contentTextStyle?.color ?? theme.colorScheme.onInverseSurface)),
-      backgroundColor: theme.snackBarTheme.backgroundColor ?? theme.colorScheme.inverseSurface,
-      behavior: theme.snackBarTheme.behavior ?? SnackBarBehavior.fixed, // Use themed behavior
-      elevation: theme.snackBarTheme.elevation ?? 6.0,
-    ),
-  );
+  final colorScheme = theme.colorScheme;
+
+  // Determine colors based on type
+  Color backgroundColor;
+  TextStyle textStyle;
+
+  switch (type) {
+    case SnackbarType.success:
+      backgroundColor = Colors.green[900] ?? colorScheme.primaryContainer;
+      textStyle = TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2, fontSize: 16);
+      break;
+    case SnackbarType.error:
+      backgroundColor = Colors.red[900] ?? colorScheme.errorContainer;
+      textStyle = TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2, fontSize: 16);
+      break;
+    case SnackbarType.info:
+      backgroundColor = Colors.orange[900] ?? colorScheme.secondaryContainer;
+      textStyle = TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.w400, // Not bold for info
+        letterSpacing: 1.2,
+        fontSize: 16,
+      );
+      break;
+  }
+
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: Duration(seconds: 3),
+        // animation: ,
+        // dismissDirection: DismissDirection.down,
+        content: Text(content, style: textStyle, textAlign: TextAlign.center),
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.fixed,
+        elevation: 6.0,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
 }

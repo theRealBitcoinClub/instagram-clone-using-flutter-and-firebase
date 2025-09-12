@@ -37,6 +37,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   late Future<void> _initFuture;
   Timer? _balanceRefreshTimer;
   final Duration _refreshInterval = Duration(seconds: 3);
+  bool _isToggleEnabled = true;
 
   @override
   void initState() {
@@ -52,13 +53,13 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 
   Future<void> _loadToggleState() async {
     final prefs = await SharedPreferences.getInstance();
-    bool isToggleEnabled = widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty;
-    if (widget.memoOnly) isToggleEnabled = false;
-    final bool defaultState = isToggleEnabled;
+    _isToggleEnabled = widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty;
+    if (widget.memoOnly) _isToggleEnabled = false;
+    final bool defaultState = _isToggleEnabled;
 
     _isCashtokenFormat = prefs.getBool('qr_code_toggle_state') ?? defaultState;
 
-    if (_isCashtokenFormat && !isToggleEnabled) {
+    if (_isCashtokenFormat && !_isToggleEnabled) {
       _isCashtokenFormat = false;
     }
 
@@ -87,17 +88,17 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 
   Future<void> _copyToClipboard(BuildContext context, String text, String successMessage) async {
     if (text.isEmpty) {
-      if (mounted) showSnackBar("Nothing to copy.", context);
+      if (mounted) showSnackBar(type: SnackbarType.info, "Nothing to copy.", context);
       return;
     }
     await FlutterClipboard.copyWithCallback(
       text: text,
       onSuccess: () {
-        if (mounted) showSnackBar(successMessage, context);
+        if (mounted) showSnackBar(type: SnackbarType.success, successMessage, context);
       },
       onError: (error) {
         _logError("Copy to clipboard failed", error);
-        if (mounted) showSnackBar('Copy failed. See logs for details.', context);
+        if (mounted) showSnackBar(type: SnackbarType.error, 'Copy failed. See logs for details.', context);
       },
     );
   }
@@ -174,7 +175,6 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
           );
         }
 
-        final bool isToggleEnabled = widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty;
         final String addressToShow = _isCashtokenFormat ? widget.cashtokenAddress! : convertToBchFormat(widget.legacyAddress);
         final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo-128x128";
         final String balanceText = _getBalanceText(_isCashtokenFormat, creatorState.value);
@@ -198,7 +198,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
           contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
           children: [
             // Tab-like selector
-            if (isToggleEnabled) _buildTabSelector(theme, colorScheme),
+            if (_isToggleEnabled) _buildTabSelector(theme, colorScheme),
 
             const SizedBox(height: 16),
 

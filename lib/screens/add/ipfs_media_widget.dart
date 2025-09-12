@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/widgets/red_action_button.dart';
 
 import 'add_post_providers.dart';
 
@@ -60,22 +61,10 @@ class IpfsMediaWidget extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        TextButton.icon(
-          icon: Icon(Icons.edit_outlined, size: 18),
-          label: const Text("Change IPFS Content"),
+        ChangeMediaButton(
           onPressed: () {
-            // ref.read(imgurUrlProvider.notifier).state = '';
-            // ref.read(youtubeVideoIdProvider.notifier).state = '';
             ref.read(ipfsCidProvider.notifier).state = '';
-            // ref.read(odyseeUrlProvider.notifier).state = '';
-            // ref.read(youtubeControllerProvider.notifier).state = null;
-            // ref.read(clearMediaProvider);
           },
-          style: TextButton.styleFrom(
-            foregroundColor: colorScheme.secondary,
-            textStyle: textTheme.labelLarge,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          ),
         ),
         const SizedBox(height: 8),
         Text(

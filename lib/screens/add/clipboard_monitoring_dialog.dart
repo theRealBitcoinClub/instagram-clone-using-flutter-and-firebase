@@ -36,6 +36,7 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
   @override
   void initState() {
     super.initState();
+    // widget.controller.text = "";
     widget.controller.addListener(_validateInput);
     _setupClipboardMonitoring();
   }
@@ -130,10 +131,16 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
       actions: <Widget>[
         TextButton(
           onPressed: () {
-            widget.onClearInputs();
+            // widget.onClearInputs();
             Navigator.of(context).pop();
           },
-          child: Text('Cancel', style: widget.textTheme.labelMedium!.copyWith(color: widget.theme.colorScheme.error)),
+          child: Text('CLOSE', style: widget.textTheme.labelMedium!.copyWith(color: widget.theme.colorScheme.error)),
+        ),
+        TextButton(
+          onPressed: () {
+            widget.onClearInputs();
+          },
+          child: Text('RESET', style: widget.textTheme.labelMedium!.copyWith(color: Colors.yellow[900])),
         ),
         TextButton(
           onPressed: _hasValidInput
@@ -142,7 +149,7 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
                 }
               : null,
           child: Text(
-            'Done',
+            'DONE',
             style: widget.textTheme.labelLarge!.copyWith(
               color: _hasValidInput ? widget.theme.colorScheme.primary : widget.theme.colorScheme.onSurface.withOpacity(0.38),
             ),

@@ -354,7 +354,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   }
 
   void _onSavePressed() {
-    _saveProfile(() => Navigator.of(context).pop(), () => showSnackBar("Failed to save profile.", context));
+    _saveProfile(() => Navigator.of(context).pop(), () => showSnackBar(type: SnackbarType.error, "Failed to save profile.", context));
   }
 
   void _saveProfile(Function onSuccess, Function onFail) async {
@@ -401,7 +401,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       }
 
       if (!changesMade) {
-        showSnackBar("No changes to save. 🤔", context);
+        showSnackBar(type: SnackbarType.info, "No changes to save. 🤔", context);
         onFail();
         return;
       }
@@ -417,10 +417,10 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
       if (failedUpdates.isNotEmpty) {
         final failMessage = failedUpdates.join(', ');
-        showSnackBar("Update failed for: $failMessage", context);
+        showSnackBar(type: SnackbarType.info, "Update failed for: $failMessage", context);
         onFail();
       } else {
-        showSnackBar("Profile updated successfully! ✨", context);
+        showSnackBar(type: SnackbarType.success, "Profile updated successfully! ✨", context);
         MemoConfetti().launch(context);
 
         // Refresh user data
@@ -430,7 +430,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         onSuccess();
       }
     } catch (e) {
-      showSnackBar("Profile update failed: $e", context);
+      showSnackBar(type: SnackbarType.error, "Profile update failed: $e", context);
       onFail();
     } finally {
       setState(() => isSavingProfile = false);

@@ -7,6 +7,7 @@ import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/screens/pin_claim_screen.dart';
+import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
@@ -182,25 +183,11 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   void _showErrorSnackBar(String message) {
-    if (!mounted) return;
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: TextStyle(color: theme.colorScheme.onError)),
-        backgroundColor: theme.colorScheme.error,
-      ),
-    );
+    showSnackBar(message, context, type: SnackbarType.error);
   }
 
   void _showSuccessSnackBar(String message) {
-    if (!mounted) return;
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: TextStyle(color: theme.colorScheme.onSecondaryContainer)),
-        backgroundColor: theme.colorScheme.secondaryContainer,
-      ),
-    );
+    showSnackBar(message, context, type: SnackbarType.success);
   }
 
   @override

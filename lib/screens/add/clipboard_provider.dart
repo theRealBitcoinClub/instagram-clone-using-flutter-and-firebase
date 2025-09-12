@@ -1,5 +1,6 @@
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../memo/memo_reg_exp.dart';
@@ -55,6 +56,12 @@ class ClipboardNotifier extends StateNotifier<ClipboardState> {
               if (odyseeUrl.isNotEmpty) {
                 ref.read(odyseeUrlProvider.notifier).state = odyseeUrl;
                 _clearOtherMediaProviders(ref, 3);
+              } else {
+                final checkUrlRequests = await MemoVerifier(urlFromClipboard).verifyAndBuildImgurUrl();
+                if (checkUrlRequests != MemoVerificationResponse.noImageNorVideo.toString()) {
+                  ref.read(imgurUrlProvider.notifier).state = checkUrlRequests;
+                  _clearOtherMediaProviders(ref, 0);
+                }
               }
             }
           }

@@ -15,11 +15,9 @@ workflows:
       - name: Run All Tests
         script: |
           echo "🧪 Running all tests..."
-          flutter test --coverage --test-randomize-ordering-seed random
-          
-          # Generate test coverage report
-          genhtml coverage/lcov.info -o coverage/html
-          echo "✅ Test coverage report generated at coverage/html/"
+          flutter test --test-randomize-ordering-seed random
+            
+          echo "✅ All tests passed!"
 
       - name: Build APK
         script: |

@@ -26,13 +26,23 @@ final streamUrlProvider = FutureProvider<String>((ref) async {
   return await odyseeService.getVideoStreamUrl(videoUrl);
 });
 
+//https://player.odycdn.com/api/v3/streams/free/Smurf---Rescue-in-Gargamel's-Castle---Atar/78b2edb9122b46552833dcf852a71d85591f31b4/9c90e4.mp4
 // Provider for video controller (auto-dispose)
 final videoControllerProvider = FutureProvider.autoDispose.family<VideoPlayerController, ({String streamUrl, bool autoPlay})>((
   ref,
   params,
 ) async {
-  final controller = VideoPlayerController.networkUrl(Uri.parse(params.streamUrl));
+  final controller = VideoPlayerController.networkUrl(
+    Uri.parse(
+      "https://player.odycdn.com/api/v3/streams/free/Smurf---Rescue-in-Gargamel's-Castle---Atar/78b2edb9122b46552833dcf852a71d85591f31b4/9c90e4.mp4",
+    ),
+  );
 
+  //TODO DOES CONTROLLER MANAGEMENT WORK WITH THIS PROVIDER AS YOU WILL HAVE VARIOUS CONTROLLERS AT THE SAME TIME?
+  //SHOULDNT IT HAVE A SIMILAR DESIGN TO THE YOUTUBE CONTROLLER SETUP?
+  //THEN AFTER THAT ONE TRY THE CUPERTINO CONTROLLED PLAYER TO HAVE MORE BEAUTIFUL UI
+
+  // final controller = VideoPlayerController.networkUrl(Uri.parse(params.streamUrl));
   await controller.initialize();
   await controller.setLooping(true);
 

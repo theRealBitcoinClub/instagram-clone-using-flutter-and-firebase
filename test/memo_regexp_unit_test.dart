@@ -232,5 +232,307 @@ void main() {
       expect(memoRegExp.extractAllWhitelistedMediaUrls(), isEmpty);
       expect(memoRegExp.hasAnyWhitelistedMediaUrl(), isFalse);
     });
+
+    // ========== EDGE CASE TESTS ==========
+
+    test('extractIpfsCid should extract multiple IPFS CIDs and return first', () {
+      const textWithMultipleCids = """
+      IPFS CIDs: QmXyZ123abcDEF456ghiJKL789mnoPQRstuVWXyz 
+      and bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi
+      """;
+      final memoRegExp = MemoRegExp(textWithMultipleCids);
+      final result = memoRegExp.extractIpfsCid();
+      expect(result, equals('bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi'));
+    });
+
+    test('extractValidImgurOrGiphyUrl should prioritize imgur over giphy', () {
+      const textWithBoth = "https://i.imgur.com/abc123.jpg https://giphy.com/gif/xyz";
+      final memoRegExp = MemoRegExp(textWithBoth);
+      final result = memoRegExp.extractValidImgurOrGiphyUrl();
+      expect(result, equals('https://i.imgur.com/abc123.jpg'));
+    });
+
+    test('extractValidImgurOrGiphyUrl should return giphy if no imgur', () {
+      const textWithGiphyOnly = "Only giphy: https://giphy.com/gif/xyz";
+      final memoRegExp = MemoRegExp(textWithGiphyOnly);
+      final result = memoRegExp.extractValidImgurOrGiphyUrl();
+      expect(result, equals('https://giphy.com/gif/xyz'));
+    });
+
+    test('YouTube regex should handle various YouTube URL formats', () {
+      const youtubeUrls = """
+      https://youtube.com/watch?v=dQw4w9WgXcQ
+      https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=shared
+      https://m.youtube.com/watch?v=dQw4w9WgXcQ
+      https://youtu.be/dQw4w9WgXcQ
+      https://youtube.com/embed/dQw4w9WgXcQ
+      https://youtube.com/v/dQw4w9WgXcQ
+      https://youtube.com/shorts/dQw4w9WgXcQ
+      """;
+
+      final memoRegExp = MemoRegExp(youtubeUrls);
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      expect(result.length, greaterThanOrEqualTo(7));
+      expect(result.every((url) => url.contains('dQw4w9WgXcQ')), isTrue);
+    });
+
+    test('GitHub regex should match various GitHub image formats', () {
+      const githubUrls = """
+      https://github.com/user/repo/blob/main/image.png
+      https://raw.githubusercontent.com/user/repo/main/image.jpg
+      https://user-images.githubusercontent.com/123456/abc123.png
+      https://github.com/user/repo/raw/main/image.webp
+      """;
+
+      final memoRegExp = MemoRegExp(githubUrls);
+      final result = memoRegExp.extractAllWhitelistedImageUrls();
+
+      expect(result.length, 4);
+    });
+
+    test('IPFS regex should handle various IPFS URL formats', () {
+      const ipfsUrls = """
+      https://free-bch.fullstack.cash/ipfs/view/bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74
+      https://free-bch.fullstack.cash/ipfs/view/QmXyZ123abcDEF456ghiJKL789mnoPQRstuVWXyz
+      https://ipfs.io/ipfs/bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74
+      """;
+
+      final memoRegExp = MemoRegExp(ipfsUrls);
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      expect(result.length, 1); // Only free-bch URLs should match psfIpfs pattern
+    });
+
+    test('Odysee regex should handle various Odysee URL formats', () {
+      const odyseeUrls = """
+      https://odysee.com/@channel:123/video-name:abc
+      https://www.odysee.com/@channel:123/video-name:abc
+      https://odysee.com/video-name:abc
+      https://odysee.com/embed/video-name:abc
+      """;
+
+      final memoRegExp = MemoRegExp(odyseeUrls);
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      expect(result.length, 4);
+    });
+
+    test('Twitter regex should handle various Twitter URL formats', () {
+      const twitterUrls = """
+      https://twitter.com/user/status/1234567890
+      https://x.com/user/status/1234567890
+      https://twitter.com/user/
+      https://t.co/abc123
+      https://pbs.twimg.com/media/abc123.jpg
+      """;
+
+      final memoRegExp = MemoRegExp(twitterUrls);
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      expect(result.length, 5);
+    });
+
+    test('Reddit regex should handle various Reddit URL formats', () {
+      const redditUrls = """
+      https://www.reddit.com/r/subreddit/comments/abc123/post_title/
+      https://np.reddit.com/r/subreddit/comments/abc123/post_title/
+      https://i.redd.it/abc123.jpg
+      https://preview.redd.it/abc123.png
+      """;
+
+      final memoRegExp = MemoRegExp(redditUrls);
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      expect(result.length, 4);
+    });
+
+    test('Telegram regex should handle various Telegram URL formats', () {
+      const telegramUrls = """
+      https://t.me/channel/123
+      https://telegram.me/channel
+      https://web.telegram.org/
+      https://telesco.pe/channel/123
+      """;
+
+      final memoRegExp = MemoRegExp(telegramUrls);
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      expect(result.length, 4);
+    });
+
+    test('URLs with query parameters should be handled correctly', () {
+      const urlsWithParams = """
+      https://i.imgur.com/abc123.jpg?width=200&height=200
+      https://youtube.com/watch?v=dQw4w9WgXcQ&t=120
+      https://github.com/user/repo/blob/main/image.png?raw=true
+      """;
+
+      final memoRegExp = MemoRegExp(urlsWithParams);
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      expect(result.length, 3);
+      expect(result[0], equals('https://i.imgur.com/abc123.jpg'));
+      expect(result[1], equals('https://youtube.com/watch?v=dQw4w9WgXcQ&t=120'));
+      expect(result[2], equals('https://github.com/user/repo/blob/main/image.png?raw=true'));
+    });
+
+    test('URLs with special characters should be handled', () {
+      const urlsWithSpecialChars = """
+      https://github.com/user/repo/blob/main/image-with-dashes.png
+      https://imgur.com/gallery/image_with_underscores
+      https://example.com/path-with-dashes_and_underscores
+      """;
+
+      final memoRegExp = MemoRegExp(urlsWithSpecialChars);
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      expect(result.length, greaterThan(0));
+    });
+
+    test('Mixed content with URLs at different positions', () {
+      const mixedContent = """
+      Start with URL: https://i.imgur.com/abc123.jpg
+      Middle https://youtube.com/watch?v=dQw4w9WgXcQ content
+      End with URL https://github.com/image.png
+      """;
+
+      final memoRegExp = MemoRegExp(mixedContent);
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      expect(result.length, 3);
+    });
+
+    test('Very long URLs should be handled', () {
+      const longUrl =
+          "https://github.com/user/very/long/path/to/the/image/file/with/many/subdirectories/and_a_very_long_file_name_that_goes_on_and_on.png";
+
+      final memoRegExp = MemoRegExp(longUrl);
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      expect(result.length, 1);
+      expect(result[0], equals(longUrl));
+    });
+
+    test('URLs with encoded characters should be handled', () {
+      const encodedUrls = """
+      https://github.com/user/repo/blob/main/image%20with%20spaces.png
+      https://example.com/path%20with%20encoded%20chars
+      """;
+
+      final memoRegExp = MemoRegExp(encodedUrls);
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      expect(result.length, greaterThan(0));
+    });
+
+    test('Case insensitive matching should work', () {
+      const mixedCaseUrls = """
+      HTTPS://I.IMGUR.COM/ABC123.JPG
+      http://GITHUB.COM/user/repo/blob/main/IMAGE.PNG
+      https://YOUTUBE.COM/WATCH?V=DQW4W9WGXCQ
+      """;
+
+      final memoRegExp = MemoRegExp(mixedCaseUrls);
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      expect(result.length, 3);
+    });
+
+    test('URLs without protocol should NOT be matched', () {
+      const noProtocolUrls = """
+      i.imgur.com/abc123.jpg
+      www.youtube.com/watch?v=dQw4w9WgXcQ
+      github.com/user/repo/blob/main/image.png
+      http://github.com/user/repo/blob/main/image.png
+      """;
+
+      final memoRegExp = MemoRegExp(noProtocolUrls);
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      expect(result.length, 1);
+    });
+
+    test('TextFilter methods should handle complex text with mixed content', () {
+      const complexText = """
+      Check this out: https://i.imgur.com/abc123.jpg and also 
+      https://youtube.com/watch?v=dQw4w9WgXcQ but ignore 
+      https://malicious.com/bad and also consider 
+      https://github.com/user/repo/blob/main/image.png
+      """;
+
+      final allUrls = TextFilter.findWhitelistedUrls(complexText);
+      final imageUrls = TextFilter.findWhitelistedImageUrls(complexText);
+      final videoUrls = TextFilter.findWhitelistedVideoUrls(complexText);
+
+      expect(allUrls.length, 3);
+      expect(imageUrls.length, 2);
+      expect(videoUrls.length, 1);
+      expect(allUrls, isNot(contains('https://malicious.com/bad')));
+    });
+
+    test('hasOnlyWhitelistedUrls should handle empty list', () {
+      expect(MemoRegExp.hasOnlyWhitelistedUrls([]), isTrue);
+    });
+
+    test('hasOnlyWhitelistedUrls should handle mixed protocols', () {
+      final mixedProtocols = ['https://i.imgur.com/abc.jpg', 'http://giphy.com/gif', 'https://malicious.com/bad'];
+
+      expect(MemoRegExp.hasOnlyWhitelistedUrls(mixedProtocols), isFalse);
+    });
+
+    test('extractTopics should handle multiple topics', () {
+      const multipleTopics = "Hello @topic1 and @topic2 and @another_topic";
+      final result = MemoRegExp.extractTopics(multipleTopics);
+
+      expect(result.length, 3);
+      expect(result, contains('@topic1'));
+      expect(result, contains('@topic2'));
+      expect(result, contains('@another_topic'));
+    });
+
+    test('extractHashtags should handle multiple hashtags', () {
+      const multipleHashtags = "#flutter #dart #testing #unit_tests";
+      final result = MemoRegExp.extractHashtags(multipleHashtags);
+
+      expect(result.length, 4);
+      expect(result, contains('#flutter'));
+      expect(result, contains('#dart'));
+      expect(result, contains('#testing'));
+      expect(result, contains('#unit_tests'));
+    });
+
+    test('extractUrls should handle complex text with various URLs', () {
+      const complexText = """
+      Multiple URLs: https://example.com, http://test.org, 
+      www.google.com, and also ftp://old.protocol but only 
+      http and https should be matched.
+      """;
+
+      final result = MemoRegExp.extractUrls(complexText);
+
+      // Should match https://example.com, http://test.org
+      expect(result.length, 2);
+      expect(result, isNot(contains('ftp://old.protocol')));
+    });
+
+    test('Performance test with large text', () {
+      // Generate large text with many URLs
+      final largeText = StringBuffer();
+      for (int i = 0; i < 1000; i++) {
+        largeText.writeln("URL https://mahakka.com/$i and text content");
+      }
+
+      final memoRegExp = MemoRegExp(largeText.toString());
+      final stopwatch = Stopwatch()..start();
+
+      final result = memoRegExp.extractAllWhitelistedMediaUrls();
+
+      stopwatch.stop();
+      print('Extracted ${result.length} URLs in ${stopwatch.elapsedMilliseconds}ms');
+
+      expect(result.length, 1000);
+      expect(stopwatch.elapsedMilliseconds, lessThan(1000)); // Should be fast
+    });
   });
 }

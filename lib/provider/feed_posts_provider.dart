@@ -72,7 +72,7 @@ class FeedState {
 class FeedPostsNotifier extends StateNotifier<FeedState> {
   final PostService _postService;
   final PostCacheRepository _cacheRepository;
-  final int _pageSize = 100; // Changed from 50 to 10
+  final int _pageSize = 10; // Changed from 50 to 10
 
   int _lastKnownPostCount = 0; // Track last known count for comparison
 

@@ -2,7 +2,7 @@
 
 # Define your collection names here.
 # Change these values to switch between environments.
-export PREFIX="____"
+export PREFIX="_____"
 export POSTS_COLLECTION="posts"
 export METADATA_COLLECTION="metadata"
 export CREATOR_COLLECTION="creators"

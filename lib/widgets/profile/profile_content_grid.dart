@@ -12,7 +12,7 @@ void _logGridError(String message, [dynamic error, StackTrace? stackTrace]) {
 
 class ProfileContentGrid extends StatelessWidget {
   final List<MemoModelPost> posts;
-  final Function(MemoModelPost post, Widget imageWidget) onPostImageTap;
+  final Function(MemoModelPost post, UnifiedImageWidget imageWidget, GlobalKey imageKey) onPostImageTap;
 
   const ProfileContentGrid({Key? key, required this.posts, required this.onPostImageTap}) : super(key: key);
 
@@ -36,6 +36,8 @@ class ProfileContentGrid extends StatelessWidget {
         ),
         itemBuilder: (context, index) {
           final post = posts[index];
+          final imageKey = GlobalKey(); // Create a unique key for each image
+
           Widget imagePlaceholder = Container(
             color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
             child: Icon(Icons.broken_image_outlined, size: 40, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
@@ -49,9 +51,10 @@ class ProfileContentGrid extends StatelessWidget {
           }
 
           final img = UnifiedImageWidget(
+            key: imageKey, // Assign the key to the image widget
             imageUrl: imageUrl,
             sourceType: ImageSourceType.network,
-            fitMode: ImageFitMode.cover,
+            fitMode: ImageFitMode.cover, // Use cover for grid
             aspectRatio: 1.0,
             borderRadius: BorderRadius.zero,
             showLoadingProgress: true,
@@ -61,32 +64,8 @@ class ProfileContentGrid extends StatelessWidget {
             ),
           );
 
-          // final img = Image.network(
-          //   imageUrl,
-          //   fit: BoxFit.cover,
-          //   errorBuilder: (context, error, stackTrace) {
-          //     _logGridError("Error loading grid image: $imageUrl", error, stackTrace);
-          //     return imagePlaceholder;
-          //   },
-          //   loadingBuilder: (context, child, loadingProgress) {
-          //     if (loadingProgress == null) return child;
-          //     return Container(
-          //       color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
-          //       child: Center(
-          //         child: CircularProgressIndicator(
-          //           strokeWidth: 1.5,
-          //           valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
-          //           value: loadingProgress.expectedTotalBytes != null
-          //               ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-          //               : null,
-          //         ),
-          //       ),
-          //     );
-          //   },
-          // );
-
           return GestureDetector(
-            onTap: () => onPostImageTap(post, AspectRatio(aspectRatio: 1, child: img)),
+            onTap: () => onPostImageTap(post, img, imageKey),
             child: AspectRatio(aspectRatio: 1, child: img),
           );
         },

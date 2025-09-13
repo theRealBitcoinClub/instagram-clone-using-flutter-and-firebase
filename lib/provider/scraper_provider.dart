@@ -1,6 +1,7 @@
 // providers/scraper_provider.dart
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../memo/scraper/memo_scraper_tag.dart';
@@ -12,7 +13,7 @@ final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraper
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
   Duration _initialDelay = Duration(seconds: 10);
-  Duration _scrapeInterval = Duration(seconds: 10);
+  Duration _scrapeInterval = Duration(seconds: kDebugMode ? 300 : 10);
 
   @override
   Future<void> build() async {

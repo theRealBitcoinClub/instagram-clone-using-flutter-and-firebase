@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
@@ -24,7 +25,7 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
   Timer? _balanceRefreshTimer;
   Timer? _mahakkaBalanceRefreshTimer;
   Timer? _memoBalanceRefreshTimer;
-  Duration _refreshBalanceInterval = Duration(seconds: 5);
+  Duration _refreshBalanceInterval = Duration(seconds: kDebugMode ? 60 : 5);
 
   DateTime? _lastRefreshTime;
   bool _isAutoRefreshRunning = false;

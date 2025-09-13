@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/config_hide_on_feed_trigger.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart'; // Your updated feed provider
 import 'package:mahakka/theme_provider.dart'; // Your theme provider
 import 'package:mahakka/widgets/burner_balance_widget.dart';
@@ -9,6 +8,7 @@ import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../config_hide_on_feed_trigger.dart';
 import '../provider/bch_burner_balance_provider.dart';
 import '../widgets/post_counter_widget.dart';
 

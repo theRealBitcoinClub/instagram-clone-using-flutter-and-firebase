@@ -1,6 +1,7 @@
 // bch_burner_balance_provider.dart
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 
@@ -16,7 +17,7 @@ final bchBurnerBalanceProvider = StreamProvider.autoDispose<Balance>((ref) {
     streamController.add(balance);
   });
 
-  timer = Timer.periodic(const Duration(seconds: 10), (_) async {
+  timer = Timer.periodic(const Duration(seconds: kDebugMode ? 100 : 10), (_) async {
     try {
       final balance = await _fetchBalance(ref);
       streamController.add(balance);

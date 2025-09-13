@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:clipboard/clipboard.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
@@ -36,7 +37,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   late bool _isCashtokenFormat;
   late Future<void> _initFuture;
   Timer? _balanceRefreshTimer;
-  final Duration _refreshInterval = Duration(seconds: 3);
+  final Duration _refreshInterval = Duration(seconds: kDebugMode ? 60 : 3);
   bool _isToggleEnabled = true;
 
   @override

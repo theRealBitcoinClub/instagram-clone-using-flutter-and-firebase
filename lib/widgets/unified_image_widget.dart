@@ -17,7 +17,7 @@ enum ImageFitMode {
   fitHeight, // Fit to height, maintain aspect ratio
 }
 
-class UnifiedImageWidget extends StatelessWidget {
+class UnifiedImageWidget extends StatefulWidget {
   final String imageUrl;
   final ImageSourceType sourceType;
   final ImageFitMode fitMode;
@@ -54,41 +54,82 @@ class UnifiedImageWidget extends StatelessWidget {
   });
 
   @override
+  State<UnifiedImageWidget> createState() => UnifiedImageWidgetState();
+}
+
+class UnifiedImageWidgetState extends State<UnifiedImageWidget> {
+  late ImageFitMode _currentFitMode;
+  late String _resolvedUrl;
+  late bool _isSvg;
+  late bool _isAvif;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentFitMode = widget.fitMode;
+    _resolvedUrl = _resolveImageUrl(widget.imageUrl, widget.sourceType);
+    _isSvg = widget.imageUrl.toLowerCase().endsWith('.svg');
+    _isAvif = widget.imageUrl.toLowerCase().endsWith('.avif');
+  }
+
+  @override
+  void didUpdateWidget(UnifiedImageWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Update fit mode if it changed
+    if (oldWidget.fitMode != widget.fitMode) {
+      setState(() {
+        _currentFitMode = widget.fitMode;
+      });
+    }
+
+    // Only reload image if URL or source type changed
+    if (oldWidget.imageUrl != widget.imageUrl || oldWidget.sourceType != widget.sourceType) {
+      setState(() {
+        _resolvedUrl = _resolveImageUrl(widget.imageUrl, widget.sourceType);
+        _isSvg = widget.imageUrl.toLowerCase().endsWith('.svg');
+        _isAvif = widget.imageUrl.toLowerCase().endsWith('.avif');
+      });
+    }
+  }
+
+  void changeFitMode(ImageFitMode newFitMode) {
+    setState(() {
+      _currentFitMode = newFitMode;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final ThemeData effectiveTheme = theme ?? Theme.of(context);
-    final ColorScheme effectiveColorScheme = colorScheme ?? effectiveTheme.colorScheme;
-    final TextTheme effectiveTextTheme = textTheme ?? effectiveTheme.textTheme;
-
-    // Determine the image type
-    final bool isSvg = imageUrl.toLowerCase().endsWith('.svg');
-    final bool isAvif = imageUrl.toLowerCase().endsWith('.avif');
-
-    // Get the actual URL based on source type
-    final String resolvedUrl = _resolveImageUrl(imageUrl, sourceType);
+    final ThemeData effectiveTheme = widget.theme ?? Theme.of(context);
+    final ColorScheme effectiveColorScheme = widget.colorScheme ?? effectiveTheme.colorScheme;
+    final TextTheme effectiveTextTheme = widget.textTheme ?? effectiveTheme.textTheme;
 
     // Build the image widget based on type
     Widget imageWidget;
-    if (isSvg) {
-      imageWidget = _buildSvgImage(resolvedUrl, effectiveColorScheme, effectiveTextTheme);
-    } else if (isAvif) {
-      imageWidget = _buildAvifImage(resolvedUrl, effectiveColorScheme, effectiveTextTheme);
+    if (_isSvg) {
+      imageWidget = _buildSvgImage(_resolvedUrl, effectiveColorScheme, effectiveTextTheme);
+    } else if (_isAvif) {
+      imageWidget = _buildAvifImage(_resolvedUrl, effectiveColorScheme, effectiveTextTheme);
     } else {
-      imageWidget = _buildRasterImage(resolvedUrl, effectiveColorScheme, effectiveTextTheme);
+      imageWidget = _buildRasterImage(_resolvedUrl, effectiveColorScheme, effectiveTextTheme);
     }
 
     // Apply constraints and container styling
     return Container(
-      width: width,
-      height: height,
-      constraints: (width != null || height != null) ? null : BoxConstraints(maxWidth: double.infinity, maxHeight: double.infinity),
+      width: widget.width,
+      height: widget.height,
+      constraints: (widget.width != null || widget.height != null)
+          ? null
+          : BoxConstraints(maxWidth: double.infinity, maxHeight: double.infinity),
       decoration: BoxDecoration(
-        color: backgroundColor ?? effectiveColorScheme.surface,
-        borderRadius: borderRadius,
-        border: border ?? Border.all(color: effectiveColorScheme.outline.withOpacity(0.3), width: 1),
+        color: widget.backgroundColor ?? effectiveColorScheme.surface,
+        borderRadius: widget.borderRadius,
+        border: widget.border ?? Border.all(color: effectiveColorScheme.outline.withOpacity(0.3), width: 1),
       ),
       child: ClipRRect(
-        borderRadius: borderRadius,
-        child: aspectRatio > 0 ? AspectRatio(aspectRatio: aspectRatio, child: imageWidget) : imageWidget,
+        borderRadius: widget.borderRadius,
+        child: widget.aspectRatio > 0 ? AspectRatio(aspectRatio: widget.aspectRatio, child: imageWidget) : imageWidget,
       ),
     );
   }
@@ -97,13 +138,13 @@ class UnifiedImageWidget extends StatelessWidget {
     try {
       return SvgPicture.network(
         url,
-        fit: _getBoxFit(fitMode),
-        width: width,
-        height: height ?? width ?? 48,
-        placeholderBuilder: (context) => placeholder ?? _buildDefaultPlaceholder(colorScheme),
+        fit: _getBoxFit(_currentFitMode),
+        width: widget.width,
+        height: widget.height ?? widget.width ?? 48,
+        placeholderBuilder: (context) => widget.placeholder ?? _buildDefaultPlaceholder(colorScheme),
       );
     } catch (e) {
-      return errorWidget ?? _buildErrorWidget('SVG Load Error: $e', colorScheme, textTheme);
+      return widget.errorWidget ?? _buildErrorWidget('SVG Load Error: $e', colorScheme, textTheme);
     }
   }
 
@@ -111,11 +152,11 @@ class UnifiedImageWidget extends StatelessWidget {
     try {
       return AvifImage.network(
         url,
-        fit: _getBoxFit(fitMode),
-        width: width,
-        height: height,
+        fit: _getBoxFit(_currentFitMode),
+        width: widget.width,
+        height: widget.height,
         errorBuilder: (context, error, stackTrace) {
-          return errorWidget ?? _buildErrorWidget('AVIF Load Error', colorScheme, textTheme);
+          return widget.errorWidget ?? _buildErrorWidget('AVIF Load Error', colorScheme, textTheme);
         },
         frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
           if (wasSynchronouslyLoaded) return child;
@@ -129,8 +170,8 @@ class UnifiedImageWidget extends StatelessWidget {
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
 
-          if (!showLoadingProgress) {
-            return placeholder ?? _buildDefaultPlaceholder(colorScheme);
+          if (!widget.showLoadingProgress) {
+            return widget.placeholder ?? _buildDefaultPlaceholder(colorScheme);
           }
 
           return Center(
@@ -145,24 +186,24 @@ class UnifiedImageWidget extends StatelessWidget {
         },
       );
     } catch (e) {
-      return errorWidget ?? _buildErrorWidget('AVIF Load Error: $e', colorScheme, textTheme);
+      return widget.errorWidget ?? _buildErrorWidget('AVIF Load Error: $e', colorScheme, textTheme);
     }
   }
 
   Widget _buildRasterImage(String url, ColorScheme colorScheme, TextTheme textTheme) {
     return Image.network(
       url,
-      fit: _getBoxFit(fitMode),
-      width: width,
-      height: height,
+      fit: _getBoxFit(_currentFitMode),
+      width: widget.width,
+      height: widget.height,
       errorBuilder: (context, error, stackTrace) {
-        return errorWidget ?? _buildErrorWidget('Image Load Error', colorScheme, textTheme);
+        return widget.errorWidget ?? _buildErrorWidget('Image Load Error', colorScheme, textTheme);
       },
       loadingBuilder: (context, child, loadingProgress) {
         if (loadingProgress == null) return child;
 
-        if (!showLoadingProgress) {
-          return placeholder ?? _buildDefaultPlaceholder(colorScheme);
+        if (!widget.showLoadingProgress) {
+          return widget.placeholder ?? _buildDefaultPlaceholder(colorScheme);
         }
 
         return Center(

@@ -2,52 +2,82 @@ import 'package:flutter/material.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/popularity_score_widget.dart';
+import 'package:mahakka/widgets/unified_image_widget.dart';
 
-class PostDialog extends StatelessWidget {
+class PostDialog extends StatefulWidget {
   final ThemeData theme;
   final MemoModelPost post;
   final MemoModelCreator? creator;
-  final Widget imageWidget;
+  final UnifiedImageWidget imageWidget;
+  final GlobalKey unifiedImageKey;
 
-  const PostDialog({Key? key, required this.theme, required this.post, required this.creator, required this.imageWidget}) : super(key: key);
+  const PostDialog({
+    Key? key,
+    required this.theme,
+    required this.post,
+    required this.creator,
+    required this.imageWidget,
+    required this.unifiedImageKey,
+  }) : super(key: key);
+
+  @override
+  State<PostDialog> createState() => _PostDialogState();
+}
+
+class _PostDialogState extends State<PostDialog> {
+  @override
+  void initState() {
+    super.initState();
+    // Call changeFitMode when dialog opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _changeFitMode();
+    });
+  }
+
+  void _changeFitMode() {
+    final state = widget.unifiedImageKey.currentState as UnifiedImageWidgetState?;
+    state?.changeFitMode(ImageFitMode.fitWidth);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SimpleDialog(
-      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-      contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-      backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
-      shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: _buildTitleRow(),
-      titleTextStyle: theme.textTheme.titleSmall,
-      children: _buildDialogContent(),
+    return Dialog(
+      backgroundColor: widget.theme.dialogTheme.backgroundColor ?? widget.theme.colorScheme.surface,
+      shape: widget.theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      // child: ConstrainedBox(
+      //   constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Title row
+            Padding(padding: const EdgeInsets.fromLTRB(20, 20, 20, 10), child: _buildTitleRow()),
+
+            // Image
+            Padding(padding: const EdgeInsets.symmetric(vertical: 12.0), child: widget.imageWidget),
+
+            // Text content if available
+            if (widget.post.text != null && widget.post.text!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: Text(widget.post.text!, style: widget.theme.dialogTheme.contentTextStyle ?? widget.theme.textTheme.bodyMedium),
+              ),
+          ],
+        ),
+      ),
+      // ),
     );
   }
 
   Widget _buildTitleRow() {
     return Row(
       children: [
-        Text("${post.createdDateTime!.toString().split('.').first}"),
-        Spacer(),
-        PopularityScoreWidget(score: post.popularityScore),
-        Spacer(),
-        Text("${post.age} ago"),
+        Expanded(child: Text("${widget.post.createdDateTime!.toString().split('.').first}", style: widget.theme.textTheme.titleSmall)),
+        PopularityScoreWidget(score: widget.post.popularityScore),
+        const SizedBox(width: 8),
+        Text("${widget.post.age} ago", style: widget.theme.textTheme.titleSmall),
       ],
     );
-  }
-
-  List<Widget> _buildDialogContent() {
-    return [
-      //TODO ADD THE DOUBLE TAP AND LIKE ANIMATION WITH A CLOSE OF THE DIALOG AND CONFETTI
-      //TODO TRIGGER UPDATE POPULARITYSCORE
-      // GestureDetector(onDoubleTap: , child:
-      Padding(padding: const EdgeInsets.symmetric(vertical: 12.0), child: imageWidget),
-      if (post.text != null && post.text!.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Text(post.text!, style: theme.dialogTheme.contentTextStyle ?? theme.textTheme.bodyMedium),
-        ),
-    ];
   }
 }
 
@@ -57,12 +87,13 @@ void showPostDialog({
   required ThemeData theme,
   required MemoModelPost post,
   required MemoModelCreator? creator,
-  required Widget imageWidget,
+  required UnifiedImageWidget imageWidget,
+  required GlobalKey unifiedImageKey,
 }) {
   showDialog(
     context: context,
     builder: (dialogCtx) {
-      return PostDialog(theme: theme, post: post, creator: creator, imageWidget: imageWidget);
+      return PostDialog(theme: theme, post: post, creator: creator, imageWidget: imageWidget, unifiedImageKey: unifiedImageKey);
     },
   );
 }

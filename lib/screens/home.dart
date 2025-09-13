@@ -83,14 +83,14 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: GestureDetector(
-        onHorizontalDragEnd: (DragEndDetails details) {
-          if (details.primaryVelocity == 0) return;
-          if (details.primaryVelocity! < 0) {
-            ref.read(tabIndexProvider.notifier).nextTab();
-          } else if (details.primaryVelocity! > 0) {
-            ref.read(tabIndexProvider.notifier).previousTab();
-          }
-        },
+        // onHorizontalDragEnd: (DragEndDetails details) {
+        //   if (details.primaryVelocity == 0) return;
+        //   if (details.primaryVelocity! < 0) {
+        //     ref.read(tabIndexProvider.notifier).nextTab();
+        //   } else if (details.primaryVelocity! > 0) {
+        //     ref.read(tabIndexProvider.notifier).previousTab();
+        //   }
+        // },
         child: Stack(
           children: List.generate(homeScreenItems.length, (index) {
             return Offstage(

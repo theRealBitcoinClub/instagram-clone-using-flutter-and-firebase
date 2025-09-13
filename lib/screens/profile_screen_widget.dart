@@ -13,7 +13,6 @@ import 'package:mahakka/widgets/profile/youtube_controller_manager.dart';
 import '../memo/model/memo_model_user.dart';
 import '../provider/profile_providers.dart';
 import '../views_taggable/widgets/qr_code_dialog.dart';
-import '../widgets/cached_unified_image_widget.dart';
 import '../widgets/image_detail_dialog.dart';
 import '../widgets/post_dialog.dart';
 import '../widgets/profile/profile_app_bar.dart';
@@ -226,8 +225,9 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     }
   }
 
-  void _showPostDialog(MemoModelPost post, CachedUnifiedImageWidget imageWidget) {
-    showPostDialog(context: context, theme: Theme.of(context), post: post, creator: post.creator);
+  void _showPostDialog(int index) {
+    showPostImageFullscreenWidget(context: context, theme: Theme.of(context), posts: _postsCategorizer.imagePosts, initialIndex: index);
+    // showPostDialog(context: context, theme: Theme.of(context), post: post, creator: post.creator);
   }
 
   void _categorizePosts(List<MemoModelPost> allPosts) {

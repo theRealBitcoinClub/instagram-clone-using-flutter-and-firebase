@@ -1,81 +1,217 @@
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/cached_unified_image_widget.dart';
 import 'package:mahakka/widgets/popularity_score_widget.dart';
+import 'package:mahakka/widgets/unified_image_widget.dart';
 
-class PostDialog extends StatefulWidget {
+class FullScreenPostActivity extends StatefulWidget {
+  final List<MemoModelPost> posts;
+  final int initialIndex;
   final ThemeData theme;
-  final MemoModelPost post;
-  final MemoModelCreator? creator;
-  const PostDialog({Key? key, required this.theme, required this.post, required this.creator}) : super(key: key);
+
+  const FullScreenPostActivity({Key? key, required this.posts, required this.initialIndex, required this.theme}) : super(key: key);
 
   @override
-  State<PostDialog> createState() => _PostDialogState();
+  State<FullScreenPostActivity> createState() => _FullScreenPostActivityState();
 }
 
-class _PostDialogState extends State<PostDialog> {
+class _FullScreenPostActivityState extends State<FullScreenPostActivity> with SingleTickerProviderStateMixin {
+  late PageController _pageController;
+  late int _currentIndex;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+
+    _animationController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _navigateToPrevious() {
+    if (_currentIndex > 0) {
+      _pageController.animateToPage(_currentIndex - 1, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+    }
+  }
+
+  void _navigateToNext() {
+    if (_currentIndex < widget.posts.length - 1) {
+      _pageController.animateToPage(_currentIndex + 1, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+    }
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  void _closeActivity() {
+    _animationController.reverse().then((_) {
+      Navigator.of(context).pop();
+    });
+  }
+
+  void _handleSwipe(DragEndDetails details) {
+    if (details.primaryVelocity! > 0) {
+      // Swipe right or bottom
+      _navigateToPrevious();
+    } else if (details.primaryVelocity! < 0) {
+      // Swipe left or top
+      _navigateToNext();
+    }
+  }
+
+  void _handleHeartAction() {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Like functionality will be implemented later'), duration: Duration(seconds: 2)));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: widget.theme.dialogTheme.backgroundColor ?? widget.theme.colorScheme.surface,
-      shape: widget.theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      // child: ConstrainedBox(
-      //   constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Title row
-            Padding(padding: const EdgeInsets.fromLTRB(20, 20, 20, 10), child: _buildTitleRow()),
+    final currentPost = widget.posts[_currentIndex];
+    final isDarkTheme = widget.theme.brightness == Brightness.dark;
+    final overlayColor = isDarkTheme ? Colors.black54 : Colors.white70;
+    final textColor = isDarkTheme ? Colors.white : Colors.black;
 
-            // Image
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12.0),
-              child: CachedUnifiedImageWidget(imageUrl: widget.post.imgurUrl ?? widget.post.imageUrl!),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Stack(
+          children: [
+            // Gesture detector for swipe actions
+            GestureDetector(
+              onHorizontalDragEnd: _handleSwipe,
+              onVerticalDragEnd: _handleSwipe,
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: _onPageChanged,
+                itemCount: widget.posts.length,
+                itemBuilder: (context, index) {
+                  final post = widget.posts[index];
+                  return Center(
+                    child: CachedUnifiedImageWidget(imageUrl: post.imgurUrl ?? post.imageUrl!, fitMode: ImageFitMode.fitWidth),
+                  );
+                },
+              ),
             ),
 
-            // Text content if available
-            if (widget.post.text != null && widget.post.text!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: Text(widget.post.text!, style: widget.theme.dialogTheme.contentTextStyle ?? widget.theme.textTheme.bodyMedium),
+            // App Bar
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: IconButton(
+                  icon: Icon(Icons.close, color: Colors.white),
+                  onPressed: _closeActivity,
+                ),
+                title: _buildTitleRow(currentPost, textColor),
               ),
+            ),
+
+            // Text overlay at bottom
+            if (currentPost.text != null && currentPost.text!.isNotEmpty)
+              Positioned(
+                bottom: 80, // Above bottom navigation bar
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: EdgeInsets.all(16),
+                  color: overlayColor,
+                  child: Text(
+                    currentPost.text!,
+                    style: widget.theme.textTheme.bodyMedium?.copyWith(color: textColor),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+
+            // Bottom Navigation Bar
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                color: overlayColor,
+                height: 80,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back, color: textColor, size: 30),
+                      onPressed: _navigateToPrevious,
+                      disabledColor: textColor.withOpacity(0.3),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.favorite_border, color: textColor, size: 30),
+                      onPressed: _handleHeartAction,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.arrow_forward, color: textColor, size: 30),
+                      onPressed: _navigateToNext,
+                      disabledColor: textColor.withOpacity(0.3),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
-      // ),
     );
   }
 
-  Widget _buildTitleRow() {
+  Widget _buildTitleRow(MemoModelPost post, Color textColor) {
     return Row(
       children: [
-        Expanded(child: Text("${widget.post.createdDateTime!.toString().split('.').first}", style: widget.theme.textTheme.titleSmall)),
-        PopularityScoreWidget(score: widget.post.popularityScore),
+        Expanded(
+          child: Text(
+            "${post.createdDateTime!.toString().split('.').first}",
+            style: widget.theme.textTheme.titleSmall?.copyWith(color: textColor),
+          ),
+        ),
+        PopularityScoreWidget(score: post.popularityScore),
         const SizedBox(width: 8),
-        Text("${widget.post.age} ago", style: widget.theme.textTheme.titleSmall),
+        Text("${post.age} ago", style: widget.theme.textTheme.titleSmall?.copyWith(color: textColor)),
       ],
     );
   }
 }
 
-// Helper function to show the dialog
-void showPostDialog({
+// Helper function to show the fullscreen post activity
+void showPostImageFullscreenWidget({
   required BuildContext context,
   required ThemeData theme,
-  required MemoModelPost post,
-  required MemoModelCreator? creator,
+  required List<MemoModelPost> posts,
+  required int initialIndex,
 }) {
-  showDialog(
-    context: context,
-    builder: (dialogCtx) {
-      return PostDialog(theme: theme, post: post, creator: creator);
-    },
+  Navigator.of(context).push(
+    PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return FullScreenPostActivity(posts: posts, initialIndex: initialIndex, theme: theme);
+      },
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(opacity: animation, child: child);
+      },
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
   );
 }

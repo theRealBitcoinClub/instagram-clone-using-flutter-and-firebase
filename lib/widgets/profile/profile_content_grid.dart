@@ -14,7 +14,7 @@ void _logGridError(String message, [dynamic error, StackTrace? stackTrace]) {
 class ProfileContentGrid extends StatelessWidget {
   final List<MemoModelPost> posts;
   // final Function(MemoModelPost post, CachedUnifiedImageWidget imageWidget, GlobalKey imageKey) onPostImageTap;
-  final Function(MemoModelPost post, CachedUnifiedImageWidget imageWidget) onPostImageTap;
+  final Function(int index) onPostImageTap;
 
   const ProfileContentGrid({Key? key, required this.posts, required this.onPostImageTap}) : super(key: key);
 
@@ -67,7 +67,7 @@ class ProfileContentGrid extends StatelessWidget {
           );
 
           return GestureDetector(
-            onTap: () => onPostImageTap(post, img),
+            onTap: () => onPostImageTap(index),
             // onTap: () => onPostImageTap(post, img, imageKey),
             child: AspectRatio(aspectRatio: 1, child: img),
           );

@@ -85,19 +85,26 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
         _showFullscreenHint = true;
       });
 
-      _fullscreenHintTimer = Timer(const Duration(seconds: 5), () {
-        if (mounted) {
-          setState(() {
-            _showFullscreenHint = false;
-          });
-        }
-      });
+      _showFullscreenHintWithTimer();
     }
+  }
+
+  void _showFullscreenHintWithTimer() {
+    _fullscreenHintTimer.cancel(); // Cancel any existing timer
+    _fullscreenHintTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _showFullscreenHint = false;
+        });
+      }
+    });
   }
 
   void _handleLongPress() {
     if (_isFullscreen) {
       _toggleFullscreen();
+    } else {
+      Navigator.of(context).pop();
     }
   }
 
@@ -134,6 +141,12 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
         // Reset overlay visibility when changing posts
         _isOverlayVisible = true;
         _overlayAnimationController.reverse();
+
+        // Show fullscreen hint again after swipe if in fullscreen mode
+        if (_isFullscreen) {
+          _showFullscreenHint = true;
+          _showFullscreenHintWithTimer();
+        }
       });
       // Animate new content in
       _contentAnimationController.forward();
@@ -332,34 +345,24 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                 ),
               ),
 
-            // Fullscreen hint overlay
+            // Fullscreen hint overlay - positioned at top left corner
             if (_showFullscreenHint && _isFullscreen)
-              Positioned.fill(
+              Positioned(
+                top: 16,
+                left: 16,
                 child: Container(
-                  color: Colors.black54,
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(color: hintOverlayColor, borderRadius: BorderRadius.circular(16)),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.touch_app, size: 48, color: textColor),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Long press to exit fullscreen mode',
-                            style: widget.theme.textTheme.bodyLarge?.copyWith(color: textColor, fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          // Text(
-                          //   'This hint will disappear in 3 seconds',
-                          //   style: widget.theme.textTheme.bodyMedium?.copyWith(color: textColor.withOpacity(0.7)),
-                          //   textAlign: TextAlign.center,
-                          // ),
-                        ],
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: hintOverlayColor, borderRadius: BorderRadius.circular(8)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.touch_app, size: 20, color: textColor),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Long press the screen at any place to exit',
+                        style: widget.theme.textTheme.bodyLarge?.copyWith(color: textColor, fontWeight: FontWeight.bold),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),

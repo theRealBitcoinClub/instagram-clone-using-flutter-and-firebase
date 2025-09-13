@@ -8,6 +8,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_avif_windows
   flutter_inappwebview_windows
   isar_community_flutter_libs
+  share_plus
   url_launcher_windows
 )
 

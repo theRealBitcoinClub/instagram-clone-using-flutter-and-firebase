@@ -1,6 +1,7 @@
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../odysee/video_providers.dart';
@@ -42,6 +43,8 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
   late ThemeData _theme;
   late ColorScheme _colorScheme;
   late TextTheme _textTheme;
+  bool _youtubeError150 = false;
+  String? _youtubeErrorVideoId;
 
   @override
   void initState() {
@@ -71,7 +74,33 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
           forceHD: false,
           enableCaption: true,
         ),
-      );
+      )..addListener(_youtubePlayerListener);
+    }
+  }
+
+  void _youtubePlayerListener() {
+    if (_youtubeController != null) {
+      final playerState = _youtubeController!.value.playerState;
+      final errorCode = _youtubeController!.value.errorCode;
+
+      // Check for error code 150
+      if (errorCode == 150) {
+        setState(() {
+          _youtubeError150 = true;
+          _youtubeErrorVideoId = widget.videoId;
+        });
+      }
+    }
+  }
+
+  Future<void> _openInBrowser() async {
+    final url = 'https://www.youtube.com/watch?v=${_youtubeErrorVideoId}';
+    final uri = Uri.parse(url);
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open browser'), backgroundColor: _colorScheme.error));
     }
   }
 
@@ -79,6 +108,11 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
   void didUpdateWidget(UnifiedVideoPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.type == VideoPlayerType.youtube && widget.videoId != oldWidget.videoId && widget.videoId != null) {
+      setState(() {
+        _youtubeError150 = false;
+        _youtubeErrorVideoId = null;
+      });
+      _youtubeController?.removeListener(_youtubePlayerListener);
       _youtubeController?.dispose();
       _initializeYoutubeController();
     }
@@ -86,6 +120,7 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
 
   @override
   void dispose() {
+    _youtubeController?.removeListener(_youtubePlayerListener);
     _youtubeController?.dispose();
     super.dispose();
   }
@@ -103,6 +138,10 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
   }
 
   Widget _buildVideoContent(double fixedHeight) {
+    if (widget.type == VideoPlayerType.youtube && _youtubeError150) {
+      return _buildYoutubeError150(fixedHeight);
+    }
+
     switch (widget.type) {
       case VideoPlayerType.youtube:
         return _buildYoutubePlayer(fixedHeight);
@@ -110,6 +149,52 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
       case VideoPlayerType.generic:
         return _buildChewieBasedVideo(fixedHeight);
     }
+  }
+
+  Widget _buildYoutubeError150(double height) {
+    return Container(
+      height: height,
+      color: _colorScheme.surface,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Video Playback Error ',
+                style: _textTheme.bodyLarge?.copyWith(color: _colorScheme.onSurface, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'This video cannot be played in the embedded player due to copyright or embedding restrictions.',
+                style: _textTheme.bodyMedium?.copyWith(color: _colorScheme.onSurface.withOpacity(0.8)),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Video ID: $_youtubeErrorVideoId',
+                style: _textTheme.bodySmall?.copyWith(color: _colorScheme.onSurface.withOpacity(0.6)),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: _openInBrowser,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _colorScheme.error,
+                  foregroundColor: _colorScheme.onError,
+                  elevation: 4,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                icon: Icon(Icons.open_in_browser, size: 20),
+                label: Text('Open in Browser', style: _textTheme.bodyMedium),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildYoutubePlayer(double fixedHeight) {

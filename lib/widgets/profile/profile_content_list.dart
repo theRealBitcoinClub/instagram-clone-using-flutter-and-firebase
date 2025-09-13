@@ -90,16 +90,16 @@ class ProfileContentList extends StatelessWidget {
 
     // Handle YouTube videos
     if (hasYoutubeId) {
-      final controllerNotifier = ytControllerNotifiers!.putIfAbsent(videoPost.id!, () => ValueNotifier(null));
-
-      if (controllerNotifier.value == null || controllerNotifier.value!.initialVideoId != videoPost.youtubeId) {
-        controllerNotifier.value?.dispose();
-        controllerNotifier.value = YoutubePlayerController(
-          initialVideoId: videoPost.youtubeId!,
-          flags: const YoutubePlayerFlags(autoPlay: false, mute: false, hideControls: false, hideThumbnail: false),
-        );
-      }
-      final YoutubePlayerController controller = controllerNotifier.value!;
+      // final controllerNotifier = ytControllerNotifiers!.putIfAbsent(videoPost.id!, () => ValueNotifier(null));
+      //
+      // if (controllerNotifier.value == null || controllerNotifier.value!.initialVideoId != videoPost.youtubeId) {
+      //   controllerNotifier.value?.dispose();
+      //   controllerNotifier.value = YoutubePlayerController(
+      //     initialVideoId: videoPost.youtubeId!,
+      //     flags: const YoutubePlayerFlags(autoPlay: false, mute: false, hideControls: false, hideThumbnail: false),
+      //   );
+      // }
+      // final YoutubePlayerController controller = controllerNotifier.value!;
 
       return Card(
         clipBehavior: Clip.antiAlias,
@@ -109,18 +109,19 @@ class ProfileContentList extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            YoutubePlayer(
-              key: ValueKey("yt_profile_${videoPost.id}_${controller.initialVideoId}"),
-              controller: controller,
-              showVideoProgressIndicator: true,
-              progressIndicatorColor: theme.colorScheme.primary,
-              progressColors: ProgressBarColors(
-                playedColor: theme.colorScheme.primary,
-                handleColor: theme.colorScheme.secondary,
-                bufferedColor: theme.colorScheme.primary.withOpacity(0.4),
-                backgroundColor: theme.colorScheme.onSurface.withOpacity(0.1),
-              ),
-            ),
+            UnifiedVideoPlayer(videoId: videoPost.youtubeId, type: VideoPlayerType.youtube, aspectRatio: 16 / 9, autoPlay: false),
+            // YoutubePlayer(
+            //   key: ValueKey("yt_profile_${videoPost.id}_${controller.initialVideoId}"),
+            //   controller: controller,
+            //   showVideoProgressIndicator: true,
+            //   progressIndicatorColor: theme.colorScheme.primary,
+            //   progressColors: ProgressBarColors(
+            //     playedColor: theme.colorScheme.primary,
+            //     handleColor: theme.colorScheme.secondary,
+            //     bufferedColor: theme.colorScheme.primary.withOpacity(0.4),
+            //     backgroundColor: theme.colorScheme.onSurface.withOpacity(0.1),
+            //   ),
+            // ),
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
@@ -131,7 +132,7 @@ class ProfileContentList extends StatelessWidget {
                       videoPost.text!,
                       expandText: 'more',
                       collapseText: 'less',
-                      maxLines: 3,
+                      maxLines: 4,
                       linkColor: theme.colorScheme.primary,
                       style: theme.textTheme.bodyMedium,
                       linkStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),

@@ -42,16 +42,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     super.initState();
     _scrollController.addListener(_scrollListener);
 
-    // Experiment: Force a rebuild after the initial data should have arrived
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   Future.delayed(const Duration(milliseconds: 100), () {
-    //     // Small delay
-    //     if (mounted) {
-    //       print("Forcing a setState in FeedScreen after initial frame and delay");
-    //       setState(() {});
-    //     }
-    //   });
-    // });
     _activateKeyboardScrollingNoListClickNeeded();
     // Initial data fetch is handled by the feedPostsProvider when it's first read/watched.
     // No explicit call needed here if the provider's constructor calls fetchInitialPosts.
@@ -87,28 +77,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   bool isFilterActive(PostFilterType filterType) {
     return ref.watch(feedPostsProvider).activeFilter == filterType;
   }
-
-  // // Sets or clears the single active filter
-  // void _selectFilter(PostFilterType? filterType) {
-  //   final currentActiveFilterInState = ref.read(feedPostsProvider).activeFilter;
-  //
-  //   // If the user taps the currently active filter, treat it as an action to clear the filter (show all).
-  //   // Or, if they explicitly tap "ALL POSTS" (filterType == null).
-  //   if (filterType == currentActiveFilterInState) {
-  //     // Tapping the same active filter again clears it
-  //     ref.read(feedPostsProvider.notifier).clearFilter();
-  //     _showFilterChangeSnackbar(currentActiveFilterInState, isActive: false); // Show it was deactivated
-  //   } else {
-  //     // Set a new filter or clear if filterType is null (from "ALL POSTS" option)
-  //     ref.read(feedPostsProvider.notifier).setFilter(filterType);
-  //     _showFilterChangeSnackbar(filterType, isActive: filterType != null);
-  //   }
-  //
-  //   // Always scroll to top when a filter action is taken
-  //   if (_scrollController.hasClients) {
-  //     _scrollController.jumpTo(0.0);
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -149,18 +117,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           const PostCounterWidget(),
 
           // Your existing feed content
-          Expanded(
-            // child:
-            // RefreshIndicator(
-            //   onRefresh: () async {
-            //     // Tell the provider to refresh the feed (fetches first page with current filter)
-            //     await ref.read(feedPostsProvider.notifier).refreshFeed();
-            //     // ref.invalidate(feedPostsProvider);
-            //   },
-            //   color: theme.colorScheme.primary,
-            //   backgroundColor: theme.colorScheme.surface,
-            child: _buildFeedBody(theme, feedState),
-          ),
+          Expanded(child: _buildFeedBody(theme, feedState)),
           // ),
         ],
       ),
@@ -177,9 +134,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       child: Stack(
         children: [
           ListView(
-            // This scrollable is necessary for RefreshIndicator to function
-            // It's "invisible" and only serves to enable the pull-to-refresh gesture.
-            // The content (child) is then layered on top using a Stack.
             physics: const AlwaysScrollableScrollPhysics(),
             children: [
               SizedBox(height: MediaQuery.of(context).size.height), // Fills the screen to enable scroll
@@ -195,9 +149,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     // Use a different widget for the "no feed" case that is still scrollable.
     // This allows RefreshIndicator to work.
     if (feedState.posts.isEmpty && !feedState.isLoadingInitial && !feedState.isLoadingMore) {
-      if (feedState.activeFilter != null) {
-        return _buildRefreshableNoPostsWidget(theme, _widgetNoMatch(theme, _getFilterName(feedState.activeFilter!)));
-      }
       return _buildRefreshableNoPostsWidget(theme, _widgetNoFeed(theme));
     }
 
@@ -207,43 +158,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       color: theme.colorScheme.primary,
       backgroundColor: theme.colorScheme.surface,
       child: FocusableActionDetector(
-        // // Initial loading state (only when posts list is truly empty and initial fetch is happening)
-        // if (feedState.isLoadingInitial && feedState.posts.isEmpty) {
-        //   return const Center(child: CircularProgressIndicator());
-        // }
-        //
-        // // Error state (only if posts list is empty and an error message exists)
-        // if (feedState.errorMessage != null && feedState.posts.isEmpty) {
-        //   return Center(
-        //     child: Padding(
-        //       padding: const EdgeInsets.all(16.0),
-        //       child: Column(
-        //         mainAxisAlignment: MainAxisAlignment.center,
-        //         children: [
-        //           Text(
-        //             'Error: ${feedState.errorMessage}',
-        //             textAlign: TextAlign.center,
-        //             style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.error),
-        //           ),
-        //           const SizedBox(height: 16),
-        //           ElevatedButton(onPressed: () => ref.read(feedPostsProvider.notifier).fetchInitialPosts(), child: const Text('Retry')),
-        //         ],
-        //       ),
-        //     ),
-        //   );
-        // }
-        //
-        // // No posts available (either no posts at all, or none match the active server-side filter)
-        // // This check is done after isLoadingInitial is false and no error.
-        // if (feedState.posts.isEmpty && !feedState.isLoadingInitial && !feedState.isLoadingMore) {
-        //   if (feedState.activeFilter != null) {
-        //     // A specific filter is active but returned no results
-        //     return _widgetNoMatch(theme, _getFilterName(feedState.activeFilter!));
-        //   }
-        //   return _widgetNoFeed(theme); // No filter active, and still no posts
-        // }
-        //
-        // // Display list of posts
         autofocus: true,
         focusNode: _listViewFocusNode,
         shortcuts: _getKeyboardShortcuts(),
@@ -348,119 +262,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         ref.read(themeNotifierProvider.notifier).toggleTheme();
       },
     );
-  }
-
-  // Widget _buildMenuFilter(ThemeData theme, PostFilterType? currentActiveFilter) {
-  //   return IconButton(
-  //     icon: Icon(currentActiveFilter != null ? Icons.filter_alt_rounded : Icons.filter_list_outlined),
-  //     tooltip: "Filter Posts",
-  //     onPressed: () {
-  //       showDialog(
-  //         context: context,
-  //         builder: (dialogCtx) {
-  //           return SimpleDialog(
-  //             title: Text("Filter by Content Type", style: theme.dialogTheme.titleTextStyle),
-  //             shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-  //             backgroundColor: theme.dialogTheme.backgroundColor ?? theme.cardColor,
-  //             children: [
-  //               // Option to show all posts (clear filter)
-  //               _buildExclusiveFilterOption(dialogCtx, theme, null, "ALL POSTS", Icons.clear_all_outlined, Icons.clear_all_rounded),
-  //               const Divider(height: 1, indent: 16, endIndent: 16),
-  //               _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.images, "IMAGES", Icons.image_outlined, Icons.image_rounded),
-  //               // Your videos filter was commented out, so I've kept it that way.
-  //               // _buildExclusiveFilterOption(
-  //               //   dialogCtx,
-  //               //   theme,
-  //               //   PostFilterType.videos,
-  //               //   "VIDEOS",
-  //               //   Icons.video_library_outlined,
-  //               //   Icons.video_library_rounded,
-  //               // ),
-  //               // _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.hashtags, "HASHTAGS", Icons.tag_outlined, Icons.tag_rounded),
-  //               _buildExclusiveFilterOption(dialogCtx, theme, PostFilterType.topics, "TOPICS", Icons.topic_outlined, Icons.topic_rounded),
-  //             ],
-  //           );
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
-
-  // Widget _buildExclusiveFilterOption(
-  //   BuildContext dialogCtx,
-  //   ThemeData theme,
-  //   PostFilterType? filterType,
-  //   String text,
-  //   IconData icon,
-  //   IconData activeIcon,
-  // ) {
-  //   // Determine if this option represents the currently active filter (or no filter if filterType is null)
-  //   final bool isSelected =
-  //       (filterType == null && ref.read(feedPostsProvider).activeFilter == null) || (filterType != null && isFilterActive(filterType));
-  //
-  //   return SimpleDialogOption(
-  //     onPressed: () {
-  //       _selectFilter(filterType); // This handles setting or clearing
-  //       Navigator.pop(dialogCtx);
-  //     },
-  //     child: Padding(
-  //       padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0), // Adjusted padding
-  //       child: Row(
-  //         children: [
-  //           Icon(
-  //             isSelected ? activeIcon : icon,
-  //             color: isSelected ? theme.colorScheme.primary : theme.iconTheme.color?.withOpacity(0.7),
-  //             size: 22,
-  //           ),
-  //           const SizedBox(width: 16),
-  //           Expanded(
-  //             child: Text(
-  //               text,
-  //               style: theme.textTheme.titleMedium?.copyWith(
-  //                 color: isSelected ? theme.colorScheme.primary : theme.textTheme.titleMedium?.color,
-  //                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-  //               ),
-  //             ),
-  //           ),
-  //           // Visual cue for selection (e.g., a check mark or radio button style)
-  //           if (isSelected)
-  //             Icon(Icons.check_circle_outline_rounded, color: theme.colorScheme.primary, size: 24)
-  //           else
-  //             const SizedBox(width: 24), // Placeholder for alignment
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  // void _showFilterChangeSnackbar(PostFilterType? filterType, {required bool isActive}) {
-  //   // Use Future.delayed to ensure the state has propagated and snackbar shows correctly
-  //   Future.delayed(const Duration(milliseconds: 50), () {
-  //     if (!mounted) return;
-  //     String message;
-  //     if (filterType == null) {
-  //       // This means "ALL POSTS" was selected
-  //       message = "Showing all posts.";
-  //     } else {
-  //       final filterName = _getFilterName(filterType);
-  //       message = isActive ? "Showing '$filterName' posts." : "Filter for '$filterName' removed. Showing all posts.";
-  //     }
-  //     showSnackBar(message, context);
-  //   });
-  // }
-
-  String _getFilterName(PostFilterType filterType) {
-    // Your existing implementation
-    switch (filterType) {
-      case PostFilterType.images:
-        return "IMAGES";
-      // case PostFilterType.videos:
-      //   return "VIDEOS";
-      // case PostFilterType.hashtags:
-      //   return "TAGS";
-      case PostFilterType.topics:
-        return "TOPICS";
-    }
   }
 
   // Keyboard scroll logic (remains unchanged)

@@ -27,13 +27,13 @@ class ProfileContentGrid extends StatelessWidget {
     }
 
     return SliverPadding(
-      padding: const EdgeInsets.all(2.0),
+      padding: const EdgeInsets.all(0.0),
       sliver: SliverGrid.builder(
         itemCount: posts.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          crossAxisSpacing: 2.0,
-          mainAxisSpacing: 2.0,
+          crossAxisSpacing: 0.1,
+          mainAxisSpacing: 0.1,
           childAspectRatio: 1.0,
         ),
         itemBuilder: (context, index) {
@@ -56,7 +56,8 @@ class ProfileContentGrid extends StatelessWidget {
             // key: imageKey, // Assign the key to the image widget
             imageUrl: imageUrl,
             sourceType: ImageSourceType.network,
-            fitMode: ImageFitMode.cover, // Use cover for grid
+            backgroundColor: Colors.black,
+            fitMode: ImageFitMode.contain, // Use cover for grid
             aspectRatio: 1.0,
             borderRadius: BorderRadius.zero,
             showLoadingProgress: true,

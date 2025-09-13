@@ -160,12 +160,15 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                   return Container(
                     color: Colors.black, // Fixed black background for image container
                     width: double.infinity, // Ensure full width
+                    height: double.infinity,
                     child: Center(
                       child: CachedUnifiedImageWidget(
+                        width: double.infinity, // Ensure full width
+                        height: double.infinity,
                         border: Border.all(color: Colors.black),
                         backgroundColor: Colors.black,
                         imageUrl: post.imgurUrl ?? post.imageUrl!,
-                        fitMode: ImageFitMode.fitWidth, // Use fitWidth to fill width while maintaining aspect ratio
+                        fitMode: ImageFitMode.contain, // Use fitWidth to fill width while maintaining aspect ratio
                       ),
                     ),
                   );
@@ -207,26 +210,26 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                 bottom: _isPortrait ? 80 : 0, // Adjust position based on orientation
                 left: 0,
                 right: 0,
-                child: FadeTransition(
-                  opacity: _overlayOpacityAnimation,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    transitionBuilder: (Widget child, Animation<double> animation) {
-                      return FadeTransition(opacity: animation, child: child);
-                    },
-                    child: _isOverlayVisible
-                        ? Container(
-                            key: ValueKey(_currentIndex),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: overlayColor,
-                              borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
-                            ),
-                            constraints: const BoxConstraints(
-                              minHeight: 100, // Fixed height for exactly 5 lines
-                              maxHeight: 100, // Fixed height for exactly 5 lines
-                            ),
-                            width: double.infinity, // Stretch full width
+                child: _isOverlayVisible
+                    ? Container(
+                        key: ValueKey(_currentIndex),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: overlayColor,
+                          borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+                        ),
+                        constraints: const BoxConstraints(
+                          minHeight: 100, // Fixed height for exactly 5 lines
+                          maxHeight: 100, // Fixed height for exactly 5 lines
+                        ),
+                        width: double.infinity, // Stretch full width
+                        child: FadeTransition(
+                          opacity: _overlayOpacityAnimation,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder: (Widget child, Animation<double> animation) {
+                              return FadeTransition(opacity: animation, child: child);
+                            },
                             child: Text(
                               currentPost.text!,
                               style: widget.theme.textTheme.bodyMedium?.copyWith(
@@ -237,10 +240,10 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                               maxLines: 5, // Exactly 5 lines
                               overflow: TextOverflow.ellipsis, // Ellipsis for overflow
                             ),
-                          )
-                        : const SizedBox.shrink(key: ValueKey('empty')),
-                  ),
-                ),
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(key: ValueKey('empty')),
               ),
 
             // Bottom Navigation Bar with theme awareness - only visible in portrait

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/config_ipfs.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart'; // Your updated feed provider
 import 'package:mahakka/theme_provider.dart'; // Your theme provider
 import 'package:mahakka/utils/snackbar.dart';
@@ -154,9 +155,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     final imgurUrl = post.imgurUrl;
     final imageUrl = post.imageUrl;
+    final ipfsUrl = post.ipfsCid;
 
     // Check if either imgurUrl or imageUrl is not null and not empty
-    return (imgurUrl != null && imgurUrl.isNotEmpty) || (imageUrl != null && imageUrl.isNotEmpty);
+    return (imgurUrl != null && imgurUrl.isNotEmpty) || (imageUrl != null && imageUrl.isNotEmpty) || (ipfsUrl != null && ipfsUrl.isNotEmpty);
   }
 
   Widget _buildFeedBody(ThemeData theme, FeedState feedState) {
@@ -244,16 +246,20 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   GestureDetector wrapInDoubleTapDetectorImagesOnly(MemoModelPost post, BuildContext context, FeedState feedState, ThemeData theme) {
     return GestureDetector(
       onDoubleTap: () async {
-        final imageUrl = post.imgurUrl ?? post.imageUrl;
-        if (imageUrl == null || imageUrl.isEmpty) {
+        final imageUrl = post.imgurUrl ?? post.imageUrl ?? "";
+        final ipfsId = post.ipfsCid ?? "";
+        if (imageUrl.isEmpty && ipfsId.isEmpty) {
           showSnackBar("No valid image available for this post", context, type: SnackbarType.info);
           return;
         }
 
-        // If you need async validation, you could do:
-        final isValid = await ref.read(imageValidationProvider(imageUrl).future);
-        if (!isValid) {
+        if (imageUrl.isNotEmpty && !(await ref.read(imageValidationProvider(imageUrl).future))) {
           showSnackBar("Image is not accessible, active VPN!", context, type: SnackbarType.error);
+          return;
+        }
+
+        if (ipfsId.isNotEmpty && !(await ref.read(imageValidationProvider(IpfsConfig.preferredNode + ipfsId).future))) {
+          showSnackBar("Incompatible IPFS format!", context, type: SnackbarType.error);
           return;
         }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/config_ipfs.dart';
 import 'package:mahakka/widgets/red_action_button.dart';
 
 import 'add_post_providers.dart';
@@ -14,7 +15,7 @@ class IpfsMediaWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cid = ref.watch(ipfsCidProvider);
-    final ipfsUrl = 'https://free-bch.fullstack.cash/ipfs/view/$cid';
+    final ipfsUrl = '${IpfsConfig.preferredNode}$cid';
 
     return Column(
       mainAxisSize: MainAxisSize.min,

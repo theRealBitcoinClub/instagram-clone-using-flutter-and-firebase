@@ -66,6 +66,7 @@ class IpfsConfig {
   static const String mappingFile = '$IPFS_MAPPING_FILE';
   static const String ghToken = '$IPFS_GH_TOKEN';
   static const String ghRepo = '$IPFS_GH_REPO';
+  static const String preferredNode = '$IPFS_PREFERRED_NODE';
 }" > lib/config_ipfs.dart
 
 # -----------------

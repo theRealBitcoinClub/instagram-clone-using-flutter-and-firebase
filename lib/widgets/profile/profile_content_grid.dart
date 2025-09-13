@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 
+import '../../config_ipfs.dart';
 import '../cached_unified_image_widget.dart';
 import '../unified_image_widget.dart';
 
@@ -90,7 +91,7 @@ class ProfileContentGrid extends StatelessWidget {
 
     // Priority 3: ipfsCid (new property - convert to IPFS gateway URL)
     if (post.ipfsCid != null && post.ipfsCid!.isNotEmpty) {
-      return 'https://free-bch.fullstack.cash/ipfs/view/${post.ipfsCid}';
+      return '${IpfsConfig.preferredNode}${post.ipfsCid}';
     }
 
     return null;

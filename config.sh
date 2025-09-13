@@ -11,6 +11,7 @@ export TOPIC_COLLECTION="_topics"
 
 # IPFS metadata and mapping files.
 
+export IPFS_PREFERRED_NODE="https://free-bch.fullstack.cash/ipfs/view/"
 export IPFS_METADATA_FILE="ipfs_metadata.json"
 export IPFS_MAPPING_FILE="ipfs_mapping.json"
 export IPFS_GH_REPO="biggiebigbitcoin/mahakka"

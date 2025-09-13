@@ -3,6 +3,8 @@ import 'package:flutter_avif/flutter_avif.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../config_ipfs.dart';
+
 enum ImageSourceType {
   network, // For HTTP URLs
   ipfs, // For IPFS CIDs
@@ -275,7 +277,7 @@ class UnifiedImageWidgetState extends ConsumerState<UnifiedImageWidget> {
   String _resolveImageUrl(String url, ImageSourceType sourceType) {
     switch (sourceType) {
       case ImageSourceType.ipfs:
-        return 'https://free-bch.fullstack.cash/ipfs/view/$url';
+        return '${IpfsConfig.preferredNode}$url';
       case ImageSourceType.network:
         return url;
       case ImageSourceType.asset:

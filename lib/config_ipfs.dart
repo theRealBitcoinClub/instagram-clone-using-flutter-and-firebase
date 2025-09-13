@@ -6,4 +6,5 @@ class IpfsConfig {
   static const String mappingFile = 'ipfs_mapping.json';
   static const String ghToken = '';
   static const String ghRepo = 'biggiebigbitcoin/mahakka';
+  static const String preferredNode = 'https://free-bch.fullstack.cash/ipfs/view/';
 }

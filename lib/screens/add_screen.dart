@@ -15,6 +15,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 // Assuming these exist and are correctly imported
+import '../config_ipfs.dart';
 import '../memo/base/memo_verifier.dart';
 import '../memo/base/text_input_verifier.dart';
 // Import the Odysee widgets and providers
@@ -571,7 +572,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     } else if (imgurUrl.isNotEmpty) {
       return "$text $imgurUrl";
     } else if (ipfsCid.isNotEmpty) {
-      return "$text https://free-bch.fullstack.cash/ipfs/view/$ipfsCid";
+      return "$text ${IpfsConfig.preferredNode}$ipfsCid";
     } else if (odyseeUrl.isNotEmpty) {
       return "$text $odyseeUrl";
     }

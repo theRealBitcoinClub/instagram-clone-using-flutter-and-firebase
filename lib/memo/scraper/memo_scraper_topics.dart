@@ -1,3 +1,4 @@
+import 'package:mahakka/config_hide_on_feed_trigger.dart';
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
@@ -63,12 +64,14 @@ class MemoScraperTopic {
     }
   }
 
+  final String keyTopic = "TopicScrape123";
+
   /// Filters topics to find only those with new posts using lastPostCount
   Future<List<MemoModelTopic>> _filterTopicsWithNewPosts(SharedPreferences prefs, List<MemoModelTopic> allTopics, String cacheId) async {
     final List<MemoModelTopic> topicsWithNewPosts = [];
 
     for (final topic in allTopics) {
-      final topicKey = "TopicScrape$cacheId${topic.url}";
+      final topicKey = "$keyTopic$cacheId${topic.url}";
       final lastPostCount = int.tryParse(prefs.getString(topicKey) ?? "0") ?? 0;
 
       // Store the previous post count for later comparison
@@ -77,9 +80,6 @@ class MemoScraperTopic {
       if (topic.postCount != null && topic.postCount! > lastPostCount) {
         // This topic has new posts
         topicsWithNewPosts.add(topic);
-
-        // Update cache for this topic
-        await prefs.setString(topicKey, topic.postCount.toString());
       }
     }
 
@@ -119,6 +119,8 @@ class MemoScraperTopic {
           print("\nSCRAPER TOPICS\nSaved ${newPosts.length} new posts for topic: ${topic.header}");
         }
 
+        final topicKey = "$keyTopic$cacheId${topic.url}";
+        (await SharedPreferences.getInstance()).setString(topicKey, topic.postCount.toString());
         // Clear posts to free memory (they're already persisted)
         // topic.posts.clear();
       } catch (e) {
@@ -240,9 +242,12 @@ class MemoScraperTopic {
         try {
           final MemoModelPost post = _createPostFromData(postData, topic);
 
+          post.text ??= "";
           if (MemoScraperUtil.isTextOnly(post)) {
             continue; // Skip text-only posts
           }
+
+          if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase()))) continue;
 
           postList.add(post);
         } catch (e) {

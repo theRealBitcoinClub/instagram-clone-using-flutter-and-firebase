@@ -10,7 +10,6 @@ import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../config_hide_on_feed_trigger.dart';
 import '../memo/model/memo_model_post.dart';
 import '../memo_data_checker.dart';
 import '../provider/bch_burner_balance_provider.dart';
@@ -151,7 +150,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   bool _hasValidImageUrl(MemoModelPost post) {
-    if (_filterSpam(post)) return false;
+    // if (_filterSpam(post)) return false;
 
     final imgurUrl = post.imgurUrl;
     final imageUrl = post.imageUrl;
@@ -202,9 +201,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 final post = feedState.posts[index];
 
                 // Check if post.text exists and contains any hidden words
-                if (_filterSpam(post)) {
-                  return const SizedBox.shrink(); // Hide the post
-                }
+                // if (_filterSpam(post)) {
+                //   return const SizedBox.shrink(); // Hide the post
+                // }
 
                 return wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme);
 
@@ -281,8 +280,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
-  bool _filterSpam(MemoModelPost post) =>
-      post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase()));
+  // bool _filterSpam(MemoModelPost post) =>
+  //     post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase()));
 
   // --- Helper Widgets (No Feed, No Match - adjusted message for No Match) ---
   Center _widgetNoFeed(ThemeData theme) {

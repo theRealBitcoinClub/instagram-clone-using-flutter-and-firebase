@@ -2,12 +2,13 @@
 
 # Define your collection names here.
 # Change these values to switch between environments.
-export POSTS_COLLECTION="_posts"
-export METADATA_COLLECTION="_metadata"
-export CREATOR_COLLECTION="_creators"
-export TAG_COLLECTION="_tags"
-export USER_COLLECTION="_users"
-export TOPIC_COLLECTION="_topics"
+export PREFIX="____"
+export POSTS_COLLECTION="posts"
+export METADATA_COLLECTION="metadata"
+export CREATOR_COLLECTION="creators"
+export TAG_COLLECTION="tags"
+export USER_COLLECTION="users"
+export TOPIC_COLLECTION="topics"
 
 # IPFS metadata and mapping files.
 

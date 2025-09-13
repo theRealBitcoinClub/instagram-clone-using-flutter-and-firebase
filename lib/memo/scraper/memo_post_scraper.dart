@@ -8,6 +8,7 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
+import '../../config_hide_on_feed_trigger.dart';
 import '../memo_reg_exp.dart';
 
 const scraperPageSize = 25;
@@ -227,6 +228,8 @@ class MemoPostScraper {
     if (filterOn && MemoScraperUtil.isTextOnly(post)) {
       return null;
     }
+
+    if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase()))) return null;
 
     post.text = post.text ?? "";
 

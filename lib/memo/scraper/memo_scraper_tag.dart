@@ -10,7 +10,7 @@ import '../firebase/post_service.dart';
 import '../model/memo_model_post.dart';
 import 'memo_post_scraper.dart';
 
-const prefskey = "lastTagScrape";
+const prefskey = "lastTagScrape123";
 
 class MemoScraperTag {
   final String cacheId;
@@ -26,11 +26,17 @@ class MemoScraperTag {
   Future<void> startScrapeTags(List<String> orderBy, int startOffset, int endOffset) async {
     for (String order in orderBy) {
       for (int offset = startOffset; offset >= endOffset; offset -= 25) {
-        // Check if we should stop scraping based on cache
-        if (await _shouldStopScraping(offset, order)) {
-          //TODO MAYBE YOU CAN USE SOME HTTP HEADER CONTENT TO VERIFY THE LAST DATE CHANGED
-          print("\nSCRAPER TAGS\nSTOP SCRAPE TAGS: No changes detected for $order$offset");
-          return;
+        final prefs = await SharedPreferences.getInstance();
+        // check if the first tag has changed
+        final sampleTags = await scrapeTags(order, offset);
+        if (sampleTags.isEmpty) continue;
+
+        final key = "$prefskey$cacheId";
+        final checkString = "${sampleTags[0].lastPost}${sampleTags[0].postCount}";
+        final lastCheckString = prefs.getString(key);
+
+        if (lastCheckString == checkString) {
+          return; // Stop scraping - no changes detected
         }
 
         // Scrape tags for current order and offset
@@ -47,32 +53,13 @@ class MemoScraperTag {
         // Process each tag with new posts
         await _processTagsWithNewPosts(tagsWithNewPosts);
 
+        //ITS IMPORTANT TO SET THE CHECKSTRING ONLY AFTER SUCCESSFULLY SCRAPING
+        await prefs.setString(key, checkString);
         print("\nSCRAPER TAGS\nScraped $order with offset $offset - Found ${tagsWithNewPosts.length} tags with new posts");
       }
     }
 
     print("\nSCRAPER TAGS\nFINISHED SCRAPING TAGS");
-  }
-
-  /// Checks if scraping should stop based on cached data
-  Future<bool> _shouldStopScraping(int offset, String order) async {
-    final prefs = await SharedPreferences.getInstance();
-    // check if the first tag has changed
-    final sampleTags = await scrapeTags(order, offset);
-    if (sampleTags.isEmpty) return true;
-
-    final key = "$prefskey$cacheId";
-    final checkString = "${sampleTags[0].lastPost}${sampleTags[0].postCount}";
-    final lastCheckString = prefs.getString(key);
-
-    if (lastCheckString == checkString) {
-      return true; // Stop scraping - no changes detected
-    }
-
-    // Update cache for next time
-    await prefs.setString(key, checkString);
-
-    return false;
   }
 
   /// Filters tags to find only those with new posts

@@ -20,20 +20,45 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late AnimationController _contentAnimationController;
+  late bool _isOverlayVisible;
+  late bool _isPortrait;
+  late AnimationController _overlayAnimationController;
+  late Animation<double> _overlayOpacityAnimation;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
+    _isOverlayVisible = true;
+    // Initialize with default value, will be updated in didChangeDependencies
+    _isPortrait = true;
 
     _animationController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
-
     _contentAnimationController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
+    _overlayAnimationController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+    _overlayOpacityAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _overlayAnimationController, curve: Curves.easeInOut));
 
     _animationController.forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Update orientation after the widget is mounted and has access to MediaQuery
+    final newOrientation = MediaQuery.of(context).orientation;
+    final newIsPortrait = newOrientation == Orientation.portrait;
+
+    if (_isPortrait != newIsPortrait) {
+      setState(() {
+        _isPortrait = newIsPortrait;
+      });
+    }
   }
 
   @override
@@ -41,6 +66,7 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
     _pageController.dispose();
     _animationController.dispose();
     _contentAnimationController.dispose();
+    _overlayAnimationController.dispose();
     super.dispose();
   }
 
@@ -61,6 +87,9 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
     _contentAnimationController.reverse().then((_) {
       setState(() {
         _currentIndex = index;
+        // Reset overlay visibility when changing posts
+        _isOverlayVisible = true;
+        _overlayAnimationController.reverse();
       });
       // Animate new content in
       _contentAnimationController.forward();
@@ -90,7 +119,14 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
   }
 
   void _handleDoubleTap() {
-    _handleHeartAction();
+    setState(() {
+      _isOverlayVisible = !_isOverlayVisible;
+      if (_isOverlayVisible) {
+        _overlayAnimationController.reverse();
+      } else {
+        _overlayAnimationController.forward();
+      }
+    });
   }
 
   @override
@@ -105,7 +141,7 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
     final textColor = isDarkTheme ? Colors.white : Colors.black;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.black, // Fixed black background
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Stack(
@@ -121,93 +157,122 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                 itemCount: widget.posts.length,
                 itemBuilder: (context, index) {
                   final post = widget.posts[index];
-                  return Center(
-                    child: CachedUnifiedImageWidget(imageUrl: post.imgurUrl ?? post.imageUrl!, fitMode: ImageFitMode.contain),
+                  return Container(
+                    color: Colors.black, // Fixed black background for image container
+                    width: double.infinity, // Ensure full width
+                    child: Center(
+                      child: CachedUnifiedImageWidget(
+                        border: Border.all(color: Colors.black),
+                        backgroundColor: Colors.black,
+                        imageUrl: post.imgurUrl ?? post.imageUrl!,
+                        fitMode: ImageFitMode.fitWidth, // Use fitWidth to fill width while maintaining aspect ratio
+                      ),
+                    ),
                   );
                 },
               ),
             ),
 
-            // App Bar with theme awareness
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                color: appBarBackgroundColor,
-                child: AppBar(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  leading: IconButton(
-                    icon: Icon(Icons.close, color: appBarIconColor),
-                    onPressed: _closeActivity,
+            // App Bar with theme awareness - only visible in portrait
+            if (_isPortrait)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  color: appBarBackgroundColor,
+                  child: AppBar(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    leading: IconButton(
+                      icon: Icon(Icons.close, color: appBarIconColor),
+                      onPressed: _closeActivity,
+                    ),
+                    title: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
+                      child: _buildTitleRow(currentPost, textColor, key: ValueKey(_currentIndex)),
+                    ),
+                    iconTheme: IconThemeData(color: appBarIconColor),
+                    titleTextStyle: widget.theme.textTheme.titleSmall?.copyWith(color: textColor),
                   ),
-                  title: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    transitionBuilder: (Widget child, Animation<double> animation) {
-                      return FadeTransition(opacity: animation, child: child);
-                    },
-                    child: _buildTitleRow(currentPost, textColor, key: ValueKey(_currentIndex)),
-                  ),
-                  iconTheme: IconThemeData(color: appBarIconColor),
-                  titleTextStyle: widget.theme.textTheme.titleSmall?.copyWith(color: textColor),
                 ),
               ),
-            ),
 
             // Text overlay at bottom with animation
             if (currentPost.text != null && currentPost.text!.isNotEmpty)
               Positioned(
-                bottom: 80,
+                bottom: _isPortrait ? 80 : 0, // Adjust position based on orientation
                 left: 0,
                 right: 0,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
-                    return FadeTransition(opacity: animation, child: child);
-                  },
-                  child: Container(
-                    key: ValueKey(_currentIndex),
-                    padding: EdgeInsets.all(16),
-                    color: overlayColor,
-                    child: Text(
-                      currentPost.text!,
-                      style: widget.theme.textTheme.bodyMedium?.copyWith(color: textColor),
-                      textAlign: TextAlign.center,
-                    ),
+                child: FadeTransition(
+                  opacity: _overlayOpacityAnimation,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    transitionBuilder: (Widget child, Animation<double> animation) {
+                      return FadeTransition(opacity: animation, child: child);
+                    },
+                    child: _isOverlayVisible
+                        ? Container(
+                            key: ValueKey(_currentIndex),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: overlayColor,
+                              borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+                            ),
+                            constraints: const BoxConstraints(
+                              minHeight: 100, // Fixed height for exactly 5 lines
+                              maxHeight: 100, // Fixed height for exactly 5 lines
+                            ),
+                            width: double.infinity, // Stretch full width
+                            child: Text(
+                              currentPost.text!,
+                              style: widget.theme.textTheme.bodyMedium?.copyWith(
+                                color: textColor,
+                                height: 1.2, // Line height for better spacing
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 5, // Exactly 5 lines
+                              overflow: TextOverflow.ellipsis, // Ellipsis for overflow
+                            ),
+                          )
+                        : const SizedBox.shrink(key: ValueKey('empty')),
                   ),
                 ),
               ),
 
-            // Bottom Navigation Bar with theme awareness
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                color: overlayColor,
-                height: 80,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back, color: textColor, size: 30),
-                      onPressed: _navigateToPrevious,
-                      disabledColor: textColor.withOpacity(0.3),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.favorite_border, color: textColor, size: 30),
-                      onPressed: _handleHeartAction,
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.arrow_forward, color: textColor, size: 30),
-                      onPressed: _navigateToNext,
-                      disabledColor: textColor.withOpacity(0.3),
-                    ),
-                  ],
+            // Bottom Navigation Bar with theme awareness - only visible in portrait
+            if (_isPortrait)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  color: overlayColor,
+                  height: 80,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.arrow_back, color: textColor, size: 36), // Increased icon size
+                        onPressed: _navigateToPrevious,
+                        disabledColor: textColor.withOpacity(0.3),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.favorite_border, color: textColor, size: 36), // Increased icon size
+                        onPressed: _handleHeartAction,
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.arrow_forward, color: textColor, size: 36), // Increased icon size
+                        onPressed: _navigateToNext,
+                        disabledColor: textColor.withOpacity(0.3),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

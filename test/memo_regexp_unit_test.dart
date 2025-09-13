@@ -363,12 +363,13 @@ void main() {
       https://twitter.com/user/
       https://t.co/abc123
       https://pbs.twimg.com/media/abc123.jpg
+      https://pbs.twimg.com/media/G0ZZQzKWMAAC7K8.jpg
       """;
 
       final memoRegExp = MemoRegExp(twitterUrls);
       final result = memoRegExp.extractAllWhitelistedMediaUrls();
 
-      expect(result.length, 5);
+      expect(result.length, 6);
     });
 
     test('Reddit regex should handle various Reddit URL formats', () {

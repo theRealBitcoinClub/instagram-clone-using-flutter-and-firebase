@@ -1,6 +1,7 @@
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
@@ -45,11 +46,23 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
   late TextTheme _textTheme;
   bool _youtubeError150 = false;
   String? _youtubeErrorVideoId;
+  bool _isCheckingVideo = false;
+  bool _videoRemoved = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.type == VideoPlayerType.youtube && widget.videoId != null) {
+      _checkVideoAvailability().then((isAvailable) {
+        if (isAvailable) {
+          _initializeYoutubeController();
+        } else {
+          setState(() {
+            _videoRemoved = true;
+          });
+        }
+      });
+    } else if (widget.type == VideoPlayerType.youtube && widget.videoId != null) {
       _initializeYoutubeController();
     }
   }
@@ -60,6 +73,49 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
     _theme = widget.theme ?? Theme.of(context);
     _colorScheme = widget.colorScheme ?? _theme.colorScheme;
     _textTheme = widget.textTheme ?? _theme.textTheme;
+  }
+
+  /// Checks if a YouTube video exists and is available
+  Future<bool> _checkVideoAvailability() async {
+    if (widget.type != VideoPlayerType.youtube || widget.videoId == null) {
+      return true;
+    }
+
+    setState(() {
+      _isCheckingVideo = true;
+    });
+
+    try {
+      // Method 1: Check using YouTube oembed API (more reliable)
+      final oembedUrl = 'https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${widget.videoId}&format=json';
+      final response = await http.get(Uri.parse(oembedUrl));
+      // Check if response contains "Not Found" (case insensitive)
+      final responseBody = response.body.toLowerCase();
+      if (responseBody.contains('not found') ||
+          responseBody.contains('this video isn\'t available') ||
+          responseBody.contains('video unavailable')) {
+        return false;
+      }
+
+      // If oembed returns 200, video exists and is embeddable
+      // if (response.statusCode == 200) {
+      return response.statusCode == 200;
+      // }
+
+      // // Method 2: Fallback - check video page directly
+      // final videoUrl = 'https://www.youtube.com/watch?v=${widget.videoId}';
+      // final videoResponse = await http.head(Uri.parse(videoUrl));
+      //
+      // // YouTube returns 200 for available videos, 404 for removed videos
+      // return videoResponse.statusCode == 200;
+    } catch (e) {
+      // If any error occurs, assume video might be unavailable
+      return false;
+    } finally {
+      setState(() {
+        _isCheckingVideo = false;
+      });
+    }
   }
 
   void _initializeYoutubeController() {
@@ -94,7 +150,10 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
   }
 
   Future<void> _openInBrowser() async {
-    final url = 'https://www.youtube.com/watch?v=${_youtubeErrorVideoId}';
+    final videoId = _youtubeErrorVideoId ?? widget.videoId;
+    if (videoId == null) return;
+
+    final url = 'https://www.youtube.com/watch?v=$videoId';
     final uri = Uri.parse(url);
 
     if (await canLaunchUrl(uri)) {
@@ -111,10 +170,23 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
       setState(() {
         _youtubeError150 = false;
         _youtubeErrorVideoId = null;
+        _videoRemoved = false;
       });
+
       _youtubeController?.removeListener(_youtubePlayerListener);
       _youtubeController?.dispose();
-      _initializeYoutubeController();
+      _youtubeController = null;
+
+      // Re-check video availability for new video ID
+      _checkVideoAvailability().then((isAvailable) {
+        if (isAvailable) {
+          _initializeYoutubeController();
+        } else {
+          setState(() {
+            _videoRemoved = true;
+          });
+        }
+      });
     }
   }
 
@@ -127,12 +199,92 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _isCheckingVideo ? _checkVideoAvailability() : Future.value(true),
+      builder: (context, snapshot) {
+        if (_isCheckingVideo) {
+          return _buildVideoCheckingUI();
+        }
+
+        if (widget.type == VideoPlayerType.youtube && _videoRemoved) {
+          return _buildRemovedVideoUI();
+        }
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final expectedAspectRatio = widget.aspectRatio ?? defaultAspectRatio;
+            final fixedHeight = constraints.maxWidth / expectedAspectRatio;
+
+            return SizedBox(height: fixedHeight, child: _buildVideoContent(fixedHeight));
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildVideoCheckingUI() {
     return LayoutBuilder(
       builder: (context, constraints) {
         final expectedAspectRatio = widget.aspectRatio ?? defaultAspectRatio;
         final fixedHeight = constraints.maxWidth / expectedAspectRatio;
 
-        return SizedBox(height: fixedHeight, child: _buildVideoContent(fixedHeight));
+        return Container(
+          height: fixedHeight,
+          color: _colorScheme.surface,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(_colorScheme.primary)),
+                const SizedBox(height: 16),
+                Text('Checking video availability...', style: _textTheme.bodyMedium?.copyWith(color: _colorScheme.onSurface)),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRemovedVideoUI() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final expectedAspectRatio = widget.aspectRatio ?? defaultAspectRatio;
+        final fixedHeight = constraints.maxWidth / expectedAspectRatio;
+
+        return Container(
+          height: fixedHeight,
+          color: _colorScheme.surface,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.remove_circle_outline, color: _colorScheme.error, size: 48),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Video Removed',
+                    style: _textTheme.bodyLarge?.copyWith(color: _colorScheme.onSurface, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'This video has been removed from YouTube and is no longer available.',
+                    style: _textTheme.bodyMedium?.copyWith(color: _colorScheme.onSurface.withOpacity(0.8)),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Video ID: ${widget.videoId}',
+                    style: _textTheme.bodySmall?.copyWith(color: _colorScheme.onSurface.withOpacity(0.6)),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
       },
     );
   }
@@ -162,7 +314,7 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Video Playback Error ',
+                'Video Playback Error',
                 style: _textTheme.bodyLarge?.copyWith(color: _colorScheme.onSurface, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),

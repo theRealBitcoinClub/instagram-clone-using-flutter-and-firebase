@@ -198,7 +198,7 @@ class UnifiedImageWidgetState extends ConsumerState<UnifiedImageWidget> {
       width: widget.width,
       height: widget.height,
       errorBuilder: (context, error, stackTrace) {
-        return widget.errorWidget ?? _buildErrorWidget('Image Load Error', colorScheme, textTheme);
+        return widget.errorWidget ?? _buildErrorWidget('Activate your VPN!', colorScheme, textTheme);
       },
       loadingBuilder: (context, child, loadingProgress) {
         if (loadingProgress == null) return child;

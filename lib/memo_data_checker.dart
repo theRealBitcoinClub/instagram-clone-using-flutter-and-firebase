@@ -1,6 +1,7 @@
 import 'dart:async'; // For TimeoutException
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
 class MemoDataChecker {
@@ -72,3 +73,14 @@ class MemoDataChecker {
     return completer.future;
   }
 }
+
+final imageValidationProvider = FutureProvider.family<bool, String>((ref, imageUrl) async {
+  try {
+    // You could add actual image validation logic here
+    // For example, check if the image exists or is accessible
+    // This is just a placeholder - implement your actual validation logic
+    return MemoDataChecker().isImageValid(url: imageUrl);
+  } catch (e) {
+    return false;
+  }
+});

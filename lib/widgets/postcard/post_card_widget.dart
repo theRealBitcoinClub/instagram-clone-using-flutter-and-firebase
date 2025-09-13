@@ -69,14 +69,15 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   Widget _buildPostMedia(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    String imgUrl = widget.post.imageUrl ?? widget.post.imgurUrl ?? "";
     // Priority: YouTube Video > Other Video > Image > IPFS > Fallback
     if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
       return _buildYouTubeWidget(theme, colorScheme, textTheme);
     } else if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty) {
       return _buildVideoWidget(theme, colorScheme, textTheme);
-    } else if (widget.post.imageUrl != null && widget.post.imageUrl!.isNotEmpty) {
+    } else if (imgUrl.isNotEmpty) {
       return UnifiedImageWidget(
-        imageUrl: widget.post.imageUrl!,
+        imageUrl: imgUrl,
         sourceType: ImageSourceType.network,
         fitMode: ImageFitMode.contain,
         aspectRatio: 16 / 9,

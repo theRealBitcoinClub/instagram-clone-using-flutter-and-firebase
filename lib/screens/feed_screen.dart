@@ -3,14 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart'; // Your updated feed provider
 import 'package:mahakka/theme_provider.dart'; // Your theme provider
+import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
 // import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config_hide_on_feed_trigger.dart';
+import '../memo/model/memo_model_post.dart';
+import '../memo_data_checker.dart';
 import '../provider/bch_burner_balance_provider.dart';
 import '../widgets/post_counter_widget.dart';
+import '../widgets/post_dialog.dart';
 
 // Enum for filter types - this should be consistent with what PostService and FeedPostsNotifier expect
 enum PostFilterType {
@@ -145,6 +149,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
+  bool _hasValidImageUrl(MemoModelPost post) {
+    if (_filterSpam(post)) return false;
+
+    final imgurUrl = post.imgurUrl;
+    final imageUrl = post.imageUrl;
+
+    // Check if either imgurUrl or imageUrl is not null and not empty
+    return (imgurUrl != null && imgurUrl.isNotEmpty) || (imageUrl != null && imageUrl.isNotEmpty);
+  }
+
   Widget _buildFeedBody(ThemeData theme, FeedState feedState) {
     // Use a different widget for the "no feed" case that is still scrollable.
     // This allows RefreshIndicator to work.
@@ -186,12 +200,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 final post = feedState.posts[index];
 
                 // Check if post.text exists and contains any hidden words
-                if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase()))) {
+                if (_filterSpam(post)) {
                   return const SizedBox.shrink(); // Hide the post
                 }
 
-                // Ensure PostCard does not require filter-related logic from FeedScreen anymore
-                return PostCard(post, key: ValueKey(post.id) /*, navBarCallback: widget.navBarCallback */);
+                return wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme);
+
+                // return PostCard(post, key: ValueKey(post.id) /*, navBarCallback: widget.navBarCallback */);
               }
               // Loading more indicator
               else if (feedState.isLoadingMore && index == feedState.posts.length) {
@@ -225,6 +240,43 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       ),
     );
   }
+
+  GestureDetector wrapInDoubleTapDetectorImagesOnly(MemoModelPost post, BuildContext context, FeedState feedState, ThemeData theme) {
+    return GestureDetector(
+      onDoubleTap: () async {
+        final imageUrl = post.imgurUrl ?? post.imageUrl;
+        if (imageUrl == null || imageUrl.isEmpty) {
+          showSnackBar("No valid image available for this post", context, type: SnackbarType.info);
+          return;
+        }
+
+        // If you need async validation, you could do:
+        final isValid = await ref.read(imageValidationProvider(imageUrl).future);
+        if (!isValid) {
+          showSnackBar("Image is not accessible, active VPN!", context, type: SnackbarType.error);
+          return;
+        }
+
+        // Filter posts to only include those with valid images
+        final validImagePosts = feedState.posts.where(_hasValidImageUrl).toList();
+
+        // Find the index of the current post in the filtered list
+        final validIndex = validImagePosts.indexWhere((p) => p.id == post.id);
+
+        if (validIndex == -1) {
+          showSnackBar("Could not open image viewer", context, type: SnackbarType.error);
+          return;
+        }
+
+        // Show the fullscreen activity
+        showPostImageFullscreenWidget(context: context, theme: theme, posts: validImagePosts, initialIndex: validIndex);
+      },
+      child: PostCard(post, key: ValueKey(post.id)),
+    );
+  }
+
+  bool _filterSpam(MemoModelPost post) =>
+      post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase()));
 
   // --- Helper Widgets (No Feed, No Match - adjusted message for No Match) ---
   Center _widgetNoFeed(ThemeData theme) {

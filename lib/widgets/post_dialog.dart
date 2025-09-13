@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/cached_unified_image_widget.dart';
 import 'package:mahakka/widgets/popularity_score_widget.dart';
@@ -24,6 +27,9 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
   late bool _isPortrait;
   late AnimationController _overlayAnimationController;
   late Animation<double> _overlayOpacityAnimation;
+  late bool _isFullscreen;
+  late Timer _fullscreenHintTimer;
+  late bool _showFullscreenHint;
 
   @override
   void initState() {
@@ -31,8 +37,9 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
     _isOverlayVisible = true;
-    // Initialize with default value, will be updated in didChangeDependencies
     _isPortrait = true;
+    _isFullscreen = false;
+    _showFullscreenHint = false;
 
     _animationController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
     _contentAnimationController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
@@ -61,12 +68,49 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
     }
   }
 
+  void _toggleFullscreen() {
+    if (_isFullscreen) {
+      // Exit fullscreen - go back to portrait
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+      setState(() {
+        _isFullscreen = false;
+        _showFullscreenHint = false;
+      });
+      _fullscreenHintTimer.cancel();
+    } else {
+      // Enter fullscreen - go to landscape
+      SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+      setState(() {
+        _isFullscreen = true;
+        _showFullscreenHint = true;
+      });
+
+      _fullscreenHintTimer = Timer(const Duration(seconds: 5), () {
+        if (mounted) {
+          setState(() {
+            _showFullscreenHint = false;
+          });
+        }
+      });
+    }
+  }
+
+  void _handleLongPress() {
+    if (_isFullscreen) {
+      _toggleFullscreen();
+    }
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
     _animationController.dispose();
     _contentAnimationController.dispose();
     _overlayAnimationController.dispose();
+    if (_isFullscreen) {
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    }
+    _fullscreenHintTimer.cancel();
     super.dispose();
   }
 
@@ -97,6 +141,9 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
   }
 
   void _closeActivity() {
+    if (_isFullscreen) {
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    }
     _animationController.reverse().then((_) {
       Navigator.of(context).pop();
     });
@@ -139,6 +186,7 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
     final appBarIconColor = isDarkTheme ? Colors.white : Colors.black;
     final overlayColor = isDarkTheme ? Colors.black54 : Colors.white70;
     final textColor = isDarkTheme ? Colors.white : Colors.black;
+    final hintOverlayColor = isDarkTheme ? Colors.black87 : Colors.grey;
 
     return Scaffold(
       backgroundColor: Colors.black, // Fixed black background
@@ -146,11 +194,12 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
         opacity: _fadeAnimation,
         child: Stack(
           children: [
-            // Gesture detector for swipe actions and double tap
+            // Gesture detector for swipe actions, double tap, and long press
             GestureDetector(
               onHorizontalDragEnd: _handleSwipe,
               onVerticalDragEnd: _handleSwipe,
               onDoubleTap: _handleDoubleTap,
+              onLongPress: _handleLongPress,
               child: PageView.builder(
                 controller: _pageController,
                 onPageChanged: _onPageChanged,
@@ -176,8 +225,8 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
               ),
             ),
 
-            // App Bar with theme awareness - only visible in portrait
-            if (_isPortrait)
+            // App Bar with theme awareness - only visible in portrait or when not in fullscreen
+            if (_isPortrait || !_isFullscreen)
               Positioned(
                 top: 0,
                 left: 0,
@@ -198,14 +247,20 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                       },
                       child: _buildTitleRow(currentPost, textColor, key: ValueKey(_currentIndex)),
                     ),
+                    actions: [
+                      IconButton(
+                        icon: Icon(_isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen, color: appBarIconColor),
+                        onPressed: _toggleFullscreen,
+                      ),
+                    ],
                     iconTheme: IconThemeData(color: appBarIconColor),
                     titleTextStyle: widget.theme.textTheme.titleSmall?.copyWith(color: textColor),
                   ),
                 ),
               ),
 
-            // Text overlay at bottom with animation
-            if (currentPost.text != null && currentPost.text!.isNotEmpty)
+            // Text overlay at bottom with animation - only visible in portrait or when not in fullscreen
+            if (currentPost.text != null && currentPost.text!.isNotEmpty && (_isPortrait || !_isFullscreen))
               Positioned(
                 bottom: _isPortrait ? 80 : 0, // Adjust position based on orientation
                 left: 0,
@@ -246,8 +301,8 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                     : const SizedBox.shrink(key: ValueKey('empty')),
               ),
 
-            // Bottom Navigation Bar with theme awareness - only visible in portrait
-            if (_isPortrait)
+            // Bottom Navigation Bar with theme awareness - only visible in portrait or when not in fullscreen
+            if (_isPortrait || !_isFullscreen)
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -273,6 +328,38 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                         disabledColor: textColor.withOpacity(0.3),
                       ),
                     ],
+                  ),
+                ),
+              ),
+
+            // Fullscreen hint overlay
+            if (_showFullscreenHint && _isFullscreen)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black54,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(color: hintOverlayColor, borderRadius: BorderRadius.circular(16)),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.touch_app, size: 48, color: textColor),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Long press to exit fullscreen mode',
+                            style: widget.theme.textTheme.bodyLarge?.copyWith(color: textColor, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          // Text(
+                          //   'This hint will disappear in 3 seconds',
+                          //   style: widget.theme.textTheme.bodyMedium?.copyWith(color: textColor.withOpacity(0.7)),
+                          //   textAlign: TextAlign.center,
+                          // ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

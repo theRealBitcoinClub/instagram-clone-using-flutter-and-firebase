@@ -37,9 +37,9 @@ class MemoDataChecker {
     }
   }
 
-  Future<bool> isImageValid(String url) async {
+  Future<bool> isImageValid({imageFile, url}) async {
     Completer<bool> completer = Completer<bool>();
-    final Image image = Image.network(url);
+    final Image image = imageFile != null ? Image.file(imageFile) : Image.network(url);
     print("URL: ${url} isImageValid height ${image.height} width ${image.width}");
     final ImageStream stream = image.image.resolve(const ImageConfiguration());
 
@@ -49,10 +49,12 @@ class MemoDataChecker {
         // The image loaded successfully
         if (!completer.isCompleted) {
           print("isImageValid height info ${image.image.height} width info ${image.image.width}");
-          if (image.image.height == 81 && image.image.width == 161) //THE STANDARD ERROR IMGURL
+          if (image.image.height == 81 && image.image.width == 161) {
+            //THE STANDARD ERROR IMGURL
             completer.complete(false);
-          else
+          } else {
             completer.complete(true);
+          }
         }
         stream.removeListener(listener!);
       },

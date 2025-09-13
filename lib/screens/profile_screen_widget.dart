@@ -9,11 +9,11 @@ import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/profile/posts_categorizer.dart';
 import 'package:mahakka/widgets/profile/settings_widget.dart';
 import 'package:mahakka/widgets/profile/youtube_controller_manager.dart';
-import 'package:mahakka/widgets/unified_image_widget.dart';
 
 import '../memo/model/memo_model_user.dart';
 import '../provider/profile_providers.dart';
 import '../views_taggable/widgets/qr_code_dialog.dart';
+import '../widgets/cached_unified_image_widget.dart';
 import '../widgets/image_detail_dialog.dart';
 import '../widgets/post_dialog.dart';
 import '../widgets/profile/profile_app_bar.dart';
@@ -226,17 +226,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     }
   }
 
-  // GlobalKey<UnifiedImageWidgetState> imageKey = GlobalKey();
-
-  void _showPostDialog(MemoModelPost post, UnifiedImageWidget imageWidget, imageKeyCreatedInsideContentGridBuilder) {
-    showPostDialog(
-      context: context,
-      theme: Theme.of(context),
-      post: post,
-      creator: post.creator,
-      imageWidget: imageWidget,
-      unifiedImageKey: imageKeyCreatedInsideContentGridBuilder,
-    );
+  void _showPostDialog(MemoModelPost post, CachedUnifiedImageWidget imageWidget) {
+    showPostDialog(context: context, theme: Theme.of(context), post: post, creator: post.creator);
   }
 
   void _categorizePosts(List<MemoModelPost> allPosts) {

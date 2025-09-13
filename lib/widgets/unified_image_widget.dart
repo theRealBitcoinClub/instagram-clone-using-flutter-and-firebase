@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_avif/flutter_avif.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 enum ImageSourceType {
@@ -17,7 +18,7 @@ enum ImageFitMode {
   fitHeight, // Fit to height, maintain aspect ratio
 }
 
-class UnifiedImageWidget extends StatefulWidget {
+class UnifiedImageWidget extends ConsumerStatefulWidget {
   final String imageUrl;
   final ImageSourceType sourceType;
   final ImageFitMode fitMode;
@@ -54,22 +55,22 @@ class UnifiedImageWidget extends StatefulWidget {
   });
 
   @override
-  State<UnifiedImageWidget> createState() => UnifiedImageWidgetState();
+  ConsumerState<UnifiedImageWidget> createState() => UnifiedImageWidgetState();
 }
 
-class UnifiedImageWidgetState extends State<UnifiedImageWidget> {
-  late ImageFitMode _currentFitMode;
-  late String _resolvedUrl;
-  late bool _isSvg;
-  late bool _isAvif;
+class UnifiedImageWidgetState extends ConsumerState<UnifiedImageWidget> {
+  late ImageFitMode currentFitMode;
+  late String resolvedUrl;
+  late bool isSvg;
+  late bool isAvif;
 
   @override
   void initState() {
     super.initState();
-    _currentFitMode = widget.fitMode;
-    _resolvedUrl = _resolveImageUrl(widget.imageUrl, widget.sourceType);
-    _isSvg = widget.imageUrl.toLowerCase().endsWith('.svg');
-    _isAvif = widget.imageUrl.toLowerCase().endsWith('.avif');
+    currentFitMode = widget.fitMode;
+    resolvedUrl = _resolveImageUrl(widget.imageUrl, widget.sourceType);
+    isSvg = widget.imageUrl.toLowerCase().endsWith('.svg');
+    isAvif = widget.imageUrl.toLowerCase().endsWith('.avif');
   }
 
   @override
@@ -79,23 +80,23 @@ class UnifiedImageWidgetState extends State<UnifiedImageWidget> {
     // Update fit mode if it changed
     if (oldWidget.fitMode != widget.fitMode) {
       setState(() {
-        _currentFitMode = widget.fitMode;
+        currentFitMode = widget.fitMode;
       });
     }
 
     // Only reload image if URL or source type changed
     if (oldWidget.imageUrl != widget.imageUrl || oldWidget.sourceType != widget.sourceType) {
       setState(() {
-        _resolvedUrl = _resolveImageUrl(widget.imageUrl, widget.sourceType);
-        _isSvg = widget.imageUrl.toLowerCase().endsWith('.svg');
-        _isAvif = widget.imageUrl.toLowerCase().endsWith('.avif');
+        resolvedUrl = _resolveImageUrl(widget.imageUrl, widget.sourceType);
+        isSvg = widget.imageUrl.toLowerCase().endsWith('.svg');
+        isAvif = widget.imageUrl.toLowerCase().endsWith('.avif');
       });
     }
   }
 
   void changeFitMode(ImageFitMode newFitMode) {
     setState(() {
-      _currentFitMode = newFitMode;
+      currentFitMode = newFitMode;
     });
   }
 
@@ -107,12 +108,12 @@ class UnifiedImageWidgetState extends State<UnifiedImageWidget> {
 
     // Build the image widget based on type
     Widget imageWidget;
-    if (_isSvg) {
-      imageWidget = _buildSvgImage(_resolvedUrl, effectiveColorScheme, effectiveTextTheme);
-    } else if (_isAvif) {
-      imageWidget = _buildAvifImage(_resolvedUrl, effectiveColorScheme, effectiveTextTheme);
+    if (isSvg) {
+      imageWidget = _buildSvgImage(resolvedUrl, effectiveColorScheme, effectiveTextTheme);
+    } else if (isAvif) {
+      imageWidget = _buildAvifImage(resolvedUrl, effectiveColorScheme, effectiveTextTheme);
     } else {
-      imageWidget = _buildRasterImage(_resolvedUrl, effectiveColorScheme, effectiveTextTheme);
+      imageWidget = buildRasterImage(resolvedUrl, effectiveColorScheme, effectiveTextTheme);
     }
 
     // Apply constraints and container styling
@@ -138,7 +139,7 @@ class UnifiedImageWidgetState extends State<UnifiedImageWidget> {
     try {
       return SvgPicture.network(
         url,
-        fit: _getBoxFit(_currentFitMode),
+        fit: getBoxFit(currentFitMode),
         width: widget.width,
         height: widget.height ?? widget.width ?? 48,
         placeholderBuilder: (context) => widget.placeholder ?? _buildDefaultPlaceholder(colorScheme),
@@ -152,7 +153,7 @@ class UnifiedImageWidgetState extends State<UnifiedImageWidget> {
     try {
       return AvifImage.network(
         url,
-        fit: _getBoxFit(_currentFitMode),
+        fit: getBoxFit(currentFitMode),
         width: widget.width,
         height: widget.height,
         errorBuilder: (context, error, stackTrace) {
@@ -190,10 +191,10 @@ class UnifiedImageWidgetState extends State<UnifiedImageWidget> {
     }
   }
 
-  Widget _buildRasterImage(String url, ColorScheme colorScheme, TextTheme textTheme) {
+  Widget buildRasterImage(String url, ColorScheme colorScheme, TextTheme textTheme) {
     return Image.network(
       url,
-      fit: _getBoxFit(_currentFitMode),
+      fit: getBoxFit(currentFitMode),
       width: widget.width,
       height: widget.height,
       errorBuilder: (context, error, stackTrace) {
@@ -256,7 +257,7 @@ class UnifiedImageWidgetState extends State<UnifiedImageWidget> {
     );
   }
 
-  BoxFit _getBoxFit(ImageFitMode fitMode) {
+  BoxFit getBoxFit(ImageFitMode fitMode) {
     switch (fitMode) {
       case ImageFitMode.cover:
         return BoxFit.cover;

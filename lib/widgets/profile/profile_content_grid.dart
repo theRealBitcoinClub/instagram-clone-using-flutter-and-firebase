@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 
+import '../cached_unified_image_widget.dart';
 import '../unified_image_widget.dart';
 
 void _logGridError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -12,7 +13,8 @@ void _logGridError(String message, [dynamic error, StackTrace? stackTrace]) {
 
 class ProfileContentGrid extends StatelessWidget {
   final List<MemoModelPost> posts;
-  final Function(MemoModelPost post, UnifiedImageWidget imageWidget, GlobalKey imageKey) onPostImageTap;
+  // final Function(MemoModelPost post, CachedUnifiedImageWidget imageWidget, GlobalKey imageKey) onPostImageTap;
+  final Function(MemoModelPost post, CachedUnifiedImageWidget imageWidget) onPostImageTap;
 
   const ProfileContentGrid({Key? key, required this.posts, required this.onPostImageTap}) : super(key: key);
 
@@ -36,7 +38,7 @@ class ProfileContentGrid extends StatelessWidget {
         ),
         itemBuilder: (context, index) {
           final post = posts[index];
-          final imageKey = GlobalKey(); // Create a unique key for each image
+          // final imageKey = GlobalKey(); // Create a unique key for each image
 
           Widget imagePlaceholder = Container(
             color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
@@ -50,8 +52,8 @@ class ProfileContentGrid extends StatelessWidget {
             return imagePlaceholder;
           }
 
-          final img = UnifiedImageWidget(
-            key: imageKey, // Assign the key to the image widget
+          CachedUnifiedImageWidget img = CachedUnifiedImageWidget(
+            // key: imageKey, // Assign the key to the image widget
             imageUrl: imageUrl,
             sourceType: ImageSourceType.network,
             fitMode: ImageFitMode.cover, // Use cover for grid
@@ -65,7 +67,8 @@ class ProfileContentGrid extends StatelessWidget {
           );
 
           return GestureDetector(
-            onTap: () => onPostImageTap(post, img, imageKey),
+            onTap: () => onPostImageTap(post, img),
+            // onTap: () => onPostImageTap(post, img, imageKey),
             child: AspectRatio(aspectRatio: 1, child: img),
           );
         },

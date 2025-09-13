@@ -75,13 +75,13 @@ class MemoVerifier {
     if (await checker.checkUrlReturns404(newText)) {
       return MemoVerificationResponse.noImageNorVideo.toString();
     }
-    if (!await checker.isImageValid(newText)) {
+    if (!await checker.isImageValid(url: newText)) {
       var url = newText + ".jpg";
-      if (!await checker.isImageValid(url)) {
+      if (!await checker.isImageValid(url: url)) {
         url = newText + ".png";
-        if (!await checker.isImageValid(url)) {
+        if (!await checker.isImageValid(url: url)) {
           url = newText + ".jpeg";
-          if (!await checker.isImageValid(url)) {
+          if (!await checker.isImageValid(url: url)) {
             return MemoVerificationResponse.noImageNorVideo.toString();
           } else
             return url;

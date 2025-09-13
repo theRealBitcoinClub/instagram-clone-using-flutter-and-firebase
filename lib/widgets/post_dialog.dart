@@ -1,24 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/widgets/cached_unified_image_widget.dart';
 import 'package:mahakka/widgets/popularity_score_widget.dart';
-import 'package:mahakka/widgets/unified_image_widget.dart';
 
 class PostDialog extends StatefulWidget {
   final ThemeData theme;
   final MemoModelPost post;
   final MemoModelCreator? creator;
-  final UnifiedImageWidget imageWidget;
-  final GlobalKey unifiedImageKey;
-
-  const PostDialog({
-    Key? key,
-    required this.theme,
-    required this.post,
-    required this.creator,
-    required this.imageWidget,
-    required this.unifiedImageKey,
-  }) : super(key: key);
+  const PostDialog({Key? key, required this.theme, required this.post, required this.creator}) : super(key: key);
 
   @override
   State<PostDialog> createState() => _PostDialogState();
@@ -28,15 +18,6 @@ class _PostDialogState extends State<PostDialog> {
   @override
   void initState() {
     super.initState();
-    // Call changeFitMode when dialog opens
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _changeFitMode();
-    });
-  }
-
-  void _changeFitMode() {
-    final state = widget.unifiedImageKey.currentState as UnifiedImageWidgetState?;
-    state?.changeFitMode(ImageFitMode.fitWidth);
   }
 
   @override
@@ -54,7 +35,10 @@ class _PostDialogState extends State<PostDialog> {
             Padding(padding: const EdgeInsets.fromLTRB(20, 20, 20, 10), child: _buildTitleRow()),
 
             // Image
-            Padding(padding: const EdgeInsets.symmetric(vertical: 12.0), child: widget.imageWidget),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12.0),
+              child: CachedUnifiedImageWidget(imageUrl: widget.post.imgurUrl ?? widget.post.imageUrl!),
+            ),
 
             // Text content if available
             if (widget.post.text != null && widget.post.text!.isNotEmpty)
@@ -87,13 +71,11 @@ void showPostDialog({
   required ThemeData theme,
   required MemoModelPost post,
   required MemoModelCreator? creator,
-  required UnifiedImageWidget imageWidget,
-  required GlobalKey unifiedImageKey,
 }) {
   showDialog(
     context: context,
     builder: (dialogCtx) {
-      return PostDialog(theme: theme, post: post, creator: creator, imageWidget: imageWidget, unifiedImageKey: unifiedImageKey);
+      return PostDialog(theme: theme, post: post, creator: creator);
     },
   );
 }

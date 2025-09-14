@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ExternalBrowserLauncher {
-  final List<String> whitelistedDomains;
+  final List<String>? whitelistedDomains;
   final List<String>? whitelistPatterns;
 
-  ExternalBrowserLauncher({required this.whitelistedDomains, this.whitelistPatterns});
+  ExternalBrowserLauncher({this.whitelistedDomains, this.whitelistPatterns});
 
   Future<void> launchUrlWithConfirmation(BuildContext context, String url) async {
     final Uri? parsedUri = Uri.tryParse(url);
@@ -39,26 +40,28 @@ class ExternalBrowserLauncher {
     final String domain = parsedUri.host;
 
     // Check against simple domain whitelist
-    if (whitelistedDomains.contains(domain)) {
+    if (whitelistedDomains != null && whitelistedDomains!.contains(domain)) {
       return true;
     }
 
-    // Check against regex patterns if provided
-    if (whitelistPatterns != null) {
-      for (final pattern in whitelistPatterns!) {
-        try {
-          final regex = RegExp(pattern, caseSensitive: false);
-          if (regex.hasMatch(url)) {
-            return true;
-          }
-        } catch (e) {
-          // Handle invalid regex patterns gracefully
-          debugPrint('Invalid regex pattern: $pattern');
-        }
-      }
-    }
+    return MemoRegExp.isUrlWhitelisted(url);
 
-    return false;
+    // // Check against regex patterns if provided
+    // if (whitelistPatterns != null) {
+    //   for (final pattern in whitelistPatterns!) {
+    //     try {
+    //       final regex = RegExp(pattern, caseSensitive: false);
+    //       if (regex.hasMatch(url)) {
+    //         return true;
+    //       }
+    //     } catch (e) {
+    //       // Handle invalid regex patterns gracefully
+    //       debugPrint('Invalid regex pattern: $pattern');
+    //     }
+    //   }
+    // }
+    //
+    // return false;
   }
 
   Future<void> _launchBrowser(String url) async {

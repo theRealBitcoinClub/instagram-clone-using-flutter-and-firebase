@@ -78,7 +78,12 @@ void main() {
     test('extractPsfIpfsUrl should extract PSF IPFS URL', () {
       final memoRegExp = MemoRegExp(testString);
       final result = memoRegExp.extractPsfIpfsUrl();
+
       expect(result, equals('https://free-bch.fullstack.cash/ipfs/view/bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74'));
+      final memoRegExp2 = MemoRegExp("https://free-bch.fullstack.cash/ipfs/view/bafkreibefriydc7opoqhvzp6ymktynmzlkv24eqlzioo3no7q4j4wdyc2i");
+      final result2 = memoRegExp2.extractPsfIpfsUrl();
+
+      expect(result2, equals("https://free-bch.fullstack.cash/ipfs/view/bafkreibefriydc7opoqhvzp6ymktynmzlkv24eqlzioo3no7q4j4wdyc2i"));
     });
 
     test('extractWhitelistedDomainUrl should extract whitelisted domain URL', () {

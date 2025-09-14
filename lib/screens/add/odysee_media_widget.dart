@@ -9,8 +9,9 @@ class OdyseeMediaWidget extends ConsumerWidget {
   final ThemeData theme;
   final ColorScheme colorScheme;
   final TextTheme textTheme;
+  final String? videoUrl;
 
-  const OdyseeMediaWidget({super.key, required this.theme, required this.colorScheme, required this.textTheme});
+  const OdyseeMediaWidget({super.key, required this.theme, required this.colorScheme, required this.textTheme, this.videoUrl});
 
   String _shortenUrl(String url) {
     if (url.length <= 30) return url;
@@ -19,7 +20,7 @@ class OdyseeMediaWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final odyseeUrl = ref.watch(odyseeUrlProvider);
+    final odyseeUrl = videoUrl ?? ref.watch(odyseeUrlProvider);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -45,11 +46,13 @@ class OdyseeMediaWidget extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        ChangeVideoButton(
-          onPressed: () {
-            ref.read(odyseeUrlProvider.notifier).state = '';
-          },
-        ),
+        videoUrl == null
+            ? ChangeVideoButton(
+                onPressed: () {
+                  ref.read(odyseeUrlProvider.notifier).state = '';
+                },
+              )
+            : SizedBox.shrink(),
         const SizedBox(height: 8),
         Text(
           "Odysee URL: ${odyseeUrl}",

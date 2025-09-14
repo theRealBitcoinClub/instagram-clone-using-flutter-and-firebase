@@ -9,12 +9,13 @@ class IpfsMediaWidget extends ConsumerWidget {
   final ThemeData theme;
   final ColorScheme colorScheme;
   final TextTheme textTheme;
+  final String? ipfsCid;
 
-  const IpfsMediaWidget({super.key, required this.theme, required this.colorScheme, required this.textTheme});
+  const IpfsMediaWidget({super.key, required this.theme, required this.colorScheme, required this.textTheme, this.ipfsCid});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cid = ref.watch(ipfsCidProvider);
+    final cid = ipfsCid ?? ref.watch(ipfsCidProvider);
     final ipfsUrl = '${IpfsConfig.preferredNode}$cid';
 
     return Column(
@@ -62,11 +63,13 @@ class IpfsMediaWidget extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        ChangeMediaButton(
-          onPressed: () {
-            ref.read(ipfsCidProvider.notifier).state = '';
-          },
-        ),
+        ipfsCid == null
+            ? ChangeMediaButton(
+                onPressed: () {
+                  ref.read(ipfsCidProvider.notifier).state = '';
+                },
+              )
+            : SizedBox.shrink(),
         const SizedBox(height: 8),
         Text(
           "IPFS CID: $cid",

@@ -8,12 +8,13 @@ class ImgurMediaWidget extends ConsumerWidget {
   final ThemeData theme;
   final ColorScheme colorScheme;
   final TextTheme textTheme;
+  final String? imgurUrl;
 
-  const ImgurMediaWidget({super.key, required this.theme, required this.colorScheme, required this.textTheme});
+  const ImgurMediaWidget({super.key, required this.theme, required this.colorScheme, required this.textTheme, this.imgurUrl});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final imgurUrl = ref.watch(imgurUrlProvider);
+    final imgUrl = imgurUrl ?? ref.watch(imgurUrlProvider)!;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -29,7 +30,7 @@ class ImgurMediaWidget extends ConsumerWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(11.5),
               child: Image.network(
-                imgurUrl,
+                imgUrl,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -61,14 +62,16 @@ class ImgurMediaWidget extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        ChangeImageButton(
-          onPressed: () {
-            ref.read(imgurUrlProvider.notifier).state = '';
-          },
-        ),
+        imgurUrl == null
+            ? ChangeImageButton(
+                onPressed: () {
+                  ref.read(imgurUrlProvider.notifier).state = '';
+                },
+              )
+            : SizedBox.shrink(),
         const SizedBox(height: 8),
         Text(
-          "Image Url: $imgurUrl",
+          "Image Url: $imgUrl",
           style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),

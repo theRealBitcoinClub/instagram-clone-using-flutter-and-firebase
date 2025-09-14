@@ -9,8 +9,9 @@ class YouTubeMediaWidget extends ConsumerStatefulWidget {
   final ThemeData theme;
   final ColorScheme colorScheme;
   final TextTheme textTheme;
+  final String? youtubeId;
 
-  const YouTubeMediaWidget({super.key, required this.theme, required this.colorScheme, required this.textTheme});
+  const YouTubeMediaWidget({super.key, required this.theme, required this.colorScheme, required this.textTheme, this.youtubeId});
 
   @override
   ConsumerState<YouTubeMediaWidget> createState() => _YouTubeMediaWidgetState();
@@ -26,7 +27,7 @@ class _YouTubeMediaWidgetState extends ConsumerState<YouTubeMediaWidget> {
   }
 
   void _initializeController() {
-    final videoId = ref.read(youtubeVideoIdProvider);
+    final videoId = widget.youtubeId ?? ref.read(youtubeVideoIdProvider)!;
     if (videoId.isNotEmpty) {
       _controller = YoutubePlayerController(initialVideoId: videoId, flags: const YoutubePlayerFlags(autoPlay: false, mute: false));
     }
@@ -87,11 +88,13 @@ class _YouTubeMediaWidgetState extends ConsumerState<YouTubeMediaWidget> {
           ),
         ),
         const SizedBox(height: 12),
-        ChangeVideoButton(
-          onPressed: () {
-            ref.read(youtubeVideoIdProvider.notifier).state = '';
-          },
-        ),
+        widget.youtubeId == null
+            ? ChangeVideoButton(
+                onPressed: () {
+                  ref.read(youtubeVideoIdProvider.notifier).state = '';
+                },
+              )
+            : const SizedBox.shrink(),
         const SizedBox(height: 8),
         Text(
           "Video Id: $videoId",

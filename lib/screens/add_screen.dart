@@ -19,10 +19,12 @@ import '../config_ipfs.dart';
 import '../memo/base/memo_verifier.dart';
 import '../memo/base/text_input_verifier.dart';
 // Import the Odysee widgets and providers
+import '../memo/model/memo_model_post.dart';
 import '../repositories/post_repository.dart';
 import '../views_taggable/view_models/search_view_model.dart';
 import '../views_taggable/widgets/comment_text_field.dart';
 import '../views_taggable/widgets/search_result_overlay.dart';
+import '../widgets/add/publish_confirmation_activity.dart';
 import 'add/add_post_providers.dart';
 import 'add/clipboard_monitoring_dialog.dart';
 import 'add/clipboard_provider.dart';
@@ -479,6 +481,29 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     );
   }
 
+  MemoModelPost _createPostFromCurrentState(String textContent, String? topic) {
+    final imgurUrl = ref.read(imgurUrlProvider);
+    final youtubeId = ref.read(youtubeVideoIdProvider);
+    final ipfsCid = ref.read(ipfsCidProvider);
+    final odyseeUrl = ref.read(odyseeUrlProvider);
+
+    return MemoModelPost(
+      id: null, // Will be generated on publish
+      text: textContent,
+      imgurUrl: imgurUrl.isNotEmpty ? imgurUrl : null,
+      youtubeId: youtubeId.isNotEmpty ? youtubeId : null,
+      imageUrl: null, // You might need to handle this based on your media selection
+      videoUrl: odyseeUrl.isNotEmpty ? odyseeUrl : null,
+      ipfsCid: ipfsCid.isNotEmpty ? ipfsCid : null,
+      tagIds: tagIdsFromTags(_inputTagTopicController.tags),
+    );
+  }
+
+  /// Extracts just the IDs from a list of Tag objects
+  List<String> tagIdsFromTags(Iterable<Tag> tags) {
+    return tags.map((tag) => tag.id).toList();
+  }
+
   Future<void> _onPublish() async {
     final isPublishing = ref.read(isPublishingProvider);
     if (isPublishing) return;
@@ -499,15 +524,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     String textContent = _inputTagTopicController.text;
 
-    final verifier = MemoVerifierDecorator(textContent)
-        .addValidator(InputValidators.verifyPostLength)
-        .addValidator(InputValidators.verifyMinWordCount)
-        .addValidator(InputValidators.verifyHashtags)
-        .addValidator(InputValidators.verifyTopics)
-        .addValidator(InputValidators.verifyUrl)
-        .addValidator(InputValidators.verifyOffensiveWords);
-
-    final result = verifier.getResult();
+    MemoVerificationResponse result = _handleVerification(textContent);
 
     if (result != MemoVerificationResponse.valid) {
       _showErrorSnackBar('Publish failed: ${result.toString()}. Please try again.');
@@ -519,29 +536,115 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final String? topic = _extractTopicFromTags(textContent);
 
     try {
-      final postRepository = ref.read(postRepositoryProvider);
-      final response = await postRepository.publishImageOrVideo(textContent, topic, validate: false);
+      // Create the post object for confirmation screen
+      final post = _createPostFromCurrentState(textContent, topic);
+      final user = ref.read(userProvider)!;
+
+      // Show confirmation screen and wait for result
+      final bool shouldPublish = (await PublishConfirmationActivity.show(context, post: post, user: user))!;
 
       if (!mounted) return;
 
-      if (response == MemoAccountantResponse.yes) {
-        MemoConfetti().launch(context);
-        _clearInputs();
-        _showSuccessSnackBar('Successfully published!');
+      if (shouldPublish) {
+        // User confirmed, proceed with publishing
+        final postRepository = ref.read(postRepositoryProvider);
+        final response = await postRepository.publishImageOrVideo(textContent, topic, validate: false);
+
+        if (!mounted) return;
+
+        if (response == MemoAccountantResponse.yes) {
+          MemoConfetti().launch(context);
+          _clearInputs();
+          _showSuccessSnackBar('Successfully published!');
+        } else {
+          showQrCodeDialog(context: context, theme: Theme.of(context), user: user, memoOnly: true);
+          _showErrorSnackBar('Publish failed: ${response.toString()}');
+        }
       } else {
-        showQrCodeDialog(context: context, theme: Theme.of(context), user: ref.read(userProvider), memoOnly: true);
-        _showErrorSnackBar('Publish failed: ${response.toString()}');
+        showSnackBar(type: SnackbarType.info, 'Publication canceled', context);
       }
+      // If shouldPublish is null, the screen was closed by other means (back button)
     } catch (e, s) {
       _log("Error during publish: $e\n$s");
       if (mounted) {
-        _showErrorSnackBar('An error occurred during publish: ${e.toString()}');
+        _showErrorSnackBar('Error during publish: ${e.toString()}');
       }
     } finally {
       if (mounted) {
         ref.read(isPublishingProvider.notifier).state = false;
       }
     }
+  }
+
+  //
+  // Future<void> _onPublish() async {
+  //   final isPublishing = ref.read(isPublishingProvider);
+  //   if (isPublishing) return;
+  //   _unfocusNodes(context);
+  //
+  //   if (!_hasMediaSelected()) {
+  //     _showErrorSnackBar('Please add an image or video to share.');
+  //     return;
+  //   }
+  //
+  //   final String? validationError = _validateTagsAndTopic();
+  //   if (validationError != null) {
+  //     _showErrorSnackBar(validationError);
+  //     return;
+  //   }
+  //
+  //   ref.read(isPublishingProvider.notifier).state = true;
+  //
+  //   String textContent = _inputTagTopicController.text;
+  //
+  //   MemoVerificationResponse result = _handleVerification(textContent);
+  //
+  //   if (result != MemoVerificationResponse.valid) {
+  //     _showErrorSnackBar('Publish failed: ${result.toString()}. Please try again.');
+  //     ref.read(isPublishingProvider.notifier).state = false;
+  //     return;
+  //   }
+  //
+  //   textContent = _appendMediaUrlToText(textContent);
+  //   final String? topic = _extractTopicFromTags(textContent);
+  //
+  //   try {
+  //     final postRepository = ref.read(postRepositoryProvider);
+  //     final response = await postRepository.publishImageOrVideo(textContent, topic, validate: false);
+  //
+  //     if (!mounted) return;
+  //
+  //     if (response == MemoAccountantResponse.yes) {
+  //       MemoConfetti().launch(context);
+  //       _clearInputs();
+  //       _showSuccessSnackBar('Successfully published!');
+  //     } else {
+  //       showQrCodeDialog(context: context, theme: Theme.of(context), user: ref.read(userProvider), memoOnly: true);
+  //       _showErrorSnackBar('Publish failed: ${response.toString()}');
+  //     }
+  //   } catch (e, s) {
+  //     _log("Error during publish: $e\n$s");
+  //     if (mounted) {
+  //       _showErrorSnackBar('An error occurred during publish: ${e.toString()}');
+  //     }
+  //   } finally {
+  //     if (mounted) {
+  //       ref.read(isPublishingProvider.notifier).state = false;
+  //     }
+  //   }
+  // }
+
+  MemoVerificationResponse _handleVerification(String textContent) {
+    final verifier = MemoVerifierDecorator(textContent)
+        .addValidator(InputValidators.verifyPostLength)
+        .addValidator(InputValidators.verifyMinWordCount)
+        .addValidator(InputValidators.verifyHashtags)
+        .addValidator(InputValidators.verifyTopics)
+        .addValidator(InputValidators.verifyUrl)
+        .addValidator(InputValidators.verifyOffensiveWords);
+
+    final result = verifier.getResult();
+    return result;
   }
 
   String? _extractTopicFromTags(String rawTextForTopicExtraction) {

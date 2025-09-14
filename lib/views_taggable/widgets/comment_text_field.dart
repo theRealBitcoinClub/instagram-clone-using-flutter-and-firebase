@@ -40,15 +40,15 @@ class CommentTextField extends StatelessWidget {
       key: containerKey,
       // Constraints logic kept as per your original design
       constraints: BoxConstraints(maxHeight: insets == EdgeInsets.zero ? baseMaxHeight : baseMaxHeight + insets.bottom),
-      padding: const EdgeInsets.fromLTRB(12, 12, 8, 12), // Adjusted padding for better spacing
+      padding: const EdgeInsets.fromLTRB(4, 4, 2, 4), // Adjusted padding for better spacing
       // Use a themed background color. theme.canvasColor is often suitable for input areas,
       // or theme.colorScheme.surface if it's meant to look like a card.
       // theme.bottomAppBarTheme.color could also be an option if this acts like a bottom app bar.
-      decoration: BoxDecoration(
-        color: theme.canvasColor, // Or theme.colorScheme.surface or theme.bottomAppBarTheme.color
-        // Optional: add a top border if this sits above other content
-        border: Border(top: BorderSide(color: theme.dividerColor, width: 0.5)),
-      ),
+      // decoration: BoxDecoration(
+      //   color: theme.canvasColor, // Or theme.colorScheme.surface or theme.bottomAppBarTheme.color
+      //   // Optional: add a top border if this sits above other content
+      //   border: Border(top: BorderSide(color: theme.dividerColor, width: 0.5)),
+      // ),
       child: Column(
         mainAxisAlignment: columnMainAxisAlignment,
         mainAxisSize: MainAxisSize.min, // Important for Column in a constrained box
@@ -78,7 +78,7 @@ class CommentTextField extends StatelessWidget {
                     focusNode: focusNode,
                     controller: controller,
                     hintText: hintText,
-                    minLines: 1, // Example: Start with 1 line
+                    minLines: 4, // Example: Start with 1 line
                     maxLines: 4, // Allow up to 4 lines before scrolling
                     // suffixIcon is handled below as a separate IconButton for better alignment
                     // and theming control for the button itself.

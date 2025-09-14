@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../memo/model/memo_model_creator.dart';
@@ -104,6 +105,15 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     );
   }
 
+  Future<void> _shareAddress(String address) async {
+    try {
+      await Share.share(address, subject: 'My Bitcoin Cash Address');
+    } catch (e) {
+      _logError("Share failed", e);
+      if (mounted) showSnackBar(type: SnackbarType.error, 'Share failed. See logs for details.', context);
+    }
+  }
+
   void _startBalanceRefresh(bool isCashtokenTab) {
     _balanceRefreshTimer?.cancel();
 
@@ -163,6 +173,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
+    final TextTheme textTheme = theme.textTheme;
     // Watch for creator updates
     final creatorState = ref.watch(profileCreatorStateProvider);
 
@@ -170,9 +181,18 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
       future: _initFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return SimpleDialog(
-            contentPadding: const EdgeInsets.all(20),
-            children: [Center(child: CircularProgressIndicator(color: colorScheme.primary))],
+          return Dialog(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: colorScheme.primary),
+                  const SizedBox(height: 16),
+                  Text('Loading...', style: textTheme.bodyMedium),
+                ],
+              ),
+            ),
           );
         }
 
@@ -180,69 +200,114 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
         final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo-128x128";
         final String balanceText = _getBalanceText(_isCashtokenFormat, creatorState.value);
 
-        final ButtonStyle primaryButtonStyle = ElevatedButton.styleFrom(
-          backgroundColor: colorScheme.primary,
-          foregroundColor: colorScheme.onPrimary,
-          textStyle: theme.textTheme.labelLarge,
-          minimumSize: const Size(double.infinity, 40),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-        );
-
-        final ButtonStyle dismissButtonStyle = TextButton.styleFrom(
-          foregroundColor: colorScheme.onSurface.withOpacity(0.7),
-          textStyle: theme.textTheme.labelLarge,
-          minimumSize: const Size(double.infinity, 40),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-        );
-
-        return SimpleDialog(
-          contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-          children: [
-            // Tab-like selector
-            if (_isToggleEnabled) _buildTabSelector(theme, colorScheme),
-
-            const SizedBox(height: 12),
-
-            // Balance display
-            Text(
-              balanceText,
-              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: 16),
-
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                return FadeTransition(opacity: animation, child: child);
-              },
-              child: Container(
-                key: ValueKey(addressToShow),
-                padding: const EdgeInsets.all(8.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.0),
-                  border: Border.all(color: theme.dividerColor, width: 0.5),
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with balance and close button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        balanceText,
+                        style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close, color: colorScheme.onSurface),
+                      onPressed: () => Navigator.of(context).pop(),
+                      tooltip: 'Close',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
                 ),
-                child: PrettyQrView.data(
-                  data: addressToShow,
-                  decoration: PrettyQrDecoration(image: PrettyQrDecorationImage(image: AssetImage("assets/images/$qrImageAsset.png"))),
+
+                if (_isToggleEnabled) const SizedBox(height: 16),
+
+                // Tab-like selector
+                if (_isToggleEnabled) _buildTabSelector(theme, colorScheme),
+
+                const SizedBox(height: 16),
+
+                // QR Code
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return FadeTransition(opacity: animation, child: child);
+                  },
+                  child: Container(
+                    key: ValueKey(addressToShow),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.dividerColor, width: 1),
+                    ),
+                    child: PrettyQrView.data(
+                      data: addressToShow,
+                      decoration: PrettyQrDecoration(image: PrettyQrDecorationImage(image: AssetImage("assets/images/$qrImageAsset.png"))),
+                    ),
+                  ),
                 ),
-              ),
+
+                const SizedBox(height: 20),
+
+                // Address text - single line with ellipsis
+                SizedBox(
+                  width: double.infinity,
+                  child: Tooltip(
+                    message: addressToShow,
+                    child: Text(
+                      addressToShow,
+                      style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Action buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _copyToClipboard(context, addressToShow, "Address copied!"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: Colors.white, // White text and icon
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        icon: Icon(Icons.copy, size: 18, color: Colors.white),
+                        label: Text('COPY', style: textTheme.labelLarge?.copyWith(color: Colors.white)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _shareAddress(addressToShow),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.yellow[900], // Dark yellow background
+                          foregroundColor: Colors.white, // White text and icon
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        icon: Icon(Icons.share, size: 18, color: Colors.white),
+                        label: Text('SHARE', style: textTheme.labelLarge?.copyWith(color: Colors.white)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              style: primaryButtonStyle,
-              onPressed: () {
-                _copyToClipboard(context, addressToShow, "Address copied!");
-                // Navigator.of(context).pop();
-              },
-              child: const Text("COPY ADDRESS"),
-            ),
-            const SizedBox(height: 12),
-            TextButton(style: dismissButtonStyle, onPressed: () => Navigator.of(context).pop(), child: const Text("CLOSE")),
-          ],
+          ),
         );
       },
     );

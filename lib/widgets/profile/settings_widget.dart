@@ -411,6 +411,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         MemoConfetti().launch(context);
 
         // Refresh user data
+        ref.read(userProvider)!.temporaryTipReceiver = null;
+        ref.read(userProvider)!.temporaryTipAmount = null;
         ref.invalidate(userProvider);
         ref.invalidate(profileCreatorStateProvider);
 

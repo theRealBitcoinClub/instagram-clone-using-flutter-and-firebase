@@ -62,7 +62,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     super.initState();
     _log("initState started");
 
-    _inputTagTopicController = FlutterTaggerController(text: "Me gusta @Bitcoin#Bitcoin# Es hora de ganar #bch#bch# y #cashtoken#cashtoken#!");
+    _inputTagTopicController = FlutterTaggerController(text: "Me gusta @Mahakka#Mahakka# Es hora de ganar #bch#bch# y #cashtoken#cashtoken#!");
 
     _youtubeCtrl.addListener(_onYouTubeInputChanged);
     _imgurCtrl.addListener(_onImgurInputChanged);
@@ -571,6 +571,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       }
     } finally {
       if (mounted) {
+        ref.read(userProvider)!.temporaryTipReceiver = null;
+        ref.read(userProvider)!.temporaryTipAmount = null;
         ref.read(isPublishingProvider.notifier).state = false;
       }
     }

@@ -33,7 +33,9 @@ class TipInformationCard extends ConsumerWidget {
     final burnColor = theme.colorScheme.primary;
     final creatorColor = theme.colorScheme.secondary;
 
-    final showCustomTipWarning = user.temporaryTipAmount != user.tipAmountEnum;
+    final showCustomTipWarning =
+        (user.temporaryTipAmount != null && user.temporaryTipAmount != user.tipAmountEnum) ||
+        (user.temporaryTipReceiver != null && user.temporaryTipReceiver != user.tipReceiver);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -47,7 +49,7 @@ class TipInformationCard extends ConsumerWidget {
               show: showCustomTipWarning,
               duration: const Duration(milliseconds: 300),
               child: Text(
-                '⚠️ Custom tip amount for this post only',
+                '⚠️ Custom tip & receiver for this post only',
                 style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(222), fontStyle: FontStyle.italic),
               ),
             ),

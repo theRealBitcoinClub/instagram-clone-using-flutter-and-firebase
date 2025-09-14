@@ -41,6 +41,8 @@ class MemoModelUser {
   // Fields to be serialized
   TipReceiver _tipReceiver;
   TipAmount _tipAmount;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  TipAmount? temporaryTipAmount;
 
   // Ignored fields
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -144,63 +146,6 @@ class MemoModelUser {
     return true;
   }
 
-  // Future<String> refreshBalanceDevPath0(Ref ref) async {
-  //   MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-  //   // MemoBitcoinBase base = await MemoBitcoinBase.create();
-  //   P2pkhAddress p2pkhwt = base.createAddressLegacy(pkLegacy);
-  //   BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
-  //
-  //   List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress);
-  //   if (utxos.isEmpty) {
-  //     balanceBchDevPath0Memo = "noutxo";
-  //     // return "noutxos";
-  //   }
-  //   List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, pkLegacy);
-  //   BigInt totalAmountInSatoshisAvailable = utxosWA.sumOfUtxosValue();
-  //   if (totalAmountInSatoshisAvailable == BigInt.zero) {
-  //     balanceBchDevPath0Memo = "noMemo";
-  //     // return "nofunds";
-  //   }
-  //   balanceBchDevPath0Memo = totalAmountInSatoshisAvailable.toString();
-  //   // return "success";
-  //   return balanceBchDevPath0Memo;
-  // }
-  //
-  // Future<String> refreshBalanceDevPath145(Ref ref) async {
-  //   MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-  //   P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(pkBchCashtoken);
-  //   BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
-  //   List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress);
-  //   if (utxos.isEmpty) {
-  //     balanceBchDevPath145 = "noutxo";
-  //     // return "noutxos";
-  //   }
-  //   List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, pkBchCashtoken);
-  //   BigInt totalAmountInSatoshisAvailable = utxosWA.sumOfUtxosValue();
-  //   if (totalAmountInSatoshisAvailable == BigInt.zero) {
-  //     balanceBchDevPath145 = "noBch";
-  //     // return "nofunds";
-  //   }
-  //   balanceBchDevPath145 = totalAmountInSatoshisAvailable.toString();
-  //   return balanceBchDevPath145;
-  // }
-  //
-  // Future<String> refreshBalanceTokens(Ref ref) async {
-  //   MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-  //   P2pkhAddress p2pkhwt = base.createAddressP2PKHWT(pkBchCashtoken);
-  //   p2pkhwt.toAddress(BitcoinCashNetwork.mainnet);
-  //   BitcoinCashAddress cashAddress = BitcoinCashAddress.fromBaseAddress(p2pkhwt);
-  //   List<ElectrumUtxo> utxos = await base.requestElectrumUtxos(cashAddress, includeCashtokens: true);
-  //   if (utxos.isEmpty) {
-  //     balanceCashtokensDevPath145 = "notokens";
-  //     // return "noutxos";
-  //   }
-  //   List<UtxoWithAddress> utxosWA = base.transformUtxosAddAddressDetails(utxos, cashAddress, pkBchCashtoken);
-  //   BigInt totalAmountOfTokenAvailable = base.calculateTotalAmountOfThatToken(utxosWA, MemoBitcoinBase.tokenId);
-  //   balanceCashtokensDevPath145 = totalAmountOfTokenAvailable.toString();
-  //   return balanceCashtokensDevPath145;
-  // }
-
   String get profileIdMemoBch {
     return legacyAddressMemoBch;
   }
@@ -216,25 +161,6 @@ class MemoModelUser {
   TipReceiver get tipReceiver {
     return _tipReceiver;
   }
-
-  //THESE ARE IN USER REPOSITORY NOW
-  // Future<dynamic> profileSetName(String name) async {
-  //   MemoVerificationResponse response = MemoVerifier(name).verifyUserName();
-  //   if (response != MemoVerificationResponse.valid) return response;
-  //   return await MemoAccountant(this).profileSetName(name);
-  // }
-  //
-  // Future<dynamic> profileSetText(String text) async {
-  //   MemoVerificationResponse response = MemoVerifier(text).verifyProfileText();
-  //   if (response != MemoVerificationResponse.valid) return response;
-  //   return await MemoAccountant(this).profileSetText(text);
-  // }
-  //
-  // Future<dynamic> profileSetAvatar(String imgur) async {
-  //   MemoVerificationResponse response = MemoVerifier(imgur).verifyImgur();
-  //   if (response != MemoVerificationResponse.valid) return response;
-  //   return await MemoAccountant(this).profileSetAvatar(imgur);
-  // }
 
   MemoModelUser._({
     required this.mnemonic,

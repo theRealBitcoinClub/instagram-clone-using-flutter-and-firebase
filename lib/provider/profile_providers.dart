@@ -17,6 +17,10 @@ final _currentProfileIdProvider = Provider<String?>((ref) {
   return ref.watch(profileTargetIdProvider) ?? loggedInUser?.profileIdMemoBch;
 });
 
+final currentProfileCreatorProvider = Provider<MemoModelCreator?>((ref) {
+  return ref.read(profileCreatorStateProvider.notifier).getCurrentCreator();
+});
+
 // Provides the creator's data for the profile screen, automatically re-fetching
 // when the profile ID changes.
 final profileCreatorStateProvider = AsyncNotifierProvider<CreatorNotifier, MemoModelCreator?>(() => CreatorNotifier());
@@ -29,6 +33,13 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
 
   DateTime? _lastRefreshTime;
   bool _isAutoRefreshRunning = false;
+
+  MemoModelCreator? getCurrentCreator() {
+    if (state is AsyncData<MemoModelCreator?>) {
+      return (state as AsyncData<MemoModelCreator?>).value;
+    }
+    return null;
+  }
 
   @override
   Future<MemoModelCreator?> build() async {

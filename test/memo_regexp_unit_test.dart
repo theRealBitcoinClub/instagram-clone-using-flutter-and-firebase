@@ -19,6 +19,7 @@ void main() {
     - Image URL: https://example.com/image.jpg
     - Video URL: https://example.com/video.mp4
     - Whitelisted: https://mahakka.com/path
+    https://github.com/video.mp4
 
     Also check @topic and #hashtag content!
     """;
@@ -161,11 +162,21 @@ void main() {
     });
 
     test('extractAllWhitelistedVideoUrls should extract video URLs', () {
-      final memoRegExp = MemoRegExp(testString);
+      // const urls = """
+      // https://github.com/user/repo/blob/main/image.png
+      // https://raw.githubusercontent.com/user/repo/main/vid.avi
+      // https://user-images.githubusercontent.com/123456/abc123.png
+      // https://github.com/user/repo/raw/main/image.webp
+      // """;
+      // final memoRegExp = MemoRegExp(urls);
+      final memoRegExp = MemoRegExp(
+        "fdsfdshttps://mahakka.com/video.mp4 https://odysee.com/@channel:123/video-name:8378 https://raw.githubusercontent.com/user/repo/main/vid.avi",
+      );
       final result = memoRegExp.extractAllWhitelistedVideoUrls();
-      expect(result.length, greaterThan(0));
-      expect(result, contains('https://youtube.com/watch?v=dQw4w9WgXcQ'));
-      expect(result, contains('https://odysee.com/@channel:123/video-name:8378'));
+      expect(result.length, equals(2));
+      expect(result, contains('https://raw.githubusercontent.com/user/repo/main/vid.avi'));
+      expect(result, contains('https://mahakka.com/video.mp4'));
+      expect(result, isNot(contains('https://odysee.com/@channel:123/video-name:8378')));
     });
 
     test('extractFirstWhitelistedImageUrl should return first image URL', () {
@@ -238,10 +249,13 @@ void main() {
     });
 
     test('TextFilter.findWhitelistedVideoUrls should filter video URLs', () {
-      const text = "https://youtube.com/watch?v=dQw4w9WgXcQ https://youtu.be/dQw4w9WgXcQ?feature=shared https://i.imgur.com/image.jpg";
+      const text =
+          "https://raw.githubusercontent.com/user/repo/main/vid.avi https://github.com/video.mp4 https://youtube.com/watch?v=dQw4w9WgXcQ https://youtu.be/dQw4w9WgXcQ?feature=shared https://i.imgur.com/image.jpg";
       final result = TextFilter.findWhitelistedVideoUrls(text);
-      expect(result, contains('https://youtube.com/watch?v=dQw4w9WgXcQ'));
-      expect(result, contains('https://youtu.be/dQw4w9WgXcQ?feature=shared'));
+      expect(result, contains('https://raw.githubusercontent.com/user/repo/main/vid.avi'));
+      expect(result, contains('https://github.com/video.mp4'));
+      expect(result, isNot(contains('https://youtube.com/watch?v=dQw4w9WgXcQ')));
+      expect(result, isNot(contains('https://youtu.be/dQw4w9WgXcQ?feature=shared')));
       expect(result, isNot(contains('https://i.imgur.com/image.jpg')));
     });
 
@@ -498,13 +512,14 @@ void main() {
       https://youtube.com/watch?v=dQw4w9WgXcQ but ignore 
       https://malicious.com/bad and also consider 
       https://github.com/user/repo/blob/main/image.png
+      https://memo.cash/video.mp4
       """;
 
       final allUrls = TextFilter.findWhitelistedUrls(complexText);
       final imageUrls = TextFilter.findWhitelistedImageUrls(complexText);
       final videoUrls = TextFilter.findWhitelistedVideoUrls(complexText);
 
-      expect(allUrls.length, 3);
+      expect(allUrls.length, 4);
       expect(imageUrls.length, 2);
       expect(videoUrls.length, 1);
       expect(allUrls, isNot(contains('https://malicious.com/bad')));

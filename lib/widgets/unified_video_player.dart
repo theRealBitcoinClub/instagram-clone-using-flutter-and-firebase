@@ -1,7 +1,7 @@
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
+import 'package:mahakka/youtube_video_checker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
@@ -75,49 +75,6 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
     _textTheme = widget.textTheme ?? _theme.textTheme;
   }
 
-  /// Checks if a YouTube video exists and is available
-  Future<bool> _checkVideoAvailability() async {
-    if (widget.type != VideoPlayerType.youtube || widget.videoId == null) {
-      return true;
-    }
-
-    setState(() {
-      _isCheckingVideo = true;
-    });
-
-    try {
-      // Method 1: Check using YouTube oembed API (more reliable)
-      final oembedUrl = 'https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${widget.videoId}&format=json';
-      final response = await http.get(Uri.parse(oembedUrl));
-      // Check if response contains "Not Found" (case insensitive)
-      final responseBody = response.body.toLowerCase();
-      if (responseBody.contains('not found') ||
-          responseBody.contains('this video isn\'t available') ||
-          responseBody.contains('video unavailable')) {
-        return false;
-      }
-
-      // If oembed returns 200, video exists and is embeddable
-      // if (response.statusCode == 200) {
-      return response.statusCode == 200;
-      // }
-
-      // // Method 2: Fallback - check video page directly
-      // final videoUrl = 'https://www.youtube.com/watch?v=${widget.videoId}';
-      // final videoResponse = await http.head(Uri.parse(videoUrl));
-      //
-      // // YouTube returns 200 for available videos, 404 for removed videos
-      // return videoResponse.statusCode == 200;
-    } catch (e) {
-      // If any error occurs, assume video might be unavailable
-      return false;
-    } finally {
-      setState(() {
-        _isCheckingVideo = false;
-      });
-    }
-  }
-
   void _initializeYoutubeController() {
     if (widget.videoId != null && widget.videoId!.isNotEmpty) {
       _youtubeController = YoutubePlayerController(
@@ -132,6 +89,22 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
         ),
       )..addListener(_youtubePlayerListener);
     }
+  }
+
+  Future<bool> _checkVideoAvailability() async {
+    if (widget.type != VideoPlayerType.youtube || widget.videoId == null) {
+      return true;
+    }
+
+    setState(() {
+      _isCheckingVideo = true;
+    });
+
+    bool isAvailable = await ref.read(youtubeVideoAvailabilityChecker(widget.videoId!).future);
+    setState(() {
+      _isCheckingVideo = false;
+    });
+    return isAvailable;
   }
 
   void _youtubePlayerListener() {

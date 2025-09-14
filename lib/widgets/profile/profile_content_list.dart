@@ -1,10 +1,13 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 import 'package:mahakka/widgets/unified_video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+
+import '../../youtube_video_checker.dart';
 
 void _logListError(String message, [dynamic error, StackTrace? stackTrace]) {
   print('ERROR: ProfileContentList - $message');
@@ -12,12 +15,12 @@ void _logListError(String message, [dynamic error, StackTrace? stackTrace]) {
   if (stackTrace != null) print('  StackTrace: $stackTrace');
 }
 
-class ProfileContentList extends StatelessWidget {
+class ProfileContentList extends ConsumerStatefulWidget {
   final List<MemoModelPost> posts;
   final bool isYouTubeList;
   final Map<String, ValueNotifier<YoutubePlayerController?>>? ytControllerNotifiers;
   final String creatorName;
-  final bool showMedia; // NEW: Control whether to show media or just text
+  final bool showMedia;
 
   const ProfileContentList._({
     Key? key,
@@ -25,10 +28,9 @@ class ProfileContentList extends StatelessWidget {
     required this.isYouTubeList,
     this.ytControllerNotifiers,
     required this.creatorName,
-    required this.showMedia, // NEW: Added parameter
+    required this.showMedia,
   }) : super(key: key);
 
-  // Factory for YouTube list (shows media)
   factory ProfileContentList.youTube({
     Key? key,
     required List<MemoModelPost> posts,
@@ -41,11 +43,10 @@ class ProfileContentList extends StatelessWidget {
       isYouTubeList: true,
       ytControllerNotifiers: ytControllerNotifiers,
       creatorName: creatorName,
-      showMedia: true, // Show media for video tab
+      showMedia: true,
     );
   }
 
-  // Factory for Generic posts list (Tagged, Topics - show only text)
   factory ProfileContentList.generic({Key? key, required List<MemoModelPost> posts, required String creatorName}) {
     return ProfileContentList._(
       key: key,
@@ -53,24 +54,29 @@ class ProfileContentList extends StatelessWidget {
       isYouTubeList: false,
       ytControllerNotifiers: null,
       creatorName: creatorName,
-      showMedia: false, // Don't show media for tagged/topic tabs
+      showMedia: false,
     );
   }
 
   @override
+  ConsumerState<ProfileContentList> createState() => _ProfileContentListState();
+}
+
+class _ProfileContentListState extends ConsumerState<ProfileContentList> {
+  @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
-    if (posts.isEmpty) {
-      final String message = isYouTubeList ? "No video posts by this creator yet." : "No posts in this category yet.";
-      final IconData icon = isYouTubeList ? Icons.videocam_off_outlined : Icons.list_alt_outlined;
+    if (widget.posts.isEmpty) {
+      final String message = widget.isYouTubeList ? "No video posts by this creator yet." : "No posts in this category yet.";
+      final IconData icon = widget.isYouTubeList ? Icons.videocam_off_outlined : Icons.list_alt_outlined;
       return EmptySliverContent(message: message, icon: icon, theme: theme);
     }
 
     return SliverList(
-      delegate: SliverChildBuilderDelegate(childCount: posts.length, (context, index) {
-        final post = posts[index];
-        if (isYouTubeList && showMedia) {
+      delegate: SliverChildBuilderDelegate(childCount: widget.posts.length, (context, index) {
+        final post = widget.posts[index];
+        if (widget.isYouTubeList && widget.showMedia) {
           return _buildVideoListItem(context, theme, post);
         } else {
           return _buildTextOnlyListItem(context, theme, post);
@@ -80,78 +86,64 @@ class ProfileContentList extends StatelessWidget {
   }
 
   Widget _buildVideoListItem(BuildContext context, ThemeData theme, MemoModelPost videoPost) {
-    // Check for both YouTube and other video types
     final bool hasYoutubeId = videoPost.youtubeId != null && videoPost.youtubeId!.isNotEmpty;
     final bool hasVideoUrl = videoPost.videoUrl != null && videoPost.videoUrl!.isNotEmpty;
 
-    if ((!hasYoutubeId && !hasVideoUrl) || ytControllerNotifiers == null) {
+    if ((!hasYoutubeId && !hasVideoUrl) || widget.ytControllerNotifiers == null) {
       return const SizedBox.shrink();
     }
 
-    // Handle YouTube videos
     if (hasYoutubeId) {
-      // final controllerNotifier = ytControllerNotifiers!.putIfAbsent(videoPost.id!, () => ValueNotifier(null));
-      //
-      // if (controllerNotifier.value == null || controllerNotifier.value!.initialVideoId != videoPost.youtubeId) {
-      //   controllerNotifier.value?.dispose();
-      //   controllerNotifier.value = YoutubePlayerController(
-      //     initialVideoId: videoPost.youtubeId!,
-      //     flags: const YoutubePlayerFlags(autoPlay: false, mute: false, hideControls: false, hideThumbnail: false),
-      //   );
-      // }
-      // final YoutubePlayerController controller = controllerNotifier.value!;
+      final availability = ref.watch(youtubeVideoAvailabilityChecker(videoPost.youtubeId ?? ""));
 
-      return Card(
-        clipBehavior: Clip.antiAlias,
-        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        elevation: 1.5,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            UnifiedVideoPlayer(videoId: videoPost.youtubeId, type: VideoPlayerType.youtube, aspectRatio: 16 / 9, autoPlay: false),
-            // YoutubePlayer(
-            //   key: ValueKey("yt_profile_${videoPost.id}_${controller.initialVideoId}"),
-            //   controller: controller,
-            //   showVideoProgressIndicator: true,
-            //   progressIndicatorColor: theme.colorScheme.primary,
-            //   progressColors: ProgressBarColors(
-            //     playedColor: theme.colorScheme.primary,
-            //     handleColor: theme.colorScheme.secondary,
-            //     bufferedColor: theme.colorScheme.primary.withOpacity(0.4),
-            //     backgroundColor: theme.colorScheme.onSurface.withOpacity(0.1),
-            //   ),
-            // ),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
-                    ExpandableText(
-                      videoPost.text!,
-                      expandText: 'more',
-                      collapseText: 'less',
-                      maxLines: 4,
-                      linkColor: theme.colorScheme.primary,
-                      style: theme.textTheme.bodyMedium,
-                      linkStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                  Text(
-                    "Posted by: $creatorName, ${videoPost.age}",
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
+      return availability.when(
+        loading: () => _buildVideoLoadingCard(theme, videoPost),
+        error: (error, stack) => _buildVideoErrorCard(theme, videoPost, error.toString()),
+        data: (isAvailable) {
+          if (!isAvailable) {
+            return SizedBox.shrink();
+          }
+
+          return Card(
+            clipBehavior: Clip.antiAlias,
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            elevation: 1.5,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                UnifiedVideoPlayer(videoId: videoPost.youtubeId, type: VideoPlayerType.youtube, aspectRatio: 16 / 9, autoPlay: false),
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
+                        ExpandableText(
+                          videoPost.text!,
+                          expandText: 'more',
+                          collapseText: 'less',
+                          maxLines: 4,
+                          linkColor: theme.colorScheme.primary,
+                          style: theme.textTheme.bodyMedium,
+                          linkStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      Text(
+                        "Posted by: ${widget.creatorName}, ${videoPost.age}",
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       );
     }
 
-    // Handle other video URLs (Odysee, etc.)
     if (hasVideoUrl) {
       return Card(
         clipBehavior: Clip.antiAlias,
@@ -179,7 +171,7 @@ class ProfileContentList extends StatelessWidget {
                     const SizedBox(height: 8),
                   ],
                   Text(
-                    "Posted by: $creatorName, ${videoPost.age}",
+                    "Posted by: ${widget.creatorName}, ${videoPost.age}",
                     style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
                   ),
                 ],
@@ -191,6 +183,149 @@ class ProfileContentList extends StatelessWidget {
     }
 
     return const SizedBox.shrink();
+  }
+
+  Widget _buildVideoLoadingCard(ThemeData theme, MemoModelPost videoPost) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      elevation: 1.5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 200,
+            color: theme.colorScheme.surfaceVariant,
+            child: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary))),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
+                  Text("Checking video availability...", style: theme.textTheme.bodyMedium),
+                  const SizedBox(height: 8),
+                ],
+                Text(
+                  "Posted by: ${widget.creatorName}, ${videoPost.age}",
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVideoErrorCard(ThemeData theme, MemoModelPost videoPost, String error) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      elevation: 1.5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 200,
+            color: theme.colorScheme.errorContainer,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, color: theme.colorScheme.error),
+                  const SizedBox(height: 8),
+                  Text("Error checking video", style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onErrorContainer)),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
+                  ExpandableText(
+                    videoPost.text!,
+                    expandText: 'more',
+                    collapseText: 'less',
+                    maxLines: 4,
+                    linkColor: theme.colorScheme.primary,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Text(
+                  "Posted by: ${widget.creatorName}, ${videoPost.age}",
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVideoRemovedCard(ThemeData theme, MemoModelPost videoPost) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      elevation: 1.5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 200,
+            color: theme.colorScheme.surfaceVariant,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.remove_circle_outline, size: 48, color: theme.colorScheme.error),
+                  const SizedBox(height: 8),
+                  Text("Video Removed", style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                  const SizedBox(height: 4),
+                  Text(
+                    "This video is no longer available on YouTube",
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
+                  ExpandableText(
+                    videoPost.text!,
+                    expandText: 'more',
+                    collapseText: 'less',
+                    maxLines: 4,
+                    linkColor: theme.colorScheme.primary,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Text(
+                  "Posted by: ${widget.creatorName}, ${videoPost.age}",
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildTextOnlyListItem(BuildContext context, ThemeData theme, MemoModelPost post) {
@@ -210,7 +345,7 @@ class ProfileContentList extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    creatorName,
+                    widget.creatorName,
                     style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -226,7 +361,6 @@ class ProfileContentList extends StatelessWidget {
             const SizedBox(height: 4),
             Divider(color: theme.dividerColor.withOpacity(0.3), height: 1),
             const SizedBox(height: 10),
-
             ExpandableText(
               post.text ?? " ",
               expandText: 'show more',

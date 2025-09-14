@@ -9,6 +9,7 @@ import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
 import '../../config_hide_on_feed_trigger.dart';
+import '../../youtube_video_checker.dart';
 import '../memo_reg_exp.dart';
 
 const scraperPageSize = 25;
@@ -108,7 +109,7 @@ class MemoPostScraper {
 
   // --- Data Parsing Logic ---
 
-  List<MemoModelPost> _parseScrapedPostData(Map<String, Object> scrapedData, {skippedPostWasFiltered, newPostCount}) {
+  Future<List<MemoModelPost>> _parseScrapedPostData(Map<String, Object> scrapedData, {skippedPostWasFiltered, newPostCount}) async {
     final List<MemoModelPost> postList = [];
 
     if (scrapedData.values.isEmpty) {
@@ -132,7 +133,7 @@ class MemoPostScraper {
 
     int index = 0;
     for (final dynamic postData in postDataList) {
-      MemoModelPost? post = parsePost(postData);
+      MemoModelPost? post = await parsePost(postData);
       if (newPostCount != -1 && index++ >= newPostCount) return postList;
 
       if (post != null)
@@ -149,11 +150,11 @@ class MemoPostScraper {
 
     var postData = await MemoScraperUtil.createScraperObj(scrapeUrl, _buildPostsScraperConfig(), nocache: true);
 
-    MemoModelPost? post = parsePost(postData.values.first, filterOn: filterOn);
+    MemoModelPost? post = await parsePost(postData.values.first, filterOn: filterOn);
     return post;
   }
 
-  MemoModelPost? parsePost(postData, {bool filterOn = true}) {
+  Future<MemoModelPost?> parsePost(postData, {bool filterOn = true}) async {
     var item = postData;
     if (postData is! Map<String, Object?>) {
       if (postData[0] is Map<String, Object?>)
@@ -228,6 +229,8 @@ class MemoPostScraper {
     if (filterOn && MemoScraperUtil.isTextOnly(post)) {
       return null;
     }
+
+    if (post.youtubeId != null && !(await YouTubeVideoChecker().isVideoAvailable(post.youtubeId!))) return null;
 
     if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase()))) return null;
 

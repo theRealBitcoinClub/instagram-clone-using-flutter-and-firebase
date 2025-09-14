@@ -6,6 +6,7 @@ import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
+import 'package:mahakka/youtube_video_checker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../firebase/post_service.dart';
@@ -147,7 +148,7 @@ class MemoScraperTopic {
       );
 
       // Parse all posts
-      final List<MemoModelPost> allPosts = _parsePostsFromData(postsData, topic);
+      final List<MemoModelPost> allPosts = await _parsePostsFromData(postsData, topic);
 
       // Return only the new posts (most recent ones first)
       // Since posts are typically ordered newest first, take the first N new posts
@@ -230,7 +231,7 @@ class MemoScraperTopic {
   }
 
   /// Parses posts from the scraped response
-  List<MemoModelPost> _parsePostsFromData(Map<String, Object> postsData, MemoModelTopic topic) {
+  Future<List<MemoModelPost>> _parsePostsFromData(Map<String, Object> postsData, MemoModelTopic topic) async {
     final List<MemoModelPost> postList = [];
 
     try {
@@ -246,6 +247,8 @@ class MemoScraperTopic {
           if (MemoScraperUtil.isTextOnly(post)) {
             continue; // Skip text-only posts
           }
+
+          if (post.youtubeId != null && !(await YouTubeVideoChecker().isVideoAvailable(post.youtubeId!))) continue;
 
           if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase()))) continue;
 

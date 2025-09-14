@@ -6,6 +6,7 @@ import 'package:mahakka/widgets/add/tip_information_card.dart';
 
 import '../../memo/model/memo_model_post.dart';
 import '../../memo/model/memo_model_user.dart';
+import '../../provider/user_provider.dart';
 import '../../screens/add/imgur_media_widget.dart';
 import '../../screens/add/ipfs_media_widget.dart';
 import '../../screens/add/odysee_media_widget.dart';
@@ -14,18 +15,16 @@ import '../hashtag_display_widget.dart';
 import '../profile/settings_widget.dart';
 import 'delete_confirmation_dialog.dart';
 
+// Assuming you have a userProvider defined elsewhere
+// final userProvider = StateProvider<MemoModelUser>((ref) => MemoModelUser());
+
 class PublishConfirmationActivity extends ConsumerStatefulWidget {
   final MemoModelPost post;
-  final MemoModelUser user;
 
-  const PublishConfirmationActivity({Key? key, required this.post, required this.user}) : super(key: key);
+  const PublishConfirmationActivity({Key? key, required this.post}) : super(key: key);
 
-  static Future<bool?> show(BuildContext context, {required MemoModelPost post, required MemoModelUser user}) {
-    return Navigator.of(context).push<bool?>(
-      MaterialPageRoute(
-        builder: (context) => PublishConfirmationActivity(post: post, user: user),
-      ),
-    );
+  static Future<bool?> show(BuildContext context, {required MemoModelPost post}) {
+    return Navigator.of(context).push<bool?>(MaterialPageRoute(builder: (context) => PublishConfirmationActivity(post: post)));
   }
 
   @override
@@ -42,8 +41,11 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
     _controller = AnimationController(duration: const Duration(milliseconds: 500), vsync: this);
     _opacityAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
 
+    // Initialize temporary values with user's current settings
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(temporaryTipAmountProvider.notifier).state = widget.user.tipAmountEnum;
+      final user = ref.read(userProvider)!;
+      user.temporaryTipAmount = user.tipAmountEnum;
+      user.temporaryTipReceiver = user.tipReceiver;
     });
 
     _controller.forward();
@@ -56,28 +58,58 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
   }
 
   void _increaseTipAmount() {
-    final current = ref.read(temporaryTipAmountProvider);
-    if (current != null) {
-      final values = TipAmount.values;
-      final currentIndex = values.indexOf(current);
-      if (currentIndex < values.length - 1) {
-        ref.read(temporaryTipAmountProvider.notifier).state = values[currentIndex + 1];
-      } else {
-        showSnackBar("It is already the maximum!", context, type: SnackbarType.info);
-      }
+    final user = ref.read(userProvider)!;
+    final current = user.temporaryTipAmount ?? user.tipAmountEnum;
+    final values = TipAmount.values;
+    final currentIndex = values.indexOf(current);
+    if (currentIndex < values.length - 1) {
+      setState(() {
+        user.temporaryTipAmount = values[currentIndex + 1];
+      });
+    } else {
+      showSnackBar("It is already the maximum!", context, type: SnackbarType.info);
     }
   }
 
   void _decreaseTipAmount() {
-    final current = ref.read(temporaryTipAmountProvider);
-    if (current != null) {
-      final values = TipAmount.values;
-      final currentIndex = values.indexOf(current);
-      if (currentIndex > 0) {
-        ref.read(temporaryTipAmountProvider.notifier).state = values[currentIndex - 1];
-      } else {
-        showSnackBar("It is already the minimum!", context, type: SnackbarType.info);
-      }
+    final user = ref.read(userProvider)!;
+    final current = user.temporaryTipAmount ?? user.tipAmountEnum;
+    final values = TipAmount.values;
+    final currentIndex = values.indexOf(current);
+    if (currentIndex > 0) {
+      setState(() {
+        user.temporaryTipAmount = values[currentIndex - 1];
+      });
+    } else {
+      showSnackBar("It is already the minimum!", context, type: SnackbarType.info);
+    }
+  }
+
+  void _nextTipReceiver() {
+    final user = ref.read(userProvider)!;
+    final current = user.temporaryTipReceiver ?? user.tipReceiver;
+    final values = TipReceiver.values;
+    final currentIndex = values.indexOf(current);
+    if (currentIndex < values.length - 1) {
+      setState(() {
+        user.temporaryTipReceiver = values[currentIndex + 1];
+      });
+    } else {
+      showSnackBar("It is already the last option!", context, type: SnackbarType.info);
+    }
+  }
+
+  void _previousTipReceiver() {
+    final user = ref.read(userProvider)!;
+    final current = user.temporaryTipReceiver ?? user.tipReceiver;
+    final values = TipReceiver.values;
+    final currentIndex = values.indexOf(current);
+    if (currentIndex > 0) {
+      setState(() {
+        user.temporaryTipReceiver = values[currentIndex - 1];
+      });
+    } else {
+      showSnackBar("It is already the first option!", context, type: SnackbarType.info);
     }
   }
 
@@ -88,18 +120,15 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
 
   void _showDeleteConfirmation() {
     showDialog(
-      context: context, // This is the PublishConfirmationActivity's context
+      context: context,
       builder: (dialogContext) => DeleteConfirmationDialog(
         theme: Theme.of(context),
         onDelete: () {
-          // Use dialogContext to pop the dialog
-          Navigator.of(dialogContext).pop(); // Close the dialog
-          // Use the outer context to pop the PublishConfirmationActivity
-          Navigator.of(context).pop(false); // Return false to add_screen
+          Navigator.of(dialogContext).pop();
+          Navigator.of(context).pop(false);
         },
         onCancel: () {
-          // Use dialogContext to pop just the dialog
-          Navigator.of(dialogContext).pop(); // Just close the dialog
+          Navigator.of(dialogContext).pop();
         },
       ),
     );
@@ -113,21 +142,15 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
   }
 
   void _sendPost() {
-    //TODO MOVE THE PUBLISHING LOGIC HERE FOM ADD_SCREEN AND POST_CARD_WIDGET
-    //currently this activity works like a receipt that does not allow any modifications
-    //it shall allow for modifications later on
     try {
-      // Return true to indicate successful confirmation
       Navigator.of(context).pop(true);
     } catch (e) {
-      // If there's an error during sending, return false
       Navigator.of(context).pop(false);
     }
   }
 
   Widget _buildMediaPreview(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     final post = widget.post;
-    //read first existing post in case it was provided as it is a reply action as media retweet
     post.imgurUrl = post.imgurUrl ?? ref.read(imgurUrlProvider);
     post.youtubeId = post.youtubeId ?? ref.read(youtubeVideoIdProvider);
     post.ipfsCid = post.ipfsCid ?? ref.read(ipfsCidProvider);
@@ -162,11 +185,12 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(userProvider)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    final temporaryTipAmount = ref.watch(temporaryTipAmountProvider);
+    final temporaryTipAmount = user.temporaryTipAmount ?? user.tipAmountEnum;
 
     return Scaffold(
       appBar: AppBar(
@@ -179,12 +203,8 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.user.creator.profileIdShort, style: textTheme.titleSmall?.copyWith(color: colorScheme.onPrimary)),
-            if (temporaryTipAmount != null)
-              Text(
-                _getTipAmountDisplay(temporaryTipAmount),
-                style: textTheme.bodySmall?.copyWith(color: colorScheme.onPrimary.withOpacity(0.8)),
-              ),
+            Text(user.creator.profileIdShort, style: textTheme.titleSmall?.copyWith(color: colorScheme.onPrimary)),
+            Text(_getTipAmountDisplay(temporaryTipAmount), style: textTheme.bodySmall?.copyWith(color: colorScheme.onPrimary.withOpacity(0.8))),
           ],
         ),
         actions: [
@@ -204,7 +224,6 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Text content with topic
               if (widget.post.text != null) Text(widget.post.text!, style: textTheme.bodyLarge),
               const SizedBox(height: 16),
               if (widget.post.tagIds.isNotEmpty) HashtagDisplayWidget(hashtags: widget.post.tagIds, theme: theme),
@@ -267,9 +286,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                icon: Icon(size: 36, Icons.cancel_outlined, color: colorScheme.onSurfaceVariant),
-                onPressed: _showDeleteConfirmation,
-                tooltip: 'Cancel Post',
+                icon: Icon(size: 36, Icons.arrow_back, color: colorScheme.onSurfaceVariant),
+                onPressed: _previousTipReceiver,
+                tooltip: 'Previous Receiver',
               ),
               IconButton(
                 icon: Icon(size: 36, Icons.arrow_downward, color: colorScheme.onSurfaceVariant),
@@ -287,9 +306,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                 tooltip: 'Increase Tip',
               ),
               IconButton(
-                icon: Icon(size: 36, Icons.send, color: colorScheme.onSurfaceVariant),
-                onPressed: _sendPost,
-                tooltip: 'Send',
+                icon: Icon(size: 36, Icons.arrow_forward, color: colorScheme.onSurfaceVariant),
+                onPressed: _nextTipReceiver,
+                tooltip: 'Next Receiver',
               ),
             ],
           ),

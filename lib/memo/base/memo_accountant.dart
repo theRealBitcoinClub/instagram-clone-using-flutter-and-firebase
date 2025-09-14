@@ -9,7 +9,6 @@ import 'package:mahakka/memo/model/memo_tip.dart';
 
 import '../../provider/user_provider.dart';
 import '../../repositories/post_cache_repository.dart';
-import '../../screens/add/add_post_providers.dart';
 import '../scraper/memo_post_scraper.dart';
 import 'memo_bitcoin_base.dart';
 
@@ -239,10 +238,11 @@ class MemoAccountant {
     return mp.doPublish(topic: top ?? "", tips: tips);
   }
 
-  List<MemoTip> parseTips({MemoModelPost? post, int? tipTotalAmountArg, TipReceiver? receiverArg}) {
-    TipReceiver receiver = receiverArg ?? ref.read(userProvider)!.tipReceiver;
-    int tipTotalAmount =
-        tipTotalAmountArg ?? (ref.read(temporaryTipAmountProvider) != null ? ref.read(temporaryTipAmountProvider)!.value : user.tipAmount);
+  List<MemoTip> parseTips({MemoModelPost? post, TipAmount? tipTotalAmountArg, TipReceiver? receiverArg}) {
+    var user = ref.read(userProvider)!;
+    TipReceiver receiver = receiverArg ?? user.temporaryTipReceiver ?? user.tipReceiver;
+    TipAmount tipAmount = tipTotalAmountArg ?? user.temporaryTipAmount ?? user.tipAmountEnum;
+    int tipTotalAmount = tipAmount.value;
 
     if (tipTotalAmount == 0) return [];
 

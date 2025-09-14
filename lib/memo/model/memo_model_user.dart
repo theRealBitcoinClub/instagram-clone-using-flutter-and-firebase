@@ -76,6 +76,8 @@ class MemoModelUser {
   TipAmount _tipAmount;
   @JsonKey(includeFromJson: false, includeToJson: false)
   TipAmount? temporaryTipAmount;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  TipReceiver? temporaryTipReceiver;
 
   // Ignored fields
   @JsonKey(includeFromJson: false, includeToJson: false)

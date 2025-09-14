@@ -541,7 +541,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       final user = ref.read(userProvider)!;
 
       // Show confirmation screen and wait for result
-      final bool shouldPublish = (await PublishConfirmationActivity.show(context, post: post, user: user))!;
+      final bool shouldPublish = (await PublishConfirmationActivity.show(context, post: post))!;
 
       if (!mounted) return;
 

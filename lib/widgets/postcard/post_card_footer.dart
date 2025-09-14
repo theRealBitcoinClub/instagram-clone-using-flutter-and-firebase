@@ -5,6 +5,7 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 
 import '../character_limited_textfield.dart';
+import '../hashtag_display_widget.dart';
 
 // If _PostCardState constants like _maxTagsCounter were used, they need to be accessible
 // or passed down. For now, assuming they are either not critical or will be handled.
@@ -153,36 +154,42 @@ class PostCardFooter extends StatelessWidget {
   }
 
   Widget _buildHashtagCheckboxesWidget(ThemeData theme) {
-    final int displayCount = post.tagIds.length > maxTagsCounter ? maxTagsCounter : post.tagIds.length;
-
-    if (displayCount == 0) return const SizedBox.shrink();
-
-    return Wrap(
-      spacing: 8.0,
-      runSpacing: 4.0,
-      children: List<Widget>.generate(displayCount, (index) {
-        final bool isSelected = selectedHashtags.length > index && selectedHashtags[index];
-        return InkWell(
-          onTap: () => onSelectHashtag(index),
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: isSelected ? theme.colorScheme.primary.withOpacity(0.15) : theme.colorScheme.surfaceVariant.withOpacity(0.7),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.5), width: 1.2),
-            ),
-            child: Text(
-              post.tagIds[index],
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        );
-      }),
+    return HashtagDisplayWidget(
+      hashtags: post.tagIds,
+      theme: theme,
+      selectedHashtags: selectedHashtags,
+      onSelectHashtag: (index) => onSelectHashtag(index),
     );
+    // final int displayCount = post.tagIds.length > maxTagsCounter ? maxTagsCounter : post.tagIds.length;
+    //
+    // if (displayCount == 0) return const SizedBox.shrink();
+    //
+    // return Wrap(
+    //   spacing: 8.0,
+    //   runSpacing: 4.0,
+    //   children: List<Widget>.generate(displayCount, (index) {
+    //     final bool isSelected = selectedHashtags.length > index && selectedHashtags[index];
+    //     return InkWell(
+    //       onTap: () => onSelectHashtag(index),
+    //       borderRadius: BorderRadius.circular(16),
+    //       child: Container(
+    //         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    //         decoration: BoxDecoration(
+    //           color: isSelected ? theme.colorScheme.primary.withOpacity(0.15) : theme.colorScheme.surfaceVariant.withOpacity(0.7),
+    //           borderRadius: BorderRadius.circular(16),
+    //           border: Border.all(color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.5), width: 1.2),
+    //         ),
+    //         child: Text(
+    //           post.tagIds[index],
+    //           style: theme.textTheme.bodySmall?.copyWith(
+    //             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+    //             color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+    //           ),
+    //         ),
+    //       ),
+    //     );
+    //   }),
+    // );
   }
 
   Widget _buildCancelButtonWidget(ThemeData theme) {

@@ -94,13 +94,15 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> wit
                 textAlign: TextAlign.center,
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               // Countdown display
-              Text(
-                'Delete button enabled in: $_countdown',
-                style: widget.theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: widget.theme.colorScheme.primary),
-              ),
+              _deleteEnabled
+                  ? SizedBox(height: 22)
+                  : Text(
+                      'Delete button enabled in: $_countdown',
+                      style: widget.theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w400, color: widget.theme.colorScheme.primary),
+                    ),
 
               const SizedBox(height: 24),
 

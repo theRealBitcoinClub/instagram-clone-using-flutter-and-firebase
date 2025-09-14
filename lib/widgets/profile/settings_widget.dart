@@ -18,10 +18,9 @@ import 'header/settings_option_widget.dart';
 enum SettingsTab { creator, tips, user }
 
 class SettingsWidget extends ConsumerStatefulWidget {
-  final MemoModelUser loggedInUser;
   final SettingsTab initialTab;
 
-  const SettingsWidget({Key? key, required this.initialTab, required this.loggedInUser}) : super(key: key);
+  const SettingsWidget({Key? key, required this.initialTab}) : super(key: key);
 
   @override
   ConsumerState<SettingsWidget> createState() => _SettingsWidgetState();
@@ -35,8 +34,9 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   TipReceiver? _selectedTipReceiver;
   TipAmount? _selectedTipAmount;
   bool allowLogout = false;
-  String get key => 'mnemonic_backup_verified ${widget.loggedInUser.id}';
+  String get key => 'mnemonic_backup_verified ${ref.read(userProvider)!.id}';
   late MemoModelCreator creator;
+  late MemoModelUser user;
 
   late TabController _tabController;
   int _currentTabIndex = 0;
@@ -52,7 +52,9 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   @override
   void initState() {
     super.initState();
-    creator = widget.loggedInUser.creator;
+    user = ref.read(userProvider)!;
+    creator = user.creator;
+
     _tabController = TabController(length: tabs().length, vsync: this);
     _tabController.addListener(_handleTabSelection);
     _initializeControllers();
@@ -60,7 +62,6 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tabController.index = widget.initialTab.index;
-      // _tabController.animateTo(widget.initialTab.index);
     });
   }
 
@@ -86,8 +87,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     _profileTextCtrl.text = creator.profileText;
     _imgurCtrl.text = creator.profileImgurUrl ?? "";
 
-    _selectedTipReceiver = widget.loggedInUser.tipReceiver;
-    _selectedTipAmount = widget.loggedInUser.tipAmountEnum;
+    _selectedTipReceiver = ref.read(userProvider)!.tipReceiver;
+    _selectedTipAmount = ref.read(userProvider)!.tipAmountEnum;
   }
 
   @override
@@ -389,7 +390,6 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
       if (!changesMade) {
         showSnackBar(type: SnackbarType.info, "No changes to save. 🤔", context);
-        onFail();
         return;
       }
 
@@ -425,24 +425,22 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   }
 
   void _showMnemonicBackupDialog() {
-    if (widget.loggedInUser != null) {
-      showDialog(
-        context: context,
-        builder: (ctx) => MnemonicBackupWidget(
-          mnemonic: widget.loggedInUser.mnemonic,
-          onVerificationComplete: () {
-            SharedPreferences.getInstance().then((prefs) {
-              prefs.setBool(key, true);
-              if (mounted) {
-                setState(() {
-                  allowLogout = true;
-                });
-              }
-            });
-          },
-        ),
-      );
-    }
+    showDialog(
+      context: context,
+      builder: (ctx) => MnemonicBackupWidget(
+        mnemonic: ref.read(userProvider)!.mnemonic,
+        onVerificationComplete: () {
+          SharedPreferences.getInstance().then((prefs) {
+            prefs.setBool(key, true);
+            if (mounted) {
+              setState(() {
+                allowLogout = true;
+              });
+            }
+          });
+        },
+      ),
+    );
   }
 
   void _logout() {

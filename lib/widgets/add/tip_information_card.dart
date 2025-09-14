@@ -4,18 +4,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../memo/base/memo_accountant.dart';
 import '../../memo/base/memo_bitcoin_base.dart';
 import '../../memo/model/memo_model_post.dart';
-import '../../memo/model/memo_model_user.dart';
 import '../../memo/model/memo_tip.dart';
+import '../../provider/user_provider.dart';
 import '../../screens/add/add_post_providers.dart';
+
+// Assuming you have a user provider somewhere, if not, you'll need to create one
+// For example: final userProvider = StateProvider<MemoModelUser>((ref) => MemoModelUser());
 
 class TipInformationCard extends ConsumerWidget {
   final MemoModelPost post;
-  final MemoModelUser user;
+  var burnColor;
+  var creatorColor;
 
-  const TipInformationCard({Key? key, required this.post, required this.user}) : super(key: key);
+  TipInformationCard({Key? key, required this.post}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the user provider to get updates when user changes
+    final user = ref.watch(userProvider)!;
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final temporaryTipAmount = ref.watch(temporaryTipAmountProvider);
@@ -29,6 +35,8 @@ class TipInformationCard extends ConsumerWidget {
     final (burnPct, creatorPct) = user.tipReceiver.calculateAmounts(100);
     final burnPercentage = burnPct;
     final creatorPercentage = creatorPct;
+    burnColor = theme.colorScheme.primary;
+    creatorColor = theme.colorScheme.secondary;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -37,72 +45,26 @@ class TipInformationCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            Row(
-              children: [
-                Icon(Icons.attach_money_rounded, size: 20, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
-                Text(
-                  'Tip Distribution',
-                  style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
-                ),
-              ],
-            ),
+            if (temporaryTipAmount != user.tipAmountEnum)
+              Text(
+                '⚠️ Custom tip amount for this post only',
+                style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary, fontStyle: FontStyle.italic),
+              ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
             // Total amount
             _buildInfoRow('Total Tip Amount:', '${_formatSatoshi(tipTotalAmount)} satoshis', theme),
-
-            const SizedBox(height: 12),
-
-            // Distribution type
-            _buildInfoRow('Distribution:', user.tipReceiver.displayName, theme),
 
             const SizedBox(height: 16),
 
             // Visual percentage bar
             _buildPercentageBar(burnPercentage, creatorPercentage, theme),
 
-            const SizedBox(height: 12),
-
-            // Percentage breakdown
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Burned: ${(user.tipReceiver.burnPercentage * 100).round()}%',
-                  style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.error, fontWeight: FontWeight.w500),
-                ),
-                Text(
-                  'Creator: ${(user.tipReceiver.creatorPercentage * 100).round()}%',
-                  style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
             // Breakdown
-            if (tips.isNotEmpty) ...[
-              Text(
-                'Amount Breakdown:',
-                style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface.withOpacity(0.8)),
-              ),
-
-              const SizedBox(height: 8),
-
-              ...tips.map((tip) => _buildTipBreakdownRow(tip, theme)).toList(),
-            ],
+            if (tips.isNotEmpty) ...[const SizedBox(height: 8), ...tips.map((tip) => _buildTipBreakdownRow(tip, theme)).toList()],
 
             const SizedBox(height: 8),
-
-            // Note about temporary tip
-            if (temporaryTipAmount != null)
-              Text(
-                '⚠️ Custom tip amount for this post only',
-                style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.secondary, fontStyle: FontStyle.italic),
-              ),
           ],
         ),
       ),
@@ -121,7 +83,7 @@ class TipInformationCard extends ConsumerWidget {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.horizontal(left: Radius.circular(4)),
-                  color: theme.colorScheme.error,
+                  color: burnColor,
                 ),
               ),
             ),
@@ -131,7 +93,7 @@ class TipInformationCard extends ConsumerWidget {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.horizontal(right: Radius.circular(4)),
-                  color: theme.colorScheme.primary,
+                  color: creatorColor,
                 ),
               ),
             ),
@@ -166,11 +128,7 @@ class TipInformationCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(
-                isBurn ? Icons.local_fire_department : Icons.person,
-                size: 16,
-                color: isBurn ? theme.colorScheme.error : theme.colorScheme.primary,
-              ),
+              Icon(isBurn ? Icons.local_fire_department : Icons.person, size: 16, color: isBurn ? burnColor : creatorColor),
               const SizedBox(width: 8),
               Text(
                 isBurn ? 'Burned' : 'To Creator',
@@ -180,10 +138,7 @@ class TipInformationCard extends ConsumerWidget {
           ),
           Text(
             '${_formatSatoshi(tip.amountInSats)} sat',
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: isBurn ? theme.colorScheme.error : theme.colorScheme.primary,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: isBurn ? burnColor : creatorColor),
           ),
         ],
       ),

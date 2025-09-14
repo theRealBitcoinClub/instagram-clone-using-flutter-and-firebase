@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/screens/add/add_post_providers.dart';
+import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/add/tip_information_card.dart';
 
 import '../../memo/model/memo_model_post.dart';
@@ -61,6 +62,8 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       final currentIndex = values.indexOf(current);
       if (currentIndex < values.length - 1) {
         ref.read(temporaryTipAmountProvider.notifier).state = values[currentIndex + 1];
+      } else {
+        showSnackBar("It is already the maximum!", context, type: SnackbarType.info);
       }
     }
   }
@@ -72,6 +75,8 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       final currentIndex = values.indexOf(current);
       if (currentIndex > 0) {
         ref.read(temporaryTipAmountProvider.notifier).state = values[currentIndex - 1];
+      } else {
+        showSnackBar("It is already the minimum!", context, type: SnackbarType.info);
       }
     }
   }
@@ -103,7 +108,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
   void _showTipSettings() {
     showDialog(
       context: context,
-      builder: (context) => SettingsWidget(loggedInUser: widget.user, initialTab: SettingsTab.tips),
+      builder: (context) => SettingsWidget(initialTab: SettingsTab.tips),
     );
   }
 
@@ -193,7 +198,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
               const SizedBox(height: 16),
               _buildMediaPreview(theme, colorScheme, textTheme),
               const SizedBox(height: 24),
-              TipInformationCard(post: widget.post, user: widget.user),
+              TipInformationCard(post: widget.post),
             ],
           ),
         ),

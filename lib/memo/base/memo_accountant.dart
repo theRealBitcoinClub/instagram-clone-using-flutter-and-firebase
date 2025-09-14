@@ -9,6 +9,7 @@ import 'package:mahakka/memo/model/memo_tip.dart';
 
 import '../../provider/user_provider.dart';
 import '../../repositories/post_cache_repository.dart';
+import '../../screens/add/add_post_providers.dart';
 import '../scraper/memo_post_scraper.dart';
 import 'memo_bitcoin_base.dart';
 
@@ -195,14 +196,14 @@ class MemoAccountant {
   }
 
   Future<MemoAccountantResponse> _executePublishReplyHashtags(MemoModelPost post, String text) async {
-    return _publishToMemo(MemoCode.profileMessage, text, tips: _parseTips());
+    return _publishToMemo(MemoCode.profileMessage, text, tips: parseTips());
   }
 
   Future<MemoAccountantResponse> _executePublishImgurOrYoutube(String? topic, String text) async {
     if (topic != null) {
-      return _publishToMemo(MemoCode.topicMessage, text, top: topic, tips: _parseTips());
+      return _publishToMemo(MemoCode.topicMessage, text, top: topic, tips: parseTips());
     } else {
-      return _publishToMemo(MemoCode.profileMessage, text, tips: _parseTips());
+      return _publishToMemo(MemoCode.profileMessage, text, tips: parseTips());
     }
   }
 
@@ -221,7 +222,7 @@ class MemoAccountant {
   // Original helper methods (unchanged)
   Future<MemoAccountantResponse> _tryPublishLike(MemoModelPost post, String wif) async {
     var mp = await MemoPublisher.create(ref, MemoBitcoinBase.reOrderTxHash(post.id!), MemoCode.postLike, wif: wif);
-    List<MemoTip> tips = _parseTips(post: post);
+    List<MemoTip> tips = parseTips(post: post);
     return mp.doPublish(tips: tips);
   }
 
@@ -229,7 +230,7 @@ class MemoAccountant {
       response != MemoAccountantResponse.yes ? MemoAccountantResponse.lowBalance : MemoAccountantResponse.yes;
 
   Future<MemoAccountantResponse> _tryPublishReplyTopic(String wif, MemoModelPost post, String postReply) async {
-    List<MemoTip> tips = _parseTips(post: post);
+    List<MemoTip> tips = parseTips(post: post);
     return _publishToMemo(MemoCode.topicMessage, postReply, tips: tips, top: post.topicId);
   }
 
@@ -238,44 +239,17 @@ class MemoAccountant {
     return mp.doPublish(topic: top ?? "", tips: tips);
   }
 
-  List<MemoTip> _parseTips({MemoModelPost? post}) {
-    // ... unchanged implementation
-    TipReceiver receiver = ref.read(userProvider)!.tipReceiver;
-    int burnAmount = 0;
-    int creatorAmount = 0;
+  List<MemoTip> parseTips({MemoModelPost? post, int? tipTotalAmountArg, TipReceiver? receiverArg}) {
+    TipReceiver receiver = receiverArg ?? ref.read(userProvider)!.tipReceiver;
+    int tipTotalAmount =
+        tipTotalAmountArg ?? (ref.read(temporaryTipAmountProvider) != null ? ref.read(temporaryTipAmountProvider)!.value : user.tipAmount);
 
-    if (user.tipAmount == 0) return [];
+    if (tipTotalAmount == 0) return [];
 
-    if (post == null) return [MemoTip(MemoBitcoinBase.bchBurnerAddress, user.tipAmount)];
+    if (post == null) return [MemoTip(MemoBitcoinBase.bchBurnerAddress, tipTotalAmount)];
 
-    switch (receiver) {
-      case TipReceiver.creator:
-        creatorAmount = user.tipAmount;
-        break;
-      case TipReceiver.app:
-        burnAmount = user.tipAmount;
-        break;
-      case TipReceiver.both:
-        burnAmount = (user.tipAmount / 2).round();
-        creatorAmount = (user.tipAmount / 2).round();
-        break;
-      case TipReceiver.burn20Creator80:
-        burnAmount = (user.tipAmount * 0.2).round();
-        creatorAmount = (user.tipAmount * 0.8).round();
-        break;
-      case TipReceiver.burn40Creator60:
-        burnAmount = (user.tipAmount * 0.4).round();
-        creatorAmount = (user.tipAmount * 0.6).round();
-        break;
-      case TipReceiver.burn60Creator40:
-        burnAmount = (user.tipAmount * 0.6).round();
-        creatorAmount = (user.tipAmount * 0.4).round();
-        break;
-      case TipReceiver.burn80Creator20:
-        burnAmount = (user.tipAmount * 0.8).round();
-        creatorAmount = (user.tipAmount * 0.2).round();
-        break;
-    }
+    // Use the enum's built-in percentage calculation
+    final (burnAmount, creatorAmount) = receiver.calculateAmounts(tipTotalAmount);
 
     List<MemoTip> tips = [];
     if (burnAmount != 0) {
@@ -287,6 +261,58 @@ class MemoAccountant {
 
     return tips;
   }
+
+  //
+  // List<MemoTip> parseTips({MemoModelPost? post}) {
+  //   // ... unchanged implementation
+  //   TipReceiver receiver = ref.read(userProvider)!.tipReceiver;
+  //   int burnAmount = 0;
+  //   int creatorAmount = 0;
+  //   int tipTotalAmount = ref.read(temporaryTipAmountProvider) != null ? ref.read(temporaryTipAmountProvider)!.value : user.tipAmount;
+  //
+  //   if (tipTotalAmount == 0) return [];
+  //
+  //   if (post == null) return [MemoTip(MemoBitcoinBase.bchBurnerAddress, tipTotalAmount)];
+  //
+  //   switch (receiver) {
+  //     case TipReceiver.creator:
+  //       creatorAmount = tipTotalAmount;
+  //       break;
+  //     case TipReceiver.app:
+  //       burnAmount = tipTotalAmount;
+  //       break;
+  //     case TipReceiver.both:
+  //       burnAmount = (tipTotalAmount / 2).round();
+  //       creatorAmount = (tipTotalAmount / 2).round();
+  //       break;
+  //     case TipReceiver.burn20Creator80:
+  //       burnAmount = (tipTotalAmount * 0.2).round();
+  //       creatorAmount = (tipTotalAmount * 0.8).round();
+  //       break;
+  //     case TipReceiver.burn40Creator60:
+  //       burnAmount = (tipTotalAmount * 0.4).round();
+  //       creatorAmount = (tipTotalAmount * 0.6).round();
+  //       break;
+  //     case TipReceiver.burn60Creator40:
+  //       burnAmount = (tipTotalAmount * 0.6).round();
+  //       creatorAmount = (tipTotalAmount * 0.4).round();
+  //       break;
+  //     case TipReceiver.burn80Creator20:
+  //       burnAmount = (tipTotalAmount * 0.8).round();
+  //       creatorAmount = (tipTotalAmount * 0.2).round();
+  //       break;
+  //   }
+  //
+  //   List<MemoTip> tips = [];
+  //   if (burnAmount != 0) {
+  //     tips.add(MemoTip(MemoBitcoinBase.bchBurnerAddress, burnAmount));
+  //   }
+  //   if (creatorAmount != 0) {
+  //     tips.add(MemoTip(post.creatorId, creatorAmount));
+  //   }
+  //
+  //   return tips;
+  // }
 
   // Cleanup method to dispose resources
   void dispose() {

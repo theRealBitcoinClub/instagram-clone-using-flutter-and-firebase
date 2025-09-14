@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/screens/add/add_post_providers.dart';
+import 'package:mahakka/widgets/add/tip_information_card.dart';
 
 import '../../memo/model/memo_model_post.dart';
 import '../../memo/model/memo_model_user.dart';
@@ -187,34 +188,12 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
             children: [
               // Text content with topic
               if (widget.post.text != null) Text(widget.post.text!, style: textTheme.bodyLarge),
-
               const SizedBox(height: 16),
-
-              // Hashtags
               if (widget.post.tagIds.isNotEmpty) HashtagDisplayWidget(hashtags: widget.post.tagIds, theme: theme),
-
               const SizedBox(height: 16),
-
-              // Media preview
               _buildMediaPreview(theme, colorScheme, textTheme),
-
               const SizedBox(height: 24),
-
-              // Tip information
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Tip Information', style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      if (temporaryTipAmount != null) Text('Amount: ${_getTipAmountDisplay(temporaryTipAmount)}', style: textTheme.bodyMedium),
-                      Text('Receiver: ${widget.user.tipReceiver.toString()}', style: textTheme.bodyMedium),
-                    ],
-                  ),
-                ),
-              ),
+              TipInformationCard(post: widget.post, user: widget.user),
             ],
           ),
         ),
@@ -225,19 +204,10 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Cancel button
               IconButton(icon: const Icon(Icons.cancel), onPressed: _showDeleteConfirmation, tooltip: 'Cancel Post'),
-
-              // Decrease tip
               IconButton(icon: const Icon(Icons.arrow_downward), onPressed: _decreaseTipAmount, tooltip: 'Decrease Tip'),
-
-              // Tip settings
               IconButton(icon: const Icon(Icons.settings), onPressed: _showTipSettings, tooltip: 'Tip Settings'),
-
-              // Increase tip
               IconButton(icon: const Icon(Icons.arrow_upward), onPressed: _increaseTipAmount, tooltip: 'Increase Tip'),
-
-              // Send button
               ElevatedButton(onPressed: _sendPost, child: const Text('SEND')),
             ],
           ),

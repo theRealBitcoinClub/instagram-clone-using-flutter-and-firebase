@@ -59,7 +59,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     _initAllowLogout();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _tabController.animateTo(widget.initialTab!.index);
+      _tabController.index = widget.initialTab.index;
+      // _tabController.animateTo(widget.initialTab.index);
     });
   }
 
@@ -273,7 +274,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             });
           },
           items: TipReceiver.values.map((TipReceiver receiver) {
-            return DropdownMenuItem<TipReceiver>(value: receiver, child: Text(_getTipReceiverDisplayName(receiver)));
+            return DropdownMenuItem<TipReceiver>(value: receiver, child: Text(receiver.displayName));
           }).toList(),
           decoration: InputDecoration(
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -331,25 +332,6 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       ),
       child: const Text("SAVE"),
     );
-  }
-
-  String _getTipReceiverDisplayName(TipReceiver receiver) {
-    switch (receiver) {
-      case TipReceiver.app:
-        return "100% Burn";
-      case TipReceiver.creator:
-        return "100% Creator";
-      case TipReceiver.both:
-        return "50% Burn & 50% Creator";
-      case TipReceiver.burn20Creator80:
-        return "20% Burn & 80% Creator";
-      case TipReceiver.burn40Creator60:
-        return "40% Burn & 60% Creator";
-      case TipReceiver.burn60Creator40:
-        return "60% Burn & 40% Creator";
-      case TipReceiver.burn80Creator20:
-        return "80% Burn & 20% Creator";
-    }
   }
 
   String _getTipAmountDisplayName(TipAmount amount) {

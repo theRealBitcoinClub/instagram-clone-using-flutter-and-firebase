@@ -33,36 +33,25 @@ class PostCacheRepository {
   Future<void> updatePopularityScore(String postId, int tipAmount, MemoModelPost? scrapedPost) async {
     MemoModelPost post = (await getPost(postId))!;
 
-    TipReceiver receiver = ref.read(userProvider)!.tipReceiver;
-    if (receiver == TipReceiver.app)
-      return;
-    else if (receiver == TipReceiver.both)
-      tipAmount = (tipAmount / 2).round();
+    final TipReceiver receiver = ref.read(userProvider)!.tipReceiver;
 
-    switch (receiver) {
-      case TipReceiver.burn80Creator20:
-        tipAmount = (tipAmount * 0.2).round();
-        break;
-      case TipReceiver.burn60Creator40:
-        tipAmount = (tipAmount * 0.4).round();
-        break;
-      case TipReceiver.burn40Creator60:
-        tipAmount = (tipAmount * 0.6).round();
-        break;
-      case TipReceiver.burn20Creator80:
-        tipAmount = (tipAmount * 0.8).round();
-        break;
-      default:
-        ;
-    }
+    // If all tips go to the app (burn), no need to update popularity
+    if (receiver == TipReceiver.app) return;
+
+    // Use the enum's built-in calculation method instead of manual switch
+    final (int burnAmount, int creatorAmount) = receiver.calculateAmounts(tipAmount);
+
+    // For popularity score, we only care about the creator's portion
+    final int creatorTipAmount = creatorAmount;
 
     var newScore;
     if (scrapedPost == null) {
       print("UPDATE POPULARITY FETCH UP TO DATE SCORE FAILED");
-      newScore = post.popularityScore + tipAmount;
+      newScore = post.popularityScore + creatorTipAmount;
     } else {
-      newScore = scrapedPost.popularityScore + tipAmount;
+      newScore = scrapedPost.popularityScore + creatorTipAmount;
     }
+
     await ref.read(postServiceProvider).savePost(post);
     await savePosts([post]);
     ref.read(postPopularityProvider.notifier).updatePopularityScore(postId, newScore);

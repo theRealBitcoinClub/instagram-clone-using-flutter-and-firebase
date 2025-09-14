@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/memo_reg_exp.dart';
+import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/screens/pin_claim_screen.dart';
 import 'package:mahakka/utils/snackbar.dart';
@@ -495,13 +496,21 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       imageUrl: null, // You might need to handle this based on your media selection
       videoUrl: odyseeUrl.isNotEmpty ? odyseeUrl : null,
       ipfsCid: ipfsCid.isNotEmpty ? ipfsCid : null,
-      tagIds: tagIdsFromTags(_inputTagTopicController.tags),
+      tagIds: hashTagsFromTags(_inputTagTopicController.tags),
+      topicId: topic ?? "",
+      topic: topic != null ? MemoModelTopic(id: topic) : null,
+      creator: ref.read(userProvider)!.creator,
+      creatorId: ref.read(userProvider)!.id,
     );
   }
 
   /// Extracts just the IDs from a list of Tag objects
-  List<String> tagIdsFromTags(Iterable<Tag> tags) {
-    return tags.map((tag) => tag.id).toList();
+  List<String> hashTagsFromTags(Iterable<Tag> tags) {
+    List<String> results = [];
+    for (Tag tag in tags) {
+      if (tag.triggerCharacter == "#") results.add(tag.id);
+    }
+    return results;
   }
 
   Future<void> _onPublish() async {
@@ -527,7 +536,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     MemoVerificationResponse result = _handleVerification(textContent);
 
     if (result != MemoVerificationResponse.valid) {
-      _showErrorSnackBar('Publish failed: ${result.toString()}. Please try again.');
+      _showErrorSnackBar('${result.message}');
       ref.read(isPublishingProvider.notifier).state = false;
       return;
     }
@@ -578,69 +587,12 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     }
   }
 
-  //
-  // Future<void> _onPublish() async {
-  //   final isPublishing = ref.read(isPublishingProvider);
-  //   if (isPublishing) return;
-  //   _unfocusNodes(context);
-  //
-  //   if (!_hasMediaSelected()) {
-  //     _showErrorSnackBar('Please add an image or video to share.');
-  //     return;
-  //   }
-  //
-  //   final String? validationError = _validateTagsAndTopic();
-  //   if (validationError != null) {
-  //     _showErrorSnackBar(validationError);
-  //     return;
-  //   }
-  //
-  //   ref.read(isPublishingProvider.notifier).state = true;
-  //
-  //   String textContent = _inputTagTopicController.text;
-  //
-  //   MemoVerificationResponse result = _handleVerification(textContent);
-  //
-  //   if (result != MemoVerificationResponse.valid) {
-  //     _showErrorSnackBar('Publish failed: ${result.toString()}. Please try again.');
-  //     ref.read(isPublishingProvider.notifier).state = false;
-  //     return;
-  //   }
-  //
-  //   textContent = _appendMediaUrlToText(textContent);
-  //   final String? topic = _extractTopicFromTags(textContent);
-  //
-  //   try {
-  //     final postRepository = ref.read(postRepositoryProvider);
-  //     final response = await postRepository.publishImageOrVideo(textContent, topic, validate: false);
-  //
-  //     if (!mounted) return;
-  //
-  //     if (response == MemoAccountantResponse.yes) {
-  //       MemoConfetti().launch(context);
-  //       _clearInputs();
-  //       _showSuccessSnackBar('Successfully published!');
-  //     } else {
-  //       showQrCodeDialog(context: context, theme: Theme.of(context), user: ref.read(userProvider), memoOnly: true);
-  //       _showErrorSnackBar('Publish failed: ${response.toString()}');
-  //     }
-  //   } catch (e, s) {
-  //     _log("Error during publish: $e\n$s");
-  //     if (mounted) {
-  //       _showErrorSnackBar('An error occurred during publish: ${e.toString()}');
-  //     }
-  //   } finally {
-  //     if (mounted) {
-  //       ref.read(isPublishingProvider.notifier).state = false;
-  //     }
-  //   }
-  // }
-
   MemoVerificationResponse _handleVerification(String textContent) {
     final verifier = MemoVerifierDecorator(textContent)
         .addValidator(InputValidators.verifyPostLength)
         .addValidator(InputValidators.verifyMinWordCount)
         .addValidator(InputValidators.verifyHashtags)
+        .addValidator(InputValidators.verifyNoTopicNorTag)
         .addValidator(InputValidators.verifyTopics)
         .addValidator(InputValidators.verifyUrl)
         .addValidator(InputValidators.verifyOffensiveWords);

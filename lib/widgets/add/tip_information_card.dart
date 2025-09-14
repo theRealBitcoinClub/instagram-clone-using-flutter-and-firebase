@@ -18,18 +18,19 @@ class TipInformationCard extends ConsumerWidget {
     final user = ref.watch(userProvider)!;
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
+    final isNewPost = user.id == post.creatorId;
 
     final tipAmount = user.temporaryTipAmount ?? user.tipAmountEnum;
     final tipTotalAmount = tipAmount.value;
 
-    final tips = ref.read(memoAccountantProvider).parseTips(post: post);
+    final tips = ref.read(memoAccountantProvider).parseTips();
 
     // Calculate percentages for visual representation
     final (burnPct, creatorPct) = user.temporaryTipReceiver != null
         ? user.temporaryTipReceiver!.calculateAmounts(100)
         : user.tipReceiver.calculateAmounts(100);
-    final burnPercentage = burnPct;
-    final creatorPercentage = creatorPct;
+    final burnPercentage = isNewPost ? 100 : burnPct;
+    final creatorPercentage = isNewPost ? 0 : creatorPct;
     final burnColor = theme.colorScheme.primary;
     final creatorColor = theme.colorScheme.secondary;
 
@@ -49,7 +50,7 @@ class TipInformationCard extends ConsumerWidget {
               show: showCustomTipWarning,
               duration: const Duration(milliseconds: 300),
               child: Text(
-                '⚠️ Custom tip & receiver for this post only',
+                '⚠️ Custom tip ' + (isNewPost ? '' : '& receiver ') + 'for this post only',
                 style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(222), fontStyle: FontStyle.italic),
               ),
             ),

@@ -34,6 +34,7 @@ class PublishConfirmationActivity extends ConsumerStatefulWidget {
 class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmationActivity> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _opacityAnimation;
+  late bool _isNewPost;
 
   @override
   void initState() {
@@ -47,6 +48,8 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       user.temporaryTipAmount = user.tipAmountEnum;
       user.temporaryTipReceiver = user.tipReceiver;
     });
+
+    _isNewPost = ref.read(userProvider)!.id == widget.post.creator!.id;
 
     _controller.forward();
   }
@@ -192,6 +195,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
 
     final temporaryTipAmount = user.temporaryTipAmount ?? user.tipAmountEnum;
 
+    var colorBottomBarIcon = colorScheme.onSurfaceVariant;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -286,28 +290,28 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                icon: Icon(size: 36, Icons.arrow_back, color: colorScheme.onSurfaceVariant),
-                onPressed: _previousTipReceiver,
+                icon: Icon(size: 36, Icons.arrow_back, color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon),
+                onPressed: _isNewPost ? null : _previousTipReceiver,
                 tooltip: 'Previous Receiver',
               ),
               IconButton(
-                icon: Icon(size: 36, Icons.arrow_downward, color: colorScheme.onSurfaceVariant),
+                icon: Icon(size: 36, Icons.arrow_downward, color: colorBottomBarIcon),
                 onPressed: _decreaseTipAmount,
                 tooltip: 'Decrease Tip',
               ),
               IconButton(
-                icon: Icon(size: 32, Icons.settings, color: colorScheme.onSurfaceVariant),
+                icon: Icon(size: 32, Icons.settings, color: colorBottomBarIcon),
                 onPressed: _showTipSettings,
                 tooltip: 'Tip Settings',
               ),
               IconButton(
-                icon: Icon(size: 36, Icons.arrow_upward, color: colorScheme.onSurfaceVariant),
+                icon: Icon(size: 36, Icons.arrow_upward, color: colorBottomBarIcon),
                 onPressed: _increaseTipAmount,
                 tooltip: 'Increase Tip',
               ),
               IconButton(
-                icon: Icon(size: 36, Icons.arrow_forward, color: colorScheme.onSurfaceVariant),
-                onPressed: _nextTipReceiver,
+                icon: Icon(size: 36, Icons.arrow_forward, color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon),
+                onPressed: _isNewPost ? null : _nextTipReceiver,
                 tooltip: 'Next Receiver',
               ),
             ],

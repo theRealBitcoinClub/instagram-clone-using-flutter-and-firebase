@@ -6,10 +6,10 @@ import 'package:mahakka/memo_data_checker.dart';
 
 enum MemoVerificationResponse {
   valid(""),
-  moreThanThreeTags("Too many tags"),
-  zeroTags("Add at least one visible tag."),
-  noTopicNorTag("Must include a topic or a tag."),
-  moreThanOneTopic("Only one topic allowed"),
+  moreThanThreeTags("Too many #tags"),
+  // zeroTags("Add at least one visible #tag."),
+  noTopicNorTag("Must include @topic or #tag."),
+  moreThanOneTopic("Only one @topic allowed"),
   tooLong("Text is too long."),
   tooShort("Too short. Tags count towards length."),
   minWordCountNotReached("Write more words."),
@@ -128,6 +128,13 @@ class MemoVerifier {
     return MemoVerificationResponse.valid;
   }
 
+  MemoVerificationResponse verifyNoTopicNorTag() {
+    if (topics.isEmpty && hashTags.isEmpty) {
+      return MemoVerificationResponse.noTopicNorTag;
+    }
+    return MemoVerificationResponse.valid;
+  }
+
   MemoVerificationResponse verifyPostLength() {
     final trimmedText = text.trim();
     if (trimmedText.length > maxPostLength) {
@@ -216,9 +223,8 @@ class MemoVerifier {
     result = verifyTopicCount();
     if (result != MemoVerificationResponse.valid) return result;
 
-    if (topics.isEmpty && hashTags.isEmpty) {
-      return MemoVerificationResponse.noTopicNorTag;
-    }
+    result = verifyNoTopicNorTag();
+    if (result != MemoVerificationResponse.valid) return result;
 
     return MemoVerificationResponse.valid;
   }

@@ -59,6 +59,10 @@ class InputValidators {
     return MemoVerifier(text.trim()).verifyHashtagCount();
   }
 
+  static MemoVerificationResponse verifyNoTopicNorTag(String text) {
+    return MemoVerifier(text.trim()).verifyNoTopicNorTag();
+  }
+
   static MemoVerificationResponse verifyTopics(String text) {
     return MemoVerifier(text.trim()).verifyTopicCount();
   }

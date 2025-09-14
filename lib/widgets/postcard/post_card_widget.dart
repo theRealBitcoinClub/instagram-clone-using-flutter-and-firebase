@@ -7,6 +7,7 @@ import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/repositories/post_repository.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
+import 'package:mahakka/widgets/cached_unified_image_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:mahakka/widgets/unified_video_player.dart';
 
@@ -76,7 +77,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     } else if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty) {
       return _buildVideoWidget(theme, colorScheme, textTheme);
     } else if (imgUrl.isNotEmpty) {
-      return UnifiedImageWidget(
+      return CachedUnifiedImageWidget(
         imageUrl: imgUrl,
         sourceType: ImageSourceType.network,
         fitMode: ImageFitMode.contain,
@@ -87,7 +88,7 @@ class _PostCardState extends ConsumerState<PostCard> {
         showLoadingProgress: true,
       );
     } else if (widget.post.ipfsCid != null && widget.post.ipfsCid!.isNotEmpty) {
-      return UnifiedImageWidget(
+      return CachedUnifiedImageWidget(
         imageUrl: widget.post.ipfsCid!,
         sourceType: ImageSourceType.ipfs,
         fitMode: ImageFitMode.contain,

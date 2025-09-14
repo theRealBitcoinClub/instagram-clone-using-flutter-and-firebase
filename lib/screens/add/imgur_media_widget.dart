@@ -63,18 +63,22 @@ class ImgurMediaWidget extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         imgurUrl == null
-            ? ChangeImageButton(
-                onPressed: () {
-                  ref.read(imgurUrlProvider.notifier).state = '';
-                },
+            ? Column(
+                children: [
+                  ChangeImageButton(
+                    onPressed: () {
+                      ref.read(imgurUrlProvider.notifier).state = '';
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Image Url: $imgUrl",
+                    style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               )
             : SizedBox.shrink(),
-        const SizedBox(height: 8),
-        Text(
-          "Image Url: $imgUrl",
-          style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ),
       ],
     );
   }

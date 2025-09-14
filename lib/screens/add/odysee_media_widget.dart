@@ -47,20 +47,24 @@ class OdyseeMediaWidget extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         videoUrl == null
-            ? ChangeVideoButton(
-                onPressed: () {
-                  ref.read(odyseeUrlProvider.notifier).state = '';
-                },
+            ? Column(
+                children: [
+                  ChangeVideoButton(
+                    onPressed: () {
+                      ref.read(odyseeUrlProvider.notifier).state = '';
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Odysee URL: ${odyseeUrl}",
+                    style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               )
             : SizedBox.shrink(),
-        const SizedBox(height: 8),
-        Text(
-          "Odysee URL: ${odyseeUrl}",
-          style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
       ],
     );
   }

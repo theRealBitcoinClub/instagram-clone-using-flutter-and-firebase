@@ -201,7 +201,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
             // Tab-like selector
             if (_isToggleEnabled) _buildTabSelector(theme, colorScheme),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // Balance display
             Text(
@@ -210,7 +210,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
               textAlign: TextAlign.center,
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
 
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
@@ -231,7 +231,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             ElevatedButton(
               style: primaryButtonStyle,
               onPressed: () {

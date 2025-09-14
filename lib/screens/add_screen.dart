@@ -558,7 +558,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           _showSuccessSnackBar('Successfully published!');
         } else {
           showQrCodeDialog(context: context, theme: Theme.of(context), user: user, memoOnly: true);
-          _showErrorSnackBar('Publish failed: ${response.toString()}');
+          _showErrorSnackBar('Publish failed: ${response.message}');
         }
       } else {
         showSnackBar(type: SnackbarType.info, 'Publication canceled', context);

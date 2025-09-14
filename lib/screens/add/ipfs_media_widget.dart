@@ -64,18 +64,22 @@ class IpfsMediaWidget extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         ipfsCid == null
-            ? ChangeMediaButton(
-                onPressed: () {
-                  ref.read(ipfsCidProvider.notifier).state = '';
-                },
+            ? Column(
+                children: [
+                  ChangeMediaButton(
+                    onPressed: () {
+                      ref.read(ipfsCidProvider.notifier).state = '';
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "IPFS CID: $cid",
+                    style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               )
             : SizedBox.shrink(),
-        const SizedBox(height: 8),
-        Text(
-          "IPFS CID: $cid",
-          style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ),
       ],
     );
   }

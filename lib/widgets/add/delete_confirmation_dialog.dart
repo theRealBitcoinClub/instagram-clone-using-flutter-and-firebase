@@ -16,7 +16,7 @@ class DeleteConfirmationDialog extends StatefulWidget {
 class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _opacityAnimation;
-  int _countdown = 5;
+  int _countdown = 3;
   bool _deleteEnabled = false;
   Timer? _countdownTimer;
   Timer? _autoCloseTimer;
@@ -87,12 +87,7 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> wit
 
               const SizedBox(height: 16),
 
-              Text(
-                'Are you sure you want to cancel this post? '
-                'This action cannot be undone.',
-                style: widget.theme.textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
+              Text('Do you want to cancel this post? ', style: widget.theme.textTheme.bodyLarge, textAlign: TextAlign.left),
 
               const SizedBox(height: 16),
 
@@ -101,7 +96,7 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> wit
                   ? SizedBox(height: 22)
                   : Text(
                       'Delete button enabled in: $_countdown',
-                      style: widget.theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w400, color: widget.theme.colorScheme.primary),
+                      style: widget.theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400, color: widget.theme.colorScheme.primary),
                     ),
 
               const SizedBox(height: 24),

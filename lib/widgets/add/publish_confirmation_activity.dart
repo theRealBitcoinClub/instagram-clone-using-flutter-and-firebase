@@ -225,13 +225,13 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (widget.post.text != null) Text(widget.post.text!, style: textTheme.bodyLarge),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               if (widget.post.tagIds.isNotEmpty) HashtagDisplayWidget(hashtags: widget.post.tagIds, theme: theme),
               const SizedBox(height: 16),
               _buildMediaPreview(theme, colorScheme, textTheme),
-              const SizedBox(height: 24),
+              const SizedBox(height: 4),
               TipInformationCard(post: widget.post),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               Row(
                 children: [
                   Expanded(

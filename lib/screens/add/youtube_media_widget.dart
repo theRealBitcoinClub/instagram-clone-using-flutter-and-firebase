@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/widgets/red_action_button.dart';
 import 'package:mahakka/widgets/unified_video_player.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import 'add_post_providers.dart';
 
@@ -64,47 +63,51 @@ class _YouTubeMediaWidgetState extends ConsumerState<YouTubeMediaWidget> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(11.5),
               child:
-              // _controller != null
-              //     ?
-                UnifiedVideoPlayer(type: VideoPlayerType.youtube, videoId: videoId)
-                  // ? YoutubePlayer(
-                  //     controller: _controller!,
-                  //     showVideoProgressIndicator: true,
-                  //     progressIndicatorColor: widget.colorScheme.primary,
-                  //     progressColors: ProgressBarColors(
-                  //       playedColor: widget.colorScheme.primary,
-                  //       handleColor: widget.colorScheme.secondary,
-                  //       bufferedColor: widget.colorScheme.primary.withOpacity(0.4),
-                  //       backgroundColor: widget.colorScheme.onSurface.withOpacity(0.1),
-                  //     ),
-                  //   )
-                  // : Center(
-                  //     child: Column(
-                  //       mainAxisAlignment: MainAxisAlignment.center,
-                  //       children: [
-                  //         Icon(Icons.videocam_off_outlined, color: widget.colorScheme.error, size: 36),
-                  //         const SizedBox(height: 8),
-                  //         Text("Video player error", style: widget.textTheme.bodyMedium?.copyWith(color: widget.colorScheme.error)),
-                  //       ],
-                  //     ),
-                  //   ),
+                  // _controller != null
+                  //     ?
+                  UnifiedVideoPlayer(type: VideoPlayerType.youtube, videoId: videoId),
+              // ? YoutubePlayer(
+              //     controller: _controller!,
+              //     showVideoProgressIndicator: true,
+              //     progressIndicatorColor: widget.colorScheme.primary,
+              //     progressColors: ProgressBarColors(
+              //       playedColor: widget.colorScheme.primary,
+              //       handleColor: widget.colorScheme.secondary,
+              //       bufferedColor: widget.colorScheme.primary.withOpacity(0.4),
+              //       backgroundColor: widget.colorScheme.onSurface.withOpacity(0.1),
+              //     ),
+              //   )
+              // : Center(
+              //     child: Column(
+              //       mainAxisAlignment: MainAxisAlignment.center,
+              //       children: [
+              //         Icon(Icons.videocam_off_outlined, color: widget.colorScheme.error, size: 36),
+              //         const SizedBox(height: 8),
+              //         Text("Video player error", style: widget.textTheme.bodyMedium?.copyWith(color: widget.colorScheme.error)),
+              //       ],
+              //     ),
+              //   ),
             ),
           ),
         ),
         const SizedBox(height: 12),
         widget.youtubeId == null
-            ? ChangeVideoButton(
-                onPressed: () {
-                  ref.read(youtubeVideoIdProvider.notifier).state = '';
-                },
+            ? Column(
+                children: [
+                  ChangeVideoButton(
+                    onPressed: () {
+                      ref.read(youtubeVideoIdProvider.notifier).state = '';
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Video Id: $videoId",
+                    style: widget.textTheme.bodySmall?.copyWith(color: widget.colorScheme.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               )
             : const SizedBox.shrink(),
-        const SizedBox(height: 8),
-        Text(
-          "Video Id: $videoId",
-          style: widget.textTheme.bodySmall?.copyWith(color: widget.colorScheme.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ),
       ],
     );
   }

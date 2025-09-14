@@ -94,11 +94,14 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
     }
 
     if (hasYoutubeId) {
-      final availability = ref.watch(youtubeVideoAvailabilityChecker(videoPost.youtubeId ?? ""));
+      final availability = ref.read(youtubeVideoAvailabilityChecker(videoPost.youtubeId ?? ""));
 
       return availability.when(
-        loading: () => _buildVideoLoadingCard(theme, videoPost),
-        error: (error, stack) => _buildVideoErrorCard(theme, videoPost, error.toString()),
+        skipLoadingOnRefresh: true,
+        skipLoadingOnReload: true,
+        skipError: true,
+        loading: () => SizedBox.shrink(),
+        error: (error, stack) => SizedBox.shrink(),
         data: (isAvailable) {
           if (!isAvailable) {
             return SizedBox.shrink();
@@ -183,149 +186,6 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
     }
 
     return const SizedBox.shrink();
-  }
-
-  Widget _buildVideoLoadingCard(ThemeData theme, MemoModelPost videoPost) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      elevation: 1.5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 200,
-            color: theme.colorScheme.surfaceVariant,
-            child: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary))),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
-                  Text("Checking video availability...", style: theme.textTheme.bodyMedium),
-                  const SizedBox(height: 8),
-                ],
-                Text(
-                  "Posted by: ${widget.creatorName}, ${videoPost.age}",
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVideoErrorCard(ThemeData theme, MemoModelPost videoPost, String error) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      elevation: 1.5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 200,
-            color: theme.colorScheme.errorContainer,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, color: theme.colorScheme.error),
-                  const SizedBox(height: 8),
-                  Text("Error checking video", style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onErrorContainer)),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
-                  ExpandableText(
-                    videoPost.text!,
-                    expandText: 'more',
-                    collapseText: 'less',
-                    maxLines: 4,
-                    linkColor: theme.colorScheme.primary,
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                Text(
-                  "Posted by: ${widget.creatorName}, ${videoPost.age}",
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVideoRemovedCard(ThemeData theme, MemoModelPost videoPost) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      elevation: 1.5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 200,
-            color: theme.colorScheme.surfaceVariant,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.remove_circle_outline, size: 48, color: theme.colorScheme.error),
-                  const SizedBox(height: 8),
-                  Text("Video Removed", style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-                  const SizedBox(height: 4),
-                  Text(
-                    "This video is no longer available on YouTube",
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
-                  ExpandableText(
-                    videoPost.text!,
-                    expandText: 'more',
-                    collapseText: 'less',
-                    maxLines: 4,
-                    linkColor: theme.colorScheme.primary,
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                Text(
-                  "Posted by: ${widget.creatorName}, ${videoPost.age}",
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildTextOnlyListItem(BuildContext context, ThemeData theme, MemoModelPost post) {

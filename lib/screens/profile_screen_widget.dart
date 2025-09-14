@@ -248,7 +248,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     if (isOwnProfile) {
       showDialog(
         context: context,
-        builder: (context) => SettingsWidget(creator: creator, loggedInUser: loggedInUser),
+        builder: (context) => SettingsWidget(initialTab: SettingsTab.creator, loggedInUser: loggedInUser!),
       );
     } else {
       showSnackBar(type: SnackbarType.info, "Follow/Message functionality is coming soon!", context);

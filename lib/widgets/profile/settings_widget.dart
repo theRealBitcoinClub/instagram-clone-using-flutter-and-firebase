@@ -15,11 +15,13 @@ import '../../resources/auth_method.dart';
 import 'header/settings_input_widget.dart';
 import 'header/settings_option_widget.dart';
 
-class SettingsWidget extends ConsumerStatefulWidget {
-  final MemoModelCreator creator;
-  final MemoModelUser? loggedInUser;
+enum SettingsTab { creator, tips, user }
 
-  const SettingsWidget({Key? key, required this.creator, required this.loggedInUser}) : super(key: key);
+class SettingsWidget extends ConsumerStatefulWidget {
+  final MemoModelUser loggedInUser;
+  final SettingsTab initialTab;
+
+  const SettingsWidget({Key? key, required this.initialTab, required this.loggedInUser}) : super(key: key);
 
   @override
   ConsumerState<SettingsWidget> createState() => _SettingsWidgetState();
@@ -33,7 +35,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   TipReceiver? _selectedTipReceiver;
   TipAmount? _selectedTipAmount;
   bool allowLogout = false;
-  String get key => 'mnemonic_backup_verified ${widget.loggedInUser!.id}';
+  String get key => 'mnemonic_backup_verified ${widget.loggedInUser.id}';
+  late MemoModelCreator creator;
 
   late TabController _tabController;
   int _currentTabIndex = 0;
@@ -49,10 +52,15 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   @override
   void initState() {
     super.initState();
+    creator = widget.loggedInUser.creator;
     _tabController = TabController(length: tabs().length, vsync: this);
     _tabController.addListener(_handleTabSelection);
     _initializeControllers();
     _initAllowLogout();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _tabController.animateTo(widget.initialTab!.index);
+    });
   }
 
   void _handleTabSelection() {
@@ -73,15 +81,12 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   }
 
   void _initializeControllers() {
-    _profileNameCtrl.text = widget.creator.name;
-    _profileTextCtrl.text = widget.creator.profileText;
-    _imgurCtrl.text = widget.creator.profileImgurUrl ?? "";
+    _profileNameCtrl.text = creator.name;
+    _profileTextCtrl.text = creator.profileText;
+    _imgurCtrl.text = creator.profileImgurUrl ?? "";
 
-    // Initialize tip settings from logged in user
-    if (widget.loggedInUser != null) {
-      _selectedTipReceiver = widget.loggedInUser!.tipReceiver;
-      _selectedTipAmount = widget.loggedInUser!.tipAmountEnum;
-    }
+    _selectedTipReceiver = widget.loggedInUser.tipReceiver;
+    _selectedTipAmount = widget.loggedInUser.tipAmountEnum;
   }
 
   @override
@@ -376,15 +381,15 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       bool changesMade = false;
 
       // Profile updates
-      if (newName.isNotEmpty && newName != widget.creator.name) {
+      if (newName.isNotEmpty && newName != creator.name) {
         updates['name'] = creatorRepo.profileSetName(newName, user);
         changesMade = true;
       }
-      if (newText != widget.creator.profileText) {
+      if (newText != creator.profileText) {
         updates['text'] = creatorRepo.profileSetText(newText, user);
         changesMade = true;
       }
-      if (newImgurUrl.isNotEmpty && newImgurUrl != widget.creator.profileImgurUrl) {
+      if (newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl) {
         updates['avatar'] = creatorRepo.profileSetAvatar(newImgurUrl, user);
         changesMade = true;
       }
@@ -442,7 +447,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       showDialog(
         context: context,
         builder: (ctx) => MnemonicBackupWidget(
-          mnemonic: widget.loggedInUser!.mnemonic,
+          mnemonic: widget.loggedInUser.mnemonic,
           onVerificationComplete: () {
             SharedPreferences.getInstance().then((prefs) {
               prefs.setBool(key, true);

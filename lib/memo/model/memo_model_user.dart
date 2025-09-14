@@ -6,8 +6,41 @@ import 'package:mahakka/memo/model/memo_model_creator.dart';
 
 part 'memo_model_user.g.dart'; // Add this line
 
+// @JsonEnum()
+// enum TipReceiver { app, creator, both, burn20Creator80, burn40Creator60, burn60Creator40, burn80Creator20 }
+
 @JsonEnum()
-enum TipReceiver { app, creator, both, burn20Creator80, burn40Creator60, burn60Creator40, burn80Creator20 }
+enum TipReceiver {
+  app('100% Burned', 1.0, 0.0),
+  creator('100% to Creator', 0.0, 1.0),
+  both('50% Burned, 50% Creator', 0.5, 0.5),
+  burn20Creator80('20% Burned, 80% Creator', 0.2, 0.8),
+  burn40Creator60('40% Burned, 60% Creator', 0.4, 0.6),
+  burn60Creator40('60% Burned, 40% Creator', 0.6, 0.4),
+  burn80Creator20('80% Burned, 20% Creator', 0.8, 0.2);
+
+  //TODO remove displayname and use percentagesString everywhere
+  final String displayName;
+  final double burnPercentage;
+  final double creatorPercentage;
+
+  const TipReceiver(this.displayName, this.burnPercentage, this.creatorPercentage);
+
+  // Helper method to calculate amounts
+  (int burnAmount, int creatorAmount) calculateAmounts(int totalAmount) {
+    return ((totalAmount * burnPercentage).round(), (totalAmount * creatorPercentage).round());
+  }
+
+  // Helper method to verify percentages sum to 1.0
+  bool get isValidPercentages {
+    return (burnPercentage + creatorPercentage - 1.0).abs() < 0.0001;
+  }
+
+  // Get percentages as a formatted string
+  String get percentagesString {
+    return '${(burnPercentage * 100).round()}% Burned, ${(creatorPercentage * 100).round()}% Creator';
+  }
+}
 
 @JsonEnum()
 enum TipAmount {

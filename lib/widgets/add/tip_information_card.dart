@@ -54,7 +54,7 @@ class TipInformationCard extends ConsumerWidget {
             const SizedBox(height: 8),
 
             // Total amount
-            _buildInfoRow('Total Tip Amount:', '${_formatSatoshi(tipTotalAmount)} satoshis', theme),
+            _buildInfoRow('Tip Total', '${_formatSatoshi(tipTotalAmount)} satoshis', theme),
 
             const SizedBox(height: 16),
 
@@ -108,7 +108,7 @@ class TipInformationCard extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface.withOpacity(0.7)),
+          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface),
         ),
         Text(
           value,

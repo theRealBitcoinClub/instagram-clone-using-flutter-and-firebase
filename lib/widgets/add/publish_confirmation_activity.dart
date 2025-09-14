@@ -170,19 +170,32 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => _showDeleteConfirmation()),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onPrimary),
+          onPressed: () => _showDeleteConfirmation(),
+        ),
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.user.creator.profileIdShort, style: textTheme.titleSmall),
+            Text(widget.user.creator.profileIdShort, style: textTheme.titleSmall?.copyWith(color: colorScheme.onPrimary)),
             if (temporaryTipAmount != null)
               Text(
                 _getTipAmountDisplay(temporaryTipAmount),
-                style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
+                style: textTheme.bodySmall?.copyWith(color: colorScheme.onPrimary.withOpacity(0.8)),
               ),
           ],
         ),
-        actions: [IconButton(icon: const Icon(Icons.check), onPressed: _sendPost, tooltip: 'Confirm and Send')],
+        actions: [
+          IconButton(
+            icon: Icon(Icons.check, color: colorScheme.onPrimary),
+            onPressed: _sendPost,
+            tooltip: 'Confirm and Send',
+          ),
+        ],
+        elevation: 4,
+        shadowColor: colorScheme.shadow,
       ),
       body: FadeTransition(
         opacity: _opacityAnimation,
@@ -199,21 +212,85 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
               _buildMediaPreview(theme, colorScheme, textTheme),
               const SizedBox(height: 24),
               TipInformationCard(post: widget.post),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _showDeleteConfirmation,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.error,
+                        foregroundColor: colorScheme.onError,
+                        elevation: 2,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: Text(
+                        'DELETE',
+                        style: textTheme.labelLarge?.copyWith(color: colorScheme.onError, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _sendPost,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        elevation: 2,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: Text(
+                        'SEND',
+                        style: textTheme.labelLarge?.copyWith(color: colorScheme.onPrimary, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ),
       bottomNavigationBar: BottomAppBar(
+        color: colorScheme.surface,
+        elevation: 8,
+        shadowColor: colorScheme.shadow,
+        surfaceTintColor: colorScheme.surfaceTint,
+        height: kBottomNavigationBarHeight + 16,
+        padding: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(icon: const Icon(Icons.cancel), onPressed: _showDeleteConfirmation, tooltip: 'Cancel Post'),
-              IconButton(icon: const Icon(Icons.arrow_downward), onPressed: _decreaseTipAmount, tooltip: 'Decrease Tip'),
-              IconButton(icon: const Icon(Icons.settings), onPressed: _showTipSettings, tooltip: 'Tip Settings'),
-              IconButton(icon: const Icon(Icons.arrow_upward), onPressed: _increaseTipAmount, tooltip: 'Increase Tip'),
-              ElevatedButton(onPressed: _sendPost, child: const Text('SEND')),
+              IconButton(
+                icon: Icon(size: 36, Icons.cancel_outlined, color: colorScheme.onSurfaceVariant),
+                onPressed: _showDeleteConfirmation,
+                tooltip: 'Cancel Post',
+              ),
+              IconButton(
+                icon: Icon(size: 36, Icons.arrow_downward, color: colorScheme.onSurfaceVariant),
+                onPressed: _decreaseTipAmount,
+                tooltip: 'Decrease Tip',
+              ),
+              IconButton(
+                icon: Icon(size: 32, Icons.settings, color: colorScheme.onSurfaceVariant),
+                onPressed: _showTipSettings,
+                tooltip: 'Tip Settings',
+              ),
+              IconButton(
+                icon: Icon(size: 36, Icons.arrow_upward, color: colorScheme.onSurfaceVariant),
+                onPressed: _increaseTipAmount,
+                tooltip: 'Increase Tip',
+              ),
+              IconButton(
+                icon: Icon(size: 36, Icons.send, color: colorScheme.onSurfaceVariant),
+                onPressed: _sendPost,
+                tooltip: 'Send',
+              ),
             ],
           ),
         ),

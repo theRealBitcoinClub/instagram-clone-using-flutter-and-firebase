@@ -1,6 +1,8 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/config_whitelist.dart';
+import 'package:mahakka/external_browser_launcher.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 import 'package:mahakka/widgets/unified_video_player.dart';
@@ -253,7 +255,8 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
                   }
                   try {
                     if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      ExternalBrowserLauncher launcher = ExternalBrowserLauncher(whitelistedDomains: whitelistPatterns);
+                      await launcher.launchUrlWithConfirmation(context, url);
                     } else {
                       _logListError('Could not launch $uri');
                       if (context.mounted) {

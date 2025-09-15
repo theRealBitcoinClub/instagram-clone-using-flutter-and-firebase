@@ -42,7 +42,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(tagIdProvider.notifier).state = null;
       });
-      return '$_baseUrl/tag/$tagId';
+      return '$_baseUrl/t/$tagId?p=new';
     } else if (topicId != null && topicId.isNotEmpty) {
       // Reset provider after reading
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -90,7 +90,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
     ref.read(topicIdProvider.notifier).state = null;
 
     if (tagId != null && tagId.isNotEmpty) {
-      _loadUrl('$_baseUrl/tag/$tagId');
+      _loadUrl('$_baseUrl/t/$tagId/?p=new');
     } else {
       _loadUrl('$_baseUrl/tags/recent');
     }
@@ -409,7 +409,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
         // Listen to provider changes and load appropriate URLs
         ref.listen(tagIdProvider, (previous, next) {
           if (next != null && next.isNotEmpty) {
-            _loadUrl('$_baseUrl/tag/$next');
+            _loadUrl('$_baseUrl/t/$next?p=new');
           }
         });
 

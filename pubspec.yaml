@@ -20,7 +20,8 @@ dependencies:
   html: ^0.15.6
   shared_preferences: ^2.5.3
   youtube_player_flutter: ^9.1.2
-  webview_flutter: ^4.4.2
+  #webview_flutter: ^4.13.0
+  flutter_inappwebview: ^6.1.5
   fluttertagger: ^2.3.1
   linkify: ^5.0.0
   url_launcher: ^6.3.2

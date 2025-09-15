@@ -1,8 +1,8 @@
 // screens/memo_webview_screen.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart'; // New import
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 import '../provider/user_provider.dart';
 import '../providers/webview_providers.dart';
@@ -20,60 +20,40 @@ class MemoWebviewScreen extends ConsumerStatefulWidget {
 }
 
 class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
-  late WebViewController _webViewController;
+  // Use InAppWebViewController
+  late InAppWebViewController _webViewController;
   String _currentPath = '/';
   bool _isLoading = true;
+  bool _isDarkTheme = false;
 
   @override
   void initState() {
     super.initState();
-    _loadInitialUrl();
+    // No need to load URL in initState anymore, it's done directly in the widget.
   }
 
-  void _loadInitialUrl() {
-    // Check providers first - if either has a value, load that URL
+  // Helper method to determine the initial URL
+  String _getInitialUrl() {
     final tagId = ref.read(tagIdProvider);
     final topicId = ref.read(topicIdProvider);
 
-    String initialUrl;
-
     if (tagId != null && tagId.isNotEmpty) {
-      initialUrl = '$_baseUrl/tag/$tagId';
       // Reset provider after reading
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(tagIdProvider.notifier).state = null;
       });
+      return '$_baseUrl/tag/$tagId';
     } else if (topicId != null && topicId.isNotEmpty) {
-      initialUrl = '$_baseUrl/topic/$topicId';
       // Reset provider after reading
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(topicIdProvider.notifier).state = null;
       });
+      return '$_baseUrl/topic/$topicId';
     } else {
       // Default to profile if no providers have values
       final user = ref.read(userProvider)!;
-      initialUrl = '$_baseUrl/profile/${user.id}';
+      return '$_baseUrl/profile/${user.id}';
     }
-
-    _webViewController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (url) {
-            setState(() => _isLoading = true);
-          },
-          onPageFinished: (url) {
-            setState(() => _isLoading = false);
-            _updateCurrentPath(url);
-          },
-          onUrlChange: (change) {
-            if (change.url != null) {
-              _updateCurrentPath(change.url!);
-            }
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse(initialUrl));
   }
 
   void _updateCurrentPath(String url) {
@@ -84,11 +64,11 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   }
 
   void _loadUrl(String url) {
-    _webViewController.loadRequest(Uri.parse(url));
+    // Use loadUrl() from InAppWebViewController
+    _webViewController.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
   }
 
   void _loadProfile() {
-    // Reset both providers when any action is tapped
     ref.read(tagIdProvider.notifier).state = null;
     ref.read(topicIdProvider.notifier).state = null;
 
@@ -97,7 +77,6 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   }
 
   void _loadFeed() {
-    // Reset both providers when any action is tapped
     ref.read(tagIdProvider.notifier).state = null;
     ref.read(topicIdProvider.notifier).state = null;
 
@@ -107,11 +86,9 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   void _loadTags() {
     final tagId = ref.read(tagIdProvider);
 
-    // Always reset providers first
     ref.read(tagIdProvider.notifier).state = null;
     ref.read(topicIdProvider.notifier).state = null;
 
-    // If tagId was set, load that specific tag, otherwise load default tags page
     if (tagId != null && tagId.isNotEmpty) {
       _loadUrl('$_baseUrl/tag/$tagId');
     } else {
@@ -122,11 +99,9 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   void _loadTopics() {
     final topicId = ref.read(topicIdProvider);
 
-    // Always reset providers first
     ref.read(tagIdProvider.notifier).state = null;
     ref.read(topicIdProvider.notifier).state = null;
 
-    // If topicId was set, load that specific topic, otherwise load default topics page
     if (topicId != null && topicId.isNotEmpty) {
       _loadUrl('$_baseUrl/topic/$topicId');
     } else {
@@ -134,9 +109,152 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
     }
   }
 
+  Future<void> _injectCSS() async {
+    final theme = Theme.of(context);
+    _isDarkTheme = theme.brightness == Brightness.dark;
+
+    String css =
+        '''
+      <style>
+        /* Hide navigation elements */
+        .navbar,
+        .footer,
+        #mobile-app-banner,
+        .alert-banner,
+        .posts-nav,
+        .posts-nav-dropdown {
+          display: none !important;
+        }
+
+        /* Remove default body padding/margin */
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow-x: hidden !important;
+        }
+
+        /* Theme-aware styling */
+        body {
+          background: ${_isDarkTheme ? '#121212' : '#f8f8f8'} !important;
+          color: ${_isDarkTheme ? '#d2d2d2' : '#000'} !important;
+        }
+
+        /* Post styling */
+        .post {
+          background: ${_isDarkTheme ? '#1e1e1e' : '#fff'} !important;
+          border-color: ${_isDarkTheme ? '#333' : '#e8e8e8'} !important;
+        }
+
+        .post.post-odd {
+          background: ${_isDarkTheme ? '#2a2a2a' : '#f8f8f8'} !important;
+        }
+
+        /* Text colors */
+        .post .name {
+          color: ${_isDarkTheme ? '#e0e0e0' : '#555'} !important;
+        }
+
+        .post .name .profile {
+          color: ${_isDarkTheme ? '#d2d2d2' : '#333'} !important;
+        }
+
+        /* Links */
+        a {
+          color: ${_isDarkTheme ? '#6eb332' : '#487521'} !important;
+        }
+
+        a.normal {
+          color: ${_isDarkTheme ? '#e0e0e0' : '#444'} !important;
+        }
+
+        /* Input fields */
+        .form-control {
+          color: ${_isDarkTheme ? '#e0e0e0' : 'inherit'} !important;
+          background: ${_isDarkTheme ? '#2d2d2d' : '#fff'} !important;
+          border-color: ${_isDarkTheme ? '#444' : '#ccc'} !important;
+        }
+
+        /* Remove any fixed positioning that might cause issues */
+        #site-wrapper.active,
+        #site-wrapper-cover.active {
+          position: relative !important;
+          overflow: visible !important;
+          height: auto !important;
+        }
+
+        /* Ensure content takes full width */
+        .container {
+          width: 100% !important;
+          max-width: 100% !important;
+          padding: 0 8px !important;
+        }
+
+        /* Hide download APK box */
+        .android-link,
+        .ios-link,
+        #mobile-app-banner {
+          display: none !important;
+        }
+
+        /* Force portrait-only layout */
+        @media (orientation: landscape) {
+          body {
+            transform: rotate(0deg) !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+          }
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 767px) {
+          .post {
+            margin: 5px 0 !important;
+            border-radius: 0 !important;
+          }
+          
+          .container {
+            padding: 0 4px !important;
+          }
+        }
+      </style>
+    ''';
+
+    // InAppWebView uses evaluateJavascript()
+    await _webViewController.evaluateJavascript(
+      source:
+          '''
+      (function() {
+        var style = document.createElement('style');
+        style.innerHTML = `$css`;
+        document.head.appendChild(style);
+        
+        // Remove existing navbar if present
+        var navbar = document.querySelector('.navbar');
+        if (navbar) navbar.remove();
+        
+        var footer = document.querySelector('.footer');
+        if (footer) footer.remove();
+        
+        // Force body to use theme colors
+        document.body.style.backgroundColor = '${_isDarkTheme ? '#121212' : '#f8f8f8'}';
+        document.body.style.color = '${_isDarkTheme ? '#d2d2d2' : '#000'}';
+        
+        // Add dark class if needed
+        if (${_isDarkTheme}) {
+          document.body.classList.add('dark');
+        } else {
+          document.body.classList.remove('dark');
+        }
+      })();
+    ''',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    _isDarkTheme = theme.brightness == Brightness.dark;
 
     return Consumer(
       builder: (context, ref, child) {
@@ -160,55 +278,31 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
               padding: EdgeInsets.zero,
               minSize: 0,
               onPressed: _loadProfile,
-              child: Icon(
-                CupertinoIcons.person_circle_fill,
-                color: theme.iconTheme.color,
-                size: 28, // Larger size for leading icon
-              ),
+              child: Icon(CupertinoIcons.person_circle_fill, color: theme.iconTheme.color, size: 28),
             ),
-            middle: Text(
-              _currentPath,
-              // style: theme.appBarTheme.titleTextStyle?.copyWith(fontSize: 16, fontWeight: FontWeight.w400, letterSpacing: 1.1),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            middle: Text(_currentPath, maxLines: 1, overflow: TextOverflow.ellipsis),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Feed icon
                 CupertinoButton(
                   padding: EdgeInsets.zero,
                   minSize: 0,
                   onPressed: _loadFeed,
-                  child: Icon(
-                    CupertinoIcons.news_solid,
-                    color: theme.iconTheme.color,
-                    size: 28, // Larger size
-                  ),
+                  child: Icon(CupertinoIcons.news_solid, color: theme.iconTheme.color, size: 28),
                 ),
                 SizedBox(width: 20),
-                // Hashtag icon
                 CupertinoButton(
                   padding: EdgeInsets.zero,
                   minSize: 0,
                   onPressed: _loadTags,
-                  child: Icon(
-                    CupertinoIcons.tag_fill,
-                    color: theme.iconTheme.color,
-                    size: 28, // Larger size
-                  ),
+                  child: Icon(CupertinoIcons.tag_fill, color: theme.iconTheme.color, size: 28),
                 ),
                 SizedBox(width: 20),
-                // Topic icon
                 CupertinoButton(
                   padding: EdgeInsets.zero,
                   minSize: 0,
                   onPressed: _loadTopics,
-                  child: Icon(
-                    CupertinoIcons.at,
-                    color: theme.iconTheme.color,
-                    size: 28, // Larger size
-                  ),
+                  child: Icon(CupertinoIcons.at, color: theme.iconTheme.color, size: 28),
                 ),
               ],
             ),
@@ -217,7 +311,30 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
           child: SafeArea(
             child: Stack(
               children: [
-                WebViewWidget(controller: _webViewController),
+                // Use InAppWebView widget
+                InAppWebView(
+                  // Set initial URL here
+                  initialUrlRequest: URLRequest(url: WebUri(_getInitialUrl())),
+                  // Set options for the webview
+                  initialOptions: InAppWebViewGroupOptions(crossPlatform: InAppWebViewOptions(javaScriptEnabled: true)),
+                  onWebViewCreated: (controller) {
+                    _webViewController = controller;
+                  },
+                  onLoadStart: (controller, url) {
+                    if (url != null) {
+                      setState(() {
+                        _isLoading = true;
+                        _updateCurrentPath(url.toString());
+                      });
+                    }
+                  },
+                  onLoadStop: (controller, url) {
+                    setState(() {
+                      _isLoading = false;
+                    });
+                    _injectCSS();
+                  },
+                ),
                 if (_isLoading)
                   Positioned(
                     top: 0,

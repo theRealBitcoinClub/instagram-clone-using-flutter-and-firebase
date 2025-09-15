@@ -191,7 +191,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
         }
 
         /* Post header elements */
-        .post .name {
+        .post .name .post-header {
           color: $nameColor !important;
           font-weight: bold !important;
           font-size: 16px !important;
@@ -209,7 +209,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
         }
 
         /* Post content */
-        .post .content {
+        .post .content .message {
           color: $textColor !important;
           font-size: 16px !important;
           line-height: 1.5 !important;
@@ -318,6 +318,10 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
           .post .content {
             font-size: 15px !important;
           }
+        }
+        
+        .message .post-header .name .message-feed-item {
+          background: $backgroundColor !important;
         }
       </style>
     ''';

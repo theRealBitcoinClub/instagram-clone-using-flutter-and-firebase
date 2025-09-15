@@ -50,7 +50,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   final TextEditingController _youtubeCtrl = TextEditingController();
   final TextEditingController _ipfsCtrl = TextEditingController();
   final TextEditingController _odyseeCtrl = TextEditingController();
-  late FlutterTaggerController _inputTagTopicController;
+  late FlutterTaggerController _textInputController;
   late AnimationController _animationController;
   final FocusNode _focusNode = FocusNode();
 
@@ -63,7 +63,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     super.initState();
     _log("initState started");
 
-    _inputTagTopicController = FlutterTaggerController(text: "Me gusta @Mahakka#Mahakka# Es hora de ganar #bch#bch# y #cashtoken#cashtoken#!");
+    _textInputController = FlutterTaggerController(text: "Me gusta @Mahakka#Mahakka# Es hora de ganar #bch#bch# y #cashtoken#cashtoken#!");
 
     _youtubeCtrl.addListener(_onYouTubeInputChanged);
     _imgurCtrl.addListener(_onImgurInputChanged);
@@ -160,7 +160,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       begin: const Offset(0, 0.25),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOutSine));
-    _inputTagTopicController.addListener(_onTagInputChanged);
+    _textInputController.addListener(_onTagInputChanged);
   }
 
   void _onTagInputChanged() {
@@ -179,8 +179,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _youtubeCtrl.dispose();
     _ipfsCtrl.dispose();
     _odyseeCtrl.dispose();
-    _inputTagTopicController.removeListener(_onTagInputChanged);
-    _inputTagTopicController.dispose();
+    _textInputController.removeListener(_onTagInputChanged);
+    _textInputController.dispose();
     _animationController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -449,7 +449,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         padding: const EdgeInsets.all(12),
         child: FlutterTagger(
           triggerStrategy: TriggerStrategy.eager,
-          controller: _inputTagTopicController,
+          controller: _textInputController,
           animationController: _animationController,
           onSearch: (query, triggerChar) {
             if (triggerChar == "@") {
@@ -466,13 +466,20 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
             return "$triggerChar$id#$tag#";
           },
           overlayHeight: _taggerOverlayHeight,
-          overlay: SearchResultOverlay(animation: _taggerOverlayAnimation, tagController: _inputTagTopicController),
+          overlay: SearchResultOverlay(animation: _taggerOverlayAnimation, tagController: _textInputController),
           builder: (context, containerKey) {
             return CommentTextField(
+              onInputText: (value) {
+                if (!mounted) return;
+                if (value.contains('\n')) {
+                  _textInputController.text = value.replaceAll("\n", "");
+                  _onPublish();
+                }
+              },
               focusNode: _focusNode,
               containerKey: containerKey,
               insets: viewInsets,
-              controller: _inputTagTopicController,
+              controller: _textInputController,
               hintText: "Add a caption... use @ for topics, # for tags",
               onSend: _onPublish,
             );
@@ -496,21 +503,12 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       imageUrl: null, // You might need to handle this based on your media selection
       videoUrl: odyseeUrl.isNotEmpty ? odyseeUrl : null,
       ipfsCid: ipfsCid.isNotEmpty ? ipfsCid : null,
-      tagIds: hashTagsFromTags(_inputTagTopicController.tags),
+      tagIds: MemoRegExp.extractHashtags(textContent),
       topicId: topic ?? "",
       topic: topic != null ? MemoModelTopic(id: topic) : null,
       creator: ref.read(userProvider)!.creator,
       creatorId: ref.read(userProvider)!.id,
     );
-  }
-
-  /// Extracts just the IDs from a list of Tag objects
-  List<String> hashTagsFromTags(Iterable<Tag> tags) {
-    List<String> results = [];
-    for (Tag tag in tags) {
-      if (tag.triggerCharacter == "#") results.add(tag.id);
-    }
-    return results;
   }
 
   Future<void> _onPublish() async {
@@ -531,7 +529,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     ref.read(isPublishingProvider.notifier).state = true;
 
-    String textContent = _inputTagTopicController.text;
+    String textContent = _textInputController.text;
 
     MemoVerificationResponse result = _handleVerification(textContent);
 
@@ -602,7 +600,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   String? _extractTopicFromTags(String rawTextForTopicExtraction) {
-    for (Tag t in _inputTagTopicController.tags) {
+    for (Tag t in _textInputController.tags) {
       if (t.triggerCharacter == "@") {
         return t.text;
       }
@@ -637,7 +635,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   String? _validateTagsAndTopic() {
-    final tags = _inputTagTopicController.tags;
+    final tags = _textInputController.tags;
     int topicCount = tags.where((t) => t.triggerCharacter == "@").length;
     int hashtagCount = tags.where((t) => t.triggerCharacter == "#").length;
 
@@ -647,14 +645,14 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     if (hashtagCount > 3) {
       return "Maximum of 3 #hashtags allowed.";
     }
-    if (_inputTagTopicController.text.trim().isEmpty && _hasMediaSelected()) {
+    if (_textInputController.text.trim().isEmpty && _hasMediaSelected()) {
       return "Please add a caption for your media.";
     }
     return null;
   }
 
   void _clearInputs() {
-    _inputTagTopicController.clear();
+    _textInputController.clear();
     _imgurCtrl.clear();
     _youtubeCtrl.clear();
     _ipfsCtrl.clear();

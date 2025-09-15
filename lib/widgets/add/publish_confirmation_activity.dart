@@ -55,8 +55,8 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
 
   @override
   void dispose() {
-    ref.read(userProvider)!.temporaryTipReceiver = null;
-    ref.read(userProvider)!.temporaryTipAmount = null;
+    // ref.read(userProvider)!.temporaryTipReceiver = null;
+    // ref.read(userProvider)!.temporaryTipAmount = null;
     _controller.dispose();
     super.dispose();
   }

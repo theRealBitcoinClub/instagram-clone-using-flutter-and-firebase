@@ -365,6 +365,16 @@ class _PostCardState extends ConsumerState<PostCard> {
 
   void _onInputText(String value) {
     if (!mounted) return;
+    // Check if the text contains a newline character (Enter key was pressed)
+    if (value.contains('\n')) {
+      // Enter key was pressed - trigger send action if conditions are met
+      if (_showSend) {
+        _onSend();
+      } else {
+        _textEditController.text = value.replaceAll("\n", "");
+      }
+      return; // Exit early since we handled the Enter key
+    }
     setState(() {
       final currentTextHashtags = MemoRegExp.extractHashtags(value);
       for (int i = 0; i < _selectedHashtags.length && i < widget.post.tagIds.length; i++) {

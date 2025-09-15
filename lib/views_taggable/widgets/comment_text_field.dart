@@ -9,6 +9,7 @@ class CommentTextField extends StatelessWidget {
   final VoidCallback? onSend; // Allow null if send button can be disabled
   final EdgeInsets insets;
   final FocusNode? focusNode;
+  final ValueChanged<String> onInputText;
   final String hintText;
   final Key? containerKey; // Key passed down from FlutterTagger
 
@@ -20,6 +21,7 @@ class CommentTextField extends StatelessWidget {
     this.focusNode,
     required this.hintText,
     this.containerKey,
+    required this.onInputText,
   }) : super(key: key);
 
   @override
@@ -75,6 +77,7 @@ class CommentTextField extends StatelessWidget {
                   // Its hintText, text style, cursor color, and border styles should
                   // come from the theme (InputDecorationTheme, TextTheme).
                   child: CustomTextField(
+                    onChanged: onInputText,
                     focusNode: focusNode,
                     controller: controller,
                     hintText: hintText,

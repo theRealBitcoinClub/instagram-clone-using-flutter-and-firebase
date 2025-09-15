@@ -1,11 +1,13 @@
+// home.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/screens/add_screen.dart'; // Ensure AddPost is themed
-import 'package:mahakka/screens/feed_screen.dart'; // Ensure FeedScreen is themed
+import 'package:mahakka/screens/add_screen.dart';
+import 'package:mahakka/screens/feed_screen.dart';
 import 'package:mahakka/screens/profile_screen_widget.dart';
 import 'package:mahakka/tab_item_data.dart';
 
+import '../memo/memo_webview_screen.dart';
 import '../provider/navigation_providers.dart';
 import '../provider/scraper_provider.dart';
 
@@ -18,7 +20,6 @@ class HomeSceen extends ConsumerStatefulWidget {
 
 class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateMixin {
   late TabController _tabController;
-  final int _totalTabs = 3; // Keep this for bounds and controller lengths
 
   late AnimationController _animationController;
 
@@ -26,23 +27,13 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     super.initState();
     final initialIndex = ref.read(tabIndexProvider);
 
-    // Initialize the TabController to sync with the BottomNavigationBar.
-    _tabController = TabController(length: _totalTabs, vsync: this, initialIndex: initialIndex);
-
-    // Initialize the AnimationController for the FadeTransition.
-    _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
-    _animationController.forward(from: 0.0); // Trigger the animation for the initial screen.
-
-    // This listener updates the tab index in Riverpod when the user taps on the TabBar.
+    _tabController = TabController(length: totalTabs, vsync: this, initialIndex: initialIndex);
+    _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
+    _animationController.forward(from: 0.0);
     _tabController.addListener(_tabControllerListener);
-
-    // This is a one-time read for the background scraper, still correct here.
     ref.read(backgroundScraperManagerProvider);
-
-    // Note: The PageController and its listeners have been removed.
   }
 
-  // A private method to hold the listener logic
   void _tabControllerListener() {
     if (_tabController.indexIsChanging || _tabController.index != ref.read(tabIndexProvider)) {
       if (_tabController.index != ref.read(tabIndexProvider)) {
@@ -55,7 +46,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   void dispose() {
     _tabController.removeListener(_tabControllerListener);
     _tabController.dispose();
-    _animationController.dispose(); // This is for the fade animation
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -66,14 +57,14 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     final ColorScheme colorScheme = theme.colorScheme;
     final Color cupertinoActiveColor = colorScheme.primary;
     final Color cupertinoInactiveColor = colorScheme.onSurface.withOpacity(0.6);
-    // Define screens with unique keys for state preservation.
+
     final List<Widget> homeScreenItems = [
       FeedScreen(key: PageStorageKey('FeedScreen')),
       AddPost(key: PageStorageKey('AddPost')),
       ProfileScreenWidget(key: PageStorageKey('ProfileScreen')),
+      MemoWebviewScreen(key: PageStorageKey('MemoWebviewScreen')), // Added webview tab
     ];
 
-    // This listener runs the fade animation whenever a tab is switched.
     ref.listen<int>(tabIndexProvider, (previous, next) {
       if (previous != next) {
         _animationController.forward(from: 0.0);
@@ -82,26 +73,16 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: GestureDetector(
-        // onHorizontalDragEnd: (DragEndDetails details) {
-        //   if (details.primaryVelocity == 0) return;
-        //   if (details.primaryVelocity! < 0) {
-        //     ref.read(tabIndexProvider.notifier).nextTab();
-        //   } else if (details.primaryVelocity! > 0) {
-        //     ref.read(tabIndexProvider.notifier).previousTab();
-        //   }
-        // },
-        child: Stack(
-          children: List.generate(homeScreenItems.length, (index) {
-            return Offstage(
-              offstage: index != currentTabIndex,
-              child: TickerMode(
-                enabled: index == currentTabIndex,
-                child: FadeTransition(opacity: _animationController, child: homeScreenItems[index]),
-              ),
-            );
-          }),
-        ),
+      body: Stack(
+        children: List.generate(homeScreenItems.length, (index) {
+          return Offstage(
+            offstage: index != currentTabIndex,
+            child: TickerMode(
+              enabled: index == currentTabIndex,
+              child: FadeTransition(opacity: _animationController, child: homeScreenItems[index]),
+            ),
+          );
+        }),
       ),
       bottomNavigationBar: CupertinoTabBar(
         height: 70,

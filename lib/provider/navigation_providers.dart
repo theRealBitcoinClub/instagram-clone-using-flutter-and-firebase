@@ -20,7 +20,8 @@ final profileTargetIdProvider = StateProvider<String?>((ref) => null);
 //     if (index >= 0 && index < totalTabs) state = index;
 //   }
 // }
+const totalTabs = 4; // Or get this from a config provider
+
 final tabIndexProvider = StateNotifierProvider<TabIndexNotifier, int>((ref) {
-  const totalTabs = 3; // Or get this from a config provider
   return TabIndexNotifier(totalTabs);
 });

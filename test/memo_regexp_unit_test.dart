@@ -541,26 +541,32 @@ void main() {
     });
 
     test('extractTopics should handle multiple topics', () {
-      const multipleTopics = "Hello @topic1 and @topic2 and @another_topic more @mahakka.com last @mahakka_yes-topic";
+      const multipleTopics = "Hello @topic1 and @topic2 @@@TOPIC@ @TOPIC_ and @another_topic more @mahakka.com last @mahakka_yes-topic";
       final result = MemoRegExp.extractTopics(multipleTopics);
 
-      expect(result.length, 5);
+      expect(result.length, 7);
       expect(result, contains('@mahakka.com'));
       expect(result, contains('@mahakka_yes-topic'));
       expect(result, contains('@topic1'));
       expect(result, contains('@topic2'));
       expect(result, contains('@another_topic'));
+      expect(result, contains('@TOPIC'));
+      expect(result, contains('@TOPIC_'));
     });
 
     test('extractHashtags should handle multiple hashtags', () {
-      const multipleHashtags = "#flutter@ #dart- #testing_ #unit_tests!";
+      const multipleHashtags = "#flutter@ #dart- #testing_ #unit_tests! fhkjds#cxz @#njk fhkjds#cxzaf@gufd @#njk_";
       final result = MemoRegExp.extractHashtags(multipleHashtags);
 
-      expect(result.length, 4);
+      expect(result.length, 8);
       expect(result, contains('#flutter'));
       expect(result, contains('#dart'));
       expect(result, contains('#testing_'));
       expect(result, contains('#unit_tests'));
+      expect(result, contains('#cxz'));
+      expect(result, contains('#njk'));
+      expect(result, contains('#cxzaf'));
+      expect(result, contains('#njk_'));
     });
 
     test('extractUrls should handle complex text with various URLs', () {

@@ -187,7 +187,8 @@ class MemoRegExp {
     return whitelistPatterns.any((pattern) => RegExp(pattern, caseSensitive: false).hasMatch(url.trim()));
   }
 
-  static List<String> extractTopics(String? text) => _extractMatches(text, r'(?:^|\s)(@[a-zA-Z0-9_\-\.]+)(?=\s|$)');
+  static List<String> extractTopics(String? text) => _extractMatches(text, r'@[a-zA-Z0-9_\-\.]+');
+  // static List<String> extractTopics(String? text) => _extractMatches(text, r'(?:^|\s)(@[a-zA-Z0-9_\-\.]+)(?=\s|$)');
 
   static List<String> extractUrls(String? text) =>
       _extractMatches(text, r'/(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)');

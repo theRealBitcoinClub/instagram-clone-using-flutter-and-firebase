@@ -9,6 +9,8 @@ import 'package:mahakka/widgets/unified_video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
+import '../../provider/navigation_providers.dart';
+import '../../providers/webview_providers.dart';
 import '../../youtube_video_checker.dart';
 
 void _logListError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -238,47 +240,23 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
               linkStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary.withOpacity(0.85), fontWeight: FontWeight.w600),
               hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary, fontWeight: FontWeight.w500),
               onHashtagTap: (String hashtag) {
+                ref.read(topicIdProvider.notifier).state = null;
+                ref.read(tagIdProvider.notifier).state = hashtag;
+                ref.read(tabIndexProvider.notifier).setTab(3); // Switch to webview tab
                 _logListError('Hashtag tapped: $hashtag (Action not implemented in this widget)');
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on hashtag: $hashtag')));
               },
-              urlStyle: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.primary.withOpacity(0.70),
-                decoration: TextDecoration.underline,
-                decorationColor: theme.colorScheme.primary.withOpacity(0.5),
-              ),
+              urlStyle: buildUrlStyle(theme),
               onUrlTap: (String url) async {
-                _logListError('URL tapped: $url');
-                Uri? uri = Uri.tryParse(url);
-                if (uri != null) {
-                  if (!uri.hasScheme && (url.startsWith('www.') || RegExp(r'^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(url))) {
-                    uri = Uri.parse('http://$url');
-                  }
-                  try {
-                    if (await canLaunchUrl(uri)) {
-                      ExternalBrowserLauncher launcher = ExternalBrowserLauncher(whitelistedDomains: whitelistPatterns);
-                      await launcher.launchUrlWithConfirmation(context, url);
-                    } else {
-                      _logListError('Could not launch $uri');
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open link: $url')));
-                      }
-                    }
-                  } catch (e) {
-                    _logListError('Error launching URL $url: $e');
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error opening link: $url')));
-                    }
-                  }
-                } else {
-                  _logListError('Invalid URL: $url');
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid link format: $url')));
-                  }
-                }
+                await _onUrlTap(url, context);
               },
               prefixText: post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null,
               prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
               onPrefixTap: () {
+                // Set the topic provider and switch to webview tab
+                ref.read(tagIdProvider.notifier).state = null;
+                ref.read(topicIdProvider.notifier).state = post.topicId;
+                ref.read(tabIndexProvider.notifier).setTab(3); // Switch to webview tab
                 _logListError("Topic prefix tapped: ${post.topicId} (Action not implemented in this widget)");
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on topic: ${post.topicId}')));
               },
@@ -287,5 +265,44 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
         ),
       ),
     );
+  }
+
+  TextStyle? buildUrlStyle(ThemeData theme) {
+    return theme.textTheme.bodyMedium?.copyWith(
+      color: theme.colorScheme.primary.withOpacity(0.70),
+      decoration: TextDecoration.underline,
+      decorationColor: theme.colorScheme.primary.withOpacity(0.5),
+    );
+  }
+
+  Future<void> _onUrlTap(String url, BuildContext context) async {
+    _logListError('URL tapped: $url');
+    Uri? uri = Uri.tryParse(url);
+    if (uri != null) {
+      if (!uri.hasScheme && (url.startsWith('www.') || RegExp(r'^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(url))) {
+        uri = Uri.parse('http://$url');
+      }
+      try {
+        if (await canLaunchUrl(uri)) {
+          ExternalBrowserLauncher launcher = ExternalBrowserLauncher(whitelistedDomains: whitelistPatterns);
+          await launcher.launchUrlWithConfirmation(context, url);
+        } else {
+          _logListError('Could not launch $uri');
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open link: $url')));
+          }
+        }
+      } catch (e) {
+        _logListError('Error launching URL $url: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error opening link: $url')));
+        }
+      }
+    } else {
+      _logListError('Invalid URL: $url');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid link format: $url')));
+      }
+    }
   }
 }

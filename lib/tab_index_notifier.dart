@@ -1,21 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class TabIndexNotifier extends StateNotifier<int> {
-  TabIndexNotifier(this._totalTabs) : super(0); // Initial tab is 0
+import '../provider/navigation_providers.dart';
 
-  final int _totalTabs;
+class TabIndexNotifier extends StateNotifier<int> {
+  TabIndexNotifier(totalTabs) : super(0); // Initial tab is 0
 
   void setTab(int newIndex) {
-    if (newIndex >= 0 && newIndex < _totalTabs) {
+    if (newIndex >= 0 && newIndex < totalTabs) {
       state = newIndex;
     }
   }
 
   void nextTab() {
-    state = (state + 1) % _totalTabs;
+    state = (state + 1) % totalTabs;
   }
 
   void previousTab() {
-    state = (state - 1 + _totalTabs) % _totalTabs;
+    state = (state - 1 + totalTabs) % totalTabs;
   }
 }

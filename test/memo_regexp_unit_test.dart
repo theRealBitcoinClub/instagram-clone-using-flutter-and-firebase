@@ -553,13 +553,13 @@ void main() {
     });
 
     test('extractHashtags should handle multiple hashtags', () {
-      const multipleHashtags = "#flutter #dart #testing #unit_tests";
+      const multipleHashtags = "#flutter@ #dart- #testing_ #unit_tests!";
       final result = MemoRegExp.extractHashtags(multipleHashtags);
 
       expect(result.length, 4);
       expect(result, contains('#flutter'));
       expect(result, contains('#dart'));
-      expect(result, contains('#testing'));
+      expect(result, contains('#testing_'));
       expect(result, contains('#unit_tests'));
     });
 

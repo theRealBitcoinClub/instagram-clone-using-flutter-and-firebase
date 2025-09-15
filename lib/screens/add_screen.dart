@@ -514,7 +514,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   Future<void> _onPublish() async {
     final isPublishing = ref.read(isPublishingProvider);
     if (isPublishing) return;
-    _unfocusNodes(context);
+    // _unfocusNodes(context);
 
     if (!_hasMediaSelected()) {
       _showErrorSnackBar('Please add an image or video to share.');
@@ -540,7 +540,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     }
 
     textContent = _appendMediaUrlToText(textContent);
-    final String? topic = _extractTopicFromTags(textContent);
+    // final String? topic = _extractTopicFromTags(textContent);
+    final String topic = MemoRegExp.extractTopics(textContent).isNotEmpty ? MemoRegExp.extractTopics(textContent).first : "";
 
     try {
       // Create the post object for confirmation screen
@@ -564,14 +565,17 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           _clearInputs();
           _showSuccessSnackBar('Successfully published!');
         } else {
+          // _focusNode.requestFocus(); // Refocus on error
           showQrCodeDialog(context: context, theme: Theme.of(context), user: user, memoOnly: true);
           _showErrorSnackBar('Publish failed: ${response.message}');
         }
       } else {
+        // _focusNode.requestFocus(); // Refocus on error
         showSnackBar(type: SnackbarType.info, 'Publication canceled', context);
       }
       // If shouldPublish is null, the screen was closed by other means (back button)
     } catch (e, s) {
+      // _focusNode.requestFocus(); // Refocus on error
       _log("Error during publish: $e\n$s");
       if (mounted) {
         _showErrorSnackBar('Error during publish: ${e.toString()}');
@@ -599,22 +603,22 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     return result;
   }
 
-  String? _extractTopicFromTags(String rawTextForTopicExtraction) {
-    for (Tag t in _textInputController.tags) {
-      if (t.triggerCharacter == "@") {
-        return t.text;
-      }
-    }
-    if (rawTextForTopicExtraction.contains("@")) {
-      final words = rawTextForTopicExtraction.split(" ");
-      for (String word in words) {
-        if (word.startsWith("@") && word.length > 1) {
-          return word.substring(1).replaceAll(RegExp(r'[^\w-]'), '');
-        }
-      }
-    }
-    return null;
-  }
+  // String? _extractTopicFromTags(String rawTextForTopicExtraction) {
+  //   for (Tag t in _textInputController.tags) {
+  //     if (t.triggerCharacter == "@") {
+  //       return t.text;
+  //     }
+  //   }
+  //   if (rawTextForTopicExtraction.contains("@")) {
+  //     final words = rawTextForTopicExtraction.split(" ");
+  //     for (String word in words) {
+  //       if (word.startsWith("@") && word.length > 1) {
+  //         return word.substring(1).replaceAll(RegExp(r'[^\w-]'), '');
+  //       }
+  //     }
+  //   }
+  //   return null;
+  // }
 
   String _appendMediaUrlToText(String text) {
     final imgurUrl = ref.read(imgurUrlProvider);

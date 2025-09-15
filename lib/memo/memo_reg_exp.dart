@@ -192,7 +192,9 @@ class MemoRegExp {
   static List<String> extractUrls(String? text) =>
       _extractMatches(text, r'/(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)');
 
-  static List<String> extractHashtags(String? text) => _extractMatches(text, r'(?:\s|^)(?:#(?!(?:\d+|\w+?_|_\w*?)(?:\s|$)))(\w+)(?=\s|$)');
+  // static List<String> extractHashtags(String? text) => _extractMatches(text, r'(?:\s|^)(?:#(?!(?:\d+|\w+?_|_\w*?)(?:\s|$)))(\w+)(?=\s|$)');
+
+  static List<String> extractHashtags(String? text) => _extractMatches(text, r'#\w+');
 
   static List<String> _extractMatches(String? text, String pattern) {
     if (text == null || text.isEmpty) return [];

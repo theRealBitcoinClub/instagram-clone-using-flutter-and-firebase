@@ -328,6 +328,14 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
         
         // Remove unwanted elements
         var elementsToRemove = [
+          '.pagination-center',
+          '.load-more-wrapper',
+          '.center',
+          '.form-new-topic-message',
+          '.block-explorer',
+          '.actions',
+          '.pagination-right',
+          '.topics-index-head',
           '.navbar',
           '.footer',
           '#mobile-app-banner',

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/config_whitelist.dart';
 import 'package:mahakka/external_browser_launcher.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 import 'package:mahakka/widgets/unified_video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -243,8 +244,10 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
                 ref.read(topicIdProvider.notifier).state = null;
                 ref.read(tagIdProvider.notifier).state = hashtag;
                 ref.read(tabIndexProvider.notifier).setTab(3); // Switch to webview tab
-                _logListError('Hashtag tapped: $hashtag (Action not implemented in this widget)');
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on hashtag: $hashtag')));
+                // _logListError('Hashtag tapped: $hashtag (Action not implemented in this widget)');
+                showSnackBar("Loading $hashtag charts!", context, type: SnackbarType.success);
+                showSnackBar("${hashtag} charts are loading...", context, type: SnackbarType.info);
+                // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on hashtag: $hashtag')));
               },
               urlStyle: buildUrlStyle(theme),
               onUrlTap: (String url) async {
@@ -253,12 +256,12 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
               prefixText: post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null,
               prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
               onPrefixTap: () {
-                // Set the topic provider and switch to webview tab
-                ref.read(tagIdProvider.notifier).state = null;
-                ref.read(topicIdProvider.notifier).state = post.topicId;
-                ref.read(tabIndexProvider.notifier).setTab(3); // Switch to webview tab
-                _logListError("Topic prefix tapped: ${post.topicId} (Action not implemented in this widget)");
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on topic: ${post.topicId}')));
+                // // Set the topic provider and switch to webview tab
+                // ref.read(tagIdProvider.notifier).state = null;
+                // ref.read(topicIdProvider.notifier).state = post.topicId;
+                // ref.read(tabIndexProvider.notifier).setTab(3); // Switch to webview tab
+                // _logListError("Topic prefix tapped: ${post.topicId} (Action not implemented in this widget)");
+                // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on topic: ${post.topicId}')));
               },
             ),
           ],

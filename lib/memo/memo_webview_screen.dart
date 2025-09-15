@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../provider/user_provider.dart';
 import '../providers/webview_providers.dart';
@@ -51,9 +50,11 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
       });
       return '$_baseUrl/topic/$topicId';
     } else {
+      return '$_baseUrl/login';
+      // _loadFeed();
       // Default to profile if no providers have values
-      final user = ref.read(userProvider)!;
-      return '$_baseUrl/profile/${user.id}';
+      // final user = ref.read(userProvider)!;
+      // return '$_baseUrl/profile/${user.id}';
     }
   }
 
@@ -86,7 +87,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
     ref.read(tagIdProvider.notifier).state = null;
     ref.read(topicIdProvider.notifier).state = null;
 
-    _loadUrl('$_baseUrl/posts/ranked');
+    _loadUrl('$_baseUrl/login');
   }
 
   void _loadTags() {
@@ -120,6 +121,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
     _isDarkTheme = theme.brightness == Brightness.dark;
 
     // Define theme colors
+    // final backgroundColor = _isDarkTheme ? '#121212' : '#f8f8f8';
     final backgroundColor = _isDarkTheme ? '#121212' : '#f8f8f8';
     final textColor = _isDarkTheme ? '#d2d2d2' : '#000';
     final postBackground = _isDarkTheme ? '#1e1e1e' : '#fff';
@@ -139,15 +141,17 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
     String css =
         '''
       <style>
+      
         /* Hide navigation and other unwanted elements */
+        .reputation-tooltip,
         .pagination-center,
-    .load-more-wrapper,
-    .center,
-    .form-new-topic-message,
-    .block-explorer,
-    .actions,
-    .pagination-right,
-    .topics-index-head,
+        .load-more-wrapper,
+        .center,
+        .form-new-topic-message,
+        .block-explorer,
+        .actions,
+        .pagination-right,
+        .topics-index-head,
         .navbar,
         .footer,
         #mobile-app-banner,
@@ -297,7 +301,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
           border: 1px solid $inputBorderColor !important;
           border-radius: 4px !important;
           padding: 2px 6px !important;
-          font-size: 12px !important;
+          font-size: 11px !important;
         }
 
         /* Force portrait-only layout */
@@ -313,9 +317,9 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
         /* Mobile responsiveness */
         @media (max-width: 767px) {
           .post {
-            margin: 12px 0 !important;
+            margin-top: 5px 0 !important;
             border-radius: 0 !important;
-            padding: 12px !important;
+            padding: 2px !important;
             box-shadow: none !important;
           }
           
@@ -323,14 +327,28 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
             padding: 0 8px !important;
           }
           
-          .post .content {
-            font-size: 15px !important;
+          .post, .content {
+            font-size: 11px !important;
           }
+          
+        
+          #all-posts {
+              max-height: max-content;
+          }
+        
         }
         
-        .message .post-header .name .message-feed-item {
-          background: $backgroundColor !important;
+        #all-posts {
+            max-height: max-content;
         }
+        
+        .message, .post-header, .name, .message-feed-item, .mini-profile-name {
+          background: $postBackground !important;
+        }
+        
+        /*.message .post-header .name .message-feed-item {
+          background: #ccc !important;
+        }*/
       </style>
     ''';
 
@@ -462,27 +480,21 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
             toolbarHeight: 50,
             centerTitle: false,
             titleSpacing: NavigationToolbar.kMiddleSpacing,
-            leading: IconButton(icon: const Icon(size: 32, Icons.person_outline), tooltip: "My Profile", onPressed: _loadProfile),
-            title: TextButton(
-              onPressed: () {
-                final currentUrl = _webViewController.getUrl().toString() ?? '';
-                if (currentUrl.isNotEmpty) {
-                  launchUrl(Uri.parse(currentUrl));
-                }
-              },
-              style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
-              child: Text(
-                _currentPath,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: (theme.appBarTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface).withOpacity(0.7),
-                ),
-                overflow: TextOverflow.ellipsis,
+
+            // _loadUrl('$_baseUrl/logout')
+            leading: IconButton(icon: const Icon(size: 30, Icons.feed_outlined), tooltip: "Feed", onPressed: _loadFeed),
+            // leading: IconButton(icon: const Icon(size: 30, Icons.person_outline), tooltip: "My Profile", onPressed: _loadProfile),
+            title: Text(
+              _currentPath,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: (theme.appBarTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface).withOpacity(0.7),
               ),
+              overflow: TextOverflow.ellipsis,
             ),
             actions: [
-              IconButton(icon: const Icon(size: 28, Icons.feed_outlined), tooltip: "Feed", onPressed: _loadFeed),
-              IconButton(icon: const Icon(size: 28, Icons.tag_outlined), tooltip: "Tags", onPressed: _loadTags),
-              IconButton(icon: const Icon(size: 28, Icons.alternate_email_rounded), tooltip: "Topics", onPressed: _loadTopics),
+              IconButton(icon: const Icon(size: 26, Icons.logout_outlined), tooltip: "Logout", onPressed: () => _loadUrl('$_baseUrl/logout')),
+              // IconButton(icon: const Icon(size: 26, Icons.tag_outlined), tooltip: "Tags", onPressed: _loadTags),
+              // IconButton(icon: const Icon(size: 26, Icons.alternate_email_rounded), tooltip: "Topics", onPressed: _loadTopics),
             ],
           ),
           body: SafeArea(

@@ -19,8 +19,8 @@ class ProfileTabSelector extends StatelessWidget {
         children: [
           _buildViewModeIconButton(theme, 0, Icons.grid_on_rounded, Icons.grid_view_rounded, "Grid"), // Grid
           _buildViewModeIconButton(theme, 1, Icons.video_library_outlined, Icons.video_library_rounded, "Videos"), // Videos
-          _buildViewModeIconButton(theme, 2, Icons.bookmark_border_rounded, Icons.bookmark_rounded, "Tagged"), // Tagged
-          _buildViewModeIconButton(theme, 4, Icons.article_outlined, Icons.article_rounded, "Topics"), // Topics
+          _buildViewModeIconButton(theme, 2, Icons.tag_outlined, Icons.tag_rounded, "Tagged"), // Tagged
+          _buildViewModeIconButton(theme, 4, Icons.alternate_email_outlined, Icons.alternate_email_rounded, "Topics"), // Topics
         ],
       ),
     );

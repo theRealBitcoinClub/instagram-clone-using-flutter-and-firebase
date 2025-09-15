@@ -7,6 +7,7 @@ void showSnackBar(String content, BuildContext context, {required SnackbarType t
   final theme = Theme.of(context);
   final colorScheme = theme.colorScheme;
 
+  content = content.toUpperCase();
   // Determine colors based on type
   Color backgroundColor;
   TextStyle textStyle;
@@ -14,18 +15,18 @@ void showSnackBar(String content, BuildContext context, {required SnackbarType t
   switch (type) {
     case SnackbarType.success:
       backgroundColor = Colors.green[900] ?? colorScheme.primaryContainer;
-      textStyle = TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2, fontSize: 16);
+      textStyle = TextStyle(color: Colors.white, fontWeight: FontWeight.w400, letterSpacing: 1.1, fontSize: 16);
       break;
     case SnackbarType.error:
       backgroundColor = Colors.red[900] ?? colorScheme.errorContainer;
-      textStyle = TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2, fontSize: 16);
+      textStyle = TextStyle(color: Colors.white, fontWeight: FontWeight.w400, letterSpacing: 1.1, fontSize: 16);
       break;
     case SnackbarType.info:
       backgroundColor = Colors.orange[900] ?? colorScheme.secondaryContainer;
       textStyle = TextStyle(
         color: Colors.white,
         fontWeight: FontWeight.w400, // Not bold for info
-        letterSpacing: 1.2,
+        letterSpacing: 1.1,
         fontSize: 16,
       );
       break;

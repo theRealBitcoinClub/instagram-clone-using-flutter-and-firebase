@@ -371,18 +371,18 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           aspectRatio: 1,
           child: Container(
             decoration: BoxDecoration(
-              color: colorScheme.surfaceVariant.withOpacity(0.5),
+              color: colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colorScheme.outline.withOpacity(0.5), width: 1.5),
+              border: Border.all(color: colorScheme.primary, width: 1.5),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(iconData, size: 60, color: colorScheme.primary),
+                Icon(iconData, size: 50, color: colorScheme.primary),
                 const SizedBox(height: 8),
                 Text(
                   label,
-                  style: textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+                  style: textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w400),
                   textAlign: TextAlign.center,
                 ),
               ],

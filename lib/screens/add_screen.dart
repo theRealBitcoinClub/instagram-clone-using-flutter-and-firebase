@@ -297,7 +297,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     // All are empty, show placeholders for all four options in two rows
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       child: Column(
         children: [
           // First row: IMGUR & YOUTUBE
@@ -313,7 +313,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
                 iconData: Icons.add_photo_alternate_outlined,
                 onTap: _showImgurDialog,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 16),
               _buildMediaPlaceholder(
                 theme: theme,
                 colorScheme: colorScheme,
@@ -338,7 +338,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
                 iconData: Icons.cloud_upload_outlined,
                 onTap: _showIpfsUploadScreen,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 16),
               _buildMediaPlaceholder(
                 theme: theme,
                 colorScheme: colorScheme,

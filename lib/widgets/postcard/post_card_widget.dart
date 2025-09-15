@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_chat_core/flutter_chat_core.dart' show LinkPreviewData;
+// Add the link previewer import
+import 'package:flutter_link_previewer/flutter_link_previewer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
@@ -47,16 +50,26 @@ class _PostCardState extends ConsumerState<PostCard> {
   late List<bool> _selectedHashtags;
   late TextEditingController _textEditController;
   bool hasRegisteredAsUser = false;
-  bool _showYouTubePlayer = false; // Add this line
-  bool _isAnimatingYouTube = false; // Add this to track animation state
+  bool _showYouTubePlayer = false;
+  bool _isAnimatingYouTube = false;
+
+  // Add link preview state variables
+  LinkPreviewData? _linkPreviewData;
+  bool _hasLinkPreview = false;
+  bool _isCheckingForLinks = false;
 
   @override
   void initState() {
     super.initState();
     _textEditController = TextEditingController();
     _initializeSelectedHashtags();
-    _showYouTubePlayer = false; // Initialize to false
-    _isAnimatingYouTube = false; // Add this to track animation state
+    _showYouTubePlayer = false;
+    _isAnimatingYouTube = false;
+
+    // Check if this post should have a link preview
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForLinkPreview();
+    });
   }
 
   @override
@@ -70,9 +83,40 @@ class _PostCardState extends ConsumerState<PostCard> {
     _selectedHashtags = List<bool>.filled(count, false);
   }
 
+  // Check if this post should display a link preview
+  void _checkForLinkPreview() {
+    if (_hasMediaContent(widget.post)) {
+      // Post has media, no need for link preview
+      setState(() {
+        _hasLinkPreview = false;
+      });
+      return;
+    }
+
+    // Check if the post text contains URLs
+    final urlRegex = RegExp(r'https?://(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z]{2,})+(?:[/\w\.-]*)*/?', caseSensitive: false);
+
+    final hasUrls = urlRegex.hasMatch(widget.post.text ?? "");
+
+    setState(() {
+      _hasLinkPreview = hasUrls;
+      _isCheckingForLinks = hasUrls;
+    });
+  }
+
+  // Check if post has any media content
+  bool _hasMediaContent(MemoModelPost post) {
+    return (post.imageUrl != null && post.imageUrl!.isNotEmpty) ||
+        (post.imgurUrl != null && post.imgurUrl!.isNotEmpty) ||
+        (post.videoUrl != null && post.videoUrl!.isNotEmpty) ||
+        (post.youtubeId != null && post.youtubeId!.isNotEmpty) ||
+        (post.ipfsCid != null && post.ipfsCid!.isNotEmpty);
+  }
+
   Widget _buildPostMedia(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     String imgUrl = widget.post.imageUrl ?? widget.post.imgurUrl ?? "";
-    // Priority: YouTube Video > Other Video > Image > IPFS > Fallback
+
+    // Priority: YouTube Video > Other Video > Image > IPFS > Link Preview > Fallback
     if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
       return _buildYouTubeWidget(theme, colorScheme, textTheme);
     } else if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty) {
@@ -109,9 +153,52 @@ class _PostCardState extends ConsumerState<PostCard> {
           ],
         ),
       );
+    } else if (_hasLinkPreview) {
+      // Show link preview for posts with URLs but no media
+      return _buildLinkPreview(theme, colorScheme, textTheme);
     } else {
       return _buildFallbackWidget(theme, colorScheme);
     }
+  }
+
+  // Build link preview widget
+  Widget _buildLinkPreview(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    return Container(
+      height: 200, // Same height as other media
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(11.5),
+        child: LinkPreview(
+          text: widget.post.text ?? '',
+          linkPreviewData: _linkPreviewData,
+          onLinkPreviewDataFetched: (data) {
+            setState(() {
+              _linkPreviewData = data;
+              _isCheckingForLinks = false;
+            });
+          },
+          // Customize the appearance to match your theme
+          backgroundColor: colorScheme.surface,
+          titleTextStyle: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+          // bodyTextStyle: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
+          // urlTextStyle: textTheme.bodySmall?.copyWith(color: colorScheme.primary),
+          borderRadius: 12,
+          // borderColor: colorScheme.outline.withOpacity(0.3),
+          // Show loading indicator while fetching
+          // loadingWidget: Container(
+          //   height: 200,
+          //   color: colorScheme.surfaceVariant,
+          //   child: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary))),
+          // ),
+          // Show error widget if preview fails
+          // errorWidget: _buildFallbackWidget(theme, colorScheme),
+        ),
+      ),
+    );
   }
 
   Widget _buildYouTubeWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
@@ -314,7 +401,9 @@ class _PostCardState extends ConsumerState<PostCard> {
     // For other media types, use fixed height
     if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty ||
         widget.post.imageUrl != null && widget.post.imageUrl!.isNotEmpty ||
-        widget.post.ipfsCid != null && widget.post.ipfsCid!.isNotEmpty) {
+        widget.post.ipfsCid != null && widget.post.ipfsCid!.isNotEmpty ||
+        _hasLinkPreview) {
+      // Include link preview in media height calculation
       return 200.0;
     }
 
@@ -485,30 +574,6 @@ class _PostCardState extends ConsumerState<PostCard> {
       }
     }
   }
-  // void _onSend() {
-  //   if (!mounted) return;
-  //   final String textToSend = _textEditController.text.trim();
-  //   final verifier = MemoVerifierDecorator(textToSend)
-  //       .addValidator(InputValidators.verifyPostLength)
-  //       .addValidator(InputValidators.verifyMinWordCount)
-  //       .addValidator(InputValidators.verifyHashtags)
-  //       .addValidator(InputValidators.verifyTopics)
-  //       .addValidator(InputValidators.verifyUrl)
-  //       .addValidator(InputValidators.verifyNoTopicNorTag)
-  //       .addValidator(InputValidators.verifyOffensiveWords);
-  //
-  //   final result = verifier.getResult();
-  //   if (result != MemoVerificationResponse.valid) {
-  //     _showVerificationResponse(result, context);
-  //     return;
-  //   }
-  //
-  //   if (_hasSelectedTopic) {
-  //     _publishReplyTopic(textToSend);
-  //   } else {
-  //     _publishReplyHashtags(textToSend);
-  //   }
-  // }
 
   void _onCancel() {
     if (!mounted) return;
@@ -613,7 +678,7 @@ class _PostCardState extends ConsumerState<PostCard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 PostCardHeader(post: widget.post, onLikePostTipCreator: _sendTipToCreator),
-                // NEW: Media section that handles all three types
+                // Media section that handles all types including link preview
                 _buildPostMedia(theme, colorScheme, textTheme),
                 PostCardFooter(
                   post: widget.post,

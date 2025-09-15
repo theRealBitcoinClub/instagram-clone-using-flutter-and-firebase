@@ -488,34 +488,42 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
           body: SafeArea(
             child: Stack(
               children: [
-                // Use InAppWebView widget
-                InAppWebView(
-                  // Set initial URL here
-                  initialUrlRequest: URLRequest(url: WebUri.uri(Uri.parse(_getInitialUrl()))),
-                  // Set options for the webview
-                  initialOptions: InAppWebViewGroupOptions(crossPlatform: InAppWebViewOptions(javaScriptEnabled: true)),
-                  onWebViewCreated: (controller) {
-                    _webViewController = controller;
-                  },
-                  onLoadStart: (controller, url) {
-                    if (url != null) {
+                // Add a container that constraints the WebView
+                Container(
+                  constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
+                  child: InAppWebView(
+                    // Your existing WebView configuration
+                    initialUrlRequest: URLRequest(url: WebUri.uri(Uri.parse(_getInitialUrl()))),
+                    initialOptions: InAppWebViewGroupOptions(
+                      crossPlatform: InAppWebViewOptions(
+                        javaScriptEnabled: true,
+                        // Disable horizontal scrolling in WebView
+                        disableHorizontalScroll: true,
+                      ),
+                    ),
+                    onWebViewCreated: (controller) {
+                      _webViewController = controller;
+                    },
+                    onLoadStart: (controller, url) {
+                      if (url != null) {
+                        setState(() {
+                          _isLoading = true;
+                          _cssInjected = false; // Reset CSS injection state
+                          _updateCurrentPath(url.toString());
+                        });
+                      }
+                    },
+                    onLoadStop: (controller, url) async {
+                      // Wait for CSS injection to complete before hiding loading indicator
+                      await _injectCSS();
                       setState(() {
-                        _isLoading = true;
-                        _cssInjected = false; // Reset CSS injection state
-                        _updateCurrentPath(url.toString());
+                        // Only hide loading if CSS injection is complete
+                        _isLoading = !_cssInjected;
                       });
-                    }
-                  },
-                  onLoadStop: (controller, url) async {
-                    // Wait for CSS injection to complete before hiding loading indicator
-                    await _injectCSS();
-                    setState(() {
-                      // Only hide loading if CSS injection is complete
-                      _isLoading = !_cssInjected;
-                    });
-                  },
+                    },
+                  ),
                 ),
-                // Show loading indicator only when loading and CSS not injected yet
+                // Your loading indicator
                 if (_isLoading)
                   Positioned(
                     top: 0,

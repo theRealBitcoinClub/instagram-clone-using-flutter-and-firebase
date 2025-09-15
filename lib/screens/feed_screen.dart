@@ -96,7 +96,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final feedState = ref.watch(feedPostsProvider);
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: theme.colorScheme.primary.withAlpha(21),
       appBar: AppBar(
         centerTitle: true,
         toolbarHeight: 50,
@@ -170,8 +170,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     // Display list of posts
     return RefreshIndicator(
       onRefresh: () => ref.read(feedPostsProvider.notifier).refreshFeed(),
-      color: theme.colorScheme.primary,
-      backgroundColor: theme.colorScheme.surface,
+      color: theme.colorScheme.onPrimary,
+      backgroundColor: theme.colorScheme.primary,
       child: FocusableActionDetector(
         autofocus: true,
         focusNode: _listViewFocusNode,

@@ -93,7 +93,7 @@ class PostCardHeader extends ConsumerWidget {
                     children: [
                       Text(
                         "${creator.profileIdShort}  ",
-                        style: theme.textTheme.titleSmall?.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.w300),
+                        style: theme.textTheme.titleSmall?.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.w400),
                       ),
                       Text(
                         creator.nameMaxLengthAware,
@@ -108,7 +108,7 @@ class PostCardHeader extends ConsumerWidget {
                     if (post.createdDateTime != null)
                       Text(
                         post.dateTimeFormattedSafe(),
-                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(111)),
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(169)),
                       ),
                     if (post.age.isNotEmpty && post.createdDateTime != null)
                       Text(" - ", style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),

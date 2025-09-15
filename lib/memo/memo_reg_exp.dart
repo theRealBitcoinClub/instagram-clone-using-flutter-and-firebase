@@ -189,11 +189,18 @@ class MemoRegExp {
 
   static List<String> extractTopics(String? text) => _extractMatches(text, r'@[a-zA-Z0-9_\-\.]+');
   // static List<String> extractTopics(String? text) => _extractMatches(text, r'(?:^|\s)(@[a-zA-Z0-9_\-\.]+)(?=\s|$)');
-
   static List<String> extractUrls(String? text) =>
-      _extractMatches(text, r'/(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)');
-
+      _extractMatches(text, r'(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)');
   // static List<String> extractHashtags(String? text) => _extractMatches(text, r'(?:\s|^)(?:#(?!(?:\d+|\w+?_|_\w*?)(?:\s|$)))(\w+)(?=\s|$)');
+  static List<String> extractUrlsWithHttpsAlways(String? text) {
+    final matches = extractUrls(text);
+    return matches.map((url) {
+      if (url.startsWith('www.')) {
+        return 'https://$url';
+      }
+      return url;
+    }).toList();
+  }
 
   static List<String> extractHashtags(String? text) => _extractMatches(text, r'#\w+');
 

@@ -245,11 +245,11 @@ class UnifiedImageWidgetState extends ConsumerState<UnifiedImageWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.broken_image_outlined, color: colorScheme.error, size: 36),
+            Icon(Icons.broken_image_outlined, color: colorScheme.error.withAlpha(222), size: 36),
             const SizedBox(height: 8),
             Text(
               message,
-              style: textTheme.bodyMedium?.copyWith(color: colorScheme.error),
+              style: textTheme.bodyMedium?.copyWith(color: colorScheme.error.withAlpha(222)),
               textAlign: TextAlign.center,
               maxLines: 2,
             ),

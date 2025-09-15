@@ -136,6 +136,6 @@ class MemoScraperUtil {
   static void extractUrlsAndHashtags(MemoModelPost post) {
     MemoScraperUtil.extractYouTubeUrlAndRemoveJavaScriptFromText(post);
     post.tagIds.addAll(MemoRegExp.extractHashtags(post.text));
-    post.urls.addAll(MemoRegExp.extractUrls(post.text));
+    post.urls.addAll(MemoRegExp.extractUrlsWithHttpsAlways(post.text));
   }
 }

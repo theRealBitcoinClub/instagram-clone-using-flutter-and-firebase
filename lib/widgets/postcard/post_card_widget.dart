@@ -1,25 +1,26 @@
+// widgets/post_card_widget.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_chat_core/flutter_chat_core.dart' show LinkPreviewData;
-// Add the link previewer import
-import 'package:flutter_link_previewer/flutter_link_previewer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/provider/user_provider.dart';
+import 'package:mahakka/repositories/post_cache_repository.dart';
 import 'package:mahakka/repositories/post_repository.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/cached_unified_image_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
+import 'package:mahakka/widgets/postcard/post_card_footer.dart';
+import 'package:mahakka/widgets/preview_url_widget.dart';
 import 'package:mahakka/widgets/unified_video_player.dart';
 
 import '../../memo/base/text_input_verifier.dart';
 import '../../memo/memo_reg_exp.dart';
 import '../../providers/post_creator_provider.dart';
+import '../../url_utils.dart';
 import '../add/publish_confirmation_activity.dart';
 import '../unified_image_widget.dart';
-import 'post_card_footer.dart';
 import 'post_card_header.dart';
 import 'postcard_animations.dart';
 
@@ -53,11 +54,6 @@ class _PostCardState extends ConsumerState<PostCard> {
   bool _showYouTubePlayer = false;
   bool _isAnimatingYouTube = false;
 
-  // Add link preview state variables
-  LinkPreviewData? _linkPreviewData;
-  bool _hasLinkPreview = false;
-  bool _isCheckingForLinks = false;
-
   @override
   void initState() {
     super.initState();
@@ -65,11 +61,6 @@ class _PostCardState extends ConsumerState<PostCard> {
     _initializeSelectedHashtags();
     _showYouTubePlayer = false;
     _isAnimatingYouTube = false;
-
-    // Check if this post should have a link preview
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkForLinkPreview();
-    });
   }
 
   @override
@@ -83,119 +74,24 @@ class _PostCardState extends ConsumerState<PostCard> {
     _selectedHashtags = List<bool>.filled(count, false);
   }
 
-  // Check if this post should display a link preview
-  void _checkForLinkPreview() {
-    if (_hasMediaContent(widget.post)) {
-      // Post has media, no need for link preview
-      setState(() {
-        _hasLinkPreview = false;
-      });
-      return;
-    }
-
-    // Check if the post text contains URLs
-    final urlRegex = RegExp(r'https?://(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z]{2,})+(?:[/\w\.-]*)*/?', caseSensitive: false);
-
-    final hasUrls = urlRegex.hasMatch(widget.post.text ?? "");
-
-    setState(() {
-      _hasLinkPreview = hasUrls;
-      _isCheckingForLinks = hasUrls;
-    });
-  }
-
-  // Check if post has any media content
-  bool _hasMediaContent(MemoModelPost post) {
-    return (post.imageUrl != null && post.imageUrl!.isNotEmpty) ||
-        (post.imgurUrl != null && post.imgurUrl!.isNotEmpty) ||
-        (post.videoUrl != null && post.videoUrl!.isNotEmpty) ||
-        (post.youtubeId != null && post.youtubeId!.isNotEmpty) ||
-        (post.ipfsCid != null && post.ipfsCid!.isNotEmpty);
-  }
-
-  Widget _buildPostMedia(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
-    String imgUrl = widget.post.imageUrl ?? widget.post.imgurUrl ?? "";
-
-    // Priority: YouTube Video > Other Video > Image > IPFS > Link Preview > Fallback
-    if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
-      return _buildYouTubeWidget(theme, colorScheme, textTheme);
-    } else if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty) {
-      return _buildVideoWidget(theme, colorScheme, textTheme);
-    } else if (imgUrl.isNotEmpty) {
-      return CachedUnifiedImageWidget(
-        imageUrl: imgUrl,
-        sourceType: ImageSourceType.network,
-        fitMode: ImageFitMode.contain,
-        aspectRatio: 16 / 9,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-        backgroundColor: colorScheme.surface,
-        showLoadingProgress: true,
-      );
-    } else if (widget.post.ipfsCid != null && widget.post.ipfsCid!.isNotEmpty) {
-      return CachedUnifiedImageWidget(
-        imageUrl: widget.post.ipfsCid!,
-        sourceType: ImageSourceType.ipfs,
-        fitMode: ImageFitMode.contain,
-        aspectRatio: 16 / 9,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-        backgroundColor: colorScheme.surface,
-        showLoadingProgress: true,
-        errorWidget: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.cloud_off_outlined, color: colorScheme.error, size: 36),
-            const SizedBox(height: 8),
-            Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
-            const SizedBox(height: 8),
-            Text("CID: ${widget.post.ipfsCid}", style: textTheme.bodySmall),
-          ],
+  Widget _buildVideoWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          // borderRadius: BorderRadius.circular(12),
+          border: Border(),
+          // border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
         ),
-      );
-    } else if (_hasLinkPreview) {
-      // Show link preview for posts with URLs but no media
-      return _buildLinkPreview(theme, colorScheme, textTheme);
-    } else {
-      return _buildFallbackWidget(theme, colorScheme);
-    }
-  }
-
-  // Build link preview widget
-  Widget _buildLinkPreview(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
-    return Container(
-      height: 200, // Same height as other media
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(11.5),
-        child: LinkPreview(
-          text: widget.post.text ?? '',
-          linkPreviewData: _linkPreviewData,
-          onLinkPreviewDataFetched: (data) {
-            setState(() {
-              _linkPreviewData = data;
-              _isCheckingForLinks = false;
-            });
-          },
-          // Customize the appearance to match your theme
-          backgroundColor: colorScheme.surface,
-          titleTextStyle: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-          // bodyTextStyle: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
-          // urlTextStyle: textTheme.bodySmall?.copyWith(color: colorScheme.primary),
-          borderRadius: 12,
-          // borderColor: colorScheme.outline.withOpacity(0.3),
-          // Show loading indicator while fetching
-          // loadingWidget: Container(
-          //   height: 200,
-          //   color: colorScheme.surfaceVariant,
-          //   child: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary))),
-          // ),
-          // Show error widget if preview fails
-          // errorWidget: _buildFallbackWidget(theme, colorScheme),
+        child: ClipRRect(
+          // borderRadius: BorderRadius.circular(11.5),
+          child: UnifiedVideoPlayer(
+            type: VideoPlayerType.generic,
+            aspectRatio: 16 / 9,
+            autoPlay: false,
+            videoUrl: widget.post.videoUrl!, // Pass the video URL
+          ),
         ),
       ),
     );
@@ -211,11 +107,12 @@ class _PostCardState extends ConsumerState<PostCard> {
         height: _showYouTubePlayer ? 200.0 : 50.0,
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+          // borderRadius: BorderRadius.circular(12),
+          // border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+          border: Border(),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(11.5),
+          // borderRadius: BorderRadius.circular(11.5),
           child: _showYouTubePlayer
               ? _buildYouTubePlayerWithOverlay(theme, colorScheme, textTheme)
               : _buildYouTubePlaceholder(theme, colorScheme, textTheme),
@@ -285,12 +182,12 @@ class _PostCardState extends ConsumerState<PostCard> {
 
   Widget _buildYouTubePlaceholder(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     return Container(
-      color: Colors.black.withOpacity(0.7),
+      color: theme.colorScheme.primary.withAlpha(222),
       child: Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.play_circle_filled, color: Colors.white, size: 32),
+            Icon(Icons.play_circle_filled, color: theme.colorScheme.onPrimary, size: 32),
             const SizedBox(width: 8),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -299,15 +196,69 @@ class _PostCardState extends ConsumerState<PostCard> {
               children: [
                 Text(
                   "YouTube Video",
-                  style: textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w500),
+                  style: textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.w500),
                 ),
-                Text("Double tap to play", style: textTheme.bodySmall?.copyWith(color: Colors.white70)),
+                Text("Double tap to play", style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onPrimary.withAlpha(222))),
               ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildPostMedia(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    String imgUrl = widget.post.imageUrl ?? widget.post.imgurUrl ?? "";
+
+    // Priority: YouTube Video > Other Video > Image > IPFS > Link Preview > Fallback
+    if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
+      return _buildYouTubeWidget(theme, colorScheme, textTheme);
+    } else if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty) {
+      return _buildVideoWidget(theme, colorScheme, textTheme);
+    } else if (imgUrl.isNotEmpty) {
+      return CachedUnifiedImageWidget(
+        imageUrl: imgUrl,
+        sourceType: ImageSourceType.network,
+        fitMode: ImageFitMode.contain,
+        aspectRatio: 16 / 9,
+        // borderRadius: BorderRadius.circular(12),
+        border: Border(),
+        // border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+        backgroundColor: colorScheme.surface,
+        showLoadingProgress: true,
+      );
+    } else if (widget.post.ipfsCid != null && widget.post.ipfsCid!.isNotEmpty) {
+      return CachedUnifiedImageWidget(
+        imageUrl: widget.post.ipfsCid!,
+        sourceType: ImageSourceType.ipfs,
+        fitMode: ImageFitMode.contain,
+        aspectRatio: 16 / 9,
+        border: Border(),
+        // borderRadius: BorderRadius.circular(12),
+        // border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+        backgroundColor: colorScheme.surface,
+        showLoadingProgress: true,
+        errorWidget: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cloud_off_outlined, color: colorScheme.error, size: 36),
+            const SizedBox(height: 8),
+            Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+            const SizedBox(height: 8),
+            Text("CID: ${widget.post.ipfsCid}", style: textTheme.bodySmall),
+          ],
+        ),
+      );
+    } else if (widget.post.hasUrlsButNoMedia) {
+      final validUrl = UrlUtils.getFirstValidUrl(MemoRegExp.extractUrlsWithHttpsAlways(widget.post.text));
+      if (validUrl != null) {
+        return PreviewUrlWidget(url: validUrl);
+      } else {
+        return _buildFallbackWidget(colorScheme);
+      }
+    } else {
+      return _buildFallbackWidget(colorScheme);
+    }
   }
 
   void _toggleYouTubePlayer() {
@@ -322,7 +273,6 @@ class _PostCardState extends ConsumerState<PostCard> {
     if (_showYouTubePlayer) {
       _hideOverlayAfterDelay(); // Start hiding timer
     }
-
     // Reset animation state after animation completes
     Future.delayed(const Duration(milliseconds: 400), () {
       if (mounted) {
@@ -333,36 +283,30 @@ class _PostCardState extends ConsumerState<PostCard> {
     });
   }
 
-  // NEW: Build video widget for Odysee videos
-  Widget _buildVideoWidget(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(11.5),
-          child: UnifiedVideoPlayer(
-            type: VideoPlayerType.generic,
-            aspectRatio: 16 / 9,
-            autoPlay: false,
-            videoUrl: widget.post.videoUrl!, // Pass the video URL
-          ),
-        ),
-      ),
-    );
+  // Save post with cached previews to both local cache and remote storage
+  Future<void> _savePostWithCachedPreviews() async {
+    try {
+      final postService = ref.read(postServiceProvider);
+      final cacheRepository = ref.read(postCacheRepositoryProvider);
+
+      // Save to local cache
+      await cacheRepository.savePosts([widget.post]);
+
+      // Save to remote storage (Firestore)
+      await postService.savePost(widget.post);
+
+      print("Post cached previews updated successfully");
+    } catch (e) {
+      _logError("Failed to save post with cached previews", e);
+    }
   }
 
-  // NEW: Fallback widget when no media is available
-  Widget _buildFallbackWidget(ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildFallbackWidget(ColorScheme colorScheme) {
     return Container(
       height: _altImageHeight,
-      color: colorScheme.surfaceVariant,
+      color: colorScheme.surface,
       child: Center(
-        child: Icon(Icons.article_outlined, color: colorScheme.onSurfaceVariant.withOpacity(0.7), size: _altImageHeight * 0.6),
+        child: Icon(Icons.article_outlined, color: colorScheme.onSurfaceVariant.withAlpha(123), size: _altImageHeight * 0.6),
       ),
     );
   }
@@ -402,8 +346,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty ||
         widget.post.imageUrl != null && widget.post.imageUrl!.isNotEmpty ||
         widget.post.ipfsCid != null && widget.post.ipfsCid!.isNotEmpty ||
-        _hasLinkPreview) {
-      // Include link preview in media height calculation
+        (widget.post.hasUrlsButNoMedia)) {
       return 200.0;
     }
 
@@ -672,14 +615,17 @@ class _PostCardState extends ConsumerState<PostCard> {
         return _wrapInAnimationStack(
           theme,
           Card(
-            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+            margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
             clipBehavior: Clip.antiAlias,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                SizedBox(height: 5),
                 PostCardHeader(post: widget.post, onLikePostTipCreator: _sendTipToCreator),
                 // Media section that handles all types including link preview
+                SizedBox(height: 7),
                 _buildPostMedia(theme, colorScheme, textTheme),
+                SizedBox(height: 5),
                 PostCardFooter(
                   post: widget.post,
                   textEditController: _textEditController,

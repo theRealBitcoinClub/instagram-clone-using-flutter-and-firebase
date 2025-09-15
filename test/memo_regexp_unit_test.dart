@@ -574,13 +574,18 @@ void main() {
       Multiple URLs: https://example.com, http://test.org, 
       www.google.com, and also ftp://old.protocol but only 
       http and https should be matched.
+      https://www.mintme.com/dsfsdfds/vcs
       """;
 
       final result = MemoRegExp.extractUrls(complexText);
 
       // Should match https://example.com, http://test.org
-      expect(result.length, 2);
+      expect(result, contains('https://www.mintme.com/dsfsdfds/vcs'));
+      expect(result, isNot(contains('www.dfdfd.com')));
+      expect(result, contains('www.google.com'));
+      expect(result, contains('https://www.mintme.com/dsfsdfds/vcs'));
       expect(result, isNot(contains('ftp://old.protocol')));
+      expect(result.length, 4);
     });
 
     test('Performance test with large text', () {

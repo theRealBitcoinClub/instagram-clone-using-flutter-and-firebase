@@ -105,6 +105,8 @@ class MemoModelPost {
     this.topic,
     this.created,
     this.docSnapshot,
+    this.showOnFeed,
+    this.hideOnFeed,
   }) {
     // Initialization logic for public constructor if needed
   }
@@ -181,5 +183,51 @@ class MemoModelPost {
       print("Error parsing DateTime: $createdDateTime, Error: $e");
       return "Invalid Date";
     }
+  }
+
+  MemoModelPost copyWith({
+    String? id,
+    String? text,
+    String? imgurUrl,
+    String? youtubeId,
+    String? imageUrl,
+    String? videoUrl,
+    bool? showOnFeed,
+    bool? hideOnFeed,
+    String? ipfsCid,
+    DateTime? createdDateTime,
+    int? popularityScore,
+    int? likeCounter,
+    int? replyCounter,
+    String? creatorId,
+    String? topicId,
+    List<String>? tagIds,
+    MemoModelCreator? creator,
+    MemoModelTopic? topic,
+    String? created,
+    DocumentSnapshot? docSnapshot,
+  }) {
+    return MemoModelPost(
+      id: id ?? this.id,
+      text: text ?? this.text,
+      imgurUrl: imgurUrl ?? this.imgurUrl,
+      youtubeId: youtubeId ?? this.youtubeId,
+      videoUrl: videoUrl ?? this.videoUrl,
+      imageUrl: imageUrl ?? this.imageUrl,
+      ipfsCid: ipfsCid ?? this.ipfsCid,
+      showOnFeed: showOnFeed ?? this.showOnFeed,
+      hideOnFeed: hideOnFeed ?? this.hideOnFeed,
+      createdDateTime: createdDateTime ?? this.createdDateTime,
+      popularityScore: popularityScore ?? this.popularityScore,
+      likeCounter: likeCounter ?? this.likeCounter,
+      replyCounter: replyCounter ?? this.replyCounter,
+      creatorId: creatorId ?? this.creatorId,
+      topicId: topicId ?? this.topicId,
+      tagIds: tagIds ?? this.tagIds,
+      creator: creator ?? this.creator,
+      topic: topic ?? this.topic,
+      created: created ?? this.created,
+      docSnapshot: docSnapshot ?? this.docSnapshot,
+    );
   }
 }

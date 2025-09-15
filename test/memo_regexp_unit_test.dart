@@ -541,10 +541,12 @@ void main() {
     });
 
     test('extractTopics should handle multiple topics', () {
-      const multipleTopics = "Hello @topic1 and @topic2 and @another_topic";
+      const multipleTopics = "Hello @topic1 and @topic2 and @another_topic more @mahakka.com last @mahakka_yes-topic";
       final result = MemoRegExp.extractTopics(multipleTopics);
 
-      expect(result.length, 3);
+      expect(result.length, 5);
+      expect(result, contains('@mahakka.com'));
+      expect(result, contains('@mahakka_yes-topic'));
       expect(result, contains('@topic1'));
       expect(result, contains('@topic2'));
       expect(result, contains('@another_topic'));

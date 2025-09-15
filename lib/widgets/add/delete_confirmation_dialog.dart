@@ -16,7 +16,7 @@ class DeleteConfirmationDialog extends StatefulWidget {
 class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _opacityAnimation;
-  int _countdown = 3;
+  int _countdown = 1;
   bool _deleteEnabled = false;
   Timer? _countdownTimer;
   Timer? _autoCloseTimer;
@@ -43,7 +43,7 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> wit
     });
 
     // Auto-close timer
-    _autoCloseTimer = Timer(const Duration(seconds: 15), () {
+    _autoCloseTimer = Timer(const Duration(seconds: 10), () {
       if (mounted) {
         Navigator.of(context).pop();
       }
@@ -92,14 +92,14 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> wit
               const SizedBox(height: 16),
 
               // Countdown display
-              _deleteEnabled
-                  ? SizedBox(height: 22)
-                  : Text(
-                      'Delete button enabled in: $_countdown',
-                      style: widget.theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400, color: widget.theme.colorScheme.primary),
-                    ),
-
-              const SizedBox(height: 24),
+              // _deleteEnabled
+              //     ? SizedBox(height: 22)
+              //     : Text(
+              //         'Delete button enabled in: $_countdown',
+              //         style: widget.theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400, color: widget.theme.colorScheme.primary),
+              //       ),
+              //
+              // const SizedBox(height: 24),
 
               // Buttons row
               Row(
@@ -115,7 +115,7 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> wit
                               widget.onDelete();
                             }
                           : null,
-                      child: const Text('DELETE POST'),
+                      child: const Text('CANCEL POST'),
                     ),
                   ),
 

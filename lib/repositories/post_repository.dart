@@ -21,19 +21,19 @@ class PostRepository {
     return ref.read(postServiceProvider).getPostsByCreatorIdStream(creatorId);
   }
 
-  Future<dynamic> publishReplyTopic(MemoModelPost post, String replyText) async {
-    MemoVerificationResponse verifier = MemoVerifier(replyText).checkAllPostValidations();
+  Future<dynamic> publishReplyTopic(MemoModelPost post) async {
+    MemoVerificationResponse verifier = MemoVerifier(post.text!).checkAllPostValidations();
     if (verifier == MemoVerificationResponse.valid) {
-      return ref.read(memoAccountantProvider).publishReplyTopic(post, replyText);
+      return ref.read(memoAccountantProvider).publishReplyTopic(post);
     } else {
       return verifier;
     }
   }
 
-  Future<dynamic> publishReplyHashtags(MemoModelPost post, String text) async {
-    MemoVerificationResponse verifier = MemoVerifier(text).checkAllPostValidations();
+  Future<dynamic> publishReplyHashtags(MemoModelPost post) async {
+    MemoVerificationResponse verifier = MemoVerifier(post.text!).checkAllPostValidations();
     if (verifier != MemoVerificationResponse.valid) return verifier;
-    return ref.read(memoAccountantProvider).publishReplyHashtags(post, text);
+    return ref.read(memoAccountantProvider).publishReplyHashtags(post);
   }
 
   Future<dynamic> publishImageOrVideo(String text, String? topic, {bool validate = false}) async {

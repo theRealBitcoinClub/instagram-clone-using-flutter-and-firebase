@@ -149,16 +149,16 @@ class MemoAccountant {
   }
 
   // Public methods that now enqueue requests
-  Future<MemoAccountantResponse> publishReplyTopic(MemoModelPost post, String postReply) {
-    return _enqueueRequest(MemoRequestType.publishReplyTopic, data: {'post': post, 'postReply': postReply});
+  Future<MemoAccountantResponse> publishReplyTopic(MemoModelPost post) {
+    return _enqueueRequest(MemoRequestType.publishReplyTopic, data: {'post': post, 'postReply': post.text});
   }
 
   Future<MemoAccountantResponse> publishLike(MemoModelPost post) {
     return _enqueueRequest(MemoRequestType.publishLike, data: {'post': post});
   }
 
-  Future<MemoAccountantResponse> publishReplyHashtags(MemoModelPost post, String text) {
-    return _enqueueRequest(MemoRequestType.publishReplyHashtags, data: {'post': post, 'text': text});
+  Future<MemoAccountantResponse> publishReplyHashtags(MemoModelPost post) {
+    return _enqueueRequest(MemoRequestType.publishReplyHashtags, data: {'post': post, 'text': post.text});
   }
 
   Future<MemoAccountantResponse> publishImgurOrYoutube(String? topic, String text) {

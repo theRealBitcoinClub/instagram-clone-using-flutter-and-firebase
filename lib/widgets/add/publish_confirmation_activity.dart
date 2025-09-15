@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/screens/add/add_post_providers.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/add/tip_information_card.dart';
 
@@ -56,6 +55,8 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
 
   @override
   void dispose() {
+    ref.read(userProvider)!.temporaryTipReceiver = null;
+    ref.read(userProvider)!.temporaryTipAmount = null;
     _controller.dispose();
     super.dispose();
   }
@@ -127,10 +128,14 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       builder: (dialogContext) => DeleteConfirmationDialog(
         theme: Theme.of(context),
         onDelete: () {
+          ref.read(userProvider)!.temporaryTipReceiver = null;
+          ref.read(userProvider)!.temporaryTipAmount = null;
           Navigator.of(dialogContext).pop();
           Navigator.of(context).pop(false);
         },
         onCancel: () {
+          ref.read(userProvider)!.temporaryTipReceiver = null;
+          ref.read(userProvider)!.temporaryTipAmount = null;
           Navigator.of(dialogContext).pop();
         },
       ),
@@ -154,10 +159,10 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
 
   Widget _buildMediaPreview(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     final post = widget.post;
-    post.imgurUrl = post.imgurUrl ?? ref.read(imgurUrlProvider);
-    post.youtubeId = post.youtubeId ?? ref.read(youtubeVideoIdProvider);
-    post.ipfsCid = post.ipfsCid ?? ref.read(ipfsCidProvider);
-    post.videoUrl = post.videoUrl ?? ref.read(odyseeUrlProvider);
+    // post.imgurUrl = post.imgurUrl ?? ref.read(imgurUrlProvider);
+    // post.youtubeId = post.youtubeId ?? ref.read(youtubeVideoIdProvider);
+    // post.ipfsCid = post.ipfsCid ?? ref.read(ipfsCidProvider);
+    // post.videoUrl = post.videoUrl ?? ref.read(odyseeUrlProvider);
 
     if (post.imgurUrl?.isNotEmpty == true) {
       return ImgurMediaWidget(theme: theme, colorScheme: colorScheme, textTheme: textTheme, imgurUrl: post.imgurUrl!);
@@ -231,7 +236,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
               if (widget.post.text != null) Text(widget.post.text!, style: textTheme.bodyLarge),
               const SizedBox(height: 12),
               if (widget.post.tagIds.isNotEmpty) HashtagDisplayWidget(hashtags: widget.post.tagIds, theme: theme),
-              const SizedBox(height: 16),
+              if (widget.post.tagIds.isNotEmpty) const SizedBox(height: 16),
               _buildMediaPreview(theme, colorScheme, textTheme),
               const SizedBox(height: 4),
               TipInformationCard(post: widget.post),
@@ -249,7 +254,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
                       child: Text(
-                        'DELETE',
+                        'CANCEL',
                         style: textTheme.labelLarge?.copyWith(color: colorScheme.onError, fontWeight: FontWeight.bold),
                       ),
                     ),

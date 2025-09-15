@@ -14,6 +14,7 @@ import 'package:mahakka/widgets/unified_video_player.dart';
 import '../../memo/base/text_input_verifier.dart';
 import '../../memo/memo_reg_exp.dart';
 import '../../providers/post_creator_provider.dart';
+import '../add/publish_confirmation_activity.dart';
 import '../unified_image_widget.dart';
 import 'post_card_footer.dart';
 import 'post_card_header.dart';
@@ -429,7 +430,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     }
   }
 
-  void _onSend() {
+  void _onSend() async {
     if (!mounted) return;
     final String textToSend = _textEditController.text.trim();
     final verifier = MemoVerifierDecorator(textToSend)
@@ -438,6 +439,7 @@ class _PostCardState extends ConsumerState<PostCard> {
         .addValidator(InputValidators.verifyHashtags)
         .addValidator(InputValidators.verifyTopics)
         .addValidator(InputValidators.verifyUrl)
+        .addValidator(InputValidators.verifyNoTopicNorTag)
         .addValidator(InputValidators.verifyOffensiveWords);
 
     final result = verifier.getResult();
@@ -446,12 +448,57 @@ class _PostCardState extends ConsumerState<PostCard> {
       return;
     }
 
-    if (_hasSelectedTopic) {
-      _publishReplyTopic(textToSend);
-    } else {
-      _publishReplyHashtags(textToSend);
+    MemoModelPost postCopy = widget.post.copyWith(
+      text: textToSend,
+      tagIds: MemoRegExp.extractHashtags(textToSend),
+      topicId: MemoRegExp.extractTopics(textToSend).isNotEmpty ? MemoRegExp.extractTopics(textToSend).first : null,
+    );
+
+    setState(() => _isSendingTx = true);
+
+    try {
+      if (_hasSelectedTopic) {
+        await _publishReplyTopic(postCopy);
+      } else {
+        await _publishReplyHashtags(postCopy);
+      }
+    } catch (e, s) {
+      _logError("Error during reply publication", e, s);
+      if (mounted) {
+        showSnackBar(type: SnackbarType.error, "Failed to publish reply $e", context);
+      }
+    } finally {
+      ref.read(userProvider)!.temporaryTipReceiver = null;
+      ref.read(userProvider)!.temporaryTipAmount = null;
+      if (mounted) {
+        setState(() => _isSendingTx = false);
+      }
     }
   }
+  // void _onSend() {
+  //   if (!mounted) return;
+  //   final String textToSend = _textEditController.text.trim();
+  //   final verifier = MemoVerifierDecorator(textToSend)
+  //       .addValidator(InputValidators.verifyPostLength)
+  //       .addValidator(InputValidators.verifyMinWordCount)
+  //       .addValidator(InputValidators.verifyHashtags)
+  //       .addValidator(InputValidators.verifyTopics)
+  //       .addValidator(InputValidators.verifyUrl)
+  //       .addValidator(InputValidators.verifyNoTopicNorTag)
+  //       .addValidator(InputValidators.verifyOffensiveWords);
+  //
+  //   final result = verifier.getResult();
+  //   if (result != MemoVerificationResponse.valid) {
+  //     _showVerificationResponse(result, context);
+  //     return;
+  //   }
+  //
+  //   if (_hasSelectedTopic) {
+  //     _publishReplyTopic(textToSend);
+  //   } else {
+  //     _publishReplyHashtags(textToSend);
+  //   }
+  // }
 
   void _onCancel() {
     if (!mounted) return;
@@ -474,16 +521,30 @@ class _PostCardState extends ConsumerState<PostCard> {
     _initializeSelectedHashtags();
   }
 
-  Future<void> _publishReplyTopic(String text) async {
-    var result = await ref.read(postRepositoryProvider).publishReplyTopic(widget.post, text);
+  Future<void> _publishReplyTopic(MemoModelPost postCopy) async {
+    bool? shouldPublish = await _showConfirmationActivity(postCopy);
+
+    if (!mounted || shouldPublish != true) return;
+
+    var result = await ref.read(postRepositoryProvider).publishReplyTopic(postCopy);
     if (!mounted) return;
     _showVerificationResponse(result, context);
   }
 
-  Future<void> _publishReplyHashtags(String text) async {
-    var result = await ref.read(postRepositoryProvider).publishReplyHashtags(widget.post, text);
+  Future<void> _publishReplyHashtags(MemoModelPost postCopy) async {
+    bool? shouldPublish = await _showConfirmationActivity(postCopy);
+
+    if (!mounted || shouldPublish != true) return;
+
+    var result = await ref.read(postRepositoryProvider).publishReplyHashtags(postCopy);
     if (!mounted) return;
     _showVerificationResponse(result, context);
+  }
+
+  Future<bool?> _showConfirmationActivity(MemoModelPost postCopy) async {
+    // Show confirmation dialog
+    final bool? shouldPublish = await PublishConfirmationActivity.show(context, post: postCopy);
+    return shouldPublish;
   }
 
   void _showVerificationResponse(dynamic result, BuildContext ctx) {

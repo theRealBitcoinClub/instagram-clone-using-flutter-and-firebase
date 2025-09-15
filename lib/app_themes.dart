@@ -99,15 +99,14 @@ final ThemeData lightTheme = ThemeData(
   ),
 
   // Bottom App Bar Theme
-  bottomAppBarTheme: BottomAppBarThemeData(
-    color: Colors.white,
-    elevation: 8.0,
-    shadowColor: Colors.black.withOpacity(0.2),
-    surfaceTintColor: primaryGreen.withOpacity(0.08),
-    height: kBottomNavigationBarHeight + 16,
-    padding: EdgeInsets.zero,
-  ),
-
+  // bottomAppBarTheme: BottomAppBarThemeData(
+  //   color: Colors.white,
+  //   elevation: 8.0,
+  //   shadowColor: Colors.black.withOpacity(0.2),
+  //   surfaceTintColor: primaryGreen.withOpacity(0.08),
+  //   height: kBottomNavigationBarHeight + 16,
+  //   padding: EdgeInsets.zero,
+  // ),
   colorScheme: ColorScheme.light(
     primary: primaryGreen,
     onPrimary: Colors.white, // Text/icons on primary color
@@ -246,15 +245,14 @@ final ThemeData darkTheme = ThemeData(
   ),
 
   // Bottom App Bar Theme
-  bottomAppBarTheme: BottomAppBarThemeData(
-    color: secondaryDarkGrey,
-    elevation: 8.0,
-    shadowColor: Colors.black.withOpacity(0.4),
-    surfaceTintColor: lightGreenAccent.withOpacity(0.08),
-    height: kBottomNavigationBarHeight + 16,
-    padding: EdgeInsets.zero,
-  ),
-
+  // bottomAppBarTheme: BottomAppBarThemeData(
+  //   color: secondaryDarkGrey,
+  //   elevation: 8.0,
+  //   shadowColor: Colors.black.withOpacity(0.4),
+  //   surfaceTintColor: lightGreenAccent.withOpacity(0.08),
+  //   height: kBottomNavigationBarHeight + 16,
+  //   padding: EdgeInsets.zero,
+  // ),
   colorScheme: ColorScheme.dark(
     primary: primaryGreen,
     onPrimary: Colors.white,

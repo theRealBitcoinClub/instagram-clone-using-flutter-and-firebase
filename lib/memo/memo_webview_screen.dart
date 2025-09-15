@@ -113,6 +113,23 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
     final theme = Theme.of(context);
     _isDarkTheme = theme.brightness == Brightness.dark;
 
+    // Define theme colors
+    final backgroundColor = _isDarkTheme ? '#121212' : '#f8f8f8';
+    final textColor = _isDarkTheme ? '#d2d2d2' : '#000';
+    final postBackground = _isDarkTheme ? '#1e1e1e' : '#fff';
+    final postOddBackground = _isDarkTheme ? '#2a2a2a' : '#f8f8f8';
+    final borderColor = _isDarkTheme ? '#333' : '#e8e8e8';
+    final nameColor = _isDarkTheme ? '#e0e0e0' : '#555';
+    final profileColor = _isDarkTheme ? '#d2d2d2' : '#333';
+    final linkColor = _isDarkTheme ? '#6eb332' : '#487521';
+    final normalLinkColor = _isDarkTheme ? '#e0e0e0' : '#444';
+    final mutedTextColor = _isDarkTheme ? '#a0a0a0' : '#666';
+    final inputBackground = _isDarkTheme ? '#2d2d2d' : '#fff';
+    final inputBorderColor = _isDarkTheme ? '#444' : '#ccc';
+    final buttonBackground = _isDarkTheme ? '#2d2d2d' : '#f0f0f0';
+    final buttonHoverBackground = _isDarkTheme ? '#3d3d3d' : '#e0e0e0';
+    final shadowColor = _isDarkTheme ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)';
+
     String css =
         '''
       <style>
@@ -131,57 +148,107 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
           display: none !important;
         }
 
-        /* Remove default body padding/margin */
+        /* Global styles */
+        * {
+          box-sizing: border-box !important;
+        }
+        
         body {
           margin: 0 !important;
           padding: 0 !important;
           overflow-x: hidden !important;
+          background: $backgroundColor !important;
+          color: $textColor !important;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
 
-        /* Theme-aware styling */
-        body {
-          background: ${_isDarkTheme ? '#121212' : '#f8f8f8'} !important;
-          color: ${_isDarkTheme ? '#d2d2d2' : '#000'} !important;
+        /* Container adjustments */
+        .container {
+          width: 100% !important;
+          max-width: 100% !important;
+          padding: 0 12px !important;
+          margin-top: 0 !important;
         }
 
-        /* Post styling - make posts more prominent */
+        /* Post styling */
         .post {
-          background: ${_isDarkTheme ? '#1e1e1e' : '#fff'} !important;
-          border-color: ${_isDarkTheme ? '#333' : '#e8e8e8'} !important;
-          border-radius: 8px !important;
-          margin: 12px 0 !important;
+          background: $postBackground !important;
+          border: 1px solid $borderColor !important;
+          border-radius: 12px !important;
+          margin: 16px 0 !important;
           padding: 16px !important;
-          box-shadow: 0 2px 4px ${_isDarkTheme ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'} !important;
+          box-shadow: 0 2px 8px $shadowColor !important;
         }
 
         .post.post-odd {
-          background: ${_isDarkTheme ? '#2a2a2a' : '#f8f8f8'} !important;
+          background: $postOddBackground !important;
         }
 
-        /* Text colors */
+        /* Post header elements */
         .post .name {
-          color: ${_isDarkTheme ? '#e0e0e0' : '#555'} !important;
+          color: $nameColor !important;
           font-weight: bold !important;
+          font-size: 16px !important;
+          margin-bottom: 4px !important;
         }
 
         .post .name .profile {
-          color: ${_isDarkTheme ? '#d2d2d2' : '#333'} !important;
+          color: $profileColor !important;
+          text-decoration: none !important;
+        }
+
+        .post .text-muted {
+          color: $mutedTextColor !important;
+          font-size: 14px !important;
+        }
+
+        /* Post content */
+        .post .content {
+          color: $textColor !important;
+          font-size: 16px !important;
+          line-height: 1.5 !important;
+          margin: 12px 0 !important;
+          word-break: break-word !important;
+        }
+
+        .post .content p {
+          margin: 8px 0 !important;
         }
 
         /* Links */
         a {
-          color: ${_isDarkTheme ? '#6eb332' : '#487521'} !important;
+          color: $linkColor !important;
+          text-decoration: none !important;
+        }
+
+        a:hover {
+          text-decoration: underline !important;
         }
 
         a.normal {
-          color: ${_isDarkTheme ? '#e0e0e0' : '#444'} !important;
+          color: $normalLinkColor !important;
+        }
+
+        /* Buttons and interactive elements */
+        .btn {
+          background: $buttonBackground !important;
+          color: $textColor !important;
+          border: 1px solid $inputBorderColor !important;
+          border-radius: 4px !important;
+          padding: 6px 12px !important;
+        }
+
+        .btn:hover {
+          background: $buttonHoverBackground !important;
         }
 
         /* Input fields */
         .form-control {
-          color: ${_isDarkTheme ? '#e0e0e0' : 'inherit'} !important;
-          background: ${_isDarkTheme ? '#2d2d2d' : '#fff'} !important;
-          border-color: ${_isDarkTheme ? '#444' : '#ccc'} !important;
+          color: $textColor !important;
+          background: $inputBackground !important;
+          border: 1px solid $inputBorderColor !important;
+          border-radius: 4px !important;
+          padding: 8px 12px !important;
         }
 
         /* Remove any fixed positioning that might cause issues */
@@ -192,12 +259,31 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
           height: auto !important;
         }
 
-        /* Ensure content takes full width */
-        .container {
-          width: 100% !important;
-          max-width: 100% !important;
-          padding: 0 8px !important;
-          margin-top: 0 !important;
+        /* Additional post elements */
+        .post .actions {
+          border-top: 1px solid $borderColor !important;
+          padding-top: 12px !important;
+          margin-top: 12px !important;
+        }
+
+        .post .actions a {
+          margin-right: 16px !important;
+          font-size: 14px !important;
+        }
+
+        .post .media {
+          margin: 12px 0 !important;
+          border-radius: 8px !important;
+          overflow: hidden !important;
+        }
+
+        .post .badge {
+          background: $buttonBackground !important;
+          color: $textColor !important;
+          border: 1px solid $inputBorderColor !important;
+          border-radius: 4px !important;
+          padding: 2px 6px !important;
+          font-size: 12px !important;
         }
 
         /* Force portrait-only layout */
@@ -213,13 +299,18 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
         /* Mobile responsiveness */
         @media (max-width: 767px) {
           .post {
-            margin: 8px 0 !important;
+            margin: 12px 0 !important;
             border-radius: 0 !important;
             padding: 12px !important;
+            box-shadow: none !important;
           }
           
           .container {
-            padding: 0 4px !important;
+            padding: 0 8px !important;
+          }
+          
+          .post .content {
+            font-size: 15px !important;
           }
         }
       </style>
@@ -266,15 +357,31 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
         });
         
         // Force body to use theme colors
-        document.body.style.backgroundColor = '${_isDarkTheme ? '#121212' : '#f8f8f8'}';
-        document.body.style.color = '${_isDarkTheme ? '#d2d2d2' : '#000'}';
+        document.body.style.backgroundColor = '$backgroundColor';
+        document.body.style.color = '$textColor';
         
         // Add dark class if needed
-        if (${_isDarkTheme}) {
+        if ($_isDarkTheme) {
           document.body.classList.add('dark');
         } else {
           document.body.classList.remove('dark');
         }
+        
+        // Additional theme-specific adjustments
+        var allElements = document.querySelectorAll('*');
+        allElements.forEach(function(el) {
+          // Fix any remaining background colors
+          var bgColor = window.getComputedStyle(el).backgroundColor;
+          if (bgColor === 'rgb(248, 248, 248)' || bgColor === 'rgba(0, 0, 0, 0)') {
+            el.style.backgroundColor = '$_isDarkTheme' ? '$backgroundColor' : '$postBackground';
+          }
+          
+          // Fix any remaining text colors
+          var txtColor = window.getComputedStyle(el).color;
+          if (txtColor === 'rgb(0, 0, 0)' || txtColor === 'rgb(51, 51, 51)') {
+            el.style.color = '$textColor';
+          }
+        });
         
         // Calculate height of removed elements and scroll down
         setTimeout(function() {

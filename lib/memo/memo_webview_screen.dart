@@ -25,6 +25,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   String _currentPath = '/';
   bool _isLoading = true;
   bool _isDarkTheme = false;
+  bool _cssInjected = false; // Track if CSS has been injected
 
   @override
   void initState() {
@@ -64,6 +65,11 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   }
 
   void _loadUrl(String url) {
+    // Reset CSS injection state when loading a new URL
+    setState(() {
+      _cssInjected = false;
+    });
+
     // Use loadUrl() from InAppWebViewController
     _webViewController.loadUrl(urlRequest: URLRequest(url: WebUri.uri(Uri.parse(url))));
   }
@@ -316,95 +322,107 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
       </style>
     ''';
 
-    // InAppWebView uses evaluateJavascript()
-    await _webViewController.evaluateJavascript(
-      source:
-          '''
-      (function() {
-        // First inject CSS
-        var style = document.createElement('style');
-        style.innerHTML = `$css`;
-        document.head.appendChild(style);
-        
-        // Remove unwanted elements
-        var elementsToRemove = [
-          '.pagination-center',
-          '.load-more-wrapper',
-          '.center',
-          '.form-new-topic-message',
-          '.block-explorer',
-          '.actions',
-          '.pagination-right',
-          '.topics-index-head',
-          '.navbar',
-          '.footer',
-          '#mobile-app-banner',
-          '.alert-banner',
-          '.posts-nav',
-          '.posts-nav-dropdown',
-          '.side-header-spacer',
-          '.android-link',
-          '.ios-link'
-        ];
-        
-        elementsToRemove.forEach(function(selector) {
-          var elements = document.querySelectorAll(selector);
-          elements.forEach(function(el) {
-            el.remove();
+    try {
+      // InAppWebView uses evaluateJavascript()
+      await _webViewController.evaluateJavascript(
+        source:
+            '''
+        (function() {
+          // First inject CSS
+          var style = document.createElement('style');
+          style.innerHTML = `$css`;
+          document.head.appendChild(style);
+          
+          // Remove unwanted elements
+          var elementsToRemove = [
+            '.pagination-center',
+            '.load-more-wrapper',
+            '.center',
+            '.form-new-topic-message',
+            '.block-explorer',
+            '.actions',
+            '.pagination-right',
+            '.topics-index-head',
+            '.navbar',
+            '.footer',
+            '#mobile-app-banner',
+            '.alert-banner',
+            '.posts-nav',
+            '.posts-nav-dropdown',
+            '.side-header-spacer',
+            '.android-link',
+            '.ios-link'
+          ];
+          
+          elementsToRemove.forEach(function(selector) {
+            var elements = document.querySelectorAll(selector);
+            elements.forEach(function(el) {
+              el.remove();
+            });
           });
-        });
-        
-        // Remove rows that don't contain posts
-        var rows = document.querySelectorAll('.row');
-        rows.forEach(function(row) {
-          var hasPost = row.querySelector('.post');
-          var hasCol = row.querySelector('[class*="col-"]');
-          if (!hasPost && !hasCol) {
-            row.remove();
-          }
-        });
-        
-        // Force body to use theme colors
-        document.body.style.backgroundColor = '$backgroundColor';
-        document.body.style.color = '$textColor';
-        
-        // Add dark class if needed
-        if ($_isDarkTheme) {
-          document.body.classList.add('dark');
-        } else {
-          document.body.classList.remove('dark');
-        }
-        
-        // Additional theme-specific adjustments
-        var allElements = document.querySelectorAll('*');
-        allElements.forEach(function(el) {
-          // Fix any remaining background colors
-          var bgColor = window.getComputedStyle(el).backgroundColor;
-          if (bgColor === 'rgb(248, 248, 248)' || bgColor === 'rgba(0, 0, 0, 0)') {
-            el.style.backgroundColor = '$_isDarkTheme' ? '$backgroundColor' : '$postBackground';
+          
+          // Remove rows that don't contain posts
+          var rows = document.querySelectorAll('.row');
+          rows.forEach(function(row) {
+            var hasPost = row.querySelector('.post');
+            var hasCol = row.querySelector('[class*="col-"]');
+            if (!hasPost && !hasCol) {
+              row.remove();
+            }
+          });
+          
+          // Force body to use theme colors
+          document.body.style.backgroundColor = '$backgroundColor';
+          document.body.style.color = '$textColor';
+          
+          // Add dark class if needed
+          if ($_isDarkTheme) {
+            document.body.classList.add('dark');
+          } else {
+            document.body.classList.remove('dark');
           }
           
-          // Fix any remaining text colors
-          var txtColor = window.getComputedStyle(el).color;
-          if (txtColor === 'rgb(0, 0, 0)' || txtColor === 'rgb(51, 51, 51)') {
-            el.style.color = '$textColor';
-          }
-        });
-        
-        // Calculate height of removed elements and scroll down
-        setTimeout(function() {
-          // Scroll to the top of the post content
-          var firstPost = document.querySelector('.post');
-          if (firstPost) {
-            firstPost.scrollIntoView({behavior: 'smooth'});
-          }
+          // Additional theme-specific adjustments
+          var allElements = document.querySelectorAll('*');
+          allElements.forEach(function(el) {
+            // Fix any remaining background colors
+            var bgColor = window.getComputedStyle(el).backgroundColor;
+            if (bgColor === 'rgb(248, 248, 248)' || bgColor === 'rgba(0, 0, 0, 0)') {
+              el.style.backgroundColor = '$_isDarkTheme' ? '$backgroundColor' : '$postBackground';
+            }
+            
+            // Fix any remaining text colors
+            var txtColor = window.getComputedStyle(el).color;
+            if (txtColor === 'rgb(0, 0, 0)' || txtColor === 'rgb(51, 51, 51)') {
+              el.style.color = '$textColor';
+            }
+          });
           
-          // Alternatively, scroll by estimated height of removed elements
-          window.scrollBy(0, 120);
-        }, 300);
-      })();
-    ''',
-    );
+          // Calculate height of removed elements and scroll down
+          setTimeout(function() {
+            // Scroll to the top of the post content
+            var firstPost = document.querySelector('.post');
+            if (firstPost) {
+              firstPost.scrollIntoView({behavior: 'smooth'});
+            }
+            
+            // Alternatively, scroll by estimated height of removed elements
+            window.scrollBy(0, 120);
+          }, 300);
+        })();
+      ''',
+      );
+
+      // Mark CSS as injected and hide loading indicator
+      setState(() {
+        _cssInjected = true;
+      });
+    } catch (e) {
+      // If injection fails, still mark as injected to avoid infinite loading
+      setState(() {
+        _cssInjected = true;
+      });
+    }
   }
 
   @override
@@ -480,17 +498,21 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                     if (url != null) {
                       setState(() {
                         _isLoading = true;
+                        _cssInjected = false; // Reset CSS injection state
                         _updateCurrentPath(url.toString());
                       });
                     }
                   },
-                  onLoadStop: (controller, url) {
+                  onLoadStop: (controller, url) async {
+                    // Wait for CSS injection to complete before hiding loading indicator
+                    await _injectCSS();
                     setState(() {
-                      _isLoading = false;
+                      // Only hide loading if CSS injection is complete
+                      _isLoading = !_cssInjected;
                     });
-                    _injectCSS();
                   },
                 ),
+                // Show loading indicator only when loading and CSS not injected yet
                 if (_isLoading)
                   Positioned(
                     top: 0,

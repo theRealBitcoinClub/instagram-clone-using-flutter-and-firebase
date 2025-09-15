@@ -1,8 +1,8 @@
 // screens/memo_webview_screen.dart
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../provider/user_provider.dart';
 import '../providers/webview_providers.dart';
@@ -133,13 +133,21 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
     final inputBackground = _isDarkTheme ? '#2d2d2d' : '#fff';
     final inputBorderColor = _isDarkTheme ? '#444' : '#ccc';
     final buttonBackground = _isDarkTheme ? '#2d2d2d' : '#f0f0f0';
-    final buttonHoverBackground = _isDarkTheme ? '#3d3d3d' : '#e0e0e0';
+    final buttonHoverBackground = _isDarkTheme ? '#3d3d3d' : '#e0e0f0';
     final shadowColor = _isDarkTheme ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)';
 
     String css =
         '''
       <style>
         /* Hide navigation and other unwanted elements */
+        .pagination-center,
+    .load-more-wrapper,
+    .center,
+    .form-new-topic-message,
+    .block-explorer,
+    .actions,
+    .pagination-right,
+    .topics-index-head,
         .navbar,
         .footer,
         #mobile-app-banner,
@@ -449,44 +457,35 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
           }
         });
 
-        return CupertinoPageScaffold(
-          navigationBar: CupertinoNavigationBar(
-            backgroundColor: theme.appBarTheme.backgroundColor,
-            leading: CupertinoButton(
-              padding: EdgeInsets.zero,
-              minSize: 0,
-              onPressed: _loadProfile,
-              child: Icon(CupertinoIcons.person_circle_fill, color: theme.iconTheme.color, size: 28),
+        return Scaffold(
+          appBar: AppBar(
+            toolbarHeight: 50,
+            centerTitle: false,
+            titleSpacing: NavigationToolbar.kMiddleSpacing,
+            leading: IconButton(icon: const Icon(size: 32, Icons.person_outline), tooltip: "My Profile", onPressed: _loadProfile),
+            title: TextButton(
+              onPressed: () {
+                final currentUrl = _webViewController.getUrl().toString() ?? '';
+                if (currentUrl.isNotEmpty) {
+                  launchUrl(Uri.parse(currentUrl));
+                }
+              },
+              style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
+              child: Text(
+                _currentPath,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: (theme.appBarTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface).withOpacity(0.7),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            middle: Text(_currentPath, maxLines: 1, overflow: TextOverflow.ellipsis),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  minSize: 0,
-                  onPressed: _loadFeed,
-                  child: Icon(CupertinoIcons.news_solid, color: theme.iconTheme.color, size: 28),
-                ),
-                SizedBox(width: 20),
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  minSize: 0,
-                  onPressed: _loadTags,
-                  child: Icon(CupertinoIcons.tag_fill, color: theme.iconTheme.color, size: 28),
-                ),
-                SizedBox(width: 20),
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  minSize: 0,
-                  onPressed: _loadTopics,
-                  child: Icon(CupertinoIcons.at, color: theme.iconTheme.color, size: 28),
-                ),
-              ],
-            ),
-            border: Border(bottom: BorderSide(color: theme.dividerColor.withOpacity(0.5), width: 0.5)),
+            actions: [
+              IconButton(icon: const Icon(size: 28, Icons.feed_outlined), tooltip: "Feed", onPressed: _loadFeed),
+              IconButton(icon: const Icon(size: 28, Icons.tag_outlined), tooltip: "Tags", onPressed: _loadTags),
+              IconButton(icon: const Icon(size: 28, Icons.alternate_email_rounded), tooltip: "Topics", onPressed: _loadTopics),
+            ],
           ),
-          child: SafeArea(
+          body: SafeArea(
             child: Stack(
               children: [
                 // Use InAppWebView widget

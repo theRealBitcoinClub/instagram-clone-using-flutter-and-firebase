@@ -212,6 +212,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
+          toolbarHeight: 50,
           title: Row(
             children: [
               BurnerBalanceWidget(),

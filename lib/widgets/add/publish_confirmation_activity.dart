@@ -203,6 +203,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
     var colorBottomBarIcon = colorScheme.onSurfaceVariant;
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 50,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: colorScheme.onPrimary),
           onPressed: () => _showDeleteConfirmation(),
@@ -283,12 +284,18 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
         ),
       ),
       bottomNavigationBar: BottomAppBar(
-        color: colorScheme.surface,
-        elevation: 8,
-        shadowColor: colorScheme.shadow,
-        surfaceTintColor: colorScheme.surfaceTint,
-        height: kBottomNavigationBarHeight + 16,
-        padding: EdgeInsets.zero,
+        color: Theme.of(context).colorScheme.surface,
+        elevation: Theme.of(context).bottomAppBarTheme.elevation,
+        shadowColor: Theme.of(context).colorScheme.shadow,
+        surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+        height: Theme.of(context).bottomAppBarTheme.height,
+        padding: Theme.of(context).bottomAppBarTheme.padding,
+        // color: colorScheme.surface,
+        // elevation: 8,
+        // shadowColor: colorScheme.shadow,
+        // surfaceTintColor: colorScheme.surfaceTint,
+        // height: kBottomNavigationBarHeight + 16,
+        // padding: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(

@@ -21,7 +21,8 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
     final ColorScheme colorScheme = theme.colorScheme;
 
     return AppBar(
-      toolbarHeight: 40,
+      toolbarHeight: 50,
+      elevation: 4,
       centerTitle: false,
       titleSpacing: NavigationToolbar.kMiddleSpacing,
       leading: IconButton(

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // --- Color Palette ---
@@ -55,6 +56,24 @@ TextTheme _buildTextTheme(TextTheme base, Color textColor, Color displayColor) {
       );
 }
 
+// --- Cupertino Text Theme ---
+CupertinoTextThemeData _buildCupertinoTextTheme(Brightness brightness, Color textColor, Color displayColor) {
+  // Use the default CupertinoTextThemeData and adjust colors based on brightness
+  final base = CupertinoTextThemeData();
+
+  return base.copyWith(
+    textStyle: TextStyle(fontSize: 14.0, color: textColor),
+    navTitleTextStyle: TextStyle(
+      fontSize: 18.0,
+      fontWeight: FontWeight.w600,
+      color: brightness == Brightness.light ? Colors.white : textOnDark,
+    ),
+    navLargeTitleTextStyle: TextStyle(fontSize: 34.0, fontWeight: FontWeight.w700, color: displayColor),
+    tabLabelTextStyle: TextStyle(fontSize: 10.0, color: textColor),
+    pickerTextStyle: TextStyle(fontSize: 21.0, color: textColor),
+  );
+}
+
 // --- Light Theme ---
 final ThemeData lightTheme = ThemeData(
   brightness: Brightness.light,
@@ -66,15 +85,30 @@ final ThemeData lightTheme = ThemeData(
   cardColor: Colors.white,
   dividerColor: primaryLightGrey, // Subtle dividers
   hintColor: subtleTextOnLight, // For hint text in TextFields
-  // In your app_themes.dart, inside lightTheme
+  // Bottom Navigation Bar Theme
   bottomNavigationBarTheme: BottomNavigationBarThemeData(
-    backgroundColor: Colors.white, // Or your desired light theme tab bar color
-    selectedItemColor: primaryGreen, // Will be overridden by CupertinoTabBar.activeColor
-    unselectedItemColor: primaryLightGrey, // Will be overridden by CupertinoTabBar.inactiveColor
-    // ... other properties if needed by Material BottomNavigationBar elsewhere
+    backgroundColor: Colors.white,
+    selectedItemColor: primaryGreen,
+    unselectedItemColor: subtleTextOnLight,
+    elevation: 4.0,
+    type: BottomNavigationBarType.fixed,
+    selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+    unselectedLabelStyle: const TextStyle(fontSize: 12),
+    showSelectedLabels: true,
+    showUnselectedLabels: true,
   ),
 
-  colorScheme: const ColorScheme.light(
+  // Bottom App Bar Theme
+  bottomAppBarTheme: BottomAppBarThemeData(
+    color: Colors.white,
+    elevation: 8.0,
+    shadowColor: Colors.black.withOpacity(0.2),
+    surfaceTintColor: primaryGreen.withOpacity(0.08),
+    height: kBottomNavigationBarHeight + 16,
+    padding: EdgeInsets.zero,
+  ),
+
+  colorScheme: ColorScheme.light(
     primary: primaryGreen,
     onPrimary: Colors.white, // Text/icons on primary color
     secondary: lightGreenAccent, // Lighter green for accents
@@ -88,6 +122,8 @@ final ThemeData lightTheme = ThemeData(
     surfaceVariant: primaryLightGrey, // For slightly different surfaces
     onSurfaceVariant: textOnLight, // Text on surfaceVariant
     outline: primaryLightGrey, // Borders
+    shadow: Colors.black.withOpacity(0.2), // For BottomAppBar shadow
+    surfaceTint: primaryGreen.withOpacity(0.08), // For BottomAppBar surface tint
   ),
 
   appBarTheme: const AppBarTheme(
@@ -95,9 +131,22 @@ final ThemeData lightTheme = ThemeData(
     foregroundColor: Colors.white, // Text and icons on AppBar
     elevation: 2.0,
     titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+    toolbarTextStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white),
+    iconTheme: IconThemeData(color: Colors.white),
+    actionsIconTheme: IconThemeData(color: Colors.white),
   ),
 
   textTheme: _buildTextTheme(ThemeData.light().textTheme, textOnLight, primaryDarkGrey),
+
+  // Cupertino Theme for iOS-style widgets
+  cupertinoOverrideTheme: CupertinoThemeData(
+    brightness: Brightness.light,
+    primaryColor: primaryGreen,
+    primaryContrastingColor: Colors.white,
+    barBackgroundColor: primaryGreen,
+    scaffoldBackgroundColor: secondaryLightGrey,
+    textTheme: _buildCupertinoTextTheme(Brightness.light, textOnLight, primaryDarkGrey),
+  ),
 
   progressIndicatorTheme: const ProgressIndicatorThemeData(
     color: primaryGreen, // Green progress bars
@@ -161,6 +210,14 @@ final ThemeData lightTheme = ThemeData(
     selectionColor: lightGreenAccent.withOpacity(0.5),
     selectionHandleColor: primaryGreen,
   ),
+
+  // Icon button theme for BottomAppBar
+  iconButtonTheme: IconButtonThemeData(
+    style: IconButton.styleFrom(
+      foregroundColor: primaryDarkGrey, // Default icon color for BottomAppBar
+      disabledForegroundColor: primaryDarkGrey.withAlpha(111), // Disabled icon color
+    ),
+  ),
 );
 
 // --- Dark Theme ---
@@ -175,14 +232,30 @@ final ThemeData darkTheme = ThemeData(
   dividerColor: primaryLightGrey.withOpacity(0.3), // More subtle dividers on dark
   hintColor: subtleTextOnDark,
 
-  // In your app_themes.dart, inside darkTheme
+  // Bottom Navigation Bar Theme
   bottomNavigationBarTheme: BottomNavigationBarThemeData(
-    backgroundColor: secondaryDarkGrey, // Or your desired dark theme tab bar color
+    backgroundColor: secondaryDarkGrey,
     selectedItemColor: lightGreenAccent,
-    unselectedItemColor: primaryLightGrey.withOpacity(0.7),
+    unselectedItemColor: subtleTextOnDark,
+    elevation: 4.0,
+    type: BottomNavigationBarType.fixed,
+    selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+    unselectedLabelStyle: const TextStyle(fontSize: 12),
+    showSelectedLabels: true,
+    showUnselectedLabels: true,
   ),
 
-  colorScheme: const ColorScheme.dark(
+  // Bottom App Bar Theme
+  bottomAppBarTheme: BottomAppBarThemeData(
+    color: secondaryDarkGrey,
+    elevation: 8.0,
+    shadowColor: Colors.black.withOpacity(0.4),
+    surfaceTintColor: lightGreenAccent.withOpacity(0.08),
+    height: kBottomNavigationBarHeight + 16,
+    padding: EdgeInsets.zero,
+  ),
+
+  colorScheme: ColorScheme.dark(
     primary: primaryGreen,
     onPrimary: Colors.white,
     secondary: lightGreenAccent,
@@ -193,9 +266,11 @@ final ThemeData darkTheme = ThemeData(
     onBackground: textOnDark,
     error: Colors.red,
     onError: Colors.white,
-    surfaceVariant: Color(0xFF424242), // Slightly different dark surfaces
+    surfaceVariant: const Color(0xFF424242), // Slightly different dark surfaces
     onSurfaceVariant: textOnDark,
     outline: primaryLightGrey, // Borders
+    shadow: Colors.black.withOpacity(0.4), // For BottomAppBar shadow
+    surfaceTint: lightGreenAccent.withOpacity(0.08), // For BottomAppBar surface tint
   ),
 
   appBarTheme: AppBarTheme(
@@ -203,9 +278,22 @@ final ThemeData darkTheme = ThemeData(
     foregroundColor: Colors.white,
     elevation: 2.0,
     titleTextStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+    toolbarTextStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white),
+    iconTheme: const IconThemeData(color: Colors.white),
+    actionsIconTheme: const IconThemeData(color: Colors.white),
   ),
 
   textTheme: _buildTextTheme(ThemeData.dark().textTheme, textOnDark, lightGreenAccent),
+
+  // Cupertino Theme for iOS-style widgets
+  cupertinoOverrideTheme: CupertinoThemeData(
+    brightness: Brightness.dark,
+    primaryColor: primaryGreen,
+    primaryContrastingColor: Colors.white,
+    barBackgroundColor: secondaryDarkGrey,
+    scaffoldBackgroundColor: primaryDarkGrey,
+    textTheme: _buildCupertinoTextTheme(Brightness.dark, textOnDark, lightGreenAccent),
+  ),
 
   progressIndicatorTheme: const ProgressIndicatorThemeData(
     color: primaryGreen, // Green progress bars
@@ -270,14 +358,18 @@ final ThemeData darkTheme = ThemeData(
     selectionColor: primaryGreen.withOpacity(0.5),
     selectionHandleColor: lightGreenAccent,
   ),
-  /*
-  // In your app_themes.dart (inside lightTheme and darkTheme)
-  listTileTheme: ListTileThemeData(
-    iconColor: colorScheme.onSurfaceVariant, // Default color for leading/trailing icons
-    textColor: colorScheme.onSurface, // Default color for title
-    // selectedColor: colorScheme.primary, // Color when selected
-    // tileColor: colorScheme.surface, // Background color of the tile itself
-    // selectedTileColor: colorScheme.primary.withOpacity(0.1),
-    // contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
-  ),*/
+
+  // Icon button theme for BottomAppBar
+  iconButtonTheme: IconButtonThemeData(
+    style: IconButton.styleFrom(
+      foregroundColor: textOnDark, // Default icon color for BottomAppBar
+      disabledForegroundColor: textOnDark.withAlpha(111), // Disabled icon color
+    ),
+  ),
 );
+
+// Helper function to get appropriate icon color for BottomAppBar based on theme
+Color getBottomAppBarIconColor(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.brightness == Brightness.light ? primaryDarkGrey : textOnDark;
+}

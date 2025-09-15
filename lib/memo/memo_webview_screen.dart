@@ -1,7 +1,7 @@
 // screens/memo_webview_screen.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart'; // New import
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../provider/user_provider.dart';
@@ -65,7 +65,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
 
   void _loadUrl(String url) {
     // Use loadUrl() from InAppWebViewController
-    _webViewController.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+    _webViewController.loadUrl(urlRequest: URLRequest(url: WebUri.uri(Uri.parse(url))));
   }
 
   void _loadProfile() {
@@ -116,13 +116,18 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
     String css =
         '''
       <style>
-        /* Hide navigation elements */
+        /* Hide navigation and other unwanted elements */
         .navbar,
         .footer,
         #mobile-app-banner,
         .alert-banner,
         .posts-nav,
-        .posts-nav-dropdown {
+        .posts-nav-dropdown,
+        .side-header-spacer,
+        .row:not(.post):not([class*="col-"]),
+        .android-link,
+        .ios-link,
+        #mobile-app-banner {
           display: none !important;
         }
 
@@ -139,10 +144,14 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
           color: ${_isDarkTheme ? '#d2d2d2' : '#000'} !important;
         }
 
-        /* Post styling */
+        /* Post styling - make posts more prominent */
         .post {
           background: ${_isDarkTheme ? '#1e1e1e' : '#fff'} !important;
           border-color: ${_isDarkTheme ? '#333' : '#e8e8e8'} !important;
+          border-radius: 8px !important;
+          margin: 12px 0 !important;
+          padding: 16px !important;
+          box-shadow: 0 2px 4px ${_isDarkTheme ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'} !important;
         }
 
         .post.post-odd {
@@ -152,6 +161,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
         /* Text colors */
         .post .name {
           color: ${_isDarkTheme ? '#e0e0e0' : '#555'} !important;
+          font-weight: bold !important;
         }
 
         .post .name .profile {
@@ -187,13 +197,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
           width: 100% !important;
           max-width: 100% !important;
           padding: 0 8px !important;
-        }
-
-        /* Hide download APK box */
-        .android-link,
-        .ios-link,
-        #mobile-app-banner {
-          display: none !important;
+          margin-top: 0 !important;
         }
 
         /* Force portrait-only layout */
@@ -209,8 +213,9 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
         /* Mobile responsiveness */
         @media (max-width: 767px) {
           .post {
-            margin: 5px 0 !important;
+            margin: 8px 0 !important;
             border-radius: 0 !important;
+            padding: 12px !important;
           }
           
           .container {
@@ -225,16 +230,40 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
       source:
           '''
       (function() {
+        // First inject CSS
         var style = document.createElement('style');
         style.innerHTML = `$css`;
         document.head.appendChild(style);
         
-        // Remove existing navbar if present
-        var navbar = document.querySelector('.navbar');
-        if (navbar) navbar.remove();
+        // Remove unwanted elements
+        var elementsToRemove = [
+          '.navbar',
+          '.footer',
+          '#mobile-app-banner',
+          '.alert-banner',
+          '.posts-nav',
+          '.posts-nav-dropdown',
+          '.side-header-spacer',
+          '.android-link',
+          '.ios-link'
+        ];
         
-        var footer = document.querySelector('.footer');
-        if (footer) footer.remove();
+        elementsToRemove.forEach(function(selector) {
+          var elements = document.querySelectorAll(selector);
+          elements.forEach(function(el) {
+            el.remove();
+          });
+        });
+        
+        // Remove rows that don't contain posts
+        var rows = document.querySelectorAll('.row');
+        rows.forEach(function(row) {
+          var hasPost = row.querySelector('.post');
+          var hasCol = row.querySelector('[class*="col-"]');
+          if (!hasPost && !hasCol) {
+            row.remove();
+          }
+        });
         
         // Force body to use theme colors
         document.body.style.backgroundColor = '${_isDarkTheme ? '#121212' : '#f8f8f8'}';
@@ -246,6 +275,18 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
         } else {
           document.body.classList.remove('dark');
         }
+        
+        // Calculate height of removed elements and scroll down
+        setTimeout(function() {
+          // Scroll to the top of the post content
+          var firstPost = document.querySelector('.post');
+          if (firstPost) {
+            firstPost.scrollIntoView({behavior: 'smooth'});
+          }
+          
+          // Alternatively, scroll by estimated height of removed elements
+          window.scrollBy(0, 120);
+        }, 300);
       })();
     ''',
     );
@@ -314,7 +355,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                 // Use InAppWebView widget
                 InAppWebView(
                   // Set initial URL here
-                  initialUrlRequest: URLRequest(url: WebUri(_getInitialUrl())),
+                  initialUrlRequest: URLRequest(url: WebUri.uri(Uri.parse(_getInitialUrl()))),
                   // Set options for the webview
                   initialOptions: InAppWebViewGroupOptions(crossPlatform: InAppWebViewOptions(javaScriptEnabled: true)),
                   onWebViewCreated: (controller) {

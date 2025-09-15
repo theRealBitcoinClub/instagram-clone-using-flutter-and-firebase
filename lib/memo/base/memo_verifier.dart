@@ -6,7 +6,7 @@ import 'package:mahakka/memo_data_checker.dart';
 
 enum MemoVerificationResponse {
   valid(""),
-  moreThanThreeTags("Too many #tags"),
+  moreThanThreeTags("Please remove one tag"),
   // zeroTags("Add at least one visible #tag."),
   noTopicNorTag("Must include @topic or #tag."),
   moreThanOneTopic("Only one @topic allowed"),

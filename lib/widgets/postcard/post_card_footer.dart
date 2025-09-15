@@ -1,7 +1,9 @@
+import 'package:clipboard/clipboard.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 
 import '../character_limited_textfield.dart';
@@ -53,19 +55,26 @@ class PostCardFooter extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (post.text != null && post.text!.isNotEmpty) ...[
-            ExpandableText(
-              // Using creatorName here
-              "$creatorName: ${post.text!}",
-              // prefixText: post.creator != null ? "${post.creator!.profileIdShort}" : "", // Handle potential null creator
-              prefixStyle: theme.textTheme.titleSmall?.copyWith(letterSpacing: 2.0),
-              expandText: 'show more',
-              collapseText: 'show less',
-              maxLines: 6,
-              linkColor: theme.colorScheme.primary,
-              style: theme.textTheme.bodyMedium?.copyWith(height: 1.3),
-              animation: true,
-              linkEllipsis: true,
-              linkStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+            GestureDetector(
+              onDoubleTap: () {
+                FlutterClipboard.clear();
+                FlutterClipboard.copy("${post.creator!.name} wrote on ${post.dateTimeFormattedSafe()}: ${post.text}" ?? "");
+                showSnackBar("Text copied to clipboard", context, type: SnackbarType.info);
+              },
+              child: ExpandableText(
+                // Using creatorName here
+                "$creatorName: ${post.text!}",
+                // prefixText: post.creator != null ? "${post.creator!.profileIdShort}" : "", // Handle potential null creator
+                prefixStyle: theme.textTheme.titleSmall?.copyWith(letterSpacing: 2.0),
+                expandText: 'show more',
+                collapseText: 'show less',
+                maxLines: 6,
+                linkColor: theme.colorScheme.primary,
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.3),
+                animation: true,
+                linkEllipsis: true,
+                linkStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+              ),
             ),
             const SizedBox(height: 10),
           ],
@@ -160,36 +169,6 @@ class PostCardFooter extends StatelessWidget {
       selectedHashtags: selectedHashtags,
       onSelectHashtag: (index) => onSelectHashtag(index),
     );
-    // final int displayCount = post.tagIds.length > maxTagsCounter ? maxTagsCounter : post.tagIds.length;
-    //
-    // if (displayCount == 0) return const SizedBox.shrink();
-    //
-    // return Wrap(
-    //   spacing: 8.0,
-    //   runSpacing: 4.0,
-    //   children: List<Widget>.generate(displayCount, (index) {
-    //     final bool isSelected = selectedHashtags.length > index && selectedHashtags[index];
-    //     return InkWell(
-    //       onTap: () => onSelectHashtag(index),
-    //       borderRadius: BorderRadius.circular(16),
-    //       child: Container(
-    //         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-    //         decoration: BoxDecoration(
-    //           color: isSelected ? theme.colorScheme.primary.withOpacity(0.15) : theme.colorScheme.surfaceVariant.withOpacity(0.7),
-    //           borderRadius: BorderRadius.circular(16),
-    //           border: Border.all(color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.5), width: 1.2),
-    //         ),
-    //         child: Text(
-    //           post.tagIds[index],
-    //           style: theme.textTheme.bodySmall?.copyWith(
-    //             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-    //             color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
-    //           ),
-    //         ),
-    //       ),
-    //     );
-    //   }),
-    // );
   }
 
   Widget _buildCancelButtonWidget(ThemeData theme) {

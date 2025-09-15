@@ -485,7 +485,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
             leading: IconButton(icon: const Icon(size: 30, Icons.feed_outlined), tooltip: "Feed", onPressed: _loadFeed),
             // leading: IconButton(icon: const Icon(size: 30, Icons.person_outline), tooltip: "My Profile", onPressed: _loadProfile),
             title: Text(
-              _currentPath,
+              "<- Login to see your personal feed",
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: (theme.appBarTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface).withOpacity(0.7),
               ),

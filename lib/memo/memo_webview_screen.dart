@@ -139,6 +139,36 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
     String css =
         '''
       <style>
+    /* Prevent horizontal scrolling */
+    body, html {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+      width: 100% !important;
+    }
+    
+    /* Ensure all containers don't exceed screen width */
+    .container, .row, .post, [class*="col-"] {
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+    }
+    
+    /* Force all elements to respect container boundaries */
+    * {
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    
+    /* Handle images and media */
+    img, video, iframe {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+    
+    /* Prevent text from causing overflow */
+    .message, .content, .post .text {
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+    }
         /* Hide navigation and other unwanted elements */
         .pagination-center,
     .load-more-wrapper,

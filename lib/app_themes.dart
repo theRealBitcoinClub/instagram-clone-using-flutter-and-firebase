@@ -99,7 +99,7 @@ final ThemeData lightTheme = ThemeData(
   ),
 
   // Bottom App Bar Theme
-  bottomAppBarTheme: BottomAppBarTheme(
+  bottomAppBarTheme: BottomAppBarThemeData(
     color: Colors.white,
     elevation: 8.0,
     shadowColor: Colors.black.withOpacity(0.2),
@@ -233,7 +233,7 @@ final ThemeData darkTheme = ThemeData(
   hintColor: subtleTextOnDark,
 
   // Bottom Navigation Bar Theme
-  bottomNavigationBarTheme: BottomNavigationBarTheme(
+  bottomNavigationBarTheme: BottomNavigationBarThemeData(
     backgroundColor: secondaryDarkGrey,
     selectedItemColor: lightGreenAccent,
     unselectedItemColor: subtleTextOnDark,

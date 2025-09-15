@@ -27,7 +27,7 @@ if (keystorePropertiesFile.exists()) {
 
 val flutterCompileSdkVersion = localProperties.getProperty("flutter.compileSdkVersion")?.toInt() ?: 36
 val flutterMinSdkVersion = localProperties.getProperty("flutter.minSdkVersion")?.toInt() ?: 27
-val flutterTargetSdkVersion = localProperties.getProperty("flutter.targetSdkVersion")?.toInt() ?: 35
+val flutterTargetSdkVersion = localProperties.getProperty("flutter.targetSdkVersion")?.toInt() ?: 36
 val flutterNdkVersion = localProperties.getProperty("flutter.ndkVersion") ?: "27.0.12077973"
 val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toInt() ?: 2025091501
 val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "2.6.1-BCH"

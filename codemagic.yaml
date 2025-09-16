@@ -4,6 +4,7 @@ workflows:
     environment:
       groups:
         - keystore
+        - telegram_credentials
       vars:
         BUNDLE: "false"
     scripts:
@@ -93,36 +94,57 @@ workflows:
           APK_FILENAME=$(basename "$APK_PATH")
           APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
 
+          # Extract version from build.gradle.kts - look for the actual versionName assignment
           if [ -f "android/app/build.gradle.kts" ]; then
             echo "📝 Found build.gradle.kts file"
-            APK_VERSION=$(grep 'versionName' android/app/build.gradle.kts | sed "s/.*versionName.*=.*\"//" | sed "s/\".*//" | head -1)
+            # Look for the versionName line that contains the actual version string
+            APK_VERSION=$(grep 'versionName.*=' android/app/build.gradle.kts | grep -v 'flutterVersionName' | sed 's/.*versionName.*=.*"\([^"]*\)".*/\1/' | head -1)
+          
+            # If not found, try flutterVersionName
             if [ -z "$APK_VERSION" ]; then
-              APK_VERSION=$(grep 'flutterVersionName' android/app/build.gradle.kts | sed "s/.*flutterVersionName.*=.*\"//" | sed "s/\".*//" | head -1)
+              APK_VERSION=$(grep 'flutterVersionName' android/app/build.gradle.kts | sed 's/.*flutterVersionName.*=.*"\([^"]*\)".*/\1/' | head -1)
+            fi
+          
+            # If still not found, try a different pattern
+            if [ -z "$APK_VERSION" ]; then
+              APK_VERSION=$(grep -A5 -B5 'versionName' android/app/build.gradle.kts | grep '"' | head -1 | sed 's/.*"\([^"]*\)".*/\1/')
             fi
           elif [ -f "android/app/build.gradle" ]; then
             APK_VERSION=$(grep 'versionName' android/app/build.gradle | sed "s/.*versionName //" | tr -d '\"' | tr -d '\n' | tr -d ' ')
-          elif [ -f "app/build.gradle.kts" ]; then
-            APK_VERSION=$(grep 'versionName' app/build.gradle.kts | sed "s/.*versionName.*=.*\"//" | sed "s/\".*//" | head -1)
-          elif [ -f "app/build.gradle" ]; then
-            APK_VERSION=$(grep 'versionName' app/build.gradle | sed "s/.*versionName //" | tr -d '\"' | tr -d '\n' | tr -d ' ')
           elif [ -f "pubspec.yaml" ]; then
             APK_VERSION=$(grep 'version:' pubspec.yaml | sed "s/version: //" | tr -d ' ')
           else
             APK_VERSION="unknown"
           fi
 
+          # If version is still empty, set to unknown
           if [ -z "$APK_VERSION" ]; then
             APK_VERSION="unknown"
           fi
 
           echo "🔖 Extracted version: $APK_VERSION"
 
+          # For debugging, let's also check what's in the build.gradle.kts file
+          echo "📄 Build.gradle.kts content around version:"
+          grep -A10 -B5 'versionName\|flutterVersionName' android/app/build.gradle.kts 2>/dev/null || echo "Cannot read build.gradle.kts"
+
           CAPTION="🚀 New App Release Available! 📱 App: Mahakka 🔖 Version: $APK_VERSION 📦 File: $APK_FILENAME 📏 Size: $APK_SIZE 📅 Built: $(date +'%Y-%m-%d %H:%M:%S UTC') 🔄 Commit: ${CM_COMMIT:0:7} 👤 By: $CM_COMMITTER ⚡ Built with Codemagic CI/CD 🔒 Signed with release keystore #android #release #apk #flutter"
 
           echo "📤 Uploading to Telegram..."
           echo "Using bot token: ${TELEGRAM_BOT_TOKEN:0:10}..."
           echo "Chat ID: $TELEGRAM_CHAT_ID"
-          
+
+          # Test Telegram API connection first
+          echo "🔧 Testing Telegram API connection..."
+          test_response=$(curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/getMe")
+          if echo "$test_response" | grep -q '"ok":true'; then
+            echo "✅ Telegram API connection successful"
+          else
+            echo "❌ Telegram API connection failed"
+            echo "Test response: $test_response"
+            exit 1
+          fi
+
           response=$(curl -s -X POST \
             -F "chat_id=$TELEGRAM_CHAT_ID" \
             -F "document=@$APK_PATH" \

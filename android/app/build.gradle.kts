@@ -29,7 +29,7 @@ val flutterCompileSdkVersion = localProperties.getProperty("flutter.compileSdkVe
 val flutterMinSdkVersion = localProperties.getProperty("flutter.minSdkVersion")?.toInt() ?: 27
 val flutterTargetSdkVersion = localProperties.getProperty("flutter.targetSdkVersion")?.toInt() ?: 36
 val flutterNdkVersion = localProperties.getProperty("flutter.ndkVersion") ?: "27.0.12077973"
-val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toInt() ?: 2025091506
+val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toInt() ?: 2025091507
 val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "2.7.1-BCH"
 
 android {
@@ -76,7 +76,7 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutterMinSdkVersion
         targetSdk = flutterTargetSdkVersion
-        versionCode = 2025091506
+        versionCode = 2025091507
         versionName = "2.7.1-BCH"
     }
 

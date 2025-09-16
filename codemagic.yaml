@@ -1,12 +1,11 @@
 workflows:
   android-apk-free:
-    name: Android APK Build & GitHub Release
+    name: Android APK Build & Telegram Release
     environment:
       groups:
         - keystore
       vars:
         BUNDLE: "false"
-        #GH_REPO: ""  # Optional: override target repository
     scripts:
       - name: Setup and Get Dependencies
         script: |
@@ -16,12 +15,10 @@ workflows:
         script: |
           echo "🧪 Running all tests..."
           flutter test --test-randomize-ordering-seed random
-            
           echo "✅ All tests passed!"
 
       - name: Build APK
         script: |
-          # Set signing environment variables for Gradle
           if [ -f "android/app/mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
           echo "🔐 Configuring signing for release build..."
           export STORE_FILE="mahakka.keystore"
@@ -30,7 +27,6 @@ workflows:
           export KEY_PASSWORD="${CM_KEY_PASSWORD:-$CM_KEYSTORE_PASSWORD}"
           else
           echo "⚠️ Building unsigned APK (no keystore or password)"
-          # Clear any previous signing environment variables
           unset STORE_FILE
           unset STORE_PASSWORD
           unset KEY_ALIAS
@@ -45,29 +41,83 @@ workflows:
           echo "This information can be used to verify the APK authenticity"
           echo ""
           
-          # Extract signing certificate info
           keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk
           
-          # Save to build artifact for reference
           keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk > signature_info.txt
           
-          # Also extract with apksigner if available
           if command -v apksigner &> /dev/null; then
             echo ""
             echo "=== APKSIGNER VERIFICATION ==="
             apksigner verify --print-certs build/app/outputs/flutter-apk/app-release.apk
           fi
           
-          # Extract SHA-256 fingerprint for verification
           SHA256_FINGERPRINT=$(keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk | grep "SHA256" | head -1 | sed 's/.*SHA256: //' | tr -d ':' | tr -d ' ')
           echo ""
           echo "=== QUICK VERIFICATION ==="
           echo "SHA-256 Fingerprint: $SHA256_FINGERPRINT"
-          echo "Users can compare this with your published fingerprint to verify authenticity."
+
+      - name: Monitor Free Build Minutes
+        script: |
+          echo "📊 Codemagic Free Tier Monitoring"
+          echo "================================="
+          echo "Build started at: $(date)"
+          echo "Free tier allowance: 500 minutes per month"
+          echo "Current build time: Tracking..."
+          echo "Tip: Optimize with --build-cache and --parallel flags"
+          echo "================================="
+
+      - name: Publish APK to Telegram
+        script: |
+          echo "📤 Preparing to publish APK to Telegram..."
+          
+          APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
+          
+          if [ ! -f "$APK_PATH" ]; then
+            echo "❌ APK file not found at: $APK_PATH"
+            find . -name "*.apk" -type f | while read file; do
+              echo "Found: $file"
+            done
+            exit 1
+          fi
+          
+          echo "📦 Found APK: $APK_PATH"
+          
+          APK_FILENAME=$(basename "$APK_PATH")
+          APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
+          APK_VERSION=$(grep 'versionName' android/app/build.gradle | sed "s/.*versionName //" | tr -d '\"' | tr -d '\n' | tr -d ' ')
+          
+          CAPTION="🚀 New App Release Available! 📱 App: Mahakka 🔖 Version: $APK_VERSION 📦 File: $APK_FILENAME 📏 Size: $APK_SIZE 📅 Built: $(date +'%Y-%m-%d %H:%M:%S UTC') 🔄 Commit: ${CM_COMMIT:0:7} 👤 By: $CM_COMMITTER ⚡ Built with Codemagic CI/CD 🔒 Signed with release keystore #android #release #apk #flutter"
+
+          echo "📤 Uploading to Telegram..."
+          
+          response=$(curl -s -X POST \
+            -F "chat_id=$TELEGRAM_CHAT_ID" \
+            -F "document=@$APK_PATH" \
+            -F "caption=$CAPTION" \
+            "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument")
+          
+          if echo "$response" | grep -q '"ok":true'; then
+            echo "✅ APK successfully published to Telegram!"
+            MESSAGE_ID=$(echo "$response" | grep -o '"message_id":[0-9]*' | cut -d: -f2)
+            echo "📨 Message ID: $MESSAGE_ID"
+          else
+            echo "❌ Failed to publish to Telegram"
+            echo "🔍 Error response: $response"
+          
+            ERROR_MSG="❌ APK Upload Failed - Build completed but APK upload to Telegram failed. Please check the build artifacts manually."
+          
+            curl -s -X POST \
+              -F "chat_id=$TELEGRAM_CHAT_ID" \
+              -F "text=$ERROR_MSG" \
+              "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"
+          
+            exit 1
+          fi
 
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
-      - coverage/html/**  # Include test coverage report
+      - coverage/html/**
+      - signature_info.txt
 
     publishing:
       email:

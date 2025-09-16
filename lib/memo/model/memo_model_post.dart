@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart'; // For Timestamp and DocumentSnapshot
 import 'package:json_annotation/json_annotation.dart';
+import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 
@@ -39,8 +40,6 @@ class MemoModelPost {
   String creatorId;
   String topicId;
   List<String> tagIds;
-  // Add link preview caching
-  List<Map<String, dynamic>>? cachedPreviews;
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   int? currentPreviewIndex;
@@ -247,31 +246,6 @@ class MemoModelPost {
 
     if (hasMedia) return false;
 
-    final urlRegex = RegExp(r'https?://(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z]{2,})+(?:[/\w\.-]*)*/?', caseSensitive: false);
-
-    return urlRegex.hasMatch(text ?? "");
-  }
-  // Add method to check if post has URLs but no media
-  // bool get hasUrlsButNoMedia {
-  //   final hasMedia =
-  //       (imageUrl != null && imageUrl!.isNotEmpty) ||
-  //       (imgurUrl != null && imgurUrl!.isNotEmpty) ||
-  //       (videoUrl != null && videoUrl!.isNotEmpty) ||
-  //       (youtubeId != null && youtubeId!.isNotEmpty) ||
-  //       (ipfsCid != null && ipfsCid!.isNotEmpty);
-  //
-  //   final urlRegex = RegExp(r'https?://(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z]{2,})+(?:[/\w\.-]*)*/?', caseSensitive: false);
-  //
-  //   final hasUrls = urlRegex.hasMatch(text ?? "");
-  //
-  //   return hasUrls && !hasMedia;
-  // }
-
-  // Add method to extract URLs from text
-  List<String> extractUrls() {
-    final urlRegex = RegExp(r'https?://(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z]{2,})+(?:[/\w\.-]*)*/?', caseSensitive: false);
-
-    final matches = urlRegex.allMatches(text ?? "");
-    return matches.map((match) => match.group(0)!).toList();
+    return MemoRegExp.extractUrls(text).isNotEmpty;
   }
 }

@@ -25,6 +25,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   bool _isLoading = true;
   bool _isDarkTheme = false;
   bool _cssInjected = false; // Track if CSS has been injected
+  String _displayInAppBar = "";
 
   @override
   void initState() {
@@ -68,6 +69,8 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   void _loadUrl(String url) {
     // Reset CSS injection state when loading a new URL
     setState(() {
+      _displayInAppBar = "$url requested ...";
+      _isLoading = true;
       _cssInjected = false;
     });
 
@@ -117,6 +120,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   }
 
   Future<void> _injectCSS() async {
+    // final theme = Theme.of(context);
     final theme = Theme.of(context);
     _isDarkTheme = theme.brightness == Brightness.dark;
 
@@ -482,17 +486,37 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
             titleSpacing: NavigationToolbar.kMiddleSpacing,
 
             // _loadUrl('$_baseUrl/logout')
-            leading: IconButton(icon: const Icon(size: 30, Icons.feed_outlined), tooltip: "Feed", onPressed: _loadFeed),
-            // leading: IconButton(icon: const Icon(size: 30, Icons.person_outline), tooltip: "My Profile", onPressed: _loadProfile),
-            title: Text(
-              "<- Login to see your personal feed",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: (theme.appBarTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface).withOpacity(0.7),
-              ),
-              overflow: TextOverflow.ellipsis,
+            leading: IconButton(
+              icon: const Icon(size: 30, Icons.account_circle_outlined),
+              tooltip: "Feed",
+              onPressed: () {
+                _loadFeed();
+              },
             ),
+            // leading: IconButton(icon: const Icon(size: 30, Icons.person_outline), tooltip: "My Profile", onPressed: _loadProfile),
+            title: !_isLoading
+                ? Row(
+                    children: [
+                      GestureDetector(onTap: _loadFeed, child: Text("LOGIN")),
+                      Spacer(),
+                      GestureDetector(onTap: _loadLogout, child: Text("LOGOUT")),
+                    ],
+                  )
+                : Text(
+                    _displayInAppBar,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: (theme.appBarTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface).withOpacity(0.7),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
             actions: [
-              IconButton(icon: const Icon(size: 26, Icons.logout_outlined), tooltip: "Logout", onPressed: () => _loadUrl('$_baseUrl/logout')),
+              IconButton(
+                icon: const Icon(size: 27, Icons.logout_rounded),
+                tooltip: "Logout",
+                onPressed: () {
+                  _loadLogout();
+                },
+              ),
               // IconButton(icon: const Icon(size: 26, Icons.tag_outlined), tooltip: "Tags", onPressed: _loadTags),
               // IconButton(icon: const Icon(size: 26, Icons.alternate_email_rounded), tooltip: "Topics", onPressed: _loadTopics),
             ],
@@ -521,6 +545,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                         setState(() {
                           _isLoading = true;
                           _cssInjected = false; // Reset CSS injection state
+                          _displayInAppBar = url.toString() + " is loading ...";
                           _updateCurrentPath(url.toString());
                         });
                       }
@@ -529,13 +554,25 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                       // Wait for CSS injection to complete before hiding loading indicator
                       await _injectCSS();
                       setState(() {
+                        _updateCurrentPath(url.toString());
                         // Only hide loading if CSS injection is complete
                         _isLoading = !_cssInjected;
                       });
                     },
                   ),
                 ),
-                // Your loading indicator
+
+                // Loading overlay that covers the whole WebView container
+                if (_isLoading)
+                  Positioned.fill(
+                    child: Container(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.black.withOpacity(222 / 255) // Black with 222 alpha for dark mode
+                          : Colors.white.withOpacity(222 / 255), // White with 222 alpha for light mode
+                    ),
+                  ),
+
+                // Your loading indicator (positioned above the overlay)
                 if (_isLoading)
                   Positioned(
                     top: 0,
@@ -552,5 +589,9 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
         );
       },
     );
+  }
+
+  void _loadLogout() {
+    _loadUrl('$_baseUrl/logout');
   }
 }

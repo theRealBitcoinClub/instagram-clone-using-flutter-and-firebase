@@ -29,7 +29,7 @@ val flutterCompileSdkVersion = 36
 val flutterMinSdkVersion = 27
 val flutterTargetSdkVersion = 36
 val flutterNdkVersion = "27.0.12077973"
-val flutterVersionCode = 2025091508
+val flutterVersionCode = 2025091509
 val flutterVersionName = "2.7.1-BCH"
 
 android {
@@ -76,7 +76,7 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutterMinSdkVersion
         targetSdk = flutterTargetSdkVersion
-        versionCode = 2025091508
+        versionCode = 2025091509
         versionName = "2.7.1-BCH"
     }
 

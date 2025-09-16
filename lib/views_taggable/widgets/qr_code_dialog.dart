@@ -64,6 +64,8 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     if (_isCashtokenFormat && !_isToggleEnabled) {
       _isCashtokenFormat = false;
     }
+    // Start/restart the refresh timer for the selected tab
+    _startBalanceRefresh(_isCashtokenFormat);
 
     if (mounted) {
       setState(() {});

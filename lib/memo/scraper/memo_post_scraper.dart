@@ -232,7 +232,10 @@ class MemoPostScraper {
 
     if (post.youtubeId != null && !(await YouTubeVideoChecker().isVideoAvailable(post.youtubeId!))) return null;
 
-    if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase()))) return null;
+    //TODO replace the trigger URLS, replace all the URLs except one that is used for preview
+
+    if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase())) && !post.hasMedia)
+      return null;
 
     post.text = post.text ?? "";
 
@@ -263,41 +266,3 @@ class MemoPostScraper {
     return post;
   }
 }
-
-// --- Assumptions for Models (ensure they support nullability as needed) ---
-// class MemoModelPost {
-//   final MemoModelTopic? topic;
-//   final String text;
-//   final String age;
-//   final int tipsInSatoshi;
-//   final String created;
-//   final String txHash;
-//   final String? imgurUrl;
-//   final MemoModelCreator creator;
-//   List<String> urls = []; // Assuming this is populated by extractUrlsAndHashtags
-
-//   MemoModelPost({
-//     this.topic,
-//     required this.text,
-//     required this.age,
-//     required this.tipsInSatoshi,
-//     required this.created,
-//     required this.txHash,
-//     this.imgurUrl,
-//     required this.creator,
-//   });
-
-//   static void addToGlobalPostList(List<MemoModelPost> posts) { /* ... */ }
-// }
-
-// class MemoModelTopic {
-//   final String url;
-//   final String header;
-//   MemoModelTopic({required this.url, required this.header});
-// }
-
-// class MemoModelCreator {
-//   final String name;
-//   final String id;
-//   MemoModelCreator({required this.name, required this.id});
-// }

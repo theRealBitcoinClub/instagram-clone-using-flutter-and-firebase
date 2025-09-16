@@ -235,17 +235,16 @@ class MemoModelPost {
     );
   }
 
-  // Add method to check if post has URLs but no media
-  bool get hasUrlsButNoMedia {
-    final hasMedia =
-        (imageUrl != null && imageUrl!.isNotEmpty) ||
+  bool get hasMedia {
+    return (imageUrl != null && imageUrl!.isNotEmpty) ||
         (imgurUrl != null && imgurUrl!.isNotEmpty) ||
         (videoUrl != null && videoUrl!.isNotEmpty) ||
-        (youtubeId != null && youtubeId!.isNotEmpty) ||
-        (ipfsCid != null && ipfsCid!.isNotEmpty);
+        (ipfsCid != null && ipfsCid!.isNotEmpty) ||
+        (youtubeId != null && youtubeId!.isNotEmpty);
+  }
 
-    if (hasMedia) return false;
-
+  // Add method to check if post has URLs but no media
+  bool get hasUrlsInText {
     return MemoRegExp.extractUrls(text).isNotEmpty;
   }
 }

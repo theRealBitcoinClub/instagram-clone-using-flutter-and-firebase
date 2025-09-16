@@ -249,7 +249,7 @@ class _PostCardState extends ConsumerState<PostCard> {
           ],
         ),
       );
-    } else if (widget.post.hasUrlsButNoMedia) {
+    } else if ((!widget.post.hasMedia && widget.post.hasUrlsInText)) {
       final validUrl = UrlUtils.getFirstValidUrl(MemoRegExp.extractUrlsWithHttpsAlways(widget.post.text));
       if (validUrl != null) {
         return PreviewUrlWidget(url: validUrl);
@@ -338,15 +338,16 @@ class _PostCardState extends ConsumerState<PostCard> {
 
   double _getMediaHeight() {
     // For YouTube, use current height (animated between 50 and 200)
-    if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
+    var post = widget.post;
+    if (post.youtubeId != null && post.youtubeId!.isNotEmpty) {
       return _showYouTubePlayer ? 200.0 : 50.0;
     }
 
     // For other media types, use fixed height
-    if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty ||
-        widget.post.imageUrl != null && widget.post.imageUrl!.isNotEmpty ||
-        widget.post.ipfsCid != null && widget.post.ipfsCid!.isNotEmpty ||
-        (widget.post.hasUrlsButNoMedia)) {
+    if (post.videoUrl != null && post.videoUrl!.isNotEmpty ||
+        post.imageUrl != null && post.imageUrl!.isNotEmpty ||
+        post.ipfsCid != null && post.ipfsCid!.isNotEmpty ||
+        (!post.hasMedia && post.hasUrlsInText)) {
       return 200.0;
     }
 

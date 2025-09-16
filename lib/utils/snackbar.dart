@@ -1,50 +1,50 @@
 // snackbar.dart
 import 'package:flutter/material.dart';
 
-enum SnackbarType { success, error, info }
+enum SnackbarType {
+  success(duration: Duration(seconds: 4), backgroundColor: Color(0xFF1B5E20), icon: Icons.check_circle_outline_rounded),
+  error(duration: Duration(seconds: 6), backgroundColor: Color(0xFFB71C1C), icon: Icons.error_outline_rounded),
+  info(duration: Duration(seconds: 3), backgroundColor: Color(0xFFE65100), icon: Icons.info_outline_rounded);
 
+  final Duration duration;
+  final Color backgroundColor;
+  final IconData icon;
+
+  const SnackbarType({required this.duration, required this.backgroundColor, required this.icon});
+}
+
+// Alternative version with floating behavior
 void showSnackBar(String content, BuildContext context, {required SnackbarType type}) {
-  final theme = Theme.of(context);
-  final colorScheme = theme.colorScheme;
+  if (!context.mounted) return;
 
+  ScaffoldMessenger.of(context).clearSnackBars();
   content = content.toUpperCase();
-  // Determine colors based on type
-  Color backgroundColor;
-  TextStyle textStyle;
 
-  switch (type) {
-    case SnackbarType.success:
-      backgroundColor = Colors.green[900] ?? colorScheme.primaryContainer;
-      textStyle = TextStyle(color: Colors.white, fontWeight: FontWeight.w400, letterSpacing: 1.1, fontSize: 16);
-      break;
-    case SnackbarType.error:
-      backgroundColor = Colors.red[900] ?? colorScheme.errorContainer;
-      textStyle = TextStyle(color: Colors.white, fontWeight: FontWeight.w400, letterSpacing: 1.1, fontSize: 16);
-      break;
-    case SnackbarType.info:
-      backgroundColor = Colors.orange[900] ?? colorScheme.secondaryContainer;
-      textStyle = TextStyle(
-        color: Colors.white,
-        fontWeight: FontWeight.w400, // Not bold for info
-        letterSpacing: 1.1,
-        fontSize: 16,
-      );
-      break;
-  }
-
-  if (context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        duration: Duration(seconds: 3),
-        // animation: ,
-        // dismissDirection: DismissDirection.down,
-        content: Text(content, style: textStyle, textAlign: TextAlign.center),
-        backgroundColor: backgroundColor,
-        behavior: SnackBarBehavior.fixed,
-        elevation: 6.0,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+  final backgroundColor = type.backgroundColor;
+  final textStyle = TextStyle(color: Colors.white, fontWeight: FontWeight.w400, letterSpacing: 1.1, fontSize: 14);
+  ScaffoldMessenger.of(context).showSnackBar(
+    snackBarAnimationStyle: AnimationStyle(duration: Duration(milliseconds: 500), curve: ElasticInOutCurve()),
+    SnackBar(
+      duration: type.duration,
+      content: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(type.icon, color: Colors.white, size: 22),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(content, style: textStyle, textAlign: TextAlign.center),
+          ),
+        ],
       ),
-    );
-  }
+      backgroundColor: backgroundColor,
+      behavior: SnackBarBehavior.floating, // Changed to floating
+      elevation: 6.0,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)), // All corners rounded for floating
+      ),
+      margin: EdgeInsets.zero, // This works with floating behavior
+      // width: MediaQuery.of(context).size.width, // Set width to screen width
+    ),
+  );
 }

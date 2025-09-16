@@ -1,6 +1,8 @@
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
+import 'package:mahakka/provider/navigation_providers.dart';
+import 'package:mahakka/tab_item_data.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../memo/memo_reg_exp.dart';
@@ -26,6 +28,7 @@ class ClipboardNotifier extends StateNotifier<ClipboardState> {
   ClipboardNotifier() : super(ClipboardState());
 
   Future<void> checkClipboard(WidgetRef ref) async {
+    if (ref.read(tabIndexProvider) != AppTab.add.tabIndex) return;
     try {
       if (await FlutterClipboard.hasData()) {
         final urlFromClipboard = await FlutterClipboard.paste();

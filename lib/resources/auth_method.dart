@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
+import 'package:mahakka/tab_item_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../provider/navigation_providers.dart';
@@ -54,7 +55,7 @@ class AuthChecker {
       await prefs.remove("mnemonic");
       _ref.read(userNotifierProvider.notifier).clearUser(); // Ideal if you have this
       _ref.read(profileTargetIdProvider.notifier).state = null;
-      _ref.read(tabIndexProvider.notifier).setTab(0);
+      _ref.read(tabIndexProvider.notifier).setTab(AppTab.feed.tabIndex);
 
       return "success";
     } catch (err) {

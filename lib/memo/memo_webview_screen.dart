@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/provider/navigation_providers.dart';
+import 'package:mahakka/tab_item_data.dart';
+import 'package:mahakka/utils/snackbar.dart';
 
 import '../provider/user_provider.dart';
 import '../providers/webview_providers.dart';
@@ -70,6 +73,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
     // Reset CSS injection state when loading a new URL
     setState(() {
       _displayInAppBar = "$url requested ...";
+      showSnackBar(_displayInAppBar, context, type: SnackbarType.success);
       _isLoading = true;
       _cssInjected = false;
     });
@@ -460,12 +464,12 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  Widget build(BuildContext buildCtx) {
+    final theme = Theme.of(buildCtx);
     _isDarkTheme = theme.brightness == Brightness.dark;
 
     return Consumer(
-      builder: (context, ref, child) {
+      builder: (consumerCtx, ref, child) {
         // Listen to provider changes and load appropriate URLs
         ref.listen(tagIdProvider, (previous, next) {
           if (next != null && next.isNotEmpty) {
@@ -526,7 +530,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
               children: [
                 // Add a container that constraints the WebView
                 Container(
-                  constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
+                  constraints: BoxConstraints(maxWidth: MediaQuery.of(consumerCtx).size.width),
                   child: InAppWebView(
                     // Your existing WebView configuration
                     initialUrlRequest: URLRequest(url: WebUri.uri(Uri.parse(_getInitialUrl()))),
@@ -546,6 +550,8 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                           _isLoading = true;
                           _cssInjected = false; // Reset CSS injection state
                           _displayInAppBar = url.toString() + " is loading ...";
+                          if (ref.read(tabIndexProvider) == AppTab.memo.tabIndex)
+                            showSnackBar(_displayInAppBar, buildCtx, type: SnackbarType.info);
                           _updateCurrentPath(url.toString());
                         });
                       }
@@ -554,6 +560,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                       // Wait for CSS injection to complete before hiding loading indicator
                       await _injectCSS();
                       setState(() {
+                        if (ref.read(tabIndexProvider) == AppTab.memo.tabIndex) showSnackBar("Enjoy the content!", context, type: SnackbarType.success);
                         _updateCurrentPath(url.toString());
                         // Only hide loading if CSS injection is complete
                         _isLoading = !_cssInjected;
@@ -566,7 +573,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                 if (_isLoading)
                   Positioned.fill(
                     child: Container(
-                      color: Theme.of(context).brightness == Brightness.dark
+                      color: Theme.of(consumerCtx).brightness == Brightness.dark
                           ? Colors.black.withOpacity(222 / 255) // Black with 222 alpha for dark mode
                           : Colors.white.withOpacity(222 / 255), // White with 222 alpha for light mode
                     ),

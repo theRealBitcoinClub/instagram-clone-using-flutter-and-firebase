@@ -27,7 +27,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     super.initState();
     final initialIndex = ref.read(tabIndexProvider);
 
-    _tabController = TabController(length: totalTabs, vsync: this, initialIndex: initialIndex);
+    _tabController = TabController(length: AppTab.totalTabs, vsync: this, initialIndex: initialIndex);
     _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
     _animationController.forward(from: 0.0);
     _tabController.addListener(_tabControllerListener);
@@ -94,9 +94,10 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         onTap: (index) => ref.read(tabIndexProvider.notifier).setTab(index),
         iconSize: 30.0,
         border: Border(top: BorderSide(color: theme.dividerColor.withOpacity(0.5), width: 0.5)),
-        items: appTabsData.map((tabData) {
-          bool isSelected = appTabsData.indexOf(tabData) == currentTabIndex;
-          return BottomNavigationBarItem(icon: Icon(isSelected ? tabData.activeIcon : tabData.defaultIcon));
+        items: AppTab.values.map((tabData) {
+          //TODO this could be improved so that switching the AppTab index means also reordering the controller tabs
+          bool isSelected = AppTab.values.indexOf(tabData) == currentTabIndex;
+          return BottomNavigationBarItem(icon: Icon(isSelected ? tabData.active : tabData.icon));
         }).toList(),
       ),
     );

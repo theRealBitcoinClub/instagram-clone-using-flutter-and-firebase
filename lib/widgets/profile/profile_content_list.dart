@@ -12,6 +12,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../provider/navigation_providers.dart';
 import '../../providers/webview_providers.dart';
+import '../../tab_item_data.dart';
 import '../../youtube_video_checker.dart';
 
 void _logListError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -243,7 +244,7 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
               onHashtagTap: (String hashtag) {
                 ref.read(topicIdProvider.notifier).state = null;
                 ref.read(tagIdProvider.notifier).state = hashtag;
-                ref.read(tabIndexProvider.notifier).setTab(3); // Switch to webview tab
+                ref.read(tabIndexProvider.notifier).setTab(AppTab.memo.tabIndex); // Switch to webview tab
                 // _logListError('Hashtag tapped: $hashtag (Action not implemented in this widget)');
                 showSnackBar("Loading $hashtag charts!", context, type: SnackbarType.success);
                 showSnackBar("${hashtag} charts are loading...", context, type: SnackbarType.info);

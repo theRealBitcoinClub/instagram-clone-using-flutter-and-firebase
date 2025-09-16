@@ -12,6 +12,7 @@ import '../../provider/profile_providers.dart';
 import '../../provider/user_provider.dart';
 import '../../repositories/creator_repository.dart';
 import '../../resources/auth_method.dart';
+import '../../tab_item_data.dart';
 import 'header/settings_input_widget.dart';
 import 'header/settings_option_widget.dart';
 
@@ -448,6 +449,6 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   void _logout() {
     ref.read(authCheckerProvider).logOut();
     ref.read(profileTargetIdProvider.notifier).state = null;
-    ref.read(tabIndexProvider.notifier).setTab(0);
+    ref.read(tabIndexProvider.notifier).setTab(AppTab.feed.tabIndex);
   }
 }

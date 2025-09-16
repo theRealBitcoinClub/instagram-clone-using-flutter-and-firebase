@@ -9,6 +9,7 @@ import 'package:mahakka/widgets/popularity_score_widget.dart';
 
 import '../../provider/post_update_provider.dart';
 import '../../providers/creator_avatar_provider.dart';
+import '../../tab_item_data.dart';
 
 // Helper for logging (can be moved to a common utils file if used elsewhere)
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -30,8 +31,7 @@ class PostCardHeader extends ConsumerWidget {
     ref.read(profileTargetIdProvider.notifier).state = creatorId;
     // Switch to the profile tab using Riverpod (assuming 2 is the profile tab index)
     // Ensure tabIndexProvider is correctly imported and defined
-    ref.read(tabIndexProvider.notifier).setTab(2);
-    //TODO use enum force use enum for tab index
+    ref.read(tabIndexProvider.notifier).setTab(AppTab.profile.tabIndex);
   }
 
   @override

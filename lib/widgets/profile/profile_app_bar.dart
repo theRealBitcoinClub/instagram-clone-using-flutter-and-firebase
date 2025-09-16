@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/provider/navigation_providers.dart'; // Import for profileTargetIdProvider
+import 'package:mahakka/tab_item_data.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../provider/profile_providers.dart';
@@ -29,7 +30,7 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
         icon: const Icon(Icons.arrow_back),
         onPressed: () {
           ref.read(profileTargetIdProvider.notifier).state = null;
-          ref.read(tabIndexProvider.notifier).setTab(0);
+          ref.read(tabIndexProvider.notifier).setTab(AppTab.feed.tabIndex);
         },
       ),
       title: creator?.id != null && creator!.id.isNotEmpty

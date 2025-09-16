@@ -23,7 +23,7 @@ class PopularityScoreWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final String formattedScore = _formatPopularityScore(score);
+    final String formattedScore = formatPopularityScore(score);
 
     // Determine which style to use based on the score magnitude
     TextStyle effectiveStyle;
@@ -44,7 +44,7 @@ class PopularityScoreWidget extends StatelessWidget {
     return Text(formattedScore, style: effectiveStyle, textAlign: textAlign, maxLines: maxLines, softWrap: softWrap, overflow: overflow);
   }
 
-  String _formatPopularityScore(int score) {
+  static String formatPopularityScore(int score) {
     if (score >= 1000000) {
       final double millions = score / 1000000;
       if (millions >= 10) {

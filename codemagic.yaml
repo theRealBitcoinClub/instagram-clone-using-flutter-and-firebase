@@ -45,7 +45,7 @@ workflows:
             export STORE_PASSWORD="$CM_KEYSTORE_PASSWORD"
             export KEY_ALIAS="mahakka"
             export KEY_PASSWORD="${CM_KEY_PASSWORD:-$CM_KEYSTORE_PASSWORD}"
-            
+          
             echo "📋 Exporting signing environment variables:"
             echo "STORE_FILE: $STORE_FILE"
             echo "STORE_PASSWORD: ${STORE_PASSWORD:+(set)} (length: ${#STORE_PASSWORD})"
@@ -62,7 +62,7 @@ workflows:
           if [ -z "$CM_KEYSTORE_PASSWORD" ]; then
             echo "   - CM_KEYSTORE_PASSWORD environment variable not set or empty"
           fi
-            
+          
           echo "🏗️ Building APK..."
           flutter build apk --release
 
@@ -83,7 +83,7 @@ workflows:
               apksigner verify --print-certs build/app/outputs/flutter-apk/app-release.apk
             fi
           
-            SHA256_FINGERPRORT=$(keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk | grep "SHA256" | head -1 | sed 's/.*SHA256: //' | tr -d ':' | tr -d ' ')
+            SHA256_FINGERPRINT=$(keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk | grep "SHA256" | head -1 | sed 's/.*SHA256: //' | tr -d ':' | tr -d ' ')
             echo ""
             echo "=== QUICK VERIFICATION ==="
             echo "SHA-256 Fingerprint: $SHA256_FINGERPRINT"

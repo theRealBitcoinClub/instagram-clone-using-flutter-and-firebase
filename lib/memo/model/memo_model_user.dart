@@ -163,15 +163,15 @@ class MemoModelUser {
   }
 
   int get tipAmount {
-    return _tipAmount.value;
+    return temporaryTipAmount != null ? temporaryTipAmount!.value : _tipAmount.value;
   }
 
   TipAmount get tipAmountEnum {
-    return _tipAmount;
+    return temporaryTipAmount ?? _tipAmount;
   }
 
   TipReceiver get tipReceiver {
-    return _tipReceiver;
+    return temporaryTipReceiver != null ? temporaryTipReceiver! : _tipReceiver;
   }
 
   MemoModelUser._({

@@ -7,7 +7,6 @@ workflows:
         - telegram_credentials
       vars:
         BUNDLE: "false"
-        CM_KEY_ALIAS: "mahakka"
     scripts:
       - name: Setup and Get Dependencies
         script: |
@@ -23,29 +22,29 @@ workflows:
         script: |
           echo "🔍 Debug: Checking keystore and environment variables..."
           echo "Current directory: $(pwd)"
-          echo "Looking for keystore at: android/app/mahakka.keystore"
-          
-          if [ -f "android/app/mahakka.keystore" ]; then
+          echo "Looking for keystore at: mahakka.keystore"
+
+          if [ -f "mahakka.keystore" ]; then
             echo "✅ Keystore file found"
-            echo "🔐 Keystore file info: $(ls -la android/app/mahakka.keystore)"
-            else
-            echo "❌ Keystore file NOT found at android/app/mahakka.keystore"
-            echo "📁 Android app directory contents:"
-            ls -la android/app/ || echo "Cannot list android/app directory"
+            echo "🔐 Keystore file info: $(ls -la mahakka.keystore)"
+          else
+            echo "❌ Keystore file NOT found at mahakka.keystore"
+            echo "📁 Root directory contents:"
+            ls -la | grep keystore || echo "No keystore files found in root"
           fi
-          
+
           echo "🔑 Environment variables check:"
           echo "CM_KEYSTORE_PASSWORD: ${CM_KEYSTORE_PASSWORD:+(set)}${CM_KEYSTORE_PASSWORD:+ (length: ${#CM_KEYSTORE_PASSWORD})}"
           echo "CM_KEY_ALIAS: ${CM_KEY_ALIAS:+(set)}${CM_KEY_ALIAS:+ (value: $CM_KEY_ALIAS)}"
           echo "CM_KEY_PASSWORD: ${CM_KEY_PASSWORD:+(set)}${CM_KEY_PASSWORD:+ (length: ${#CM_KEY_PASSWORD})}"
-          
-          if [ -f "android/app/mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
+
+          if [ -f "mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
             echo "🔐 Configuring signing for release build..."
             export STORE_FILE="mahakka.keystore"
             export STORE_PASSWORD="$CM_KEYSTORE_PASSWORD"
             export KEY_ALIAS="mahakka"
             export KEY_PASSWORD="${CM_KEY_PASSWORD:-$CM_KEYSTORE_PASSWORD}"
-          
+
             echo "📋 Exporting signing environment variables:"
             echo "STORE_FILE: $STORE_FILE"
             echo "STORE_PASSWORD: ${STORE_PASSWORD:+(set)} (length: ${#STORE_PASSWORD})"
@@ -55,16 +54,48 @@ workflows:
             echo "⚠️ Building unsigned APK (no keystore or password)"
             echo "❌ Reason: "
           
-          if [ ! -f "android/app/mahakka.keystore" ]; then
-            echo "   - Keystore file not found"
-          fi
+            if [ ! -f "mahakka.keystore" ]; then
+              echo "   - Keystore file not found"
+            fi
           
-          if [ -z "$CM_KEYSTORE_PASSWORD" ]; then
-            echo "   - CM_KEYSTORE_PASSWORD environment variable not set or empty"
-          fi
+            if [ -z "$CM_KEYSTORE_PASSWORD" ]; then
+              echo "   - CM_KEYSTORE_PASSWORD environment variable not set or empty"
+            fi
           
+            # Clear any previous signing environment variables
+            unset STORE_FILE
+            unset STORE_PASSWORD
+            unset KEY_ALIAS
+            unset KEY_PASSWORD
+          fi
+
           echo "🏗️ Building APK..."
           flutter build apk --release
+
+      - name: Debug Signing Configuration
+        script: |
+          echo "🔍 Debug: Checking build environment after build..."
+          echo "Environment variables:"
+          env | grep -E '(STORE|KEY|PASSWORD)' || echo "No signing environment variables found"
+          
+          echo "📁 Checking build outputs:"
+          ls -la build/app/outputs/flutter-apk/ || echo "No build outputs directory"
+          
+          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
+            echo "📦 APK file exists, checking signing status:"
+            # Check if APK is signed
+            if keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk 2>/dev/null; then
+              echo "✅ APK appears to be signed"
+            else
+              echo "❌ APK is NOT signed or cannot verify signature"
+              echo "Trying apksigner:"
+              if command -v apksigner &> /dev/null; then
+                apksigner verify --print-certs build/app/outputs/flutter-apk/app-release.apk || echo "apksigner verification failed"
+              else
+                echo "apksigner not available"
+              fi
+            fi
+          fi
 
       - name: Extract and Display Signing Information
         script: |
@@ -72,7 +103,7 @@ workflows:
           echo "This information can be used to verify the APK authenticity"
           echo ""
           
-          if [ -f "android/app/mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
+          if [ -f "mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
             keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk
           
             keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk > signature_info.txt
@@ -105,7 +136,7 @@ workflows:
       - name: Publish APK to Telegram
         script: |
           echo "📤 Preparing to publish APK to Telegram..."
-
+          
           # Check if APK file exists and is readable
           if [ -f "build/app/outputs/flutter-apk/app-release.apk" ] && [ -r "build/app/outputs/flutter-apk/app-release.apk" ]; then
             APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
@@ -119,17 +150,17 @@ workflows:
             done
             exit 1
           fi
-
+          
           echo "📦 Found APK: $APK_PATH"
           echo "📏 APK size: $(du -h "$APK_PATH" | cut -f1)"
-
+          
           APK_FILENAME=$(basename "$APK_PATH")
           APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
 
           if [ -f "android/app/build.gradle.kts" ]; then
             echo "📝 Found build.gradle.kts file"
             APK_VERSION=$(grep 'val flutterVersionName = ' android/app/build.gradle.kts | sed 's/.*val flutterVersionName = "\([^"]*\)".*/\1/' | head -1)
-
+          
             if [ -z "$APK_VERSION" ]; then
               APK_VERSION=$(grep 'versionName = ' android/app/build.gradle.kts | sed 's/.*versionName = "\([^"]*\)".*/\1/' | head -1)
             fi
@@ -190,7 +221,7 @@ workflows:
             if echo "$response" | grep -q '"description"'; then
               ERROR_DESC=$(echo "$response" | grep -o '"description":"[^"]*"' | cut -d'"' -f4)
               echo "📝 Error description: $ERROR_DESC"
-
+          
               # Check if it's a file size limit error
               if echo "$ERROR_DESC" | grep -qi "too large\|size\|big"; then
                 echo "📁 The APK file might be too large for Telegram (89MB)"

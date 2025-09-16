@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:mahakka/memo/memo_reg_exp.dart';
 
 typedef StringCallback = void Function(String value);
 
@@ -366,9 +367,9 @@ List<TextSegment> parseText(String? text) {
   }
 
   // Use your existing regex patterns
-  final RegExp topicRegex = RegExp(r'@[a-zA-Z0-9_\-\.]+');
-  final RegExp hashtagRegex = RegExp(r'#\w+');
-  final RegExp urlRegex = RegExp(r'(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)');
+  final RegExp topicRegex = RegExp(MemoRegExp.topicRegex);
+  final RegExp hashtagRegex = RegExp(MemoRegExp.hashtagRegex);
+  final RegExp urlRegex = RegExp(MemoRegExp.urlRegex);
 
   // Combine all patterns into one regex for efficient parsing
   final combinedPattern = '(${topicRegex.pattern})|(${hashtagRegex.pattern})|(${urlRegex.pattern})';

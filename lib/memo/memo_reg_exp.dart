@@ -2,6 +2,9 @@ import 'package:mahakka/config_whitelist.dart';
 
 class MemoRegExp {
   final String text;
+  static const topicRegex = r'@[a-zA-Z0-9_\-\.]+';
+  static const hashtagRegex = r'#\w+';
+  static const urlRegex = r'(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)';
 
   MemoRegExp(this.text);
 
@@ -187,11 +190,10 @@ class MemoRegExp {
     return whitelistPatterns.any((pattern) => RegExp(pattern, caseSensitive: false).hasMatch(url.trim()));
   }
 
-  static List<String> extractTopics(String? text) => _extractMatches(text, r'@[a-zA-Z0-9_\-\.]+');
-  // static List<String> extractTopics(String? text) => _extractMatches(text, r'(?:^|\s)(@[a-zA-Z0-9_\-\.]+)(?=\s|$)');
-  static List<String> extractUrls(String? text) =>
-      _extractMatches(text, r'(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)');
-  // static List<String> extractHashtags(String? text) => _extractMatches(text, r'(?:\s|^)(?:#(?!(?:\d+|\w+?_|_\w*?)(?:\s|$)))(\w+)(?=\s|$)');
+  static List<String> extractTopics(String? text) => _extractMatches(text, topicRegex);
+
+  static List<String> extractUrls(String? text) => _extractMatches(text, urlRegex);
+
   static List<String> extractUrlsWithHttpsAlways(String? text) {
     final matches = extractUrls(text);
     return matches.map((url) {
@@ -202,7 +204,7 @@ class MemoRegExp {
     }).toList();
   }
 
-  static List<String> extractHashtags(String? text) => _extractMatches(text, r'#\w+');
+  static List<String> extractHashtags(String? text) => _extractMatches(text, hashtagRegex);
 
   static List<String> _extractMatches(String? text, String pattern) {
     if (text == null || text.isEmpty) return [];
@@ -215,10 +217,7 @@ class MemoRegExp {
 }
 
 class TextFilter {
-  static final _urlRegex = RegExp(
-    r'https?:\/\/(?:www\.)?[-\w@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-\w()@:%_\+.~#?&\/=]*)(?=\s|$)',
-    caseSensitive: false,
-  );
+  static final _urlRegex = RegExp(MemoRegExp.urlRegex, caseSensitive: false);
 
   /// Replaces all non-whitelisted domains in the text with "[link removed]"
   static String replaceNonWhitelistedDomains(String text) {

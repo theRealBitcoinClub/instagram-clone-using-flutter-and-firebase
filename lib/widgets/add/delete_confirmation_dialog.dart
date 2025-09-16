@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 
 class DeleteConfirmationDialog extends StatefulWidget {
   final ThemeData theme;
-  final VoidCallback onDelete;
   final VoidCallback onCancel;
+  final VoidCallback onContinue;
 
-  const DeleteConfirmationDialog({Key? key, required this.theme, required this.onDelete, required this.onCancel}) : super(key: key);
+  const DeleteConfirmationDialog({Key? key, required this.theme, required this.onCancel, required this.onContinue}) : super(key: key);
 
   @override
   _DeleteConfirmationDialogState createState() => _DeleteConfirmationDialogState();
@@ -17,7 +17,7 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> wit
   late AnimationController _controller;
   late Animation<double> _opacityAnimation;
   int _countdown = 1;
-  bool _deleteEnabled = false;
+  bool _cancelEnabled = false;
   Timer? _countdownTimer;
   Timer? _autoCloseTimer;
 
@@ -38,7 +38,7 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> wit
         setState(() => _countdown--);
       } else {
         timer.cancel();
-        setState(() => _deleteEnabled = true);
+        setState(() => _cancelEnabled = true);
       }
     });
 
@@ -107,12 +107,12 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> wit
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _deleteEnabled ? widget.theme.colorScheme.error : widget.theme.colorScheme.error.withOpacity(0.5),
+                        backgroundColor: _cancelEnabled ? widget.theme.colorScheme.error : widget.theme.colorScheme.error.withOpacity(0.5),
                         foregroundColor: widget.theme.colorScheme.onError,
                       ),
-                      onPressed: _deleteEnabled
+                      onPressed: _cancelEnabled
                           ? () {
-                              widget.onDelete();
+                              widget.onCancel();
                             }
                           : null,
                       child: const Text('CANCEL POST'),
@@ -128,7 +128,7 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> wit
                         foregroundColor: widget.theme.colorScheme.onPrimary,
                       ),
                       onPressed: () {
-                        widget.onCancel();
+                        widget.onContinue();
                       },
                       child: const Text('KEEP EDITING'),
                     ),

@@ -400,11 +400,10 @@ class _PostCardState extends ConsumerState<PostCard> {
     if (!mounted) return;
     // Check if the text contains a newline character (Enter key was pressed)
     if (value.contains('\n')) {
+      _textEditController.text = value.replaceAll("\n", "");
       // Enter key was pressed - trigger send action if conditions are met
       if (_showSend) {
         _onSend();
-      } else {
-        _textEditController.text = value.replaceAll("\n", "");
       }
       return; // Exit early since we handled the Enter key
     }

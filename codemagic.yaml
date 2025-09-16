@@ -7,6 +7,7 @@ workflows:
         - telegram_credentials
       vars:
         BUNDLE: "false"
+        CM_KEY_ALIAS: "mahakka"
     scripts:
       - name: Setup and Get Dependencies
         script: |
@@ -20,20 +21,49 @@ workflows:
 
       - name: Build APK
         script: |
-          if [ -f "android/app/mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
-          echo "🔐 Configuring signing for release build..."
-          export STORE_FILE="mahakka.keystore"
-          export STORE_PASSWORD="$CM_KEYSTORE_PASSWORD"
-          export KEY_ALIAS="mahakka"
-          export KEY_PASSWORD="$CM_KEYSTORE_PASSWORD"
-          else
-          echo "⚠️ Building unsigned APK (no keystore or password)"
-          unset STORE_FILE
-          unset STORE_PASSWORD
-          unset KEY_ALIAS
-          unset KEY_PASSWORD
+          echo "🔍 Debug: Checking keystore and environment variables..."
+          echo "Current directory: $(pwd)"
+          echo "Looking for keystore at: android/app/mahakka.keystore"
+          
+          if [ -f "android/app/mahakka.keystore" ]; then
+            echo "✅ Keystore file found"
+            echo "🔐 Keystore file info: $(ls -la android/app/mahakka.keystore)"
+            else
+            echo "❌ Keystore file NOT found at android/app/mahakka.keystore"
+            echo "📁 Android app directory contents:"
+            ls -la android/app/ || echo "Cannot list android/app directory"
           fi
           
+          echo "🔑 Environment variables check:"
+          echo "CM_KEYSTORE_PASSWORD: ${CM_KEYSTORE_PASSWORD:+(set)}${CM_KEYSTORE_PASSWORD:+ (length: ${#CM_KEYSTORE_PASSWORD})}"
+          echo "CM_KEY_ALIAS: ${CM_KEY_ALIAS:+(set)}${CM_KEY_ALIAS:+ (value: $CM_KEY_ALIAS)}"
+          echo "CM_KEY_PASSWORD: ${CM_KEY_PASSWORD:+(set)}${CM_KEY_PASSWORD:+ (length: ${#CM_KEY_PASSWORD})}"
+          
+          if [ -f "android/app/mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
+            echo "🔐 Configuring signing for release build..."
+            export STORE_FILE="mahakka.keystore"
+            export STORE_PASSWORD="$CM_KEYSTORE_PASSWORD"
+            export KEY_ALIAS="mahakka"
+            export KEY_PASSWORD="${CM_KEY_PASSWORD:-$CM_KEYSTORE_PASSWORD}"
+            
+            echo "📋 Exporting signing environment variables:"
+            echo "STORE_FILE: $STORE_FILE"
+            echo "STORE_PASSWORD: ${STORE_PASSWORD:+(set)} (length: ${#STORE_PASSWORD})"
+            echo "KEY_ALIAS: $KEY_ALIAS"
+            echo "KEY_PASSWORD: ${KEY_PASSWORD:+(set)} (length: ${#KEY_PASSWORD})"
+          else
+            echo "⚠️ Building unsigned APK (no keystore or password)"
+            echo "❌ Reason: "
+          
+          if [ ! -f "android/app/mahakka.keystore" ]; then
+            echo "   - Keystore file not found"
+          fi
+          
+          if [ -z "$CM_KEYSTORE_PASSWORD" ]; then
+            echo "   - CM_KEYSTORE_PASSWORD environment variable not set or empty"
+          fi
+            
+          echo "🏗️ Building APK..."
           flutter build apk --release
 
       - name: Extract and Display Signing Information

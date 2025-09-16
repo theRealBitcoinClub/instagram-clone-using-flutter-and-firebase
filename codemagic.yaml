@@ -53,7 +53,7 @@ workflows:
               apksigner verify --print-certs build/app/outputs/flutter-apk/app-release.apk
             fi
           
-            SHA256_FINGERPRINT=$(keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk | grep "SHA256" | head -1 | sed 's/.*SHA256: //' | tr -d ':' | tr -d ' ')
+            SHA256_FINGERPRORT=$(keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk | grep "SHA256" | head -1 | sed 's/.*SHA256: //' | tr -d ':' | tr -d ' ')
             echo ""
             echo "=== QUICK VERIFICATION ==="
             echo "SHA-256 Fingerprint: $SHA256_FINGERPRINT"
@@ -76,20 +76,23 @@ workflows:
         script: |
           echo "📤 Preparing to publish APK to Telegram..."
           
-          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
+          # Check if APK file exists and is readable
+          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ] && [ -r "build/app/outputs/flutter-apk/app-release.apk" ]; then
             APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
-          elif [ -f "build/app/outputs/apk/release/app-release.apk" ]; then
+          elif [ -f "build/app/outputs/apk/release/app-release.apk" ] && [ -r "build/app/outputs/apk/release/app-release.apk" ]; then
             APK_PATH="build/app/outputs/apk/release/app-release.apk"
           else
-            echo "❌ APK file not found in standard locations"
+            echo "❌ APK file not found or not readable in standard locations"
             echo "🔍 Searching for APK files..."
-            find . -name "*.apk" -type f | while read file; do
-              echo "Found: $file"
+            find . -name "*.apk" -type f -readable | while read file; do
+              echo "Found readable: $file (size: $(du -h "$file" | cut -f1))"
             done
             exit 1
           fi
           
           echo "📦 Found APK: $APK_PATH"
+          echo "📏 APK size: $(du -h "$APK_PATH" | cut -f1)"
+          echo "🔐 File permissions: $(ls -la "$APK_PATH")"
           
           APK_FILENAME=$(basename "$APK_PATH")
           APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
@@ -127,21 +130,46 @@ workflows:
             exit 1
           fi
 
+          # Create a simple caption without emojis that might cause issues
+          CAPTION="New App Release: Mahakka v$APK_VERSION - Built: $(date +'%Y-%m-%d %H:%M') - Commit: ${CM_COMMIT:0:7}"
+
           echo "📤 Uploading APK file..."
-          response=$(curl -v -X POST \
+          echo "File to upload: $APK_PATH"
+          echo "File exists: $( [ -f "$APK_PATH" ] && echo "Yes" || echo "No" )"
+          echo "File readable: $( [ -r "$APK_PATH" ] && echo "Yes" || echo "No" )"
+          echo "File size: $(wc -c < "$APK_PATH") bytes"
+
+          # Test file upload with a simple curl command first
+          echo "🧪 Testing file upload..."
+          test_upload=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             -F "chat_id=$TELEGRAM_CHAT_ID" \
             -F "document=@$APK_PATH" \
-            -F "caption=🚀 New App Release Available! 📱 App: Mahakka 🔖 Version: $APK_VERSION 📦 File: $APK_FILENAME 📏 Size: $APK_SIZE 📅 Built: $(date +'%Y-%m-%d %H:%M:%S UTC') 🔄 Commit: ${CM_COMMIT:0:7} 👤 By: $CM_COMMITTER ⚡ Built with Codemagic CI/CD 🔒 Signed with release keystore #android #release #apk #flutter" \
-            "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument" 2>&1)
-          
-          json_response=$(echo "$response" | grep -E '^{.*}$' | tail -1)
-          
-          if [ -z "$json_response" ]; then
-            echo "❌ No JSON response received from Telegram"
-            echo "Full curl output: $response"
+            "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument")
+
+          if [ "$test_upload" = "200" ]; then
+            echo "✅ File upload test successful"
+          else
+            echo "❌ File upload test failed with HTTP code: $test_upload"
+            echo "Trying alternative upload method..."
+          fi
+
+          # Upload with simpler approach
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            -F "chat_id=$TELEGRAM_CHAT_ID" \
+            -F "document=@$APK_PATH" \
+            -F "caption=$CAPTION" \
+            "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument")
+
+          # Separate the JSON response from the HTTP status code
+          http_code=$(echo "$response" | tail -n 1)
+          json_response=$(echo "$response" | head -n -1)
+
+          if [ "$http_code" != "200" ]; then
+            echo "❌ HTTP error: $http_code"
+            echo "Response: $json_response"
             exit 1
           fi
-          
+
           if echo "$json_response" | grep -q '"ok":true'; then
             echo "✅ APK successfully published to Telegram!"
             MESSAGE_ID=$(echo "$json_response" | grep -o '"message_id":[0-9]*' | cut -d: -f2)
@@ -149,13 +177,13 @@ workflows:
           else
             echo "❌ Failed to publish to Telegram"
             echo "🔍 Error response: $json_response"
-          
+
             if echo "$json_response" | grep -q '"description"'; then
               ERROR_DESC=$(echo "$json_response" | grep -o '"description":"[^"]*"' | cut -d'"' -f4)
               echo "📝 Error description: $ERROR_DESC"
             fi
 
-            ERROR_MSG="❌ APK Upload Failed - Build completed but APK upload to Telegram failed. Please check the build artifacts manually."
+            ERROR_MSG="APK Upload Failed - Please check build artifacts manually."
 
             curl -s -X POST \
               -F "chat_id=$TELEGRAM_CHAT_ID" \

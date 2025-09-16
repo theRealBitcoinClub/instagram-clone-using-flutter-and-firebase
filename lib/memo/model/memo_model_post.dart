@@ -3,6 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 part 'memo_model_post.g.dart';
 
@@ -241,6 +242,10 @@ class MemoModelPost {
         (videoUrl != null && videoUrl!.isNotEmpty) ||
         (ipfsCid != null && ipfsCid!.isNotEmpty) ||
         (youtubeId != null && youtubeId!.isNotEmpty);
+  }
+
+  String? get mediaUrl {
+    return imgurUrl ?? imageUrl ?? videoUrl ?? ipfsCid ?? (youtubeId != null ? YoutubePlayer.getThumbnail(videoId: youtubeId!) : null);
   }
 
   // Add method to check if post has URLs but no media

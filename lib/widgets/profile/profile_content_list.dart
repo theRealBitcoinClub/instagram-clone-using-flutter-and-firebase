@@ -2,6 +2,7 @@ import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/config_whitelist.dart';
+import 'package:mahakka/expandable_text_custom.dart';
 import 'package:mahakka/external_browser_launcher.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/utils/snackbar.dart';
@@ -227,7 +228,7 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
             const SizedBox(height: 4),
             Divider(color: theme.dividerColor.withOpacity(0.3), height: 1),
             const SizedBox(height: 10),
-            ExpandableText(
+            ExpandableTextCustom(
               post.text ?? " ",
               expandText: 'show more',
               collapseText: 'show less',
@@ -250,10 +251,12 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
                 showSnackBar("${hashtag} charts are loading...", context, type: SnackbarType.info);
                 // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on hashtag: $hashtag')));
               },
+              mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary, fontWeight: FontWeight.w500),
               urlStyle: buildUrlStyle(theme),
               onUrlTap: (String url) async {
                 await _onUrlTap(url, context);
               },
+
               prefixText: post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null,
               prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
               onPrefixTap: () {

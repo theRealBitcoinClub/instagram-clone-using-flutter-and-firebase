@@ -28,9 +28,9 @@ class MemoVerifier {
   final List<String> _topics = [];
   final List<String> _urls = [];
 
-  static const String super_tag = " #mahakka.com";
+  static const String super_tag = " #mahakka_com";
   //TODO if users dont add their own topic, you add this topic invisibly
-  static const String super_topic = "@mahakka.com";
+  static const String super_topic = "@mahakka_com";
   // --- Configuration Constants ---
   static const int maxHashtags = 3;
   static const int maxTopics = 1;

@@ -69,11 +69,19 @@ workflows:
       - name: Publish APK to Telegram
         script: |
           echo "📤 Preparing to publish APK to Telegram..."
+          echo "📁 Current directory: $(pwd)"
+          echo "📁 Directory contents:"
+          ls -la
+          echo "📁 Android directory:"
+          ls -la android/ 2>/dev/null || echo "No android directory found"
           
-          APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
-          
-          if [ ! -f "$APK_PATH" ]; then
-            echo "❌ APK file not found at: $APK_PATH"
+          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
+            APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
+          elif [ -f "build/app/outputs/apk/release/app-release.apk" ]; then
+            APK_PATH="build/app/outputs/apk/release/app-release.apk"
+          else
+            echo "❌ APK file not found in standard locations"
+            echo "🔍 Searching for APK files..."
             find . -name "*.apk" -type f | while read file; do
               echo "Found: $file"
             done
@@ -84,11 +92,36 @@ workflows:
           
           APK_FILENAME=$(basename "$APK_PATH")
           APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
-          APK_VERSION=$(grep 'versionName' android/app/build.gradle | sed "s/.*versionName //" | tr -d '\"' | tr -d '\n' | tr -d ' ')
-          
+
+          if [ -f "android/app/build.gradle.kts" ]; then
+            echo "📝 Found build.gradle.kts file"
+            APK_VERSION=$(grep 'versionName' android/app/build.gradle.kts | sed "s/.*versionName.*=.*\"//" | sed "s/\".*//" | head -1)
+            if [ -z "$APK_VERSION" ]; then
+              APK_VERSION=$(grep 'flutterVersionName' android/app/build.gradle.kts | sed "s/.*flutterVersionName.*=.*\"//" | sed "s/\".*//" | head -1)
+            fi
+          elif [ -f "android/app/build.gradle" ]; then
+            APK_VERSION=$(grep 'versionName' android/app/build.gradle | sed "s/.*versionName //" | tr -d '\"' | tr -d '\n' | tr -d ' ')
+          elif [ -f "app/build.gradle.kts" ]; then
+            APK_VERSION=$(grep 'versionName' app/build.gradle.kts | sed "s/.*versionName.*=.*\"//" | sed "s/\".*//" | head -1)
+          elif [ -f "app/build.gradle" ]; then
+            APK_VERSION=$(grep 'versionName' app/build.gradle | sed "s/.*versionName //" | tr -d '\"' | tr -d '\n' | tr -d ' ')
+          elif [ -f "pubspec.yaml" ]; then
+            APK_VERSION=$(grep 'version:' pubspec.yaml | sed "s/version: //" | tr -d ' ')
+          else
+            APK_VERSION="unknown"
+          fi
+
+          if [ -z "$APK_VERSION" ]; then
+            APK_VERSION="unknown"
+          fi
+
+          echo "🔖 Extracted version: $APK_VERSION"
+
           CAPTION="🚀 New App Release Available! 📱 App: Mahakka 🔖 Version: $APK_VERSION 📦 File: $APK_FILENAME 📏 Size: $APK_SIZE 📅 Built: $(date +'%Y-%m-%d %H:%M:%S UTC') 🔄 Commit: ${CM_COMMIT:0:7} 👤 By: $CM_COMMITTER ⚡ Built with Codemagic CI/CD 🔒 Signed with release keystore #android #release #apk #flutter"
 
           echo "📤 Uploading to Telegram..."
+          echo "Using bot token: ${TELEGRAM_BOT_TOKEN:0:10}..."
+          echo "Chat ID: $TELEGRAM_CHAT_ID"
           
           response=$(curl -s -X POST \
             -F "chat_id=$TELEGRAM_CHAT_ID" \
@@ -104,18 +137,24 @@ workflows:
             echo "❌ Failed to publish to Telegram"
             echo "🔍 Error response: $response"
           
+            if echo "$response" | grep -q '"description"'; then
+              ERROR_DESC=$(echo "$response" | grep -o '"description":"[^"]*"' | cut -d'"' -f4)
+              echo "📝 Error description: $ERROR_DESC"
+            fi
+
             ERROR_MSG="❌ APK Upload Failed - Build completed but APK upload to Telegram failed. Please check the build artifacts manually."
-          
+
             curl -s -X POST \
               -F "chat_id=$TELEGRAM_CHAT_ID" \
               -F "text=$ERROR_MSG" \
               "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"
-          
+
             exit 1
           fi
 
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
+      - build/app/outputs/apk/release/*.apk
       - coverage/html/**
       - signature_info.txt
 

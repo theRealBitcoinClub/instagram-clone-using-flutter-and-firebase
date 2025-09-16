@@ -75,7 +75,7 @@ workflows:
       - name: Publish APK to Telegram
         script: |
           echo "📤 Preparing to publish APK to Telegram..."
-          
+
           # Check if APK file exists and is readable
           if [ -f "build/app/outputs/flutter-apk/app-release.apk" ] && [ -r "build/app/outputs/flutter-apk/app-release.apk" ]; then
             APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
@@ -89,18 +89,17 @@ workflows:
             done
             exit 1
           fi
-          
+
           echo "📦 Found APK: $APK_PATH"
           echo "📏 APK size: $(du -h "$APK_PATH" | cut -f1)"
-          echo "🔐 File permissions: $(ls -la "$APK_PATH")"
-          
+
           APK_FILENAME=$(basename "$APK_PATH")
           APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
 
           if [ -f "android/app/build.gradle.kts" ]; then
             echo "📝 Found build.gradle.kts file"
             APK_VERSION=$(grep 'val flutterVersionName = ' android/app/build.gradle.kts | sed 's/.*val flutterVersionName = "\([^"]*\)".*/\1/' | head -1)
-          
+
             if [ -z "$APK_VERSION" ]; then
               APK_VERSION=$(grep 'versionName = ' android/app/build.gradle.kts | sed 's/.*versionName = "\([^"]*\)".*/\1/' | head -1)
             fi
@@ -130,57 +129,43 @@ workflows:
             exit 1
           fi
 
-          # Create a simple caption without emojis that might cause issues
+          # Create a simple caption
           CAPTION="New App Release: Mahakka v$APK_VERSION - Built: $(date +'%Y-%m-%d %H:%M') - Commit: ${CM_COMMIT:0:7}"
 
           echo "📤 Uploading APK file..."
-          echo "File to upload: $APK_PATH"
-          echo "File exists: $( [ -f "$APK_PATH" ] && echo "Yes" || echo "No" )"
-          echo "File readable: $( [ -r "$APK_PATH" ] && echo "Yes" || echo "No" )"
           echo "File size: $(wc -c < "$APK_PATH") bytes"
 
-          # Test file upload with a simple curl command first
-          echo "🧪 Testing file upload..."
-          test_upload=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-            -F "chat_id=$TELEGRAM_CHAT_ID" \
-            -F "document=@$APK_PATH" \
-            "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument")
-
-          if [ "$test_upload" = "200" ]; then
-            echo "✅ File upload test successful"
-          else
-            echo "❌ File upload test failed with HTTP code: $test_upload"
-            echo "Trying alternative upload method..."
-          fi
-
-          # Upload with simpler approach
-          response=$(curl -s -w "\n%{http_code}" -X POST \
+          # Upload with timeout and simpler approach
+          response=$(curl --connect-timeout 30 --max-time 120 -s -X POST \
             -F "chat_id=$TELEGRAM_CHAT_ID" \
             -F "document=@$APK_PATH" \
             -F "caption=$CAPTION" \
             "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument")
 
-          # Separate the JSON response from the HTTP status code
-          http_code=$(echo "$response" | tail -n 1)
-          json_response=$(echo "$response" | head -n -1)
-
-          if [ "$http_code" != "200" ]; then
-            echo "❌ HTTP error: $http_code"
-            echo "Response: $json_response"
+          # Check if we got any response
+          if [ -z "$response" ]; then
+            echo "❌ No response received from Telegram - connection timeout or network issue"
+            echo "The APK file might be too large for Telegram's upload limits"
             exit 1
           fi
 
-          if echo "$json_response" | grep -q '"ok":true'; then
+          if echo "$response" | grep -q '"ok":true'; then
             echo "✅ APK successfully published to Telegram!"
-            MESSAGE_ID=$(echo "$json_response" | grep -o '"message_id":[0-9]*' | cut -d: -f2)
+            MESSAGE_ID=$(echo "$response" | grep -o '"message_id":[0-9]*' | cut -d: -f2)
             echo "📨 Message ID: $MESSAGE_ID"
           else
             echo "❌ Failed to publish to Telegram"
-            echo "🔍 Error response: $json_response"
+            echo "🔍 Error response: $response"
 
-            if echo "$json_response" | grep -q '"description"'; then
-              ERROR_DESC=$(echo "$json_response" | grep -o '"description":"[^"]*"' | cut -d'"' -f4)
+            if echo "$response" | grep -q '"description"'; then
+              ERROR_DESC=$(echo "$response" | grep -o '"description":"[^"]*"' | cut -d'"' -f4)
               echo "📝 Error description: $ERROR_DESC"
+
+              # Check if it's a file size limit error
+              if echo "$ERROR_DESC" | grep -qi "too large\|size\|big"; then
+                echo "📁 The APK file might be too large for Telegram (89MB)"
+                echo "ℹ️ Telegram has file size limits for uploads"
+              fi
             fi
 
             ERROR_MSG="APK Upload Failed - Please check build artifacts manually."

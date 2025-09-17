@@ -41,14 +41,14 @@ workflows:
           # Extract versionName and versionCode from pubspec.yaml
           VERSION_NAME=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
           VERSION_CODE=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f2)
-          
+
           echo "📦 Version Name: $VERSION_NAME"
           echo "🔢 Version Code: $VERSION_CODE"
-          
+
           # Set custom APK name with hyphens
           CUSTOM_APK_NAME="mahakka-com-${VERSION_NAME}-${VERSION_CODE}.apk"
           echo "🏷️ Custom APK Name: $CUSTOM_APK_NAME"
-          
+
           echo "🔍 Debug: Environment variables check..."
           echo "CM_KEYSTORE_BASE64: ${CM_KEYSTORE_BASE64:+(set)} (length: ${#CM_KEYSTORE_BASE64})"
           echo "CM_KEYSTORE_PASSWORD: ${CM_KEYSTORE_PASSWORD:+(set)} (length: ${#CM_KEYSTORE_PASSWORD})"
@@ -56,12 +56,13 @@ workflows:
           echo "CM_KEY_PASSWORD: ${CM_KEY_PASSWORD:+(set)} (length: ${#CM_KEY_PASSWORD})"
 
           echo "🔐 Restoring keystore from base64..."
-          echo -n "$CM_KEYSTORE_BASE64" | base64 -d > mahakka.keystore
+          # Create keystore in the android/app directory where Gradle expects it
+          echo -n "$CM_KEYSTORE_BASE64" | base64 -d > android/app/mahakka.keystore
           echo "✅ Keystore restored from base64"
-          echo "🔐 Keystore file info: $(ls -la mahakka.keystore)"
+          echo "🔐 Keystore file info: $(ls -la android/app/mahakka.keystore)"
 
           echo "🔐 Configuring signing for release build..."
-          export STORE_FILE="mahakka.keystore"
+          export STORE_FILE="android/app/mahakka.keystore"  # Updated path
           export STORE_PASSWORD="$CM_KEYSTORE_PASSWORD"
           export KEY_ALIAS="$CM_KEY_ALIAS"
           export KEY_PASSWORD="$CM_KEY_PASSWORD"
@@ -76,11 +77,11 @@ workflows:
           flutter build apk --release
 
           echo "🏷️ Renaming APK to: $CUSTOM_APK_NAME"
-          
+
           # Define source and target paths clearly
           SOURCE_APK="build/app/outputs/flutter-apk/app-release.apk"
           TARGET_APK="build/app/outputs/flutter-apk/$CUSTOM_APK_NAME"
-          
+
           # Verify source APK exists before renaming
           if [ ! -f "$SOURCE_APK" ]; then
             echo "❌ Source APK not found: $SOURCE_APK"
@@ -88,14 +89,14 @@ workflows:
             ls -la build/app/outputs/flutter-apk/
             exit 1
           fi
-          
+
           # Rename the built APK
           mv "$SOURCE_APK" "$TARGET_APK"
-          
+
           echo "✅ APK renamed successfully"
           echo "📦 Final APK location: $TARGET_APK"
           echo "📊 File size: $(du -h "$TARGET_APK" | cut -f1)"
-          
+
           # Verify the renamed file exists
           if [ -f "$TARGET_APK" ]; then
             echo "✅ Renamed APK verified and ready for publishing"

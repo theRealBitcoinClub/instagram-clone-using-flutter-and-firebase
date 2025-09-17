@@ -29,7 +29,7 @@ val flutterCompileSdkVersion = 36
 val flutterMinSdkVersion = 27
 val flutterTargetSdkVersion = 36
 val flutterNdkVersion = "27.0.12077973"
-val flutterVersionCode = 2025091706
+val flutterVersionCode = 2025091707
 val flutterVersionName = "2.8.1-BCH"
 
 android {
@@ -58,6 +58,10 @@ android {
             if (storeFileEnv != null) {
                 storeFile = file(storeFileEnv)
                 println("Using store file: $storeFileEnv")
+            } else {
+                // Fallback to relative path if env var not set
+                storeFile = file("mahakka.keystore")
+                println("Using default store file: mahakka.keystore")
             }
             if (storePasswordEnv != null) {
                 storePassword = storePasswordEnv

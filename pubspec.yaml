@@ -75,7 +75,7 @@ icons_launcher:
     android:
       enable: true
       image_path: "assets/icon_round_1010.png"
-      notification_image: "assets/icon_round_1010.png"
+      #notification_image: "assets/icon_round_1010.png"
       #adaptive_background_color: '#000000'
       adaptive_background_image: "assets/icon_round_1010.png"
       adaptive_foreground_image: "assets/icon_round_1010.png"
@@ -92,5 +92,15 @@ flutter:
 flutter_native_splash:
   color: "#000000"
   image: assets/icon_round_1010.png
-  android: true
-  web: true
+  #branding: assets/branding-development.png
+  color_dark: "#000000"
+  image_dark: assets/icon_round_1010.png
+  #branding_dark: assets/branding-development.png
+
+  android_12:
+    image: assets/icon_round_200.png
+    icon_background_color: "#000000"
+    image_dark: assets/icon_round_200.png
+    icon_background_color_dark: "#000000"
+
+  web: false

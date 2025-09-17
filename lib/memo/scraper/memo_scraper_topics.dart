@@ -250,8 +250,11 @@ class MemoScraperTopic {
 
           if (post.youtubeId != null && !(await YouTubeVideoChecker().isVideoAvailable(post.youtubeId!))) continue;
 
-          if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase())) && !post.hasMedia)
+          if (post.text != null &&
+              hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase())) &&
+              !post.hasImageMedia) {
             continue;
+          }
 
           postList.add(post);
         } catch (e) {

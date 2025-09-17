@@ -17,6 +17,7 @@ import 'package:mahakka/widgets/unified_video_player.dart';
 
 import '../../memo/base/text_input_verifier.dart';
 import '../../memo/memo_reg_exp.dart';
+import '../../provider/telegram_bot_publisher.dart';
 import '../../providers/post_creator_provider.dart';
 import '../../url_utils.dart';
 import '../add/publish_confirmation_activity.dart';
@@ -589,6 +590,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     if (success) {
       _clearAndConfetti();
       showSnackBar(type: SnackbarType.success, message, ctx);
+      ref.read(telegramBotPublisherProvider).publishPost(postText: widget.post.text!);
     } else if (message.isNotEmpty && mounted) {
       showSnackBar(type: SnackbarType.error, message, ctx);
     }

@@ -236,6 +236,10 @@ class MemoModelPost {
     );
   }
 
+  bool get hasImageMedia {
+    return (imageUrl != null && imageUrl!.isNotEmpty) || (imgurUrl != null && imgurUrl!.isNotEmpty);
+  }
+
   bool get hasMedia {
     return (imageUrl != null && imageUrl!.isNotEmpty) ||
         (imgurUrl != null && imgurUrl!.isNotEmpty) ||

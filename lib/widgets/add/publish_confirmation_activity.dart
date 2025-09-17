@@ -127,15 +127,13 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       context: context,
       builder: (dialogContext) => DeleteConfirmationDialog(
         theme: Theme.of(context),
-        onDelete: () {
+        onCancel: () {
           ref.read(userProvider)!.temporaryTipReceiver = null;
           ref.read(userProvider)!.temporaryTipAmount = null;
           Navigator.of(dialogContext).pop();
           Navigator.of(context).pop(false);
         },
-        onCancel: () {
-          ref.read(userProvider)!.temporaryTipReceiver = null;
-          ref.read(userProvider)!.temporaryTipAmount = null;
+        onContinue: () {
           Navigator.of(dialogContext).pop();
         },
       ),
@@ -149,7 +147,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
     );
   }
 
-  void _sendPost() {
+  void _onSendPost() async {
     try {
       Navigator.of(context).pop(true);
     } catch (e) {
@@ -220,7 +218,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
         actions: [
           IconButton(
             icon: Icon(Icons.check, color: colorScheme.onPrimary),
-            onPressed: _sendPost,
+            onPressed: _onSendPost,
             tooltip: 'Confirm and Send',
           ),
         ],
@@ -246,7 +244,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _showDeleteConfirmation,
+                      onPressed: () {
+                        _showDeleteConfirmation();
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.error,
                         foregroundColor: colorScheme.onError,
@@ -263,7 +263,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                   const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _sendPost,
+                      onPressed: () {
+                        _onSendPost();
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,

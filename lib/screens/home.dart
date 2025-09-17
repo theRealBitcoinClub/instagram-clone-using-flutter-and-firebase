@@ -10,6 +10,7 @@ import 'package:mahakka/tab_item_data.dart';
 import '../memo/memo_webview_screen.dart';
 import '../provider/navigation_providers.dart';
 import '../provider/scraper_provider.dart';
+import 'add/add_post_providers.dart';
 
 class HomeSceen extends ConsumerStatefulWidget {
   const HomeSceen({Key? key}) : super(key: key);
@@ -48,6 +49,16 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     _tabController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  void _moveToTab(int index) {
+    ref.read(tabIndexProvider.notifier).setTab(index);
+    if (index != AppTab.add.tabIndex) {
+      ref.read(imgurUrlProvider.notifier).state = '';
+      ref.read(youtubeVideoIdProvider.notifier).state = '';
+      ref.read(ipfsCidProvider.notifier).state = '';
+      ref.read(odyseeUrlProvider.notifier).state = '';
+    }
   }
 
   @override
@@ -91,7 +102,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         activeColor: cupertinoActiveColor,
         inactiveColor: cupertinoInactiveColor,
         currentIndex: currentTabIndex,
-        onTap: (index) => ref.read(tabIndexProvider.notifier).setTab(index),
+        onTap: (index) => _moveToTab(index),
         iconSize: 30.0,
         border: Border(top: BorderSide(color: theme.dividerColor.withOpacity(0.5), width: 0.5)),
         items: AppTab.values.map((tabData) {

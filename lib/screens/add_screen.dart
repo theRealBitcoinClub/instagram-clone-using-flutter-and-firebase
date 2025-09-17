@@ -21,6 +21,7 @@ import '../memo/base/memo_verifier.dart';
 import '../memo/base/text_input_verifier.dart';
 // Import the Odysee widgets and providers
 import '../memo/model/memo_model_post.dart';
+import '../provider/telegram_bot_publisher.dart';
 import '../repositories/post_repository.dart';
 import '../views_taggable/view_models/search_view_model.dart';
 import '../views_taggable/widgets/comment_text_field.dart';
@@ -565,6 +566,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           MemoConfetti().launch(context);
           _clearInputs();
           _showSuccessSnackBar('Successfully published!');
+          ref.read(telegramBotPublisherProvider).publishPost(postText: post.text!, mediaUrl: post.mediaUrl);
         } else {
           // _focusNode.requestFocus(); // Refocus on error
           showQrCodeDialog(context: context, theme: Theme.of(context), user: user, memoOnly: true);

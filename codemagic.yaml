@@ -1,17 +1,16 @@
 workflows:
   android-apk-free:
-    name: Android APK Build & GitHub Release
+    name: Android APK Build & Telegram Release
     environment:
       groups:
         - keystore
+        - telegram_credentials
       vars:
         BUNDLE: "false"
     scripts:
       - name: Setup and Get Dependencies
         script: |
-          echo "📦 Setting up environment..."
           flutter packages pub get
-          echo "✅ Dependencies installed"
 
       - name: Run All Tests
         script: |
@@ -72,7 +71,6 @@ workflows:
 
           echo "🏗️ Building APK..."
           flutter build apk --release
-          echo "✅ APK build completed"
 
       - name: Debug Signing Configuration
         script: |
@@ -125,156 +123,16 @@ workflows:
             echo "This is a debug/unsigned APK for testing purposes"
           fi
 
-      - name: Monitor Free Build Minutes
-        script: |
-          echo "📊 Codemagic Free Tier Monitoring"
-          echo "================================="
-          echo "Build started at: $(date)"
-          echo "Free tier allowance: 500 minutes per month"
-          echo "Current build time: Tracking..."
-          echo "Tip: Optimize with --build-cache and --parallel flags"
-          echo "================================="
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+      - build/app/outputs/apk/release/*.apk
+      - coverage/html/**
+      - signature_info.txt
 
-      - name: Setup GitHub CLI
-        script: |
-          echo "🔧 Setting up GitHub CLI..."
-          echo "GH_TOKEN available: ${GH_TOKEN:+(yes)}"
-          echo "Current directory: $(pwd)"
-          
-          # Install GitHub CLI if not available
-          if ! command -v gh &> /dev/null; then
-            echo "📦 Installing GitHub CLI..."
-            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-            sudo apt update
-            sudo apt install gh -y
-          fi
-          
-          echo "✅ GitHub CLI version: $(gh --version)"
-          
-          # Configure GitHub CLI
-          echo "⚙️ Configuring GitHub CLI authentication..."
-          echo "$GH_TOKEN" | gh auth login --with-token
-          gh auth status
-          echo "✅ GitHub CLI configured"
-
-      - name: Extract Version Information
-        script: |
-          echo "🔖 Extracting version information for release..."
-          
-          if [ -f "android/app/build.gradle.kts" ]; then
-            echo "📝 Found build.gradle.kts file"
-            APK_VERSION=$(grep 'val flutterVersionName = ' android/app/build.gradle.kts | sed 's/.*val flutterVersionName = "\([^"]*\)".*/\1/' | head -1)
-          
-            if [ -z "$APK_VERSION" ]; then
-              APK_VERSION=$(grep 'versionName = ' android/app/build.gradle.kts | sed 's/.*versionName = "\([^"]*\)".*/\1/' | head -1)
-            fi
-          elif [ -f "pubspec.yaml" ]; then
-            APK_VERSION=$(grep 'version:' pubspec.yaml | sed "s/version: //" | tr -d ' ')
-          else
-            APK_VERSION="unknown"
-          fi
-
-          if [ -z "$APK_VERSION" ]; then
-            APK_VERSION="unknown"
-          fi
-
-          echo "📦 Version: $APK_VERSION"
-          echo "🔖 Commit: ${CM_COMMIT:0:7}"
-          echo "👤 Committer: $CM_COMMITTER"
-          
-          # Export for use in next steps
-          export RELEASE_VERSION="v$APK_VERSION"
-          export RELEASE_TAG="${RELEASE_VERSION}-${CM_COMMIT:0:7}"
-          echo "🏷️ Release tag: $RELEASE_TAG"
-
-      - name: Create GitHub Release
-        script: |
-          echo "🚀 Creating GitHub Release..."
-          echo "Repository: $CM_REPO_SLUG"
-          echo "Release tag: $RELEASE_TAG"
-          echo "Version: $RELEASE_VERSION"
-          
-          # Check if release already exists
-          if gh release view "$RELEASE_TAG" &>/dev/null; then
-            echo "⚠️ Release $RELEASE_TAG already exists, deleting it..."
-            gh release delete "$RELEASE_TAG" --yes
-          fi
-          
-          # Create release notes
-          RELEASE_NOTES="## Mahakka $RELEASE_VERSION
-  
-            **Build Information:**
-          - **Version:** $APK_VERSION
-          - **Commit:** ${CM_COMMIT:0:7}
-          - **Built by:** $CM_COMMITTER
-          - **Build date:** $(date +'%Y-%m-%d %H:%M:%S UTC')
-          - **Signed:** $(if [ -f "mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then echo "Yes"; else echo "No (Debug)"; fi)
-            
-            **SHA-256 Fingerprint:**
-            \`\`\`
-            $SHA256_FINGERPRINT
-            \`\`\`
-            
-            This is an automated release built with Codemagic CI/CD."
-            
-            echo "📝 Release notes prepared"
-            echo "Creating release..."
-            
-            # Create the release
-            gh release create "$RELEASE_TAG" \
-            --title "Mahakka $RELEASE_VERSION" \
-            --notes "$RELEASE_NOTES" \
-            --target "$CM_BRANCH"
-          
-          echo "✅ GitHub Release created: $RELEASE_TAG"
-          
-          - name: Upload APK to GitHub Release
-            script: |
-              echo "📤 Uploading APK to GitHub Release..."
-              APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
-              
-              if [ ! -f "$APK_PATH" ]; then
-                echo "❌ APK file not found: $APK_PATH"
-                exit 1
-              fi
-              
-              echo "📦 APK file: $APK_PATH"
-              echo "📏 Size: $(du -h "$APK_PATH" | cut -f1)"
-              
-              # Upload APK to release
-              gh release upload "$RELEASE_TAG" "$APK_PATH" --clobber
-              
-              echo "✅ APK uploaded to GitHub Release"
-              
-              # Also upload signature info if available
-              if [ -f "signature_info.txt" ]; then
-                echo "📝 Uploading signature information..."
-                gh release upload "$RELEASE_TAG" "signature_info.txt" --clobber
-                echo "✅ Signature info uploaded"
-              fi
-          
-          - name: Display Release Information
-            script: |
-              echo "🎉 Release completed successfully!"
-              echo "================================="
-              echo "📱 App: Mahakka"
-              echo "🔖 Version: $APK_VERSION"
-              echo "🏷️ Release Tag: $RELEASE_TAG"
-              echo "📦 APK Size: $(du -h build/app/outputs/flutter-apk/app-release.apk | cut -f1)"
-              echo "🔗 Release URL: https://github.com/$CM_REPO_SLUG/releases/tag/$RELEASE_TAG"
-              echo "================================="
-          
-          artifacts:
-            - build/app/outputs/flutter-apk/*.apk
-            - build/app/outputs/apk/release/*.apk
-            - coverage/html/**
-            - signature_info.txt
-          
-          publishing:
-            email:
-              recipients:
-                - bitcoinizado@proton.me
-              notify:
-                success: true
-                failure: true
+    publishing:
+      email:
+        recipients:
+          - bitcoinizado@proton.me
+        notify:
+          success: true
+          failure: true

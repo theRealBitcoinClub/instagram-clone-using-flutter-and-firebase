@@ -234,7 +234,7 @@ class MemoPostScraper {
 
     //TODO replace the trigger URLS, replace all the URLs except one that is used for preview
 
-    if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase())) && !post.hasMedia)
+    if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase())) && !post.hasImageMedia)
       return null;
 
     post.text = post.text ?? "";

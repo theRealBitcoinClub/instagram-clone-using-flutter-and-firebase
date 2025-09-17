@@ -28,8 +28,8 @@ workflows:
           echo "📦 Version Name: $VERSION_NAME"
           echo "🔢 Version Code: $VERSION_CODE"
           
-          # Set custom APK name
-          export CUSTOM_APK_NAME="mahakka_com_${VERSION_NAME}_${VERSION_CODE}.apk"
+          # Set custom APK name with hyphens
+          export CUSTOM_APK_NAME="mahakka-com-${VERSION_NAME}-${VERSION_CODE}.apk"
           echo "🏷️ Custom APK Name: $CUSTOM_APK_NAME"
 
       - name: Build APK
@@ -64,17 +64,44 @@ workflows:
         script: |
           echo "🏷️ Renaming APK to: $CUSTOM_APK_NAME"
           
+          # Define source and target paths clearly
+          SOURCE_APK="build/app/outputs/flutter-apk/app-release.apk"
+          TARGET_APK="build/app/outputs/flutter-apk/$CUSTOM_APK_NAME"
+          
+          # Verify source APK exists before renaming
+          if [ ! -f "$SOURCE_APK" ]; then
+            echo "❌ Source APK not found: $SOURCE_APK"
+            echo "📁 Directory contents:"
+            ls -la build/app/outputs/flutter-apk/
+            exit 1
+          fi
+          
           # Rename the built APK
-          mv build/app/outputs/flutter-apk/app-release.apk "build/app/outputs/flutter-apk/$CUSTOM_APK_NAME"
+          mv "$SOURCE_APK" "$TARGET_APK"
           
           echo "✅ APK renamed successfully"
-          echo "📦 Final APK location: build/app/outputs/flutter-apk/$CUSTOM_APK_NAME"
-          echo "📊 File size: $(du -h "build/app/outputs/flutter-apk/$CUSTOM_APK_NAME" | cut -f1)"
+          echo "📦 Final APK location: $TARGET_APK"
+          echo "📊 File size: $(du -h "$TARGET_APK" | cut -f1)"
+          
+          # Verify the renamed file exists
+          if [ -f "$TARGET_APK" ]; then
+            echo "✅ Renamed APK verified and ready for publishing"
+          else
+            echo "❌ Renamed APK not found at expected location"
+            exit 1
+          fi
 
       - name: Verify Signing
         script: |
-          echo "🔍 Verifying signature..."
-          if keytool -printcert -jarfile "build/app/outputs/flutter-apk/$CUSTOM_APK_NAME" 2>/dev/null; then
+          echo "🔍 Verifying signature of renamed APK..."
+          TARGET_APK="build/app/outputs/flutter-apk/$CUSTOM_APK_NAME"
+          
+          if [ ! -f "$TARGET_APK" ]; then
+            echo "❌ APK not found for verification: $TARGET_APK"
+            exit 1
+          fi
+          
+          if keytool -printcert -jarfile "$TARGET_APK" 2>/dev/null; then
             echo "✅ APK is properly signed"
           else
             echo "❌ APK signing verification failed"
@@ -87,18 +114,20 @@ workflows:
           echo "This information can be used to verify the APK authenticity"
           echo ""
           
-          if [ -f "mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
-            keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk
+          TARGET_APK="build/app/outputs/flutter-apk/$CUSTOM_APK_NAME"
           
-            keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk > signature_info.txt
+          if [ -f "$TARGET_APK" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
+            keytool -printcert -jarfile "$TARGET_APK"
+          
+            keytool -printcert -jarfile "$TARGET_APK" > signature_info.txt
           
             if command -v apksigner &> /dev/null; then
               echo ""
               echo "=== APKSIGNER VERIFICATION ==="
-              apksigner verify --print-certs build/app/outputs/flutter-apk/app-release.apk
+              apksigner verify --print-certs "$TARGET_APK"
             fi
           
-            SHA256_FINGERPRINT=$(keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk | grep "SHA256" | head -1 | sed 's/.*SHA256: //' | tr -d ':' | tr -d ' ')
+            SHA256_FINGERPRINT=$(keytool -printcert -jarfile "$TARGET_APK" | grep "SHA256" | head -1 | sed 's/.*SHA256: //' | tr -d ':' | tr -d ' ')
             echo ""
             echo "=== QUICK VERIFICATION ==="
             echo "SHA-256 Fingerprint: $SHA256_FINGERPRINT"
@@ -108,7 +137,7 @@ workflows:
           fi
 
     artifacts:
-      - build/app/outputs/flutter-apk/mahakka_com_*_*.apk
+      - build/app/outputs/flutter-apk/mahakka-com-*.apk
 
     publishing:
       email:

@@ -29,7 +29,7 @@ val flutterCompileSdkVersion = 36
 val flutterMinSdkVersion = 27
 val flutterTargetSdkVersion = 36
 val flutterNdkVersion = "27.0.12077973"
-val flutterVersionCode = 2025091704
+val flutterVersionCode = 2025091705
 val flutterVersionName = "2.8.1-BCH"
 
 android {
@@ -49,23 +49,34 @@ android {
     signingConfigs {
         create("release") {
             // Try to get from environment variables first (for CI/CD)
-            val storeFileEnv = System.getenv("CM_KEYSTORE_PATH") ?: keystoreProperties.getProperty("storeFile")
-            val storePasswordEnv = System.getenv("CM_KEYSTORE_PASSWORD") ?: keystoreProperties.getProperty("storePassword")
-            val keyAliasEnv = System.getenv("CM_KEY_ALIAS") ?: keystoreProperties.getProperty("keyAlias")
-            val keyPasswordEnv = System.getenv("CM_KEY_PASSWORD") ?: keystoreProperties.getProperty("keyPassword")
+            // Use the same variable names as in Codemagic script
+            val storeFileEnv = System.getenv("STORE_FILE") ?: keystoreProperties.getProperty("storeFile")
+            val storePasswordEnv = System.getenv("STORE_PASSWORD") ?: keystoreProperties.getProperty("storePassword")
+            val keyAliasEnv = System.getenv("KEY_ALIAS") ?: keystoreProperties.getProperty("keyAlias")
+            val keyPasswordEnv = System.getenv("KEY_PASSWORD") ?: keystoreProperties.getProperty("keyPassword")
 
             if (storeFileEnv != null) {
                 storeFile = file(storeFileEnv)
+                println("Using store file: $storeFileEnv")
             }
             if (storePasswordEnv != null) {
                 storePassword = storePasswordEnv
+                println("Store password is set")
             }
             if (keyAliasEnv != null) {
                 keyAlias = keyAliasEnv
+                println("Key alias: $keyAliasEnv")
             }
             if (keyPasswordEnv != null) {
                 keyPassword = keyPasswordEnv
+                println("Key password is set")
             }
+
+            // Debug output to see what's being used
+            println("Signing config - Store file: ${storeFile?.name}")
+            println("Signing config - Has store password: ${storePassword?.isNotEmpty()}")
+            println("Signing config - Key alias: $keyAlias")
+            println("Signing config - Has key password: ${keyPassword?.isNotEmpty()}")
         }
     }
 
@@ -76,8 +87,8 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutterMinSdkVersion
         targetSdk = flutterTargetSdkVersion
-        versionCode = 2025091704
-        versionName = "2.8.1-BCH"
+        versionCode = flutterVersionCode
+        versionName = flutterVersionName
     }
 
     buildTypes {
@@ -88,9 +99,11 @@ android {
                 releaseSigningConfig.storePassword?.isNotEmpty() == true &&
                 releaseSigningConfig.keyAlias?.isNotEmpty() == true &&
                 releaseSigningConfig.keyPassword?.isNotEmpty() == true) {
+                println("Using RELEASE signing configuration")
                 releaseSigningConfig
             } else {
                 // Fallback to debug signing if release config is not available
+                println("Falling back to DEBUG signing configuration")
                 signingConfigs.getByName("debug")
             }
 

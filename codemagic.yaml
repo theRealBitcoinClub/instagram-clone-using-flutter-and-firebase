@@ -22,7 +22,18 @@ workflows:
         script: |
           echo "🔍 Debug: Checking keystore and environment variables..."
           echo "Current directory: $(pwd)"
-          echo "Looking for keystore at: mahakka.keystore"
+          echo "Looking for base64 keystore in environment variable..."
+
+          # Restore keystore from base64 if available
+          if [ -n "$CM_KEYSTORE_BASE64" ]; then
+            echo "✅ Base64 keystore data found in environment variable"
+            echo "🔐 Restoring keystore from base64..."
+            echo -n "$CM_KEYSTORE_BASE64" | base64 -d > mahakka.keystore
+            echo "✅ Keystore restored from base64"
+            echo "🔐 Keystore file info: $(ls -la mahakka.keystore)"
+          else
+            echo "❌ CM_KEYSTORE_BASE64 environment variable not set or empty"
+          fi
 
           if [ -f "mahakka.keystore" ]; then
             echo "✅ Keystore file found"

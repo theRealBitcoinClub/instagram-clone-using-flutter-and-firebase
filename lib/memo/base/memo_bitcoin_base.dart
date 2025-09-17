@@ -305,7 +305,7 @@ class MemoBitcoinBase {
       // Calculate fee based on estimated size (0.00001 BCH per 1000 bytes)
       // final feePerByte = BtcUtils.toSatoshi("0.000001");
       // final fee = BigInt.from(estimatedSize) * feePerByte ~/ BigInt.from(1000);
-      final fee = BtcUtils.toSatoshi("0.000005");
+      final fee = BtcUtils.toSatoshi("0.000007");
       // final fee = BigInt.from(estimatedSize) * feePerByte ~/ BigInt.from(1000);
 
       // Check if we have enough balance

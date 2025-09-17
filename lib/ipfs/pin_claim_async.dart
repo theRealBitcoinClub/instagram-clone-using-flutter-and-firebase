@@ -6,11 +6,11 @@ import 'package:http/http.dart' as http;
 
 import '../memo/base/memo_bitcoin_base.dart';
 
-class PinClaimAsync {
+class IpfsPinClaimService {
   final MemoBitcoinBase wallet;
   final String server;
 
-  PinClaimAsync({required this.wallet, required this.server});
+  IpfsPinClaimService({required this.wallet, required this.server});
 
   Future<double> fetchBCHWritePrice(File file) async {
     try {

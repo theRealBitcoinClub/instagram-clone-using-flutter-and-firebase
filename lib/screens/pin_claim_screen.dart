@@ -30,7 +30,7 @@ class _PinClaimScreenState extends ConsumerState<PinClaimScreen> {
   bool _isUploading = false;
   bool _isPinning = false;
 
-  PinClaimAsync? _pinClaim;
+  IpfsPinClaimService? _pinClaim;
   final String _serverUrl = 'https://file-stage.fullstack.cash';
 
   @override
@@ -39,7 +39,7 @@ class _PinClaimScreenState extends ConsumerState<PinClaimScreen> {
     // Initialize PinClaimAsync with data from providers
     final wallet = ref.read(electrumServiceProvider).value;
     if (wallet != null) {
-      _pinClaim = PinClaimAsync(wallet: wallet, server: _serverUrl);
+      _pinClaim = IpfsPinClaimService(wallet: wallet, server: _serverUrl);
     }
   }
 

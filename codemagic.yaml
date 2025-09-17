@@ -18,7 +18,7 @@ workflows:
           flutter test --test-randomize-ordering-seed random
           echo "✅ All tests passed!"
 
-      - name: Extract Version Info
+      - name: Extract Version Info and Build APK
         script: |
           echo "📋 Extracting version information..."
           # Extract versionName and versionCode from pubspec.yaml
@@ -29,11 +29,9 @@ workflows:
           echo "🔢 Version Code: $VERSION_CODE"
           
           # Set custom APK name with hyphens
-          export CUSTOM_APK_NAME="mahakka-com-${VERSION_NAME}-${VERSION_CODE}.apk"
+          CUSTOM_APK_NAME="mahakka-com-${VERSION_NAME}-${VERSION_CODE}.apk"
           echo "🏷️ Custom APK Name: $CUSTOM_APK_NAME"
-
-      - name: Build APK
-        script: |
+          
           echo "🔍 Debug: Environment variables check..."
           echo "CM_KEYSTORE_BASE64: ${CM_KEYSTORE_BASE64:+(set)} (length: ${#CM_KEYSTORE_BASE64})"
           echo "CM_KEYSTORE_PASSWORD: ${CM_KEYSTORE_PASSWORD:+(set)} (length: ${#CM_KEYSTORE_PASSWORD})"
@@ -60,8 +58,6 @@ workflows:
           echo "🏗️ Building APK..."
           flutter build apk --release
 
-      - name: Rename APK
-        script: |
           echo "🏷️ Renaming APK to: $CUSTOM_APK_NAME"
           
           # Define source and target paths clearly
@@ -86,6 +82,8 @@ workflows:
           # Verify the renamed file exists
           if [ -f "$TARGET_APK" ]; then
             echo "✅ Renamed APK verified and ready for publishing"
+            # Write the custom APK name to a file for use in subsequent steps
+            echo "$CUSTOM_APK_NAME" > custom_apk_name.txt
           else
             echo "❌ Renamed APK not found at expected location"
             exit 1
@@ -94,6 +92,8 @@ workflows:
       - name: Verify Signing
         script: |
           echo "🔍 Verifying signature of renamed APK..."
+          # Read the custom APK name from file
+          CUSTOM_APK_NAME=$(cat custom_apk_name.txt)
           TARGET_APK="build/app/outputs/flutter-apk/$CUSTOM_APK_NAME"
           
           if [ ! -f "$TARGET_APK" ]; then
@@ -114,6 +114,8 @@ workflows:
           echo "This information can be used to verify the APK authenticity"
           echo ""
           
+          # Read the custom APK name from file
+          CUSTOM_APK_NAME=$(cat custom_apk_name.txt)
           TARGET_APK="build/app/outputs/flutter-apk/$CUSTOM_APK_NAME"
           
           if [ -f "$TARGET_APK" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
@@ -127,7 +129,7 @@ workflows:
               apksigner verify --print-certs "$TARGET_APK"
             fi
           
-            SHA256_FINGERPRINT=$(keytool -printcert -jarfile "$TARGET_APK" | grep "SHA256" | head -1 | sed 's/.*SHA256: //' | tr -d ':' | tr -d ' ')
+            SHA256_FINGERPRINT=$(keytool -printcert -jarfile "$TARGET_APK" | grep "SHA256" | head -1 | sed 's/❌ SHA256: //' | tr -d ':' | tr -d ' ')
             echo ""
             echo "=== QUICK VERIFICATION ==="
             echo "SHA-256 Fingerprint: $SHA256_FINGERPRINT"
@@ -138,6 +140,7 @@ workflows:
 
     artifacts:
       - build/app/outputs/flutter-apk/mahakka-com-*.apk
+      - custom_apk_name.txt
 
     publishing:
       email:

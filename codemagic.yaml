@@ -18,94 +18,67 @@ workflows:
           flutter test --test-randomize-ordering-seed random
           echo "✅ All tests passed!"
 
+      - name: Extract Version Info
+        script: |
+          echo "📋 Extracting version information..."
+          # Extract versionName and versionCode from pubspec.yaml
+          VERSION_NAME=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
+          VERSION_CODE=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f2)
+          
+          echo "📦 Version Name: $VERSION_NAME"
+          echo "🔢 Version Code: $VERSION_CODE"
+          
+          # Set custom APK name
+          export CUSTOM_APK_NAME="mahakka_com_${VERSION_NAME}_${VERSION_CODE}.apk"
+          echo "🏷️ Custom APK Name: $CUSTOM_APK_NAME"
+
       - name: Build APK
         script: |
-          echo "🔍 Debug: Checking keystore and environment variables..."
-          echo "Current directory: $(pwd)"
-          echo "Looking for base64 keystore in environment variable..."
+          echo "🔍 Debug: Environment variables check..."
+          echo "CM_KEYSTORE_BASE64: ${CM_KEYSTORE_BASE64:+(set)} (length: ${#CM_KEYSTORE_BASE64})"
+          echo "CM_KEYSTORE_PASSWORD: ${CM_KEYSTORE_PASSWORD:+(set)} (length: ${#CM_KEYSTORE_PASSWORD})"
+          echo "CM_KEY_ALIAS: ${CM_KEY_ALIAS:+(set)} (value: $CM_KEY_ALIAS)"
+          echo "CM_KEY_PASSWORD: ${CM_KEY_PASSWORD:+(set)} (length: ${#CM_KEY_PASSWORD})"
 
-          # Restore keystore from base64 if available
-          if [ -n "$CM_KEYSTORE_BASE64" ]; then
-            echo "✅ Base64 keystore data found in environment variable"
-            echo "🔐 Restoring keystore from base64..."
-            echo -n "$CM_KEYSTORE_BASE64" | base64 -d > mahakka.keystore
-            echo "✅ Keystore restored from base64"
-            echo "🔐 Keystore file info: $(ls -la mahakka.keystore)"
-          else
-            echo "❌ CM_KEYSTORE_BASE64 environment variable not set or empty"
-          fi
+          echo "🔐 Restoring keystore from base64..."
+          echo -n "$CM_KEYSTORE_BASE64" | base64 -d > mahakka.keystore
+          echo "✅ Keystore restored from base64"
+          echo "🔐 Keystore file info: $(ls -la mahakka.keystore)"
 
-          if [ -f "mahakka.keystore" ]; then
-            echo "✅ Keystore file found"
-            echo "🔐 Keystore file info: $(ls -la mahakka.keystore)"
-          else
-            echo "❌ Keystore file NOT found at mahakka.keystore"
-            echo "📁 Root directory contents:"
-            ls -la | grep keystore || echo "No keystore files found in root"
-          fi
+          echo "🔐 Configuring signing for release build..."
+          export STORE_FILE="mahakka.keystore"
+          export STORE_PASSWORD="$CM_KEYSTORE_PASSWORD"
+          export KEY_ALIAS="$CM_KEY_ALIAS"
+          export KEY_PASSWORD="$CM_KEY_PASSWORD"
 
-          echo "🔑 Environment variables check:"
-          echo "CM_KEYSTORE_PASSWORD: ${CM_KEYSTORE_PASSWORD:+(set)}${CM_KEYSTORE_PASSWORD:+ (length: ${#CM_KEYSTORE_PASSWORD})}"
-          echo "CM_KEY_ALIAS: ${CM_KEY_ALIAS:+(set)}${CM_KEY_ALIAS:+ (value: $CM_KEY_ALIAS)}"
-          echo "CM_KEY_PASSWORD: ${CM_KEY_PASSWORD:+(set)}${CM_KEY_PASSWORD:+ (length: ${#CM_KEY_PASSWORD})}"
-
-          if [ -f "mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then
-            echo "🔐 Configuring signing for release build..."
-            export STORE_FILE="mahakka.keystore"
-            export STORE_PASSWORD="$CM_KEYSTORE_PASSWORD"
-            export KEY_ALIAS="mahakka"
-            export KEY_PASSWORD="${CM_KEY_PASSWORD:-$CM_KEYSTORE_PASSWORD}"
-
-            echo "📋 Exporting signing environment variables:"
-            echo "STORE_FILE: $STORE_FILE"
-            echo "STORE_PASSWORD: ${STORE_PASSWORD:+(set)} (length: ${#STORE_PASSWORD})"
-            echo "KEY_ALIAS: $KEY_ALIAS"
-            echo "KEY_PASSWORD: ${KEY_PASSWORD:+(set)} (length: ${#KEY_PASSWORD})"
-          else
-            echo "⚠️ Building unsigned APK (no keystore or password)"
-            echo "❌ Reason: "
-          
-            if [ ! -f "mahakka.keystore" ]; then
-              echo "   - Keystore file not found"
-            fi
-          
-            if [ -z "$CM_KEYSTORE_PASSWORD" ]; then
-              echo "   - CM_KEYSTORE_PASSWORD environment variable not set or empty"
-            fi
-          
-            # Clear any previous signing environment variables
-            unset STORE_FILE
-            unset STORE_PASSWORD
-            unset KEY_ALIAS
-            unset KEY_PASSWORD
-          fi
+          echo "📋 Exporting signing environment variables:"
+          echo "STORE_FILE: $STORE_FILE"
+          echo "STORE_PASSWORD: ${STORE_PASSWORD:+(set)} (length: ${#STORE_PASSWORD})"
+          echo "KEY_ALIAS: $KEY_ALIAS"
+          echo "KEY_PASSWORD: ${KEY_PASSWORD:+(set)} (length: ${#KEY_PASSWORD})"
 
           echo "🏗️ Building APK..."
           flutter build apk --release
 
-      - name: Debug Signing Configuration
+      - name: Rename APK
         script: |
-          echo "🔍 Debug: Checking build environment after build..."
-          echo "Environment variables:"
-          env | grep -E '(STORE|KEY|PASSWORD)' || echo "No signing environment variables found"
+          echo "🏷️ Renaming APK to: $CUSTOM_APK_NAME"
           
-          echo "📁 Checking build outputs:"
-          ls -la build/app/outputs/flutter-apk/ || echo "No build outputs directory"
+          # Rename the built APK
+          mv build/app/outputs/flutter-apk/app-release.apk "build/app/outputs/flutter-apk/$CUSTOM_APK_NAME"
           
-          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
-            echo "📦 APK file exists, checking signing status:"
-            # Check if APK is signed
-            if keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk 2>/dev/null; then
-              echo "✅ APK appears to be signed"
-            else
-              echo "❌ APK is NOT signed or cannot verify signature"
-              echo "Trying apksigner:"
-              if command -v apksigner &> /dev/null; then
-                apksigner verify --print-certs build/app/outputs/flutter-apk/app-release.apk || echo "apksigner verification failed"
-              else
-                echo "apksigner not available"
-              fi
-            fi
+          echo "✅ APK renamed successfully"
+          echo "📦 Final APK location: build/app/outputs/flutter-apk/$CUSTOM_APK_NAME"
+          echo "📊 File size: $(du -h "build/app/outputs/flutter-apk/$CUSTOM_APK_NAME" | cut -f1)"
+
+      - name: Verify Signing
+        script: |
+          echo "🔍 Verifying signature..."
+          if keytool -printcert -jarfile "build/app/outputs/flutter-apk/$CUSTOM_APK_NAME" 2>/dev/null; then
+            echo "✅ APK is properly signed"
+          else
+            echo "❌ APK signing verification failed"
+            exit 1
           fi
 
       - name: Extract and Display Signing Information
@@ -135,10 +108,7 @@ workflows:
           fi
 
     artifacts:
-      - build/app/outputs/flutter-apk/*.apk
-      - build/app/outputs/apk/release/*.apk
-      - coverage/html/**
-      - signature_info.txt
+      - build/app/outputs/flutter-apk/mahakka_com_*_*.apk
 
     publishing:
       email:

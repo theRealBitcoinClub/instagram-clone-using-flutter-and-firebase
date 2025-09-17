@@ -1,17 +1,16 @@
 workflows:
   android-apk-free:
-    name: Android APK Build & GitHub Release
+    name: Android APK Build & Telegram Release
     environment:
       groups:
         - keystore
+        - telegram_credentials
       vars:
         BUNDLE: "false"
     scripts:
       - name: Setup and Get Dependencies
         script: |
-          echo "📦 Setting up environment..."
           flutter packages pub get
-          echo "✅ Dependencies installed"
 
       - name: Run All Tests
         script: |
@@ -72,7 +71,6 @@ workflows:
 
           echo "🏗️ Building APK..."
           flutter build apk --release
-          echo "✅ APK build completed"
 
       - name: Debug Signing Configuration
         script: |
@@ -135,33 +133,30 @@ workflows:
           echo "Tip: Optimize with --build-cache and --parallel flags"
           echo "================================="
 
-      - name: Setup GitHub CLI
+      - name: Publish APK to Telegram
         script: |
-          echo "🔧 Setting up GitHub CLI..."
-          echo "GH_TOKEN available: ${GH_TOKEN:+(yes)}"
-          echo "Current directory: $(pwd)"
+          echo "📤 Preparing to publish APK to Telegram..."
           
-          # Install GitHub CLI if not available
-          if ! command -v gh &> /dev/null; then
-            echo "📦 Installing GitHub CLI..."
-            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-            sudo apt update
-            sudo apt install gh -y
+          # Check if APK file exists and is readable
+          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ] && [ -r "build/app/outputs/flutter-apk/app-release.apk" ]; then
+            APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
+          elif [ -f "build/app/outputs/apk/release/app-release.apk" ] && [ -r "build/app/outputs/apk/release/app-release.apk" ]; then
+            APK_PATH="build/app/outputs/apk/release/app-release.apk"
+          else
+            echo "❌ APK file not found or not readable in standard locations"
+            echo "🔍 Searching for APK files..."
+            find . -name "*.apk" -type f -readable | while read file; do
+              echo "Found readable: $file (size: $(du -h "$file" | cut -f1))"
+            done
+            exit 1
           fi
           
-          echo "✅ GitHub CLI version: $(gh --version)"
+          echo "📦 Found APK: $APK_PATH"
+          echo "📏 APK size: $(du -h "$APK_PATH" | cut -f1)"
           
-          # Configure GitHub CLI
-          echo "⚙️ Configuring GitHub CLI authentication..."
-          echo "$GH_TOKEN" | gh auth login --with-token
-          gh auth status
-          echo "✅ GitHub CLI configured"
+          APK_FILENAME=$(basename "$APK_PATH")
+          APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
 
-      - name: Extract Version Information
-        script: |
-          echo "🔖 Extracting version information for release..."
-          
           if [ -f "android/app/build.gradle.kts" ]; then
             echo "📝 Found build.gradle.kts file"
             APK_VERSION=$(grep 'val flutterVersionName = ' android/app/build.gradle.kts | sed 's/.*val flutterVersionName = "\([^"]*\)".*/\1/' | head -1)
@@ -179,102 +174,81 @@ workflows:
             APK_VERSION="unknown"
           fi
 
-          echo "📦 Version: $APK_VERSION"
-          echo "🔖 Commit: ${CM_COMMIT:0:7}"
-          echo "👤 Committer: $CM_COMMITTER"
-          
-          # Export for use in next steps
-          export RELEASE_VERSION="v$APK_VERSION"
-          export RELEASE_TAG="${RELEASE_VERSION}-${CM_COMMIT:0:7}"
-          echo "🏷️ Release tag: $RELEASE_TAG"
+          echo "🔖 Extracted version: $APK_VERSION"
 
-      - name: Create GitHub Release
-        script: |
-          echo "🚀 Creating GitHub Release..."
-          echo "Repository: $CM_REPO_SLUG"
-          echo "Release tag: $RELEASE_TAG"
-          echo "Version: $RELEASE_VERSION"
-          
-          # Check if release already exists
-          if gh release view "$RELEASE_TAG" &>/dev/null; then
-            echo "⚠️ Release $RELEASE_TAG already exists, deleting it..."
-            gh release delete "$RELEASE_TAG" --yes
+          echo "📤 Uploading to Telegram..."
+          echo "Using bot token: ${TELEGRAM_BOT_TOKEN:0:10}..."
+          echo "Chat ID: $TELEGRAM_CHAT_ID"
+
+          echo "🔧 Testing Telegram API connection..."
+          test_response=$(curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/getMe")
+          if echo "$test_response" | grep -q '"ok":true'; then
+            echo "✅ Telegram API connection successful"
+          else
+            echo "❌ Telegram API connection failed"
+            echo "Test response: $test_response"
+            exit 1
           fi
+
+          # Create a simple caption
+          CAPTION="New App Release: Mahakka v$APK_VERSION - Built: $(date +'%Y-%m-%d %H:%M') - Commit: ${CM_COMMIT:0:7}"
+
+          echo "📤 Uploading APK file..."
+          echo "File size: $(wc -c < "$APK_PATH") bytes"
+
+          # Upload with timeout and simpler approach
+          response=$(curl --connect-timeout 30 --max-time 120 -s -X POST \
+            -F "chat_id=$TELEGRAM_CHAT_ID" \
+            -F "document=@$APK_PATH" \
+            -F "caption=$CAPTION" \
+            "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument")
+
+          # Check if we got any response
+          if [ -z "$response" ]; then
+            echo "❌ No response received from Telegram - connection timeout or network issue"
+            echo "The APK file might be too large for Telegram's upload limits"
+            exit 1
+          fi
+
+          if echo "$response" | grep -q '"ok":true'; then
+            echo "✅ APK successfully published to Telegram!"
+            MESSAGE_ID=$(echo "$response" | grep -o '"message_id":[0-9]*' | cut -d: -f2)
+            echo "📨 Message ID: $MESSAGE_ID"
+          else
+            echo "❌ Failed to publish to Telegram"
+            echo "🔍 Error response: $response"
+
+            if echo "$response" | grep -q '"description"'; then
+              ERROR_DESC=$(echo "$response" | grep -o '"description":"[^"]*"' | cut -d'"' -f4)
+              echo "📝 Error description: $ERROR_DESC"
           
-          # Create release notes
-          RELEASE_NOTES="## Mahakka $RELEASE_VERSION
-  
-            **Build Information:**
-          - **Version:** $APK_VERSION
-          - **Commit:** ${CM_COMMIT:0:7}
-          - **Built by:** $CM_COMMITTER
-          - **Build date:** $(date +'%Y-%m-%d %H:%M:%S UTC')
-          - **Signed:** $(if [ -f "mahakka.keystore" ] && [ -n "$CM_KEYSTORE_PASSWORD" ]; then echo "Yes"; else echo "No (Debug)"; fi)
-            
-            **SHA-256 Fingerprint:**
-            \`\`\`
-            $SHA256_FINGERPRINT
-            \`\`\`
-            
-            This is an automated release built with Codemagic CI/CD."
-            
-            echo "📝 Release notes prepared"
-            echo "Creating release..."
-            
-            # Create the release
-            gh release create "$RELEASE_TAG" \
-            --title "Mahakka $RELEASE_VERSION" \
-            --notes "$RELEASE_NOTES" \
-            --target "$CM_BRANCH"
-          
-          echo "✅ GitHub Release created: $RELEASE_TAG"
-          
-          - name: Upload APK to GitHub Release
-            script: |
-              echo "📤 Uploading APK to GitHub Release..."
-              APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
-              
-              if [ ! -f "$APK_PATH" ]; then
-                echo "❌ APK file not found: $APK_PATH"
-                exit 1
+              # Check if it's a file size limit error
+              if echo "$ERROR_DESC" | grep -qi "too large\|size\|big"; then
+                echo "📁 The APK file might be too large for Telegram (89MB)"
+                echo "ℹ️ Telegram has file size limits for uploads"
               fi
-              
-              echo "📦 APK file: $APK_PATH"
-              echo "📏 Size: $(du -h "$APK_PATH" | cut -f1)"
-              
-              # Upload APK to release
-              gh release upload "$RELEASE_TAG" "$APK_PATH" --clobber
-              
-              echo "✅ APK uploaded to GitHub Release"
-              
-              # Also upload signature info if available
-              if [ -f "signature_info.txt" ]; then
-                echo "📝 Uploading signature information..."
-                gh release upload "$RELEASE_TAG" "signature_info.txt" --clobber
-                echo "✅ Signature info uploaded"
-              fi
-          
-          - name: Display Release Information
-            script: |
-              echo "🎉 Release completed successfully!"
-              echo "================================="
-              echo "📱 App: Mahakka"
-              echo "🔖 Version: $APK_VERSION"
-              echo "🏷️ Release Tag: $RELEASE_TAG"
-              echo "📦 APK Size: $(du -h build/app/outputs/flutter-apk/app-release.apk | cut -f1)"
-              echo "🔗 Release URL: https://github.com/$CM_REPO_SLUG/releases/tag/$RELEASE_TAG"
-              echo "================================="
-          
-          artifacts:
-            - build/app/outputs/flutter-apk/*.apk
-            - build/app/outputs/apk/release/*.apk
-            - coverage/html/**
-            - signature_info.txt
-          
-          publishing:
-            email:
-              recipients:
-                - bitcoinizado@proton.me
-              notify:
-                success: true
-                failure: true
+            fi
+
+            ERROR_MSG="APK Upload Failed - Please check build artifacts manually."
+
+            curl -s -X POST \
+              -F "chat_id=$TELEGRAM_CHAT_ID" \
+              -F "text=$ERROR_MSG" \
+              "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"
+
+            exit 1
+          fi
+
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+      - build/app/outputs/apk/release/*.apk
+      - coverage/html/**
+      - signature_info.txt
+
+    publishing:
+      email:
+        recipients:
+          - bitcoinizado@proton.me
+        notify:
+          success: true
+          failure: true

@@ -1,12 +1,21 @@
 workflows:
   android-apk-free:
-    name: Android APK Build & Telegram Release
+    name: Android APK Build & GitHub Release
     environment:
       groups:
         - keystore
         - telegram_credentials
+        - github_credentials  # Add this group for GitHub token
       vars:
         BUNDLE: "false"
+    triggering:
+      events:
+        - pull_request
+        - tag
+      branch_patterns:
+        - pattern: '*'
+          include: true
+          source: true
     scripts:
       - name: Setup and Get Dependencies
         script: |
@@ -84,6 +93,9 @@ workflows:
             echo "✅ Renamed APK verified and ready for publishing"
             # Write the custom APK name to a file for use in subsequent steps
             echo "$CUSTOM_APK_NAME" > custom_apk_name.txt
+            # Also store version info for GitHub release
+            echo "$VERSION_NAME" > version_name.txt
+            echo "$VERSION_CODE" > version_code.txt
           else
             echo "❌ Renamed APK not found at expected location"
             exit 1
@@ -129,7 +141,7 @@ workflows:
               apksigner verify --print-certs "$TARGET_APK"
             fi
           
-            SHA256_FINGERPRINT=$(keytool -printcert -jarfile "$TARGET_APK" | grep "SHA256" | head -1 | sed 's/❌ SHA256: //' | tr -d ':' | tr -d ' ')
+            SHA256_FINGERPRINT=$(keytool -printcert -jarfile "$TARGET_APK" | grep "SHA256" | head -1 | sed 's/.*SHA256: //' | tr -d ':' | tr -d ' ')
             echo ""
             echo "=== QUICK VERIFICATION ==="
             echo "SHA-256 Fingerprint: $SHA256_FINGERPRINT"
@@ -138,9 +150,64 @@ workflows:
             echo "This is a debug/unsigned APK for testing purposes"
           fi
 
+      - name: Publish to GitHub Release
+        script: |
+          # Only publish on tag events or manual builds, not on pull requests
+          if [ "$CM_PULL_REQUEST" = "true" ]; then
+            echo "📝 Pull request build - skipping GitHub release"
+            exit 0
+          fi
+
+          echo "🚀 Preparing GitHub Release..."
+          
+          # Read version info
+          CUSTOM_APK_NAME=$(cat custom_apk_name.txt)
+          VERSION_NAME=$(cat version_name.txt)
+          VERSION_CODE=$(cat version_code.txt)
+          
+          # Set up GitHub CLI authentication
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "❌ GITHUB_TOKEN not set. Please add it to github_credentials group."
+            exit 1
+          fi
+          
+          echo "$GITHUB_TOKEN" > token.txt
+          gh auth login --with-token < token.txt
+          rm token.txt
+          
+          # Verify authentication
+          gh auth status
+          
+          # Get repository info
+          REPO_OWNER=$(echo $CM_REPO_SLUG | cut -d'/' -f1)
+          REPO_NAME=$(echo $CM_REPO_SLUG | cut -d'/' -f2)
+          
+          echo "📦 Repository: $CM_REPO_SLUG"
+          echo "🏷️ Release tag: $CUSTOM_APK_NAME"
+          
+          # Create GitHub release
+          RELEASE_NOTES="Mahakka App Release
+          Version: $VERSION_NAME
+          Build: $VERSION_CODE
+          Built on: $(date)
+          SHA-256: $(keytool -printcert -jarfile "build/app/outputs/flutter-apk/$CUSTOM_APK_NAME" 2>/dev/null | grep "SHA256" | head -1 | sed 's/.*SHA256: //' | tr -d ':' | tr -d ' ' || echo "Unknown")"
+          
+          echo "📝 Creating GitHub release..."
+          gh release create "$CUSTOM_APK_NAME" \
+            "build/app/outputs/flutter-apk/$CUSTOM_APK_NAME" \
+            --title "Mahakka $VERSION_NAME ($VERSION_CODE)" \
+            --notes "$RELEASE_NOTES" \
+            --repo "$CM_REPO_SLUG"
+          
+          echo "✅ GitHub release created successfully!"
+          echo "🔗 Release URL: https://github.com/$CM_REPO_SLUG/releases/tag/$CUSTOM_APK_NAME"
+
     artifacts:
       - build/app/outputs/flutter-apk/mahakka-com-*.apk
       - custom_apk_name.txt
+      - version_name.txt
+      - version_code.txt
+      - signature_info.txt
 
     publishing:
       email:

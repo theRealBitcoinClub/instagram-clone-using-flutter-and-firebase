@@ -17,6 +17,14 @@ workflows:
           include: true
           source: true
     scripts:
+      - name: Create env file
+        script: |
+          cat > telegram.env << EOL
+          BOT_TOKEN=$TELEGRAM_BOT_TOKEN
+          CHAT_ID=$TELEGRAM_CHAT_ID
+          GITHUB_TOKEN=$GITHUB_TOKEN
+          EOL
+
       - name: Setup and Get Dependencies
         script: |
           flutter packages pub get

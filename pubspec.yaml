@@ -1,7 +1,7 @@
 name: mahakka
 description: An app using the memo protocol to publish content to the BCH blockchain.
 publish_to: 'none'
-version: 2.8.1-BCH+2025091707
+version: 2.8.2-BCH+2025091708
 
 environment:
   sdk: '>=3.8.0 <4.0.0'
@@ -61,7 +61,7 @@ dev_dependencies:
   json_serializable: ^6.9.5
   flutter_lints: ^6.0.0
   isar_community_generator: ^3.3.0-dev.1  # Correct package name
-  flutter_launcher_icons: ^0.14.4
+  icons_launcher: ^3.0.2
   test: ^1.25.0
   mockito: ^5.4.0
   mocktail: ^1.0.4
@@ -69,17 +69,17 @@ dev_dependencies:
   cloud_firestore_platform_interface: ^7.0.1
   fake_cloud_firestore: ^4.0.0
 
-
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "assets/icon.png"
-  min_sdk_android: 21 # android min sdk min:16, default 21
-  web:
-    generate: true
-    image_path: "assets/icon.png"
-    background_color: "#6bfe82"
-    theme_color: "#6bfe82"
+icons_launcher:
+  image_path: "assets/icon_round_1010.png"
+  platforms:
+    android:
+      enable: true
+      image_path: "assets/icon_round_1010.png"
+      notification_image: "assets/icon_round_1010.png"
+      #adaptive_background_color: '#000000'
+      adaptive_background_image: "assets/icon_round_1010.png"
+      adaptive_foreground_image: "assets/icon_round_1010.png"
+      adaptive_round_image: "assets/icon_round_1010.png"
 
 flutter:
   uses-material-design: true
@@ -90,7 +90,7 @@ flutter:
     - shorebird.yaml
 
 flutter_native_splash:
-  color: "#6bfe82"
-  image: assets/splash.png
+  color: "#000000"
+  image: assets/icon_round_1010.png
   android: true
   web: true

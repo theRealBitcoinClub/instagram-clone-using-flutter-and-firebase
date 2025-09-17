@@ -35,7 +35,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   TipReceiver? _selectedTipReceiver;
   TipAmount? _selectedTipAmount;
   bool allowLogout = false;
-  String get key => 'mnemonic_backup_verified ${ref.read(userProvider)!.id}';
+  String get key => 'mnemonic_backup_verified${user.id}';
   late MemoModelCreator creator;
   late MemoModelUser user;
 

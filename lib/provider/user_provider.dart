@@ -81,6 +81,7 @@ class UserNotifier extends StateNotifier<UserState> {
         UserService service = UserService();
 
         if (createdUser == null) {
+          state = state.copyWith(user: createdUser, isLoading: false);
           return; //first run after instalation
         }
 
@@ -100,7 +101,7 @@ class UserNotifier extends StateNotifier<UserState> {
       //the refresh balance is now done per creator
       // refreshAllBalances();
 
-      // state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false);
     } catch (e, stackTrace) {
       print("Error refreshing fetchedUser from DB: $e \n$stackTrace");
       state = state.copyWith(error: e.toString(), isLoading: false);
@@ -122,7 +123,6 @@ final userProvider = Provider<MemoModelUser?>((ref) {
   return ref.watch(userNotifierProvider).user;
 });
 
-// Optional: Provider for loading state
-// final userIsLoadingProvider = Provider<bool>((ref) {
-//   return ref.watch(userNotifierProvider).isLoading;
-// });
+final userIsLoadingProvider = Provider<bool>((ref) {
+  return ref.watch(userNotifierProvider).isLoading;
+});

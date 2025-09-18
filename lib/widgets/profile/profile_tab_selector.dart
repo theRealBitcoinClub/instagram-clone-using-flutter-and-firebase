@@ -31,10 +31,10 @@ class ProfileTabSelector extends StatelessWidget {
     return Expanded(
       // Make each button take equal width
       child: IconButton(
-        iconSize: 26, // Slightly adjusted size
+        iconSize: 28, // Slightly adjusted size
         visualDensity: VisualDensity.standard,
         // padding: EdgeInsets.zero, // Remove padding if buttons are too spaced
-        icon: Icon(isActive ? activeIcon : inactiveIcon, color: isActive ? theme.colorScheme.primary : theme.iconTheme.color?.withOpacity(0.6)),
+        icon: Icon(isActive ? activeIcon : inactiveIcon, color: isActive ? theme.iconTheme.color : theme.iconTheme.color?.withOpacity(0.6)),
         tooltip: tooltip,
         onPressed: () => onViewModeChanged(index),
         splashRadius: 24, // Control splash radius

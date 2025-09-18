@@ -33,9 +33,12 @@ class HashtagDisplayWidget extends StatelessWidget {
         final widget = Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: isSelected ? theme.colorScheme.primary.withOpacity(0.15) : theme.colorScheme.surfaceVariant.withOpacity(0.7),
+            // color: isSelected ? theme.colorScheme.primary.withOpacity(0.15) : theme.colorScheme.surfaceVariant.withOpacity(0.7),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.5), width: 1.2),
+            border: Border.all(
+              color: isSelected ? theme.colorScheme.primary.withAlpha(111) : theme.colorScheme.outline.withAlpha(222),
+              width: 1.2,
+            ),
           ),
           child: Text(
             hashtags[index],

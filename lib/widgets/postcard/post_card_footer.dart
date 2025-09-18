@@ -98,8 +98,8 @@ class PostCardFooter extends StatelessWidget {
               ],
             ),
           ),
-          if (post.topicId.isNotEmpty) ...[_buildTopicCheckBoxWidget(theme), const SizedBox(height: 6)],
-          if (post.tagIds.isNotEmpty) ...[_buildHashtagCheckboxesWidget(theme), const SizedBox(height: 8)],
+          if (post.topicId.isNotEmpty) ...[_buildTopicCheckBoxWidget(theme)],
+          if (post.tagIds.isNotEmpty) ...[const SizedBox(height: 6), _buildHashtagCheckboxesWidget(theme), const SizedBox(height: 8)],
           AnimatedGrowFadeIn(
             show: showSend,
             delay: const Duration(milliseconds: 200), // Optional: small delay

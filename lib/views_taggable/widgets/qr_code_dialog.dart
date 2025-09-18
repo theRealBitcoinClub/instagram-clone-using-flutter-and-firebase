@@ -199,7 +199,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
         }
 
         final String addressToShow = _isCashtokenFormat ? widget.cashtokenAddress! : convertToBchFormat(widget.legacyAddress);
-        final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo-128x128";
+        final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo";
         final String balanceText = _getBalanceText(_isCashtokenFormat, creatorState.value);
 
         return Dialog(

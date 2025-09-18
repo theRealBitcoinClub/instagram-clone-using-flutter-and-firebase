@@ -80,9 +80,9 @@ final ThemeData lightTheme = ThemeData(
   primaryColor: primaryGreen,
   primaryColorDark: darkGreenShade, // Used by some components for a darker primary variant
   // primaryColorLight: lightGreenAccent, // Can be used for highlights
-  scaffoldBackgroundColor: secondaryLightGrey, // Very light grey for main background
-  canvasColor: Colors.white, // Background for cards, dialogs, drawers
-  cardColor: Colors.white,
+  scaffoldBackgroundColor: primaryLightGrey, // Very light grey for main background
+  canvasColor: secondaryLightGrey, // Background for cards, dialogs, drawers
+  cardColor: secondaryLightGrey,
   dividerColor: primaryLightGrey, // Subtle dividers
   hintColor: subtleTextOnLight, // For hint text in TextFields
   // Bottom Navigation Bar Theme
@@ -112,7 +112,7 @@ final ThemeData lightTheme = ThemeData(
     onPrimary: Colors.white, // Text/icons on primary color
     secondary: lightGreenAccent, // Lighter green for accents
     onSecondary: primaryDarkGrey, // Text/icons on secondary color
-    surface: Colors.white, // Cards, sheets, dialogs
+    surface: secondaryLightGrey, // Cards, sheets, dialogs
     onSurface: textOnLight, // Main text color
     background: secondaryLightGrey, // Overall background
     onBackground: textOnLight,
@@ -120,7 +120,7 @@ final ThemeData lightTheme = ThemeData(
     onError: Colors.white,
     surfaceVariant: primaryLightGrey, // For slightly different surfaces
     onSurfaceVariant: textOnLight, // Text on surfaceVariant
-    outline: primaryLightGrey, // Borders
+    outline: subtleTextOnLight, // Borders
     shadow: Colors.black.withOpacity(0.2), // For BottomAppBar shadow
     surfaceTint: primaryGreen.withOpacity(0.08), // For BottomAppBar surface tint
   ),
@@ -227,13 +227,13 @@ final ThemeData darkTheme = ThemeData(
   // primaryColorLight: lightGreenAccent,
   scaffoldBackgroundColor: primaryDarkGrey, // Dark grey for main background
   canvasColor: secondaryDarkGrey, // Background for cards, dialogs
-  cardColor: secondaryDarkGrey,
+  cardColor: primaryDarkGrey,
   dividerColor: primaryLightGrey.withOpacity(0.3), // More subtle dividers on dark
   hintColor: subtleTextOnDark,
 
   // Bottom Navigation Bar Theme
   bottomNavigationBarTheme: BottomNavigationBarThemeData(
-    backgroundColor: secondaryDarkGrey,
+    backgroundColor: primaryDarkGrey,
     selectedItemColor: lightGreenAccent,
     unselectedItemColor: subtleTextOnDark,
     elevation: 4.0,
@@ -258,7 +258,7 @@ final ThemeData darkTheme = ThemeData(
     onPrimary: Colors.white,
     secondary: lightGreenAccent,
     onSecondary: primaryDarkGrey,
-    surface: secondaryDarkGrey, // Cards, sheets
+    surface: primaryDarkGrey, // Cards, sheets
     onSurface: textOnDark, // Main text color
     background: primaryDarkGrey, // Overall background
     onBackground: textOnDark,
@@ -272,7 +272,7 @@ final ThemeData darkTheme = ThemeData(
   ),
 
   appBarTheme: AppBarTheme(
-    backgroundColor: secondaryDarkGrey, // Darker AppBar
+    backgroundColor: darkGreenShade, // Darker AppBar
     foregroundColor: Colors.white,
     elevation: 2.0,
     titleTextStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),

@@ -87,7 +87,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final feedState = ref.watch(feedPostsProvider);
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.primary.withAlpha(21),
+      backgroundColor: Colors.black.withAlpha(21),
       appBar: AppBar(
         centerTitle: true,
         toolbarHeight: 50,
@@ -106,7 +106,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       body: Stack(
         children: [
           // Show progress indicator during initial rendering
-          if (_isRenderingContent || feedState.isLoadingInitial) const Center(child: CircularProgressIndicator()),
+          if (_isRenderingContent || feedState.isLoadingInitial) Center(child: Image.asset("assets/icon_round_200.png", height: 120)),
 
           // Show error state if something went wrong
           if (_loadingError != null)

@@ -617,6 +617,7 @@ class _PostCardState extends ConsumerState<PostCard> {
         return _wrapInAnimationStack(
           theme,
           Card(
+            color: theme.cardColor,
             margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
             clipBehavior: Clip.antiAlias,
             child: Column(

@@ -511,8 +511,8 @@ class _PostCardState extends ConsumerState<PostCard> {
         showSnackBar(type: SnackbarType.error, "Failed to publish reply $e", context);
       }
     } finally {
-      ref.read(userProvider)!.temporaryTipReceiver = null;
-      ref.read(userProvider)!.temporaryTipAmount = null;
+      // ref.read(userProvider)!.temporaryTipReceiver = null;
+      // ref.read(userProvider)!.temporaryTipAmount = null;
       if (mounted) {
         setState(() => _isSendingTx = false);
       }

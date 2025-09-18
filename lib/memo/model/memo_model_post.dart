@@ -43,6 +43,15 @@ class MemoModelPost {
   List<String> tagIds;
 
   @JsonKey(includeFromJson: false, includeToJson: false)
+  String? translatedLanguage;
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  String? originalLanguage;
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  String? originalText;
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
   int? currentPreviewIndex;
 
   // --- Transient (Client-Side) Fields ---

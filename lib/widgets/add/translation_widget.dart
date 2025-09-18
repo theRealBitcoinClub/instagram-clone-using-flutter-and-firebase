@@ -153,7 +153,7 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
           },
         ),
         const SizedBox(width: 8),
-        Expanded(child: Text('Translate this post', style: Theme.of(context).textTheme.bodyMedium)),
+        Expanded(child: Text('Translate', style: Theme.of(context).textTheme.bodyMedium)),
       ],
     );
   }

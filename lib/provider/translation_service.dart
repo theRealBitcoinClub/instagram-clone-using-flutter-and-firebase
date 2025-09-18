@@ -44,8 +44,9 @@ class TranslationService {
 class Language {
   final String code;
   final String name;
+  final String flag;
 
-  const Language({required this.code, required this.name});
+  const Language({required this.code, required this.name, required this.flag});
 
   @override
   String toString() => name;
@@ -53,15 +54,15 @@ class Language {
 
 // Available languages
 const availableLanguages = [
-  const Language(code: 'auto', name: 'Auto'),
-  const Language(code: 'zh', name: '🇨🇳'),
-  const Language(code: 'en', name: '🇬🇧'),
-  const Language(code: 'tl', name: '🇵🇭'),
-  const Language(code: 'fr', name: '🇫🇷'),
-  const Language(code: 'hi', name: '🇮🇳'),
-  const Language(code: 'ja', name: '🇯🇵'),
-  const Language(code: 'ru', name: '🇷🇺'),
-  const Language(code: 'es', name: '🇪🇸'),
+  const Language(code: 'auto', name: 'Auto', flag: ''),
+  const Language(code: 'zh', name: 'Chinese', flag: '🇨🇳'),
+  const Language(code: 'en', name: 'English', flag: '🇬🇧'),
+  const Language(code: 'tl', name: 'Filipino', flag: '🇵🇭'),
+  const Language(code: 'fr', name: 'French', flag: '🇫🇷'),
+  const Language(code: 'hi', name: 'Hindi', flag: '🇮🇳'),
+  const Language(code: 'ja', name: 'Japanese', flag: '🇯🇵'),
+  const Language(code: 'ru', name: 'Russian', flag: '🇷🇺'),
+  const Language(code: 'es', name: 'Spanish', flag: '🇪🇸'),
 ];
 
 // Riverpod providers for translation state

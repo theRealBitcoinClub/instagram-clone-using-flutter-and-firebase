@@ -30,27 +30,27 @@ class LanguageSelectorDialog extends StatelessWidget {
       backgroundColor: colorScheme.surface,
       elevation: 4.0,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 500),
+        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 450),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header with theme-aware styling
-            Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
-                borderRadius: const BorderRadius.only(topLeft: Radius.circular(16.0), topRight: Radius.circular(16.0)),
-              ),
-              child: Text(
-                'Choose language', // Fixed title
-                style: textTheme.titleMedium!.copyWith(color: colorScheme.onSurface, fontWeight: FontWeight.w600),
-                textAlign: TextAlign.center,
-              ),
-            ),
-
-            // Divider with theme color
-            Divider(height: 1, thickness: 1, color: colorScheme.onSurface.withOpacity(0.12)),
+            // // Header with theme-aware styling
+            // Container(
+            //   padding: const EdgeInsets.all(16.0),
+            //   decoration: BoxDecoration(
+            //     color: colorScheme.primary.withOpacity(0.1),
+            //     borderRadius: const BorderRadius.only(topLeft: Radius.circular(16.0), topRight: Radius.circular(16.0)),
+            //   ),
+            //   child: Text(
+            //     'Choose language', // Fixed title
+            //     style: textTheme.titleMedium!.copyWith(color: colorScheme.onSurface, fontWeight: FontWeight.w600),
+            //     textAlign: TextAlign.center,
+            //   ),
+            // ),
+            //
+            // // Divider with theme color
+            // Divider(height: 1, thickness: 1, color: colorScheme.onSurface.withOpacity(0.12)),
 
             // Language List
             Expanded(
@@ -70,9 +70,7 @@ class LanguageSelectorDialog extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
                         child: ListTile(
-                          leading: language.flag.isNotEmpty
-                              ? Text(language.flag, style: const TextStyle(fontSize: 24))
-                              : const SizedBox(width: 24),
+                          leading: Text(language.flag, style: const TextStyle(fontSize: 24)),
                           title: Text(language.name, style: textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface)),
                           trailing: Icon(Icons.chevron_right, color: colorScheme.onSurface.withOpacity(0.6)),
                         ),
@@ -84,23 +82,23 @@ class LanguageSelectorDialog extends StatelessWidget {
             ),
 
             // Close Button with theme-aware styling
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: colorScheme.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-                ),
-                child: Text(
-                  'Close',
-                  style: textTheme.bodyLarge?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.all(8.0),
+            //   child: TextButton(
+            //     onPressed: () {
+            //       Navigator.of(context).pop();
+            //     },
+            //     style: TextButton.styleFrom(
+            //       foregroundColor: colorScheme.primary,
+            //       padding: const EdgeInsets.symmetric(vertical: 16.0),
+            //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+            //     ),
+            //     child: Text(
+            //       'Close',
+            //       style: textTheme.bodyLarge?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w500),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),

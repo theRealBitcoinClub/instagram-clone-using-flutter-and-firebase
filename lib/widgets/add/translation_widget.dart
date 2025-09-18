@@ -39,6 +39,7 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
   late String _originalText;
   late Language? _detectedLanguage;
   late bool _languageDetectionFailed;
+  bool _isAutoDetecting = true;
 
   @override
   void initState() {
@@ -52,9 +53,10 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
   }
 
   Future<void> _detectLanguage() async {
-    if (_originalText.isEmpty) return;
-
     try {
+      setState(() {
+        _isAutoDetecting = true;
+      });
       final translationService = ref.read(translationServiceProvider);
       final detectedLangCode = await translationService.detectLanguage(_originalText);
       if (detectedLangCode == "error") {
@@ -83,6 +85,10 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
       setState(() {
         _languageDetectionFailed = true;
         _detectedLanguage = null;
+      });
+    } finally {
+      setState(() {
+        _isAutoDetecting = false;
       });
     }
   }
@@ -249,7 +255,7 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AnimatedGrowFadeIn(
-          show: !_languageDetectionFailed,
+          show: !_languageDetectionFailed && !_isAutoDetecting,
           duration: const Duration(milliseconds: 300),
           child: Column(
             children: [
@@ -261,15 +267,24 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
 
         // Show detected language info or error message
         AnimatedGrowFadeIn(
-          show: _detectedLanguage != null && !_languageDetectionFailed,
+          show: _detectedLanguage != null && !_languageDetectionFailed && !_isAutoDetecting,
           duration: const Duration(milliseconds: 300),
           child: _buildDetectedLanguageInfo(),
         ),
 
-        AnimatedGrowFadeIn(show: _languageDetectionFailed, duration: const Duration(milliseconds: 300), child: _buildErrorText()),
+        AnimatedGrowFadeIn(
+          show: _languageDetectionFailed && !_isAutoDetecting,
+          duration: const Duration(milliseconds: 300),
+          child: _buildErrorText(),
+        ),
 
         const SizedBox(height: 4),
-        AnimatedGrowFadeIn(show: isTranslating, duration: const Duration(milliseconds: 300), child: _buildProgressIndicator()),
+        AnimatedGrowFadeIn(
+          show: isTranslating || _isAutoDetecting,
+          duration: const Duration(milliseconds: 300),
+          child: _buildProgressIndicator(),
+        ),
+        const SizedBox(height: 4),
       ],
     );
   }

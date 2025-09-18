@@ -32,7 +32,8 @@ class TranslationService {
 
   Future<String> detectLanguage(String text) async {
     try {
-      final detection = await translator.translate(text);
+      //USING SOME UNSUPPORTED LANGUAGE TO BE ABLE TO DETECT ENGLISH
+      final detection = await translator.translate(text, to: "bg");
       return detection.sourceLanguage?.code ?? 'auto';
     } catch (e) {
       return 'error';
@@ -55,15 +56,14 @@ class Language {
 // Available languages
 const availableLanguages = [
   const Language(code: 'auto', name: 'Auto', flag: ''),
-  const Language(code: 'zh-cn', name: 'Chinese', flag: '🇨🇳'),
+  const Language(code: 'zh-cn', name: '中国人', flag: '🇨🇳'),
   const Language(code: 'de', name: 'Deutsch', flag: '🇩🇪'),
   const Language(code: 'en', name: 'English', flag: '🇬🇧'),
+  const Language(code: 'es', name: 'Español', flag: '🇪🇸'),
   const Language(code: 'tl', name: 'Filipino', flag: '🇵🇭'),
-  const Language(code: 'fr', name: 'French', flag: '🇫🇷'),
-  const Language(code: 'hi', name: 'Hindi', flag: '🇮🇳'),
-  const Language(code: 'ja', name: 'Japanese', flag: '🇯🇵'),
-  const Language(code: 'ru', name: 'Russian', flag: '🇷🇺'),
-  const Language(code: 'es', name: 'Spanish', flag: '🇪🇸'),
+  const Language(code: 'fr', name: 'Français', flag: '🇫🇷'),
+  const Language(code: 'ja', name: 'Japans', flag: '🇯🇵'),
+  const Language(code: 'ru', name: 'Русский', flag: '🇷🇺'),
 ];
 
 final targetLanguageProvider = StateProvider<Language>((ref) {

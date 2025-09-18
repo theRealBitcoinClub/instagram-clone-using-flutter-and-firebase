@@ -492,6 +492,11 @@ class _PostCardState extends ConsumerState<PostCard> {
     }
 
     MemoModelPost postCopy = widget.post.copyWith(
+      videoUrl: "",
+      imageUrl: "",
+      ipfsCid: "",
+      imgurUrl: "",
+      youtubeId: "",
       text: textToSend,
       tagIds: MemoRegExp.extractHashtags(textToSend),
       topicId: MemoRegExp.extractTopics(textToSend).isNotEmpty ? MemoRegExp.extractTopics(textToSend).first : null,

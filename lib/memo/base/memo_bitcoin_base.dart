@@ -1,5 +1,6 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:mahakka/memo/base/memo_publisher.dart';
 
 import 'socket/electrum_websocket_service.dart';
 
@@ -305,7 +306,7 @@ class MemoBitcoinBase {
       // Calculate fee based on estimated size (0.00001 BCH per 1000 bytes)
       // final feePerByte = BtcUtils.toSatoshi("0.000001");
       // final fee = BigInt.from(estimatedSize) * feePerByte ~/ BigInt.from(1000);
-      final fee = BtcUtils.toSatoshi("0.000007");
+      final fee = MemoPublisher.minerFeeDefault;
       // final fee = BigInt.from(estimatedSize) * feePerByte ~/ BigInt.from(1000);
 
       // Check if we have enough balance

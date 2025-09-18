@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/provider/translation_service.dart';
 
 class PublishOptions {
-  final bool hasTranslation;
+  final bool showTranslationWidget;
   final bool publishInBothLanguages;
   final String? originalText;
   final Language? originalLanguage;
@@ -15,7 +15,7 @@ class PublishOptions {
     this.originalText,
     this.originalLanguage,
     this.targetLanguage,
-    required this.hasTranslation,
+    required this.showTranslationWidget,
   });
 
   PublishOptions copyWith({
@@ -23,10 +23,10 @@ class PublishOptions {
     String? originalText,
     Language? originalLanguage,
     Language? targetLanguage,
-    bool? hasTranslation,
+    bool? showTranslationWidget,
   }) {
     return PublishOptions(
-      hasTranslation: hasTranslation ?? this.hasTranslation,
+      showTranslationWidget: showTranslationWidget ?? this.showTranslationWidget,
       publishInBothLanguages: publishInBothLanguages ?? this.publishInBothLanguages,
       originalText: originalText ?? this.originalText,
       originalLanguage: originalLanguage ?? this.originalLanguage,
@@ -37,5 +37,5 @@ class PublishOptions {
 
 // Create a provider for publish options
 final publishOptionsProvider = StateProvider<PublishOptions>((ref) {
-  return const PublishOptions(hasTranslation: false, publishInBothLanguages: false);
+  return const PublishOptions(showTranslationWidget: false, publishInBothLanguages: false);
 });

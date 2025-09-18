@@ -52,15 +52,16 @@ class Language {
 }
 
 // Available languages
-final availableLanguages = [
+const availableLanguages = [
   const Language(code: 'auto', name: 'Auto'),
-  const Language(code: 'en', name: 'English'),
-  const Language(code: 'es', name: 'Spanish'),
-  const Language(code: 'tl', name: 'Filipino'),
-  const Language(code: 'zh', name: 'Chinese'),
-  const Language(code: 'ja', name: 'Japanese'),
-  const Language(code: 'hi', name: 'Hindi'),
-  const Language(code: 'ru', name: 'Russian'),
+  const Language(code: 'zh', name: '🇨🇳'),
+  const Language(code: 'en', name: '🇬🇧'),
+  const Language(code: 'tl', name: '🇵🇭'),
+  const Language(code: 'fr', name: '🇫🇷'),
+  const Language(code: 'hi', name: '🇮🇳'),
+  const Language(code: 'ja', name: '🇯🇵'),
+  const Language(code: 'ru', name: '🇷🇺'),
+  const Language(code: 'es', name: '🇪🇸'),
 ];
 
 // Riverpod providers for translation state

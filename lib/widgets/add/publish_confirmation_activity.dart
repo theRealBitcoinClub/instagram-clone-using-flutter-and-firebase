@@ -47,6 +47,10 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
   late bool _isFirstSourceSelection; // ADD THIS FLAG
   late bool _isUpdatingSourceLanguage; // ADD THIS FLAG
 
+  // ADD TRANSLATION SECTION FADE ANIMATION CONTROLLER
+  late AnimationController _translationSectionController;
+  late Animation<double> _translationSectionAnimation;
+
   final detectedLanguageProvider = StateProvider<Language?>((ref) => null);
 
   @override
@@ -57,7 +61,14 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
     _originalText = widget.post.text ?? '';
     _isUpdatingSourceLanguage = false; // INITIALIZE THE FLAG
     _isFirstSourceSelection = true; // INITIALIZE THE FLAG
-
+    _translationSectionController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
+    _translationSectionAnimation = CurvedAnimation(
+      parent: _translationSectionController,
+      curve: Curves.easeInOut,
+    ); // Start with translation section visible if hasTranslation is true
+    if (ref.read(publishOptionsProvider).hasTranslation) {
+      _translationSectionController.forward();
+    }
     // ADD TEXT FADE ANIMATION CONTROLLER
     _textFadeController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
     _textFadeAnimation = CurvedAnimation(parent: _textFadeController, curve: Curves.easeInOut);
@@ -90,6 +101,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
   void dispose() {
     // DISPOSE TEXT FADE CONTROLLER
     _textFadeController.dispose();
+    _translationSectionController.dispose(); // ADD THIS
     _buttonFadeController.dispose(); // ADD THIS
     _controller.dispose();
     super.dispose();
@@ -179,6 +191,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       builder: (dialogContext) => DeleteConfirmationDialog(
         theme: Theme.of(context),
         onCancel: () {
+          _resetTranslation();
           // ref.read(userProvider)!.temporaryTipReceiver = null;
           // ref.read(userProvider)!.temporaryTipAmount = null;
           Navigator.of(dialogContext).pop();
@@ -220,9 +233,6 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
 
   // MODIFY THE _translateText METHOD
   void _translateText() async {
-    final text = widget.post.text;
-    if (text == null || text.isEmpty) return;
-
     final sourceLang = ref.read(sourceLanguageProvider);
     final targetLang = ref.read(targetLanguageProvider);
     final translationService = ref.read(translationServiceProvider);
@@ -237,10 +247,10 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
 
     try {
       final translated = await translationService.translateText(
-        text: text,
+        text: _originalText,
         from: sourceLang.code == 'auto' ? null : sourceLang.code,
         to: targetLang.code,
-        excludePatterns: excludePatterns,
+        // excludePatterns: excludePatterns,
       );
 
       ref.read(translatedTextProvider.notifier).state = translated;
@@ -249,7 +259,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       if (sourceLang.code == 'auto') {
         // Assuming your translation service returns detected language
         // You'll need to modify your translation service to return this info
-        final detectedLangCode = await translationService.detectLanguage(text);
+        final detectedLangCode = await translationService.detectLanguage(_originalText);
         final detectedLang = availableLanguages.firstWhere(
           (lang) => lang.code == detectedLangCode,
           orElse: () => const Language(code: 'en', name: 'English'),
@@ -268,6 +278,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       final currentSourceLang = sourceLang.code == 'auto' ? ref.read(detectedLanguageProvider) : sourceLang;
 
       ref.read(publishOptionsProvider.notifier).state = PublishOptions(
+        hasTranslation: true, // Set hasTranslation to true
         publishInBothLanguages: ref.read(publishOptionsProvider).publishInBothLanguages,
         originalText: _originalText,
         originalLanguage: currentSourceLang,
@@ -288,7 +299,37 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
     }
   }
 
-  // MODIFY THE _resetTranslation METHOD
+  // ADD THIS METHOD TO BUILD THE TRANSLATION TOGGLE CHECKBOX
+  Widget _buildTranslationToggle() {
+    final publishOptions = ref.watch(publishOptionsProvider);
+
+    return Row(
+      children: [
+        Checkbox(
+          value: publishOptions.hasTranslation,
+          onChanged: (value) {
+            final newValue = value ?? false;
+            ref.read(publishOptionsProvider.notifier).state = publishOptions.copyWith(hasTranslation: newValue);
+
+            // Animate the translation section in or out
+            if (newValue) {
+              _translationSectionController.forward();
+            } else {
+              _translationSectionController.reverse();
+              // Reset translation if user disables translations
+              if (ref.read(translatedTextProvider) != null) {
+                _resetTranslation();
+              }
+            }
+          },
+        ),
+        const SizedBox(width: 8),
+        Expanded(child: Text('Translate this post', style: Theme.of(context).textTheme.bodyMedium)),
+      ],
+    );
+  }
+
+  // MODIFY THE _resetTranslation METHOD to properly reset all options except hasTranslation
   void _resetTranslation() {
     // Animate button transition
     _buttonFadeController.reverse().then((_) {
@@ -296,6 +337,18 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
 
       // REPLACE DIRECT TEXT ASSIGNMENT WITH ANIMATED VERSION
       _animateTextChange(_originalText);
+
+      // Get current state to preserve hasTranslation
+      final currentPublishOptions = ref.read(publishOptionsProvider);
+
+      // Create a fresh options object with only hasTranslation preserved
+      ref.read(publishOptionsProvider.notifier).state = PublishOptions(
+        hasTranslation: currentPublishOptions.hasTranslation, // Keep the same value
+        publishInBothLanguages: false, // Reset to default
+        originalText: null, // Reset to default
+        originalLanguage: null, // Reset to default
+        targetLanguage: null, // Reset to default
+      );
 
       // Then fade back in
       _buttonFadeController.forward();
@@ -457,41 +510,41 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       ],
     );
   }
-
-  // ADD THIS METHOD TO BUILD THE CHECKBOX
-  Widget _buildPublishOptions() {
-    final publishOptions = ref.watch(publishOptionsProvider);
-    //TODO ALWAYS RESET THE VALUE ON INIT OR LEAVE IT AS IT WAS IN THE LAST PUBLICATION?
-    // ref.read(publishOptionsProvider.notifier).state = publishOptions.copyWith(publishInBothLanguages: false);
-    final hasTranslation = ref.watch(translatedTextProvider) != null;
-
-    return Column(
-      children: [
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Checkbox(
-              value: publishOptions.publishInBothLanguages,
-              onChanged: hasTranslation
-                  ? (value) {
-                      ref.read(publishOptionsProvider.notifier).state = publishOptions.copyWith(publishInBothLanguages: value);
-                    }
-                  : null, // Disable if no translation available
-            ),
-            const SizedBox(width: 8),
-            Expanded(child: Text('Publish in both original and translated languages', style: Theme.of(context).textTheme.bodyMedium)),
-          ],
-        ),
-        if (publishOptions.publishInBothLanguages && hasTranslation) ...[
-          const SizedBox(height: 8),
-          Text(
-            'Your post will be published in both ${publishOptions.originalLanguage?.name ?? 'original'} and ${publishOptions.targetLanguage?.name ?? 'translated'} languages.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-          ),
-        ],
-      ],
-    );
-  }
+  //
+  // // ADD THIS METHOD TO BUILD THE CHECKBOX
+  // Widget _buildPublishOptions() {
+  //   final publishOptions = ref.watch(publishOptionsProvider);
+  //   //TODO ALWAYS RESET THE VALUE ON INIT OR LEAVE IT AS IT WAS IN THE LAST PUBLICATION?
+  //   // ref.read(publishOptionsProvider.notifier).state = publishOptions.copyWith(publishInBothLanguages: false);
+  //   final hasTranslation = ref.watch(translatedTextProvider) != null;
+  //
+  //   return Column(
+  //     children: [
+  //       const SizedBox(height: 16),
+  //       Row(
+  //         children: [
+  //           Checkbox(
+  //             value: publishOptions.publishInBothLanguages,
+  //             onChanged: hasTranslation
+  //                 ? (value) {
+  //                     ref.read(publishOptionsProvider.notifier).state = publishOptions.copyWith(publishInBothLanguages: value);
+  //                   }
+  //                 : null, // Disable if no translation available
+  //           ),
+  //           const SizedBox(width: 8),
+  //           Expanded(child: Text('Publish in both original and translated languages', style: Theme.of(context).textTheme.bodyMedium)),
+  //         ],
+  //       ),
+  //       if (publishOptions.publishInBothLanguages && hasTranslation) ...[
+  //         const SizedBox(height: 8),
+  //         Text(
+  //           'Your post will be published in both ${publishOptions.originalLanguage?.name ?? 'original'} and ${publishOptions.targetLanguage?.name ?? 'translated'} languages.',
+  //           style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+  //         ),
+  //       ],
+  //     ],
+  //   );
+  // }
 
   Widget _buildMediaPreview(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     final post = widget.post;
@@ -570,8 +623,14 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (widget.post.text != null) _buildTranslationRow(),
-              if (widget.post.text != null) _buildPublishOptions(), // ADD THIS
+              // ADD THE TRANSLATION TOGGLE CHECKBOX
+              if (widget.post.text != null) _buildTranslationToggle(),
+              // WRAP THE TRANSLATION SECTION IN A FADE TRANSITION
+              if (widget.post.text != null && ref.read(publishOptionsProvider).hasTranslation)
+                FadeTransition(
+                  opacity: _translationSectionAnimation,
+                  child: Column(children: [_buildTranslationRow() /*, _buildPublishOptions()*/]),
+                ),
               if (widget.post.text != null)
                 FadeTransition(
                   opacity: _textFadeAnimation,

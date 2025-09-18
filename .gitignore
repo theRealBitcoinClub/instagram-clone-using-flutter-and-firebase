@@ -46,3 +46,4 @@ assets/.env
 *.env
 *.abc
 *.apk
+/.local-chrome

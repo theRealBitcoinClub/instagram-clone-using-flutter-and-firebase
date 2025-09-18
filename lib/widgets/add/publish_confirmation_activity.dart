@@ -5,6 +5,7 @@ import 'package:mahakka/widgets/add/tip_information_card.dart';
 
 import '../../memo/model/memo_model_post.dart';
 import '../../memo/model/memo_model_user.dart';
+import '../../provider/translation_service.dart';
 import '../../provider/user_provider.dart';
 import '../../screens/add/imgur_media_widget.dart';
 import '../../screens/add/ipfs_media_widget.dart';
@@ -30,22 +31,49 @@ class PublishConfirmationActivity extends ConsumerStatefulWidget {
   _PublishConfirmationActivityState createState() => _PublishConfirmationActivityState();
 }
 
-class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmationActivity> with SingleTickerProviderStateMixin {
+class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmationActivity> with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _opacityAnimation;
   late bool _isNewPost;
+  late String _originalText;
+
+  // ADD THESE NEW ANIMATION CONTROLLERS
+  late AnimationController _textFadeController;
+  late Animation<double> _textFadeAnimation;
+  // Add this new animation controller for button transitions
+  late AnimationController _buttonFadeController;
+  late Animation<double> _buttonFadeAnimation;
+  late bool _isFirstSourceSelection; // ADD THIS FLAG
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(duration: const Duration(milliseconds: 500), vsync: this);
     _opacityAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _originalText = widget.post.text ?? '';
+    _isFirstSourceSelection = true; // INITIALIZE THE FLAG
+
+    // ADD TEXT FADE ANIMATION CONTROLLER
+    _textFadeController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
+    _textFadeAnimation = CurvedAnimation(parent: _textFadeController, curve: Curves.easeInOut);
+
+    // ADD BUTTON FADE ANIMATION CONTROLLER
+    _buttonFadeController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
+    _buttonFadeAnimation = CurvedAnimation(parent: _buttonFadeController, curve: Curves.easeInOut);
 
     // Initialize temporary values with user's current settings
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = ref.read(userProvider)!;
       user.temporaryTipAmount = user.tipAmountEnum;
       user.temporaryTipReceiver = user.tipReceiver;
+
+      // ADD THIS: Start text fade-in animation after the main animation
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _textFadeController.forward();
+          _buttonFadeController.forward();
+        }
+      });
     });
 
     _isNewPost = ref.read(userProvider)!.id == widget.post.creator!.id;
@@ -55,10 +83,24 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
 
   @override
   void dispose() {
-    // ref.read(userProvider)!.temporaryTipReceiver = null;
-    // ref.read(userProvider)!.temporaryTipAmount = null;
+    // DISPOSE TEXT FADE CONTROLLER
+    _textFadeController.dispose();
+    _buttonFadeController.dispose(); // ADD THIS
     _controller.dispose();
     super.dispose();
+  }
+
+  // ADD THIS NEW METHOD FOR ANIMATED TEXT TRANSITION
+  void _animateTextChange(String newText) {
+    // First fade out
+    _textFadeController.reverse().then((_) {
+      // Change text while invisible
+      setState(() {
+        widget.post.text = newText;
+      });
+      // Then fade back in
+      _textFadeController.forward();
+    });
   }
 
   void _increaseTipAmount() {
@@ -70,6 +112,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipAmount = values[currentIndex + 1];
       });
+      showSnackBar("Changed Tip Amount for this Post!", context, type: SnackbarType.success);
     } else {
       showSnackBar("It is already the maximum!", context, type: SnackbarType.info);
     }
@@ -84,6 +127,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipAmount = values[currentIndex - 1];
       });
+      showSnackBar("Changed Tip Amount for this Post!", context, type: SnackbarType.success);
     } else {
       showSnackBar("It is already the minimum!", context, type: SnackbarType.info);
     }
@@ -98,6 +142,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipReceiver = values[currentIndex + 1];
       });
+      showSnackBar("Changed Tip Receiver for this Post!", context, type: SnackbarType.success);
     } else {
       showSnackBar("It is already the last option!", context, type: SnackbarType.info);
     }
@@ -112,6 +157,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipReceiver = values[currentIndex - 1];
       });
+      showSnackBar("Changed Tip Receiver for this Post!", context, type: SnackbarType.success);
     } else {
       showSnackBar("It is already the first option!", context, type: SnackbarType.info);
     }
@@ -153,6 +199,227 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
     } catch (e) {
       Navigator.of(context).pop(false);
     }
+  }
+
+  void _translateText() async {
+    final text = widget.post.text;
+    if (text == null || text.isEmpty) return;
+
+    final sourceLang = ref.read(sourceLanguageProvider);
+    final targetLang = ref.read(targetLanguageProvider);
+    final translationService = ref.read(translationServiceProvider);
+
+    // Get patterns to exclude (topicId and tagIds)
+    final excludePatterns = [
+      if (widget.post.topicId != null) widget.post.topicId!,
+      ...widget.post.tagIds,
+    ].where((pattern) => pattern.isNotEmpty).toList();
+
+    ref.read(isTranslatingProvider.notifier).state = true;
+
+    try {
+      final translated = await translationService.translateText(
+        text: text,
+        from: sourceLang.code == 'auto' ? null : sourceLang.code,
+        to: targetLang.code,
+        excludePatterns: excludePatterns,
+      );
+
+      ref.read(translatedTextProvider.notifier).state = translated;
+
+      // REPLACE DIRECT TEXT ASSIGNMENT WITH ANIMATED VERSION
+      _animateTextChange(translated);
+      // setState(() {
+      //   widget.post.text = translated;
+      // });
+      // Animate button transition
+      _buttonFadeController.reverse().then((_) {
+        // REPLACE DIRECT TEXT ASSIGNMENT WITH ANIMATED VERSION
+        _animateTextChange(translated);
+        // Then fade back in
+        _buttonFadeController.forward();
+      });
+    } catch (e) {
+      showSnackBar("Translation failed: ${e.toString()}", context, type: SnackbarType.error);
+    } finally {
+      ref.read(isTranslatingProvider.notifier).state = false;
+    }
+  }
+
+  // void _resetTranslation() {
+  //   ref.read(translatedTextProvider.notifier).state = null;
+  //   setState(() {
+  //     widget.post.text = _originalText;
+  //   });
+  // }
+
+  // MODIFY THE _resetTranslation METHOD
+  void _resetTranslation() {
+    // Animate button transition
+    _buttonFadeController.reverse().then((_) {
+      ref.read(translatedTextProvider.notifier).state = null;
+
+      // REPLACE DIRECT TEXT ASSIGNMENT WITH ANIMATED VERSION
+      _animateTextChange(_originalText);
+
+      // Then fade back in
+      _buttonFadeController.forward();
+    });
+  }
+
+  Widget _buildTranslationRow() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    final isTranslating = ref.watch(isTranslatingProvider);
+    final hasTranslation = ref.watch(translatedTextProvider) != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            // Source language dropdown
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Source', style: textTheme.labelSmall),
+                  const SizedBox(height: 4),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final sourceLang = ref.watch(sourceLanguageProvider);
+                      return DropdownButtonFormField<Language>(
+                        value: sourceLang,
+                        isExpanded: true,
+                        items: availableLanguages.map((Language language) {
+                          return DropdownMenuItem<Language>(
+                            value: language,
+                            child: Text(language.name, overflow: TextOverflow.ellipsis),
+                          );
+                        }).toList(),
+                          onChanged: (Language? newValue) {
+                            if (newValue != null) {
+                              ref.read(sourceLanguageProvider.notifier).state = newValue;
+
+                              // Auto-translate when source language changes
+                              if (widget.post.text?.isNotEmpty == true) {
+                                // For first selection, translate immediately
+                                if (_isFirstSourceSelection) {
+                                  _translateText();
+                                  _isFirstSourceSelection = false;
+                                } else {
+                                  // For subsequent changes, use a small delay to avoid rapid translations
+                                  Future.delayed(const Duration(milliseconds: 300), () {
+                                    if (mounted) {
+                                      _translateText();
+                                    }
+                                  });
+                                }
+                              }
+                            }
+                          },,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // Target language dropdown
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Target', style: textTheme.labelSmall),
+                  const SizedBox(height: 4),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final targetLang = ref.watch(targetLanguageProvider);
+                      return DropdownButtonFormField<Language>(
+                        value: targetLang,
+                        isExpanded: true,
+                        items: availableLanguages.where((lang) => lang.code != 'auto').map((Language language) {
+                          return DropdownMenuItem<Language>(
+                            value: language,
+                            child: Text(language.name, overflow: TextOverflow.ellipsis),
+                          );
+                        }).toList(),
+                        onChanged: (Language? newValue) {
+                          if (newValue != null) {
+                            ref.read(targetLanguageProvider.notifier).state = newValue;
+                          }
+                        },
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // Button container with fixed width
+            SizedBox(
+              width: 100, // Fixed width for both buttons
+              child: Column(
+                children: [
+                  const SizedBox(height: 20), // Align with dropdowns
+                  SizedBox(
+                    height: 48,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
+                      child: hasTranslation
+                          ? SizedBox(
+                              width: double.infinity, // Expand to fill parent
+                              child: ElevatedButton(
+                                key: const ValueKey('reset_button'),
+                                onPressed: _resetTranslation,
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(48), // Ensure consistent height
+                                  backgroundColor: colorScheme.errorContainer,
+                                  foregroundColor: colorScheme.onErrorContainer,
+                                ),
+                                child: const Text('RESET'),
+                              ),
+                            )
+                          : SizedBox(
+                              width: double.infinity, // Expand to fill parent
+                              child: ElevatedButton(
+                                key: const ValueKey('translate_button'),
+                                onPressed: isTranslating ? null : _translateText,
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(48), // Ensure consistent height
+                                ),
+                                child: isTranslating
+                                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                    : const Text('LANG'),
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
   }
 
   Widget _buildMediaPreview(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
@@ -232,7 +499,12 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (widget.post.text != null) Text(widget.post.text!, style: textTheme.bodyLarge),
+              if (widget.post.text != null) _buildTranslationRow(),
+              if (widget.post.text != null)
+                FadeTransition(
+                  opacity: _textFadeAnimation,
+                  child: Text(widget.post.text!, style: textTheme.bodyLarge),
+                ),
               const SizedBox(height: 12),
               if (widget.post.tagIds.isNotEmpty) HashtagDisplayWidget(hashtags: widget.post.tagIds, theme: theme),
               if (widget.post.tagIds.isNotEmpty) const SizedBox(height: 16),

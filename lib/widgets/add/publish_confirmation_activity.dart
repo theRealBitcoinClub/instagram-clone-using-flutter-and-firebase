@@ -299,27 +299,27 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                             child: Text(language.name, overflow: TextOverflow.ellipsis),
                           );
                         }).toList(),
-                          onChanged: (Language? newValue) {
-                            if (newValue != null) {
-                              ref.read(sourceLanguageProvider.notifier).state = newValue;
+                        onChanged: (Language? newValue) {
+                          if (newValue != null) {
+                            ref.read(sourceLanguageProvider.notifier).state = newValue;
 
-                              // Auto-translate when source language changes
-                              if (widget.post.text?.isNotEmpty == true) {
-                                // For first selection, translate immediately
-                                if (_isFirstSourceSelection) {
-                                  _translateText();
-                                  _isFirstSourceSelection = false;
-                                } else {
-                                  // For subsequent changes, use a small delay to avoid rapid translations
-                                  Future.delayed(const Duration(milliseconds: 300), () {
-                                    if (mounted) {
-                                      _translateText();
-                                    }
-                                  });
-                                }
+                            // Auto-translate when source language changes
+                            if (widget.post.text?.isNotEmpty == true) {
+                              // For first selection, translate immediately
+                              if (_isFirstSourceSelection) {
+                                _translateText();
+                                _isFirstSourceSelection = false;
+                              } else {
+                                // For subsequent changes, use a small delay to avoid rapid translations
+                                Future.delayed(const Duration(milliseconds: 300), () {
+                                  if (mounted) {
+                                    _translateText();
+                                  }
+                                });
                               }
                             }
-                          },,
+                          }
+                        },
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

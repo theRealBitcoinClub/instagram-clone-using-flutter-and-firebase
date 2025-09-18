@@ -15,9 +15,9 @@ class TranslationWidget extends ConsumerStatefulWidget {
   final Animation<double> translationSectionAnimation;
   final AnimationController textFadeController;
   final Animation<double> textFadeAnimation;
-  final AnimationController buttonFadeController;
-  final Animation<double> buttonFadeAnimation;
-  final VoidCallback onTextChanged;
+  // final AnimationController buttonFadeController;
+  // final Animation<double> buttonFadeAnimation;
+  // final VoidCallback onTextChanged;
 
   const TranslationWidget({
     Key? key,
@@ -26,9 +26,9 @@ class TranslationWidget extends ConsumerStatefulWidget {
     required this.translationSectionAnimation,
     required this.textFadeController,
     required this.textFadeAnimation,
-    required this.buttonFadeController,
-    required this.buttonFadeAnimation,
-    required this.onTextChanged,
+    // required this.buttonFadeController,
+    // required this.buttonFadeAnimation,
+    // required this.onTextChanged,
   }) : super(key: key);
 
   @override
@@ -75,8 +75,9 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
 
       // Set initial target language to detected language (showTranslationWidget = false)
       if (_detectedLanguage != null && _detectedLanguage!.code != 'auto') {
+        //TODO do i need this targetLanguageProvider or can i use the publishoptionsprovider only
         ref.read(targetLanguageProvider.notifier).state = _detectedLanguage!;
-        ref.read(publishOptionsProvider.notifier).state = ref.read(publishOptionsProvider).copyWith(showTranslationWidget: false);
+        ref.read(publishOptionsProvider.notifier).state = ref.read(publishOptionsProvider).copyWith(originalLanguage: _detectedLanguage);
       } else {
         _languageDetectionFailed = true;
         showSnackBar("Unsupported language detected", context, type: SnackbarType.info);
@@ -98,27 +99,27 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
       setState(() {
         widget.post.text = newText;
       });
-      widget.onTextChanged();
+      // widget.onTextChanged();
       widget.textFadeController.forward();
     });
   }
 
   void _resetTranslation() {
-    widget.buttonFadeController.reverse().then((_) {
-      ref.read(translatedTextProvider.notifier).state = null;
-      _animateTextChange(_originalText);
+    // widget.buttonFadeController.reverse().then((_) {
+    //TODO the provider should trigger the rebuild of the listeners themselves, using callbacks with a mix of providers is inefficient
+    ref.read(translatedTextProvider.notifier).state = null;
+    _animateTextChange(_originalText);
 
-      final currentPublishOptions = ref.read(publishOptionsProvider);
-      ref.read(publishOptionsProvider.notifier).state = PublishOptions(
-        showTranslationWidget: currentPublishOptions.showTranslationWidget,
-        publishInBothLanguages: false,
-        originalText: null,
-        originalLanguage: null,
-        targetLanguage: null,
-      );
+    // final currentPublishOptions = ref.read(publishOptionsProvider);
+    ref.read(publishOptionsProvider.notifier).state = PublishOptions(
+      publishInBothLanguages: false,
+      translatedText: "",
+      originalLanguage: null,
+      targetLanguage: null,
+    );
 
-      widget.buttonFadeController.forward();
-    });
+    // widget.buttonFadeController.forward();
+    // });
   }
 
   void _translateText() async {
@@ -130,20 +131,18 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     try {
       final translated = await translationService.translateText(text: _originalText, from: _detectedLanguage?.code, to: targetLang.code);
 
+      //TODO do i need this translated text provider or can i just use publishoptions and rename that to PostTranslation
       ref.read(translatedTextProvider.notifier).state = translated;
 
-      ref.read(publishOptionsProvider.notifier).state = PublishOptions(
-        showTranslationWidget: true,
-        publishInBothLanguages: ref.read(publishOptionsProvider).publishInBothLanguages,
-        originalText: _originalText,
-        originalLanguage: _detectedLanguage,
-        targetLanguage: targetLang,
-      );
+      ref.read(publishOptionsProvider.notifier).state = ref
+          .read(publishOptionsProvider.notifier)
+          .state
+          .copyWith(translatedText: translated, targetLanguage: targetLang);
 
-      widget.buttonFadeController.reverse().then((_) {
-        _animateTextChange(translated);
-        widget.buttonFadeController.forward();
-      });
+      // widget.buttonFadeController.reverse().then((_) {
+      _animateTextChange(translated);
+      // widget.buttonFadeController.forward();
+      // });
     } catch (e) {
       showSnackBar("Translation failed: ${e.toString()}", context, type: SnackbarType.error);
     } finally {
@@ -166,10 +165,6 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
 
       // Update showTranslationWidget based on whether the selected language matches detected language
       final shouldShowTranslationWidget = _detectedLanguage == null || selectedLang.code != _detectedLanguage!.code;
-
-      ref.read(publishOptionsProvider.notifier).state = ref
-          .read(publishOptionsProvider)
-          .copyWith(showTranslationWidget: shouldShowTranslationWidget);
 
       // Trigger translation immediately if languages are different
       if (shouldShowTranslationWidget) {
@@ -248,15 +243,13 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
   @override
   Widget build(BuildContext context) {
     final isTranslating = ref.watch(isTranslatingProvider);
-
-    if (widget.post.text == null) return const SizedBox.shrink();
-
+    const animDuration = const Duration(milliseconds: 250);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AnimatedGrowFadeIn(
           show: !_languageDetectionFailed && !_isAutoDetecting,
-          duration: const Duration(milliseconds: 300),
+          duration: animDuration,
           child: Column(
             children: [
               Row(children: [_buildTargetLanguageSelector()]),
@@ -268,22 +261,14 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
         // Show detected language info or error message
         AnimatedGrowFadeIn(
           show: _detectedLanguage != null && !_languageDetectionFailed && !_isAutoDetecting,
-          duration: const Duration(milliseconds: 300),
+          duration: animDuration,
           child: _buildDetectedLanguageInfo(),
         ),
 
-        AnimatedGrowFadeIn(
-          show: _languageDetectionFailed && !_isAutoDetecting,
-          duration: const Duration(milliseconds: 300),
-          child: _buildErrorText(),
-        ),
+        AnimatedGrowFadeIn(show: _languageDetectionFailed && !_isAutoDetecting, duration: animDuration, child: _buildErrorText()),
 
         const SizedBox(height: 4),
-        AnimatedGrowFadeIn(
-          show: isTranslating || _isAutoDetecting,
-          duration: const Duration(milliseconds: 300),
-          child: _buildProgressIndicator(),
-        ),
+        AnimatedGrowFadeIn(show: isTranslating || _isAutoDetecting, duration: animDuration, child: _buildProgressIndicator()),
         const SizedBox(height: 4),
       ],
     );

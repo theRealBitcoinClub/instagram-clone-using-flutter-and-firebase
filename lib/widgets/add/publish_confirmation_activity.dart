@@ -6,7 +6,6 @@ import 'package:mahakka/widgets/add/translation_widget.dart';
 
 import '../../memo/model/memo_model_post.dart';
 import '../../memo/model/memo_model_user.dart';
-import '../../provider/draft_post_provider.dart';
 import '../../provider/publish_options_provider.dart';
 import '../../provider/translation_service.dart';
 import '../../provider/user_provider.dart';
@@ -44,10 +43,10 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
   late AnimationController _textFadeController;
   late Animation<double> _textFadeAnimation;
   // Add this new animation controller for button transitions
-  late AnimationController _buttonFadeController;
-  late Animation<double> _buttonFadeAnimation;
-  late bool _isFirstSourceSelection; // ADD THIS FLAG
-  late bool _isUpdatingSourceLanguage; // ADD THIS FLAG
+  // late AnimationController _buttonFadeController;
+  // late Animation<double> _buttonFadeAnimation;
+  // late bool _isFirstSourceSelection; // ADD THIS FLAG
+  // late bool _isUpdatingSourceLanguage; // ADD THIS FLAG
 
   // ADD TRANSLATION SECTION FADE ANIMATION CONTROLLER
   late AnimationController _translationSectionController;
@@ -61,23 +60,23 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
     _controller = AnimationController(duration: const Duration(milliseconds: 500), vsync: this);
     _opacityAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     _originalText = widget.post.text ?? '';
-    _isUpdatingSourceLanguage = false; // INITIALIZE THE FLAG
-    _isFirstSourceSelection = true; // INITIALIZE THE FLAG
+    // _isUpdatingSourceLanguage = false; // INITIALIZE THE FLAG
+    // _isFirstSourceSelection = true; // INITIALIZE THE FLAG
     _translationSectionController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
     _translationSectionAnimation = CurvedAnimation(
       parent: _translationSectionController,
       curve: Curves.easeInOut,
     ); // Start with translation section visible if hasTranslation is true
-    if (ref.read(publishOptionsProvider).showTranslationWidget) {
-      _translationSectionController.forward();
-    }
+    // if (ref.read(publishOptionsProvider).showTranslationWidget) {
+    _translationSectionController.forward();
+    // }
     // ADD TEXT FADE ANIMATION CONTROLLER
     _textFadeController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
     _textFadeAnimation = CurvedAnimation(parent: _textFadeController, curve: Curves.easeInOut);
 
     // ADD BUTTON FADE ANIMATION CONTROLLER
-    _buttonFadeController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
-    _buttonFadeAnimation = CurvedAnimation(parent: _buttonFadeController, curve: Curves.easeInOut);
+    // _buttonFadeController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
+    // _buttonFadeAnimation = CurvedAnimation(parent: _buttonFadeController, curve: Curves.easeInOut);
 
     // Initialize temporary values with user's current settings
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -89,7 +88,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           _textFadeController.forward();
-          _buttonFadeController.forward();
+          // _buttonFadeController.forward();
         }
       });
     });
@@ -104,7 +103,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
     // DISPOSE TEXT FADE CONTROLLER
     _textFadeController.dispose();
     _translationSectionController.dispose(); // ADD THIS
-    _buttonFadeController.dispose(); // ADD THIS
+    // _buttonFadeController.dispose(); // ADD THIS
     _controller.dispose();
     super.dispose();
   }
@@ -115,7 +114,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
     _textFadeController.reverse().then((_) {
       // Change text while invisible
       setState(() {
-        widget.post.text = newText;
+        widget.post.text = newText + " ";
       });
       // Then fade back in
       _textFadeController.forward();
@@ -339,17 +338,16 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
   // }
 
   void _resetTranslation() {
-    ref.read(draftPostProvider.notifier).state = widget.post;
+    // ref.read(draftPostProvider.notifier).state = widget.post;
     // Animate button transition
     ref.read(translatedTextProvider.notifier).state = null;
     // Get current state to preserve hasTranslation
-    final currentPublishOptions = ref.read(publishOptionsProvider);
+    // final currentPublishOptions = ref.read(publishOptionsProvider);
 
     // Create a fresh options object with only hasTranslation preserved
     ref.read(publishOptionsProvider.notifier).state = PublishOptions(
-      showTranslationWidget: currentPublishOptions.showTranslationWidget, // Keep the same value
       publishInBothLanguages: false, // Reset to default
-      originalText: null, // Reset to default
+      translatedText: "", // Reset to default
       originalLanguage: null, // Reset to default
       targetLanguage: null, // Reset to default
     );
@@ -590,7 +588,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
     final temporaryTipAmount = user.temporaryTipAmount ?? user.tipAmountEnum;
 
     var colorBottomBarIcon = colorScheme.onSurfaceVariant;
-    String translatedText = ref.watch(translatedTextProvider) != null ? ref.read(translatedTextProvider)! : "";
+    String translatedText = ref.watch(translatedTextProvider) != null ? ref.read(translatedTextProvider)! : _originalText;
 
     return Scaffold(
       appBar: AppBar(
@@ -633,12 +631,12 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                   translationSectionAnimation: _translationSectionAnimation,
                   textFadeController: _textFadeController,
                   textFadeAnimation: _textFadeAnimation,
-                  buttonFadeController: _buttonFadeController,
-                  buttonFadeAnimation: _buttonFadeAnimation,
-                  onTextChanged: () {
-                    // Update draft post provider when text changes
-                    // ref.read(draftPostProvider.notifier).state = widget.post;
-                  },
+                  // buttonFadeController: _buttonFadeController,
+                  // buttonFadeAnimation: _buttonFadeAnimation,
+                  // onTextChanged: () {
+                  // Update draft post provider when text changes
+                  // ref.read(draftPostProvider.notifier).state = widget.post;
+                  // },
                 ),
               if (widget.post.text != null)
                 FadeTransition(

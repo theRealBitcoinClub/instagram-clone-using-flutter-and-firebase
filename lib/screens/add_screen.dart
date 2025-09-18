@@ -477,7 +477,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
                 if (!mounted) return;
                 if (value.contains('\n')) {
                   _textInputController.text = value.replaceAll("\n", "");
-                  _onSendPublishAllLanguages();
+                  _onPublish();
                 }
               },
               focusNode: _focusNode,
@@ -485,7 +485,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
               insets: viewInsets,
               controller: _textInputController,
               hintText: "Add a caption... use @ for topics, # for tags",
-              onSend: _onSendPublishAllLanguages,
+              onSend: _onPublish,
             );
           },
         ),
@@ -515,40 +515,12 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     );
   }
 
-  //TODO THIS WILL BE PAID FEATURE TO PUBLISH IN BOTH LANGUAGES, MIGHT ALSO BE AN OPTION TO NOT CLEAR THE INPUTS AND OFFER RIGHT AWAY ON THE CONFIRMATION SCREEN TO PUBLISH AGAIN WITH ANY OTHER LANGUAGE THEY CAN SELECT
-  Future<void> _onSendPublishAllLanguages() async {
-    PostTranslation translation = ref.read(postTranslationProvider);
-    if (translation.targetLanguage != translation.originalLanguage) {
-      await _onPublish(translation.targetLanguage!, translation: translation.translatedText);
-      // showSnackBar("Publishing translation", context, type: SnackbarType.info);
-      // await _onPublish(translation.targetLanguage!, isTranslation: true);
-      // TODO handle edge case when publishing of translation failed, offer to retry after the balance has increased, check current balance and watch it then onincrease offer to publish translation
-      // } else {
-      //   _onPublish(translation.originalLanguage!);
-    } else {
-      await _onPublish(translation.originalLanguage!);
-    }
-  }
-
-  Future<void> _onPublish(Language lang, {String? translation}) async {
+  Future<void> _onPublish() async {
     final isPublishing = ref.read(isPublishingProvider);
     if (isPublishing) return;
     ref.read(isPublishingProvider.notifier).state = true;
 
-    // _unfocusNodes(context);
-
-    // if (!_hasAddedMediaToPublish()) {
-    //   _showErrorSnackBar('Please add an image or video to share.');
-    //   return;
-    // }
-
-    // final String? validationError = _validateTagsAndTopic();
-    // if (validationError != null) {
-    //   _showErrorSnackBar(validationError);
-    //   return;
-    // }
-
-    String textContent = "${lang.flag} ${translation ?? _textInputController.text}";
+    String textContent = _textInputController.text;
 
     MemoVerificationResponse result = _handleVerification(textContent);
 
@@ -559,34 +531,28 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     }
 
     textContent = _appendMediaUrlToText(textContent);
-    // final String? topic = _extractTopicFromTags(textContent);
     final String topic = MemoRegExp.extractTopics(textContent).isNotEmpty ? MemoRegExp.extractTopics(textContent).first : "";
 
     try {
-      // Create the post object for confirmation screen
       final post = _createPostFromCurrentState(textContent, topic);
       final user = ref.read(userProvider)!;
 
-      // Show confirmation screen and wait for result
       final bool shouldPublish = (await PublishConfirmationActivity.show(context, post: post))!;
-
       if (!mounted) return;
 
       if (shouldPublish) {
-        // User confirmed, proceed with publishing
         final postRepository = ref.read(postRepositoryProvider);
-        final response = await postRepository.publishImageOrVideo(textContent, topic, validate: false);
-
-        // PublishOptions options = ref.read(publishOptionsProvider);
-        // if (options.publishInBothLanguages) {
-        //   await _onPublish(options.originalLanguage!);
-        //   showSnackBar("Publishing translation", context, type: SnackbarType.info);
-        //   await _onPublish(options.targetLanguage!, isTranslation: true);
-        //   //TODO handle edge case when publishing of translation failed, offer to retry after the balance has increased, check current balance and watch it then onincrease offer to publish translation
-        // } else {
-        //   _onPublish(options.originalLanguage!);
-        // }
-
+        PostTranslation translation = ref.read(postTranslationProvider);
+        Language lang;
+        String textTranslated;
+        if (translation.targetLanguage != translation.originalLanguage) {
+          lang = translation.targetLanguage!;
+          textTranslated = translation.translatedText;
+        } else {
+          lang = translation.originalLanguage!;
+          textTranslated = textContent;
+        }
+        final response = await postRepository.publishImageOrVideo("${lang.flag} $textTranslated", topic, validate: false);
         if (!mounted) return;
 
         if (response == MemoAccountantResponse.yes) {
@@ -595,25 +561,19 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           _showSuccessSnackBar('Successfully published!');
           ref.read(telegramBotPublisherProvider).publishPost(postText: post.text!, mediaUrl: post.mediaUrl);
         } else {
-          // _focusNode.requestFocus(); // Refocus on error
           showQrCodeDialog(context: context, theme: Theme.of(context), user: user, memoOnly: true);
           _showErrorSnackBar('Publish failed: ${response.message}');
         }
       } else {
-        // _focusNode.requestFocus(); // Refocus on error
         showSnackBar(type: SnackbarType.info, 'Publication canceled', context);
       }
-      // If shouldPublish is null, the screen was closed by other means (back button)
     } catch (e, s) {
-      // _focusNode.requestFocus(); // Refocus on error
       _log("Error during publish: $e\n$s");
       if (mounted) {
         _showErrorSnackBar('Error during publish: ${e.toString()}');
       }
     } finally {
       if (mounted) {
-        // ref.read(userProvider)!.temporaryTipReceiver = null;
-        // ref.read(userProvider)!.temporaryTipAmount = null;
         ref.read(isPublishingProvider.notifier).state = false;
       }
     }

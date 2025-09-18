@@ -41,6 +41,7 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
     _isPortrait = true;
     _isFullscreen = false;
     _showFullscreenHint = false;
+    _initFullScreenHintTimer();
 
     _animationController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
     _contentAnimationController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
@@ -92,6 +93,10 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
 
   void _showFullscreenHintWithTimer() {
     _fullscreenHintTimer.cancel(); // Cancel any existing timer
+    _initFullScreenHintTimer();
+  }
+
+  void _initFullScreenHintTimer() {
     _fullscreenHintTimer = Timer(const Duration(seconds: 2), () {
       if (mounted) {
         setState(() {

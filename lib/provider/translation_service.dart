@@ -32,10 +32,10 @@ class TranslationService {
 
   Future<String> detectLanguage(String text) async {
     try {
-      final detection = await translator.translate(text, to: 'en');
+      final detection = await translator.translate(text);
       return detection.sourceLanguage?.code ?? 'auto';
     } catch (e) {
-      return 'auto';
+      return 'error';
     }
   }
 }
@@ -55,7 +55,8 @@ class Language {
 // Available languages
 const availableLanguages = [
   const Language(code: 'auto', name: 'Auto', flag: ''),
-  // const Language(code: 'zh', name: 'Chinese', flag: '🇨🇳'),
+  const Language(code: 'zh-cn', name: 'Chinese', flag: '🇨🇳'),
+  const Language(code: 'de', name: 'Deutsch', flag: '🇩🇪'),
   const Language(code: 'en', name: 'English', flag: '🇬🇧'),
   const Language(code: 'tl', name: 'Filipino', flag: '🇵🇭'),
   const Language(code: 'fr', name: 'French', flag: '🇫🇷'),
@@ -65,13 +66,8 @@ const availableLanguages = [
   const Language(code: 'es', name: 'Spanish', flag: '🇪🇸'),
 ];
 
-// Riverpod providers for translation state
-final sourceLanguageProvider = StateProvider<Language>((ref) {
-  return availableLanguages.firstWhere((lang) => lang.code == 'auto');
-});
-
 final targetLanguageProvider = StateProvider<Language>((ref) {
-  return availableLanguages.firstWhere((lang) => lang.code == 'es');
+  return availableLanguages.firstWhere((lang) => lang.code == 'auto');
 });
 
 final isTranslatingProvider = StateProvider<bool>((ref) => false);

@@ -6,6 +6,7 @@ import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/utils/snackbar.dart';
 
 import '../../memo/model/memo_model_post.dart';
+import '../animations/animated_grow_fade_in.dart';
 import 'language_selector_widget.dart';
 
 class TranslationWidget extends ConsumerStatefulWidget {
@@ -36,15 +37,54 @@ class TranslationWidget extends ConsumerStatefulWidget {
 
 class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
   late String _originalText;
-  late bool _isFirstTargetSelection;
-  late bool _isUpdatingTargetLanguage;
+  late Language? _detectedLanguage;
+  late bool _languageDetectionFailed;
 
   @override
   void initState() {
     super.initState();
     _originalText = widget.post.text ?? '';
-    _isFirstTargetSelection = true;
-    _isUpdatingTargetLanguage = false;
+    _detectedLanguage = null;
+    _languageDetectionFailed = false;
+
+    // Auto-detect language on init
+    _detectLanguage();
+  }
+
+  Future<void> _detectLanguage() async {
+    if (_originalText.isEmpty) return;
+
+    try {
+      final translationService = ref.read(translationServiceProvider);
+      final detectedLangCode = await translationService.detectLanguage(_originalText);
+      if (detectedLangCode == "error") {
+        showSnackBar("Error on translation request", context, type: SnackbarType.error);
+        _languageDetectionFailed = true;
+        return;
+      }
+
+      setState(() {
+        _detectedLanguage = availableLanguages.firstWhere((lang) => lang.code == detectedLangCode, orElse: () => availableLanguages[0]);
+        _languageDetectionFailed = false;
+      });
+
+      if (_detectedLanguage != availableLanguages[0])
+        showSnackBar("Detected language: ${_detectedLanguage!.name}", context, type: SnackbarType.success);
+
+      // Set initial target language to detected language (showTranslationWidget = false)
+      if (_detectedLanguage != null && _detectedLanguage!.code != 'auto') {
+        ref.read(targetLanguageProvider.notifier).state = _detectedLanguage!;
+        ref.read(publishOptionsProvider.notifier).state = ref.read(publishOptionsProvider).copyWith(showTranslationWidget: false);
+      } else {
+        _languageDetectionFailed = true;
+        showSnackBar("Unsupported language detected", context, type: SnackbarType.info);
+      }
+    } catch (e) {
+      setState(() {
+        _languageDetectionFailed = true;
+        _detectedLanguage = null;
+      });
+    }
   }
 
   void _animateTextChange(String newText) {
@@ -82,12 +122,7 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     ref.read(isTranslatingProvider.notifier).state = true;
 
     try {
-      // Auto-detect source language
-      final translationService = ref.read(translationServiceProvider);
-      final detectedLangCode = await translationService.detectLanguage(_originalText);
-      final detectedLang = availableLanguages.firstWhere((lang) => lang.code == detectedLangCode, orElse: () => availableLanguages[0]);
-
-      final translated = await translationService.translateText(text: _originalText, from: detectedLang.code, to: targetLang.code);
+      final translated = await translationService.translateText(text: _originalText, from: _detectedLanguage?.code, to: targetLang.code);
 
       ref.read(translatedTextProvider.notifier).state = translated;
 
@@ -95,7 +130,7 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
         showTranslationWidget: true,
         publishInBothLanguages: ref.read(publishOptionsProvider).publishInBothLanguages,
         originalText: _originalText,
-        originalLanguage: detectedLang,
+        originalLanguage: _detectedLanguage,
         targetLanguage: targetLang,
       );
 
@@ -121,13 +156,21 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
         orElse: () => availableLanguages[1], // Default to first non-auto language
       );
 
-      _isUpdatingTargetLanguage = true;
       ref.read(targetLanguageProvider.notifier).state = selectedLang;
-      _isUpdatingTargetLanguage = false;
 
-      // Trigger translation immediately when language is selected
-      if (ref.read(publishOptionsProvider).showTranslationWidget) {
+      // Update showTranslationWidget based on whether the selected language matches detected language
+      final shouldShowTranslationWidget = _detectedLanguage == null || selectedLang.code != _detectedLanguage!.code;
+
+      ref.read(publishOptionsProvider.notifier).state = ref
+          .read(publishOptionsProvider)
+          .copyWith(showTranslationWidget: shouldShowTranslationWidget);
+
+      // Trigger translation immediately if languages are different
+      if (shouldShowTranslationWidget) {
         _translateText();
+      } else {
+        // Reset to original text if going back to detected language
+        _resetTranslation();
       }
     }
   }
@@ -150,8 +193,9 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const SizedBox(width: 4),
             Text(
-              targetLang.name,
+              targetLang.flag + "  " + targetLang.name,
               style: textTheme.bodyMedium?.copyWith(
                 color: isTranslating ? theme.colorScheme.onSurface.withOpacity(0.5) : theme.colorScheme.onSurface,
               ),
@@ -171,22 +215,32 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
   Widget _buildProgressIndicator() {
     final isTranslating = ref.watch(isTranslatingProvider);
 
-    if (!isTranslating) return const SizedBox.shrink();
+    return LinearProgressIndicator(
+      minHeight: 2,
+      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+      borderRadius: BorderRadius.circular(2),
+    );
+  }
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0),
-      child: LinearProgressIndicator(
-        minHeight: 2,
-        backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
-        valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
-        borderRadius: BorderRadius.circular(2),
-      ),
+  Widget _buildErrorText() {
+    return Text(
+      'Unsupported language, publish text as is or cancel to retry',
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.error),
+    );
+  }
+
+  Widget _buildDetectedLanguageInfo() {
+    if (_detectedLanguage == null) return const SizedBox.shrink();
+
+    return Text(
+      'Original language: ${_detectedLanguage!.name}',
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final publishOptions = ref.watch(publishOptionsProvider);
     final isTranslating = ref.watch(isTranslatingProvider);
 
     if (widget.post.text == null) return const SizedBox.shrink();
@@ -194,54 +248,28 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Checkbox(
-              value: publishOptions.showTranslationWidget,
-              onChanged: isTranslating
-                  ? null // Disable checkbox during translation to prevent state conflicts
-                  : (value) {
-                      final newValue = value ?? false;
-                      ref.read(publishOptionsProvider.notifier).state = publishOptions.copyWith(showTranslationWidget: newValue);
-
-                      if (newValue) {
-                        widget.translationSectionController.forward();
-                        // Trigger translation immediately when checkbox is checked
-                        _translateText();
-                      } else {
-                        widget.translationSectionController.reverse();
-                        _resetTranslation();
-                      }
-                    },
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: isTranslating
-                  ? null // Disable during translation
-                  : () {
-                      if (!publishOptions.showTranslationWidget) {
-                        final newValue = true;
-                        ref.read(publishOptionsProvider.notifier).state = publishOptions.copyWith(showTranslationWidget: newValue);
-                        widget.translationSectionController.forward();
-                        _translateText();
-                      } else {
-                        _showLanguageSelector();
-                      }
-                    },
-              child: Text(
-                'Translate to',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isTranslating ? Theme.of(context).colorScheme.onSurface.withOpacity(0.5) : Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            _buildTargetLanguageSelector(),
-          ],
+        AnimatedGrowFadeIn(
+          show: !_languageDetectionFailed,
+          duration: const Duration(milliseconds: 300),
+          child: Column(
+            children: [
+              Row(children: [_buildTargetLanguageSelector()]),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
-        const SizedBox(width: 8),
-        _buildProgressIndicator(),
-        const SizedBox(width: 8),
+
+        // Show detected language info or error message
+        AnimatedGrowFadeIn(
+          show: _detectedLanguage != null && !_languageDetectionFailed,
+          duration: const Duration(milliseconds: 300),
+          child: _buildDetectedLanguageInfo(),
+        ),
+
+        AnimatedGrowFadeIn(show: _languageDetectionFailed, duration: const Duration(milliseconds: 300), child: _buildErrorText()),
+
+        const SizedBox(height: 4),
+        AnimatedGrowFadeIn(show: isTranslating, duration: const Duration(milliseconds: 300), child: _buildProgressIndicator()),
       ],
     );
   }

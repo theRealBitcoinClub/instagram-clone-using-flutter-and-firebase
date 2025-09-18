@@ -55,7 +55,7 @@ class Language {
 // Available languages
 const availableLanguages = [
   const Language(code: 'auto', name: 'Auto', flag: ''),
-  const Language(code: 'zh', name: 'Chinese', flag: '🇨🇳'),
+  // const Language(code: 'zh', name: 'Chinese', flag: '🇨🇳'),
   const Language(code: 'en', name: 'English', flag: '🇬🇧'),
   const Language(code: 'tl', name: 'Filipino', flag: '🇵🇭'),
   const Language(code: 'fr', name: 'French', flag: '🇫🇷'),

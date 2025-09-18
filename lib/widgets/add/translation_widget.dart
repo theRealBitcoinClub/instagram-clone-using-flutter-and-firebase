@@ -6,6 +6,7 @@ import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/utils/snackbar.dart';
 
 import '../../memo/model/memo_model_post.dart';
+import 'language_selector_widget.dart';
 
 class TranslationWidget extends ConsumerStatefulWidget {
   final MemoModelPost post;
@@ -35,15 +36,15 @@ class TranslationWidget extends ConsumerStatefulWidget {
 
 class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
   late String _originalText;
-  late bool _isFirstSourceSelection;
-  late bool _isUpdatingSourceLanguage;
+  late bool _isFirstTargetSelection;
+  late bool _isUpdatingTargetLanguage;
 
   @override
   void initState() {
     super.initState();
     _originalText = widget.post.text ?? '';
-    _isFirstSourceSelection = true;
-    _isUpdatingSourceLanguage = false;
+    _isFirstTargetSelection = true;
+    _isUpdatingTargetLanguage = false;
   }
 
   void _animateTextChange(String newText) {
@@ -75,47 +76,26 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
   }
 
   void _translateText() async {
-    final sourceLang = ref.read(sourceLanguageProvider);
     final targetLang = ref.read(targetLanguageProvider);
     final translationService = ref.read(translationServiceProvider);
-
-    // final excludePatterns = [
-    //   if (widget.post.topicId != null) widget.post.topicId!,
-    //   ...widget.post.tagIds,
-    // ].where((pattern) => pattern.isNotEmpty).toList();
 
     ref.read(isTranslatingProvider.notifier).state = true;
 
     try {
-      final translated = await translationService.translateText(
-        text: _originalText,
-        from: sourceLang.code == 'auto' ? null : sourceLang.code,
-        to: targetLang.code,
-        // excludePatterns: excludePatterns,
-      );
+      // Auto-detect source language
+      final translationService = ref.read(translationServiceProvider);
+      final detectedLangCode = await translationService.detectLanguage(_originalText);
+      final detectedLang = availableLanguages.firstWhere((lang) => lang.code == detectedLangCode, orElse: () => availableLanguages[0]);
+
+      final translated = await translationService.translateText(text: _originalText, from: detectedLang.code, to: targetLang.code);
 
       ref.read(translatedTextProvider.notifier).state = translated;
-
-      var detectedLang;
-      if (sourceLang.code == 'auto') {
-        final detectedLangCode = await translationService.detectLanguage(_originalText);
-        detectedLang = availableLanguages.firstWhere(
-          (lang) => lang.code == detectedLangCode,
-          orElse: () => availableLanguages[0], //return AUTO if undetected
-        );
-
-        _isUpdatingSourceLanguage = true;
-        ref.read(sourceLanguageProvider.notifier).state = detectedLang;
-        _isUpdatingSourceLanguage = false;
-      }
-
-      final currentSourceLang = sourceLang.code == 'auto' ? detectedLang : sourceLang;
 
       ref.read(publishOptionsProvider.notifier).state = PublishOptions(
         showTranslationWidget: true,
         publishInBothLanguages: ref.read(publishOptionsProvider).publishInBothLanguages,
         originalText: _originalText,
-        originalLanguage: currentSourceLang,
+        originalLanguage: detectedLang,
         targetLanguage: targetLang,
       );
 
@@ -130,190 +110,138 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     }
   }
 
-  Widget _buildTranslationToggle() {
-    final publishOptions = ref.watch(publishOptionsProvider);
+  Future<void> _showLanguageSelector() async {
+    final isTranslating = ref.read(isTranslatingProvider);
+    if (isTranslating) return; // Prevent opening dialog during translation
 
-    return Row(
-      children: [
-        Checkbox(
-          value: publishOptions.showTranslationWidget,
-          onChanged: (value) {
-            final newValue = value ?? false;
-            ref.read(publishOptionsProvider.notifier).state = publishOptions.copyWith(showTranslationWidget: newValue);
+    final selectedLangCode = await LanguageSelectorWidget.showLanguageSelector(context: context);
+    if (selectedLangCode != null && mounted) {
+      final selectedLang = availableLanguages.firstWhere(
+        (lang) => lang.code == selectedLangCode,
+        orElse: () => availableLanguages[1], // Default to first non-auto language
+      );
 
-            if (newValue) {
-              widget.translationSectionController.forward();
-            } else {
-              widget.translationSectionController.reverse();
-              _resetTranslation();
-              // if (ref.read(translatedTextProvider) != null) {
-              //   _resetTranslation();
-              // }
-            }
-          },
+      _isUpdatingTargetLanguage = true;
+      ref.read(targetLanguageProvider.notifier).state = selectedLang;
+      _isUpdatingTargetLanguage = false;
+
+      // Trigger translation immediately when language is selected
+      if (ref.read(publishOptionsProvider).showTranslationWidget) {
+        _translateText();
+      }
+    }
+  }
+
+  Widget _buildTargetLanguageSelector() {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final targetLang = ref.watch(targetLanguageProvider);
+    final isTranslating = ref.watch(isTranslatingProvider);
+
+    return GestureDetector(
+      onTap: isTranslating ? null : _showLanguageSelector,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: theme.colorScheme.outline),
+          borderRadius: BorderRadius.circular(8),
+          color: isTranslating ? theme.colorScheme.surface.withOpacity(0.5) : theme.colorScheme.surface,
         ),
-        const SizedBox(width: 8),
-        Expanded(child: Text('Translate', style: Theme.of(context).textTheme.bodyMedium)),
-      ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              targetLang.name,
+              style: textTheme.bodyMedium?.copyWith(
+                color: isTranslating ? theme.colorScheme.onSurface.withOpacity(0.5) : theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.arrow_drop_down,
+              size: 20,
+              color: isTranslating ? theme.colorScheme.onSurface.withOpacity(0.5) : theme.colorScheme.onSurface,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildTranslationRow() {
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-
+  Widget _buildProgressIndicator() {
     final isTranslating = ref.watch(isTranslatingProvider);
-    final hasTranslation = ref.watch(translatedTextProvider) != null;
+
+    if (!isTranslating) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: LinearProgressIndicator(
+        minHeight: 2,
+        backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+        valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+        borderRadius: BorderRadius.circular(2),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final publishOptions = ref.watch(publishOptionsProvider);
+    final isTranslating = ref.watch(isTranslatingProvider);
+
+    if (widget.post.text == null) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Source', style: textTheme.labelSmall),
-                  const SizedBox(height: 4),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final sourceLang = ref.watch(sourceLanguageProvider);
-                      return DropdownButtonFormField<Language>(
-                        value: sourceLang,
-                        isExpanded: true,
-                        items: availableLanguages.map((Language language) {
-                          return DropdownMenuItem<Language>(
-                            value: language,
-                            child: Text(language.name, overflow: TextOverflow.ellipsis),
-                          );
-                        }).toList(),
-                        onChanged: (Language? newValue) {
-                          if (newValue != null) {
-                            ref.read(sourceLanguageProvider.notifier).state = newValue;
+            Checkbox(
+              value: publishOptions.showTranslationWidget,
+              onChanged: isTranslating
+                  ? null // Disable checkbox during translation to prevent state conflicts
+                  : (value) {
+                      final newValue = value ?? false;
+                      ref.read(publishOptionsProvider.notifier).state = publishOptions.copyWith(showTranslationWidget: newValue);
 
-                            if (!_isUpdatingSourceLanguage && widget.post.text?.isNotEmpty == true) {
-                              if (_isFirstSourceSelection) {
-                                _translateText();
-                                _isFirstSourceSelection = false;
-                              } else {
-                                Future.delayed(const Duration(milliseconds: 300), () {
-                                  if (mounted) {
-                                    _translateText();
-                                  }
-                                });
-                              }
-                            }
-                          }
-                        },
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                      );
+                      if (newValue) {
+                        widget.translationSectionController.forward();
+                        // Trigger translation immediately when checkbox is checked
+                        _translateText();
+                      } else {
+                        widget.translationSectionController.reverse();
+                        _resetTranslation();
+                      }
                     },
-                  ),
-                ],
-              ),
             ),
-
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Target', style: textTheme.labelSmall),
-                  const SizedBox(height: 4),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final targetLang = ref.watch(targetLanguageProvider);
-                      return DropdownButtonFormField<Language>(
-                        value: targetLang,
-                        isExpanded: true,
-                        items: availableLanguages.where((lang) => lang.code != 'auto').map((Language language) {
-                          return DropdownMenuItem<Language>(
-                            value: language,
-                            child: Text(language.name, overflow: TextOverflow.ellipsis),
-                          );
-                        }).toList(),
-                        onChanged: (Language? newValue) {
-                          if (newValue != null) {
-                            ref.read(targetLanguageProvider.notifier).state = newValue;
-                          }
-                        },
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                      );
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: isTranslating
+                  ? null // Disable during translation
+                  : () {
+                      if (!publishOptions.showTranslationWidget) {
+                        final newValue = true;
+                        ref.read(publishOptionsProvider.notifier).state = publishOptions.copyWith(showTranslationWidget: newValue);
+                        widget.translationSectionController.forward();
+                        _translateText();
+                      } else {
+                        _showLanguageSelector();
+                      }
                     },
-                  ),
-                ],
+              child: Text(
+                'Translate to',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: isTranslating ? Theme.of(context).colorScheme.onSurface.withOpacity(0.5) : Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ),
-
-            const SizedBox(width: 12),
-
-            SizedBox(
-              width: 100,
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    height: 48,
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (Widget child, Animation<double> animation) {
-                        return FadeTransition(opacity: animation, child: child);
-                      },
-                      child: hasTranslation
-                          ? SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                key: const ValueKey('reset_button'),
-                                onPressed: _resetTranslation,
-                                style: ElevatedButton.styleFrom(
-                                  minimumSize: const Size.fromHeight(48),
-                                  backgroundColor: theme.colorScheme.errorContainer,
-                                  foregroundColor: theme.colorScheme.onErrorContainer,
-                                ),
-                                child: const Text('RESET'),
-                              ),
-                            )
-                          : SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                key: const ValueKey('translate_button'),
-                                onPressed: isTranslating ? null : _translateText,
-                                style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                                child: isTranslating
-                                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                                    : const Text('LANG'),
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox(width: 8),
+            _buildTargetLanguageSelector(),
           ],
         ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        if (widget.post.text != null) _buildTranslationToggle(),
-        if (widget.post.text != null && ref.read(publishOptionsProvider).showTranslationWidget)
-          FadeTransition(
-            opacity: widget.translationSectionAnimation,
-            child: Column(children: [_buildTranslationRow()]),
-          ),
+        const SizedBox(width: 8),
+        _buildProgressIndicator(),
+        const SizedBox(width: 8),
       ],
     );
   }

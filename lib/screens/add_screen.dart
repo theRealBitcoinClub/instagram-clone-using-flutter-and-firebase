@@ -6,6 +6,8 @@ import 'package:fluttertagger/fluttertagger.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
+import 'package:mahakka/provider/publish_options_provider.dart';
+import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/screens/pin_claim_screen.dart';
 import 'package:mahakka/utils/snackbar.dart';
@@ -229,7 +231,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           child: Column(
             children: [
               _buildMediaInputSection(theme, colorScheme, textTheme),
-              if (_hasMediaSelected())
+              if (_hasAddedMediaToPublish())
                 Padding(
                   padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 12, left: 12, right: 12, top: 8),
                   child: _buildTaggableInput(theme, colorScheme, textTheme, mediaQuery.viewInsets),
@@ -241,7 +243,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     );
   }
 
-  bool _hasMediaSelected() {
+  bool _hasAddedMediaToPublish() {
     final imgurUrl = ref.read(imgurUrlProvider);
     final youtubeId = ref.read(youtubeVideoIdProvider);
     final ipfsCid = ref.read(ipfsCidProvider);
@@ -475,7 +477,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
                 if (!mounted) return;
                 if (value.contains('\n')) {
                   _textInputController.text = value.replaceAll("\n", "");
-                  _onPublish();
+                  _onSendPublishAllLanguages();
                 }
               },
               focusNode: _focusNode,
@@ -483,7 +485,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
               insets: viewInsets,
               controller: _textInputController,
               hintText: "Add a caption... use @ for topics, # for tags",
-              onSend: _onPublish,
+              onSend: _onSendPublishAllLanguages,
             );
           },
         ),
@@ -513,25 +515,40 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     );
   }
 
-  Future<void> _onPublish() async {
+  //TODO THIS WILL BE PAID FEATURE TO PUBLISH IN BOTH LANGUAGES, MIGHT ALSO BE AN OPTION TO NOT CLEAR THE INPUTS AND OFFER RIGHT AWAY ON THE CONFIRMATION SCREEN TO PUBLISH AGAIN WITH ANY OTHER LANGUAGE THEY CAN SELECT
+  Future<void> _onSendPublishAllLanguages() async {
+    PostTranslation translation = ref.read(postTranslationProvider);
+    if (translation.targetLanguage != translation.originalLanguage) {
+      await _onPublish(translation.targetLanguage!, translation: translation.translatedText);
+      // showSnackBar("Publishing translation", context, type: SnackbarType.info);
+      // await _onPublish(translation.targetLanguage!, isTranslation: true);
+      // TODO handle edge case when publishing of translation failed, offer to retry after the balance has increased, check current balance and watch it then onincrease offer to publish translation
+      // } else {
+      //   _onPublish(translation.originalLanguage!);
+    } else {
+      await _onPublish(translation.originalLanguage!);
+    }
+  }
+
+  Future<void> _onPublish(Language lang, {String? translation}) async {
     final isPublishing = ref.read(isPublishingProvider);
     if (isPublishing) return;
-    // _unfocusNodes(context);
-
-    if (!_hasMediaSelected()) {
-      _showErrorSnackBar('Please add an image or video to share.');
-      return;
-    }
-
-    final String? validationError = _validateTagsAndTopic();
-    if (validationError != null) {
-      _showErrorSnackBar(validationError);
-      return;
-    }
-
     ref.read(isPublishingProvider.notifier).state = true;
 
-    String textContent = _textInputController.text;
+    // _unfocusNodes(context);
+
+    // if (!_hasAddedMediaToPublish()) {
+    //   _showErrorSnackBar('Please add an image or video to share.');
+    //   return;
+    // }
+
+    // final String? validationError = _validateTagsAndTopic();
+    // if (validationError != null) {
+    //   _showErrorSnackBar(validationError);
+    //   return;
+    // }
+
+    String textContent = "${lang.flag} ${translation ?? _textInputController.text}";
 
     MemoVerificationResponse result = _handleVerification(textContent);
 
@@ -560,6 +577,16 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         final postRepository = ref.read(postRepositoryProvider);
         final response = await postRepository.publishImageOrVideo(textContent, topic, validate: false);
 
+        // PublishOptions options = ref.read(publishOptionsProvider);
+        // if (options.publishInBothLanguages) {
+        //   await _onPublish(options.originalLanguage!);
+        //   showSnackBar("Publishing translation", context, type: SnackbarType.info);
+        //   await _onPublish(options.targetLanguage!, isTranslation: true);
+        //   //TODO handle edge case when publishing of translation failed, offer to retry after the balance has increased, check current balance and watch it then onincrease offer to publish translation
+        // } else {
+        //   _onPublish(options.originalLanguage!);
+        // }
+
         if (!mounted) return;
 
         if (response == MemoAccountantResponse.yes) {
@@ -585,8 +612,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       }
     } finally {
       if (mounted) {
-        ref.read(userProvider)!.temporaryTipReceiver = null;
-        ref.read(userProvider)!.temporaryTipAmount = null;
+        // ref.read(userProvider)!.temporaryTipReceiver = null;
+        // ref.read(userProvider)!.temporaryTipAmount = null;
         ref.read(isPublishingProvider.notifier).state = false;
       }
     }
@@ -606,23 +633,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     return result;
   }
 
-  // String? _extractTopicFromTags(String rawTextForTopicExtraction) {
-  //   for (Tag t in _textInputController.tags) {
-  //     if (t.triggerCharacter == "@") {
-  //       return t.text;
-  //     }
-  //   }
-  //   if (rawTextForTopicExtraction.contains("@")) {
-  //     final words = rawTextForTopicExtraction.split(" ");
-  //     for (String word in words) {
-  //       if (word.startsWith("@") && word.length > 1) {
-  //         return word.substring(1).replaceAll(RegExp(r'[^\w-]'), '');
-  //       }
-  //     }
-  //   }
-  //   return null;
-  // }
-
   String _appendMediaUrlToText(String text) {
     final imgurUrl = ref.read(imgurUrlProvider);
     final youtubeId = ref.read(youtubeVideoIdProvider);
@@ -641,22 +651,22 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     return text;
   }
 
-  String? _validateTagsAndTopic() {
-    final tags = _textInputController.tags;
-    int topicCount = tags.where((t) => t.triggerCharacter == "@").length;
-    int hashtagCount = tags.where((t) => t.triggerCharacter == "#").length;
-
-    if (topicCount > 1) {
-      return "Only one @topic is allowed.";
-    }
-    if (hashtagCount > 3) {
-      return "Maximum of 3 #hashtags allowed.";
-    }
-    if (_textInputController.text.trim().isEmpty && _hasMediaSelected()) {
-      return "Please add a caption for your media.";
-    }
-    return null;
-  }
+  // String? _validateTagsAndTopic() {
+  //   final tags = _textInputController.tags;
+  //   int topicCount = tags.where((t) => t.triggerCharacter == "@").length;
+  //   int hashtagCount = tags.where((t) => t.triggerCharacter == "#").length;
+  //
+  //   if (topicCount > 1) {
+  //     return "Only one @topic is allowed.";
+  //   }
+  //   if (hashtagCount > 3) {
+  //     return "Maximum of 3 #hashtags allowed.";
+  //   }
+  //   if (_textInputController.text.trim().isEmpty && _hasMediaSelected()) {
+  //     return "Please add a caption for your media.";
+  //   }
+  //   return null;
+  // }
 
   void _clearInputs() {
     _textInputController.clear();

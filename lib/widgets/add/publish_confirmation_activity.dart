@@ -211,7 +211,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
   void _resetTranslation() {
     ref.read(translatedTextProvider.notifier).state = null;
     // Create a fresh options object with only hasTranslation preserved
-    ref.read(publishOptionsProvider.notifier).state = PublishOptions(
+    ref.read(postTranslationProvider.notifier).state = PostTranslation(
       publishInBothLanguages: false, // Reset to default
       translatedText: "", // Reset to default
       originalLanguage: null, // Reset to default

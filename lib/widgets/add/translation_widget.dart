@@ -77,7 +77,7 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
       if (_detectedLanguage != null && _detectedLanguage!.code != 'auto') {
         //TODO do i need this targetLanguageProvider or can i use the publishoptionsprovider only
         ref.read(targetLanguageProvider.notifier).state = _detectedLanguage!;
-        ref.read(publishOptionsProvider.notifier).state = ref.read(publishOptionsProvider).copyWith(originalLanguage: _detectedLanguage);
+        ref.read(postTranslationProvider.notifier).state = ref.read(postTranslationProvider).copyWith(originalLanguage: _detectedLanguage);
       } else {
         _languageDetectionFailed = true;
         showSnackBar("Unsupported language detected", context, type: SnackbarType.info);
@@ -111,7 +111,7 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     _animateTextChange(_originalText);
 
     // final currentPublishOptions = ref.read(publishOptionsProvider);
-    ref.read(publishOptionsProvider.notifier).state = PublishOptions(
+    ref.read(postTranslationProvider.notifier).state = PostTranslation(
       publishInBothLanguages: false,
       translatedText: "",
       originalLanguage: null,
@@ -134,8 +134,8 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
       //TODO do i need this translated text provider or can i just use publishoptions and rename that to PostTranslation
       ref.read(translatedTextProvider.notifier).state = translated;
 
-      ref.read(publishOptionsProvider.notifier).state = ref
-          .read(publishOptionsProvider.notifier)
+      ref.read(postTranslationProvider.notifier).state = ref
+          .read(postTranslationProvider.notifier)
           .state
           .copyWith(translatedText: translated, targetLanguage: targetLang);
 

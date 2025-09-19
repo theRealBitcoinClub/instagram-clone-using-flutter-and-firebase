@@ -1,6 +1,7 @@
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/external_browser_launcher.dart';
 import 'package:mahakka/youtube_video_checker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -130,9 +131,7 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
     final uri = Uri.parse(url);
 
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open browser'), backgroundColor: _colorScheme.error));
+      ExternalBrowserLauncher().launchUrlWithConfirmation(context, url);
     }
   }
 

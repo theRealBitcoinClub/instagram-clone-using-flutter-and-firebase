@@ -33,6 +33,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   bool _cssInjected = false; // Track if CSS has been injected
   String _displayInAppBar = "";
   bool _isCustomUrl = false;
+  bool _shouldInjectCss = true; // Track whether CSS should be injected for current URL
 
   @override
   void initState() {
@@ -85,12 +86,19 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   }
 
   void _loadUrl(String url) {
-    // Reset CSS injection state when loading a new URL
+    // Determine if CSS should be injected for this URL
+    final bool shouldInject =
+        !url.contains('/logout') &&
+        !_isCustomUrl &&
+        !url.contains('target-specific-page') && // Add other URLs that shouldn't have CSS
+        url.startsWith(_baseUrl);
+
     setState(() {
       _displayInAppBar = "$url requested ...";
       showSnackBar(_displayInAppBar, context, type: SnackbarType.success);
       _isLoading = true;
       _cssInjected = false;
+      _shouldInjectCss = shouldInject;
     });
 
     // Use loadUrl() from InAppWebViewController
@@ -512,44 +520,46 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
         });
 
         return Scaffold(
-          appBar: AppBar(
-            toolbarHeight: 50,
-            centerTitle: false,
-            titleSpacing: NavigationToolbar.kMiddleSpacing,
+          appBar: _isCustomUrl
+              ? null
+              : AppBar(
+                  toolbarHeight: 50,
+                  centerTitle: false,
+                  titleSpacing: NavigationToolbar.kMiddleSpacing,
 
-            // _loadUrl('$_baseUrl/logout')
-            leading: IconButton(
-              icon: const Icon(size: 30, Icons.account_circle_outlined),
-              tooltip: "Feed",
-              onPressed: () {
-                _loadFeed();
-              },
-            ),
-            title: !_isLoading
-                ? Row(
-                    children: [
-                      GestureDetector(onTap: _loadFeed, child: Text("LOGIN")),
-                      Spacer(),
-                      GestureDetector(onTap: _loadLogout, child: Text("LOGOUT")),
-                    ],
-                  )
-                : Text(
-                    _displayInAppBar,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: (theme.appBarTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface).withOpacity(0.7),
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                  // _loadUrl('$_baseUrl/logout')
+                  leading: IconButton(
+                    icon: const Icon(size: 30, Icons.account_circle_outlined),
+                    tooltip: "Feed",
+                    onPressed: () {
+                      _loadFeed();
+                    },
                   ),
-            actions: [
-              IconButton(
-                icon: const Icon(size: 27, Icons.logout_rounded),
-                tooltip: "Logout",
-                onPressed: () {
-                  _loadLogout();
-                },
-              ),
-            ],
-          ),
+                  title: !_isLoading
+                      ? Row(
+                          children: [
+                            GestureDetector(onTap: _loadFeed, child: Text("LOGIN")),
+                            Spacer(),
+                            GestureDetector(onTap: _loadLogout, child: Text("LOGOUT")),
+                          ],
+                        )
+                      : Text(
+                          _displayInAppBar,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: (theme.appBarTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface).withOpacity(0.7),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(size: 27, Icons.logout_rounded),
+                      tooltip: "Logout",
+                      onPressed: () {
+                        _loadLogout();
+                      },
+                    ),
+                  ],
+                ),
           body: SafeArea(
             child: Stack(
               children: [
@@ -582,8 +592,16 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                       }
                     },
                     onLoadStop: (controller, url) async {
-                      // Wait for CSS injection to complete before hiding loading indicator
-                      if (!_isCustomUrl) await _injectCSS();
+                      // Only inject CSS if it should be injected for this URL
+                      if (_shouldInjectCss) {
+                        await _injectCSS();
+                      } else {
+                        // If CSS shouldn't be injected, mark as complete immediately
+                        setState(() {
+                          _cssInjected = true;
+                        });
+                      }
+
                       setState(() {
                         if (ref.read(tabIndexProvider) == AppTab.memo.tabIndex)
                           showSnackBar("Enjoy the content!", context, type: SnackbarType.success);

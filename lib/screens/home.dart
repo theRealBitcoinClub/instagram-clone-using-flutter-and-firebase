@@ -88,7 +88,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
 
         var barIcon = Icon(
           isSelected ? tabData.active : tabData.icon,
-          color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(198),
+          color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
         );
         return BottomNavigationBarItem(tooltip: tabData.label, activeIcon: barIcon, icon: barIcon, label: "");
       }).toList();

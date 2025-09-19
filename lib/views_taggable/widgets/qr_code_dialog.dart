@@ -9,7 +9,6 @@ import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../memo/model/memo_model_creator.dart';
 import '../../memo/model/memo_model_user.dart';
@@ -360,13 +359,19 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
           // CashToken Address Tab (BCH & Token)
           Expanded(
             child: GestureDetector(
-              onDoubleTap: () {
-                if (_isCashtokenFormat) {
-                  launchUrl(Uri.parse(MemoBitcoinBase.tokenUrl));
-                } else {
-                  launchUrl(Uri.parse(MemoBitcoinBase.memoExplorerUrlPrefix + widget.memoProfileId + MemoBitcoinBase.memoExplorerUrlSuffix));
-                }
-              },
+              // onDoubleTap: () {
+              //   if (_isCashtokenFormat) {
+              //     WebViewNavigationHelper.navigateToWebView(ref, WebViewShow.url, MemoBitcoinBase.tokenUrl);
+              //     // launchUrl(Uri.parse(MemoBitcoinBase.tokenUrl));
+              //   } else {
+              //     WebViewNavigationHelper.navigateToWebView(
+              //       ref,
+              //       WebViewShow.url,
+              //       MemoBitcoinBase.memoExplorerUrlPrefix + widget.memoProfileId + MemoBitcoinBase.memoExplorerUrlSuffix,
+              //     );
+              //     // launchUrl(Uri.parse(MemoBitcoinBase.memoExplorerUrlPrefix + widget.memoProfileId + MemoBitcoinBase.memoExplorerUrlSuffix));
+              //   }
+              // },
               onTap: () {
                 if (!_isCashtokenFormat) {
                   _toggleFormat(true);

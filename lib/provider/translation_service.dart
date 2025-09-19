@@ -62,6 +62,7 @@ const availableLanguages = [
   const Language(code: 'es', name: 'Español', flag: '🇪🇸'),
   const Language(code: 'tl', name: 'Filipino', flag: '🇵🇭'),
   const Language(code: 'fr', name: 'Français', flag: '🇫🇷'),
+  const Language(code: 'it', name: 'Italiano', flag: '🇮🇹'),
   const Language(code: 'ja', name: 'Japans', flag: '🇯🇵'),
   const Language(code: 'ru', name: 'Русский', flag: '🇷🇺'),
 ];

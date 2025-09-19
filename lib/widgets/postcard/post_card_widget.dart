@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/provider/publish_options_provider.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/repositories/post_cache_repository.dart';
 import 'package:mahakka/repositories/post_repository.dart';
@@ -550,6 +551,9 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     if (!mounted || shouldPublish != true) return;
 
+    String translation = ref.read(postTranslationProvider).translatedText;
+    postCopy = postCopy.copyWith(text: translation);
+
     var result = await ref.read(postRepositoryProvider).publishReplyTopic(postCopy);
     if (!mounted) return;
     _showVerificationResponse(result, context);
@@ -559,6 +563,9 @@ class _PostCardState extends ConsumerState<PostCard> {
     bool? shouldPublish = await _showConfirmationActivity(postCopy);
 
     if (!mounted || shouldPublish != true) return;
+
+    String translation = ref.read(postTranslationProvider).translatedText;
+    postCopy = postCopy.copyWith(text: translation);
 
     var result = await ref.read(postRepositoryProvider).publishReplyHashtags(postCopy);
     if (!mounted) return;

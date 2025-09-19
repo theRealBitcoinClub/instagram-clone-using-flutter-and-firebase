@@ -15,10 +15,10 @@ import 'memo_bitcoin_base.dart';
 enum MemoAccountType { tokens, bch, memo }
 
 enum MemoAccountantResponse {
-  yes(""),
-  noUtxo("Transaction error (no UTXO)."),
-  lowBalance("Insufficient balance."),
-  dust("Transaction error (dust).");
+  yes("Successfully published!"),
+  noUtxo("Transaction error (no UTXO)"),
+  lowBalance("Insufficient balance!"),
+  dust("Transaction error (dust)");
   // failed("Transaction failed due to an unexpected error."),
   // queued("Request queued for processing.");
 

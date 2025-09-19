@@ -20,11 +20,8 @@ class BurnerBalanceWidget extends ConsumerWidget {
     final asyncBurnerBalance = ref.watch(bchBurnerBalanceProvider);
 
     return GestureDetector(
-      onTap: () => WebViewNavigationHelper.navigateToWebView(
-        ref,
-        WebViewShow.url,
-        "https://explorer.salemkode.com/address/${MemoBitcoinBase.bchBurnerAddress}",
-      ),
+      onTap: () =>
+          WebViewNavigationHelper.navigateToWebView(ref, WebViewShow.url, "$MemoBitcoinBase.explorerUrl${MemoBitcoinBase.bchBurnerAddress}"),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

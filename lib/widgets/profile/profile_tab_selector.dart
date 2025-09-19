@@ -10,14 +10,14 @@ class ProfileTabSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     return Container(
-      color: theme.colorScheme.surface, // Match header background or use scaffoldBackground
+      color: theme.colorScheme.primary, // Match header background or use scaffoldBackground
       // padding: const EdgeInsets.symmetric(vertical: 0), // Remove padding if not desired
       height: 60, // Ensure fixed height for SliverPersistentHeader
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround, // Distribute space evenly
         crossAxisAlignment: CrossAxisAlignment.stretch, // Make buttons fill height
         children: [
-          _buildViewModeIconButton(theme, 0, Icons.grid_on_rounded, Icons.grid_view_rounded, "Grid"), // Grid
+          _buildViewModeIconButton(theme, 0, Icons.grid_on_rounded, Icons.grid_view_rounded, "Images"), // Grid
           _buildViewModeIconButton(theme, 1, Icons.video_library_outlined, Icons.video_library_rounded, "Videos"), // Videos
           _buildViewModeIconButton(theme, 2, Icons.tag_outlined, Icons.tag_rounded, "Tagged"), // Tagged
           _buildViewModeIconButton(theme, 4, Icons.alternate_email_outlined, Icons.alternate_email_rounded, "Topics"), // Topics
@@ -34,7 +34,10 @@ class ProfileTabSelector extends StatelessWidget {
         iconSize: 28, // Slightly adjusted size
         visualDensity: VisualDensity.standard,
         // padding: EdgeInsets.zero, // Remove padding if buttons are too spaced
-        icon: Icon(isActive ? activeIcon : inactiveIcon, color: isActive ? theme.iconTheme.color : theme.iconTheme.color?.withOpacity(0.6)),
+        icon: Icon(
+          isActive ? activeIcon : inactiveIcon,
+          color: isActive ? theme.colorScheme.onPrimary : theme.colorScheme.onPrimary.withAlpha(169),
+        ),
         tooltip: tooltip,
         onPressed: () => onViewModeChanged(index),
         splashRadius: 24, // Control splash radius

@@ -55,38 +55,10 @@ class ProfileHeader extends ConsumerWidget {
           ),
           _buildNameRow(creator, theme),
           _buildProfileText(creator, theme),
-          const Divider(height: 2.0, thickness: 0.5),
         ],
       ),
     );
   }
-
-  // @override
-  // Widget build(BuildContext context, WidgetRef ref) {
-  //   final theme = Theme.of(context);
-  //   final updatedCreator = ref.watch(profileCreatorStateProvider).asData?.value ?? creator;
-  //
-  //   return Container(
-  //     decoration: BoxDecoration(color: theme.colorScheme.surface),
-  //     child: Column(
-  //       mainAxisSize: MainAxisSize.min,
-  //       children: [
-  //         if (isRefreshingProfile) _buildProgressIndicator(),
-  //         TopDetailsRow(
-  //           creator: updatedCreator,
-  //           theme: theme,
-  //           showImageDetail: showImageDetail,
-  //           showDefaultAvatar: showDefaultAvatar,
-  //           isOwnProfile: isOwnProfile,
-  //           onProfileButtonPressed: onProfileButtonPressed,
-  //         ),
-  //         _buildNameRow(updatedCreator, theme),
-  //         _buildProfileText(updatedCreator, theme),
-  //         const Divider(height: 2.0, thickness: 0.5),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   Widget _buildProgressIndicator() {
     return const LinearProgressIndicator(

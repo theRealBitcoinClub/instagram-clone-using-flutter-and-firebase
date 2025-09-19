@@ -54,14 +54,14 @@ class ProfileAvatarBalancesButtonRow extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
+                    // Expanded(
+                    //   child: StatWidget(title: 'BCH', count: creator.balanceBch, theme: theme),
+                    // ),
                     Expanded(
-                      child: StatWidget(title: 'BCH', count: creator.balanceBch, theme: theme),
+                      child: StatWidget(title: 'MKK', count: creator.balanceToken, theme: theme),
                     ),
                     Expanded(
-                      child: StatWidget(title: 'Tokens', count: creator.balanceToken, theme: theme),
-                    ),
-                    Expanded(
-                      child: StatWidget(title: 'Memo', count: creator.balanceMemo, theme: theme),
+                      child: StatWidget(title: 'BCH', count: creator.balanceMemo, theme: theme),
                     ),
                   ],
                 ),

@@ -108,6 +108,7 @@ final ThemeData lightTheme = ThemeData(
   //   padding: EdgeInsets.zero,
   // ),
   colorScheme: ColorScheme.light(
+    onTertiaryFixedVariant: primaryGreen,
     primary: primaryGreen,
     onPrimary: Colors.white, // Text/icons on primary color
     secondary: lightGreenAccent, // Lighter green for accents
@@ -254,6 +255,7 @@ final ThemeData darkTheme = ThemeData(
   //   padding: EdgeInsets.zero,
   // ),
   colorScheme: ColorScheme.dark(
+    onTertiaryFixedVariant: lightGreenAccent,
     primary: primaryGreen,
     onPrimary: Colors.white,
     secondary: lightGreenAccent,

@@ -230,18 +230,17 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
             const SizedBox(height: 10),
             ExpandableTextCustom(
               post.text ?? " ",
-              expandText: 'show more',
+              expandText: ' show more',
               collapseText: 'show less',
               maxLines: 5,
-              linkColor: theme.colorScheme.primary.withOpacity(0.85),
+              // linkColor: theme.colorScheme.onSurface.withOpacity(0.85),
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontFamily: "Open Sans",
-                fontSize: 14,
+                fontSize: 15,
                 height: 1.4,
                 color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
               ),
-              linkStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary.withOpacity(0.85), fontWeight: FontWeight.w600),
-              hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary, fontWeight: FontWeight.w500),
+              hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
               onHashtagTap: (String hashtag) {
                 ref.read(topicIdProvider.notifier).state = null;
                 ref.read(tagIdProvider.notifier).state = hashtag;
@@ -251,7 +250,7 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
                 showSnackBar("${hashtag} charts are loading...", context, type: SnackbarType.info);
                 // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on hashtag: $hashtag')));
               },
-              mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary, fontWeight: FontWeight.w500),
+              mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
               urlStyle: buildUrlStyle(theme),
               onUrlTap: (String url) async {
                 await _onUrlTap(url, context);
@@ -275,11 +274,7 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
   }
 
   TextStyle? buildUrlStyle(ThemeData theme) {
-    return theme.textTheme.bodyMedium?.copyWith(
-      color: theme.colorScheme.primary.withOpacity(0.70),
-      decoration: TextDecoration.underline,
-      decorationColor: theme.colorScheme.primary.withOpacity(0.5),
-    );
+    return theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant);
   }
 
   Future<void> _onUrlTap(String url, BuildContext context) async {

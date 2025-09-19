@@ -557,7 +557,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         MemoConfetti().launch(context);
         _clearInputs();
         _showSuccessSnackBar('Successfully published!');
-        ref.read(telegramBotPublisherProvider).publishPost(postText: post.text!, mediaUrl: post.mediaPreviewUrl);
+        ref.read(telegramBotPublisherProvider).publishPost(postText: formattedContent, mediaUrl: null);
       } else {
         showQrCodeDialog(context: context, theme: Theme.of(context), user: user, memoOnly: true);
         _showErrorSnackBar('Publish failed: ${response.message}');

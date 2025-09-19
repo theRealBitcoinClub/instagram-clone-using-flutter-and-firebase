@@ -488,7 +488,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     final result = verifier.getResult();
     if (result != MemoVerificationResponse.valid) {
-      _showVerificationResponse(result, context);
+      _showVerificationResponse(result, context, null);
       return;
     }
 
@@ -556,7 +556,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     var result = await ref.read(postRepositoryProvider).publishReplyTopic(postCopy);
     if (!mounted) return;
-    _showVerificationResponse(result, context);
+    _showVerificationResponse(result, context, postCopy);
   }
 
   Future<void> _publishReplyHashtags(MemoModelPost postCopy) async {
@@ -569,7 +569,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     var result = await ref.read(postRepositoryProvider).publishReplyHashtags(postCopy);
     if (!mounted) return;
-    _showVerificationResponse(result, context);
+    _showVerificationResponse(result, context, postCopy);
   }
 
   Future<bool?> _showConfirmationActivity(MemoModelPost postCopy) async {
@@ -578,7 +578,8 @@ class _PostCardState extends ConsumerState<PostCard> {
     return shouldPublish;
   }
 
-  void _showVerificationResponse(dynamic result, BuildContext ctx) {
+  //TODO THIS CALL IS CONFUSING AS IT ONLY EXECUTES THE FIRST PART BUT BEFORE PUBLISH THEN THE LAST PART AFTER
+  void _showVerificationResponse(dynamic result, BuildContext ctx, MemoModelPost? postCopy) {
     String message = "";
     bool success = false;
 
@@ -602,7 +603,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     if (success) {
       _clearAndConfetti();
       showSnackBar(type: SnackbarType.success, message, ctx);
-      ref.read(telegramBotPublisherProvider).publishPost(postText: widget.post.text!);
+      ref.read(telegramBotPublisherProvider).publishPost(postText: postCopy!.text!);
     } else if (message.isNotEmpty && mounted) {
       showSnackBar(type: SnackbarType.error, message, ctx);
     }

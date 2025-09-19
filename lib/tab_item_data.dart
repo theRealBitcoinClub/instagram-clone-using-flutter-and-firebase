@@ -2,17 +2,33 @@
 import 'package:flutter/cupertino.dart';
 
 enum AppTab {
-  feed(tabIndex: 0, icon: CupertinoIcons.house, active: CupertinoIcons.house_fill, label: 'Feed'),
-  add(tabIndex: 1, icon: CupertinoIcons.add_circled, active: CupertinoIcons.add_circled_solid, label: 'Add'),
-  profile(tabIndex: 2, icon: CupertinoIcons.person, active: CupertinoIcons.person_fill, label: 'Profile'),
-  memo(tabIndex: 3, icon: CupertinoIcons.globe, active: CupertinoIcons.globe, label: 'Memo');
+  feed(tabIndex: 0, visibleTab: 0, icon: CupertinoIcons.house, active: CupertinoIcons.house_fill, label: 'FEED', isVisibleOnBar: true),
+  add(
+    tabIndex: 1,
+    visibleTab: 1,
+    icon: CupertinoIcons.add_circled,
+    active: CupertinoIcons.add_circled_solid,
+    label: 'CREATE',
+    isVisibleOnBar: true,
+  ),
+  profile(tabIndex: 2, visibleTab: 2, icon: CupertinoIcons.person, active: CupertinoIcons.person_fill, label: 'PROFILE', isVisibleOnBar: true),
+  memo(tabIndex: 3, visibleTab: 2, icon: CupertinoIcons.globe, active: CupertinoIcons.globe, label: 'MEMO', isVisibleOnBar: false);
 
   final int tabIndex;
+  final int visibleTab;
   final IconData icon;
   final IconData active;
   final String label;
+  final bool isVisibleOnBar;
 
-  const AppTab({required this.tabIndex, required this.icon, required this.active, required this.label});
+  const AppTab({
+    required this.tabIndex,
+    required this.visibleTab,
+    required this.icon,
+    required this.active,
+    required this.label,
+    required this.isVisibleOnBar,
+  });
 
   // Returns the total number of tabs
   static int get totalTabs => AppTab.values.length;
@@ -26,17 +42,3 @@ enum AppTab {
     }
   }
 }
-
-// You can keep this class if you still need it for other purposes,
-// but now all the data is contained within the enum itself
-// class TabItemData {
-//   final AppTab tab;
-//   final IconData icon;
-//   final IconData active;
-//   final String label;
-//
-//   TabItemData({required this.tab, required this.icon, required this.active, required this.label});
-// }
-
-// Optional: If you still want a list for easy iteration
-// final List<AppTab> appTabs = AppTab.values;

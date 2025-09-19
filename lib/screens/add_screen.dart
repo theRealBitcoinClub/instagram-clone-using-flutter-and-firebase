@@ -25,6 +25,7 @@ import '../memo/model/memo_model_post.dart';
 import '../provider/telegram_bot_publisher.dart';
 import '../provider/translation_service.dart';
 import '../repositories/post_repository.dart';
+import '../theme_provider.dart';
 import '../views_taggable/view_models/search_view_model.dart';
 import '../views_taggable/widgets/comment_text_field.dart';
 import '../views_taggable/widgets/search_result_overlay.dart';
@@ -197,6 +198,16 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     showSnackBar(message, context, type: SnackbarType.success);
   }
 
+  Widget _buildMenuTheme(ThemeState themeState, ThemeData theme) {
+    return IconButton(
+      icon: Icon(themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+      tooltip: "Toggle Theme",
+      onPressed: () {
+        ref.read(themeNotifierProvider.notifier).toggleTheme();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _log("Build method called");
@@ -207,6 +218,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final bool isKeyboardVisible = mediaQuery.viewInsets.bottom > 0;
     ref.read(clipboardNotifierProvider.notifier).checkClipboard(ref);
     hasInitialized = true;
+    final asyncThemeState = ref.watch(themeNotifierProvider);
+    final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
 
     return GestureDetector(
       onTap: () {
@@ -226,6 +239,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
               ),
             ],
           ),
+          actions: [_buildMenuTheme(currentThemeState, theme)],
         ),
         body: SafeArea(
           child: Column(

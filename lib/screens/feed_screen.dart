@@ -80,7 +80,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   Widget build(BuildContext context) {
     final asyncThemeState = ref.watch(themeNotifierProvider);
-    // final asyncBurnerBalance = ref.watch(bchBurnerBalanceProvider);
     final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
     final ThemeData theme = currentThemeState.currentTheme;
 

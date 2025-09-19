@@ -82,6 +82,18 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       }
     });
 
+    List<BottomNavigationBarItem> _buildBottomNavItems() {
+      return AppTab.values.where((tabData) => tabData.isVisibleOnBar).map((tabData) {
+        final isSelected = AppTab.values.indexOf(tabData) == currentTabIndex;
+
+        var barIcon = Icon(
+          isSelected ? tabData.active : tabData.icon,
+          color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(198),
+        );
+        return BottomNavigationBarItem(tooltip: tabData.label, activeIcon: barIcon, icon: barIcon, label: "");
+      }).toList();
+    }
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
@@ -102,15 +114,11 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
             (theme.brightness == Brightness.light ? theme.colorScheme.surface : Colors.grey[900]),
         activeColor: cupertinoActiveColor,
         inactiveColor: cupertinoInactiveColor,
-        currentIndex: currentTabIndex,
+        currentIndex: currentTabIndex == AppTab.memo.tabIndex ? 2 : currentTabIndex,
         onTap: (index) => _moveToTab(index),
         iconSize: 32.0,
         border: Border(),
-        items: AppTab.values.map((tabData) {
-          //TODO this could be improved so that switching the AppTab index means also reordering the controller tabs
-          bool isSelected = AppTab.values.indexOf(tabData) == currentTabIndex;
-          return BottomNavigationBarItem(icon: Icon(isSelected ? tabData.active : tabData.icon, color: theme.primaryColor));
-        }).toList(),
+        items: _buildBottomNavItems(),
       ),
     );
   }

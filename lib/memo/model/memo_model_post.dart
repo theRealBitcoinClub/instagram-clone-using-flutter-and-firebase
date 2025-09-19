@@ -248,7 +248,39 @@ class MemoModelPost {
         (youtubeId != null && youtubeId!.isNotEmpty);
   }
 
-  String? get mediaUrl {
+  String restoreMediaUrlsCase(MemoModelPost post, {String? text}) {
+    if (post.text == null && text == null) return "";
+    String result = text ?? post.text!;
+
+    // Check each media URL property and restore its case in the text
+    if (post.imageUrl != null && post.imageUrl!.isNotEmpty) {
+      result = restoreWordCase(result, post.imageUrl!);
+    }
+
+    if (post.imgurUrl != null && post.imgurUrl!.isNotEmpty) {
+      result = restoreWordCase(result, post.imgurUrl!);
+    }
+
+    if (post.videoUrl != null && post.videoUrl!.isNotEmpty) {
+      result = restoreWordCase(result, post.videoUrl!);
+    }
+
+    if (post.ipfsCid != null && post.ipfsCid!.isNotEmpty) {
+      result = restoreWordCase(result, post.ipfsCid!);
+    }
+
+    if (post.youtubeId != null && post.youtubeId!.isNotEmpty) {
+      result = restoreWordCase(result, post.youtubeId!);
+    }
+
+    return result;
+  }
+
+  String restoreWordCase(String lowercaseText, String originalWord) {
+    return lowercaseText.replaceAll(originalWord.toLowerCase(), originalWord);
+  }
+
+  String? get mediaPreviewUrl {
     return imgurUrl ?? imageUrl ?? videoUrl ?? ipfsCid ?? (youtubeId != null ? YoutubePlayer.getThumbnail(videoId: youtubeId!) : null);
   }
 

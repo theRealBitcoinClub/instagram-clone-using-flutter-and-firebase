@@ -82,7 +82,7 @@ class _CachedUnifiedImageWidgetState extends UnifiedImageWidgetState {
       _isLoadingFromCache = true;
       _cachedFile = await ref.read(cachedImageManagerProvider).downloadAndCacheImage(resolvedUrl);
     } catch (e) {
-      print('Failed to cache image: $e');
+      print('$resolvedUrl Failed to cache image: $e');
       _cachedFile = null;
     } finally {
       _isLoadingFromCache = false;

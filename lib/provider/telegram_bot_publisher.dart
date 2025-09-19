@@ -70,6 +70,6 @@ class TelegramBotPublisher {
     return '$name published: $postText, '
         '🔥 Burn total: ${PopularityScoreWidget.formatPopularityScore(burnTotal)} sats,'
         ' ${creator.profileIdShort} contributed ${PopularityScoreWidget.formatPopularityScore(tip)} sats to $tipReceiver, '
-        ' ${mediaUrl ?? creator.profileImageDetail()}';
+        ' ${mediaUrl == null ? creator.profileImageDetail() : ""}';
   }
 }

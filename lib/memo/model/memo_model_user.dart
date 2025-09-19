@@ -8,13 +8,13 @@ part 'memo_model_user.g.dart';
 
 @JsonEnum()
 enum TipReceiver {
-  app('100% Burned', 1.0, 0.0),
   creator('100% to Creator', 0.0, 1.0),
-  both('50% Burned, 50% Creator', 0.5, 0.5),
   burn20Creator80('20% Burned, 80% Creator', 0.2, 0.8),
   burn40Creator60('40% Burned, 60% Creator', 0.4, 0.6),
+  both('50% Burned, 50% Creator', 0.5, 0.5),
   burn60Creator40('60% Burned, 40% Creator', 0.6, 0.4),
-  burn80Creator20('80% Burned, 20% Creator', 0.8, 0.2);
+  burn80Creator20('80% Burned, 20% Creator', 0.8, 0.2),
+  app('100% Burned', 1.0, 0.0);
 
   final String displayName;
   final double burnPercentage;

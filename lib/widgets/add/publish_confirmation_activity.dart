@@ -117,7 +117,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipAmount = values[currentIndex + 1];
       });
-      showSnackBar("Changed Tip Amount for this Post!", context, type: SnackbarType.success);
+      showSnackBar("Increased Tip for this Post!", context, type: SnackbarType.success);
     } else {
       showSnackBar("It is already the maximum!", context, type: SnackbarType.info);
     }
@@ -132,9 +132,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipAmount = values[currentIndex - 1];
       });
-      showSnackBar("Changed Tip Amount for this Post!", context, type: SnackbarType.success);
+      showSnackBar("Decreased Tip for this Post!", context, type: SnackbarType.success);
     } else {
-      showSnackBar("It is already the minimum!", context, type: SnackbarType.info);
+      showSnackBar("Tip amount is already the minimum!", context, type: SnackbarType.info);
     }
   }
 
@@ -149,7 +149,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       });
       showSnackBar("Changed Tip Receiver for this Post!", context, type: SnackbarType.success);
     } else {
-      showSnackBar("It is already the last option!", context, type: SnackbarType.info);
+      showSnackBar("All the tips for this post will be burned!", context, type: SnackbarType.info);
     }
   }
 
@@ -164,7 +164,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       });
       showSnackBar("Changed Tip Receiver for this Post!", context, type: SnackbarType.success);
     } else {
-      showSnackBar("It is already the first option!", context, type: SnackbarType.info);
+      showSnackBar("All the tips for this post go to creator!", context, type: SnackbarType.info);
     }
   }
 
@@ -209,14 +209,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
   }
 
   void _resetTranslation() {
-    ref.read(translatedTextProvider.notifier).state = null;
-    // Create a fresh options object with only hasTranslation preserved
-    ref.read(postTranslationProvider.notifier).state = PostTranslation(
-      publishInBothLanguages: false, // Reset to default
-      translatedText: "", // Reset to default
-      originalLanguage: null, // Reset to default
-      targetLanguage: null, // Reset to default
-    );
+    ref.read(postTranslationProvider.notifier).reset();
   }
 
   Widget _buildMediaPreview(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
@@ -386,7 +379,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
             children: [
               IconButton(
                 icon: Icon(size: 36, Icons.arrow_back, color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon),
-                onPressed: _isNewPost ? null : _previousTipReceiver,
+                onPressed: _isNewPost
+                    ? () => showSnackBar("Tip receiver is 100% burn on new publications!", context, type: SnackbarType.error)
+                    : _previousTipReceiver,
                 tooltip: 'Previous Receiver',
               ),
               IconButton(
@@ -406,7 +401,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
               ),
               IconButton(
                 icon: Icon(size: 36, Icons.arrow_forward, color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon),
-                onPressed: _isNewPost ? null : _nextTipReceiver,
+                onPressed: _isNewPost
+                    ? () => showSnackBar("Tip receiver is 100% burn on new publications!", context, type: SnackbarType.error)
+                    : _nextTipReceiver,
                 tooltip: 'Next Receiver',
               ),
             ],

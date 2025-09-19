@@ -7,7 +7,6 @@ import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/provider/publish_options_provider.dart';
-import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/screens/pin_claim_screen.dart';
 import 'package:mahakka/utils/snackbar.dart';
@@ -24,6 +23,7 @@ import '../memo/base/text_input_verifier.dart';
 // Import the Odysee widgets and providers
 import '../memo/model/memo_model_post.dart';
 import '../provider/telegram_bot_publisher.dart';
+import '../provider/translation_service.dart';
 import '../repositories/post_repository.dart';
 import '../views_taggable/view_models/search_view_model.dart';
 import '../views_taggable/widgets/comment_text_field.dart';
@@ -516,66 +516,59 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   Future<void> _onPublish() async {
-    final isPublishing = ref.read(isPublishingProvider);
-    if (isPublishing) return;
+    if (ref.read(isPublishingProvider)) return;
     ref.read(isPublishingProvider.notifier).state = true;
 
-    String textContent = _textInputController.text;
-
-    MemoVerificationResponse result = _handleVerification(textContent);
-
-    if (result != MemoVerificationResponse.valid) {
-      _showErrorSnackBar('${result.message}');
-      ref.read(isPublishingProvider.notifier).state = false;
-      return;
-    }
-
-    textContent = _appendMediaUrlToText(textContent);
-    final String topic = MemoRegExp.extractTopics(textContent).isNotEmpty ? MemoRegExp.extractTopics(textContent).first : "";
-
     try {
-      final post = _createPostFromCurrentState(textContent, topic);
-      final user = ref.read(userProvider)!;
+      String textContent = _textInputController.text;
+      final verification = _handleVerification(textContent);
 
-      final bool shouldPublish = (await PublishConfirmationActivity.show(context, post: post))!;
+      if (verification != MemoVerificationResponse.valid) {
+        _showErrorSnackBar(verification.message);
+        return;
+      }
+
+      textContent = _appendMediaUrlToText(textContent);
+      final topics = MemoRegExp.extractTopics(textContent);
+      final topic = topics.isNotEmpty ? topics.first : "";
+      final post = _createPostFromCurrentState(textContent, topic);
+
+      final shouldPublish = await PublishConfirmationActivity.show(context, post: post);
+      if (!mounted || shouldPublish != true) {
+        if (shouldPublish == false) {
+          showSnackBar(type: SnackbarType.info, 'Publication canceled', context);
+        }
+        return;
+      }
+
+      final user = ref.read(userProvider)!;
+      final translation = ref.read(postTranslationProvider);
+      final useTranslation = translation.targetLanguage != translation.originalLanguage;
+
+      final lang = useTranslation ? translation.targetLanguage! : translation.originalLanguage!;
+      final content = useTranslation ? translation.translatedText : textContent;
+      final formattedContent = "${lang.flag} $content";
+
+      final response = await ref.read(postRepositoryProvider).publishImageOrVideo(formattedContent, topic, validate: false);
+
       if (!mounted) return;
 
-      if (shouldPublish) {
-        final postRepository = ref.read(postRepositoryProvider);
-        PostTranslation translation = ref.read(postTranslationProvider);
-        Language lang;
-        String textTranslated;
-        if (translation.targetLanguage != translation.originalLanguage) {
-          lang = translation.targetLanguage!;
-          textTranslated = translation.translatedText;
-        } else {
-          lang = translation.originalLanguage!;
-          textTranslated = textContent;
-        }
-        final response = await postRepository.publishImageOrVideo("${lang.flag} $textTranslated", topic, validate: false);
-        if (!mounted) return;
-
-        if (response == MemoAccountantResponse.yes) {
-          MemoConfetti().launch(context);
-          _clearInputs();
-          _showSuccessSnackBar('Successfully published!');
-          ref.read(telegramBotPublisherProvider).publishPost(postText: post.text!, mediaUrl: post.mediaUrl);
-        } else {
-          showQrCodeDialog(context: context, theme: Theme.of(context), user: user, memoOnly: true);
-          _showErrorSnackBar('Publish failed: ${response.message}');
-        }
+      if (response == MemoAccountantResponse.yes) {
+        MemoConfetti().launch(context);
+        _clearInputs();
+        _showSuccessSnackBar('Successfully published!');
+        ref.read(telegramBotPublisherProvider).publishPost(postText: post.text!, mediaUrl: post.mediaPreviewUrl);
       } else {
-        showSnackBar(type: SnackbarType.info, 'Publication canceled', context);
+        showQrCodeDialog(context: context, theme: Theme.of(context), user: user, memoOnly: true);
+        _showErrorSnackBar('Publish failed: ${response.message}');
       }
     } catch (e, s) {
       _log("Error during publish: $e\n$s");
-      if (mounted) {
-        _showErrorSnackBar('Error during publish: ${e.toString()}');
-      }
+      if (mounted) _showErrorSnackBar('Error during publish: $e');
     } finally {
-      if (mounted) {
-        ref.read(isPublishingProvider.notifier).state = false;
-      }
+      if (mounted) ref.read(translatedTextProvider.notifier).state = null;
+      if (mounted) ref.read(postTranslationProvider.notifier).reset();
+      if (mounted) ref.read(isPublishingProvider.notifier).state = false;
     }
   }
 

@@ -25,3 +25,9 @@ class PostTranslation {
 final postTranslationProvider = StateProvider<PostTranslation>((ref) {
   return const PostTranslation(publishInBothLanguages: false, translatedText: "");
 });
+
+extension PostTranslationReset on StateController<PostTranslation> {
+  void reset() {
+    state = const PostTranslation(publishInBothLanguages: false, translatedText: "", originalLanguage: null, targetLanguage: null);
+  }
+}

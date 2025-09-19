@@ -242,17 +242,25 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                   transitionBuilder: (Widget child, Animation<double> animation) {
                     return FadeTransition(opacity: animation, child: child);
                   },
-                  child: Container(
-                    key: ValueKey(addressToShow),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: theme.dividerColor, width: 1),
-                    ),
-                    child: PrettyQrView.data(
-                      data: addressToShow,
-                      decoration: PrettyQrDecoration(image: PrettyQrDecorationImage(image: AssetImage("assets/images/$qrImageAsset.png"))),
+                  child: GestureDetector(
+                    onTap: () {
+                      _copyToClipboard(context, addressToShow, "Address copied!");
+                    },
+                    onLongPress: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Container(
+                      key: ValueKey(addressToShow),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: theme.dividerColor, width: 1),
+                      ),
+                      child: PrettyQrView.data(
+                        data: addressToShow,
+                        decoration: PrettyQrDecoration(image: PrettyQrDecorationImage(image: AssetImage("assets/images/$qrImageAsset.png"))),
+                      ),
                     ),
                   ),
                 ),

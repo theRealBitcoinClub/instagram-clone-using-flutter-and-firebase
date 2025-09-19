@@ -3,6 +3,7 @@ import 'dart:async'; // For TimeoutException
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:mahakka/memo/memo_reg_exp.dart';
 
 class MemoDataChecker {
   // Utility function using the 'http' package
@@ -39,6 +40,8 @@ class MemoDataChecker {
   }
 
   Future<bool> isImageValid({imageFile, url}) async {
+    if (url.isEmpty || MemoRegExp.extractUrls(url).isEmpty || url.length > 256) return false;
+
     Completer<bool> completer = Completer<bool>();
     final Image image = imageFile != null ? Image.file(imageFile) : Image.network(url);
     print("URL: ${url} isImageValid height ${image.height} width ${image.width}");

@@ -76,11 +76,11 @@ class MemoVerifier {
       return MemoVerificationResponse.noImageNorVideo.toString();
     }
     if (!await checker.isImageValid(url: newText)) {
-      var url = newText + ".jpg";
+      var url = newText + ".jpeg";
       if (!await checker.isImageValid(url: url)) {
         url = newText + ".png";
         if (!await checker.isImageValid(url: url)) {
-          url = newText + ".jpeg";
+          url = newText + ".jpg";
           if (!await checker.isImageValid(url: url)) {
             return MemoVerificationResponse.noImageNorVideo.toString();
           } else

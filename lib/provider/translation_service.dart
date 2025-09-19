@@ -70,6 +70,13 @@ final targetLanguageProvider = StateProvider<Language>((ref) {
   return availableLanguages.firstWhere((lang) => lang.code == 'auto');
 });
 
+// Add this extension for targetLanguageProvider
+extension TargetLanguageReset on StateController<Language> {
+  void reset() {
+    state = availableLanguages.firstWhere((lang) => lang.code == 'auto');
+  }
+}
+
 final isTranslatingProvider = StateProvider<bool>((ref) => false);
 
 final translatedTextProvider = StateProvider<String?>((ref) => null);

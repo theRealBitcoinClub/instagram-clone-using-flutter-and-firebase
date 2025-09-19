@@ -15,9 +15,6 @@ class TranslationWidget extends ConsumerStatefulWidget {
   final Animation<double> translationSectionAnimation;
   final AnimationController textFadeController;
   final Animation<double> textFadeAnimation;
-  // final AnimationController buttonFadeController;
-  // final Animation<double> buttonFadeAnimation;
-  // final VoidCallback onTextChanged;
 
   const TranslationWidget({
     Key? key,
@@ -26,9 +23,6 @@ class TranslationWidget extends ConsumerStatefulWidget {
     required this.translationSectionAnimation,
     required this.textFadeController,
     required this.textFadeAnimation,
-    // required this.buttonFadeController,
-    // required this.buttonFadeAnimation,
-    // required this.onTextChanged,
   }) : super(key: key);
 
   @override
@@ -47,7 +41,10 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     _originalText = widget.post.text ?? '';
     _detectedLanguage = null;
     _languageDetectionFailed = false;
-
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(targetLanguageProvider.notifier).reset();
+      ref.read(translatedTextProvider.notifier).state = null;
+    });
     // Auto-detect language on init
     _detectLanguage();
   }
@@ -105,21 +102,11 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
   }
 
   void _resetTranslation() {
-    // widget.buttonFadeController.reverse().then((_) {
     //TODO the provider should trigger the rebuild of the listeners themselves, using callbacks with a mix of providers is inefficient
     ref.read(translatedTextProvider.notifier).state = null;
     _animateTextChange(_originalText);
 
-    // final currentPublishOptions = ref.read(publishOptionsProvider);
-    ref.read(postTranslationProvider.notifier).state = PostTranslation(
-      publishInBothLanguages: false,
-      translatedText: "",
-      originalLanguage: null,
-      targetLanguage: null,
-    );
-
-    // widget.buttonFadeController.forward();
-    // });
+    ref.read(postTranslationProvider.notifier).reset();
   }
 
   void _translateText() async {
@@ -129,7 +116,8 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     ref.read(isTranslatingProvider.notifier).state = true;
 
     try {
-      final translated = await translationService.translateText(text: _originalText, from: _detectedLanguage?.code, to: targetLang.code);
+      String translated = await translationService.translateText(text: _originalText, from: _detectedLanguage?.code, to: targetLang.code);
+      translated = widget.post.restoreMediaUrlsCase(widget.post, text: translated);
 
       //TODO do i need this translated text provider or can i just use publishoptions and rename that to PostTranslation
       ref.read(translatedTextProvider.notifier).state = translated;

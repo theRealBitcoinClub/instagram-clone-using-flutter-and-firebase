@@ -32,17 +32,13 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
   Timer? _clipboardTimer;
   bool _dialogOpen = true;
   bool _hasValidInput = false;
+  bool isListening = false;
 
   @override
   void initState() {
     super.initState();
     widget.controller.addListener(_validateInput);
     _setupClipboardMonitoring();
-
-    ref.listen(youtubeVideoIdProvider, _handleProviderChange);
-    ref.listen(imgurUrlProvider, _handleProviderChange);
-    ref.listen(ipfsCidProvider, _handleProviderChange);
-    ref.listen(odyseeUrlProvider, _handleProviderChange);
   }
 
   void _setupClipboardMonitoring() {
@@ -99,6 +95,15 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
 
   @override
   Widget build(BuildContext context) {
+    if (!isListening) {
+      isListening = true;
+
+      ref.listen(youtubeVideoIdProvider, _handleProviderChange);
+      ref.listen(imgurUrlProvider, _handleProviderChange);
+      ref.listen(ipfsCidProvider, _handleProviderChange);
+      ref.listen(odyseeUrlProvider, _handleProviderChange);
+    }
+
     return AlertDialog(
       title: Text(widget.title),
       contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),

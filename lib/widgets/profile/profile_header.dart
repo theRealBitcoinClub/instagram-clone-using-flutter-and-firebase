@@ -99,14 +99,14 @@ class ProfileHeader extends ConsumerWidget {
     if (creator.profileText.trim().isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(21, 2, 20, 8),
+      padding: const EdgeInsets.fromLTRB(21, 2, 20, 14),
       child: Align(
         alignment: Alignment.centerLeft,
         child: ExpandableText(
           creator.profileText,
           expandText: 'show more',
           collapseText: 'show less',
-          maxLines: 3,
+          maxLines: 2,
           linkColor: theme.colorScheme.primary,
           style: _profileTextStyle(theme),
           linkStyle: _profileLinkStyle(theme),

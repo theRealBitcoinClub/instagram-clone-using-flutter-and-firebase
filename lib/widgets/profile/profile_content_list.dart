@@ -1,10 +1,10 @@
-import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/config_whitelist.dart';
 import 'package:mahakka/expandable_text_custom.dart';
 import 'package:mahakka/external_browser_launcher.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 import 'package:mahakka/widgets/unified_video_player.dart';
@@ -115,8 +115,9 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
           }
 
           return Card(
+            color: ref.read(themeNotifierProvider).value!.isDarkMode ? Colors.black.withAlpha(33) : Colors.white.withAlpha(169),
             clipBehavior: Clip.antiAlias,
-            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 16),
             elevation: 1.5,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             child: Column(
@@ -129,19 +130,11 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
-                        ExpandableText(
-                          videoPost.text!,
-                          expandText: 'more',
-                          collapseText: 'less',
-                          maxLines: 4,
-                          linkColor: theme.colorScheme.primary,
-                          style: theme.textTheme.bodyMedium,
-                          linkStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
-                        ),
+                        expandableTextCustom(videoPost, theme, context),
                         const SizedBox(height: 8),
                       ],
                       Text(
-                        "Posted by: ${widget.creatorName}, ${videoPost.age}",
+                        "${widget.creatorName}, ${videoPost.age}",
                         style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
                       ),
                     ],
@@ -156,8 +149,9 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
 
     if (hasVideoUrl) {
       return Card(
+        color: ref.read(themeNotifierProvider).value!.isDarkMode ? Colors.black.withAlpha(33) : Colors.white.withAlpha(169),
         clipBehavior: Clip.antiAlias,
-        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 16),
         elevation: 1.5,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         child: Column(
@@ -170,18 +164,11 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
-                    ExpandableText(
-                      videoPost.text!,
-                      expandText: 'more',
-                      collapseText: 'less',
-                      maxLines: 3,
-                      linkColor: theme.colorScheme.primary,
-                      style: theme.textTheme.bodyMedium,
-                    ),
+                    expandableTextCustom(videoPost, theme, context),
                     const SizedBox(height: 8),
                   ],
                   Text(
-                    "Posted by: ${widget.creatorName}, ${videoPost.age}",
+                    "${widget.creatorName}, ${videoPost.age}",
                     style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
                   ),
                 ],
@@ -199,9 +186,10 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
     final String postTimestamp = post.age;
 
     return Card(
+      color: ref.read(themeNotifierProvider).value!.isDarkMode ? Colors.black.withAlpha(33) : Colors.white.withAlpha(169),
       elevation: 1.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Padding(
         padding: const EdgeInsets.all(14.0),
         child: Column(
@@ -226,52 +214,58 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
               ],
             ),
             const SizedBox(height: 4),
-            Divider(color: theme.dividerColor.withOpacity(0.3), height: 1),
+            Divider(color: theme.dividerColor.withAlpha(222), height: 1),
             const SizedBox(height: 10),
-            ExpandableTextCustom(
-              post.text ?? " ",
-              expandText: ' show more',
-              collapseText: 'show less',
-              maxLines: 5,
-              //TODO WHAT IS LINKCOLOR
-              linkColor: theme.colorScheme.onTertiaryFixedVariant,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontFamily: "Open Sans",
-                fontSize: 15,
-                height: 1.4,
-                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
-              ),
-              hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
-              onHashtagTap: (String hashtag) {
-                ref.read(topicIdProvider.notifier).state = null;
-                ref.read(tagIdProvider.notifier).state = hashtag;
-                ref.read(tabIndexProvider.notifier).setTab(AppTab.memo.tabIndex); // Switch to webview tab
-                // _logListError('Hashtag tapped: $hashtag (Action not implemented in this widget)');
-                showSnackBar("Loading $hashtag charts!", context, type: SnackbarType.success);
-                showSnackBar("${hashtag} charts are loading...", context, type: SnackbarType.info);
-                // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on hashtag: $hashtag')));
-              },
-              //TODO VERIFY THIS
-              mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
-              urlStyle: buildUrlStyle(theme),
-              onUrlTap: (String url) async {
-                await _onUrlTap(url, context);
-              },
-
-              prefixText: post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null,
-              prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
-              onPrefixTap: () {
-                // // Set the topic provider and switch to webview tab
-                // ref.read(tagIdProvider.notifier).state = null;
-                // ref.read(topicIdProvider.notifier).state = post.topicId;
-                // ref.read(tabIndexProvider.notifier).setTab(3); // Switch to webview tab
-                // _logListError("Topic prefix tapped: ${post.topicId} (Action not implemented in this widget)");
-                // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on topic: ${post.topicId}')));
-              },
-            ),
+            expandableTextCustom(post, theme, context),
+            const SizedBox(height: 10),
+            // Divider(color: theme.dividerColor.withOpacity(0.3), height: 1),
           ],
         ),
       ),
+    );
+  }
+
+  ExpandableTextCustom expandableTextCustom(MemoModelPost post, ThemeData theme, BuildContext context) {
+    return ExpandableTextCustom(
+      post.text ?? " ",
+      expandText: ' show more',
+      collapseText: 'show less',
+      maxLines: 5,
+      //TODO WHAT IS LINKCOLOR
+      linkColor: theme.colorScheme.onTertiaryFixedVariant,
+      style: theme.textTheme.bodyMedium?.copyWith(
+        fontFamily: "Open Sans",
+        fontSize: 15,
+        height: 1.4,
+        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
+      ),
+      hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
+      onHashtagTap: (String hashtag) {
+        ref.read(topicIdProvider.notifier).state = null;
+        ref.read(tagIdProvider.notifier).state = hashtag;
+        ref.read(tabIndexProvider.notifier).setTab(AppTab.memo.tabIndex); // Switch to webview tab
+        // _logListError('Hashtag tapped: $hashtag (Action not implemented in this widget)');
+        showSnackBar("Loading $hashtag charts!", context, type: SnackbarType.success);
+        showSnackBar("${hashtag} charts are loading...", context, type: SnackbarType.info);
+        // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on hashtag: $hashtag')));
+      },
+      //TODO VERIFY THIS
+      mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
+      urlStyle: buildUrlStyle(theme),
+      onUrlTap: (String url) async {
+        await _onUrlTap(url, context);
+      },
+
+      prefixText: post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null,
+      prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
+      onPrefixTap: () {
+        // // Set the topic provider and switch to webview tab
+        // ref.read(tagIdProvider.notifier).state = null;
+        // ref.read(topicIdProvider.notifier).state = post.topicId;
+        // ref.read(tabIndexProvider.notifier).setTab(3); // Switch to webview tab
+        // _logListError("Topic prefix tapped: ${post.topicId} (Action not implemented in this widget)");
+        // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on topic: ${post.topicId}')));
+      },
     );
   }
 

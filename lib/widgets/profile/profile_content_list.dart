@@ -11,9 +11,7 @@ import 'package:mahakka/widgets/unified_video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-import '../../provider/navigation_providers.dart';
 import '../../providers/webview_providers.dart';
-import '../../tab_item_data.dart';
 import '../../youtube_video_checker.dart';
 
 void _logListError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -213,9 +211,9 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
                   ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 5),
             Divider(color: theme.dividerColor.withAlpha(222), height: 1),
-            const SizedBox(height: 10),
+            const SizedBox(height: 4),
             expandableTextCustom(post, theme, context),
             const SizedBox(height: 10),
             // Divider(color: theme.dividerColor.withOpacity(0.3), height: 1),
@@ -241,9 +239,10 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
       ),
       hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
       onHashtagTap: (String hashtag) {
-        ref.read(topicIdProvider.notifier).state = null;
-        ref.read(tagIdProvider.notifier).state = hashtag;
-        ref.read(tabIndexProvider.notifier).setTab(AppTab.memo.tabIndex); // Switch to webview tab
+        // ref.read(topicIdProvider.notifier).state = null;
+        // ref.read(tagIdProvider.notifier).state = hashtag;
+        // ref.read(tabIndexProvider.notifier).setTab(AppTab.memo.tabIndex); // Switch to webview tab
+        WebViewNavigationHelper.navigateToWebView(ref, WebViewShow.tag, hashtag);
         // _logListError('Hashtag tapped: $hashtag (Action not implemented in this widget)');
         showSnackBar("Loading $hashtag charts!", context, type: SnackbarType.success);
         showSnackBar("${hashtag} charts are loading...", context, type: SnackbarType.info);
@@ -259,6 +258,9 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
       prefixText: post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null,
       prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
       onPrefixTap: () {
+        WebViewNavigationHelper.navigateToWebView(ref, WebViewShow.topic, post.topicId);
+        showSnackBar("Loading ${post.topicId} charts!", context, type: SnackbarType.success);
+        showSnackBar("${post.topicId} charts are loading...", context, type: SnackbarType.info);
         // // Set the topic provider and switch to webview tab
         // ref.read(tagIdProvider.notifier).state = null;
         // ref.read(topicIdProvider.notifier).state = post.topicId;

@@ -9,6 +9,9 @@ import 'package:mahakka/utils/snackbar.dart';
 import '../provider/user_provider.dart';
 import '../providers/webview_providers.dart';
 
+// Add this provider to your webview_providers.dart or navigation_providers.dart
+// final targetUrlProvider = StateProvider<String?>((ref) => null);
+
 // Constants for URLs
 const String _httpsPrefix = 'https://';
 const String _memoCashDomain = 'memo.cash';
@@ -29,6 +32,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   bool _isDarkTheme = false;
   bool _cssInjected = false; // Track if CSS has been injected
   String _displayInAppBar = "";
+  bool _isCustomUrl = false;
 
   @override
   void initState() {
@@ -40,25 +44,36 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   String _getInitialUrl() {
     final tagId = ref.read(tagIdProvider);
     final topicId = ref.read(topicIdProvider);
+    final targetUrl = ref.read(targetUrlProvider);
 
-    if (tagId != null && tagId.isNotEmpty) {
+    // Priority 1: Custom target URL
+    if (targetUrl != null && targetUrl.isNotEmpty) {
+      _isCustomUrl = true;
+      // Reset provider after reading
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(targetUrlProvider.notifier).state = null;
+      });
+      return targetUrl;
+    }
+    // Priority 2: Tag ID
+    else if (tagId != null && tagId.isNotEmpty) {
       // Reset provider after reading
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(tagIdProvider.notifier).state = null;
       });
       return '$_baseUrl/t/$tagId?p=new';
-    } else if (topicId != null && topicId.isNotEmpty) {
+    }
+    // Priority 3: Topic ID
+    else if (topicId != null && topicId.isNotEmpty) {
       // Reset provider after reading
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(topicIdProvider.notifier).state = null;
       });
       return '$_baseUrl/topic/$topicId';
-    } else {
+    }
+    // Default: Login page
+    else {
       return '$_baseUrl/login';
-      // _loadFeed();
-      // Default to profile if no providers have values
-      // final user = ref.read(userProvider)!;
-      // return '$_baseUrl/profile/${user.id}';
     }
   }
 
@@ -83,6 +98,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   }
 
   void _loadProfile() {
+    ref.read(targetUrlProvider.notifier).state = null;
     ref.read(tagIdProvider.notifier).state = null;
     ref.read(topicIdProvider.notifier).state = null;
 
@@ -91,6 +107,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   }
 
   void _loadFeed() {
+    ref.read(targetUrlProvider.notifier).state = null;
     ref.read(tagIdProvider.notifier).state = null;
     ref.read(topicIdProvider.notifier).state = null;
 
@@ -100,6 +117,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   void _loadTags() {
     final tagId = ref.read(tagIdProvider);
 
+    ref.read(targetUrlProvider.notifier).state = null;
     ref.read(tagIdProvider.notifier).state = null;
     ref.read(topicIdProvider.notifier).state = null;
 
@@ -113,6 +131,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   void _loadTopics() {
     final topicId = ref.read(topicIdProvider);
 
+    ref.read(targetUrlProvider.notifier).state = null;
     ref.read(tagIdProvider.notifier).state = null;
     ref.read(topicIdProvider.notifier).state = null;
 
@@ -471,14 +490,23 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
     return Consumer(
       builder: (consumerCtx, ref, child) {
         // Listen to provider changes and load appropriate URLs
+        ref.listen(targetUrlProvider, (previous, next) {
+          if (next != null && next.isNotEmpty) {
+            _isCustomUrl = true;
+            _loadUrl(next);
+          }
+        });
+
         ref.listen(tagIdProvider, (previous, next) {
           if (next != null && next.isNotEmpty) {
+            _isCustomUrl = false;
             _loadUrl('$_baseUrl/t/$next?p=new');
           }
         });
 
         ref.listen(topicIdProvider, (previous, next) {
           if (next != null && next.isNotEmpty) {
+            _isCustomUrl = false;
             _loadUrl('$_baseUrl/topic/$next');
           }
         });
@@ -497,7 +525,6 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                 _loadFeed();
               },
             ),
-            // leading: IconButton(icon: const Icon(size: 30, Icons.person_outline), tooltip: "My Profile", onPressed: _loadProfile),
             title: !_isLoading
                 ? Row(
                     children: [
@@ -521,8 +548,6 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                   _loadLogout();
                 },
               ),
-              // IconButton(icon: const Icon(size: 26, Icons.tag_outlined), tooltip: "Tags", onPressed: _loadTags),
-              // IconButton(icon: const Icon(size: 26, Icons.alternate_email_rounded), tooltip: "Topics", onPressed: _loadTopics),
             ],
           ),
           body: SafeArea(
@@ -558,9 +583,10 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                     },
                     onLoadStop: (controller, url) async {
                       // Wait for CSS injection to complete before hiding loading indicator
-                      await _injectCSS();
+                      if (!_isCustomUrl) await _injectCSS();
                       setState(() {
-                        if (ref.read(tabIndexProvider) == AppTab.memo.tabIndex) showSnackBar("Enjoy the content!", context, type: SnackbarType.success);
+                        if (ref.read(tabIndexProvider) == AppTab.memo.tabIndex)
+                          showSnackBar("Enjoy the content!", context, type: SnackbarType.success);
                         _updateCurrentPath(url.toString());
                         // Only hide loading if CSS injection is complete
                         _isLoading = !_cssInjected;

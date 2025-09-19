@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/widgets/profile/header/stat_widget.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../memo/model/memo_model_creator.dart';
+import '../../../providers/webview_providers.dart';
 import '../../../views_taggable/widgets/qr_code_dialog.dart';
 import '../profile_buttons.dart';
 
-class ProfileAvatarBalancesButtonRow extends StatelessWidget {
+class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
   final MemoModelCreator creator;
   final ThemeData theme;
   final VoidCallback showImageDetail;
@@ -26,7 +27,7 @@ class ProfileAvatarBalancesButtonRow extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = theme.colorScheme;
     final creatorProfileImg = creator.profileImgurUrl ?? creator.profileImageAvatar();
 
@@ -61,13 +62,17 @@ class ProfileAvatarBalancesButtonRow extends StatelessWidget {
                     // ),
                     Expanded(
                       child: GestureDetector(
-                        onTap: () => launchUrl(Uri.parse(MemoBitcoinBase.tokenUrl)),
+                        onTap: () => WebViewNavigationHelper.navigateToWebView(ref, WebViewShow.url, MemoBitcoinBase.tokenUrl),
                         child: StatWidget(title: MemoBitcoinBase.tokenTicker, count: creator.balanceToken, theme: theme),
                       ),
                     ),
                     Expanded(
                       child: GestureDetector(
-                        onTap: () => launchUrl(Uri.parse(MemoBitcoinBase.memoUrlPrefix + creator.id + MemoBitcoinBase.memoUrlSuffix)),
+                        onTap: () => WebViewNavigationHelper.navigateToWebView(
+                          ref,
+                          WebViewShow.url,
+                          MemoBitcoinBase.memoExplorerUrlPrefix + creator.id + MemoBitcoinBase.memoExplorerUrlSuffix,
+                        ),
                         child: StatWidget(title: 'BCH', count: creator.balanceMemo, theme: theme),
                       ),
                     ),

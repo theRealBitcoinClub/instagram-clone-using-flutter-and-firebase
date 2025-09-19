@@ -364,7 +364,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                 if (_isCashtokenFormat) {
                   launchUrl(Uri.parse(MemoBitcoinBase.tokenUrl));
                 } else {
-                  launchUrl(Uri.parse(MemoBitcoinBase.memoUrlPrefix + widget.memoProfileId + MemoBitcoinBase.memoUrlSuffix));
+                  launchUrl(Uri.parse(MemoBitcoinBase.memoExplorerUrlPrefix + widget.memoProfileId + MemoBitcoinBase.memoExplorerUrlSuffix));
                 }
               },
               onTap: () {

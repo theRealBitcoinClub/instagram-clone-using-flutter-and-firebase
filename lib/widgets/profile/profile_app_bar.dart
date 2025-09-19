@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/provider/navigation_providers.dart'; // Import for profileTargetIdProvider
+import 'package:mahakka/providers/webview_providers.dart';
 import 'package:mahakka/tab_item_data.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../provider/profile_providers.dart';
 
@@ -38,7 +38,8 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
               onPressed: () {
                 if (creator?.id != null && creator!.id.isNotEmpty) {
                   // Redundant check, but safe
-                  launchUrl(Uri.parse("https://memo.cash/profile/${creator!.id}"));
+                  WebViewNavigationHelper.navigateToWebView(ref, WebViewShow.url, "https://memo.cash/profile/${creator!.id}");
+                  // launchUrl(Uri.parse("https://memo.cash/profile/${creator!.id}"));
                 }
               },
               style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),

@@ -345,7 +345,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Center(
                   child: Text(
-                    "MEMO",
+                    "BCH",
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: !_isCashtokenFormat ? colorScheme.onPrimary : colorScheme.onSurface,
                       fontWeight: !_isCashtokenFormat ? FontWeight.bold : FontWeight.normal,
@@ -372,7 +372,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Center(
                   child: Text(
-                    "BCH & TOKEN",
+                    "MKK",
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: _isCashtokenFormat ? colorScheme.onPrimary : colorScheme.onSurface,
                       fontWeight: _isCashtokenFormat ? FontWeight.bold : FontWeight.normal,

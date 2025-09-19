@@ -5,9 +5,11 @@ import 'package:clipboard/clipboard.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../memo/model/memo_model_creator.dart';
 import '../../memo/model/memo_model_user.dart';
@@ -23,11 +25,10 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
 class QrCodeDialog extends ConsumerStatefulWidget {
   final String legacyAddress;
   final String? cashtokenAddress;
-  final MemoModelCreator? creator;
-  final MemoModelUser? user;
+  final String memoProfileId;
   final bool memoOnly;
 
-  const QrCodeDialog({Key? key, required this.legacyAddress, this.cashtokenAddress, this.creator, this.user, this.memoOnly = false})
+  const QrCodeDialog({Key? key, required this.legacyAddress, this.cashtokenAddress, required this.memoProfileId, this.memoOnly = false})
     : super(key: key);
 
   @override
@@ -359,6 +360,13 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
           // CashToken Address Tab (BCH & Token)
           Expanded(
             child: GestureDetector(
+              onDoubleTap: () {
+                if (_isCashtokenFormat) {
+                  launchUrl(Uri.parse(MemoBitcoinBase.tokenUrl));
+                } else {
+                  launchUrl(Uri.parse(MemoBitcoinBase.memoUrlPrefix + widget.memoProfileId + MemoBitcoinBase.memoUrlSuffix));
+                }
+              },
               onTap: () {
                 if (!_isCashtokenFormat) {
                   _toggleFormat(true);
@@ -372,7 +380,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Center(
                   child: Text(
-                    "MKK",
+                    MemoBitcoinBase.tokenTicker,
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: _isCashtokenFormat ? colorScheme.onPrimary : colorScheme.onSurface,
                       fontWeight: _isCashtokenFormat ? FontWeight.bold : FontWeight.normal,
@@ -410,8 +418,7 @@ void showQrCodeDialog({
             : creator!.hasRegisteredAsUser
             ? creator.id
             : creator.id,
-        user: user,
-        creator: creator,
+        memoProfileId: creator != null ? creator.id : user!.id,
         memoOnly: memoOnly,
       );
     },

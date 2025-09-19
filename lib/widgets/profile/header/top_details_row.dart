@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/widgets/profile/header/stat_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../memo/model/memo_model_creator.dart';
 import '../../../views_taggable/widgets/qr_code_dialog.dart';
@@ -58,10 +60,16 @@ class ProfileAvatarBalancesButtonRow extends StatelessWidget {
                     //   child: StatWidget(title: 'BCH', count: creator.balanceBch, theme: theme),
                     // ),
                     Expanded(
-                      child: StatWidget(title: 'MKK', count: creator.balanceToken, theme: theme),
+                      child: GestureDetector(
+                        onTap: () => launchUrl(Uri.parse(MemoBitcoinBase.tokenUrl)),
+                        child: StatWidget(title: MemoBitcoinBase.tokenTicker, count: creator.balanceToken, theme: theme),
+                      ),
                     ),
                     Expanded(
-                      child: StatWidget(title: 'BCH', count: creator.balanceMemo, theme: theme),
+                      child: GestureDetector(
+                        onTap: () => launchUrl(Uri.parse(MemoBitcoinBase.memoUrlPrefix + creator.id + MemoBitcoinBase.memoUrlSuffix)),
+                        child: StatWidget(title: 'BCH', count: creator.balanceMemo, theme: theme),
+                      ),
                     ),
                   ],
                 ),

@@ -233,7 +233,8 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
               expandText: ' show more',
               collapseText: 'show less',
               maxLines: 5,
-              // linkColor: theme.colorScheme.onSurface.withOpacity(0.85),
+              //TODO WHAT IS LINKCOLOR
+              linkColor: theme.colorScheme.onTertiaryFixedVariant,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontFamily: "Open Sans",
                 fontSize: 15,
@@ -250,6 +251,7 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
                 showSnackBar("${hashtag} charts are loading...", context, type: SnackbarType.info);
                 // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on hashtag: $hashtag')));
               },
+              //TODO VERIFY THIS
               mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
               urlStyle: buildUrlStyle(theme),
               onUrlTap: (String url) async {

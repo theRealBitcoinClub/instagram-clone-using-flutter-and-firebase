@@ -133,7 +133,7 @@ class MemoModelUser {
     user.wifLegacy = pkLegacy.toWif();
     user.wifBchCashtoken = pkBchCashtoken.toWif();
     user.hasInit = true;
-    user.creator = MemoModelCreator(id: userId);
+    user.creator = MemoModelCreator(id: userId, name: userId, hasRegisteredAsUser: true);
 
     return user;
   }
@@ -141,28 +141,6 @@ class MemoModelUser {
   factory MemoModelUser.fromJson(Map<String, dynamic> json) => _$MemoModelUserFromJson(json);
 
   Map<String, dynamic> toJson() => _$MemoModelUserToJson(this);
-
-  bool init({required String mnemonic}) {
-    if (hasInit) return true;
-    this.mnemonic = mnemonic;
-    if (MemoVerifier(mnemonic).verifyMnemonic() != "success") return false;
-
-    pkLegacy = MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoBch);
-    pkBchCashtoken = MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathCashtoken);
-
-    final p2pkhWt = P2pkhAddress.fromHash160(addrHash: pkBchCashtoken.getPublic().toHash160Hex(), type: P2pkhAddressType.p2pkhwt);
-    bchAddressCashtokenAware = p2pkhWt.toAddress(BitcoinCashNetwork.mainnet);
-
-    legacyAddressMemoBch = pkLegacy.getPublic().toAddress().toAddress(BitcoinNetwork.mainnet);
-    id = legacyAddressMemoBch;
-    creator = MemoModelCreator(id: id);
-    legacyAddressMemoBchAsCashaddress = pkLegacy.getPublic().toAddress().toAddress(BitcoinCashNetwork.mainnet);
-
-    wifLegacy = pkLegacy.toWif();
-    wifBchCashtoken = pkBchCashtoken.toWif();
-    hasInit = true;
-    return true;
-  }
 
   String get profileIdMemoBch {
     return legacyAddressMemoBch;

@@ -12,6 +12,7 @@ import '../../ipfs/ipfs_pin_claim_service.dart';
 import '../../provider/electrum_provider.dart';
 import '../../provider/user_provider.dart';
 import '../../repositories/post_cache_repository.dart';
+import '../../screens/add/add_post_providers.dart';
 import '../scraper/memo_post_scraper.dart';
 import 'memo_bitcoin_base.dart';
 
@@ -289,6 +290,7 @@ class MemoAccountant {
         return MemoAccountantResponse.connectionError;
       }
 
+      ref.read(ipfsCidProvider.notifier).state = cid;
       print('MemoAccountant: IPFS pin successful, CID added to user: $cid');
       return MemoAccountantResponse.yes;
     } catch (e) {

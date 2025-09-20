@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/config_ipfs.dart';
@@ -31,10 +32,10 @@ class IpfsMediaWidget extends ConsumerWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(11.5),
-              child: Image.network(
-                ipfsUrl,
+              child: CachedNetworkImage(
+                imageUrl: ipfsUrl,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
+                errorWidget: (context, error, stackTrace) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -48,15 +49,8 @@ class IpfsMediaWidget extends ConsumerWidget {
                     ),
                   );
                 },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                          : null,
-                    ),
-                  );
+                progressIndicatorBuilder: (context, child, loadingProgress) {
+                  return Center(child: CircularProgressIndicator(value: loadingProgress.totalSize != null ? loadingProgress.progress : null));
                 },
               ),
             ),

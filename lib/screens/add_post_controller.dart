@@ -225,15 +225,7 @@ class AddPostController {
 
   // In AddPostController class
   void showIpfsUploadScreen() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const IpfsPinClaimScreen())).then((result) {
-      if (result != null) {
-        final cid = result['cid'];
-        if (cid != null && context.mounted) {
-          ref.read(ipfsCidProvider.notifier).state = cid.toString().trim();
-          _clearOtherMediaProviders(2);
-        }
-      }
-    });
+    IpfsPinClaimScreen.show(context);
   }
 
   void showIpfsGallery() {

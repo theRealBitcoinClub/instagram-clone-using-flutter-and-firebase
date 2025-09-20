@@ -248,9 +248,8 @@ class MemoModelPost {
         (youtubeId != null && youtubeId!.isNotEmpty);
   }
 
-  String restoreMediaUrlsCase(MemoModelPost post, {String? text}) {
-    if (post.text == null && text == null) return "";
-    String result = text ?? post.text!;
+  static String restoreMediaUrlsCase(MemoModelPost post, String textToBeRestored) {
+    String result = textToBeRestored;
 
     // Check each media URL property and restore its case in the text
     if (post.imageUrl != null && post.imageUrl!.isNotEmpty) {
@@ -276,8 +275,34 @@ class MemoModelPost {
     return result;
   }
 
-  String restoreWordCase(String lowercaseText, String originalWord) {
-    return lowercaseText.replaceAll(originalWord.toLowerCase(), originalWord);
+  static String restoreTagsAndTopicCase(String malformedText, String originalText) {
+    String result = malformedText;
+
+    MemoRegExp.extractTopics(originalText).forEach((topic) {
+      result = restoreWordCase(result, topic);
+    });
+
+    MemoRegExp.extractHashtags(originalText).forEach((tag) {
+      result = restoreWordCase(result, tag);
+    });
+
+    return result;
+  }
+
+  static String restoreWordCase(String originalWithMessedUpCase, String originalWord) {
+    String lowercaseWord = originalWord.toLowerCase();
+    int index = originalWithMessedUpCase.toLowerCase().indexOf(lowercaseWord);
+
+    if (index == -1) {
+      return originalWithMessedUpCase; // Word not found, return original text
+    }
+
+    // Split the text into parts: before, the word itself, and after
+    String before = originalWithMessedUpCase.substring(0, index);
+    String after = originalWithMessedUpCase.substring(index + lowercaseWord.length);
+
+    // Reconstruct with the original word case
+    return before + originalWord + after;
   }
 
   String? get mediaPreviewUrl {

@@ -110,19 +110,6 @@ class CreatorRepository {
     return minimalCreator;
   }
 
-  /// Special method for profile widget - always fetches fresh data and updates cache
-  Future<MemoModelCreator> getCreatorForProfileWidget(String creatorId) async {
-    // Always force fresh scrape for profile widget
-    return await getCreator(
-          creatorId,
-          scrapeIfNotFound: true,
-          forceScrape: true,
-          saveToFirebase: true,
-          useCache: false, // Don't use cache for profile widget
-        ) ??
-        MemoModelCreator(id: creatorId, name: "Loading...");
-  }
-
   Future<String?> refreshAndCacheAvatar(String creatorId, {bool forceRefreshAfterProfileUpdate = false, String? forceImageType}) async {
     final creator = await _getFromCache(creatorId);
     if (creator == null) return null;

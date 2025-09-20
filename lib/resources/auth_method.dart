@@ -40,7 +40,7 @@ class AuthChecker {
 
       // Trigger user refresh using the UserNotifier from Riverpod
       // This will update the UserState and any widgets watching it.
-      await _ref.read(userNotifierProvider.notifier).refreshUser();
+      await _ref.read(userNotifierProvider.notifier).refreshUser(true);
       return "success";
     } catch (err) {
       print("Error during loginInWithMnemonic: $err");

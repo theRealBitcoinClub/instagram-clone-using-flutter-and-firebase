@@ -1,20 +1,22 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/config_ipfs.dart';
+import 'package:mahakka/screens/ipfs_pin_claim_screen.dart';
+import 'package:share_plus/share_plus.dart';
 
-class IpfsConfig {
-  static const String preferredNode = 'https://free-bch.fullstack.cash/ipfs/view/';
-}
+import 'add/add_post_providers.dart';
 
-class IPFSGalleryScreen extends StatefulWidget {
+class IPFSGalleryScreen extends ConsumerStatefulWidget {
   final List<String> ipfsCids;
 
   const IPFSGalleryScreen({Key? key, required this.ipfsCids}) : super(key: key);
 
   @override
-  State<IPFSGalleryScreen> createState() => _IPFSGalleryScreenState();
+  ConsumerState<IPFSGalleryScreen> createState() => _IPFSGalleryScreenState();
 }
 
-class _IPFSGalleryScreenState extends State<IPFSGalleryScreen> {
+class _IPFSGalleryScreenState extends ConsumerState<IPFSGalleryScreen> {
   String? _selectedCid;
   bool get _hasSelection => _selectedCid != null;
 
@@ -47,9 +49,9 @@ class _IPFSGalleryScreenState extends State<IPFSGalleryScreen> {
           // IPFS Images ListView
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(8.0),
               child: Container(
-                constraints: const BoxConstraints(maxHeight: 500),
+                // constraints: const BoxConstraints(maxHeight: 500),
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(12),
@@ -266,22 +268,21 @@ class _IPFSGalleryScreenState extends State<IPFSGalleryScreen> {
 
   void _createNewIpfsPin() {
     Navigator.pop(context); // Return to create new IPFS pin screen
+    IpfsPinClaimScreen.show(context);
   }
 
   void _shareImage() {
     if (_selectedCid == null) return;
 
     final shareUrl = '${IpfsConfig.preferredNode}$_selectedCid';
-    // Implement share functionality here
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Sharing: $_selectedCid'), backgroundColor: Theme.of(context).colorScheme.secondary));
+    SharePlus.instance.share(ShareParams(title: "IPFS", uri: Uri.parse(shareUrl)));
   }
 
   void _reuseImage() {
     if (_selectedCid == null) return;
 
-    Navigator.pop(context, _selectedCid);
+    ref.read(ipfsCidProvider.notifier).state = _selectedCid!;
+    Navigator.pop(context);
   }
 }
 

@@ -16,6 +16,16 @@ import '../provider/user_provider.dart';
 class IpfsPinClaimScreen extends ConsumerStatefulWidget {
   const IpfsPinClaimScreen({Key? key}) : super(key: key);
 
+  static Future<Map<String, dynamic>?> show(BuildContext context) async {
+    return await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const IpfsPinClaimScreen(),
+        fullscreenDialog: true, // Optional: makes it feel more like a modal
+      ),
+    );
+  }
+
   @override
   ConsumerState<IpfsPinClaimScreen> createState() => _PinClaimScreenState();
 }
@@ -25,13 +35,12 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
   double? _pinClaimPrice;
   String? _cid;
   String? _pobTxid;
-  bool isPopping = false;
   String? _claimTxid;
   String? _error;
   bool _isLoading = false;
   bool _isUploading = false;
   bool _isPinning = false;
-  bool _checkingBalance = false;
+  bool _isCheckingBalance = false;
 
   final String _serverUrl = 'https://file-stage.fullstack.cash';
 
@@ -124,7 +133,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
     if (_selectedFile == null || _cid == null) return;
 
     setState(() {
-      _checkingBalance = true;
+      _isCheckingBalance = true;
       _error = null;
     });
 
@@ -135,7 +144,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
       if (!hasSufficientBalance) {
         setState(() {
           _error = 'Insufficient balance for IPFS operation. Please add more BCH to your wallet.';
-          _checkingBalance = false;
+          _isCheckingBalance = false;
           showQrCodeDialog(context: context, user: ref.read(userProvider), memoOnly: true);
         });
         return;
@@ -146,7 +155,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
     } catch (e) {
       setState(() {
         _error = 'Error checking balance: ${e.toString()}';
-        _checkingBalance = false;
+        _isCheckingBalance = false;
       });
     }
   }
@@ -209,16 +218,6 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(userProvider);
-
-    // Auto-close the screen and return the CID after successful pinning
-    if (_claimTxid != null && _cid != null && !isPopping) {
-      isPopping = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pop({'cid': _cid});
-      });
-    }
-
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
@@ -230,15 +229,15 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Use this page to upload an image and pin it to the IPFS network. '
-              'Your wallet must have sufficient BCH to pay for the pinning of content. '
-              'Balance will be checked automatically before proceeding.',
-              style: textTheme.bodyMedium?.copyWith(height: 1.5),
-            ),
-            const SizedBox(height: 16),
-            Text('Selected Server: $_serverUrl', style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
-            const SizedBox(height: 16),
+            // Text(
+            //   'Use this page to upload an image and pin it to the IPFS network. '
+            //   'Your wallet must have sufficient BCH to pay for the pinning of content. '
+            //   'Balance will be checked automatically before proceeding.',
+            //   style: textTheme.bodyMedium?.copyWith(height: 1.5),
+            // ),
+            const SizedBox(height: 4),
+            // Text('$_serverUrl', style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+            // const SizedBox(height: 16),
 
             // File selection area
             Container(
@@ -316,7 +315,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                 ),
               ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
 
             // Success messages
             if (_cid != null) _buildSuccessCard('Upload Success', 'CID: $_cid', theme, colorScheme, textTheme),
@@ -336,11 +335,15 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                     ),
                   if (_cid != null && _claimTxid == null)
                     ElevatedButton(
-                      onPressed: (_isPinning || _checkingBalance) ? null : _checkBalanceAndPin,
-                      style: ElevatedButton.styleFrom(backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
-                      child: (_isPinning || _checkingBalance)
+                      onPressed: (_isPinning || _isCheckingBalance) ? null : _checkBalanceAndPin,
+                      style: ElevatedButton.styleFrom(
+                        fixedSize: Size.fromHeight(52),
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                      ),
+                      child: (_isPinning || _isCheckingBalance)
                           ? CircularProgressIndicator(color: colorScheme.onPrimary)
-                          : const Text('Pin File with Balance Check'),
+                          : const Text('PIN IMAGE'),
                     ),
                 ],
               ),

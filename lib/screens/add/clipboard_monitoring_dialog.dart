@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/utils/snackbar.dart';
 
 import 'add_post_providers.dart';
 import 'clipboard_provider.dart';
@@ -59,8 +60,8 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
     if (next is String && next.isNotEmpty && _dialogOpen && mounted) {
       // Use post-frame callback to avoid navigator conflicts
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && Navigator.canPop(context)) {
-          Navigator.of(context).pop();
+        if (mounted && Navigator.canPop(_dialogCtx)) {
+          Navigator.of(_dialogCtx).pop();
         }
       });
     }
@@ -97,8 +98,11 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
     super.dispose();
   }
 
+  late BuildContext _dialogCtx;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext dialogCtx) {
+    _dialogCtx = dialogCtx;
     if (!isListening) {
       isListening = true;
 
@@ -135,7 +139,7 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
       ),
       actions: <Widget>[
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(_dialogCtx).pop(),
           child: Text('CLOSE', style: widget.textTheme.labelMedium!.copyWith(color: widget.theme.colorScheme.error)),
         ),
         TextButton(
@@ -143,7 +147,9 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
           child: Text('RESET', style: widget.textTheme.labelMedium!.copyWith(color: Colors.yellow[900])),
         ),
         TextButton(
-          onPressed: _hasValidInput ? () => Navigator.of(context).pop() : null,
+          onPressed: _hasValidInput
+              ? () => Navigator.of(_dialogCtx).pop()
+              : () => showSnackBar("Go and copy a valid link, then paste it here!", context, type: SnackbarType.error),
           child: Text(
             'DONE',
             style: widget.textTheme.labelLarge!.copyWith(
@@ -160,12 +166,26 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
       children: [
         if (widget.onCreate != null)
           Expanded(
-            child: _buildOptionCard(label: 'CREATE', color: colorScheme.primary, onTap: widget.onCreate!),
+            child: _buildOptionCard(
+              label: 'CREATE',
+              color: colorScheme.primary,
+              onTap: () {
+                Navigator.of(_dialogCtx).pop();
+                widget.onCreate!();
+              },
+            ),
           ),
         if (widget.onCreate != null && widget.onReuse != null) const SizedBox(width: 12),
         if (widget.onReuse != null)
           Expanded(
-            child: _buildOptionCard(label: 'REUSE', color: colorScheme.secondary, onTap: widget.onReuse!),
+            child: _buildOptionCard(
+              label: 'REUSE',
+              color: colorScheme.secondary,
+              onTap: () {
+                Navigator.of(_dialogCtx).pop();
+                widget.onReuse!();
+              },
+            ),
           ),
       ],
     );

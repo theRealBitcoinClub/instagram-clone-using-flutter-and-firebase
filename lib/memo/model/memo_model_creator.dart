@@ -217,7 +217,7 @@ class MemoModelCreator {
       if (isNowRegistered) {
         // Update the creator with registration info
         hasRegisteredAsUser = true;
-        bchAddressCashtokenAware = userData.bchAddressCashtokenAware;
+        // bchAddressCashtokenAware = userData.bchAddressCashtokenAware;
 
         // Persist changes
         await ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: true);

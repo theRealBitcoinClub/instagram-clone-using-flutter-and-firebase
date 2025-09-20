@@ -117,7 +117,8 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
 
     try {
       String translated = await translationService.translateText(text: _originalText, from: _detectedLanguage?.code, to: targetLang.code);
-      translated = widget.post.restoreMediaUrlsCase(widget.post, text: translated);
+      translated = MemoModelPost.restoreTagsAndTopicCase(translated, _originalText);
+      translated = MemoModelPost.restoreMediaUrlsCase(widget.post, translated);
 
       //TODO do i need this translated text provider or can i just use publishoptions and rename that to PostTranslation
       ref.read(translatedTextProvider.notifier).state = translated;

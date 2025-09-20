@@ -1,9 +1,10 @@
 // lib/provider/user_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
+import 'package:mahakka/repositories/creator_repository.dart';
 import 'package:mahakka/resources/auth_method.dart';
 
-import '../memo/firebase/user_service.dart'; // Ensure AuthChecker is correctly defined
+import '../memo/firebase/user_service.dart';
 
 // State class for user
 class UserState {
@@ -26,7 +27,7 @@ class UserState {
 class UserNotifier extends StateNotifier<UserState> {
   UserNotifier(this.ref, this._authChecker) : super(UserState(isLoading: true)) {
     // Initial load when the provider is first created
-    refreshUser();
+    refreshUser(false);
   }
 
   final AuthChecker _authChecker;
@@ -72,27 +73,37 @@ class UserNotifier extends StateNotifier<UserState> {
     return "fail updateTipAmount";
   }
 
-  Future<void> refreshUser() async {
+  Future<void> refreshUser(bool freshScrapeCreatorData) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       if (state.user == null || !state.user!.hasInit) {
-        final createdUser = await _authChecker.createUserFromMnemonic();
+        MemoModelUser? createdUser = await _authChecker.createUserFromMnemonic();
         // state = state.copyWith(fetchedUser: createdUser);
         UserService service = UserService();
 
         if (createdUser == null) {
           state = state.copyWith(user: createdUser, isLoading: false);
-          return; //first run after instalation
+          return; //first run after instalation there is no mnemonic
         }
 
-        var memoModelUser = await service.getUserOnce(createdUser.id);
-        MemoModelUser? fetchedUser = memoModelUser;
+        if (freshScrapeCreatorData) {
+          createdUser = createdUser.copyWith(creator: await ref.read(creatorRepositoryProvider).getCreator(createdUser.id));
+          state = state.copyWith(user: createdUser);
+        }
+
+        MemoModelUser? fetchedUser = await service.getUserOnce(createdUser.id);
+
         if (fetchedUser != null) {
           state = state.copyWith(
-            user: createdUser.copyWith(tipAmount: fetchedUser.tipAmountEnum, tipReceiver: fetchedUser.tipReceiver),
+            user: createdUser.copyWith(
+              tipAmount: fetchedUser.tipAmountEnum,
+              tipReceiver: fetchedUser.tipReceiver,
+              ipfsCids: fetchedUser.ipfsCids,
+            ),
             isLoading: false,
           );
         } else {
+          //save user  if didnt exist in firebase before
           await service.saveUser(createdUser);
           state = state.copyWith(user: createdUser, isLoading: false);
         }
@@ -123,7 +134,6 @@ class UserNotifier extends StateNotifier<UserState> {
       // Save to Firebase
       final userService = UserService();
       await userService.saveUser(updatedUser);
-
       // Update local state
       state = state.copyWith(user: updatedUser);
       return "success";

@@ -247,7 +247,7 @@ class _PostCardState extends ConsumerState<PostCard> {
             const SizedBox(height: 8),
             Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
             const SizedBox(height: 8),
-            Text("CID: ${widget.post.ipfsCid}", style: textTheme.bodySmall),
+            Text("${widget.post.ipfsCid}", style: textTheme.bodySmall!.copyWith(color: theme.colorScheme.error.withAlpha(169))),
           ],
         ),
       );

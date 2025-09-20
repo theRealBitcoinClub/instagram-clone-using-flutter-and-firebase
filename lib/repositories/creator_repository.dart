@@ -202,6 +202,12 @@ class CreatorRepository {
       case MemoAccountantResponse.lowBalance:
       case MemoAccountantResponse.dust:
         return MemoAccountantResponse.lowBalance;
+      case MemoAccountantResponse.connectionError:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+      case MemoAccountantResponse.insufficientBalanceForIpfs:
+        // TODO: Handle this case.
+        throw UnimplementedError();
     }
   }
 
@@ -223,6 +229,12 @@ class CreatorRepository {
       case MemoAccountantResponse.lowBalance:
       case MemoAccountantResponse.dust:
         return MemoAccountantResponse.lowBalance;
+      case MemoAccountantResponse.connectionError:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+      case MemoAccountantResponse.insufficientBalanceForIpfs:
+        // TODO: Handle this case.
+        throw UnimplementedError();
     }
   }
 
@@ -244,6 +256,12 @@ class CreatorRepository {
       case MemoAccountantResponse.lowBalance:
       case MemoAccountantResponse.dust:
         return MemoAccountantResponse.lowBalance;
+      case MemoAccountantResponse.connectionError:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+      case MemoAccountantResponse.insufficientBalanceForIpfs:
+        // TODO: Handle this case.
+        throw UnimplementedError();
     }
   }
 

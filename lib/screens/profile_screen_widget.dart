@@ -254,7 +254,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
   void _showBchQrDialog(MemoModelUser? loggedInUser, ThemeData theme) {
     if (loggedInUser != null) {
-      showQrCodeDialog(context: context, theme: theme, user: loggedInUser);
+      showQrCodeDialog(context: context, user: loggedInUser);
     } else {
       showSnackBar(type: SnackbarType.error, "User data not available for QR code.", context);
     }

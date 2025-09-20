@@ -13,6 +13,8 @@ class ClipboardMonitoringDialog extends ConsumerStatefulWidget {
   final ThemeData theme;
   final TextTheme textTheme;
   final VoidCallback onClearInputs;
+  final VoidCallback? onCreate;
+  final VoidCallback? onReuse;
 
   const ClipboardMonitoringDialog({
     Key? key,
@@ -22,6 +24,8 @@ class ClipboardMonitoringDialog extends ConsumerStatefulWidget {
     required this.theme,
     required this.textTheme,
     required this.onClearInputs,
+    this.onCreate,
+    this.onReuse,
   }) : super(key: key);
 
   @override
@@ -104,12 +108,21 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
       ref.listen(odyseeUrlProvider, _handleProviderChange);
     }
 
+    final hasOptions = widget.onCreate != null || widget.onReuse != null;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return AlertDialog(
       title: Text(widget.title),
       contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // New placeholder widgets row (only shown if callbacks are provided)
+          if (hasOptions) _buildOptionsRow(theme, colorScheme),
+          if (hasOptions) const SizedBox(height: 16),
+
+          // Existing content - unchanged
           TextInputFieldAddDialog(
             textEditingController: widget.controller,
             hintText: widget.hint,
@@ -139,6 +152,47 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildOptionsRow(ThemeData theme, ColorScheme colorScheme) {
+    return Row(
+      children: [
+        if (widget.onCreate != null)
+          Expanded(
+            child: _buildOptionCard(label: 'CREATE', color: colorScheme.primary, onTap: widget.onCreate!),
+          ),
+        if (widget.onCreate != null && widget.onReuse != null) const SizedBox(width: 12),
+        if (widget.onReuse != null)
+          Expanded(
+            child: _buildOptionCard(label: 'REUSE', color: colorScheme.secondary, onTap: widget.onReuse!),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildOptionCard({required String label, required Color color, required VoidCallback onTap}) {
+    final theme = Theme.of(context);
+
+    return SizedBox(
+      height: 60, // Fixed height as requested
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: color.withOpacity(0.3), width: 1),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Center(
+            child: Text(
+              label,
+              style: theme.textTheme.labelLarge?.copyWith(color: color, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

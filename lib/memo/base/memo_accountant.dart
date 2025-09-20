@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_code.dart';
@@ -7,6 +8,8 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/model/memo_tip.dart';
 
+import '../../ipfs/ipfs_pin_claim_service.dart';
+import '../../provider/electrum_provider.dart';
 import '../../provider/user_provider.dart';
 import '../../repositories/post_cache_repository.dart';
 import '../scraper/memo_post_scraper.dart';
@@ -18,9 +21,9 @@ enum MemoAccountantResponse {
   yes("Successfully published!"),
   noUtxo("Transaction error (no UTXO)"),
   lowBalance("Insufficient balance!"),
-  dust("Transaction error (dust)");
-  // failed("Transaction failed due to an unexpected error."),
-  // queued("Request queued for processing.");
+  dust("Transaction error (dust)"),
+  connectionError("Network connection error"),
+  insufficientBalanceForIpfs("Insufficient balance for IPFS operation");
 
   const MemoAccountantResponse(this.message);
   final String message;
@@ -35,6 +38,7 @@ enum MemoRequestType {
   profileSetAvatar,
   profileSetName,
   profileSetText,
+  pinIpfsFile,
 }
 
 // Request class to hold all necessary data
@@ -74,7 +78,7 @@ class MemoAccountant {
     _queueSubscription = _queueController!.stream.listen(
       _processRequest,
       onError: (error) {
-        print('Queue processor error: $error');
+        print('MemoAccountant: Queue processor error: $error');
         _isProcessing = false;
         _processNextRequest();
       },
@@ -133,15 +137,18 @@ class MemoAccountant {
           response = await _executeProfileSetText(request.data['text'] as String);
           break;
 
-        // default:
-        //   response = MemoAccountantResponse.failed;
+        case MemoRequestType.pinIpfsFile:
+          response = await _executePinIpfsFile(request.data['file'] as File, request.data['cid'] as String);
+          break;
+
+        default:
+          response = MemoAccountantResponse.connectionError;
       }
 
       request.completer.complete(response);
     } catch (error) {
-      print('Error processing request ${request.type}: $error');
-      request.completer.complete(MemoAccountantResponse.lowBalance);
-      // request.completer.complete(MemoAccountantResponse.failed);
+      print('MemoAccountant: Error processing request ${request.type}: $error');
+      request.completer.complete(MemoAccountantResponse.connectionError);
     } finally {
       _isProcessing = false;
       _processNextRequest();
@@ -177,7 +184,32 @@ class MemoAccountant {
     return _enqueueRequest(MemoRequestType.profileSetText, data: {'text': text});
   }
 
-  // Actual execution methods (moved from original public methods)
+  Future<MemoAccountantResponse> pinIpfsFile(File file, String cid) {
+    return _enqueueRequest(MemoRequestType.pinIpfsFile, data: {'file': file, 'cid': cid});
+  }
+
+  // Balance checking method
+  Future<bool> checkBalanceForIpfsOperation(double bchCost, {double tolerancePercent = 0.2}) async {
+    try {
+      print('MemoAccountant: Checking balance for IPFS operation with cost: $bchCost BCH');
+
+      final bitcoinBase = await ref.read(electrumServiceProvider.future);
+      final balance = await bitcoinBase.getBalances(user.legacyAddressMemoBch);
+
+      // Convert BCH cost to satoshis
+      final requiredSatoshis = (bchCost * 100000000).round();
+      final requiredWithTolerance = (requiredSatoshis * (1 + tolerancePercent)).round();
+
+      print('MemoAccountant: Current balance: ${balance.bch} sats, Required: $requiredWithTolerance sats (with $tolerancePercent% tolerance)');
+
+      return balance.bch > requiredWithTolerance;
+    } catch (e) {
+      print('MemoAccountant: Error checking balance: $e');
+      return false;
+    }
+  }
+
+  // Actual execution methods
   Future<MemoAccountantResponse> _executePublishReplyTopic(MemoModelPost post, String postReply) async {
     MemoAccountantResponse response = await _tryPublishReplyTopic(user.wifLegacy, post, postReply);
     return _memoAccountantResponse(response);
@@ -217,6 +249,140 @@ class MemoAccountant {
   Future<MemoAccountantResponse> _executeProfileSetText(String text) async {
     return _publishToMemo(MemoCode.profileText, text, tips: []);
   }
+
+  Future<MemoAccountantResponse> _executePinIpfsFile(File file, String cid) async {
+    try {
+      print('MemoAccountant: Starting IPFS pin operation for CID: $cid');
+
+      // Check balance before proceeding
+      final bitcoinBase = await ref.read(electrumServiceProvider.future);
+      final ipfsService = IpfsPinClaimService(bitcoinBase: bitcoinBase, serverUrl: 'https://file-stage.fullstack.cash');
+
+      final bchCost = await ipfsService.fetchBCHWritePrice(file);
+      final hasSufficientBalance = await checkBalanceForIpfsOperation(bchCost);
+
+      if (!hasSufficientBalance) {
+        return MemoAccountantResponse.insufficientBalanceForIpfs;
+      }
+
+      // Get current user for mnemonic
+      final currentUser = ref.read(userProvider);
+      if (currentUser == null) {
+        print('MemoAccountant: No user found');
+        return MemoAccountantResponse.connectionError;
+      }
+
+      // Proceed with pinning and verify the result
+      final result = await ipfsService.pinClaimBCH(file, cid, currentUser.mnemonic);
+
+      // Verify the pinClaimBCH result
+      final verificationResult = _verifyPinClaimResult(result, cid);
+      if (verificationResult != MemoAccountantResponse.yes) {
+        return verificationResult;
+      }
+
+      // Update user with the new IPFS URL
+      final resultMessage = await ref.read(userNotifierProvider.notifier).addIpfsUrlAndUpdate(cid);
+
+      if (resultMessage != "success") {
+        print('MemoAccountant: Failed to update user with CID: $resultMessage');
+        return MemoAccountantResponse.connectionError;
+      }
+
+      print('MemoAccountant: IPFS pin successful, CID added to user: $cid');
+      return MemoAccountantResponse.yes;
+    } catch (e) {
+      print('MemoAccountant: Error in IPFS pin operation: $e');
+      return MemoAccountantResponse.connectionError;
+    }
+  }
+
+  // Helper method to verify the pinClaimBCH result
+  MemoAccountantResponse _verifyPinClaimResult(Map<String, String> result, String expectedCid) {
+    try {
+      // Check if result contains required fields
+      if (result.isEmpty) {
+        print('MemoAccountant: Empty result from pinClaimBCH');
+        return MemoAccountantResponse.connectionError;
+      }
+
+      // Verify required transaction IDs are present
+      final pobTxid = result['pobTxid'];
+      final claimTxid = result['claimTxid'];
+
+      if (pobTxid == null || pobTxid.isEmpty) {
+        print('MemoAccountant: Missing or empty pobTxid in result');
+        return MemoAccountantResponse.connectionError;
+      }
+
+      if (claimTxid == null || claimTxid.isEmpty) {
+        print('MemoAccountant: Missing or empty claimTxid in result');
+        return MemoAccountantResponse.connectionError;
+      }
+
+      // Verify transaction IDs are valid Bitcoin transaction hashes
+      if (!_isValidBitcoinTxId(pobTxid)) {
+        print('MemoAccountant: Invalid pobTxid format: $pobTxid');
+        return MemoAccountantResponse.connectionError;
+      }
+
+      if (!_isValidBitcoinTxId(claimTxid)) {
+        print('MemoAccountant: Invalid claimTxid format: $claimTxid');
+        return MemoAccountantResponse.connectionError;
+      }
+
+      // Optional: Verify the transactions exist on the blockchain
+      // This could be added if you want to wait for blockchain confirmation
+      // await _verifyTransactionOnBlockchain(pobTxid);
+      // await _verifyTransactionOnBlockchain(claimTxid);
+
+      print('MemoAccountant: Pin claim verified successfully - pobTxid: $pobTxid, claimTxid: $claimTxid');
+      return MemoAccountantResponse.yes;
+    } catch (e) {
+      print('MemoAccountant: Error verifying pin claim result: $e');
+      return MemoAccountantResponse.connectionError;
+    }
+  }
+
+  // Helper method to validate Bitcoin transaction ID format
+  bool _isValidBitcoinTxId(String txid) {
+    // Bitcoin transaction IDs are 64 character hexadecimal strings
+    final regex = RegExp(r'^[a-fA-F0-9]{64}$');
+    return regex.hasMatch(txid);
+  }
+
+  // Optional: Method to verify transaction exists on blockchain
+  //   Future<bool> _verifyTransactionOnBlockchain(String txid, {int maxRetries = 3}) async {
+  //     try {
+  //       final bitcoinBase = await ref.read(electrumServiceProvider.future);
+  //
+  //       for (int attempt = 1; attempt <= maxRetries; attempt++) {
+  //         try {
+  //           final transaction = await bitcoinBase.getTransaction(txid);
+  //           if (transaction != null) {
+  //             print('MemoAccountant: Transaction $txid confirmed on blockchain');
+  //             return true;
+  //           }
+  //
+  //           if (attempt < maxRetries) {
+  //             print('MemoAccountant: Transaction $txid not found yet, retrying in 5 seconds...');
+  //             await Future.delayed(Duration(seconds: 5));
+  //           }
+  //         } catch (e) {
+  //           print('MemoAccountant: Error checking transaction $txid: $e');
+  //           if (attempt < maxRetries) {
+  //             await Future.delayed(Duration(seconds: 5));
+  //           }
+  //         }
+  //       }
+  //
+  //       print('MemoAccountant: Transaction $txid not found after $maxRetries attempts');
+  //       return false;
+  //     } catch (e) {
+  //       print('MemoAccountant: Error in blockchain verification: $e');
+  //       return false;
+  //     }
+  //   }
 
   // Original helper methods (unchanged)
   Future<MemoAccountantResponse> _tryPublishLike(MemoModelPost post, String wif) async {

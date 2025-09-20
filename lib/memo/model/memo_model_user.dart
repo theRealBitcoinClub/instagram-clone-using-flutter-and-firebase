@@ -88,7 +88,8 @@ class MemoModelUser {
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool hasInit = false;
 
-  List<String> ipfsUrls;
+  @JsonKey(defaultValue: [])
+  List<String> ipfsCids;
 
   MemoModelUser({
     required this.id,
@@ -97,8 +98,10 @@ class MemoModelUser {
     required this.legacyAddressMemoBchAsCashaddress,
     required TipReceiver tipReceiver,
     required TipAmount tipAmount,
+    List<String>? ipfsCids,
   }) : _tipReceiver = tipReceiver,
-       _tipAmount = tipAmount;
+       _tipAmount = tipAmount,
+       ipfsCids = ipfsCids ?? [];
 
   factory MemoModelUser.fromMnemonic({required String mnemonic}) {
     if (MemoVerifier(mnemonic).verifyMnemonic() != "success") {
@@ -121,6 +124,7 @@ class MemoModelUser {
       legacyAddressMemoBchAsCashaddress: legacyAddressAsCash,
       tipReceiver: TipReceiver.both,
       tipAmount: TipAmount.survival,
+      ipfsCids: [],
     );
 
     user.mnemonic = mnemonic;
@@ -190,6 +194,7 @@ class MemoModelUser {
     required this.wifBchCashtoken,
     required this.wifLegacy,
     required this.hasInit,
+    required this.ipfsCids,
   }) : _tipReceiver = tipReceiver,
        _tipAmount = tipAmount;
 
@@ -209,6 +214,7 @@ class MemoModelUser {
     String? wifBchCashtoken,
     String? wifLegacy,
     bool? hasInit,
+    List<String>? ipfsCids,
   }) {
     return MemoModelUser._(
         id: id ?? this.id,
@@ -224,6 +230,7 @@ class MemoModelUser {
         wifBchCashtoken: wifBchCashtoken ?? this.wifBchCashtoken,
         wifLegacy: wifLegacy ?? this.wifLegacy,
         hasInit: hasInit ?? this.hasInit,
+        ipfsCids: ipfsCids ?? this.ipfsCids,
       )
       ..temporaryTipAmount = temporaryTipAmount ?? this.temporaryTipAmount
       ..temporaryTipReceiver = temporaryTipReceiver ?? this.temporaryTipReceiver;
@@ -243,7 +250,9 @@ class MemoModelUser {
         temporaryTipAmount == other.temporaryTipAmount &&
         temporaryTipReceiver == other.temporaryTipReceiver &&
         creator == other.creator &&
-        hasInit == other.hasInit;
+        hasInit == other.hasInit &&
+        ipfsCids.length == other.ipfsCids.length &&
+        ipfsCids.every((url) => other.ipfsCids.contains(url));
   }
 
   @override
@@ -259,6 +268,21 @@ class MemoModelUser {
       temporaryTipReceiver,
       creator,
       hasInit,
+      Object.hashAll(ipfsCids),
     );
+  }
+
+  void addIpfsUrl(String url) {
+    if (!ipfsCids.contains(url)) {
+      ipfsCids.add(url);
+    }
+  }
+
+  void removeIpfsUrl(String url) {
+    ipfsCids.remove(url);
+  }
+
+  void clearipfsCids() {
+    ipfsCids.clear();
   }
 }

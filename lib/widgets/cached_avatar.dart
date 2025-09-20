@@ -131,7 +131,9 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
 
   // In CachedAvatar's _refreshAvatar method
   Future<void> _refreshAvatar() async {
-    final isAlreadyRefreshing = ref.read(avatarRefreshStateProvider.notifier).isRefreshing(widget.creatorId);
+    if (!mounted) return;
+    var notifier = ref.read(avatarRefreshStateProvider.notifier);
+    final isAlreadyRefreshing = notifier.isRefreshing(widget.creatorId);
 
     if (isAlreadyRefreshing) {
       // Another CachedAvatar is already refreshing this creator, just wait for it
@@ -140,7 +142,7 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
 
     try {
       // Mark as refreshing
-      ref.read(avatarRefreshStateProvider.notifier).setRefreshing(widget.creatorId, true);
+      notifier.setRefreshing(widget.creatorId, true);
 
       await ref.read(creatorRepositoryProvider).refreshAndCacheAvatar(widget.creatorId);
 
@@ -153,7 +155,7 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
       print("Error refreshing avatar: $e");
     } finally {
       // Always mark as not refreshing
-      ref.read(avatarRefreshStateProvider.notifier).completeRefresh(widget.creatorId);
+      notifier.completeRefresh(widget.creatorId);
     }
   }
 

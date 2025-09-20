@@ -21,27 +21,27 @@ class ElectrumServiceNotifier extends AsyncNotifier<MemoBitcoinBase> {
 
   @override
   Future<MemoBitcoinBase> build() async {
-    final service = await _createServiceWithRetry();
+    final bitcoinBase = await _createServiceWithRetry();
 
     // Start health monitoring
-    _startHealthMonitoring(service);
+    _startHealthMonitoring(bitcoinBase);
 
     // Register the onDispose hook.
     ref.onDispose(() {
       _healthCheckTimer?.cancel();
-      service.service?.discounnect();
+      bitcoinBase.service?.discounnect();
     });
 
-    return service;
+    return bitcoinBase;
   }
 
   Future<MemoBitcoinBase> _createServiceWithRetry() async {
     for (int attempt = 1; attempt <= _maxReconnectAttempts; attempt++) {
       try {
-        final service = await MemoBitcoinBase.create();
+        final bitcoinBase = await MemoBitcoinBase.create();
         print("Successfully connected to Electrum server");
         _reconnectAttempts = 0;
-        return service;
+        return bitcoinBase;
       } catch (e) {
         print("Connection attempt $attempt failed: $e");
         if (attempt == _maxReconnectAttempts) {

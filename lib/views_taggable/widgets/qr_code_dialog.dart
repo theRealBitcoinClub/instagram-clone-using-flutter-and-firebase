@@ -40,7 +40,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   late bool _isCashtokenFormat;
   late Future<void> _initFuture;
   Timer? _balanceRefreshTimer;
-  final Duration _refreshInterval = Duration(seconds: kDebugMode ? 60 : 3);
+  final Duration _refreshInterval = Duration(seconds: kDebugMode ? 3 : 3);
   bool _isToggleEnabled = true;
 
   @override
@@ -394,13 +394,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 }
 
 // --- Simplified BCH QR Code Dialog Helper ---
-void showQrCodeDialog({
-  required BuildContext context,
-  required ThemeData theme,
-  MemoModelUser? user,
-  MemoModelCreator? creator,
-  bool memoOnly = false,
-}) {
+void showQrCodeDialog({required BuildContext context, MemoModelUser? user, MemoModelCreator? creator, bool memoOnly = false}) {
   showDialog(
     context: context,
     builder: (dialogCtx) {

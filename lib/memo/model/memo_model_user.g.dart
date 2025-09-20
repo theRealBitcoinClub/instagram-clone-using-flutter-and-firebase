@@ -15,6 +15,11 @@ MemoModelUser _$MemoModelUserFromJson(Map<String, dynamic> json) =>
           json['legacyAddressMemoBchAsCashaddress'] as String,
       tipReceiver: $enumDecode(_$TipReceiverEnumMap, json['tipReceiver']),
       tipAmount: $enumDecode(_$TipAmountEnumMap, json['tipAmount']),
+      ipfsCids:
+          (json['ipfsCids'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
 
 Map<String, dynamic> _$MemoModelUserToJson(MemoModelUser instance) =>
@@ -24,6 +29,7 @@ Map<String, dynamic> _$MemoModelUserToJson(MemoModelUser instance) =>
       'legacyAddressMemoBch': instance.legacyAddressMemoBch,
       'legacyAddressMemoBchAsCashaddress':
           instance.legacyAddressMemoBchAsCashaddress,
+      'ipfsCids': instance.ipfsCids,
       'tipAmount': instance.tipAmount,
       'tipReceiver': _$TipReceiverEnumMap[instance.tipReceiver]!,
     };

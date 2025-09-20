@@ -3,40 +3,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertagger/fluttertagger.dart';
-import 'package:mahakka/memo/base/memo_accountant.dart';
-import 'package:mahakka/memo/memo_reg_exp.dart';
-import 'package:mahakka/memo/model/memo_model_topic.dart';
-import 'package:mahakka/provider/publish_options_provider.dart';
-import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
-import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
-import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-// Assuming these exist and are correctly imported
-import '../config_ipfs.dart';
-import '../memo/base/memo_verifier.dart';
-import '../memo/base/text_input_verifier.dart';
-// Import the Odysee widgets and providers
-import '../memo/model/memo_model_post.dart';
-import '../provider/telegram_bot_publisher.dart';
-import '../provider/translation_service.dart';
-import '../repositories/post_repository.dart';
 import '../theme_provider.dart';
-import '../views_taggable/view_models/search_view_model.dart';
-import '../views_taggable/widgets/comment_text_field.dart';
-import '../views_taggable/widgets/search_result_overlay.dart';
-import '../widgets/add/publish_confirmation_activity.dart';
 import 'add/add_post_providers.dart';
 import 'add/clipboard_monitoring_dialog.dart';
 import 'add/clipboard_provider.dart';
 import 'add/imgur_media_widget.dart';
 import 'add/ipfs_media_widget.dart';
+import 'add/media_placeholder_widget.dart';
 import 'add/odysee_media_widget.dart';
+import 'add/taggable_input_widget.dart';
 import 'add/youtube_media_widget.dart';
-import 'ipfs_pin_claim_screen.dart';
+import 'add_post_controller.dart';
 
 void _log(String message) => print('[AddPost] $message');
 
@@ -60,7 +41,9 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
   // UI State
   late Animation<Offset> _taggerOverlayAnimation;
-  final double _taggerOverlayHeight = 300;
+
+  // AddPostController instance
+  late AddPostController _addPostController;
 
   @override
   void initState() {
@@ -72,6 +55,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _youtubeCtrl.addListener(_onYouTubeInputChanged);
     _imgurCtrl.addListener(_onImgurInputChanged);
     _odyseeCtrl.addListener(_onOdyseeInputChanged);
+    _ipfsCtrl.addListener(_onIpfsInputChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(clipboardNotifierProvider.notifier).checkClipboard(ref);
@@ -79,59 +63,38 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     _initStateTagger();
 
+    // Initialize the controller
+    _addPostController = AddPostController(
+      ref: ref,
+      context: context,
+      onPublish: _onPublish,
+      clearInputs: _clearInputs,
+      showErrorSnackBar: _showErrorSnackBar,
+      showSuccessSnackBar: _showSuccessSnackBar,
+      log: _log,
+    );
+
     _log("initState completed");
   }
 
   void _onImgurInputChanged() {
     if (!mounted) return;
-    final text = _imgurCtrl.text.trim();
-    String newImgurUrl = MemoRegExp(text).extractValidImgurOrGiphyUrl();
-
-    if (newImgurUrl.isNotEmpty) {
-      ref.read(imgurUrlProvider.notifier).state = newImgurUrl;
-      _clearOtherMediaProviders(0);
-    } else {
-      tryAdvancedImgurCheck();
-    }
-  }
-
-  Future<void> tryAdvancedImgurCheck() async {
-    final text = _imgurCtrl.text.trim();
-    final newImgurUrl = await MemoVerifier(text).verifyAndBuildImgurUrl();
-
-    if (newImgurUrl != MemoVerificationResponse.noImageNorVideo.toString()) {
-      ref.read(imgurUrlProvider.notifier).state = newImgurUrl;
-      _clearOtherMediaProviders(0);
-    }
+    _addPostController.handleImgurInput(_imgurCtrl.text);
   }
 
   void _onYouTubeInputChanged() {
     if (!mounted) return;
-    final text = _youtubeCtrl.text.trim();
-    final newVideoId = YoutubePlayer.convertUrlToId(text);
-
-    if (newVideoId != null && newVideoId.isNotEmpty) {
-      ref.read(youtubeVideoIdProvider.notifier).state = newVideoId;
-      _clearOtherMediaProviders(1);
-    }
+    _addPostController.handleYouTubeInput(_youtubeCtrl.text);
   }
 
   void _onOdyseeInputChanged() {
     if (!mounted) return;
-    final text = _odyseeCtrl.text.trim();
-    final newOdyseeUrl = MemoRegExp(text).extractOdyseeUrl();
-
-    if (newOdyseeUrl.isNotEmpty) {
-      ref.read(odyseeUrlProvider.notifier).state = newOdyseeUrl;
-      _clearOtherMediaProviders(3);
-    }
+    _addPostController.handleOdyseeInput(_odyseeCtrl.text);
   }
 
-  void _clearOtherMediaProviders(int index) {
-    if (index != 0) ref.read(imgurUrlProvider.notifier).state = "";
-    if (index != 1) ref.read(youtubeVideoIdProvider.notifier).state = "";
-    if (index != 2) ref.read(ipfsCidProvider.notifier).state = "";
-    if (index != 3) ref.read(odyseeUrlProvider.notifier).state = "";
+  void _onIpfsInputChanged() {
+    if (!mounted) return;
+    _addPostController.handleIpfsInput(_ipfsCtrl.text);
   }
 
   void _initStateTagger() {
@@ -147,8 +110,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _log("Dispose called");
     _imgurCtrl.removeListener(_onImgurInputChanged);
     _youtubeCtrl.removeListener(_onYouTubeInputChanged);
-    // _ipfsCtrl.removeListener(_onIpfsInputChanged);
     _odyseeCtrl.removeListener(_onOdyseeInputChanged);
+    _odyseeCtrl.removeListener(_onIpfsInputChanged);
     _imgurCtrl.dispose();
     _youtubeCtrl.dispose();
     _ipfsCtrl.dispose();
@@ -217,22 +180,19 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
               if (_hasAddedMediaToPublish())
                 Padding(
                   padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 12, left: 12, right: 12, top: 8),
-                  child: _buildTaggableInput(theme, colorScheme, textTheme, mediaQuery.viewInsets),
+                  child: TaggableInputWidget(
+                    textInputController: _textInputController,
+                    animationController: _animationController,
+                    focusNode: _focusNode,
+                    viewInsets: MediaQuery.of(context).viewInsets,
+                    onPublish: _onPublish,
+                  ),
                 ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  bool _hasAddedMediaToPublish() {
-    final imgurUrl = ref.read(imgurUrlProvider);
-    final youtubeId = ref.read(youtubeVideoIdProvider);
-    final ipfsCid = ref.read(ipfsCidProvider);
-    final odyseeUrl = ref.read(odyseeUrlProvider);
-
-    return imgurUrl.isNotEmpty || youtubeId.isNotEmpty || ipfsCid.isNotEmpty || odyseeUrl.isNotEmpty;
   }
 
   void _unfocusNodes(BuildContext context) {
@@ -240,100 +200,48 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     FocusScope.of(context).unfocus();
   }
 
-  Widget _buildMediaInputSection(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+  Widget _buildMediaInputSection(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme, {double space = 16}) {
     final imgurUrl = ref.watch(imgurUrlProvider);
     final youtubeId = ref.watch(youtubeVideoIdProvider);
     final ipfsCid = ref.watch(ipfsCidProvider);
     final odyseeUrl = ref.watch(odyseeUrlProvider);
 
-    if (imgurUrl.isNotEmpty) {
+    // Define reusable padding constants
+    final EdgeInsets mediaPadding = EdgeInsets.all(space);
+    final EdgeInsets placeholderPadding = EdgeInsets.symmetric(horizontal: space, vertical: space);
+    final double spacerWidth = space;
+    final double spacerHeight = space;
+
+    // Check for media content and return appropriate widget
+    final mediaWidget = _getMediaWidget(imgurUrl, youtubeId, ipfsCid, odyseeUrl, theme, colorScheme, textTheme);
+    if (mediaWidget != null) {
       return Expanded(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ImgurMediaWidget(theme: theme, colorScheme: colorScheme, textTheme: textTheme),
-        ),
+        child: Padding(padding: mediaPadding, child: mediaWidget),
       );
     }
 
-    if (youtubeId.isNotEmpty) {
-      return Expanded(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: YouTubeMediaWidget(theme: theme, colorScheme: colorScheme, textTheme: textTheme),
-        ),
-      );
-    }
-
-    if (ipfsCid.isNotEmpty) {
-      return Expanded(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: IpfsMediaWidget(theme: theme, colorScheme: colorScheme, textTheme: textTheme),
-        ),
-      );
-    }
-
-    if (odyseeUrl.isNotEmpty) {
-      return Expanded(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: OdyseeMediaWidget(theme: theme, colorScheme: colorScheme, textTheme: textTheme),
-        ),
-      );
-    }
-
-    // All are empty, show placeholders for all four options in two rows
+    // All are empty, show placeholders
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+      padding: placeholderPadding,
       child: Column(
         children: [
-          // First row: IMGUR & YOUTUBE
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildMediaPlaceholder(
-                theme: theme,
-                colorScheme: colorScheme,
-                textTheme: textTheme,
-                label: "IMGUR",
-                iconData: Icons.add_photo_alternate_outlined,
-                onTap: _showImgurDialog,
-              ),
-              const SizedBox(width: 16),
-              _buildMediaPlaceholder(
-                theme: theme,
-                colorScheme: colorScheme,
-                textTheme: textTheme,
-                label: "YOUTUBE",
-                iconData: Icons.video_call_outlined,
-                onTap: _showVideoDialog,
-              ),
+              MediaPlaceholderWidget(label: "IMGUR", iconData: Icons.add_photo_alternate_outlined, onTap: _showImgurDialog),
+              SizedBox(width: spacerWidth),
+              MediaPlaceholderWidget(label: "YOUTUBE", iconData: Icons.video_call_outlined, onTap: _showVideoDialog),
             ],
           ),
-          const SizedBox(height: 16),
-          // Second row: IPFS & ODYSEE
+          SizedBox(height: spacerHeight),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildMediaPlaceholder(
-                theme: theme,
-                colorScheme: colorScheme,
-                textTheme: textTheme,
-                label: "IPFS",
-                iconData: Icons.cloud_upload_outlined,
-                onTap: _showIpfsUploadScreen,
-              ),
-              const SizedBox(width: 16),
-              _buildMediaPlaceholder(
-                theme: theme,
-                colorScheme: colorScheme,
-                textTheme: textTheme,
-                label: "ODYSEE",
-                iconData: Icons.video_library_outlined,
-                onTap: _showOdyseeDialog,
-              ),
+              MediaPlaceholderWidget(label: "IPFS", iconData: Icons.cloud_upload_outlined, onTap: _showIpfsDialog),
+              SizedBox(width: spacerWidth),
+              MediaPlaceholderWidget(label: "ODYSEE", iconData: Icons.video_library_outlined, onTap: _showOdyseeDialog),
             ],
           ),
         ],
@@ -341,54 +249,33 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildMediaPlaceholder({
-    required ThemeData theme,
-    required ColorScheme colorScheme,
-    required TextTheme textTheme,
-    required String label,
-    required IconData iconData,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: AspectRatio(
-          aspectRatio: 1,
-          child: Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colorScheme.primary, width: 1.5),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(iconData, size: 50, color: colorScheme.primary),
-                const SizedBox(height: 8),
-                Text(
-                  label,
-                  style: textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w400),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+  // Helper method to get the appropriate media widget
+  Widget? _getMediaWidget(
+    String imgurUrl,
+    String youtubeId,
+    String ipfsCid,
+    String odyseeUrl,
+    ThemeData theme,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
+    if (imgurUrl.isNotEmpty) {
+      return ImgurMediaWidget(theme: theme, colorScheme: colorScheme, textTheme: textTheme);
+    }
+    if (youtubeId.isNotEmpty) {
+      return YouTubeMediaWidget(theme: theme, colorScheme: colorScheme, textTheme: textTheme);
+    }
+    if (ipfsCid.isNotEmpty) {
+      return IpfsMediaWidget(theme: theme, colorScheme: colorScheme, textTheme: textTheme);
+    }
+    if (odyseeUrl.isNotEmpty) {
+      return OdyseeMediaWidget(theme: theme, colorScheme: colorScheme, textTheme: textTheme);
+    }
+    return null;
   }
 
-  void _showIpfsUploadScreen() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const IpfsPinClaimScreen())).then((result) {
-      if (result != null) {
-        final cid = result['cid'];
-        if (cid != null && mounted) {
-          ref.read(ipfsCidProvider.notifier).state = cid.toString().trim();
-          _clearOtherMediaProviders(2);
-        }
-      }
-    });
+  Future<void> _showIpfsDialog() async {
+    _showUrlInputDialog("IPFS For The Win", _ipfsCtrl, "e.g. bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74");
   }
 
   Future<void> _showImgurDialog() async {
@@ -418,169 +305,30 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         theme: theme,
         textTheme: textTheme,
         onClearInputs: _clearInputs,
+        // Add IPFS-specific callbacks only for IPFS dialog
+        onCreate: title.toLowerCase().contains('ipfs') ? _showIpfsUploadScreen : null,
+        onReuse: title.toLowerCase().contains('ipfs') ? _showIpfsGallery : null,
       ),
     );
   }
 
-  Widget _buildTaggableInput(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme, EdgeInsets viewInsets) {
-    return Material(
-      elevation: 4.0,
-      color: theme.cardColor,
-      shadowColor: theme.shadowColor,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: FlutterTagger(
-          triggerStrategy: TriggerStrategy.eager,
-          controller: _textInputController,
-          animationController: _animationController,
-          onSearch: (query, triggerChar) {
-            if (triggerChar == "@") {
-              searchViewModel.searchTopic(query);
-            } else if (triggerChar == "#") {
-              searchViewModel.searchHashtag(query);
-            }
-          },
-          triggerCharacterAndStyles: {
-            "@": textTheme.bodyLarge!.copyWith(color: colorScheme.secondary, fontWeight: FontWeight.bold),
-            "#": textTheme.bodyLarge!.copyWith(color: colorScheme.tertiary, fontWeight: FontWeight.bold),
-          },
-          tagTextFormatter: (id, tag, triggerChar) {
-            return "$triggerChar$id#$tag#";
-          },
-          overlayHeight: _taggerOverlayHeight,
-          overlay: SearchResultOverlay(animation: _taggerOverlayAnimation, tagController: _textInputController),
-          builder: (context, containerKey) {
-            return CommentTextField(
-              onInputText: (value) {
-                if (!mounted) return;
-                if (value.contains('\n')) {
-                  _textInputController.text = value.replaceAll("\n", "");
-                  _onPublish();
-                }
-              },
-              focusNode: _focusNode,
-              containerKey: containerKey,
-              insets: viewInsets,
-              controller: _textInputController,
-              hintText: "Add a caption... use @ for topics, # for tags",
-              onSend: _onPublish,
-            );
-          },
-        ),
-      ),
-    );
+  // Add these methods to _AddPostState
+  void _showIpfsGallery() {
+    _addPostController.showIpfsGallery();
   }
 
-  MemoModelPost _createPostFromCurrentState(String textContent, String? topic) {
-    final imgurUrl = ref.read(imgurUrlProvider);
-    final youtubeId = ref.read(youtubeVideoIdProvider);
-    final ipfsCid = ref.read(ipfsCidProvider);
-    final odyseeUrl = ref.read(odyseeUrlProvider);
-
-    return MemoModelPost(
-      id: null, // Will be generated on publish
-      text: textContent,
-      imgurUrl: imgurUrl.isNotEmpty ? imgurUrl : null,
-      youtubeId: youtubeId.isNotEmpty ? youtubeId : null,
-      imageUrl: null, // You might need to handle this based on your media selection
-      videoUrl: odyseeUrl.isNotEmpty ? odyseeUrl : null,
-      ipfsCid: ipfsCid.isNotEmpty ? ipfsCid : null,
-      tagIds: MemoRegExp.extractHashtags(textContent),
-      topicId: topic ?? "",
-      topic: topic != null ? MemoModelTopic(id: topic) : null,
-      creator: ref.read(userProvider)!.creator,
-      creatorId: ref.read(userProvider)!.id,
-    );
+  void _showIpfsUploadScreen() {
+    _addPostController.showIpfsUploadScreen();
   }
 
   Future<void> _onPublish() async {
-    if (ref.read(isPublishingProvider)) return;
-    ref.read(isPublishingProvider.notifier).state = true;
-
-    try {
-      String textContent = _textInputController.text;
-      final verification = _handleVerification(textContent);
-
-      if (verification != MemoVerificationResponse.valid) {
-        _showErrorSnackBar(verification.message);
-        return;
-      }
-
-      textContent = _appendMediaUrlToText(textContent);
-      final topics = MemoRegExp.extractTopics(textContent);
-      final topic = topics.isNotEmpty ? topics.first : "";
-      final post = _createPostFromCurrentState(textContent, topic);
-
-      final shouldPublish = await PublishConfirmationActivity.show(context, post: post);
-      if (!mounted || shouldPublish != true) {
-        if (shouldPublish == false) {
-          showSnackBar(type: SnackbarType.info, 'Publication canceled', context);
-        }
-        return;
-      }
-
-      final user = ref.read(userProvider)!;
-      final translation = ref.read(postTranslationProvider);
-      final useTranslation = translation.targetLanguage != translation.originalLanguage;
-
-      final lang = useTranslation ? translation.targetLanguage! : translation.originalLanguage!;
-      final content = useTranslation ? translation.translatedText : textContent;
-      final formattedContent = "${lang.flag} $content";
-
-      final response = await ref.read(postRepositoryProvider).publishImageOrVideo(formattedContent, topic, validate: false);
-
-      if (!mounted) return;
-
-      if (response == MemoAccountantResponse.yes) {
-        MemoConfetti().launch(context);
-        _clearInputs();
-        _showSuccessSnackBar('Successfully published!');
-        ref.read(telegramBotPublisherProvider).publishPost(postText: formattedContent, mediaUrl: null);
-      } else {
-        showQrCodeDialog(context: context, theme: Theme.of(context), user: user, memoOnly: true);
-        _showErrorSnackBar('Publish failed: ${response.message}');
-      }
-    } catch (e, s) {
-      _log("Error during publish: $e\n$s");
-      if (mounted) _showErrorSnackBar('Error during publish: $e');
-    } finally {
-      if (mounted) ref.read(translatedTextProvider.notifier).state = null;
-      if (mounted) ref.read(postTranslationProvider.notifier).reset();
-      if (mounted) ref.read(isPublishingProvider.notifier).state = false;
-    }
+    if (!mounted) return;
+    await _addPostController.publishPost(_textInputController.text);
   }
 
-  MemoVerificationResponse _handleVerification(String textContent) {
-    final verifier = MemoVerifierDecorator(textContent)
-        .addValidator(InputValidators.verifyPostLength)
-        .addValidator(InputValidators.verifyMinWordCount)
-        .addValidator(InputValidators.verifyHashtags)
-        .addValidator(InputValidators.verifyNoTopicNorTag)
-        .addValidator(InputValidators.verifyTopics)
-        .addValidator(InputValidators.verifyUrl)
-        .addValidator(InputValidators.verifyOffensiveWords);
-
-    final result = verifier.getResult();
-    return result;
-  }
-
-  String _appendMediaUrlToText(String text) {
-    final imgurUrl = ref.read(imgurUrlProvider);
-    final youtubeId = ref.read(youtubeVideoIdProvider);
-    final ipfsCid = ref.read(ipfsCidProvider);
-    final odyseeUrl = ref.read(odyseeUrlProvider);
-
-    if (youtubeId.isNotEmpty) {
-      return "$text https://youtu.be/$youtubeId";
-    } else if (imgurUrl.isNotEmpty) {
-      return "$text $imgurUrl";
-    } else if (ipfsCid.isNotEmpty) {
-      return "$text ${IpfsConfig.preferredNode}$ipfsCid";
-    } else if (odyseeUrl.isNotEmpty) {
-      return "$text $odyseeUrl";
-    }
-    return text;
+  // Update the _hasAddedMediaToPublish method to use the controller
+  bool _hasAddedMediaToPublish() {
+    return _addPostController.hasAddedMediaToPublish();
   }
 
   void _clearInputs() {

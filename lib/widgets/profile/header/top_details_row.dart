@@ -101,6 +101,6 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
   }
 
   void _showTipDialog(BuildContext context, ThemeData theme, MemoModelCreator creator) {
-    showQrCodeDialog(theme: theme, context: context, creator: creator);
+    showQrCodeDialog(context: context, creator: creator);
   }
 }

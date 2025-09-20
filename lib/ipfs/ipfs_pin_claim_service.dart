@@ -3,8 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:http/http.dart' as http;
-
-import '../memo/base/memo_bitcoin_base.dart';
+import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 
 class IpfsPinClaimService {
   final MemoBitcoinBase bitcoinBase;
@@ -18,7 +17,7 @@ class IpfsPinClaimService {
         throw Exception('File does not exist');
       }
 
-      print('Calculating BCH cost for file');
+      print('IpfsPinClaimService: Calculating BCH cost for file');
 
       final fileSizeInMegabytes = file.lengthSync() / pow(10, 6); // get file size in MB
 
@@ -33,73 +32,104 @@ class IpfsPinClaimService {
       }
 
       final bchCost = double.parse(response.body);
-      print('Bch Cost $bchCost');
+      print('IpfsPinClaimService: BCH cost calculated: $bchCost');
       return bchCost;
     } catch (error) {
-      print('Error fetching BCH cost: $error');
+      print('IpfsPinClaimService: Error fetching BCH cost: $error');
       rethrow;
     }
   }
 
   Future<Map<String, String>> pinClaimBCH(File file, String cid, String mnemonic) async {
+    const maxRetries = 3;
+    int attempt = 0;
+
+    while (attempt < maxRetries) {
+      try {
+        attempt++;
+        print('IpfsPinClaimService: Attempt $attempt to pin file with BCH Payment');
+
+        // Check if socket is connected, reconnect if necessary
+        if (bitcoinBase.service?.isConnected == false) {
+          print('IpfsPinClaimService: Socket disconnected, attempting to reconnect...');
+          await _reconnectBitcoinBase();
+        }
+
+        final fileSizeInMegabytes = file.lengthSync() / pow(10, 6); // get file size in MB
+
+        final response = await http.post(
+          Uri.parse('$serverUrl/ipfs/getPaymentAddr'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'sizeInMb': fileSizeInMegabytes}),
+        );
+
+        if (response.statusCode != 200) {
+          throw Exception('Failed to get payment address: ${response.statusCode}');
+        }
+
+        final responseData = json.decode(response.body);
+        final address = responseData['address'];
+        final bchCost = responseData['bchCost'];
+
+        // Convert BCH cost to satoshis using the helper method
+        final amountSat = _toSatoshi(bchCost);
+
+        // Use the send method with proper outputs format
+        final outputs = [
+          {'address': address, 'amountSat': amountSat},
+        ];
+
+        final txid = await bitcoinBase.sendIpfs(outputs, mnemonic);
+        print('IpfsPinClaimService: Transaction sent successfully, txid: $txid');
+
+        // Wait for the transaction delay
+        await Future.delayed(Duration(seconds: 3));
+
+        // Generate a Pin Claim
+        final pinObj = {
+          'cid': cid,
+          'filename': file.uri.pathSegments.last, // Get filename from path
+          'address': address,
+        };
+
+        final pinClaimResponse = await http.post(
+          Uri.parse('$serverUrl/ipfs/createPinClaim'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(pinObj),
+        );
+
+        if (pinClaimResponse.statusCode != 200) {
+          throw Exception('Failed to create pin claim: ${pinClaimResponse.statusCode}');
+        }
+
+        final pinClaimData = json.decode(pinClaimResponse.body);
+        final pobTxid = pinClaimData['pobTxid'];
+        final claimTxid = pinClaimData['claimTxid'];
+
+        return {'pobTxid': pobTxid, 'claimTxid': claimTxid};
+      } catch (error) {
+        print('IpfsPinClaimService: Error in attempt $attempt: $error');
+
+        if (attempt == maxRetries) {
+          rethrow;
+        }
+
+        // Wait before retrying
+        await Future.delayed(Duration(seconds: 2 * attempt));
+      }
+    }
+
+    throw Exception('Failed to pin file after $maxRetries attempts');
+  }
+
+  Future<void> _reconnectBitcoinBase() async {
     try {
-      // await wallet.initialize();
-
-      print('Try to pin file with BCH Payment');
-      final fileSizeInMegabytes = file.lengthSync() / pow(10, 6); // get file size in MB
-
-      final response = await http.post(
-        Uri.parse('$serverUrl/ipfs/getPaymentAddr'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'sizeInMb': fileSizeInMegabytes}),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to get payment address: ${response.statusCode}');
-      }
-
-      final responseData = json.decode(response.body);
-      final address = responseData['address'];
-      final bchCost = responseData['bchCost'];
-
-      // Convert BCH cost to satoshis using the helper method
-      final amountSat = _toSatoshi(bchCost);
-
-      // Use the send method with proper outputs format
-      final outputs = [
-        {'address': address, 'amountSat': amountSat},
-      ];
-
-      final txid = await bitcoinBase.sendIpfs(outputs, mnemonic);
-      print('txid: $txid');
-
-      // Wait for the transaction delay
-      await Future.delayed(Duration(seconds: 3));
-
-      // Generate a Pin Claim
-      final pinObj = {
-        'cid': cid,
-        'filename': file.uri.pathSegments.last, // Get filename from path
-        'address': address,
-      };
-
-      final pinClaimResponse = await http.post(
-        Uri.parse('$serverUrl/ipfs/createPinClaim'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(pinObj),
-      );
-
-      if (pinClaimResponse.statusCode != 200) {
-        throw Exception('Failed to create pin claim: ${pinClaimResponse.statusCode}');
-      }
-
-      final pinClaimData = json.decode(pinClaimResponse.body);
-      final pobTxid = pinClaimData['pobTxid'];
-      final claimTxid = pinClaimData['claimTxid'];
-
-      return {'pobTxid': pobTxid, 'claimTxid': claimTxid};
-    } catch (error) {
-      print('Error pinning file with BCH: $error');
+      print('IpfsPinClaimService: Reconnecting to Electrum server...');
+      // This would need access to the provider to recreate the connection
+      // For now, we'll rely on the auto-reconnect functionality
+      await Future.delayed(Duration(seconds: 2));
+    } catch (e) {
+      print('IpfsPinClaimService: Error reconnecting: $e');
       rethrow;
     }
   }
@@ -115,15 +145,3 @@ class IpfsPinClaimService {
     }
   }
 }
-
-// Add this to your pubspec.yaml dependencies:
-// http: ^1.1.0
-
-// Usage example:
-// final pinClaim = PinClaimAsync(
-//   wallet: yourMemoBitcoinBaseInstance,
-//   server: 'https://file-stage.fullstack.cash'
-// );
-//
-// final price = await pinClaim.fetchBCHWritePrice(file);
-// final result = await pinClaim.pinClaimBCH(file, cid);

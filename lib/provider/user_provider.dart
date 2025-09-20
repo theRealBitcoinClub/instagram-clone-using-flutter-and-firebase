@@ -111,6 +111,28 @@ class UserNotifier extends StateNotifier<UserState> {
   void clearUser() {
     state = UserState(user: null, isLoading: false, error: null);
   }
+
+  // Add this method to your UserNotifier class
+  Future<String> addIpfsUrlAndUpdate(String cid) async {
+    if (state.user == null) return "user is null";
+
+    try {
+      // Create a copy of the user with the new IPFS URL
+      final updatedUser = state.user!.copyWith(ipfsCids: [...state.user!.ipfsCids, cid]);
+
+      // Save to Firebase
+      final userService = UserService();
+      await userService.saveUser(updatedUser);
+
+      // Update local state
+      state = state.copyWith(user: updatedUser);
+      return "success";
+    } catch (e) {
+      print("Error adding IPFS URL: $e");
+      state = state.copyWith(error: "Failed to add IPFS URL: $e");
+      return "fail addIpfsUrl";
+    }
+  }
 }
 
 // The global provider for UserNotifier

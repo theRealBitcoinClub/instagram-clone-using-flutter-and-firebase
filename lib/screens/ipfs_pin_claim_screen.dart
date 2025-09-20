@@ -5,10 +5,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
-import 'package:path/path.dart';
+import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
+import 'package:path/path.dart' show basename;
 
 import '../ipfs/ipfs_pin_claim_service.dart';
+import '../memo/base/memo_accountant.dart';
 import '../provider/electrum_provider.dart';
 import '../provider/user_provider.dart';
 
@@ -30,18 +31,14 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
   bool _isLoading = false;
   bool _isUploading = false;
   bool _isPinning = false;
+  bool _checkingBalance = false;
 
-  IpfsPinClaimService? _pinClaim;
   final String _serverUrl = 'https://file-stage.fullstack.cash';
 
   @override
   void initState() {
     super.initState();
-    // Initialize PinClaimAsync with data from providers
-    MemoBitcoinBase? bitcoinBase = ref.read(electrumServiceProvider).value;
-    if (bitcoinBase != null) {
-      _pinClaim = IpfsPinClaimService(bitcoinBase: bitcoinBase, serverUrl: _serverUrl);
-    }
+    print('IpfsPinClaimScreen: Initialized');
   }
 
   Future<void> _pickFile() async {
@@ -66,7 +63,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
   }
 
   Future<void> _calculatePrice() async {
-    if (_selectedFile == null || _pinClaim == null) return;
+    if (_selectedFile == null) return;
 
     setState(() {
       _isLoading = true;
@@ -74,7 +71,10 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
     });
 
     try {
-      final price = await _pinClaim!.fetchBCHWritePrice(_selectedFile!);
+      final bitcoinBase = await ref.read(electrumServiceProvider.future);
+      final ipfsService = IpfsPinClaimService(bitcoinBase: bitcoinBase, serverUrl: _serverUrl);
+
+      final price = await ipfsService.fetchBCHWritePrice(_selectedFile!);
       setState(() {
         _pinClaimPrice = price;
         _isLoading = false;
@@ -120,8 +120,39 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
     }
   }
 
+  Future<void> _checkBalanceAndPin() async {
+    if (_selectedFile == null || _cid == null) return;
+
+    setState(() {
+      _checkingBalance = true;
+      _error = null;
+    });
+
+    try {
+      final accountant = ref.read(memoAccountantProvider);
+      final hasSufficientBalance = await accountant.checkBalanceForIpfsOperation(_pinClaimPrice!);
+
+      if (!hasSufficientBalance) {
+        setState(() {
+          _error = 'Insufficient balance for IPFS operation. Please add more BCH to your wallet.';
+          _checkingBalance = false;
+          showQrCodeDialog(context: context, user: ref.read(userProvider), memoOnly: true);
+        });
+        return;
+      }
+
+      // Proceed with pinning if balance is sufficient
+      await _pinFile();
+    } catch (e) {
+      setState(() {
+        _error = 'Error checking balance: ${e.toString()}';
+        _checkingBalance = false;
+      });
+    }
+  }
+
   Future<void> _pinFile() async {
-    if (_selectedFile == null || _cid == null || _pinClaim == null) return;
+    if (_selectedFile == null || _cid == null) return;
 
     setState(() {
       _isPinning = true;
@@ -129,18 +160,34 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
     });
 
     try {
-      final result = await _pinClaim!.pinClaimBCH(_selectedFile!, _cid!, ref.watch(userProvider)!.mnemonic);
-      setState(() {
-        _pobTxid = result['pobTxid'];
-        _claimTxid = result['claimTxid'];
-        _isPinning = false;
-      });
+      final accountant = ref.read(memoAccountantProvider);
+      final result = await accountant.pinIpfsFile(_selectedFile!, _cid!);
+
+      if (result == MemoAccountantResponse.yes) {
+        // setState(() {
+        //   _isPinning = false;
+        // });
+        if (mounted) Navigator.pop(context);
+        // Success will be handled by the auto-pop mechanism
+      } else {
+        setState(() {
+          _error = 'Error pinning file!!!!';
+          resetLoadingStates();
+        });
+        throw Exception(result.message);
+      }
     } catch (e) {
-      setState(() {
-        _error = 'Error pinning file: ${e.toString()}';
-        _isPinning = false;
-      });
+      _error = 'Error pinning file: ${e.toString()}';
+      resetLoadingStates();
     }
+  }
+
+  void resetLoadingStates() {
+    setState(() {
+      _isUploading = false;
+      _isPinning = false;
+      _isLoading = false;
+    });
   }
 
   void _resetState() {
@@ -162,33 +209,19 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(userProvider);
+
     // Auto-close the screen and return the CID after successful pinning
     if (_claimTxid != null && _cid != null && !isPopping) {
       isPopping = true;
-      pop(context);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pop({'cid': _cid});
+      });
     }
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
-
-    // Check if we have all required data from providers
-    // final wallet = ref.watch(electrumServiceProvider).value;
-    //
-    // if (wallet == null) {
-    //   return Scaffold(
-    //     appBar: AppBar(title: const Text('Upload and Pin Content')),
-    //     body: Center(
-    //       child: Text('Wallet not available', style: textTheme.bodyLarge?.copyWith(color: colorScheme.error)),
-    //     ),
-    //   );
-    // }
-
-    if (_claimTxid != null && _cid != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pop({'cid': _cid});
-      });
-    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Upload and Pin Content'), backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
@@ -199,11 +232,12 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
           children: [
             Text(
               'Use this page to upload an image and pin it to the IPFS network. '
-              'Your wallet must have BCH to pay for the pinning of content. ',
+              'Your wallet must have sufficient BCH to pay for the pinning of content. '
+              'Balance will be checked automatically before proceeding.',
               style: textTheme.bodyMedium?.copyWith(height: 1.5),
             ),
-            // const SizedBox(height: 16),
-            // Text('Selected Server: $_serverUrl', style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 16),
+            Text('Selected Server: $_serverUrl', style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
             const SizedBox(height: 16),
 
             // File selection area
@@ -256,13 +290,13 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
               ),
             ),
 
-            // const SizedBox(height: 8),
+            const SizedBox(height: 8),
 
             // Loading indicator for price calculation
             if (_isLoading)
               Center(
                 child: Padding(
-                  padding: EdgeInsetsGeometry.only(top: 12),
+                  padding: const EdgeInsets.only(top: 12),
                   child: LinearProgressIndicator(color: colorScheme.primary),
                 ),
               ),
@@ -270,7 +304,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
             // Error message
             if (_error != null)
               Padding(
-                padding: EdgeInsetsGeometry.only(top: 12),
+                padding: const EdgeInsets.only(top: 12),
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -302,9 +336,11 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                     ),
                   if (_cid != null && _claimTxid == null)
                     ElevatedButton(
-                      onPressed: _isPinning ? null : _pinFile,
+                      onPressed: (_isPinning || _checkingBalance) ? null : _checkBalanceAndPin,
                       style: ElevatedButton.styleFrom(backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
-                      child: _isPinning ? CircularProgressIndicator(color: colorScheme.onPrimary) : const Text('Pin File'),
+                      child: (_isPinning || _checkingBalance)
+                          ? CircularProgressIndicator(color: colorScheme.onPrimary)
+                          : const Text('Pin File with Balance Check'),
                     ),
                 ],
               ),
@@ -313,14 +349,6 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
         ),
       ),
     );
-  }
-
-  void pop(BuildContext context) async {
-    Future.delayed(const Duration(milliseconds: 2000), () {
-      if (context.mounted) {
-        Navigator.of(context).pop({'cid': _cid});
-      }
-    });
   }
 
   Widget _buildSuccessCard(String title, String content, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {

@@ -21,7 +21,7 @@ import '../provider/translation_service.dart';
 import '../repositories/post_repository.dart';
 import '../widgets/add/publish_confirmation_activity.dart';
 import 'add/add_post_providers.dart';
-import 'ipfs_gallery_screen.dart' hide IpfsConfig;
+import 'ipfs_gallery_screen.dart';
 import 'ipfs_pin_claim_screen.dart';
 
 class AddPostController {
@@ -123,6 +123,8 @@ class AddPostController {
       final topics = MemoRegExp.extractTopics(finalTextContent);
       final topic = topics.isNotEmpty ? topics.first : "";
       final post = _createPostFromCurrentState(finalTextContent, topic);
+      //save ipfs cid whatever happens
+      ref.read(userNotifierProvider.notifier).addIpfsUrlAndUpdate(ref.read(ipfsCidProvider));
 
       final shouldPublish = await PublishConfirmationActivity.show(context, post: post);
       if (shouldPublish != true) {

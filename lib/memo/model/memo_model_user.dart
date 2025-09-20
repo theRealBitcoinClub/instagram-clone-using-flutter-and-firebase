@@ -250,17 +250,9 @@ class MemoModelUser {
     );
   }
 
-  void addIpfsUrl(String url) {
-    if (!ipfsCids.contains(url)) {
-      ipfsCids.add(url);
+  void addIpfsCid(String contentId) {
+    if (!ipfsCids.contains(contentId)) {
+      ipfsCids.add(contentId);
     }
-  }
-
-  void removeIpfsUrl(String url) {
-    ipfsCids.remove(url);
-  }
-
-  void clearipfsCids() {
-    ipfsCids.clear();
   }
 }

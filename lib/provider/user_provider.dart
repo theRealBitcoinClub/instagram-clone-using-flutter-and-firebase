@@ -128,14 +128,20 @@ class UserNotifier extends StateNotifier<UserState> {
     if (state.user == null) return "user is null";
 
     try {
-      // Create a copy of the user with the new IPFS URL
-      final updatedUser = state.user!.copyWith(ipfsCids: [...state.user!.ipfsCids, cid]);
+      int oldLength = state.user!.ipfsCids.length;
+      //AVOID DUPLICATES
+      state.user!.addIpfsCid(cid);
+      int newLength = state.user!.ipfsCids.length;
+      // // Create a copy of the user with the new IPFS URL
+      // final updatedUser = state.user!.copyWith(ipfsCids: [...state.user!.ipfsCids, cid]);
 
       // Save to Firebase
-      final userService = UserService();
-      await userService.saveUser(updatedUser);
-      // Update local state
-      state = state.copyWith(user: updatedUser);
+      // final userService = UserService();
+      if (oldLength != newLength) {
+        await UserService().saveUser(state.user!);
+        // Update local state
+        state = state.copyWith(user: state.user!);
+      }
       return "success";
     } catch (e) {
       print("Error adding IPFS URL: $e");

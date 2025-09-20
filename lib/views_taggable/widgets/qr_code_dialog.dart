@@ -1,3 +1,5 @@
+// lib/views_taggable/widgets/qr_code_dialog.dart
+
 import 'dart:async';
 
 import 'package:bitcoin_base/bitcoin_base.dart';
@@ -38,7 +40,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   late bool _isCashtokenFormat;
   late Future<void> _initFuture;
   Timer? _balanceRefreshTimer;
-  final Duration _refreshInterval = Duration(seconds: kDebugMode ? 60 : 3);
+  final Duration _refreshInterval = Duration(seconds: kDebugMode ? 3 : 3);
   bool _isToggleEnabled = true;
 
   @override
@@ -119,7 +121,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   void _startBalanceRefresh(bool isCashtokenTab) {
     _balanceRefreshTimer?.cancel();
 
-    final profileNotifier = ref.read(profileCreatorStateProvider.notifier);
+    final profileNotifier = ref.read(profileDataProvider.notifier);
     final isAutoRefreshRunning = profileNotifier.isAutoRefreshRunning();
 
     // Only start refresh timer if general auto-refresh isn't running
@@ -131,7 +133,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   }
 
   void _refreshBalance(bool isCashtokenTab) {
-    final profileNotifier = ref.read(profileCreatorStateProvider.notifier);
+    final profileNotifier = ref.read(profileDataProvider.notifier);
 
     if (isCashtokenTab) {
       profileNotifier.refreshMahakkaBalance();
@@ -155,19 +157,17 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   }
 
   String _formatBalance(int balance) {
-    // Format with thousand separators (no decimals)
     return balance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
   }
 
   String _getBalanceText(bool isCashtokenTab, MemoModelCreator? creator) {
     if (isCashtokenTab) {
-      // Mahakka balance (BCH & Tokens)
-      final balance = creator?.balanceBch ?? 0;
-      return 'Balance: ${_formatBalance(balance)}';
+      final bch = creator?.balanceBch ?? 0;
+      final token = creator?.balanceToken ?? 0;
+      return 'BCH: ${_formatBalance(bch)} sats  -  ${MemoBitcoinBase.tokenTicker}: ${_formatBalance(token)} token';
     } else {
-      // Memo balance
       final balance = creator?.balanceMemo ?? 0;
-      return 'Balance: ${_formatBalance(balance)}';
+      return 'Balance: ${_formatBalance(balance)} sats';
     }
   }
 
@@ -176,8 +176,10 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
     final TextTheme textTheme = theme.textTheme;
-    // Watch for creator updates
-    final creatorState = ref.watch(profileCreatorStateProvider);
+
+    // Watch for creator updates using the new provider
+    final profileData = ref.watch(profileDataProvider);
+    final creator = profileData.value?.creator;
 
     return FutureBuilder(
       future: _initFuture,
@@ -198,14 +200,15 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
           );
         }
 
+        final String addressShorter = _isCashtokenFormat ? widget.cashtokenAddress! : convertToBchFormat(widget.legacyAddress).substring(12);
         final String addressToShow = _isCashtokenFormat ? widget.cashtokenAddress! : convertToBchFormat(widget.legacyAddress);
         final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo";
-        final String balanceText = _getBalanceText(_isCashtokenFormat, creatorState.value);
+        final String balanceText = _getBalanceText(_isCashtokenFormat, creator);
 
         return Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(25, 20, 25, 30),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -216,7 +219,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                     Expanded(
                       child: Text(
                         balanceText,
-                        style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+                        style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: colorScheme.onSurface),
                       ),
                     ),
                     IconButton(
@@ -229,7 +232,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                   ],
                 ),
 
-                if (_isToggleEnabled) const SizedBox(height: 16),
+                if (_isToggleEnabled) const SizedBox(height: 6),
 
                 // Tab-like selector
                 if (_isToggleEnabled) _buildTabSelector(theme, colorScheme),
@@ -267,16 +270,18 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 
                 const SizedBox(height: 20),
 
-                // Address text - single line with ellipsis
+                // Address text
                 SizedBox(
                   width: double.infinity,
-                  child: Tooltip(
-                    message: addressToShow,
-                    child: Text(
-                      addressToShow,
-                      style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
+                  child: Center(
+                    child: Tooltip(
+                      message: addressToShow,
+                      child: Text(
+                        addressShorter,
+                        style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
                   ),
                 ),
@@ -291,7 +296,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                         onPressed: () => _copyToClipboard(context, addressToShow, "Address copied!"),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colorScheme.primary,
-                          foregroundColor: Colors.white, // White text and icon
+                          foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
@@ -304,8 +309,8 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                       child: ElevatedButton.icon(
                         onPressed: () => _shareAddress(addressToShow),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.yellow[900], // Dark yellow background
-                          foregroundColor: Colors.white, // White text and icon
+                          backgroundColor: Colors.yellow[900],
+                          foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
@@ -359,19 +364,6 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
           // CashToken Address Tab (BCH & Token)
           Expanded(
             child: GestureDetector(
-              // onDoubleTap: () {
-              //   if (_isCashtokenFormat) {
-              //     WebViewNavigationHelper.navigateToWebView(ref, WebViewShow.url, MemoBitcoinBase.tokenUrl);
-              //     // launchUrl(Uri.parse(MemoBitcoinBase.tokenUrl));
-              //   } else {
-              //     WebViewNavigationHelper.navigateToWebView(
-              //       ref,
-              //       WebViewShow.url,
-              //       MemoBitcoinBase.memoExplorerUrlPrefix + widget.memoProfileId + MemoBitcoinBase.memoExplorerUrlSuffix,
-              //     );
-              //     // launchUrl(Uri.parse(MemoBitcoinBase.memoExplorerUrlPrefix + widget.memoProfileId + MemoBitcoinBase.memoExplorerUrlSuffix));
-              //   }
-              // },
               onTap: () {
                 if (!_isCashtokenFormat) {
                   _toggleFormat(true);

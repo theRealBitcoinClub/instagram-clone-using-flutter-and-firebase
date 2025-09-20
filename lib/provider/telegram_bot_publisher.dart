@@ -4,7 +4,7 @@ import 'package:mahakka/provider/user_provider.dart';
 import 'package:telegram/telegram.dart';
 
 import '../memo/model/memo_model_creator.dart';
-import '../providers/creator_cache_provider.dart';
+import '../repositories/creator_repository.dart';
 import '../widgets/popularity_score_widget.dart';
 import 'bch_burner_balance_provider.dart';
 
@@ -26,7 +26,7 @@ class TelegramBotPublisher {
       Telegram.setBotToken(token);
 
       var user = ref.read(userProvider)!;
-      MemoModelCreator? creator = await ref.read(creatorCacheRepositoryProvider).getCreator(user.id);
+      MemoModelCreator? creator = await ref.read(creatorRepositoryProvider).getCreator(user.id);
 
       if (creator == null) {
         throw Exception('Creator not found for user ${user.id}');

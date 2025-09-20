@@ -59,24 +59,21 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: GestureDetector(
-                        onTap: () => WebViewNavigationHelper.navigateToWebView(
-                          ref,
-                          WebViewShow.url,
-                          MemoBitcoinBase.explorerUrl + creator.bchAddressCashtokenAware,
-                        ),
+                        onTap: () =>
+                            WebViewNavigator.navigateTo(ref, WebViewShow.url, MemoBitcoinBase.explorerUrl + creator.bchAddressCashtokenAware),
 
                         child: StatWidget(title: 'BCH', count: creator.balanceBch, theme: theme),
                       ),
                     ),
                     Expanded(
                       child: GestureDetector(
-                        onTap: () => WebViewNavigationHelper.navigateToWebView(ref, WebViewShow.url, MemoBitcoinBase.tokenUrl),
+                        onTap: () => WebViewNavigator.navigateTo(ref, WebViewShow.url, MemoBitcoinBase.tokenUrl),
                         child: StatWidget(title: MemoBitcoinBase.tokenTicker, count: creator.balanceToken, theme: theme),
                       ),
                     ),
                     Expanded(
                       child: GestureDetector(
-                        onTap: () => WebViewNavigationHelper.navigateToWebView(
+                        onTap: () => WebViewNavigator.navigateTo(
                           ref,
                           WebViewShow.url,
                           MemoBitcoinBase.memoExplorerUrlPrefix + creator.id + MemoBitcoinBase.memoExplorerUrlSuffix,

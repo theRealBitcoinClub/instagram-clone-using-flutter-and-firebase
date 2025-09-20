@@ -1,18 +1,19 @@
+// lib/widgets/profile/profile_content_list.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/config_whitelist.dart';
 import 'package:mahakka/expandable_text_custom.dart';
 import 'package:mahakka/external_browser_launcher.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/providers/webview_providers.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 import 'package:mahakka/widgets/unified_video_player.dart';
+import 'package:mahakka/youtube_video_checker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
-
-import '../../providers/webview_providers.dart';
-import '../../youtube_video_checker.dart';
 
 void _logListError(String message, [dynamic error, StackTrace? stackTrace]) {
   print('ERROR: ProfileContentList - $message');
@@ -79,14 +80,14 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
     }
 
     return SliverList(
-      delegate: SliverChildBuilderDelegate(childCount: widget.posts.length, (context, index) {
+      delegate: SliverChildBuilderDelegate((context, index) {
         final post = widget.posts[index];
         if (widget.isYouTubeList && widget.showMedia) {
           return _buildVideoListItem(context, theme, post);
         } else {
           return _buildTextOnlyListItem(context, theme, post);
         }
-      }),
+      }, childCount: widget.posts.length),
     );
   }
 
@@ -105,11 +106,11 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
         skipLoadingOnRefresh: true,
         skipLoadingOnReload: true,
         skipError: true,
-        loading: () => SizedBox.shrink(),
-        error: (error, stack) => SizedBox.shrink(),
+        loading: () => const SizedBox.shrink(),
+        error: (error, stack) => const SizedBox.shrink(),
         data: (isAvailable) {
           if (!isAvailable) {
-            return SizedBox.shrink();
+            return const SizedBox.shrink();
           }
 
           return Card(
@@ -216,7 +217,6 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
             const SizedBox(height: 4),
             expandableTextCustom(post, theme, context),
             const SizedBox(height: 10),
-            // Divider(color: theme.dividerColor.withOpacity(0.3), height: 1),
           ],
         ),
       ),
@@ -229,7 +229,6 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
       expandText: ' show more',
       collapseText: 'show less',
       maxLines: 5,
-      //TODO WHAT IS LINKCOLOR
       linkColor: theme.colorScheme.onTertiaryFixedVariant,
       style: theme.textTheme.bodyMedium?.copyWith(
         fontFamily: "Open Sans",
@@ -239,34 +238,21 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
       ),
       hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
       onHashtagTap: (String hashtag) {
-        // ref.read(topicIdProvider.notifier).state = null;
-        // ref.read(tagIdProvider.notifier).state = hashtag;
-        // ref.read(tabIndexProvider.notifier).setTab(AppTab.memo.tabIndex); // Switch to webview tab
-        WebViewNavigationHelper.navigateToWebView(ref, WebViewShow.tag, hashtag);
-        // _logListError('Hashtag tapped: $hashtag (Action not implemented in this widget)');
+        WebViewNavigator.navigateTo(ref, WebViewShow.tag, hashtag);
         showSnackBar("Loading $hashtag charts!", context, type: SnackbarType.success);
-        showSnackBar("${hashtag} charts are loading...", context, type: SnackbarType.info);
-        // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on hashtag: $hashtag')));
+        showSnackBar("$hashtag charts are loading...", context, type: SnackbarType.info);
       },
-      //TODO VERIFY THIS
       mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
       urlStyle: buildUrlStyle(theme),
       onUrlTap: (String url) async {
         await _onUrlTap(url, context);
       },
-
       prefixText: post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null,
       prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
       onPrefixTap: () {
-        WebViewNavigationHelper.navigateToWebView(ref, WebViewShow.topic, post.topicId);
+        WebViewNavigator.navigateTo(ref, WebViewShow.topic, post.topicId);
         showSnackBar("Loading ${post.topicId} charts!", context, type: SnackbarType.success);
         showSnackBar("${post.topicId} charts are loading...", context, type: SnackbarType.info);
-        // // Set the topic provider and switch to webview tab
-        // ref.read(tagIdProvider.notifier).state = null;
-        // ref.read(topicIdProvider.notifier).state = post.topicId;
-        // ref.read(tabIndexProvider.notifier).setTab(3); // Switch to webview tab
-        // _logListError("Topic prefix tapped: ${post.topicId} (Action not implemented in this widget)");
-        // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Tapped on topic: ${post.topicId}')));
       },
     );
   }

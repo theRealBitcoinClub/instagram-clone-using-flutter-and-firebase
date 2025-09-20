@@ -1,3 +1,5 @@
+// lib/widgets/profile/settings_widget.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
@@ -319,7 +321,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         minimumSize: const Size(double.infinity, 44),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         side: BorderSide(color: theme.colorScheme.outline),
-        foregroundColor: theme.colorScheme.onSurface, // Uses theme's error color (often red)
+        foregroundColor: theme.colorScheme.onSurface,
       ),
       child: Text("CANCEL", style: TextStyle(color: theme.colorScheme.onSurface)),
     );
@@ -415,7 +417,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         ref.read(userProvider)!.temporaryTipReceiver = null;
         ref.read(userProvider)!.temporaryTipAmount = null;
         ref.invalidate(userProvider);
-        ref.invalidate(profileCreatorStateProvider);
+        ref.invalidate(profileDataProvider); // Changed from profileCreatorStateProvider
 
         onSuccess();
       }

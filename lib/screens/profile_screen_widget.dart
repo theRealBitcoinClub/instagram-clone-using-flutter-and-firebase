@@ -1,26 +1,27 @@
+// lib/widgets/profile/profile_screen_widget.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/provider/navigation_providers.dart';
+import 'package:mahakka/provider/profile_providers.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/sliver_app_bar_delegate.dart';
 import 'package:mahakka/utils/snackbar.dart';
+import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
+import 'package:mahakka/widgets/image_detail_dialog.dart';
+import 'package:mahakka/widgets/post_dialog.dart';
 import 'package:mahakka/widgets/profile/posts_categorizer.dart';
+import 'package:mahakka/widgets/profile/profile_app_bar.dart';
+import 'package:mahakka/widgets/profile/profile_content_grid.dart';
+import 'package:mahakka/widgets/profile/profile_content_list.dart';
+import 'package:mahakka/widgets/profile/profile_header.dart';
+import 'package:mahakka/widgets/profile/profile_placeholders.dart';
+import 'package:mahakka/widgets/profile/profile_tab_selector.dart';
 import 'package:mahakka/widgets/profile/settings_widget.dart';
 import 'package:mahakka/widgets/profile/youtube_controller_manager.dart';
-
-import '../memo/model/memo_model_user.dart';
-import '../provider/profile_providers.dart';
-import '../views_taggable/widgets/qr_code_dialog.dart';
-import '../widgets/image_detail_dialog.dart';
-import '../widgets/post_dialog.dart';
-import '../widgets/profile/profile_app_bar.dart';
-import '../widgets/profile/profile_content_grid.dart';
-import '../widgets/profile/profile_content_list.dart';
-import '../widgets/profile/profile_header.dart';
-import '../widgets/profile/profile_placeholders.dart';
-import '../widgets/profile/profile_tab_selector.dart';
 
 class ProfileScreenWidget extends ConsumerStatefulWidget {
   const ProfileScreenWidget({Key? key}) : super(key: key);
@@ -36,13 +37,10 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   bool isRefreshingProfile = false;
   bool allowLogout = false;
 
-  late PostsCategorizer _postsCategorizer;
-
   @override
   void initState() {
     super.initState();
     _viewMode.addListener(_onViewModeChanged);
-    _postsCategorizer = PostsCategorizer(imagePosts: [], videoPosts: [], taggedPosts: [], topicPosts: []);
   }
 
   @override
@@ -60,47 +58,71 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     }
   }
 
-  void refreshCreatorProfile(String profileId) {
-    final profileProvider = ref.read(profileCreatorStateProvider.notifier);
-    profileProvider.refreshUserRegisteredFlag();
-    profileProvider.refreshCreatorCache(profileId);
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final loggedInUser = ref.watch(userProvider);
-    final creatorAsyncValue = ref.watch(profileCreatorStateProvider);
-    final postsAsyncValue = ref.watch(postsStreamProvider);
+    // final profileDataAsync = ref.watch(profileDataProvider);
     final currentTabIndex = ref.watch(tabIndexProvider);
 
-    return creatorAsyncValue.when(
-      skipLoadingOnReload: true,
-      skipLoadingOnRefresh: true,
-      data: (creator) => _buildProfileScreen(creator, loggedInUser, postsAsyncValue, currentTabIndex, theme),
-      loading: () => ProfileLoadingScaffold(theme: theme, message: "Loading Profile..."),
-      error: (error, stack) =>
-          ProfileErrorScaffold(theme: theme, message: "Error loading profile: $error", onRetry: () => ref.refresh(profileCreatorStateProvider)),
+    return Consumer(
+      builder: (context, ref, child) {
+        final profileDataAsync = ref.watch(profileDataProvider);
+
+        return profileDataAsync.when(
+          // skipLoadingOnReload: true,
+          // skipLoadingOnRefresh: true,
+          data: (profileData) => _buildProfileScreen(profileData, loggedInUser, currentTabIndex, theme),
+          loading: () => ProfileLoadingScaffold(theme: theme, message: "Loading Profile..."),
+          error: (error, stack) =>
+              ProfileErrorScaffold(theme: theme, message: "Error loading profile: $error", onRetry: () => ref.invalidate(profileDataProvider)),
+        );
+      },
     );
+    // return profileDataAsync.when(
+    //   // skipLoadingOnReload: true,
+    //   // skipLoadingOnRefresh: true,
+    //   data: (profileData) => _buildProfileScreen(profileData, loggedInUser, currentTabIndex, theme),
+    //   loading: () => ProfileLoadingScaffold(theme: theme, message: "Loading Profile..."),
+    //   error: (error, stack) => ProfileErrorScaffold(theme: theme, message: "Error loading profile: $error", onRetry: () => _safeRefresh),
+    // );
   }
 
-  Widget _buildProfileScreen(
-    MemoModelCreator? creator,
-    MemoModelUser? loggedInUser,
-    AsyncValue<List<MemoModelPost>> postsAsyncValue,
-    int currentTabIndex,
-    ThemeData theme,
-  ) {
+  // void _safeRefresh() {
+  //   Future.microtask(() {
+  //     ref.refresh(profileDataProvider);
+  //   });
+  // }
+
+  // Fix the refresh method
+  Future<void> _refreshData() async {
+    try {
+      await ref.refresh(profileDataProvider.future);
+    } catch (e) {
+      print("Error refreshing profile data: $e");
+    }
+  }
+
+  // Fix safeRefresh
+  void _safeRefresh() {
+    Future.microtask(() {
+      ref.refresh(profileDataProvider);
+    });
+  }
+
+  Widget _buildProfileScreen(ProfileData profileData, MemoModelUser? loggedInUser, int currentTabIndex, ThemeData theme) {
+    final creator = profileData.creator;
     if (creator == null) {
-      return ProfileErrorScaffold(
-        theme: theme,
-        message: "Profile not found or an error occurred.",
-        onRetry: () => ref.refresh(profileCreatorStateProvider),
-      );
+      return ProfileErrorScaffold(theme: theme, message: "Profile not found or an error occurred.", onRetry: () => _safeRefresh);
     }
 
     final isOwnProfile = loggedInUser?.profileIdMemoBch == creator.id;
-    _handleTabLogic(currentTabIndex, creator.id, isOwnProfile);
+    // _handleTabLogic(currentTabIndex, creator.id, isOwnProfile);
+
+    // Schedule tab logic to run after build
+    Future.microtask(() {
+      ref.read(profileDataProvider.notifier).refreshProfileDataAndStartBalanceTimer(currentTabIndex, creator.id, isOwnProfile);
+    });
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -114,32 +136,23 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
           slivers: [
             SliverToBoxAdapter(child: _buildProfileHeader(creator, isOwnProfile, theme)),
             _buildTabSelector(),
-            _buildContent(theme, postsAsyncValue, creator),
+            _buildContent(theme, profileData),
           ],
         ),
       ),
     );
   }
 
-  void _handleTabLogic(int currentTabIndex, String profileId, bool isOwnProfile) {
-    if (currentTabIndex == 2) {
-      if (!isRefreshingProfile) {
-        isRefreshingProfile = true;
-        refreshCreatorProfile(profileId);
-        isRefreshingProfile = false;
-      }
-      if (isOwnProfile) {
-        ref.read(profileCreatorStateProvider.notifier).startAutoRefreshBalanceProfile();
-      }
-    } else {
-      ref.read(profileCreatorStateProvider.notifier).stopAutoRefreshBalanceProfile();
-    }
-  }
+  // In your _ProfileScreenWidgetState class
 
-  Future<void> _refreshData() async {
-    ref.refresh(profileCreatorStateProvider);
-    ref.refresh(postsStreamProvider);
-  }
+  // Future<void> _refreshData() async {
+  //   try {
+  //     _safeRefresh();
+  //   } catch (e) {
+  //     print("Error refreshing profile data: $e");
+  //     // Don't rethrow, let the error handler show the retry button
+  //   }
+  // }
 
   Widget _buildProfileHeader(MemoModelCreator creator, bool isOwnProfile, ThemeData theme) {
     return ProfileHeader(
@@ -174,23 +187,23 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     );
   }
 
-  Widget _buildContent(ThemeData theme, AsyncValue<List<MemoModelPost>> postsAsyncValue, MemoModelCreator creator) {
-    return postsAsyncValue.when(
-      data: (posts) => _buildPostsContent(theme, posts, creator),
-      loading: () => _buildLoadingContent(theme),
-      error: (error, stack) => _buildErrorContent(error, theme),
-    );
+  Widget _buildContent(ThemeData theme, ProfileData profileData) {
+    // Show loading indicator if posts are being categorized or data is incomplete
+    if (profileData.isLoading || profileData.categorizer.isEmpty) {
+      return _buildLoadingContent(theme);
+    }
+
+    return _buildPostsContent(theme, profileData);
   }
 
-  Widget _buildPostsContent(ThemeData theme, List<MemoModelPost> posts, MemoModelCreator creator) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _categorizePosts(posts);
-    });
-
+  Widget _buildPostsContent(ThemeData theme, ProfileData profileData) {
     return ValueListenableBuilder<int>(
       valueListenable: _viewMode,
       builder: (context, viewMode, child) {
-        return _buildSliverCategorizedView(theme, creator, viewMode);
+        return KeyedSubtree(
+          key: ValueKey('${profileData.creator!.id}_$viewMode'), // Unique key per profile and view mode
+          child: _buildSliverCategorizedView(theme, profileData.creator!, profileData.categorizer, viewMode),
+        );
       },
     );
   }
@@ -202,43 +215,27 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     );
   }
 
-  Widget _buildErrorContent(dynamic error, ThemeData theme) {
-    return EmptySliverContent(message: 'Error loading posts. ${error.toString()}', theme: theme, icon: Icons.error_outline);
-  }
-
-  Widget _buildSliverCategorizedView(ThemeData theme, MemoModelCreator creator, int viewMode) {
+  Widget _buildSliverCategorizedView(ThemeData theme, MemoModelCreator creator, PostsCategorizer categorizer, int viewMode) {
     switch (viewMode) {
       case 0: // Images
-        return ProfileContentGrid(posts: _postsCategorizer.imagePosts, onPostImageTap: _showPostDialog);
+        return ProfileContentGrid(posts: categorizer.imagePosts, onPostImageTap: (index) => _showPostDialog(categorizer.imagePosts, index));
       case 1: // Videos
         return ProfileContentList.youTube(
-          posts: _postsCategorizer.videoPosts,
+          posts: categorizer.videoPosts,
           ytControllerNotifiers: _ytManager.controllers,
           creatorName: creator.name,
         );
       case 2: // Tagged (text only)
-        return ProfileContentList.generic(posts: _postsCategorizer.taggedPosts, creatorName: creator.name);
+        return ProfileContentList.generic(posts: categorizer.taggedPosts, creatorName: creator.name);
       case 4: // Topics (text only)
-        return ProfileContentList.generic(posts: _postsCategorizer.topicPosts, creatorName: creator.name);
+        return ProfileContentList.generic(posts: categorizer.topicPosts, creatorName: creator.name);
       default:
         return EmptySliverContent(message: "Select a view to see posts.", theme: theme);
     }
   }
 
-  void _showPostDialog(int index) {
-    showPostImageFullscreenWidget(context: context, theme: Theme.of(context), posts: _postsCategorizer.imagePosts, initialIndex: index);
-    // showPostDialog(context: context, theme: Theme.of(context), post: post, creator: post.creator);
-  }
-
-  void _categorizePosts(List<MemoModelPost> allPosts) {
-    final newCategorizer = PostsCategorizer.fromPosts(allPosts);
-    _ytManager.cleanupUnused(newCategorizer.videoPosts);
-
-    if (_postsCategorizer.hasChanged(newCategorizer)) {
-      setState(() {
-        _postsCategorizer = newCategorizer;
-      });
-    }
+  void _showPostDialog(List<MemoModelPost> posts, int index) {
+    showPostImageFullscreenWidget(context: context, theme: Theme.of(context), posts: posts, initialIndex: index);
   }
 
   void _showSettings(MemoModelCreator creator) {

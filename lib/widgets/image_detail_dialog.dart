@@ -42,13 +42,14 @@ class _ImageDetailDialogState extends State<ImageDetailDialog> {
   @override
   Widget build(BuildContext context) {
     return SimpleDialog(
-      contentPadding: const EdgeInsets.all(10),
-      backgroundColor: widget.theme.colorScheme.surfaceVariant.withOpacity(0.95),
+      contentPadding: const EdgeInsets.all(20),
+      backgroundColor: Colors.black87,
+      // backgroundColor: widget.theme.colorScheme.surfaceVariant.withOpacity(0.95),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       children: [
         CircleAvatar(
           radius: 130,
-          backgroundColor: widget.theme.colorScheme.surface,
+          backgroundColor: Colors.black87,
           backgroundImage: widget.getShowDefaultAvatar() || widget.creator.profileImageDetail().isEmpty
               ? const AssetImage("assets/images/default_profile.png") as ImageProvider
               : NetworkImage(widget.creator.profileImageDetail()),

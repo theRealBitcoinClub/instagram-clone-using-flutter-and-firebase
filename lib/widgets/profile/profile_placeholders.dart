@@ -24,14 +24,15 @@ class ProfileLoadingScaffold extends StatelessWidget {
         // title: Text(message, style: theme.appBarTheme.titleTextStyle),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 20),
-            Text(message, style: theme.textTheme.titleMedium),
-          ],
-        ),
+        child: Image.asset("assets/icon_round_200.png", height: 120),
+        // Column(
+        //   mainAxisAlignment: MainAxisAlignment.center,
+        //   children: [
+        //     const CircularProgressIndicator(),
+        //     const SizedBox(height: 20),
+        //     Text(message, style: theme.textTheme.titleMedium),
+        //   ],
+        // ),
       ),
     );
   }

@@ -1,14 +1,15 @@
+// lib/widgets/profile/profile_app_bar.dart
+
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
-import 'package:mahakka/provider/navigation_providers.dart'; // Import for profileTargetIdProvider
+import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/providers/webview_providers.dart';
 import 'package:mahakka/tab_item_data.dart';
 
 import '../../provider/profile_providers.dart';
 
 class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
-  // Changed to ConsumerWidget
   final MemoModelCreator? creator;
   final bool isOwnProfile;
   final VoidCallback onShowBchQrDialog;
@@ -17,7 +18,6 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Added WidgetRef ref
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
 
@@ -37,9 +37,7 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
           ? TextButton(
               onPressed: () {
                 if (creator?.id != null && creator!.id.isNotEmpty) {
-                  // Redundant check, but safe
-                  WebViewNavigationHelper.navigateToWebView(ref, WebViewShow.url, "https://memo.cash/profile/${creator!.id}");
-                  // launchUrl(Uri.parse("https://memo.cash/profile/${creator!.id}"));
+                  WebViewNavigator.navigateTo(ref, WebViewShow.url, "https://memo.cash/profile/${creator!.id}");
                 }
               },
               style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
@@ -63,14 +61,18 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
       actions: [
         if (isOwnProfile)
           IconButton(icon: const Icon(Icons.qr_code_scanner_rounded), tooltip: "Show Deposit QR", onPressed: onShowBchQrDialog)
-        else // Show "Home/My Profile" button if not own profile
+        else
           IconButton(
-            icon: const Icon(Icons.home_filled), // Or Icons.person_outline for "My Profile"
+            icon: const Icon(Icons.home_filled),
             tooltip: "View My Profile",
             onPressed: () {
               ref.read(profileTargetIdProvider.notifier).state = null;
-              ref.refresh(profileCreatorStateProvider);
-              ref.refresh(postsStreamProvider);
+              // ref.refresh(profileDataProvider); // Changed from profileCreatorStateProvider
+              // Force a complete refresh and UI rebuild
+              Future.microtask(() {
+                ref.invalidate(profileDataProvider); // Invalidate first
+                ref.refresh(profileDataProvider); // Then refresh
+              });
             },
           ),
       ],

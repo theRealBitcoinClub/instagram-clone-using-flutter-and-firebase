@@ -11,9 +11,9 @@ import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/firebase/user_service.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo_data_checker.dart';
-import 'package:mahakka/providers/creator_cache_provider.dart';
 
 import '../../provider/electrum_provider.dart';
+import '../../repositories/creator_repository.dart';
 
 part 'memo_model_creator.g.dart'; // This will be generated
 
@@ -216,6 +216,8 @@ class MemoModelCreator {
   int get hashCode => id.hashCode;
 
   Future<void> refreshUserHasRegistered(Ref ref) async {
+    if (hasRegisteredAsUser) return;
+
     MemoModelUser? userData = null;
     if (bchAddressCashtokenAware.isEmpty) {
       userData = await UserService().getUserOnce(id);
@@ -226,7 +228,7 @@ class MemoModelCreator {
       // return true; //TODO store the userdata in local cache same as creator to avoid repeating requests for each post
     }
     //TODO check if data changed before save
-    ref.read(creatorCacheRepositoryProvider).saveCreator(this);
+    ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: hasRegisteredAsUser);
 
     refreshBalances(ref);
   }
@@ -239,7 +241,7 @@ class MemoModelCreator {
       await refreshBalanceMemo(ref);
     }
     //TODO check if balance changed before save
-    ref.read(creatorCacheRepositoryProvider).saveCreator(this);
+    ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: false);
   }
 
   //TODO why is debouncer not working as expected

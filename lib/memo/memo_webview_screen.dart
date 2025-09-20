@@ -603,8 +603,8 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                       }
 
                       setState(() {
-                        if (ref.read(tabIndexProvider) == AppTab.memo.tabIndex)
-                          showSnackBar("Enjoy the content!", context, type: SnackbarType.success);
+                        // if (ref.read(tabIndexProvider) == AppTab.memo.tabIndex)
+                        // showSnackBar("Enjoy the content!", context, type: SnackbarType.success);
                         _updateCurrentPath(url.toString());
                         // Only hide loading if CSS injection is complete
                         _isLoading = !_cssInjected;

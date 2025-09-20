@@ -183,29 +183,3 @@ class MemoCreatorScraper {
     return creator; // Return the mutated creator
   }
 }
-
-// --- Assumptions for MemoModelCreator ---
-// class MemoModelCreator {
-//   final String id;
-//   String? name;
-//   String? profileText;
-//   int? followerCount;
-//   int? actions;
-//   String? created;
-//   String? lastActionDate;
-
-//   MemoModelCreator({
-//     required this.id,
-//     this.name,
-//     this.profileText,
-//     this.followerCount,
-//     this.actions,
-//     this.created,
-//     this.lastActionDate,
-//   });
-
-//   @override
-//   String toString() {
-//     return 'MemoModelCreator(id: $id, name: $name, followers: $followerCount, actions: $actions)';
-//   }
-// }

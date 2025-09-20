@@ -6,159 +6,245 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/provider/navigation_providers.dart'; // Import the source of truth
+import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/repositories/creator_repository.dart';
 import 'package:mahakka/repositories/post_repository.dart';
+import 'package:mahakka/widgets/profile/posts_categorizer.dart';
 
-// An internal provider that provides the current profile ID to watch
+// Provider for the current profile ID
 final _currentProfileIdProvider = Provider<String?>((ref) {
   final loggedInUser = ref.watch(userProvider);
   return ref.watch(profileTargetIdProvider) ?? loggedInUser?.profileIdMemoBch;
 });
 
-final currentProfileCreatorProvider = Provider<MemoModelCreator?>((ref) {
-  return ref.read(profileCreatorStateProvider.notifier).getCurrentCreator();
-});
+// Combined provider that ensures posts are only loaded after creator is loaded
+final profileDataProvider = AsyncNotifierProvider<ProfileDataNotifier, ProfileData>(() => ProfileDataNotifier());
 
-// Provides the creator's data for the profile screen, automatically re-fetching
-// when the profile ID changes.
-final profileCreatorStateProvider = AsyncNotifierProvider<CreatorNotifier, MemoModelCreator?>(() => CreatorNotifier());
+class ProfileData {
+  final MemoModelCreator? creator;
+  final List<MemoModelPost> posts;
+  final PostsCategorizer categorizer;
+  final bool fromCache;
 
-class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
+  ProfileData({required this.creator, required this.posts, required this.categorizer, this.fromCache = false});
+
+  bool get isLoading => creator == null || posts.isEmpty;
+  bool get hasData => creator != null && posts.isNotEmpty;
+}
+
+class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   Timer? _balanceRefreshTimer;
   Timer? _mahakkaBalanceRefreshTimer;
   Timer? _memoBalanceRefreshTimer;
-  Duration _refreshBalanceInterval = Duration(seconds: kDebugMode ? 60 : 5);
-
-  DateTime? _lastRefreshTime;
+  Duration _refreshBalanceInterval = Duration(seconds: kDebugMode ? 5 : 5);
   bool _isAutoRefreshRunning = false;
-
-  MemoModelCreator? getCurrentCreator() {
-    if (state is AsyncData<MemoModelCreator?>) {
-      return (state as AsyncData<MemoModelCreator?>).value;
-    }
-    return null;
-  }
+  DateTime? _lastRefreshTime;
+  String? _lastProfileIdPostDataRequest;
+  String? _lastProfileIdRefreshRequest;
+  int? _lastTabIndex;
+  // bool _shouldForceRefresh = false;
+  bool _pendingRefresh = false;
 
   @override
-  Future<MemoModelCreator?> build() async {
-    final creatorId = ref.watch(_currentProfileIdProvider);
+  Future<ProfileData> build() async {
+    final profileId = ref.watch(_currentProfileIdProvider);
 
-    // Debounce rapid rebuilds
+    if (profileId == null || profileId.isEmpty) {
+      return ProfileData(creator: null, posts: [], categorizer: PostsCategorizer.empty());
+    }
+
+    // Handle pending refresh from previous build
+    if (_pendingRefresh) {
+      _pendingRefresh = false;
+      return await _loadProfileData(profileId, forceScrape: true);
+    }
+
+    // Check if we should use cached data
     final now = DateTime.now();
-    if (_lastRefreshTime != null && now.difference(_lastRefreshTime!) < Duration(seconds: 2)) {
-      return state.value; // Return current state if recently refreshed
+    final shouldUseCache =
+        // !_shouldForceRefresh &&
+        _lastProfileIdPostDataRequest == profileId && _lastRefreshTime != null && now.difference(_lastRefreshTime!) < Duration(minutes: 5);
+
+    if (shouldUseCache && state.value != null) {
+      return state.value!;
     }
 
-    _lastRefreshTime = now;
-
-    if (creatorId == null || creatorId.isEmpty) {
-      // Return null or throw a specific error if no ID is available
-      return null;
-    }
-    //TODO WHERE AND WHEN MUST I REFRESH WHAT
-    CreatorRepository creatorRepository = ref.read(creatorRepositoryProvider);
-    // await creatorRepository.refreshCreatorCache(creatorId, () {}, () {});
-    MemoModelCreator? creator = await creatorRepository.getCreator(creatorId);
-    // if (creator!.hasRegisteredAsUser) await creator.refreshBalanceMahakka();
-    // await creator.refreshBalanceMemo();
-    return creator;
+    return await _loadProfileData(profileId, forceScrape: true);
   }
 
-  //TODO MAKE SURE THIS IS ONLY TRIGGERED ON SUCCESS OF PROFILE SAVE
+  Future<ProfileData> _loadProfileData(String profileId, {bool forceScrape = false}) async {
+    _lastProfileIdPostDataRequest = profileId;
+    _lastRefreshTime = DateTime.now();
+    // _shouldForceRefresh = false;
+
+    try {
+      // Load creator from repository
+      final creatorRepo = ref.read(creatorRepositoryProvider);
+      final creator = await creatorRepo.getCreator(profileId, scrapeIfNotFound: false, saveToFirebase: false, forceScrape: forceScrape);
+
+      // Load posts
+      final posts = await _loadPosts(profileId);
+
+      // Categorize posts
+      final categorizer = PostsCategorizer.fromPosts(posts);
+
+      return ProfileData(creator: creator, posts: posts, categorizer: categorizer, fromCache: !forceScrape);
+    } catch (e) {
+      // If we have a previous state, return it as fallback
+      if (state.value != null) {
+        return state.value!;
+      }
+      rethrow;
+    }
+  }
+
+  Future<List<MemoModelPost>> _loadPosts(String profileId) async {
+    try {
+      final postRepository = ref.read(postRepositoryProvider);
+      final postsStream = postRepository.getPostsByCreatorId(profileId);
+
+      // Convert stream to future for initial load with timeout
+      return await postsStream.first.timeout(Duration(seconds: 10));
+    } catch (e) {
+      print('Error loading posts: $e');
+      return [];
+    }
+  }
+
+  Future<void> refreshProfile({bool forceScrape = false}) async {
+    // Schedule the refresh to happen after the current build phase
+    Future.microtask(() async {
+      // _shouldForceRefresh = forceScrape;
+      state = const AsyncValue.loading();
+      state = await AsyncValue.guard(() async {
+        final profileId = ref.read(_currentProfileIdProvider);
+        if (profileId == null || profileId.isEmpty) {
+          return ProfileData(creator: null, posts: [], categorizer: PostsCategorizer.empty());
+        }
+
+        return await _loadProfileData(profileId, forceScrape: forceScrape);
+      });
+    });
+  }
+
   Future<void> refreshCreatorCache(String creatorId) async {
-    CreatorRepository creatorRepository = ref.read(creatorRepositoryProvider);
-    creatorRepository.refreshCreatorCache(
-      creatorId,
-      () {
-        print("refreshCreatorCache fresh scrape success for creatorId ${creatorId}");
-      },
-      () {
-        print("refreshCreatorCache no fresh data avaiable for creatorId ${creatorId}");
-      },
-      () {
-        print("refreshCreatorCache scrape failed for creatorId ${creatorId}");
-      },
-    );
+    final creatorRepository = ref.read(creatorRepositoryProvider);
+
+    // Schedule the operation to happen after build
+    Future.microtask(() async {
+      await creatorRepository.refreshCreatorCache(
+        creatorId,
+        hasUpdatedCallback: () {
+          print("refreshCreatorCache fresh scrape success for creatorId $creatorId");
+          // Schedule the profile refresh after the cache update
+          //TODO IS THIS TRIGGERING A DUPLICATE REFRESH?
+          refreshProfile(forceScrape: false);
+        },
+        nothingChangedCallback: () {
+          print("refreshCreatorCache no fresh data available for creatorId $creatorId");
+        },
+        scrapeFailedCallback: () {
+          print("refreshCreatorCache scrape failed for creatorId $creatorId");
+        },
+      );
+    });
   }
 
-  //TODO this is triggered by the set methods
-  //TODO check if the set methods should be better placed in profile provider
-  // Future<void> refreshProfileImages(String forceImageType) async {
-  //   final creatorId = ref.read(_currentProfileIdProvider);
-  //   if (creatorId != null && creatorId.isNotEmpty) {
-  //     state = const AsyncValue.loading();
-  //     state = await AsyncValue.guard(() async {
-  //       var creator = await ref.read(creatorRepositoryProvider).getCreator(creatorId);
-  //       await creator!.refreshAvatar(forceImageType: forceImageType, forceRefreshAfterProfileUpdate: true);
-  //       //TODO also update the detail
-  //       // await creator!.refreshAvatarDetail(forceImageType: forceImageType, forceRefreshAfterProfileUpdate: true);
-  //       return creator;
-  //     });
-  //   }
-  // }
+  void refreshProfileDataAndStartBalanceTimer(int currentTabIndex, String profileId, bool isOwnProfile) {
+    // Schedule the operation to happen after build
+    Future.microtask(() {
+      if (currentTabIndex == 2) {
+        if (_lastTabIndex != currentTabIndex || _lastProfileIdRefreshRequest != profileId) {
+          refreshUserRegisteredFlag();
+          refreshCreatorCache(profileId);
+        }
+        //TODO call this refreshcreatorcache inside the timer and after save settings
+        if (isOwnProfile) {
+          startAutoRefreshBalanceProfile();
+        }
+        // Set pending refresh flag for next build
+        _pendingRefresh = true;
+        _lastProfileIdRefreshRequest = profileId;
+      } else {
+        stopAutoRefreshBalanceProfile();
+      }
+      _lastTabIndex = currentTabIndex;
+    });
+  }
 
-  // TODO MAKE SURE THIS IS ONLY TRIGGERED ON SUCCESS OF PROFILE SAVE
-  // TODO manually triggered by user refresh pull down in addition to current auto build method call? or just rebuild all on refresh?
   Future<void> refreshUserRegisteredFlag() async {
-    final creatorId = ref.read(_currentProfileIdProvider);
-    if (creatorId != null && creatorId.isNotEmpty) {
-      //TODO  asyncvalue loading seems to triger the watch events cant be used inside build methods
-      // state = const AsyncValue.loading();
-      // state = await AsyncValue.guard(() async {
-      var creator = await ref.read(creatorRepositoryProvider).getCreator(creatorId);
-      await creator!.refreshUserHasRegistered(ref);
-      // return creator;
-      // });
+    final profileId = ref.read(_currentProfileIdProvider);
+    if (profileId != null && profileId.isNotEmpty) {
+      final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId);
+      if (creator != null && !creator.hasRegisteredAsUser) {
+        await creator.refreshUserHasRegistered(ref);
+        // Update state with the refreshed creator
+        final currentData = state.value;
+        if (currentData != null) {
+          state = AsyncValue.data(
+            ProfileData(creator: creator, posts: currentData.posts, categorizer: currentData.categorizer, fromCache: currentData.fromCache),
+          );
+        }
+      }
     }
   }
 
-  // timer triggered
   Future<void> refreshBalances() async {
-    final creatorId = ref.read(_currentProfileIdProvider);
-    if (creatorId != null && creatorId.isNotEmpty) {
-      state = const AsyncValue.loading();
-      state = await AsyncValue.guard(() async {
-        var creator = await ref.read(creatorRepositoryProvider).getCreator(creatorId);
-        await creator!.refreshBalances(ref);
-        return creator;
-      });
+    final profileId = ref.read(_currentProfileIdProvider);
+    if (profileId != null && profileId.isNotEmpty) {
+      final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
+      if (creator != null) {
+        await creator.refreshBalances(ref);
+        // Update state with the refreshed creator
+        final currentData = state.value;
+        if (currentData != null) {
+          state = AsyncValue.data(
+            ProfileData(creator: creator, posts: currentData.posts, categorizer: currentData.categorizer, fromCache: currentData.fromCache),
+          );
+        }
+      }
     }
   }
 
-  // Refresh only Mahakka balance
   Future<void> refreshMahakkaBalance() async {
-    final creatorId = ref.read(_currentProfileIdProvider);
-    if (creatorId != null && creatorId.isNotEmpty && state.value != null) {
-      state = const AsyncValue.loading();
-      state = await AsyncValue.guard(() async {
-        var creator = await ref.read(creatorRepositoryProvider).getCreator(creatorId);
-        await creator!.refreshBalanceMahakka(ref);
-        return creator;
-      });
+    final profileId = ref.read(_currentProfileIdProvider);
+    if (profileId != null && profileId.isNotEmpty) {
+      final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
+      if (creator != null && creator.hasRegisteredAsUser) {
+        await creator.refreshBalanceMahakka(ref);
+        // Update state with the refreshed creator
+        final currentData = state.value;
+        if (currentData != null) {
+          state = AsyncValue.data(
+            ProfileData(creator: creator, posts: currentData.posts, categorizer: currentData.categorizer, fromCache: currentData.fromCache),
+          );
+        }
+      }
     }
   }
 
-  // Refresh only Memo balance
   Future<void> refreshMemoBalance() async {
-    final creatorId = ref.read(_currentProfileIdProvider);
-    if (creatorId != null && creatorId.isNotEmpty && state.value != null) {
-      state = const AsyncValue.loading();
-      state = await AsyncValue.guard(() async {
-        var creator = await ref.read(creatorRepositoryProvider).getCreator(creatorId);
-        await creator!.refreshBalanceMemo(ref);
-        return creator;
-      });
+    final profileId = ref.read(_currentProfileIdProvider);
+    if (profileId != null && profileId.isNotEmpty) {
+      final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
+      if (creator != null) {
+        await creator.refreshBalanceMemo(ref);
+        // Update state with the refreshed creator
+        final currentData = state.value;
+        if (currentData != null) {
+          state = AsyncValue.data(
+            ProfileData(creator: creator, posts: currentData.posts, categorizer: currentData.categorizer, fromCache: currentData.fromCache),
+          );
+        }
+      }
     }
   }
 
-  // Check if auto-refresh is currently running
   bool isAutoRefreshRunning() {
     return _isAutoRefreshRunning;
   }
 
-  // Optional: Method to manually change refresh interval
   void setRefreshInterval(Duration interval) {
     _refreshBalanceInterval = interval;
     // Restart any active timers with new interval
@@ -171,34 +257,28 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
     }
   }
 
-  // Optional: Method to stop automatic refreshing
   void stopAutoRefreshBalanceProfile() {
-    if (!_isAutoRefreshRunning) return; // Don't stop if not running
+    if (!_isAutoRefreshRunning) return;
     _stopAllBalanceTimers(stopProfileRefresh: true);
     _isAutoRefreshRunning = false;
   }
 
-  // Optional: Method to start automatic refreshing (both balances)
   void startAutoRefreshBalanceProfile() {
-    if (_isAutoRefreshRunning) return; // Don't start if already running
+    if (_isAutoRefreshRunning) return;
 
     _stopAllBalanceTimers(stopProfileRefresh: true);
     _isAutoRefreshRunning = true;
     _startBalanceRefreshTimerProfile();
   }
 
-  // Auto-refresh for Mahakka balance only - for QR Code dialog
   void startAutoRefreshMahakkaBalanceQrDialog() {
-    // Only start if auto-refresh isn't already running (i.e., not on profile tab)
     if (!_isAutoRefreshRunning) {
       _stopAllBalanceTimers();
       _startMahakkaBalanceRefreshTimerQrDialog();
     }
   }
 
-  // Auto-refresh for Memo balance only - for QR Code dialog
   void startAutoRefreshMemoBalanceQrDialog() {
-    // Only start if auto-refresh isn't already running (i.e., not on profile tab)
     if (!_isAutoRefreshRunning) {
       _stopAllBalanceTimers();
       _startMemoBalanceRefreshTimerQrDialog();
@@ -206,10 +286,7 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
   }
 
   void _startBalanceRefreshTimerProfile() {
-    // Cancel any existing timer
     _balanceRefreshTimer?.cancel();
-
-    // Start a new periodic timer
     _balanceRefreshTimer = Timer.periodic(_refreshBalanceInterval, (_) async {
       await _refreshBalancesPeriodicallyOnProfile();
     });
@@ -243,36 +320,37 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
   }
 
   Future<void> _refreshBalancesPeriodicallyOnProfile() async {
-    final creatorId = ref.read(_currentProfileIdProvider);
-    if (creatorId == null || creatorId.isEmpty || state.isLoading) {
-      return; // Skip if no creator ID or already loading
-    }
-
-    try {
-      // Get the current creator to check if we need to refresh
-      final currentCreator = state.value;
-      if (currentCreator != null) {
-        // Only refresh if the creator is a registered user
-        // if (currentCreator.hasRegisteredAsUser) {
-        await refreshBalances();
-        // }
-      }
-    } catch (e) {
-      print('Periodic balance refresh failed: $e');
-      // Don't update state on periodic refresh failures to avoid UI disruption
-    }
-  }
-
-  Future<void> _refreshMahakkaBalancePeriodicallyOnQrDialog() async {
-    final creatorId = ref.read(_currentProfileIdProvider);
-    if (creatorId == null || creatorId.isEmpty || state.isLoading) {
+    final profileId = ref.read(_currentProfileIdProvider);
+    if (profileId == null || profileId.isEmpty || state.isLoading) {
       return;
     }
 
     try {
-      final currentCreator = state.value;
-      if (currentCreator != null && currentCreator.hasRegisteredAsUser) {
-        await refreshMahakkaBalance();
+      final currentData = state.value;
+      if (currentData != null && currentData.creator != null) {
+        // Schedule balance refresh after build
+        Future.microtask(() async {
+          await refreshBalances();
+        });
+      }
+    } catch (e) {
+      print('Periodic balance refresh failed: $e');
+    }
+  }
+
+  Future<void> _refreshMahakkaBalancePeriodicallyOnQrDialog() async {
+    final profileId = ref.read(_currentProfileIdProvider);
+    if (profileId == null || profileId.isEmpty || state.isLoading) {
+      return;
+    }
+
+    try {
+      final currentData = state.value;
+      if (currentData != null && currentData.creator != null && currentData.creator!.hasRegisteredAsUser) {
+        // Schedule balance refresh after build
+        Future.microtask(() async {
+          await refreshMahakkaBalance();
+        });
       }
     } catch (e) {
       print('Periodic Mahakka balance refresh failed: $e');
@@ -280,15 +358,18 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
   }
 
   Future<void> _refreshMemoBalancePeriodicallyOnQrDialog() async {
-    final creatorId = ref.read(_currentProfileIdProvider);
-    if (creatorId == null || creatorId.isEmpty || state.isLoading) {
+    final profileId = ref.read(_currentProfileIdProvider);
+    if (profileId == null || profileId.isEmpty || state.isLoading) {
       return;
     }
 
     try {
-      final currentCreator = state.value;
-      if (currentCreator != null) {
-        await refreshMemoBalance();
+      final currentData = state.value;
+      if (currentData != null && currentData.creator != null) {
+        // Schedule balance refresh after build
+        Future.microtask(() async {
+          await refreshMemoBalance();
+        });
       }
     } catch (e) {
       print('Periodic Memo balance refresh failed: $e');
@@ -300,7 +381,7 @@ class CreatorNotifier extends AsyncNotifier<MemoModelCreator?> {
   }
 }
 
-// Provides the stream of posts for the currently selected creator ID
+// Keep postsStreamProvider for other parts of the app that need the stream
 final postsStreamProvider = StreamProvider<List<MemoModelPost>>((ref) {
   final creatorId = ref.watch(_currentProfileIdProvider);
   if (creatorId == null || creatorId.isEmpty) {

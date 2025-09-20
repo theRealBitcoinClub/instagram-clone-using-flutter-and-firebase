@@ -1,3 +1,5 @@
+// lib/widgets/profile/posts_categorizer.dart
+
 import '../../memo/model/memo_model_post.dart';
 
 class PostsCategorizer {
@@ -7,6 +9,11 @@ class PostsCategorizer {
   final List<MemoModelPost> topicPosts;
 
   PostsCategorizer({required this.imagePosts, required this.videoPosts, required this.taggedPosts, required this.topicPosts});
+
+  // Empty constructor
+  factory PostsCategorizer.empty() {
+    return PostsCategorizer(imagePosts: [], videoPosts: [], taggedPosts: [], topicPosts: []);
+  }
 
   factory PostsCategorizer.fromPosts(List<MemoModelPost> allPosts) {
     final imagePosts = <MemoModelPost>[];
@@ -39,6 +46,8 @@ class PostsCategorizer {
 
     return PostsCategorizer(imagePosts: imagePosts, videoPosts: videoPosts, taggedPosts: taggedPosts, topicPosts: topicPosts);
   }
+
+  bool get isEmpty => imagePosts.isEmpty && videoPosts.isEmpty && taggedPosts.isEmpty && topicPosts.isEmpty;
 
   bool hasChanged(PostsCategorizer other) {
     return !_listEquals(imagePosts, other.imagePosts) ||

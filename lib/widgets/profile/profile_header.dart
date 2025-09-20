@@ -1,42 +1,77 @@
+// lib/widgets/profile/profile_header.dart
+
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../memo/model/memo_model_creator.dart';
-import '../../provider/profile_providers.dart';
 import 'header/top_details_row.dart';
 
-class ProfileHeader extends ConsumerWidget {
-  final MemoModelCreator creator;
+class ProfileHeader extends StatelessWidget {
   final bool isOwnProfile;
   final bool isRefreshingProfile;
   final VoidCallback onProfileButtonPressed;
   final VoidCallback showImageDetail;
   final bool showDefaultAvatar;
+  final MemoModelCreator creator;
 
   const ProfileHeader({
     Key? key,
-    required this.creator,
     required this.isOwnProfile,
     required this.isRefreshingProfile,
     required this.onProfileButtonPressed,
     required this.showImageDetail,
     required this.showDefaultAvatar,
+    required this.creator,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final creatorAsync = ref.watch(profileCreatorStateProvider);
-
-    return creatorAsync.when(
-      skipLoadingOnRefresh: true,
-      skipLoadingOnReload: true,
-      data: (creator) => _buildHeaderContent(creator!, theme),
-      loading: () => LinearProgressIndicator(),
-      error: (error, stack) => Text("Please kill and restart the app"),
-    );
+    return _buildHeaderContent(creator, theme);
   }
+  // @override
+  // Widget build(BuildContext context, WidgetRef ref) {
+  //   final theme = Theme.of(context);
+  //
+  //   return Consumer(
+  //     builder: (context, ref, child) {
+  //       final profileDataAsync = ref.watch(profileDataProvider);
+  //
+  //       return profileDataAsync.when(
+  //         skipLoadingOnReload: true,
+  //         skipLoadingOnRefresh: true,
+  //         skipError: true,
+  //         data: (profileData) {
+  //           if (profileData.creator == null) return LinearProgressIndicator();
+  //           return _buildHeaderContent(profileData.creator!, theme);
+  //         },
+  //         loading: () => LinearProgressIndicator(),
+  //         error: (error, stack) => SizedBox.shrink(),
+  //       );
+  //     },
+  //   );
+  // }
+  //
+  // @override
+  // Widget build(BuildContext context, WidgetRef ref) {
+  //   final theme = Theme.of(context);
+  //   final profileDataAsync = ref.watch(profileDataProvider);
+  //
+  //   return profileDataAsync.when(
+  //     skipLoadingOnReload: true, // Add this
+  //     skipLoadingOnRefresh: true, // Add this
+  //     skipError: true,
+  //     data: (profileData) {
+  //       // Safe null handling
+  //       if (profileData.creator == null) {
+  //         return LinearProgressIndicator();
+  //       }
+  //       return _buildHeaderContent(profileData.creator!, theme);
+  //     },
+  //     loading: () => LinearProgressIndicator(),
+  //     error: (error, stack) => SizedBox.shrink(),
+  //   );
+  // }
 
   Widget _buildHeaderContent(MemoModelCreator creator, ThemeData theme) {
     return Container(
@@ -46,7 +81,7 @@ class ProfileHeader extends ConsumerWidget {
         children: [
           if (isRefreshingProfile) _buildProgressIndicator(),
           ProfileAvatarBalancesButtonRow(
-            creator: creator, // Use the provider data directly
+            creator: creator,
             theme: theme,
             showImageDetail: showImageDetail,
             showDefaultAvatar: showDefaultAvatar,

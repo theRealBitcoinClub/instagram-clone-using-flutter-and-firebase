@@ -40,7 +40,7 @@ class PostCardHeader extends ConsumerWidget {
     final ThemeData theme = Theme.of(context);
     // Creator null check should ideally happen before this widget is built,
     // or you can add a fallback here.
-    final MemoModelCreator creator = post.creator ?? MemoModelCreator(id: 'unknown', name: 'Unknown'); // Fallback
+    final MemoModelCreator creator = post.creator ?? MemoModelCreator(id: post.creatorId, name: post.creatorId); // Fallback
     // Watch the avatar provider to get the avatar URL.
     final avatarAsyncValue = ref.watch(creatorAvatarProvider(post.creator!.id));
     // Watch for popularity score updates for this specific post

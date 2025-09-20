@@ -346,7 +346,7 @@ final ThemeData darkTheme = ThemeData(
   ),
 
   dialogTheme: DialogThemeData(
-    backgroundColor: secondaryDarkGrey,
+    backgroundColor: primaryDarkGrey,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: textOnDark),
     contentTextStyle: TextStyle(fontSize: 14, color: textOnDark),

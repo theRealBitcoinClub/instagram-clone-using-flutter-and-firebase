@@ -12,8 +12,8 @@ final targetUrlProvider = StateProvider<String?>((ref) => null);
 enum WebViewShow { tag, topic, url }
 
 // Add this to webview_providers.dart
-class WebViewNavigationHelper {
-  static void navigateToWebView(WidgetRef ref, WebViewShow target, String value) {
+class WebViewNavigator {
+  static void navigateTo(WidgetRef ref, WebViewShow target, String value) {
     // Reset all providers first
     ref.read(targetUrlProvider.notifier).state = null;
     ref.read(tagIdProvider.notifier).state = null;

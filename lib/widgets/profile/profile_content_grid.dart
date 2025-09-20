@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/widgets/profile/profile_placeholders.dart';
+// lib/widgets/profile/profile_content_grid.dart
 
-import '../../config_ipfs.dart';
-import '../cached_unified_image_widget.dart';
-import '../unified_image_widget.dart';
+import 'package:flutter/material.dart';
+import 'package:mahakka/config_ipfs.dart';
+import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/widgets/cached_unified_image_widget.dart';
+import 'package:mahakka/widgets/profile/profile_placeholders.dart';
+import 'package:mahakka/widgets/unified_image_widget.dart';
 
 void _logGridError(String message, [dynamic error, StackTrace? stackTrace]) {
   print('ERROR: ProfileContentGrid - $message');
@@ -14,7 +15,6 @@ void _logGridError(String message, [dynamic error, StackTrace? stackTrace]) {
 
 class ProfileContentGrid extends StatelessWidget {
   final List<MemoModelPost> posts;
-  // final Function(MemoModelPost post, CachedUnifiedImageWidget imageWidget, GlobalKey imageKey) onPostImageTap;
   final Function(int index) onPostImageTap;
 
   const ProfileContentGrid({Key? key, required this.posts, required this.onPostImageTap}) : super(key: key);
@@ -39,7 +39,6 @@ class ProfileContentGrid extends StatelessWidget {
         ),
         itemBuilder: (context, index) {
           final post = posts[index];
-          // final imageKey = GlobalKey(); // Create a unique key for each image
 
           Widget imagePlaceholder = Container(
             color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
@@ -54,11 +53,10 @@ class ProfileContentGrid extends StatelessWidget {
           }
 
           CachedUnifiedImageWidget img = CachedUnifiedImageWidget(
-            // key: imageKey, // Assign the key to the image widget
             imageUrl: imageUrl,
             sourceType: ImageSourceType.network,
             backgroundColor: Colors.black,
-            fitMode: ImageFitMode.contain, // Use cover for grid
+            fitMode: ImageFitMode.contain,
             aspectRatio: 1.0,
             borderRadius: BorderRadius.zero,
             showLoadingProgress: true,
@@ -70,7 +68,6 @@ class ProfileContentGrid extends StatelessWidget {
 
           return GestureDetector(
             onTap: () => onPostImageTap(index),
-            // onTap: () => onPostImageTap(post, img, imageKey),
             child: AspectRatio(aspectRatio: 1, child: img),
           );
         },

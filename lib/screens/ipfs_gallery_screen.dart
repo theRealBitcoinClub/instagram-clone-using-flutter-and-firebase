@@ -8,39 +8,41 @@ import 'package:share_plus/share_plus.dart';
 import '../widgets/animations/animated_grow_fade_in.dart';
 import 'add/add_post_providers.dart';
 
-class IPFSGalleryScreen extends ConsumerStatefulWidget {
+// Provider for selected CID state
+final selectedCidProvider = StateProvider<String?>((ref) => null);
+
+class IPFSGalleryScreen extends ConsumerWidget {
   final List<String> ipfsCids;
 
   const IPFSGalleryScreen({Key? key, required this.ipfsCids}) : super(key: key);
 
   @override
-  ConsumerState<IPFSGalleryScreen> createState() => _IPFSGalleryScreenState();
-}
-
-class _IPFSGalleryScreenState extends ConsumerState<IPFSGalleryScreen> {
-  String? _selectedCid;
-  bool get _hasSelection => _selectedCid != null;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedCid = ref.watch(selectedCidProvider);
+    final hasSelection = selectedCid != null;
+    final TextTheme textTheme = Theme.of(context).textTheme;
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDarkTheme ? Colors.black.withAlpha(133) : Colors.white.withAlpha(133);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_hasSelection ? 'Selected: ${_selectedCid!.substring(0, 8)}...' : 'My IPFS Gallery'),
+        leadingWidth: 50,
+        title: Text(
+          hasSelection ? '${selectedCid}' : 'Tap image to select or create new one',
+          style: textTheme.titleSmall!.copyWith(letterSpacing: 0.2, fontWeight: FontWeight.w400, fontSize: 14),
+        ),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
         actions: [
-          if (!_hasSelection)
+          if (!hasSelection)
             IconButton(
-              icon: Icon(Icons.add, color: colorScheme.primary),
-              onPressed: _createNewIpfsPin,
+              icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+              onPressed: () => _createNewIpfsPin(context),
               tooltip: 'Create new IPFS pin',
             )
           else
             IconButton(
-              icon: Icon(Icons.close, color: colorScheme.error),
-              onPressed: _clearSelection,
+              icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onPrimary),
+              onPressed: () => ref.read(selectedCidProvider.notifier).state = null,
               tooltip: 'Clear selection',
             ),
         ],
@@ -50,105 +52,37 @@ class _IPFSGalleryScreenState extends ConsumerState<IPFSGalleryScreen> {
           // IPFS Images ListView
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(0.0),
               child: Container(
-                // constraints: const BoxConstraints(maxHeight: 500),
                 decoration: BoxDecoration(
-                  color: colorScheme.surface,
+                  color: backgroundColor,
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: [BoxShadow(color: colorScheme.shadow.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
+                  boxShadow: [
+                    BoxShadow(color: Theme.of(context).colorScheme.shadow.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2)),
+                  ],
                 ),
-                child: widget.ipfsCids.isEmpty
-                    ? _buildEmptyState()
+                child: ipfsCids.isEmpty
+                    ? _buildEmptyState(context)
                     : ListView.builder(
-                        itemCount: widget.ipfsCids.length,
+                        itemCount: ipfsCids.length,
                         itemBuilder: (context, index) {
-                          final cid = widget.ipfsCids[index];
-                          final isSelected = _selectedCid == cid;
-                          return _buildImageCard(cid, isSelected, theme, colorScheme);
+                          final cid = ipfsCids[index];
+                          final isSelected = selectedCid == cid;
+                          return IPFSImageCard(cid: cid, isSelected: isSelected);
                         },
                       ),
               ),
             ),
           ),
 
-          const SizedBox(height: 16),
-
           // Button Row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: AnimatedGrowFadeIn(
-              show: !_hasSelection,
-              duration: const Duration(milliseconds: 300),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  onPressed: _createNewIpfsPin,
-                  child: const Text('Create New IPFS Pin'),
-                ),
-              ),
-            ),
-          ),
-
-          AnimatedGrowFadeIn(
-            show: _hasSelection,
-            duration: const Duration(milliseconds: 300),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.error,
-                        foregroundColor: colorScheme.onError,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      onPressed: _clearSelection,
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.secondary,
-                        foregroundColor: colorScheme.onSecondary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      onPressed: _shareImage,
-                      child: const Text('Share'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      onPressed: _reuseImage,
-                      child: const Text('Reuse'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
+          GalleryActionButtonRow(ipfsCids: ipfsCids),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -170,119 +104,227 @@ class _IPFSGalleryScreenState extends ConsumerState<IPFSGalleryScreen> {
     );
   }
 
-  Widget _buildImageCard(String cid, bool isSelected, ThemeData theme, ColorScheme colorScheme) {
+  void _createNewIpfsPin(BuildContext context) {
+    Navigator.pop(context);
+    IpfsPinClaimScreen.show(context);
+  }
+}
+
+class IPFSImageCard extends ConsumerWidget {
+  final String cid;
+  final bool isSelected;
+
+  const IPFSImageCard({Key? key, required this.cid, required this.isSelected}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final imageUrl = '${IpfsConfig.preferredNode}$cid';
+    final isDarkTheme = theme.brightness == Brightness.dark;
+    final overlayColor = isDarkTheme ? Colors.black.withAlpha(133) : Colors.white.withAlpha(133);
+    final backgroundColor = isDarkTheme ? Colors.black.withAlpha(133) : Colors.white.withAlpha(133);
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: isSelected ? BorderSide(color: colorScheme.primary, width: 2) : BorderSide(color: colorScheme.outline.withOpacity(0.2), width: 1),
-      ),
-      child: InkWell(
-        onTap: () => _selectImage(cid),
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      color: backgroundColor,
+      child: GestureDetector(
+        onTap: () => ref.read(selectedCidProvider.notifier).state = cid,
+        child: Stack(
           children: [
-            Stack(
-              children: [
-                // Image
-                Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                    color: colorScheme.surfaceVariant,
-                  ),
-                  child: CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    placeholder: (context, url) => Container(
-                      color: colorScheme.surfaceVariant,
-                      child: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary))),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: colorScheme.errorContainer,
-                      child: Center(child: Icon(Icons.broken_image_outlined, size: 48, color: colorScheme.onErrorContainer)),
-                    ),
-                  ),
-                ),
-
-                // Selection badge
-                if (isSelected)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        shape: BoxShape.circle,
-                        boxShadow: [BoxShadow(color: colorScheme.shadow.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))],
-                      ),
-                      child: Icon(Icons.check, size: 20, color: colorScheme.onPrimary),
-                    ),
-                  ),
-              ],
-            ),
-
-            // URL info
-            Padding(
-              padding: const EdgeInsets.all(12.0),
+            InkWell(
+              onTap: () => ref.read(selectedCidProvider.notifier).state = cid,
+              // borderRadius: BorderRadius.circular(12),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'CID: ${cid.substring(0, 12)}...',
-                    style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7), fontFamily: 'Monospace'),
-                    overflow: TextOverflow.ellipsis,
+                  Stack(
+                    children: [
+                      // Image
+                      Container(
+                        height: 300,
+                        decoration: BoxDecoration(
+                          // borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                          color: backgroundColor,
+                        ),
+                        child: CachedNetworkImage(
+                          alignment: Alignment.bottomCenter,
+                          imageUrl: imageUrl,
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          placeholder: (context, url) => Container(
+                            color: colorScheme.surfaceVariant,
+                            child: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary))),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: colorScheme.errorContainer,
+                            child: Center(child: Icon(Icons.broken_image_outlined, size: 48, color: colorScheme.onErrorContainer)),
+                          ),
+                        ),
+                      ),
+
+                      // Selection badge
+                      if (isSelected)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              shape: BoxShape.circle,
+                              boxShadow: [BoxShadow(color: colorScheme.shadow.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))],
+                            ),
+                            child: Icon(Icons.check, size: 30, color: colorScheme.onPrimary),
+                          ),
+                        ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    imageUrl,
-                    style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.5), fontSize: 10),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
+
+                  // CID info
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text(
+                      cid,
+                      style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7), fontFamily: 'Monospace'),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   ),
                 ],
               ),
             ),
+
+            // Selection overlay
+            if (ref.read(selectedCidProvider) != null && !isSelected)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: overlayColor,
+                    // borderRadius: BorderRadius.vertical(top: Radius.circular(0), bottom: Radius.circular(12)),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
+}
 
-  void _selectImage(String cid) {
-    setState(() {
-      _selectedCid = cid;
-    });
+class GalleryActionButtonRow extends ConsumerWidget {
+  final List<String> ipfsCids;
+
+  const GalleryActionButtonRow({Key? key, required this.ipfsCids}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedCid = ref.watch(selectedCidProvider);
+    final hasSelection = selectedCid != null;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDarkTheme ? Colors.black.withAlpha(133) : Colors.white.withAlpha(133);
+
+    return Container(
+      height: 80, // Fixed height
+      color: backgroundColor, // Theme-aware background color
+      child: hasSelection
+          ? AnimatedGrowFadeIn(
+              show: hasSelection,
+              duration: const Duration(milliseconds: 300),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.error,
+                          foregroundColor: colorScheme.onError,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        onPressed: () => ref.read(selectedCidProvider.notifier).state = null,
+                        child: const Text('RESET'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.yellow[900],
+                          foregroundColor: colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        onPressed: () => _shareImage(selectedCid!),
+                        child: const Text('SHARE'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        onPressed: () => _reuseImage(context, ref, selectedCid!),
+                        child: const Text('CHOOSE'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : AnimatedGrowFadeIn(
+              show: !hasSelection,
+              duration: const Duration(milliseconds: 300),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.error,
+                          foregroundColor: colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('CANCEL'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        onPressed: () => _createNewIpfsPin(context),
+                        child: const Text('CREATE'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+    );
   }
 
-  void _clearSelection() {
-    setState(() {
-      _selectedCid = null;
-    });
-  }
-
-  void _createNewIpfsPin() {
-    Navigator.pop(context); // Return to create new IPFS pin screen
+  void _createNewIpfsPin(BuildContext context) {
+    Navigator.pop(context);
     IpfsPinClaimScreen.show(context);
   }
 
-  void _shareImage() {
-    if (_selectedCid == null) return;
-
-    final shareUrl = '${IpfsConfig.preferredNode}$_selectedCid';
+  void _shareImage(String selectedCid) {
+    final shareUrl = '${IpfsConfig.preferredNode}$selectedCid';
     SharePlus.instance.share(ShareParams(title: "IPFS", uri: Uri.parse(shareUrl)));
   }
 
-  void _reuseImage() {
-    if (_selectedCid == null) return;
-
-    ref.read(ipfsCidProvider.notifier).state = _selectedCid!;
+  void _reuseImage(context, ref, String selectedCid) {
+    ref.read(ipfsCidProvider.notifier).state = selectedCid;
     Navigator.pop(context);
   }
 }

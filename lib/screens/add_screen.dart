@@ -8,7 +8,6 @@ import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/provider/publish_options_provider.dart';
 import 'package:mahakka/provider/user_provider.dart';
-import 'package:mahakka/screens/pin_claim_screen.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
@@ -37,6 +36,7 @@ import 'add/imgur_media_widget.dart';
 import 'add/ipfs_media_widget.dart';
 import 'add/odysee_media_widget.dart';
 import 'add/youtube_media_widget.dart';
+import 'ipfs_pin_claim_screen.dart';
 
 void _log(String message) => print('[AddPost] $message');
 
@@ -411,7 +411,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   void _showIpfsUploadScreen() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const PinClaimScreen())).then((result) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const IpfsPinClaimScreen())).then((result) {
       if (result != null) {
         final cid = result['cid'];
         if (cid != null && mounted) {

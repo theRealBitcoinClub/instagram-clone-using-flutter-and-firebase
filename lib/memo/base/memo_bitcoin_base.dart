@@ -153,7 +153,7 @@ class MemoBitcoinBase {
     BigInt totalAmountOfTokenAvailable,
   ) {
     var amount = BigInt.from(tokenAmountToSend);
-    //TODO AUTO CONSOLIDATE TO SAVE ON FEES
+    //TOD AUTO CONSOLIDATE TO SAVE ON FEES
     BigInt fee = BtcUtils.toSatoshi("0.000007");
     BigInt tokenFee = BtcUtils.toSatoshi("0.000007");
     return ForkedTransactionBuilder(
@@ -353,14 +353,5 @@ class MemoBitcoinBase {
   // Helper method to convert BCH amount to satoshis
   BigInt toSatoshi(double bchAmount) {
     return BigInt.from((bchAmount * 100000000).round());
-  }
-
-  // Private method to get mnemonic from secure storage
-  Future<String> _getMnemonic() async {
-    // Implement this using your preferred secure storage method
-    // For example using flutter_secure_storage:
-    // final storage = FlutterSecureStorage();
-    // return await storage.read(key: 'mnemonic') ?? '';
-    throw UnimplementedError('_getMnemonic() needs to be implemented');
   }
 }

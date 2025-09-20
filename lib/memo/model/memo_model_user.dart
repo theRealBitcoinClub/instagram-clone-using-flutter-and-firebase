@@ -88,6 +88,8 @@ class MemoModelUser {
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool hasInit = false;
 
+  List<String> ipfsUrls;
+
   MemoModelUser({
     required this.id,
     required this.bchAddressCashtokenAware,

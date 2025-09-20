@@ -39,17 +39,8 @@ class MemoPublisher {
     return publisher;
   }
 
-  // This method no longer needs to be async.
-  // _initAsync() async {
-  //   base = await MemoBitcoinBase.create();
-  // }
-
-  //TODO
-
   Future<MemoAccountantResponse> doPublish({String topic = "", tips}) async {
     if (_memoAction == MemoCode.profileMessage || _memoAction == MemoCode.topicMessage) topic = _addSuperTagAndSuperTopic(topic);
-
-    // Get the shared instance from the provider using the stored ref.
     final MemoBitcoinBase base = await _ref.read(electrumServiceProvider.future);
 
     final List<ElectrumUtxo> elctrumUtxos = await base.requestElectrumUtxos(_p2pkhAddress);

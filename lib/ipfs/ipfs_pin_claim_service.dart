@@ -7,10 +7,10 @@ import 'package:http/http.dart' as http;
 import '../memo/base/memo_bitcoin_base.dart';
 
 class IpfsPinClaimService {
-  final MemoBitcoinBase wallet;
-  final String server;
+  final MemoBitcoinBase bitcoinBase;
+  final String serverUrl;
 
-  IpfsPinClaimService({required this.wallet, required this.server});
+  IpfsPinClaimService({required this.bitcoinBase, required this.serverUrl});
 
   Future<double> fetchBCHWritePrice(File file) async {
     try {
@@ -23,7 +23,7 @@ class IpfsPinClaimService {
       final fileSizeInMegabytes = file.lengthSync() / pow(10, 6); // get file size in MB
 
       final response = await http.post(
-        Uri.parse('$server/ipfs/getBchCost'),
+        Uri.parse('$serverUrl/ipfs/getBchCost'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'sizeInMb': fileSizeInMegabytes}),
       );
@@ -49,7 +49,7 @@ class IpfsPinClaimService {
       final fileSizeInMegabytes = file.lengthSync() / pow(10, 6); // get file size in MB
 
       final response = await http.post(
-        Uri.parse('$server/ipfs/getPaymentAddr'),
+        Uri.parse('$serverUrl/ipfs/getPaymentAddr'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'sizeInMb': fileSizeInMegabytes}),
       );
@@ -70,7 +70,7 @@ class IpfsPinClaimService {
         {'address': address, 'amountSat': amountSat},
       ];
 
-      final txid = await wallet.sendIpfs(outputs, mnemonic);
+      final txid = await bitcoinBase.sendIpfs(outputs, mnemonic);
       print('txid: $txid');
 
       // Wait for the transaction delay
@@ -84,7 +84,7 @@ class IpfsPinClaimService {
       };
 
       final pinClaimResponse = await http.post(
-        Uri.parse('$server/ipfs/createPinClaim'),
+        Uri.parse('$serverUrl/ipfs/createPinClaim'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(pinObj),
       );

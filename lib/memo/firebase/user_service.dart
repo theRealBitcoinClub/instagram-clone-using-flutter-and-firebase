@@ -63,27 +63,4 @@ class UserService {
       return Stream.value([]);
     }
   }
-
-  Stream<MemoModelUser?> getUserStream(String userId) {
-    try {
-      final DocumentReference docRef = _firestore.collection(_usersCollection).doc(userId);
-      return docRef
-          .snapshots()
-          .map((snapshot) {
-            if (snapshot.exists && snapshot.data() != null) {
-              return MemoModelUser.fromJson(snapshot.data()! as Map<String, dynamic>);
-            } else {
-              print("User with ID $userId not found in Firestore stream.");
-              return null;
-            }
-          })
-          .handleError((error) {
-            print("Error in user stream for $userId: $error");
-            return null;
-          });
-    } catch (e) {
-      print("Error getting user stream for $userId: $e");
-      return Stream.value(null);
-    }
-  }
 }

@@ -5,20 +5,21 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:path/path.dart';
 
-import '../ipfs/pin_claim_async.dart';
+import '../ipfs/ipfs_pin_claim_service.dart';
 import '../provider/electrum_provider.dart';
 import '../provider/user_provider.dart';
 
-class PinClaimScreen extends ConsumerStatefulWidget {
-  const PinClaimScreen({Key? key}) : super(key: key);
+class IpfsPinClaimScreen extends ConsumerStatefulWidget {
+  const IpfsPinClaimScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<PinClaimScreen> createState() => _PinClaimScreenState();
+  ConsumerState<IpfsPinClaimScreen> createState() => _PinClaimScreenState();
 }
 
-class _PinClaimScreenState extends ConsumerState<PinClaimScreen> {
+class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
   File? _selectedFile;
   double? _pinClaimPrice;
   String? _cid;
@@ -37,9 +38,9 @@ class _PinClaimScreenState extends ConsumerState<PinClaimScreen> {
   void initState() {
     super.initState();
     // Initialize PinClaimAsync with data from providers
-    final wallet = ref.read(electrumServiceProvider).value;
-    if (wallet != null) {
-      _pinClaim = IpfsPinClaimService(wallet: wallet, server: _serverUrl);
+    MemoBitcoinBase? bitcoinBase = ref.read(electrumServiceProvider).value;
+    if (bitcoinBase != null) {
+      _pinClaim = IpfsPinClaimService(bitcoinBase: bitcoinBase, serverUrl: _serverUrl);
     }
   }
 

@@ -262,58 +262,6 @@ class MemoAccountant {
     return tips;
   }
 
-  //
-  // List<MemoTip> parseTips({MemoModelPost? post}) {
-  //   // ... unchanged implementation
-  //   TipReceiver receiver = ref.read(userProvider)!.tipReceiver;
-  //   int burnAmount = 0;
-  //   int creatorAmount = 0;
-  //   int tipTotalAmount = ref.read(temporaryTipAmountProvider) != null ? ref.read(temporaryTipAmountProvider)!.value : user.tipAmount;
-  //
-  //   if (tipTotalAmount == 0) return [];
-  //
-  //   if (post == null) return [MemoTip(MemoBitcoinBase.bchBurnerAddress, tipTotalAmount)];
-  //
-  //   switch (receiver) {
-  //     case TipReceiver.creator:
-  //       creatorAmount = tipTotalAmount;
-  //       break;
-  //     case TipReceiver.app:
-  //       burnAmount = tipTotalAmount;
-  //       break;
-  //     case TipReceiver.both:
-  //       burnAmount = (tipTotalAmount / 2).round();
-  //       creatorAmount = (tipTotalAmount / 2).round();
-  //       break;
-  //     case TipReceiver.burn20Creator80:
-  //       burnAmount = (tipTotalAmount * 0.2).round();
-  //       creatorAmount = (tipTotalAmount * 0.8).round();
-  //       break;
-  //     case TipReceiver.burn40Creator60:
-  //       burnAmount = (tipTotalAmount * 0.4).round();
-  //       creatorAmount = (tipTotalAmount * 0.6).round();
-  //       break;
-  //     case TipReceiver.burn60Creator40:
-  //       burnAmount = (tipTotalAmount * 0.6).round();
-  //       creatorAmount = (tipTotalAmount * 0.4).round();
-  //       break;
-  //     case TipReceiver.burn80Creator20:
-  //       burnAmount = (tipTotalAmount * 0.8).round();
-  //       creatorAmount = (tipTotalAmount * 0.2).round();
-  //       break;
-  //   }
-  //
-  //   List<MemoTip> tips = [];
-  //   if (burnAmount != 0) {
-  //     tips.add(MemoTip(MemoBitcoinBase.bchBurnerAddress, burnAmount));
-  //   }
-  //   if (creatorAmount != 0) {
-  //     tips.add(MemoTip(post.creatorId, creatorAmount));
-  //   }
-  //
-  //   return tips;
-  // }
-
   // Cleanup method to dispose resources
   void dispose() {
     _queueSubscription?.cancel();

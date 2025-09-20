@@ -6,17 +6,25 @@ part of 'memo_model_creator.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-MemoModelCreator _$MemoModelCreatorFromJson(Map<String, dynamic> json) =>
-    MemoModelCreator(
-      id: json['id'] as String? ?? "",
-      name: json['name'] as String? ?? "",
-      profileText: json['profileText'] as String? ?? "",
-      followerCount: (json['followerCount'] as num?)?.toInt() ?? 0,
-      actions: (json['actions'] as num?)?.toInt() ?? 0,
-      created: json['created'] as String? ?? "",
-      lastActionDate: json['lastActionDate'] as String? ?? "",
-      profileImgurUrl: json['profileImgurUrl'] as String?,
-    )..bchAddressCashtokenAware = json['bchAddressCashtokenAware'] as String;
+MemoModelCreator _$MemoModelCreatorFromJson(
+  Map<String, dynamic> json,
+) => MemoModelCreator(
+  id: json['id'] as String? ?? "",
+  name: json['name'] as String? ?? "",
+  profileText: json['profileText'] as String? ?? "",
+  followerCount: (json['followerCount'] as num?)?.toInt() ?? 0,
+  actions: (json['actions'] as num?)?.toInt() ?? 0,
+  created: json['created'] as String? ?? "",
+  lastActionDate: json['lastActionDate'] as String? ?? "",
+  profileImgurUrl: json['profileImgurUrl'] as String?,
+  hasRegisteredAsUser: json['hasRegisteredAsUser'] as bool? ?? false,
+  lastRegisteredCheck:
+      json['lastRegisteredCheck'] == null
+          ? null
+          : DateTime.parse(json['lastRegisteredCheck'] as String),
+  profileImageAvatarSerialized: json['profileImageAvatarSerialized'] as String?,
+  profileImageDetailSerialized: json['profileImageDetailSerialized'] as String?,
+)..bchAddressCashtokenAware = json['bchAddressCashtokenAware'] as String;
 
 Map<String, dynamic> _$MemoModelCreatorToJson(MemoModelCreator instance) =>
     <String, dynamic>{
@@ -29,4 +37,8 @@ Map<String, dynamic> _$MemoModelCreatorToJson(MemoModelCreator instance) =>
       'lastActionDate': instance.lastActionDate,
       'bchAddressCashtokenAware': instance.bchAddressCashtokenAware,
       'profileImgurUrl': instance.profileImgurUrl,
+      'hasRegisteredAsUser': instance.hasRegisteredAsUser,
+      'lastRegisteredCheck': instance.lastRegisteredCheck?.toIso8601String(),
+      'profileImageAvatarSerialized': instance.profileImageAvatarSerialized,
+      'profileImageDetailSerialized': instance.profileImageDetailSerialized,
     };

@@ -1,0 +1,201 @@
+// lib/widgets/cached_avatar.dart
+
+import 'dart:async';
+
+import 'package:badges/badges.dart' as badges;
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/memo/model/memo_model_creator.dart';
+import 'package:mahakka/provider/navigation_providers.dart';
+import 'package:mahakka/repositories/creator_repository.dart';
+import 'package:mahakka/tab_item_data.dart';
+
+class CachedAvatar extends ConsumerStatefulWidget {
+  final String creatorId;
+  final double radius;
+  final bool showBadge;
+  final bool enableNavigation;
+  final String fallbackAsset;
+  final Duration registrationCheckInterval;
+
+  const CachedAvatar({
+    Key? key,
+    required this.creatorId,
+    this.radius = 24,
+    this.showBadge = true,
+    this.enableNavigation = true,
+    this.fallbackAsset = "assets/images/default_profile.png",
+    this.registrationCheckInterval = const Duration(minutes: 30),
+  }) : super(key: key);
+
+  @override
+  _CachedAvatarState createState() => _CachedAvatarState();
+}
+
+class _CachedAvatarState extends ConsumerState<CachedAvatar> {
+  late Future<MemoModelCreator?> _creatorFuture;
+  Timer? _registrationCheckTimer;
+  final Map<String, DateTime> _lastRegistrationChecks = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCreator();
+    _startRegistrationCheckTimer();
+  }
+
+  @override
+  void didUpdateWidget(CachedAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.creatorId != widget.creatorId) {
+      _loadCreator();
+    }
+  }
+
+  @override
+  void dispose() {
+    _registrationCheckTimer?.cancel();
+    super.dispose();
+  }
+
+  void _loadCreator() {
+    _creatorFuture = ref
+        .read(creatorRepositoryProvider)
+        .getCreator(
+          widget.creatorId,
+          scrapeIfNotFound: false,
+          saveToFirebase: false, // Never save to Firebase from here
+        );
+  }
+
+  void _startRegistrationCheckTimer() {
+    _registrationCheckTimer = Timer.periodic(Duration(minutes: 1), (timer) {
+      _checkRegistrationStatus();
+    });
+  }
+
+  Future<void> _checkRegistrationStatus() async {
+    final now = DateTime.now();
+    final lastCheck = _lastRegistrationChecks[widget.creatorId];
+
+    // Check if enough time has passed since last check
+    if (lastCheck != null && now.difference(lastCheck) < widget.registrationCheckInterval) {
+      return;
+    }
+
+    try {
+      final creator = await _creatorFuture;
+      if (creator != null && !creator.hasRegisteredAsUser) {
+        await _refreshUserRegistration(creator);
+        _lastRegistrationChecks[widget.creatorId] = now;
+      }
+    } catch (e) {
+      print("Error checking registration status: $e");
+    }
+  }
+
+  Future<void> _refreshUserRegistration(MemoModelCreator creator) async {
+    try {
+      await ref.read(creatorRepositoryProvider).refreshUserHasRegistered(creator);
+      // await creator.refreshUserHasRegistered(ref);
+
+      // Update local cache with new registration status
+      final updatedCreator = creator.copyWith(lastRegisteredCheck: DateTime.now());
+
+      await ref
+          .read(creatorRepositoryProvider)
+          .saveToCache(
+            updatedCreator,
+            saveToFirebase: false, // Never save to Firebase
+          );
+
+      // Reload the creator to get updated data
+      _loadCreator();
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      print("Error refreshing user registration: $e");
+    }
+  }
+
+  Future<void> _refreshAvatar() async {
+    try {
+      await ref.read(creatorRepositoryProvider).refreshAndCacheAvatar(widget.creatorId);
+      // Reload the creator to get updated data
+      _loadCreator();
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      print("Error refreshing avatar: $e");
+    }
+  }
+
+  void _navigateToProfile() {
+    if (!widget.enableNavigation) return;
+
+    // Set the target profile ID
+    ref.read(profileTargetIdProvider.notifier).state = widget.creatorId;
+    // Switch to the profile tab
+    ref.read(tabIndexProvider.notifier).setTab(AppTab.profile.tabIndex);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<MemoModelCreator?>(
+      future: _creatorFuture,
+      builder: (context, snapshot) {
+        final creator = snapshot.data;
+        final avatarUrl = creator?.profileImageAvatar() ?? '';
+        final hasRegistered = creator?.hasRegisteredAsUser ?? false;
+        final isLoading = snapshot.connectionState == ConnectionState.waiting;
+
+        return GestureDetector(
+          onTap: _navigateToProfile,
+          onLongPress: _refreshAvatar,
+          child: _buildAvatarWithBadge(context, avatarUrl, hasRegistered, isLoading),
+        );
+      },
+    );
+  }
+
+  Widget _buildAvatarWithBadge(BuildContext context, String avatarUrl, bool hasRegistered, bool isLoading) {
+    final theme = Theme.of(context);
+
+    Widget avatar = CircleAvatar(
+      radius: widget.radius,
+      backgroundColor: theme.colorScheme.surfaceVariant,
+      backgroundImage: avatarUrl.isEmpty ? AssetImage(widget.fallbackAsset) as ImageProvider : CachedNetworkImageProvider(avatarUrl),
+      onBackgroundImageError: (exception, stackTrace) {
+        print("Error loading avatar image: $exception");
+      },
+      child: isLoading ? Icon(Icons.person, size: widget.radius) : null,
+    );
+
+    if (!widget.showBadge || !hasRegistered) {
+      return avatar;
+    }
+
+    return badges.Badge(
+      position: badges.BadgePosition.topEnd(top: -2, end: -6),
+      showBadge: true,
+      onTap: () {},
+      badgeContent: Icon(Icons.currency_bitcoin_rounded, color: theme.colorScheme.onPrimary, size: widget.radius / 2),
+      badgeAnimation: badges.BadgeAnimation.fade(
+        animationDuration: Duration(milliseconds: 5000),
+        loopAnimation: true,
+        colorChangeAnimationCurve: Curves.fastOutSlowIn,
+      ),
+      badgeStyle: badges.BadgeStyle(
+        shape: badges.BadgeShape.circle,
+        badgeColor: theme.colorScheme.primary,
+        padding: EdgeInsets.all(1.5),
+        borderSide: BorderSide(color: theme.colorScheme.onSurface, width: 0.8),
+        elevation: 0,
+      ),
+      child: avatar,
+    );
+  }
+}

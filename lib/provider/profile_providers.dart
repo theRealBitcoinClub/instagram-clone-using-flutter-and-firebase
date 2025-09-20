@@ -37,7 +37,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   Timer? _balanceRefreshTimer;
   Timer? _mahakkaBalanceRefreshTimer;
   Timer? _memoBalanceRefreshTimer;
-  Duration _refreshBalanceInterval = Duration(seconds: kDebugMode ? 5 : 5);
+  Duration _refreshBalanceInterval = Duration(seconds: kDebugMode ? 100 : 5);
   bool _isAutoRefreshRunning = false;
   DateTime? _lastRefreshTime;
   String? _lastProfileIdPostDataRequest;

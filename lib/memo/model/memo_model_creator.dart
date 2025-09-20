@@ -9,7 +9,6 @@ import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/firebase/user_service.dart';
-import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo_data_checker.dart';
 
 import '../../provider/electrum_provider.dart';
@@ -27,13 +26,16 @@ class MemoModelCreator {
   String created = "";
   String lastActionDate = "";
   String bchAddressCashtokenAware = "";
+  String? profileImgurUrl;
+  bool hasRegisteredAsUser = false;
+  DateTime? lastRegisteredCheck;
+  String? profileImageAvatarSerialized;
+  String? profileImageDetailSerialized;
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   int balanceBch = -1;
-
   @JsonKey(includeFromJson: false, includeToJson: false)
   int balanceMemo = -1;
-
   @JsonKey(includeFromJson: false, includeToJson: false)
   int balanceToken = -1;
 
@@ -42,12 +44,7 @@ class MemoModelCreator {
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool _isCheckingDetail = false;
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  bool hasRegisteredAsUser = false;
-
   String get profileIdShort => id.substring(1, 5);
-
-  String? profileImgurUrl;
 
   String get nameMaxLengthAware {
     return name.isNotEmpty
@@ -64,6 +61,10 @@ class MemoModelCreator {
     this.created = "",
     this.lastActionDate = "",
     this.profileImgurUrl,
+    this.hasRegisteredAsUser = false,
+    this.lastRegisteredCheck,
+    this.profileImageAvatarSerialized,
+    this.profileImageDetailSerialized,
   });
 
   // Constants are not part of JSON serialization
@@ -72,15 +73,6 @@ class MemoModelCreator {
   static const List<String> imageTypes = ["jpg", "png"];
   static const String imageBaseUrl = "https://memo.cash/img/profilepics/";
   static int maxCheckImage = 1; // static fields are not serialized by default
-
-  // These fields are runtime state and should likely not be part of the JSON
-  // If they were to be stored, they should probably be part of a different caching mechanism
-  // or a user session, not the core creator model persisted in the DB.
-  // @JsonKey(includeFromJson: false, includeToJson: false)
-  String? _profileImageAvatar;
-
-  // @JsonKey(includeFromJson: false, includeToJson: false)
-  String? _profileImageDetail;
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   int _hasCheckedUrlAvatarCount = 0;
@@ -137,22 +129,18 @@ class MemoModelCreator {
     }
   }
 
-  // These methods below expose the runtime state.
-  // The underlying fields (_profileImageAvatar, _profileImageDetail) are not serialized.
-  // If you need to persist profile image URLs that are *known* (not dynamically checked),
-  // add separate String fields to the class for that purpose and include them in serialization.
   String profileImageAvatar() {
-    return profileImgurUrl ?? _profileImageAvatar ?? "";
+    return profileImgurUrl ?? profileImageAvatarSerialized ?? "";
   }
 
   Future<bool> _checkProfileImageAvatar({bool forceRefreshAfterProfileUpdate = false, String? forcedImageType}) async {
     if (forceRefreshAfterProfileUpdate) {
-      _profileImageAvatar == null;
+      profileImageAvatarSerialized == null;
       _isCheckingAvatar = false;
       _hasCheckedUrlAvatarCount = 0;
     }
 
-    if (_profileImageAvatar != null || _isCheckingAvatar) return true;
+    if (profileImageAvatarSerialized != null || _isCheckingAvatar) return true;
     if (_hasCheckedUrlAvatarCount >= maxCheckImage) return false; // Use >= for safety
     _isCheckingAvatar = true;
 
@@ -164,7 +152,7 @@ class MemoModelCreator {
       // Assuming checkUrlReturns404 is available and works as intended
       //we have to make this check to find out if image is jpg or png
       if (!await MemoDataChecker().checkUrlReturns404(avatarUrl)) {
-        _profileImageAvatar = avatarUrl;
+        profileImageAvatarSerialized = avatarUrl;
         //TODO you mixing things here must separate concerns better
         // _creatorService.saveCreator(this);
         _hasCheckedUrlAvatarCount = 0;
@@ -177,11 +165,11 @@ class MemoModelCreator {
   }
 
   String profileImageDetail() {
-    return profileImgurUrl ?? _profileImageDetail ?? "";
+    return profileImgurUrl ?? profileImageDetailSerialized ?? "";
   }
 
   Future<bool> _checkProfileImageDetail() async {
-    if (_profileImageDetail != null || _isCheckingDetail) {
+    if (profileImageDetailSerialized != null || _isCheckingDetail) {
       return true;
     }
 
@@ -192,7 +180,7 @@ class MemoModelCreator {
     for (String t in imageTypes) {
       String url = _profileImageUrl(sizeDetail, t);
       if (!await MemoDataChecker().checkUrlReturns404(url)) {
-        _profileImageDetail = url;
+        profileImageDetailSerialized = url;
         // ref.read(creatorServiceProvider).saveCreator(this);
         _hasCheckedUrlDetailCount = 0;
         return true;
@@ -215,22 +203,36 @@ class MemoModelCreator {
   @override
   int get hashCode => id.hashCode;
 
-  Future<void> refreshUserHasRegistered(Ref ref) async {
-    if (hasRegisteredAsUser) return;
-
-    MemoModelUser? userData = null;
-    if (bchAddressCashtokenAware.isEmpty) {
-      userData = await UserService().getUserOnce(id);
-      hasRegisteredAsUser = userData != null;
-      if (hasRegisteredAsUser) bchAddressCashtokenAware = userData!.bchAddressCashtokenAware;
-    } else {
-      hasRegisteredAsUser = true;
-      // return true; //TODO store the userdata in local cache same as creator to avoid repeating requests for each post
+  Future<MemoModelCreator> refreshUserHasRegistered(Ref ref) async {
+    // Early return if already registered
+    if (hasRegisteredAsUser) {
+      print('Creator $id is already registered');
+      return this;
     }
-    //TODO check if data changed before save
-    ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: hasRegisteredAsUser);
 
-    refreshBalances(ref);
+    try {
+      final userData = await UserService().getUserOnce(id);
+      final isNowRegistered = userData != null;
+
+      if (isNowRegistered) {
+        // Update the creator with registration info
+        hasRegisteredAsUser = true;
+        bchAddressCashtokenAware = userData.bchAddressCashtokenAware;
+
+        // Persist changes
+        await ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: true);
+        await refreshBalances(ref);
+
+        print('Creator $id is now registered');
+      } else {
+        print('Creator $id is not registered yet');
+      }
+
+      return this;
+    } catch (e) {
+      print('Error checking registration status for $id: $e');
+      return this; // Still return this even on error
+    }
   }
 
   Future<void> refreshBalances(Ref ref) async {
@@ -263,21 +265,44 @@ class MemoModelCreator {
     String? id,
     String? name,
     String? profileText,
-    String? profileImgurUrl,
     int? followerCount,
     int? actions,
     String? created,
     String? lastActionDate,
+    String? bchAddressCashtokenAware,
+    String? profileImgurUrl,
+    bool? hasRegisteredAsUser,
+    DateTime? lastRegisteredCheck,
+    String? profileImageAvatarSerialized,
+    String? profileImageDetailSerialized,
+    int? balanceBch,
+    int? balanceMemo,
+    int? balanceToken,
+    bool? isCheckingAvatar,
+    bool? isCheckingDetail,
+    int? hasCheckedUrlAvatarCount,
+    int? hasCheckedUrlDetailCount,
   }) {
     return MemoModelCreator(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      profileText: profileText ?? this.profileText,
-      profileImgurUrl: profileImgurUrl ?? this.profileImgurUrl,
-      followerCount: followerCount ?? this.followerCount,
-      actions: actions ?? this.actions,
-      created: created ?? this.created,
-      lastActionDate: lastActionDate ?? this.lastActionDate,
-    );
+        id: id ?? this.id,
+        name: name ?? this.name,
+        profileText: profileText ?? this.profileText,
+        followerCount: followerCount ?? this.followerCount,
+        actions: actions ?? this.actions,
+        created: created ?? this.created,
+        lastActionDate: lastActionDate ?? this.lastActionDate,
+        profileImgurUrl: profileImgurUrl ?? this.profileImgurUrl,
+        hasRegisteredAsUser: hasRegisteredAsUser ?? this.hasRegisteredAsUser,
+        lastRegisteredCheck: lastRegisteredCheck ?? this.lastRegisteredCheck,
+        profileImageAvatarSerialized: profileImageAvatarSerialized ?? this.profileImageAvatarSerialized,
+        profileImageDetailSerialized: profileImageDetailSerialized ?? this.profileImageDetailSerialized,
+      )
+      ..balanceBch = balanceBch ?? this.balanceBch
+      ..balanceMemo = balanceMemo ?? this.balanceMemo
+      ..balanceToken = balanceToken ?? this.balanceToken
+      .._isCheckingAvatar = isCheckingAvatar ?? _isCheckingAvatar
+      .._isCheckingDetail = isCheckingDetail ?? _isCheckingDetail
+      .._hasCheckedUrlAvatarCount = hasCheckedUrlAvatarCount ?? _hasCheckedUrlAvatarCount
+      .._hasCheckedUrlDetailCount = hasCheckedUrlDetailCount ?? _hasCheckedUrlDetailCount;
   }
 }

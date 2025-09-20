@@ -40,7 +40,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   late bool _isCashtokenFormat;
   late Future<void> _initFuture;
   Timer? _balanceRefreshTimer;
-  final Duration _refreshInterval = Duration(seconds: kDebugMode ? 3 : 3);
+  final Duration _refreshInterval = Duration(seconds: kDebugMode ? 60 : 3);
   bool _isToggleEnabled = true;
 
   @override

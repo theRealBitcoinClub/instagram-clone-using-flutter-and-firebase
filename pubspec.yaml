@@ -19,6 +19,7 @@ dependencies:
   bip39_mnemonic: ^4.0.1
   clipboard: ^2.0.2
   html: ^0.15.6
+  cached_network_image: ^3.4.1
   shared_preferences: ^2.5.3
   youtube_player_flutter: ^9.1.2
   #webview_flutter: ^4.13.0

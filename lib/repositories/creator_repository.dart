@@ -267,6 +267,10 @@ class CreatorRepository {
     await clearIsarCache();
     print("INFO: Cleared all creator caches.");
   }
+
+  Future<void> refreshUserHasRegistered(MemoModelCreator creator) async {
+    creator.refreshUserHasRegistered(ref);
+  }
 }
 
 final creatorRepositoryProvider = Provider((ref) => CreatorRepository(ref));

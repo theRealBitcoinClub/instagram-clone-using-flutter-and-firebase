@@ -29,13 +29,13 @@ Map<String, dynamic> _$MemoModelUserToJson(MemoModelUser instance) =>
     };
 
 const _$TipReceiverEnumMap = {
-  TipReceiver.app: 'app',
   TipReceiver.creator: 'creator',
-  TipReceiver.both: 'both',
   TipReceiver.burn20Creator80: 'burn20Creator80',
   TipReceiver.burn40Creator60: 'burn40Creator60',
+  TipReceiver.both: 'both',
   TipReceiver.burn60Creator40: 'burn60Creator40',
   TipReceiver.burn80Creator20: 'burn80Creator20',
+  TipReceiver.app: 'app',
 };
 
 const _$TipAmountEnumMap = {

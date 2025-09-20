@@ -6,6 +6,7 @@ import 'package:mahakka/widgets/profile/header/stat_widget.dart';
 import '../../../memo/model/memo_model_creator.dart';
 import '../../../providers/webview_providers.dart';
 import '../../../views_taggable/widgets/qr_code_dialog.dart';
+import '../../cached_avatar.dart';
 import '../profile_buttons.dart';
 
 class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
@@ -39,12 +40,11 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
           // Avatar
           GestureDetector(
             onTap: showImageDetail,
-            child: CircleAvatar(
-              radius: 40,
-              backgroundColor: colorScheme.surfaceVariant,
-              backgroundImage: showDefaultAvatar || creatorProfileImg.isEmpty
-                  ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                  : NetworkImage(creatorProfileImg),
+            child: CachedAvatar(
+              key: ValueKey('profile_avatar_${creator.id}'),
+              creatorId: creator.id,
+              radius: 45,
+              enableNavigation: false, // No navigation in profile header
             ),
           ),
           const SizedBox(width: 16),

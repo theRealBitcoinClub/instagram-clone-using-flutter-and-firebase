@@ -8,8 +8,8 @@ import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/widgets/popularity_score_widget.dart';
 
 import '../../provider/post_update_provider.dart';
-import '../../providers/creator_avatar_provider.dart';
 import '../../tab_item_data.dart';
+import '../cached_avatar.dart';
 
 // Helper for logging (can be moved to a common utils file if used elsewhere)
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -42,7 +42,7 @@ class PostCardHeader extends ConsumerWidget {
     // or you can add a fallback here.
     final MemoModelCreator creator = post.creator ?? MemoModelCreator(id: post.creatorId, name: post.creatorId); // Fallback
     // Watch the avatar provider to get the avatar URL.
-    final avatarAsyncValue = ref.watch(creatorAvatarProvider(post.creator!.id));
+    // final avatarAsyncValue = ref.watch(creatorAvatarProvider(post.creator!.id));
     // Watch for popularity score updates for this specific post
     final popularityUpdates = ref.watch(postPopularityProvider);
     final updatedScore = popularityUpdates[post.id!];
@@ -50,37 +50,32 @@ class PostCardHeader extends ConsumerWidget {
     // Use the updated score if available, otherwise use the original
     final displayScore = updatedScore ?? post.popularityScore;
 
-    String avatarUrl = creator.profileImageAvatar();
+    // String avatarUrl = creator.profileImageAvatar();
 
     // The when() method is called with a data, loading and error handler to return a widget.
     // This allows for asynchronous UI updates.
-    avatarAsyncValue.when(
-      data: (url) {
-        // If the provider successfully fetched an avatar URL, update the local variable.
-        if (url != null) {
-          avatarUrl = url;
-        }
-      },
-      loading: () {
-        // We can just keep the existing avatar URL while loading.
-        // The UI will show whatever is already there.
-      },
-      error: (e, s) {
-        // Log the error but don't disrupt the rest of the UI.
-        print("Error fetching avatar for ${creator.id}: $e");
-      },
-    );
+    // avatarAsyncValue.when(
+    //   data: (url) {
+    //     // If the provider successfully fetched an avatar URL, update the local variable.
+    //     if (url != null) {
+    //       avatarUrl = url;
+    //     }
+    //   },
+    //   loading: () {
+    //     // We can just keep the existing avatar URL while loading.
+    //     // The UI will show whatever is already there.
+    //   },
+    //   error: (e, s) {
+    //     // Log the error but don't disrupt the rest of the UI.
+    //     print("Error fetching avatar for ${creator.id}: $e");
+    //   },
+    // );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16).copyWith(right: 8),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => _navigateToProfile(context, ref, creator.id), // Pass ref
-            child: creator.hasRegisteredAsUser
-                ? wrapWithBadge(context, theme, creator, buildCircleAvatar(theme, creator, avatarUrl))
-                : buildCircleAvatar(theme, creator, avatarUrl),
-          ),
+          CachedAvatar(creatorId: creator.id, radius: 26),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

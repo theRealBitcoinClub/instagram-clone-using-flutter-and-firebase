@@ -8,29 +8,27 @@ part of 'memo_model_post.dart';
 
 MemoModelPost _$MemoModelPostFromJson(Map<String, dynamic> json) =>
     MemoModelPost(
-        id: json['id'] as String?,
-        text: json['text'] as String?,
-        imgurUrl: json['imgurUrl'] as String?,
-        youtubeId: json['youtubeId'] as String?,
-        createdDateTime: _dateTimeFromJson(
-          json['createdDateTime'] as Timestamp?,
-        ),
-        popularityScore: (json['popularityScore'] as num?)?.toInt() ?? 0,
-        likeCounter: (json['likeCounter'] as num?)?.toInt(),
-        replyCounter: (json['replyCounter'] as num?)?.toInt(),
-        creatorId: json['creatorId'] as String? ?? '',
-        topicId: json['topicId'] as String? ?? '',
-        tagIds:
-            (json['tagIds'] as List<dynamic>?)
-                ?.map((e) => e as String)
-                .toList() ??
-            const [],
-      )
-      ..imageUrl = json['imageUrl'] as String?
-      ..videoUrl = json['videoUrl'] as String?
-      ..showOnFeed = json['showOnFeed'] as bool?
-      ..hideOnFeed = json['hideOnFeed'] as bool?
-      ..ipfsCid = json['ipfsCid'] as String?;
+      id: json['id'] as String?,
+      text: json['text'] as String?,
+      imgurUrl: json['imgurUrl'] as String?,
+      youtubeId: json['youtubeId'] as String?,
+      videoUrl: json['videoUrl'] as String?,
+      imageUrl: json['imageUrl'] as String?,
+      ipfsCid: json['ipfsCid'] as String?,
+      createdDateTime: _dateTimeFromJson(json['createdDateTime'] as Timestamp?),
+      popularityScore: (json['popularityScore'] as num?)?.toInt() ?? 0,
+      likeCounter: (json['likeCounter'] as num?)?.toInt(),
+      replyCounter: (json['replyCounter'] as num?)?.toInt(),
+      creatorId: json['creatorId'] as String? ?? '',
+      topicId: json['topicId'] as String? ?? '',
+      tagIds:
+          (json['tagIds'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
+      showOnFeed: json['showOnFeed'] as bool?,
+      hideOnFeed: json['hideOnFeed'] as bool?,
+    );
 
 Map<String, dynamic> _$MemoModelPostToJson(MemoModelPost instance) =>
     <String, dynamic>{

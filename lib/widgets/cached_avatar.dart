@@ -3,13 +3,14 @@
 import 'dart:async';
 
 import 'package:badges/badges.dart' as badges;
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/repositories/creator_repository.dart';
 import 'package:mahakka/tab_item_data.dart';
+
+import '../providers/avatar_refresh_provider.dart';
 
 class CachedAvatar extends ConsumerStatefulWidget {
   final String creatorId;
@@ -42,6 +43,14 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
   void initState() {
     super.initState();
     _loadCreator();
+
+    // _creatorFuture.then((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshAvatar();
+    });
+    // _refreshAvatar();
+    // });
+
     _startRegistrationCheckTimer();
   }
 
@@ -120,9 +129,21 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
     }
   }
 
+  // In CachedAvatar's _refreshAvatar method
   Future<void> _refreshAvatar() async {
+    final isAlreadyRefreshing = ref.read(avatarRefreshStateProvider.notifier).isRefreshing(widget.creatorId);
+
+    if (isAlreadyRefreshing) {
+      // Another CachedAvatar is already refreshing this creator, just wait for it
+      return;
+    }
+
     try {
+      // Mark as refreshing
+      ref.read(avatarRefreshStateProvider.notifier).setRefreshing(widget.creatorId, true);
+
       await ref.read(creatorRepositoryProvider).refreshAndCacheAvatar(widget.creatorId);
+
       // Reload the creator to get updated data
       _loadCreator();
       if (mounted) {
@@ -130,6 +151,9 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
       }
     } catch (e) {
       print("Error refreshing avatar: $e");
+    } finally {
+      // Always mark as not refreshing
+      ref.read(avatarRefreshStateProvider.notifier).completeRefresh(widget.creatorId);
     }
   }
 
@@ -144,6 +168,9 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
 
   @override
   Widget build(BuildContext context) {
+    final avatarRefreshState = ref.watch(avatarRefreshStateProvider);
+    final isRefreshing = avatarRefreshState[widget.creatorId] ?? false;
+
     return FutureBuilder<MemoModelCreator?>(
       future: _creatorFuture,
       builder: (context, snapshot) {
@@ -155,23 +182,23 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
         return GestureDetector(
           onTap: _navigateToProfile,
           onLongPress: _refreshAvatar,
-          child: _buildAvatarWithBadge(context, avatarUrl, hasRegistered, isLoading),
+          child: _buildAvatarWithBadge(context, avatarUrl, hasRegistered, isLoading, isRefreshing),
         );
       },
     );
   }
 
-  Widget _buildAvatarWithBadge(BuildContext context, String avatarUrl, bool hasRegistered, bool isLoading) {
+  Widget _buildAvatarWithBadge(BuildContext context, String avatarUrl, bool hasRegistered, bool isLoading, bool isRefreshing) {
     final theme = Theme.of(context);
 
     Widget avatar = CircleAvatar(
       radius: widget.radius,
       backgroundColor: theme.colorScheme.surfaceVariant,
-      backgroundImage: avatarUrl.isEmpty ? AssetImage(widget.fallbackAsset) as ImageProvider : CachedNetworkImageProvider(avatarUrl),
+      backgroundImage: avatarUrl.isEmpty ? AssetImage(widget.fallbackAsset) as ImageProvider : NetworkImage(avatarUrl),
       onBackgroundImageError: (exception, stackTrace) {
         print("Error loading avatar image: $exception");
       },
-      child: isLoading ? Icon(Icons.person, size: widget.radius) : null,
+      child: isLoading || isRefreshing ? Icon(Icons.person, size: widget.radius) : null,
     );
 
     if (!widget.showBadge || !hasRegistered) {
@@ -182,7 +209,7 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
       position: badges.BadgePosition.topEnd(top: -2, end: -6),
       showBadge: true,
       onTap: () {},
-      badgeContent: Icon(Icons.currency_bitcoin_rounded, color: theme.colorScheme.onPrimary, size: widget.radius / 2),
+      badgeContent: Icon(Icons.currency_bitcoin_rounded, color: theme.colorScheme.onPrimary, size: 15),
       badgeAnimation: badges.BadgeAnimation.fade(
         animationDuration: Duration(milliseconds: 5000),
         loopAnimation: true,

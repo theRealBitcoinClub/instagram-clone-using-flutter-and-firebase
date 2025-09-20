@@ -50,32 +50,15 @@ class PostCardHeader extends ConsumerWidget {
     // Use the updated score if available, otherwise use the original
     final displayScore = updatedScore ?? post.popularityScore;
 
-    // String avatarUrl = creator.profileImageAvatar();
-
-    // The when() method is called with a data, loading and error handler to return a widget.
-    // This allows for asynchronous UI updates.
-    // avatarAsyncValue.when(
-    //   data: (url) {
-    //     // If the provider successfully fetched an avatar URL, update the local variable.
-    //     if (url != null) {
-    //       avatarUrl = url;
-    //     }
-    //   },
-    //   loading: () {
-    //     // We can just keep the existing avatar URL while loading.
-    //     // The UI will show whatever is already there.
-    //   },
-    //   error: (e, s) {
-    //     // Log the error but don't disrupt the rest of the UI.
-    //     print("Error fetching avatar for ${creator.id}: $e");
-    //   },
-    // );
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16).copyWith(right: 8),
       child: Row(
         children: [
-          CachedAvatar(creatorId: creator.id, radius: 26),
+          CachedAvatar(
+            key: ValueKey('post_avatar_${creator.id}_${post.id}'), // Include refresh state in key
+            creatorId: creator.id,
+            radius: 26,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

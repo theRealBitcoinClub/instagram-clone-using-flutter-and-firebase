@@ -71,7 +71,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     _youtubeCtrl.addListener(_onYouTubeInputChanged);
     _imgurCtrl.addListener(_onImgurInputChanged);
-    // _ipfsCtrl.addListener(_onIpfsInputChanged);
     _odyseeCtrl.addListener(_onOdyseeInputChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -88,15 +87,12 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final text = _imgurCtrl.text.trim();
     String newImgurUrl = MemoRegExp(text).extractValidImgurOrGiphyUrl();
 
-    // var read = ref.read(imgurUrlProvider);
-    // if (newImgurUrl != read) {
     if (newImgurUrl.isNotEmpty) {
       ref.read(imgurUrlProvider.notifier).state = newImgurUrl;
       _clearOtherMediaProviders(0);
     } else {
       tryAdvancedImgurCheck();
     }
-    // }
   }
 
   Future<void> tryAdvancedImgurCheck() async {
@@ -114,41 +110,21 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final text = _youtubeCtrl.text.trim();
     final newVideoId = YoutubePlayer.convertUrlToId(text);
 
-    // if ((newVideoId ?? "") != ref.read(youtubeVideoIdProvider)) {
     if (newVideoId != null && newVideoId.isNotEmpty) {
       ref.read(youtubeVideoIdProvider.notifier).state = newVideoId;
       _clearOtherMediaProviders(1);
     }
-    // else {
-    //   ref.read(youtubeVideoIdProvider.notifier).state = "";
-    // }
-    // }
   }
-
-  // void _onIpfsInputChanged() {
-  //   if (!mounted) return;
-  //   final text = _ipfsCtrl.text.trim();
-  //   final newIpfsCid = MemoRegExp(text).extractIpfsCid();
-  //
-  //   // if (newIpfsCid != ref.read(ipfsCidProvider)) {
-  //   if (newIpfsCid.isNotEmpty) {
-  //     ref.read(ipfsCidProvider.notifier).state = newIpfsCid;
-  //     _clearOtherMediaProviders(2);
-  //   }
-  //   // }
-  // }
 
   void _onOdyseeInputChanged() {
     if (!mounted) return;
     final text = _odyseeCtrl.text.trim();
     final newOdyseeUrl = MemoRegExp(text).extractOdyseeUrl();
 
-    // if (newOdyseeUrl != ref.read(odyseeUrlProvider)) {
     if (newOdyseeUrl.isNotEmpty) {
       ref.read(odyseeUrlProvider.notifier).state = newOdyseeUrl;
       _clearOtherMediaProviders(3);
     }
-    // }
   }
 
   void _clearOtherMediaProviders(int index) {
@@ -164,12 +140,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       begin: const Offset(0, 0.25),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOutSine));
-    _textInputController.addListener(_onTagInputChanged);
-  }
-
-  void _onTagInputChanged() {
-    // Future(() {});
-    // if (hasInitialized) ref.read(tagTextProvider.notifier).state = _inputTagTopicController.text;
   }
 
   @override
@@ -183,7 +153,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _youtubeCtrl.dispose();
     _ipfsCtrl.dispose();
     _odyseeCtrl.dispose();
-    _textInputController.removeListener(_onTagInputChanged);
     _textInputController.dispose();
     _animationController.dispose();
     _focusNode.dispose();
@@ -430,10 +399,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _showUrlInputDialog("Paste YouTube Video URL", _youtubeCtrl, "e.g. https://youtu.be/video_id");
   }
 
-  Future<void> _showIpfsDialog() async {
-    _showUrlInputDialog("Paste IPFS CID", _ipfsCtrl, "e.g. QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco");
-  }
-
   Future<void> _showOdyseeDialog() async {
     _showUrlInputDialog("Paste Odysee Video URL", _odyseeCtrl, "e.g. https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73");
   }
@@ -618,23 +583,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     return text;
   }
 
-  // String? _validateTagsAndTopic() {
-  //   final tags = _textInputController.tags;
-  //   int topicCount = tags.where((t) => t.triggerCharacter == "@").length;
-  //   int hashtagCount = tags.where((t) => t.triggerCharacter == "#").length;
-  //
-  //   if (topicCount > 1) {
-  //     return "Only one @topic is allowed.";
-  //   }
-  //   if (hashtagCount > 3) {
-  //     return "Maximum of 3 #hashtags allowed.";
-  //   }
-  //   if (_textInputController.text.trim().isEmpty && _hasMediaSelected()) {
-  //     return "Please add a caption for your media.";
-  //   }
-  //   return null;
-  // }
-
   void _clearInputs() {
     _textInputController.clear();
     _imgurCtrl.clear();
@@ -645,6 +593,5 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     ref.read(youtubeVideoIdProvider.notifier).state = '';
     ref.read(ipfsCidProvider.notifier).state = '';
     ref.read(odyseeUrlProvider.notifier).state = '';
-    // ref.read(youtubeControllerProvider.notifier).state = null;
   }
 }

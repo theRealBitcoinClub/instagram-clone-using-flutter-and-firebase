@@ -7,6 +7,10 @@ class MemoRegExp {
   static const urlRegex = r'(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)';
   static const ipfsRegex = r'b[A-Za-z2-7]{58,}';
 
+  static const imageExtensions = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg", ".avif"};
+  static const videoExtensions = {"mp4", "mov", "m4v", "avi", "wmv", "flv", "mkv", "webm", "3gp", "mpeg", "mpg", "m2v", "m4p", "m4b"};
+  static const audioExtensions = {".mp3", ".wav", ".ogg", ".m4a", ".flac", ".aac", ".wma"};
+
   MemoRegExp(this.text);
 
   // Generic method to extract URLs matching a given pattern
@@ -40,51 +44,29 @@ class MemoRegExp {
     return memoRegExp.extractAllWhitelistedVideoUrls();
   }
 
-  // Member method that utilizes the text property to extract whitelisted image URLs
-  List<String> extractAllWhitelistedImageUrls() {
-    final List<String> allUrls = extractAllWhitelistedMediaUrls();
-
-    // Filter for URLs that are likely to be images (common image extensions)
-    final imageUrls = allUrls.where((url) {
-      // Check if URL ends with common image extensions
+  // Generic method that can filter by any set of extensions
+  List<String> _filterUrlsByExtensions(List<String> urls, Set<String> extensions) {
+    return urls.where((url) {
       final lowerUrl = url.toLowerCase();
-      return lowerUrl.endsWith('.jpg') ||
-          lowerUrl.endsWith('.jpeg') ||
-          lowerUrl.endsWith('.png') ||
-          lowerUrl.endsWith('.gif') ||
-          lowerUrl.endsWith('.webp') ||
-          lowerUrl.endsWith('.bmp') ||
-          lowerUrl.endsWith('.svg') ||
-          lowerUrl.endsWith('.avif');
+      return extensions.any((ext) => lowerUrl.endsWith(ext));
     }).toList();
-
-    return imageUrls;
   }
 
-  // Member method that utilizes the text property to extract whitelisted video URLs
+  // Specific methods that reuse the generic functionality
+  List<String> extractAllWhitelistedImageUrls() {
+    final allUrls = extractAllWhitelistedMediaUrls();
+    return _filterUrlsByExtensions(allUrls, imageExtensions);
+  }
+
   List<String> extractAllWhitelistedVideoUrls() {
-    final List<String> allUrls = extractAllWhitelistedMediaUrls();
+    final allUrls = extractAllWhitelistedMediaUrls();
+    return _filterUrlsByExtensions(allUrls, videoExtensions);
+  }
 
-    // Filter for URLs that are likely to be videos (common video formats and platforms)
-    final videoUrls = allUrls.where((url) {
-      final lowerUrl = url.toLowerCase();
-
-      // Check for common video file extensions supported by video_player
-      final hasVideoExtension =
-          lowerUrl.endsWith('.mp4') ||
-          lowerUrl.endsWith('.mov') ||
-          lowerUrl.endsWith('.m4v') ||
-          lowerUrl.endsWith('.avi') ||
-          lowerUrl.endsWith('.wmv') ||
-          lowerUrl.endsWith('.flv') ||
-          lowerUrl.endsWith('.mkv') ||
-          lowerUrl.endsWith('.webm') ||
-          lowerUrl.endsWith('.3gp');
-
-      return hasVideoExtension;
-    }).toList();
-
-    return videoUrls;
+  // Optional: Method to extract other media types
+  List<String> extractAllWhitelistedAudioUrls() {
+    final allUrls = extractAllWhitelistedMediaUrls();
+    return _filterUrlsByExtensions(allUrls, audioExtensions);
   }
 
   // Extract first whitelisted image URL (useful for previews)

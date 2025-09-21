@@ -5,6 +5,7 @@ class MemoRegExp {
   static const topicRegex = r'@[a-zA-Z0-9_\-\.]+';
   static const hashtagRegex = r'#\w+';
   static const urlRegex = r'(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)';
+  static const ipfsRegex = r'b[A-Za-z2-7]{58,}';
 
   MemoRegExp(this.text);
 
@@ -107,7 +108,7 @@ class MemoRegExp {
   }
 
   String extractIpfsCid() {
-    final RegExp ipfsExp = RegExp(r'b[A-Za-z2-7]{58,}');
+    final RegExp ipfsExp = RegExp(ipfsRegex);
     final match = ipfsExp.firstMatch(text);
     return match?.group(0) ?? "";
   }
@@ -223,7 +224,7 @@ class TextFilter {
   static String replaceNonWhitelistedDomains(String text) {
     return text.replaceAllMapped(_urlRegex, (match) {
       final url = match.group(0)!;
-      return _isUrlWhitelisted(url) ? url : '[link removed]';
+      return _isUrlWhitelisted(url) ? url : '[link]';
     });
   }
 

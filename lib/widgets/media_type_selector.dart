@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../provider/media_selection_notifier.dart';
 import '../screens/add/clipboard_provider.dart';
+import 'animations/animated_grow_fade_in.dart';
 
 // media_type.dart
 enum MediaType {
@@ -66,53 +67,61 @@ class MediaTypeSelector extends ConsumerWidget {
     final selectionState = ref.watch(mediaSelectionProvider);
     final isCheckingClipboard = ref.watch(clipboardNotifierProvider.select((state) => state.isChecking));
 
-    if (isCheckingClipboard) {
-      return Container(
-        color: colorScheme.surfaceVariant.withOpacity(0.1),
-        height: 60,
-        child: Stack(
-          children: [
-            LinearProgressIndicator(valueColor: AlwaysStoppedAnimation(colorScheme.primary)),
-            // Keep the buttons visible but disabled
-            Opacity(
-              opacity: 0.5,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: MediaType.values.map((mediaType) {
-                  final isSelected = selectionState.lastSelectedMediaType == mediaType;
-                  return _buildMediaTypeButton(theme, mediaType, isSelected, ref);
-                }).toList(),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+    // if (isCheckingClipboard) {
+    //   return Container(
+    //     color: colorScheme.surfaceVariant.withOpacity(0.1),
+    //     height: 66,
+    //     child: Stack(
+    //       children: [
+    //         LinearProgressIndicator(valueColor: AlwaysStoppedAnimation(colorScheme.primary)),
+    //         // Keep the buttons visible but disabled
+    //         Opacity(
+    //           opacity: 0.5,
+    //           child: Row(
+    //             mainAxisAlignment: MainAxisAlignment.spaceAround,
+    //             crossAxisAlignment: CrossAxisAlignment.stretch,
+    //             children: MediaType.values.map((mediaType) {
+    //               final isSelected = selectionState.lastSelectedMediaType == mediaType;
+    //               return _buildMediaTypeButton(theme, mediaType, isSelected, ref);
+    //             }).toList(),
+    //           ),
+    //         ),
+    //       ],
+    //     ),
+    //   );
+    // }
 
     return Container(
-      color: theme.brightness == Brightness.dark ? Colors.black.withAlpha(45) : Colors.white.withAlpha(45),
-      height: 60,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: MediaType.values.map((mediaType) {
-          final isSelected = selectionState.lastSelectedMediaType == mediaType;
-          return _buildMediaTypeButton(theme, mediaType, isSelected, ref);
-        }).toList(),
+      color: theme.colorScheme.surface,
+      height: 66,
+      child: Column(
+        children: [
+          if (isCheckingClipboard)
+            AnimatedGrowFadeIn(
+              show: isCheckingClipboard,
+              child: LinearProgressIndicator(minHeight: 2, valueColor: AlwaysStoppedAnimation(colorScheme.primary)),
+            ),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: MediaType.values.map((mediaType) {
+                final isSelected = selectionState.lastSelectedMediaType == mediaType;
+                return _buildMediaTypeButton(theme, mediaType, isSelected, ref);
+              }).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildMediaTypeButton(ThemeData theme, MediaType mediaType, bool isSelected, WidgetRef ref) {
     final colorScheme = theme.colorScheme;
-    final isCheckingClipboard = ref.watch(clipboardNotifierProvider.select((state) => state.isChecking));
-    final selectionColor = isSelected ? colorScheme.primary : colorScheme.primary.withOpacity(0.8);
-    final backgroundColor = isSelected
-        ? theme.brightness == Brightness.dark
-              ? Colors.black.withAlpha(66)
-              : Colors.white.withAlpha(66)
-        : Colors.transparent;
+    // final isCheckingClipboard = ref.watch(clipboardNotifierProvider.select((state) => state.isChecking));
+    // final selectionColor = isSelected ? colorScheme.primary : colorScheme.primary.withOpacity(0.8);
+    final selectionColor = colorScheme.primary;
+    final backgroundColor = isSelected ? theme.scaffoldBackgroundColor : theme.colorScheme.surface;
 
     return Expanded(
       child: Tooltip(
@@ -122,14 +131,16 @@ class MediaTypeSelector extends ConsumerWidget {
             foregroundColor: selectionColor,
             backgroundColor: backgroundColor,
             padding: EdgeInsets.zero,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
           ),
-          onPressed: isCheckingClipboard
-              ? null // Disable button when checking clipboard
-              : () {
-                  ref.read(mediaSelectionProvider.notifier).selectMediaType(mediaType);
-                  onMediaTypeSelected(mediaType);
-                },
+          onPressed:
+              // isCheckingClipboard
+              //     ? null // Disable button when checking clipboard
+              //     :
+              () {
+                ref.read(mediaSelectionProvider.notifier).selectMediaType(mediaType);
+                onMediaTypeSelected(mediaType);
+              },
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

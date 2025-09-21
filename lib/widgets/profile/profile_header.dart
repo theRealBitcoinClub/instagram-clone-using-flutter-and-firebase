@@ -29,49 +29,6 @@ class ProfileHeader extends StatelessWidget {
     final theme = Theme.of(context);
     return _buildHeaderContent(creator, theme);
   }
-  // @override
-  // Widget build(BuildContext context, WidgetRef ref) {
-  //   final theme = Theme.of(context);
-  //
-  //   return Consumer(
-  //     builder: (context, ref, child) {
-  //       final profileDataAsync = ref.watch(profileDataProvider);
-  //
-  //       return profileDataAsync.when(
-  //         skipLoadingOnReload: true,
-  //         skipLoadingOnRefresh: true,
-  //         skipError: true,
-  //         data: (profileData) {
-  //           if (profileData.creator == null) return LinearProgressIndicator();
-  //           return _buildHeaderContent(profileData.creator!, theme);
-  //         },
-  //         loading: () => LinearProgressIndicator(),
-  //         error: (error, stack) => SizedBox.shrink(),
-  //       );
-  //     },
-  //   );
-  // }
-  //
-  // @override
-  // Widget build(BuildContext context, WidgetRef ref) {
-  //   final theme = Theme.of(context);
-  //   final profileDataAsync = ref.watch(profileDataProvider);
-  //
-  //   return profileDataAsync.when(
-  //     skipLoadingOnReload: true, // Add this
-  //     skipLoadingOnRefresh: true, // Add this
-  //     skipError: true,
-  //     data: (profileData) {
-  //       // Safe null handling
-  //       if (profileData.creator == null) {
-  //         return LinearProgressIndicator();
-  //       }
-  //       return _buildHeaderContent(profileData.creator!, theme);
-  //     },
-  //     loading: () => LinearProgressIndicator(),
-  //     error: (error, stack) => SizedBox.shrink(),
-  //   );
-  // }
 
   Widget _buildHeaderContent(MemoModelCreator creator, ThemeData theme) {
     return Container(

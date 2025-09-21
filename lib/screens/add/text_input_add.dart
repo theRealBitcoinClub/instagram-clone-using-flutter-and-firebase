@@ -21,6 +21,8 @@ class TextInputFieldAddDialog extends StatelessWidget {
     return TextField(
       controller: textEditingController,
       decoration: InputDecoration(
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surface,
         hintText: hintText,
         border: const OutlineInputBorder(),
         focusedBorder: borderColor != null ? OutlineInputBorder(borderSide: BorderSide(color: borderColor!, width: 2.0)) : null,

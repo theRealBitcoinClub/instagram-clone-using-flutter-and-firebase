@@ -16,7 +16,7 @@ class StatWidget extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 0.0, bottom: 2.0),
-          child: PopularityScoreWidget(score: count, textStyleBalance: true),
+          child: PopularityScoreWidget(initialScore: count, textStyleBalance: true),
         ),
         Text(
           title,

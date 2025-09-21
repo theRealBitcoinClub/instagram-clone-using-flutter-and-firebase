@@ -32,7 +32,7 @@ class BurnerBalanceWidget extends ConsumerWidget {
           asyncBurnerBalance.when(
             data: (burnerBalance) {
               return PopularityScoreWidget(
-                score: burnerBalance.bch,
+                initialScore: burnerBalance.bch,
                 textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: theme.colorScheme.onPrimary),
               );
             },

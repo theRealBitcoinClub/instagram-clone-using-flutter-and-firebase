@@ -221,7 +221,7 @@ class MemoAccountant {
     MemoAccountantResponse response = await _tryPublishLike(post, user.wifLegacy);
 
     if (response == MemoAccountantResponse.yes) {
-      ref.read(postCacheRepositoryProvider).updatePopularityScore(post.id!, user.tipAmount, scrapedPost);
+      ref.read(postCacheRepositoryProvider).updatePopularityScore(post.id!, tipAmount: user.tipAmount, scrapedPost: scrapedPost);
     }
 
     return _memoAccountantResponse(response);

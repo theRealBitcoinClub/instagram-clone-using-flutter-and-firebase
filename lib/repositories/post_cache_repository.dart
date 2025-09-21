@@ -30,7 +30,7 @@ class PostCacheRepository {
 
   Future<Isar> get _isar async => await ref.read(isarProvider.future);
 
-  Future<void> updatePopularityScore(String postId, int tipAmount, MemoModelPost? scrapedPost) async {
+  Future<void> updatePopularityScore(String postId, {int tipAmount = 0, MemoModelPost? scrapedPost, bool saveToFirebase = false}) async {
     MemoModelPost post = (await getPost(postId))!;
 
     final TipReceiver receiver = ref.read(userProvider)!.tipReceiver;
@@ -52,7 +52,7 @@ class PostCacheRepository {
       newScore = scrapedPost.popularityScore + creatorTipAmount;
     }
 
-    await ref.read(postServiceProvider).savePost(post);
+    if (saveToFirebase) await ref.read(postServiceProvider).savePost(post);
     await savePosts([post]);
     ref.read(postPopularityProvider.notifier).updatePopularityScore(postId, newScore);
   }

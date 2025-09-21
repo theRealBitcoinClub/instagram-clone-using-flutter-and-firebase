@@ -97,7 +97,7 @@ class PostCardHeader extends ConsumerWidget {
               ],
             ),
           ),
-          PopularityScoreWidget(score: displayScore),
+          PopularityScoreWidget(initialScore: displayScore, postId: post.id),
           // Text("${post.popularityScore}", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400)),
           SizedBox(width: 4),
           IconButton(

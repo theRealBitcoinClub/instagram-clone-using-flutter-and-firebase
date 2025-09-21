@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class PopularityScoreWidget extends StatelessWidget {
-  final int score;
+import '../provider/post_update_provider.dart';
+
+class PopularityScoreWidget extends ConsumerStatefulWidget {
+  final String? postId; // Optional - when provided, enables auto-refresh
+  final int initialScore;
   final TextStyle? textStyle;
   final TextAlign textAlign;
   final int maxLines;
@@ -11,7 +15,8 @@ class PopularityScoreWidget extends StatelessWidget {
 
   const PopularityScoreWidget({
     Key? key,
-    required this.score,
+    this.postId, // Make postId optional
+    required this.initialScore,
     this.textStyle,
     this.textStyleBalance = false,
     this.textAlign = TextAlign.start,
@@ -21,28 +26,7 @@ class PopularityScoreWidget extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final String formattedScore = formatPopularityScore(score);
-
-    // Determine which style to use based on the score magnitude
-    TextStyle effectiveStyle;
-
-    // if (score >= 1000000 && largeNumberStyle != null) {
-    //   effectiveStyle = largeNumberStyle!;
-    // } else if (score >= 1000 && mediumNumberStyle != null) {
-    //   effectiveStyle = mediumNumberStyle!;
-    // } else if (smallNumberStyle != null) {
-    //   effectiveStyle = smallNumberStyle!;
-    // } else {
-    if (textStyleBalance)
-      effectiveStyle = textStyle ?? theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w400) ?? const TextStyle();
-    else
-      effectiveStyle = textStyle ?? theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400) ?? const TextStyle();
-    // }
-
-    return Text(formattedScore, style: effectiveStyle, textAlign: textAlign, maxLines: maxLines, softWrap: softWrap, overflow: overflow);
-  }
+  ConsumerState<PopularityScoreWidget> createState() => _PopularityScoreWidgetState();
 
   static String formatPopularityScore(int score) {
     if (score >= 1000000) {
@@ -66,5 +50,51 @@ class PopularityScoreWidget extends StatelessWidget {
     } else {
       return score == -1 ? "?" : score.toString();
     }
+  }
+}
+
+class _PopularityScoreWidgetState extends ConsumerState<PopularityScoreWidget> {
+  @override
+  void initState() {
+    super.initState();
+
+    // Only trigger auto-refresh if postId is provided
+    if (widget.postId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.read(postPopularityProvider.notifier).fetchPopularityScore(widget.postId!);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // If postId is provided, watch for updates, otherwise use initial score
+    final int displayScore;
+
+    if (widget.postId != null) {
+      final popularityUpdates = ref.watch(postPopularityProvider);
+      displayScore = popularityUpdates[widget.postId!] ?? widget.initialScore;
+    } else {
+      displayScore = widget.initialScore;
+    }
+
+    final String formattedScore = PopularityScoreWidget.formatPopularityScore(displayScore);
+
+    final ThemeData theme = Theme.of(context);
+    TextStyle effectiveStyle;
+    if (widget.textStyleBalance) {
+      effectiveStyle = widget.textStyle ?? theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w400) ?? const TextStyle();
+    } else {
+      effectiveStyle = widget.textStyle ?? theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400) ?? const TextStyle();
+    }
+
+    return Text(
+      formattedScore,
+      style: effectiveStyle,
+      textAlign: widget.textAlign,
+      maxLines: widget.maxLines,
+      softWrap: widget.softWrap,
+      overflow: widget.overflow,
+    );
   }
 }

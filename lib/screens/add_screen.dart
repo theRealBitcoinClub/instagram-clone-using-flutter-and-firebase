@@ -4,17 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 import 'package:mahakka/utils/snackbar.dart';
+import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../provider/url_input_verification_notifier.dart';
 import '../theme_provider.dart';
 import 'add/add_post_providers.dart';
-import 'add/clipboard_monitoring_dialog.dart';
+import 'add/clipboard_monitoring_widget.dart';
 import 'add/clipboard_provider.dart';
 import 'add/imgur_media_widget.dart';
 import 'add/ipfs_media_widget.dart';
-import 'add/media_placeholder_widget.dart';
+import 'add/media_selector_widget.dart';
 import 'add/odysee_media_widget.dart';
 import 'add/taggable_input_widget.dart';
 import 'add/youtube_media_widget.dart';
@@ -42,6 +42,11 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   // AddPostController instance
   late AddPostController _addPostController;
 
+  String _title = "Which type of media would you like to publish?";
+  String _hint = "";
+  var _onCreateCallback;
+  var _onGalleryCallback;
+
   @override
   void initState() {
     super.initState();
@@ -67,28 +72,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     _log("initState completed");
   }
-
-  void _onMediaInput(ctrl) {
-    if (!mounted) return;
-    ref.read(urlInputVerificationProvider.notifier).verifyAndProcessInput(ref, ctrl.text);
-
-    // _addPostController.handleImgurInput(_imgurCtrl.text);
-  }
-
-  // void _onYouTubeInputChanged() {
-  //   if (!mounted) return;
-  //   _addPostController.handleYouTubeInput(_youtubeCtrl.text);
-  // }
-  //
-  // void _onOdyseeInputChanged() {
-  //   if (!mounted) return;
-  //   _addPostController.handleOdyseeInput(_odyseeCtrl.text);
-  // }
-  //
-  // void _onIpfsInputChanged() {
-  //   if (!mounted) return;
-  //   _addPostController.handleIpfsInput(_ipfsCtrl.text);
-  // }
 
   void _initStateTagger() {
     _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
@@ -133,7 +116,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final TextTheme textTheme = theme.textTheme;
     final MediaQueryData mediaQuery = MediaQuery.of(context);
     final bool isKeyboardVisible = mediaQuery.viewInsets.bottom > 0;
-    ref.read(clipboardNotifierProvider.notifier).checkClipboard(ref);
+    // WidgetsFlutterBinding.add
+    // ref.read(clipboardNotifierProvider.notifier).checkClipboard(ref);
     hasInitialized = true;
     final asyncThemeState = ref.watch(themeNotifierProvider);
     final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
@@ -162,6 +146,10 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           child: Column(
             children: [
               _buildMediaInputSection(theme, colorScheme, textTheme),
+              AnimatedGrowFadeIn(
+                show: !_hasAddedMediaToPublish(),
+                child: ClipboardMonitoringWidget(title: _title, hint: _hint, onCreate: _onCreateCallback, onGallery: _onGalleryCallback),
+              ),
               if (_hasAddedMediaToPublish())
                 Padding(
                   padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 12, left: 12, right: 12, top: 8),
@@ -193,8 +181,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     // Define reusable padding constants
     final EdgeInsets mediaPadding = EdgeInsets.all(space);
-    final EdgeInsets placeholderPadding = EdgeInsets.symmetric(horizontal: space, vertical: space);
-    final double spacerWidth = space;
+    final EdgeInsets placeholderPadding = EdgeInsets.symmetric(horizontal: space / 2, vertical: space);
+    final double spacerWidth = space / 2;
     final double spacerHeight = space;
 
     // Check for media content and return appropriate widget
@@ -208,26 +196,32 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     // All are empty, show placeholders
     return Padding(
       padding: placeholderPadding,
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              MediaPlaceholderWidget(label: "IMGUR", iconData: Icons.add_photo_alternate_outlined, onTap: _showImgurDialog),
-              SizedBox(width: spacerWidth),
-              MediaPlaceholderWidget(label: "YOUTUBE", iconData: Icons.video_call_outlined, onTap: _showVideoDialog),
-            ],
+          MediaSelectorWidget(
+            label: "IMGUR",
+            iconData: Icons.add_photo_alternate_outlined,
+            onTap: () => updateTitleAndHint("Paste Imgur URL", "e.g. https://i.imgur.com/image.jpeg"),
           ),
-          SizedBox(height: spacerHeight),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              MediaPlaceholderWidget(label: "IPFS", iconData: Icons.cloud_upload_outlined, onTap: _showIpfsDialog),
-              SizedBox(width: spacerWidth),
-              MediaPlaceholderWidget(label: "ODYSEE", iconData: Icons.video_library_outlined, onTap: _showOdyseeDialog),
-            ],
+          SizedBox(width: spacerWidth),
+          MediaSelectorWidget(
+            label: "YOUTUBE",
+            iconData: Icons.video_call_outlined,
+            onTap: () => updateTitleAndHint("Paste YouTube URL", "e.g. https://youtu.be/video_id"),
+          ),
+          SizedBox(width: spacerWidth),
+          MediaSelectorWidget(
+            label: "IPFS",
+            iconData: Icons.cloud_upload_outlined,
+            onTap: () => updateTitleAndHint("Paste Ipfs id or create one", "e.g. bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74"),
+          ),
+          SizedBox(width: spacerWidth),
+          MediaSelectorWidget(
+            label: "ODYSEE",
+            iconData: Icons.video_library_outlined,
+            onTap: () => updateTitleAndHint("Paste Odysee URL", "e.g. https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73"),
           ),
         ],
       ),
@@ -259,39 +253,13 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     return null;
   }
 
-  Future<void> _showIpfsDialog() async {
-    _showUrlInputDialog("Paste Ipfs id or create one", "e.g. bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74");
-  }
-
-  Future<void> _showImgurDialog() async {
-    _showUrlInputDialog("Paste Imgur URL", "e.g. https://i.imgur.com/image.jpeg");
-  }
-
-  Future<void> _showVideoDialog() async {
-    _showUrlInputDialog("Paste YouTube URL", "e.g. https://youtu.be/video_id");
-  }
-
-  Future<void> _showOdyseeDialog() async {
-    _showUrlInputDialog("Paste Odysee URL", "e.g. https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73");
-  }
-
-  void _showUrlInputDialog(String title, String hint) {
-    final ThemeData theme = Theme.of(context);
-    final TextTheme textTheme = theme.textTheme;
-
-    ref.watch(clipboardNotifierProvider.notifier).checkClipboard(ref);
-
-    showDialog(
-      context: context,
-      builder: (dialogCtx) => ClipboardMonitoringDialog(
-        title: title,
-        hint: hint,
-        theme: theme,
-        textTheme: textTheme,
-        onCreate: title.toLowerCase().contains('ipfs') ? _showIpfsUploadScreen : null,
-        onReuse: title.toLowerCase().contains('ipfs') ? _showIpfsGallery : null,
-      ),
-    );
+  void updateTitleAndHint(String title, String hint) {
+    setState(() {
+      _title = title;
+      _hint = hint;
+      _onCreateCallback = title.toLowerCase().contains('ipfs') ? _showIpfsUploadScreen : null;
+      _onGalleryCallback = title.toLowerCase().contains('ipfs') ? _showIpfsGallery : null;
+    });
   }
 
   // Add these methods to _AddPostState

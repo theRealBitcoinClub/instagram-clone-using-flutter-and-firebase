@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/screens/add/media_placeholder_widget.dart';
 import 'package:mahakka/utils/snackbar.dart';
 
 import 'add_post_providers.dart';
@@ -44,6 +45,8 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
     super.initState();
     widget.controller.addListener(_validateInput);
     _setupClipboardMonitoring();
+
+    // _hasValidInput = true;
   }
 
   void _setupClipboardMonitoring() {
@@ -117,7 +120,8 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
     final colorScheme = theme.colorScheme;
 
     return AlertDialog(
-      title: Text(widget.title),
+      title: Text(widget.title, style: theme.textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w400, letterSpacing: 1)),
+      backgroundColor: widget.theme.scaffoldBackgroundColor,
       contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -132,7 +136,9 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
             hintText: widget.hint,
             textInputType: TextInputType.url,
             borderColor: _hasValidInput ? null : Colors.red,
-            errorText: _hasValidInput ? null : 'Please enter a valid URL',
+            errorText: _hasValidInput
+                ? null
+                : 'Paste a valid' + (widget.title.toLowerCase().contains("ipfs") ? " Ipfs Content Id" : " Url link"),
           ),
           const SizedBox(height: 8),
         ],
@@ -165,54 +171,25 @@ class _ClipboardMonitoringDialogState extends ConsumerState<ClipboardMonitoringD
     return Row(
       children: [
         if (widget.onCreate != null)
-          Expanded(
-            child: _buildOptionCard(
-              label: 'CREATE',
-              color: colorScheme.primary,
-              onTap: () {
-                Navigator.of(_dialogCtx).pop();
-                widget.onCreate!();
-              },
-            ),
+          MediaPlaceholderWidget(
+            label: "CREATE",
+            iconData: Icons.add,
+            onTap: () {
+              Navigator.of(_dialogCtx).pop();
+              widget.onCreate!();
+            },
           ),
         if (widget.onCreate != null && widget.onReuse != null) const SizedBox(width: 12),
         if (widget.onReuse != null)
-          Expanded(
-            child: _buildOptionCard(
-              label: 'REUSE',
-              color: colorScheme.secondary,
-              onTap: () {
-                Navigator.of(_dialogCtx).pop();
-                widget.onReuse!();
-              },
-            ),
+          MediaPlaceholderWidget(
+            label: "GALLERY",
+            iconData: Icons.image_search,
+            onTap: () {
+              Navigator.of(_dialogCtx).pop();
+              widget.onReuse!();
+            },
           ),
       ],
-    );
-  }
-
-  Widget _buildOptionCard({required String label, required Color color, required VoidCallback onTap}) {
-    final theme = Theme.of(context);
-
-    return SizedBox(
-      height: 60, // Fixed height as requested
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: color.withOpacity(0.3), width: 1),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
-          child: Center(
-            child: Text(
-              label,
-              style: theme.textTheme.labelLarge?.copyWith(color: color, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

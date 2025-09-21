@@ -275,19 +275,19 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   Future<void> _showIpfsDialog() async {
-    _showUrlInputDialog("IPFS For The Win", _ipfsCtrl, "e.g. bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74");
+    _showUrlInputDialog("Paste Ipfs id or create one", _ipfsCtrl, "e.g. bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74");
   }
 
   Future<void> _showImgurDialog() async {
-    _showUrlInputDialog("Paste Imgur Image URL", _imgurCtrl, "e.g. https://i.imgur.com/image.jpeg");
+    _showUrlInputDialog("Paste Imgur URL", _imgurCtrl, "e.g. https://i.imgur.com/image.jpeg");
   }
 
   Future<void> _showVideoDialog() async {
-    _showUrlInputDialog("Paste YouTube Video URL", _youtubeCtrl, "e.g. https://youtu.be/video_id");
+    _showUrlInputDialog("Paste YouTube URL", _youtubeCtrl, "e.g. https://youtu.be/video_id");
   }
 
   Future<void> _showOdyseeDialog() async {
-    _showUrlInputDialog("Paste Odysee Video URL", _odyseeCtrl, "e.g. https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73");
+    _showUrlInputDialog("Paste Odysee URL", _odyseeCtrl, "e.g. https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73");
   }
 
   void _showUrlInputDialog(String title, TextEditingController controller, String hint) {

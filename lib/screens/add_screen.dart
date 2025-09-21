@@ -8,13 +8,14 @@ import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../provider/media_selection_notifier.dart';
 import '../theme_provider.dart';
+import '../widgets/media_type_selector.dart';
 import 'add/add_post_providers.dart';
 import 'add/clipboard_monitoring_widget.dart';
 import 'add/clipboard_provider.dart';
 import 'add/imgur_media_widget.dart';
 import 'add/ipfs_media_widget.dart';
-import 'add/media_selector_widget.dart';
 import 'add/odysee_media_widget.dart';
 import 'add/taggable_input_widget.dart';
 import 'add/youtube_media_widget.dart';
@@ -42,8 +43,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   // AddPostController instance
   late AddPostController _addPostController;
 
-  String _title = "";
-  String _hint = "";
+  String _title = "Select a media type or paste a link";
+  String _hint = "e.g. any media url or ipfs content id";
   var _onCreateCallback;
   var _onGalleryCallback;
 
@@ -110,7 +111,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    _log("Build method called");
+    // _log("Build method called");
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
     final TextTheme textTheme = theme.textTheme;
@@ -178,53 +179,27 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final youtubeId = ref.watch(youtubeVideoIdProvider);
     final ipfsCid = ref.watch(ipfsCidProvider);
     final odyseeUrl = ref.watch(odyseeUrlProvider);
-
-    // Define reusable padding constants
-    final EdgeInsets mediaPadding = EdgeInsets.all(space);
-    final EdgeInsets placeholderPadding = EdgeInsets.symmetric(horizontal: space / 2, vertical: space);
-    final double spacerWidth = space / 2;
-    final double spacerHeight = space;
+    final selectionState = ref.watch(mediaSelectionProvider);
 
     // Check for media content and return appropriate widget
     final mediaWidget = _getMediaWidget(imgurUrl, youtubeId, ipfsCid, odyseeUrl, theme, colorScheme, textTheme);
     if (mediaWidget != null) {
+      // Clear selection when media is actually loaded
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(mediaSelectionProvider.notifier).clearSelection();
+      });
       return Expanded(
-        child: Padding(padding: mediaPadding, child: mediaWidget),
+        child: Padding(padding: EdgeInsets.all(space), child: mediaWidget),
       );
     }
 
-    // All are empty, show placeholders
-    return Padding(
-      padding: placeholderPadding,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          MediaSelectorWidget(
-            label: "IMGUR",
-            iconData: Icons.add_photo_alternate_outlined,
-            onTap: () => updateTitleAndHint("Paste Imgur URL", "e.g. https://i.imgur.com/image.jpeg"),
-          ),
-          SizedBox(width: spacerWidth),
-          MediaSelectorWidget(
-            label: "YOUTUBE",
-            iconData: Icons.video_call_outlined,
-            onTap: () => updateTitleAndHint("Paste YouTube URL", "e.g. https://youtu.be/video_id"),
-          ),
-          SizedBox(width: spacerWidth),
-          MediaSelectorWidget(
-            label: "IPFS",
-            iconData: Icons.cloud_upload_outlined,
-            onTap: () => updateTitleAndHint("Paste Ipfs id or create one", "e.g. bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74"),
-          ),
-          SizedBox(width: spacerWidth),
-          MediaSelectorWidget(
-            label: "ODYSEE",
-            iconData: Icons.video_library_outlined,
-            onTap: () => updateTitleAndHint("Paste Odysee URL", "e.g. https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73"),
-          ),
-        ],
-      ),
+    // All are empty, show media type selector
+    return MediaTypeSelector(
+      onMediaTypeSelected: (mediaType) {
+        updateTitleAndHint(mediaType.title, mediaType.hint);
+      },
+      // onIpfsCreate: _showIpfsUploadScreen,
+      // onIpfsGallery: _showIpfsGallery,
     );
   }
 
@@ -257,8 +232,14 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     setState(() {
       _title = title;
       _hint = hint;
-      _onCreateCallback = title.toLowerCase().contains('ipfs') ? _showIpfsUploadScreen : null;
-      _onGalleryCallback = title.toLowerCase().contains('ipfs') ? _showIpfsGallery : null;
+      // Only set callbacks for IPFS (they're handled by the selector directly)
+      if (title.toUpperCase().contains('IPFS')) {
+        _onCreateCallback = _showIpfsUploadScreen;
+        _onGalleryCallback = _showIpfsGallery;
+      } else {
+        _onCreateCallback = null;
+        _onGalleryCallback = null;
+      }
     });
   }
 

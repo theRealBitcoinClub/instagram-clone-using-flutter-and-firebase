@@ -66,11 +66,7 @@ class MemoVerifier {
   }
 
   Future<String> verifyAndBuildImgurUrl() async {
-    if (text.isEmpty ||
-        !text.contains("imgur") ||
-        MemoRegExp.extractUrls(text).isEmpty ||
-        text.length > 256 ||
-        !MemoRegExp(text).hasAnyWhitelistedImageUrl()) {
+    if (text.isEmpty || !text.contains("imgur") || MemoRegExp.extractUrls(text).isEmpty || text.length > 256) {
       return MemoVerificationResponse.noImageNorVideo.toString();
     }
 

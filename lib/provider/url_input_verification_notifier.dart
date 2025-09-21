@@ -24,31 +24,33 @@ class UrlInputVerificationNotifier extends StateNotifier<UrlInputVerificationSta
   UrlInputVerificationNotifier() : super(UrlInputVerificationState());
 
   Future<void> verifyAndProcessInput(WidgetRef ref, String input) async {
-    if (input.trim().isEmpty || input == state.lastProcessedContent) {
-      state = state.copyWith(hasValidInput: false);
-      return;
-    }
+    // if (input.trim().isEmpty || input == state.lastProcessedContent) {
+    //   state = state.copyWith(hasValidInput: false);
+    //   return;
+    // }
 
     state = state.copyWith(lastProcessedContent: input);
 
-    // Check YouTube first
-    final ytId = YoutubePlayer.convertUrlToId(input);
-    if (ytId != null && ytId.isNotEmpty) {
-      _handleMedia(ref, 1, ytId);
+    // Check IPFS
+    final ipfsCid = MemoRegExp(input).extractIpfsCid();
+    if (ipfsCid.isNotEmpty) {
+      _handleMedia(ref, 2, ipfsCid);
       return;
+    }
+
+    // Check YouTube first
+    if (MemoRegExp.extractUrls(input).isNotEmpty) {
+      final ytId = YoutubePlayer.convertUrlToId(input);
+      if (ytId != null && ytId.isNotEmpty) {
+        _handleMedia(ref, 1, ytId);
+        return;
+      }
     }
 
     // Check Imgur/Giphy
     final imgurUrl = MemoRegExp(input).extractValidImgurOrGiphyUrl();
     if (imgurUrl.isNotEmpty) {
       _handleMedia(ref, 0, imgurUrl);
-      return;
-    }
-
-    // Check IPFS
-    final ipfsCid = MemoRegExp(input).extractIpfsCid();
-    if (ipfsCid.isNotEmpty) {
-      _handleMedia(ref, 2, ipfsCid);
       return;
     }
 

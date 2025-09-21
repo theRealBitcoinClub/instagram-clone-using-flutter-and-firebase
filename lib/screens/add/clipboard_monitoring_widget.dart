@@ -93,8 +93,8 @@ class _ClipboardMonitoringWidgetState extends ConsumerState<ClipboardMonitoringW
         children: [
           // Title
           Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: Text(widget.title, style: theme.textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w400, letterSpacing: 1)),
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: Text(widget.title, style: theme.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.w500, letterSpacing: 1)),
           ),
 
           // Input field and actions in a Row
@@ -115,48 +115,6 @@ class _ClipboardMonitoringWidgetState extends ConsumerState<ClipboardMonitoringW
               ),
 
               const SizedBox(width: 8),
-
-              // Action buttons in a column
-              // Column(
-              //   mainAxisSize: MainAxisSize.min,
-              //   children: [
-              //     // Reset button
-              //     IconButton(
-              //       icon: const Icon(Icons.clear),
-              //       color: Colors.yellow[900],
-              //       onPressed: () {
-              //         _controller.clear();
-              //         ref.read(urlInputVerificationProvider.notifier).reset(ref);
-              //         setState(() {
-              //           _hasAutoClosed = false;
-              //         });
-              //       },
-              //       tooltip: 'Reset',
-              //     ),
-              //
-              //     const SizedBox(height: 4),
-              //
-              //     // Status indicator/Done button
-              //     if (hasValidInput)
-              //       IconButton(
-              //         icon: const Icon(Icons.check_circle),
-              //         color: theme.colorScheme.primary,
-              //         onPressed: () {
-              //           showSnackBar("Media ready to use!", context, type: SnackbarType.success);
-              //         },
-              //         tooltip: 'Ready',
-              //       )
-              //     else
-              //       IconButton(
-              //         icon: const Icon(Icons.error_outline),
-              //         color: theme.colorScheme.onSurface.withOpacity(0.38),
-              //         onPressed: () {
-              //           showSnackBar("Copy a valid link, then paste it here!", context, type: SnackbarType.error);
-              //         },
-              //         tooltip: 'Paste valid URL',
-              //       ),
-              //   ],
-              // ),
             ],
           ),
 
@@ -168,12 +126,15 @@ class _ClipboardMonitoringWidgetState extends ConsumerState<ClipboardMonitoringW
   }
 
   Widget _buildOptionsRow(ThemeData theme) {
-    return Row(
-      children: [
-        if (widget.onCreate != null) MediaPlaceholderWidget(label: "CREATE", iconData: Icons.add, onTap: widget.onCreate!),
-        if (widget.onCreate != null && widget.onGallery != null) const SizedBox(width: 12),
-        if (widget.onGallery != null) MediaPlaceholderWidget(label: "GALLERY", iconData: Icons.image_search, onTap: widget.onGallery!),
-      ],
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 0),
+      child: Row(
+        children: [
+          if (widget.onCreate != null) MediaPlaceholderWidget(label: "CREATE", iconData: Icons.add, onTap: widget.onCreate!),
+          if (widget.onCreate != null && widget.onGallery != null) const SizedBox(width: 12),
+          if (widget.onGallery != null) MediaPlaceholderWidget(label: "GALLERY", iconData: Icons.image_search, onTap: widget.onGallery!),
+        ],
+      ),
     );
   }
 }

@@ -42,7 +42,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   // AddPostController instance
   late AddPostController _addPostController;
 
-  String _title = "Which type of media would you like to publish?";
+  String _title = "";
   String _hint = "";
   var _onCreateCallback;
   var _onGalleryCallback;

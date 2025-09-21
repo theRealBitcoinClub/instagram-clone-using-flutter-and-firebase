@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/config_ipfs.dart';
+import 'package:mahakka/provider/url_input_verification_notifier.dart';
 import 'package:mahakka/screens/ipfs_pin_claim_screen.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -324,6 +325,7 @@ class GalleryActionButtonRow extends ConsumerWidget {
   }
 
   void _reuseImage(context, ref, String selectedCid) {
+    ref.read(urlInputVerificationProvider.notifier).reset(ref);
     ref.read(ipfsCidProvider.notifier).state = selectedCid;
     Navigator.pop(context);
   }

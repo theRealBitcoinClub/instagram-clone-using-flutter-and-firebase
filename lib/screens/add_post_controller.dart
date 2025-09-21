@@ -6,11 +6,11 @@ import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/provider/publish_options_provider.dart';
+import 'package:mahakka/provider/url_input_verification_notifier.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../config_ipfs.dart';
 import '../memo/base/memo_verifier.dart';
@@ -28,7 +28,6 @@ class AddPostController {
   final WidgetRef ref;
   final BuildContext context;
   final VoidCallback onPublish;
-  final VoidCallback clearInputs;
   final Function(String) showErrorSnackBar;
   final Function(String) showSuccessSnackBar;
   final Function(String) log;
@@ -37,74 +36,10 @@ class AddPostController {
     required this.ref,
     required this.context,
     required this.onPublish,
-    required this.clearInputs,
     required this.showErrorSnackBar,
     required this.showSuccessSnackBar,
     required this.log,
   });
-
-  // Media URL handlers
-  void handleImgurInput(String text) {
-    if (text.trim().isEmpty) return;
-
-    final newImgurUrl = MemoRegExp(text).extractValidImgurOrGiphyUrl();
-
-    if (newImgurUrl.isNotEmpty) {
-      ref.read(imgurUrlProvider.notifier).state = newImgurUrl;
-      _clearOtherMediaProviders(0);
-    } else {
-      _tryAdvancedImgurCheck(text);
-    }
-  }
-
-  Future<void> _tryAdvancedImgurCheck(String text) async {
-    final newImgurUrl = await MemoVerifier(text).verifyAndBuildImgurUrl();
-
-    if (newImgurUrl != MemoVerificationResponse.noImageNorVideo.toString()) {
-      ref.read(imgurUrlProvider.notifier).state = newImgurUrl;
-      _clearOtherMediaProviders(0);
-    }
-  }
-
-  void handleYouTubeInput(String text) {
-    if (text.trim().isEmpty) return;
-
-    final newVideoId = YoutubePlayer.convertUrlToId(text);
-
-    if (newVideoId != null && newVideoId.isNotEmpty) {
-      ref.read(youtubeVideoIdProvider.notifier).state = newVideoId;
-      _clearOtherMediaProviders(1);
-    }
-  }
-
-  void handleOdyseeInput(String text) {
-    if (text.trim().isEmpty) return;
-
-    final newOdyseeUrl = MemoRegExp(text).extractOdyseeUrl();
-
-    if (newOdyseeUrl.isNotEmpty) {
-      ref.read(odyseeUrlProvider.notifier).state = newOdyseeUrl;
-      _clearOtherMediaProviders(3);
-    }
-  }
-
-  void handleIpfsInput(String text) {
-    if (text.trim().isEmpty) return;
-
-    final ipfsCid = MemoRegExp(text).extractIpfsCid();
-
-    if (ipfsCid.isNotEmpty) {
-      ref.read(ipfsCidProvider.notifier).state = ipfsCid;
-      _clearOtherMediaProviders(2);
-    }
-  }
-
-  void _clearOtherMediaProviders(int index) {
-    if (index != 0) ref.read(imgurUrlProvider.notifier).state = "";
-    if (index != 1) ref.read(youtubeVideoIdProvider.notifier).state = "";
-    if (index != 2) ref.read(ipfsCidProvider.notifier).state = "";
-    if (index != 3) ref.read(odyseeUrlProvider.notifier).state = "";
-  }
 
   // Publish functionality
   Future<void> publishPost(String textContent) async {
@@ -146,7 +81,7 @@ class AddPostController {
 
       if (response == MemoAccountantResponse.yes) {
         MemoConfetti().launch(context);
-        clearInputs();
+        ref.read(urlInputVerificationProvider.notifier).reset(ref);
         showSuccessSnackBar('Successfully published!');
         ref.read(telegramBotPublisherProvider).publishPost(postText: formattedContent, mediaUrl: null);
       } else {
@@ -237,11 +172,6 @@ class AddPostController {
       return;
     }
 
-    Navigator.push(context, MaterialPageRoute(builder: (context) => IPFSGalleryScreen(ipfsCids: user.ipfsCids))).then((selectedCid) {
-      if (selectedCid != null && context.mounted) {
-        ref.read(ipfsCidProvider.notifier).state = selectedCid;
-        _clearOtherMediaProviders(2);
-      }
-    });
+    Navigator.push(context, MaterialPageRoute(builder: (context) => IPFSGalleryScreen(ipfsCids: user.ipfsCids)));
   }
 }

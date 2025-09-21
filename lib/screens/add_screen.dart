@@ -7,6 +7,7 @@ import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../provider/url_input_verification_notifier.dart';
 import '../theme_provider.dart';
 import 'add/add_post_providers.dart';
 import 'add/clipboard_monitoring_dialog.dart';
@@ -31,10 +32,6 @@ class AddPost extends ConsumerStatefulWidget {
 class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin {
   bool hasInitialized = false;
   // Controllers
-  final TextEditingController _imgurCtrl = TextEditingController();
-  final TextEditingController _youtubeCtrl = TextEditingController();
-  final TextEditingController _ipfsCtrl = TextEditingController();
-  final TextEditingController _odyseeCtrl = TextEditingController();
   late FlutterTaggerController _textInputController;
   late AnimationController _animationController;
   final FocusNode _focusNode = FocusNode();
@@ -52,11 +49,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     _textInputController = FlutterTaggerController(text: "Me gusta @Mahakka#Mahakka# Es hora de ganar #bch#bch# y #cashtoken#cashtoken#!");
 
-    _youtubeCtrl.addListener(_onYouTubeInputChanged);
-    _imgurCtrl.addListener(_onImgurInputChanged);
-    _odyseeCtrl.addListener(_onOdyseeInputChanged);
-    _ipfsCtrl.addListener(_onIpfsInputChanged);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(clipboardNotifierProvider.notifier).checkClipboard(ref);
     });
@@ -68,7 +60,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       ref: ref,
       context: context,
       onPublish: _onPublish,
-      clearInputs: _clearInputs,
       showErrorSnackBar: _showErrorSnackBar,
       showSuccessSnackBar: _showSuccessSnackBar,
       log: _log,
@@ -77,25 +68,27 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     _log("initState completed");
   }
 
-  void _onImgurInputChanged() {
+  void _onMediaInput(ctrl) {
     if (!mounted) return;
-    _addPostController.handleImgurInput(_imgurCtrl.text);
+    ref.read(urlInputVerificationProvider.notifier).verifyAndProcessInput(ref, ctrl.text);
+
+    // _addPostController.handleImgurInput(_imgurCtrl.text);
   }
 
-  void _onYouTubeInputChanged() {
-    if (!mounted) return;
-    _addPostController.handleYouTubeInput(_youtubeCtrl.text);
-  }
-
-  void _onOdyseeInputChanged() {
-    if (!mounted) return;
-    _addPostController.handleOdyseeInput(_odyseeCtrl.text);
-  }
-
-  void _onIpfsInputChanged() {
-    if (!mounted) return;
-    _addPostController.handleIpfsInput(_ipfsCtrl.text);
-  }
+  // void _onYouTubeInputChanged() {
+  //   if (!mounted) return;
+  //   _addPostController.handleYouTubeInput(_youtubeCtrl.text);
+  // }
+  //
+  // void _onOdyseeInputChanged() {
+  //   if (!mounted) return;
+  //   _addPostController.handleOdyseeInput(_odyseeCtrl.text);
+  // }
+  //
+  // void _onIpfsInputChanged() {
+  //   if (!mounted) return;
+  //   _addPostController.handleIpfsInput(_ipfsCtrl.text);
+  // }
 
   void _initStateTagger() {
     _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
@@ -108,14 +101,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   @override
   void dispose() {
     _log("Dispose called");
-    _imgurCtrl.removeListener(_onImgurInputChanged);
-    _youtubeCtrl.removeListener(_onYouTubeInputChanged);
-    _odyseeCtrl.removeListener(_onOdyseeInputChanged);
-    _odyseeCtrl.removeListener(_onIpfsInputChanged);
-    _imgurCtrl.dispose();
-    _youtubeCtrl.dispose();
-    _ipfsCtrl.dispose();
-    _odyseeCtrl.dispose();
     _textInputController.dispose();
     _animationController.dispose();
     _focusNode.dispose();
@@ -275,22 +260,22 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   Future<void> _showIpfsDialog() async {
-    _showUrlInputDialog("Paste Ipfs id or create one", _ipfsCtrl, "e.g. bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74");
+    _showUrlInputDialog("Paste Ipfs id or create one", "e.g. bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74");
   }
 
   Future<void> _showImgurDialog() async {
-    _showUrlInputDialog("Paste Imgur URL", _imgurCtrl, "e.g. https://i.imgur.com/image.jpeg");
+    _showUrlInputDialog("Paste Imgur URL", "e.g. https://i.imgur.com/image.jpeg");
   }
 
   Future<void> _showVideoDialog() async {
-    _showUrlInputDialog("Paste YouTube URL", _youtubeCtrl, "e.g. https://youtu.be/video_id");
+    _showUrlInputDialog("Paste YouTube URL", "e.g. https://youtu.be/video_id");
   }
 
   Future<void> _showOdyseeDialog() async {
-    _showUrlInputDialog("Paste Odysee URL", _odyseeCtrl, "e.g. https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73");
+    _showUrlInputDialog("Paste Odysee URL", "e.g. https://odysee.com/@BitcoinMap:9/HijackingBitcoin:73");
   }
 
-  void _showUrlInputDialog(String title, TextEditingController controller, String hint) {
+  void _showUrlInputDialog(String title, String hint) {
     final ThemeData theme = Theme.of(context);
     final TextTheme textTheme = theme.textTheme;
 
@@ -300,12 +285,9 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       context: context,
       builder: (dialogCtx) => ClipboardMonitoringDialog(
         title: title,
-        controller: controller,
         hint: hint,
         theme: theme,
         textTheme: textTheme,
-        onClearInputs: _clearInputs,
-        // Add IPFS-specific callbacks only for IPFS dialog
         onCreate: title.toLowerCase().contains('ipfs') ? _showIpfsUploadScreen : null,
         onReuse: title.toLowerCase().contains('ipfs') ? _showIpfsGallery : null,
       ),
@@ -329,17 +311,5 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   // Update the _hasAddedMediaToPublish method to use the controller
   bool _hasAddedMediaToPublish() {
     return _addPostController.hasAddedMediaToPublish();
-  }
-
-  void _clearInputs() {
-    _textInputController.clear();
-    _imgurCtrl.clear();
-    _youtubeCtrl.clear();
-    _ipfsCtrl.clear();
-    _odyseeCtrl.clear();
-    ref.read(imgurUrlProvider.notifier).state = '';
-    ref.read(youtubeVideoIdProvider.notifier).state = '';
-    ref.read(ipfsCidProvider.notifier).state = '';
-    ref.read(odyseeUrlProvider.notifier).state = '';
   }
 }

@@ -6,7 +6,7 @@ const Color primaryGreen = Color(0xFF2E7D32); // A solid, accessible green
 const Color lightGreenAccent = Color(0xFF81C784); // A lighter, softer green
 const Color darkGreenShade = Color(0xFF1B5E20); // A darker shade for depth
 
-const Color primaryDarkerGrey = Color(0xFF111111);
+const Color primaryDarkerGrey = Color(0xFF161616);
 const Color primaryDarkGrey = Color(0xFF212121); // For dark backgrounds, dark text
 const Color secondaryDarkGrey = Color(0xFF303030); // Slightly lighter dark grey
 const Color primaryLightGrey = Color(0xFFE0E0E0); // For light backgrounds, dividers

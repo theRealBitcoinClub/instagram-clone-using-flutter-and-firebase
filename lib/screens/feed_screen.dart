@@ -7,10 +7,12 @@ import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../memo/model/memo_model_post.dart';
 import '../memo_data_checker.dart';
+import '../widgets/intro_overlay.dart';
 import '../widgets/post_counter_widget.dart';
 import '../widgets/post_dialog.dart';
 
@@ -32,6 +34,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   final FocusNode _listViewFocusNode = FocusNode();
   bool _isRenderingContent = true;
   Object? _loadingError;
+  bool showIntro = true;
 
   @override
   void initState() {
@@ -46,6 +49,27 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           _isRenderingContent = false;
         });
       }
+    });
+    _checkIntroStatus();
+  }
+
+  void _checkIntroStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool introShown = prefs.getBool('introShown') ?? false;
+
+    if (!introShown) {
+      setState(() {
+        showIntro = true;
+      });
+    }
+  }
+
+  void _completeIntro() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('introShown', true);
+
+    setState(() {
+      showIntro = false;
     });
   }
 
@@ -153,6 +177,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               ],
             ),
           ),
+          // Intro overlay - should be at the top of the Stack to overlay everything
+          if (showIntro)
+            IntroOverlay(
+              onComplete: _completeIntro,
+              // If your IntroOverlay needs any additional parameters, pass them here
+            ),
         ],
       ),
     );

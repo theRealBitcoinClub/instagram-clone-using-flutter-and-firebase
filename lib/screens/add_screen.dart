@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertagger/fluttertagger.dart';
+import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
@@ -106,9 +107,17 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     );
   }
 
+  void _dismissTaggerOverlay() {
+    try {
+      _animationController.reverse();
+      _textInputController.dismissOverlay();
+    } catch (e) {
+      // Ignore errors if controllers are not initialized
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // _log("Build method called");
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
     final TextTheme textTheme = theme.textTheme;
@@ -117,11 +126,22 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     hasInitialized = true;
     final asyncThemeState = ref.watch(themeNotifierProvider);
     final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
+    // final int currentTabIndex = ref.watch(tabIndexProvider);
+    ref.listen<int>(tabIndexProvider, (previous, current) {
+      // if (previous != current && mounted) {
+      _dismissTaggerOverlay();
+      // }
+    });
+    // if (currentTabIndex != AppTab.add.tabIndex && mounted) {
+    //   _dismissTaggerOverlay();
+    // }
 
     return GestureDetector(
       onTap: () {
+        _dismissTaggerOverlay();
         _unfocusNodes(context);
       },
+      behavior: HitTestBehavior.opaque,
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
@@ -131,7 +151,10 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
               BurnerBalanceWidget(),
               Spacer(),
               GestureDetector(
-                onTap: () => launchUrl(Uri.parse('https://mahakka.com')),
+                onTap: () {
+                  _dismissTaggerOverlay();
+                  launchUrl(Uri.parse('https://mahakka.com'));
+                },
                 child: Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
               ),
             ],

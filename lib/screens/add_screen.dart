@@ -117,8 +117,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final TextTheme textTheme = theme.textTheme;
     final MediaQueryData mediaQuery = MediaQuery.of(context);
     final bool isKeyboardVisible = mediaQuery.viewInsets.bottom > 0;
-    // WidgetsFlutterBinding.add
-    // ref.read(clipboardNotifierProvider.notifier).checkClipboard(ref);
     hasInitialized = true;
     final asyncThemeState = ref.watch(themeNotifierProvider);
     final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);

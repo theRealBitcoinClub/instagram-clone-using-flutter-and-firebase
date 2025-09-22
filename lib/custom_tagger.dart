@@ -106,8 +106,8 @@ class CustomFlutterTagger extends StatefulWidget {
   /// Specify this parameter to use a different format.
   final TagTextFormatter? tagTextFormatter;
 
-  /// {@macro flutterTaggerController}
-  final FlutterTaggerController controller;
+  /// {@macro CustomFlutterTaggerController}
+  final CustomFlutterTaggerController controller;
 
   /// Callback to dispatch updated formatted text.
   final void Function(String)? onFormattedTextChanged;
@@ -152,7 +152,7 @@ class CustomFlutterTagger extends StatefulWidget {
 }
 
 class _CustomFlutterTaggerState extends State<CustomFlutterTagger> {
-  FlutterTaggerController get controller => widget.controller;
+  CustomFlutterTaggerController get controller => widget.controller;
 
   late final _textFieldKey = GlobalKey(debugLabel: "FlutterTagger's child TextField key");
 
@@ -820,13 +820,13 @@ class _CustomFlutterTaggerState extends State<CustomFlutterTagger> {
   }
 }
 
-/// {@template flutterTaggerController}
+/// {@template CustomFlutterTaggerController}
 /// Controller for [CustomFlutterTagger].
 /// This object exposes callback registration bindings to enable clearing
 /// [CustomFlutterTagger]'s tags, dismissing overlay and retrieving formatted text.
 /// {@endtemplate}
-class FlutterTaggerController extends TextEditingController {
-  FlutterTaggerController({String? text}) : super(text: text);
+class CustomFlutterTaggerController extends TextEditingController {
+  CustomFlutterTaggerController({String? text}) : super(text: text);
 
   late final Trie _trie = Trie();
   late Map<TaggedText, String> _tags;
@@ -909,8 +909,8 @@ class FlutterTaggerController extends TextEditingController {
   Function? _formatTagsCallback;
 
   /// {@template formatTags}
-  /// Extracts tags from [FlutterTaggerController]'s [text] and formats the textfield to display them as tags.
-  /// This should be called after [FlutterTaggerController] is constructed with a non-null
+  /// Extracts tags from [CustomFlutterTaggerController]'s [text] and formats the textfield to display them as tags.
+  /// This should be called after [CustomFlutterTaggerController] is constructed with a non-null
   /// text value that contain unformatted tags.
   ///
   /// [pattern] -> Pattern to match tags.

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertagger/fluttertagger.dart'; // Assuming FlutterTaggerController is from here
 
 // Assuming CustomTextField is in the same directory or correctly imported
+import '../../custom_tagger.dart';
 import 'custom_text_field.dart';
 
 class CommentTextField extends StatelessWidget {
-  final FlutterTaggerController controller; // Changed to FlutterTaggerController for clarity if that's its type
+  final CustomFlutterTaggerController controller; // Changed to FlutterTaggerController for clarity if that's its type
   final VoidCallback? onSend; // Allow null if send button can be disabled
   final EdgeInsets insets;
   final FocusNode? focusNode;

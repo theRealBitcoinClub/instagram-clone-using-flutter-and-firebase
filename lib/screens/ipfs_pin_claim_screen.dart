@@ -229,15 +229,15 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Text(
-            //   'Use this page to upload an image and pin it to the IPFS network. '
-            //   'Your wallet must have sufficient BCH to pay for the pinning of content. '
-            //   'Balance will be checked automatically before proceeding.',
-            //   style: textTheme.bodyMedium?.copyWith(height: 1.5),
-            // ),
+            Text(
+              'Use this page to upload an image and pin it to the IPFS network. '
+              'Your wallet must have sufficient BCH to pay for the pinning of content. '
+              'Balance will be checked automatically before proceeding.',
+              style: textTheme.bodyMedium?.copyWith(height: 1.5),
+            ),
             const SizedBox(height: 4),
-            // Text('$_serverUrl', style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
-            // const SizedBox(height: 16),
+            Text('$_serverUrl', style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 16),
 
             // File selection area
             Container(

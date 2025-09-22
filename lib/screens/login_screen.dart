@@ -4,6 +4,7 @@ import 'package:bip39_mnemonic/bip39_mnemonic.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/resources/auth_method.dart';
 
@@ -180,9 +181,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
       _isLoading = true;
     });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    context.afterBuild(refreshUI: false, () {
       doHeavyWork();
     });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {});
   }
 
   Future<void> doHeavyWork() async {

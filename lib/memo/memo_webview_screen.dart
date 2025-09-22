@@ -95,7 +95,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
 
     setState(() {
       _displayInAppBar = "$url requested ...";
-      showSnackBar(_displayInAppBar, context, type: SnackbarType.success);
+      context.showSnackBar(_displayInAppBar, type: SnackbarType.success);
       _isLoading = true;
       _cssInjected = false;
       _shouldInjectCss = shouldInject;

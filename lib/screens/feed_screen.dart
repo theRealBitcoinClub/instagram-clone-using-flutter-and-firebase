@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/config_ipfs.dart';
+import 'package:mahakka/intros/intro_enums.dart';
+import 'package:mahakka/intros/intro_state_notifier.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../intros/intro_overlay.dart';
 import '../memo/model/memo_model_post.dart';
 import '../memo_data_checker.dart';
-import '../widgets/intro_overlay.dart';
 import '../widgets/post_counter_widget.dart';
 import '../widgets/post_dialog.dart';
 
@@ -34,44 +36,50 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   final FocusNode _listViewFocusNode = FocusNode();
   bool _isRenderingContent = true;
   Object? _loadingError;
-  bool showIntro = true;
+  // bool showIntro = true;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
-    _activateKeyboardScrollingNoListClickNeeded();
+
+    context.afterLayout(refreshUI: false, () {
+      FocusScope.of(context).requestFocus(_listViewFocusNode);
+    });
 
     // Schedule rendering completion after the first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() {
-          _isRenderingContent = false;
-        });
-      }
+    context.afterLayout(refreshUI: true, () {
+      _isRenderingContent = false;
     });
-    _checkIntroStatus();
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   if (mounted) {
+    //     setState(() {
+    //       _isRenderingContent = false;
+    //     });
+    //   }
+    // });
+    // _checkIntroStatus();
   }
-
-  void _checkIntroStatus() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool introShown = prefs.getBool('introShown') ?? false;
-
-    if (!introShown) {
-      setState(() {
-        showIntro = true;
-      });
-    }
-  }
-
-  void _completeIntro() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('introShown', true);
-
-    setState(() {
-      showIntro = false;
-    });
-  }
+  //
+  // void _checkIntroStatus() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   bool introShown = prefs.getBool('introShown') ?? false;
+  //
+  //   if (!introShown) {
+  //     setState(() {
+  //       showIntro = true;
+  //     });
+  //   }
+  // }
+  //
+  // void _completeIntro() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   await prefs.setBool('introShown', true);
+  //
+  //   setState(() {
+  //     showIntro = false;
+  //   });
+  // }
 
   void _scrollListener() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300 &&
@@ -79,14 +87,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         ref.read(feedPostsProvider).hasMorePosts) {
       ref.read(feedPostsProvider.notifier).fetchMorePosts();
     }
-  }
-
-  void _activateKeyboardScrollingNoListClickNeeded() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        FocusScope.of(context).requestFocus(_listViewFocusNode);
-      }
-    });
   }
 
   @override
@@ -101,6 +101,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     return ref.watch(feedPostsProvider).activeFilter == filterType;
   }
 
+  final _introType = IntroType.mainApp;
+
   @override
   Widget build(BuildContext context) {
     final asyncThemeState = ref.watch(themeNotifierProvider);
@@ -108,6 +110,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final ThemeData theme = currentThemeState.currentTheme;
 
     final feedState = ref.watch(feedPostsProvider);
+    final shouldShowIntro = ref.read(introStateNotifierProvider.notifier).shouldShow(_introType);
 
     return Scaffold(
       backgroundColor: Colors.black.withAlpha(21),
@@ -144,19 +147,22 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   Text('Error: $_loadingError', style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       setState(() {
                         _isRenderingContent = true;
                         _loadingError = null;
                       });
-                      ref.read(feedPostsProvider.notifier).refreshFeed();
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (mounted) {
-                          setState(() {
-                            _isRenderingContent = false;
-                          });
-                        }
+                      await ref.read(feedPostsProvider.notifier).refreshFeed();
+
+                      context.afterLayout(refreshUI: true, () {
+                        _isRenderingContent = false;
                       });
+                      // WidgetsBinding.instance.addPostFrameCallback((_) {
+                      //   if (mounted) {
+                      //     setState(() {
+                      //     });
+                      //   }
+                      // });
                     },
                     child: const Text('Retry'),
                   ),
@@ -178,11 +184,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             ),
           ),
           // Intro overlay - should be at the top of the Stack to overlay everything
-          if (showIntro)
-            IntroOverlay(
-              onComplete: _completeIntro,
-              // If your IntroOverlay needs any additional parameters, pass them here
-            ),
+          if (shouldShowIntro) IntroOverlay(introType: _introType, onComplete: () {}),
         ],
       ),
     );
@@ -342,6 +344,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       icon: Icon(themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
       tooltip: "Toggle Theme",
       onPressed: () {
+        ref.read(introStateNotifierProvider.notifier).triggerIntroAction(_introType, IntroStep.themeSelection, context);
         ref.read(themeNotifierProvider.notifier).toggleTheme();
       },
     );

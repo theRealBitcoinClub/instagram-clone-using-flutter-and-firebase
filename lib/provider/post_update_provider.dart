@@ -15,7 +15,7 @@ class PostPopularityNotifier extends StateNotifier<Map<String, int>> {
   final Ref ref;
   final Map<String, DateTime> _lastFetchTimes = {};
   final Map<String, Timer> _refreshTimers = {};
-  static const Duration refreshInterval = Duration(minutes: 5);
+  static const Duration refreshInterval = Duration(minutes: 15);
 
   PostPopularityNotifier(this.ref) : super({});
 

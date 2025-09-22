@@ -1,191 +1,149 @@
-import 'package:flutter/foundation.dart'; // For ValueNotifier
+// view_models/search_view_model.dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/firebase/tag_service.dart';
-// TODO: Import your actual TopicService and TagService
 import 'package:mahakka/memo/firebase/topic_service.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 
-final searchViewModel = SearchViewModel();
-
 enum SearchResultView { hashtag, topics, none }
 
-class SearchViewModel {
-  final TopicService _topicService = TopicService();
-  final TagService _tagService = TagService();
+final searchViewModelProvider = StateNotifierProvider.autoDispose<SearchViewModel, SearchState>(
+  (ref) => SearchViewModel(topicService: ref.watch(topicServiceProvider), tagService: ref.watch(tagServiceProvider)),
+);
 
-  // In-memory caches
-  List<MemoModelTopic> _allTopicsCache = [];
-  List<MemoModelTag> _allTagsCache = [];
+final topicServiceProvider = Provider<TopicService>((ref) => TopicService());
+final tagServiceProvider = Provider<TagService>((ref) => TagService());
 
-  bool _areTopicsCached = false;
-  bool _areTagsCached = false;
-  bool _isCacheLoading = false; // To prevent multiple concurrent cache loads
+class SearchState {
+  final List<MemoModelTopic> topics;
+  final List<MemoModelTag> hashtags;
+  final SearchResultView activeView;
+  final bool isLoading;
+  final String? error;
 
-  final ValueNotifier<List<MemoModelTopic>> _topicsSearchResults = ValueNotifier([]);
-  ValueNotifier<List<MemoModelTopic>> get topics => _topicsSearchResults;
+  const SearchState({
+    this.topics = const [],
+    this.hashtags = const [],
+    this.activeView = SearchResultView.none,
+    this.isLoading = false,
+    this.error,
+  });
 
-  final ValueNotifier<List<MemoModelTag>> _hashtagsSearchResults = ValueNotifier([]);
-  ValueNotifier<List<MemoModelTag>> get hashtags => _hashtagsSearchResults;
-
-  final ValueNotifier<bool> _loadingSearch = ValueNotifier(false); // For search operation itself
-  ValueNotifier<bool> get loading => _loadingSearch;
-
-  final ValueNotifier<SearchResultView> _activeView = ValueNotifier(SearchResultView.none);
-  ValueNotifier<SearchResultView> get activeView => _activeView;
-
-  SearchViewModel() {
-    // Optionally, load caches when the ViewModel is created
-    // Or, you can have an explicit method like `initializeCache()`
-    // to be called from your app's initialization logic.
-    _loadAllTopicsAndTagsCache();
+  SearchState copyWith({
+    List<MemoModelTopic>? topics,
+    List<MemoModelTag>? hashtags,
+    SearchResultView? activeView,
+    bool? isLoading,
+    String? error,
+  }) {
+    return SearchState(
+      topics: topics ?? this.topics,
+      hashtags: hashtags ?? this.hashtags,
+      activeView: activeView ?? this.activeView,
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
+    );
   }
+}
 
-  void _setSearchLoading(bool val) {
-    if (val != _loadingSearch.value) {
-      _loadingSearch.value = val;
-    }
-  }
+class SearchViewModel extends StateNotifier<SearchState> {
+  final TopicService _topicService;
+  final TagService _tagService;
 
-  /// Loads all topics and tags from Firebase into local caches.
-  /// Includes a flag to prevent multiple concurrent loads.
-  Future<void> _loadAllTopicsAndTagsCache({bool forceRefresh = false}) async {
-    if (_isCacheLoading && !forceRefresh) {
-      print("SearchViewModel: Cache loading already in progress.");
-      return;
-    }
-    if ((_areTopicsCached && _areTagsCached) && !forceRefresh) {
-      print("SearchViewModel: Topics and Tags already cached.");
-      return;
-    }
+  List<MemoModelTopic>? _cachedTopics;
+  List<MemoModelTag>? _cachedTags;
 
-    _isCacheLoading = true;
-    _setSearchLoading(true); // Indicate overall loading for initial cache
-    print("SearchViewModel: Starting to load/refresh caches...");
+  bool get _isTopicsCacheValid => _cachedTopics != null;
+  bool get _isTagsCacheValid => _cachedTags != null;
+
+  SearchViewModel({required TopicService topicService, required TagService tagService})
+    : _topicService = topicService,
+      _tagService = tagService,
+      super(const SearchState());
+
+  Future<void> refreshCache() async {
+    state = state.copyWith(isLoading: true, error: null);
 
     try {
-      if (!_areTopicsCached || forceRefresh) {
-        _allTopicsCache = await _topicService.getAllTopics();
-        _areTopicsCached = true;
-        print("SearchViewModel: All topics cached (${_allTopicsCache.length} items).");
-      }
-      if (!_areTagsCached || forceRefresh) {
-        _allTagsCache = await _tagService.getAllTags();
-        _areTagsCached = true;
-        print("SearchViewModel: All tags cached (${_allTagsCache.length} items).");
-      }
-    } catch (e, s) {
-      print("SearchViewModel: Error loading caches: $e");
-      print(s);
-      // Decide how to handle cache loading errors (e.g., retry logic, error state)
-      _areTopicsCached = false; // Reset flags on error so it can retry
-      _areTagsCached = false;
-    } finally {
-      _isCacheLoading = false;
-      _setSearchLoading(false);
+      final results = await Future.wait([_topicService.getAllTopics(), _tagService.getAllTags()]);
+
+      _cachedTopics = results[0] as List<MemoModelTopic>;
+      _cachedTags = results[1] as List<MemoModelTag>;
+
+      state = state.copyWith(isLoading: false);
+    } catch (error, stackTrace) {
+      state = state.copyWith(isLoading: false, error: 'Failed to refresh cache: $error');
+      print('Cache refresh error: $error\n$stackTrace');
     }
   }
 
-  /// Call this method if you want to manually refresh the cache from Firebase.
-  Future<void> refreshCache() async {
-    await _loadAllTopicsAndTagsCache(forceRefresh: true);
+  Future<bool> _ensureCacheLoaded() async {
+    if (_isTopicsCacheValid && _isTagsCacheValid) return true;
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      if (!_isTopicsCacheValid) {
+        _cachedTopics = await _topicService.getAllTopics();
+      }
+      if (!_isTagsCacheValid) {
+        _cachedTags = await _tagService.getAllTags();
+      }
+
+      state = state.copyWith(isLoading: false);
+      return true;
+    } catch (error, stackTrace) {
+      state = state.copyWith(isLoading: false, error: 'Failed to load cache: $error');
+      print('Cache loading error: $error\n$stackTrace');
+      return false;
+    }
   }
 
   Future<void> searchTopic(String query) async {
-    _activeView.value = SearchResultView.topics;
-    _topicsSearchResults.value = []; // Clear previous search results
-
-    if (query.isEmpty) {
-      _setSearchLoading(false);
+    if (query.trim().isEmpty) {
+      state = state.copyWith(topics: [], activeView: SearchResultView.topics, isLoading: false);
       return;
     }
 
-    final String trimmedQuery = query.toLowerCase().trim();
-    if (trimmedQuery.isEmpty) {
-      _setSearchLoading(false);
-      return;
-    }
+    state = state.copyWith(activeView: SearchResultView.topics, isLoading: true, error: null);
 
-    _setSearchLoading(true);
+    final cacheLoaded = await _ensureCacheLoaded();
+    if (!cacheLoaded) return;
 
-    // Ensure cache is loaded before searching
-    if (!_areTopicsCached && !_isCacheLoading) {
-      print("SearchViewModel: Topics cache not ready, attempting to load...");
-      await _loadAllTopicsAndTagsCache(); // Wait for cache to load
-      if (!_areTopicsCached) {
-        // Check again if loading failed
-        print("SearchViewModel: Failed to load topics cache for search.");
-        _setSearchLoading(false);
-        return;
-      }
-    } else if (_isCacheLoading) {
-      // If cache is currently loading, wait a bit then retry search or return empty
-      // This is a simple wait; a more robust solution might use a Completer or listen to a cache loaded event.
-      await Future.delayed(const Duration(seconds: 1));
-      if (!_areTopicsCached) {
-        print("SearchViewModel: Topics cache still not ready after waiting.");
-        _setSearchLoading(false);
-        return;
-      }
-    }
-
-    // Perform search on the cached list
-    // The Future.delayed is just to simulate a slight processing delay for UX,
-    // as local filtering is very fast. You can remove it.
     await Future.delayed(const Duration(milliseconds: 50));
 
-    final result = _allTopicsCache.where((topic) => topic.header.toLowerCase().startsWith(trimmedQuery)).toList();
+    final trimmedQuery = query.toLowerCase().trim();
+    final results = _cachedTopics!.where((topic) => topic.header.toLowerCase().contains(trimmedQuery)).toList();
 
-    _topicsSearchResults.value = result;
-    _setSearchLoading(false);
+    state = state.copyWith(topics: results, isLoading: false);
   }
 
   Future<void> searchHashtag(String query) async {
-    _activeView.value = SearchResultView.hashtag;
-    _hashtagsSearchResults.value = [];
-
-    if (query.isEmpty) {
-      _setSearchLoading(false);
+    if (query.trim().isEmpty) {
+      state = state.copyWith(hashtags: [], activeView: SearchResultView.hashtag, isLoading: false);
       return;
     }
 
-    final String trimmedQuery = query.toLowerCase().trim();
-    if (trimmedQuery.isEmpty) {
-      _setSearchLoading(false);
-      return;
-    }
+    state = state.copyWith(activeView: SearchResultView.hashtag, isLoading: true, error: null);
 
-    _setSearchLoading(true);
-
-    // Ensure cache is loaded
-    if (!_areTagsCached && !_isCacheLoading) {
-      print("SearchViewModel: Tags cache not ready, attempting to load...");
-      await _loadAllTopicsAndTagsCache();
-      if (!_areTagsCached) {
-        print("SearchViewModel: Failed to load tags cache for search.");
-        _setSearchLoading(false);
-        return;
-      }
-    } else if (_isCacheLoading) {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!_areTagsCached) {
-        print("SearchViewModel: Tags cache still not ready after waiting.");
-        _setSearchLoading(false);
-        return;
-      }
-    }
+    final cacheLoaded = await _ensureCacheLoaded();
+    if (!cacheLoaded) return;
 
     await Future.delayed(const Duration(milliseconds: 50));
 
-    final result = _allTagsCache.where((tag) => tag.name.toLowerCase().startsWith(trimmedQuery)).toList();
+    final trimmedQuery = query.toLowerCase().trim();
+    final results = _cachedTags!.where((tag) => tag.name.toLowerCase().contains(trimmedQuery)).toList();
 
-    _hashtagsSearchResults.value = result;
-    _setSearchLoading(false);
+    state = state.copyWith(hashtags: results, isLoading: false);
   }
 
   void clearSearch() {
-    _topicsSearchResults.value = [];
-    _hashtagsSearchResults.value = [];
-    _activeView.value = SearchResultView.none;
-    _setSearchLoading(false);
+    state = state.copyWith(topics: [], hashtags: [], activeView: SearchResultView.none, error: null);
+  }
+
+  @override
+  void dispose() {
+    clearSearch();
+    super.dispose();
   }
 }

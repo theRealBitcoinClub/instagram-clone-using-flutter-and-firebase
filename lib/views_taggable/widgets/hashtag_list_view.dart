@@ -1,143 +1,115 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertagger/fluttertagger.dart';
-import 'package:mahakka/memo/model/memo_model_tag.dart'; // Ensure correct model_original import
+import 'package:mahakka/memo/model/memo_model_tag.dart';
+import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
+import 'package:mahakka/views_taggable/widgets/loading_indicator.dart';
 
-// Assuming SearchViewModel and LoadingWidget are correctly imported
-import '../view_models/search_view_model.dart';
-import 'loading_indicator.dart'; // Ensure LoadingWidget is theme-aware
-
-class HashtagListView extends StatelessWidget {
-  const HashtagListView({
-    Key? key,
-    required this.tagController,
-    // Animation is likely handled by the parent SearchResultOverlay
-    // required this.animation,
-  }) : super(key: key);
+class HashtagListView extends ConsumerWidget {
+  const HashtagListView({Key? key, required this.tagController, required this.animationController, required this.hashtags}) : super(key: key);
 
   final FlutterTaggerController tagController;
-  // final Animation<Offset> animation; // See comment above
+  final AnimationController animationController;
+  final List<MemoModelTag> hashtags;
 
   @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
-    final TextTheme textTheme = theme.textTheme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final searchState = ref.watch(searchViewModelProvider);
 
-    // This widget is typically the direct child of SearchResultOverlay's Material widget.
     return Container(
-      // The SearchResultOverlay now wraps this in a Material widget with elevation
-      // and a themed background color (e.g., theme.colorScheme.surface).
-      padding: const EdgeInsets.symmetric(horizontal: 4.0), // Consistent horizontal padding
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
       decoration: BoxDecoration(
-        color: colorScheme.surface, // Use theme's surface color
-        // borderRadius is likely best on the parent Material in SearchResultOverlay
+        color: colorScheme.surface,
         borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
-        // boxShadow is also likely better on the parent Material in SearchResultOverlay
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: theme.shadowColor.withOpacity(0.15),
-        //     offset: const Offset(0, -4),
-        //     blurRadius: 12,
-        //     spreadRadius: 1,
-        //   ),
-        // ],
       ),
       child: Column(
-        // Using Column directly
         children: [
           Padding(
-            // Padding for the header row
-            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 4.0, 4.0), // Adjusted padding
+            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 4.0, 4.0),
             child: Row(
-              // mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribute space
               children: [
-                // SizedBox(width: 40), // Placeholder for symmetry if needed, or remove
                 Expanded(
                   child: Text(
                     "Hashtags",
-                    style: textTheme.titleLarge?.copyWith(
-                      // More prominent title
-                      color: colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: textTheme.titleLarge?.copyWith(color: colorScheme.onSurface, fontWeight: FontWeight.w600),
                     textAlign: TextAlign.center,
                   ),
                 ),
                 IconButton(
                   icon: Icon(Icons.close, color: colorScheme.onSurfaceVariant),
-                  // tooltip: "Close suggestions",
-                  onPressed: tagController.dismissOverlay,
+                  onPressed: () {
+                    // Dismiss overlay when close button is pressed
+                    animationController.reverse();
+                    tagController.dismissOverlay();
+                  },
                 ),
               ],
             ),
           ),
-          // const SizedBox(height: 4), // Reduce spacing if header is padded
-          Divider(color: theme.dividerColor, height: 1, thickness: 0.5), // Themed divider
-          Expanded(
-            child: ValueListenableBuilder<bool>(
-              valueListenable: searchViewModel.loading,
-              builder: (_, isLoading, __) {
-                return ValueListenableBuilder<List<MemoModelTag>>(
-                  valueListenable: searchViewModel.hashtags,
-                  builder: (_, hashtags, __) {
-                    if (isLoading && hashtags.isEmpty) {
-                      return Center(heightFactor: 6, child: LoadingWidget());
-                    }
-                    if (!isLoading && hashtags.isEmpty) {
-                      return Center(
-                        heightFactor: 6,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            "Didn't find any tags matching your search!",
-                            style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      );
-                    }
-                    if (hashtags.isNotEmpty) {
-                      return ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 8.0, top: 4.0), // Padding for the list
-                        itemCount: hashtags.length,
-                        itemBuilder: (context, index) {
-                          final hashtag = hashtags[index];
-                          // Use a more standard ListTile appearance
-                          return ListTile(
-                            leading: CircleAvatar(
-                              // Themed CircleAvatar for '#'
-                              radius: 20,
-                              backgroundColor: colorScheme.primaryContainer,
-                              child: Text(
-                                "#",
-                                style: textTheme.titleMedium?.copyWith(color: colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            title: Text(
-                              hashtag.name, // Handle null name
-                              style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface),
-                            ),
-                            // subtitle: Text(" Posts: ${hashtag.postCount ?? 0}", // Example if you have post count
-                            //   style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-                            // ),
-                            onTap: () {
-                              tagController.addTag(id: hashtag.name, name: hashtag.name);
-                              tagController.dismissOverlay(); // Dismiss overlay after selection
-                            },
-                            // Add a subtle border or keep it clean
-                            // dense: true, // For a more compact list
-                          );
-                        },
-                      );
-                    }
-                    return const SizedBox.shrink(); // Fallback
-                  },
-                );
-              },
-            ),
-          ),
+          Divider(color: theme.dividerColor, height: 1, thickness: 0.5),
+          Expanded(child: _buildContent(searchState, theme, colorScheme, textTheme)),
         ],
       ),
     );
+  }
+
+  Widget _buildContent(SearchState state, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    if (state.isLoading && hashtags.isEmpty) {
+      return Center(heightFactor: 6, child: LoadingWidget());
+    }
+
+    if (!state.isLoading && hashtags.isEmpty) {
+      return Center(
+        heightFactor: 6,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            "Didn't find any tags matching your search!",
+            style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    if (hashtags.isNotEmpty) {
+      return ListView.builder(
+        padding: const EdgeInsets.only(bottom: 8.0, top: 4.0),
+        itemCount: hashtags.length,
+        itemBuilder: (context, index) {
+          final hashtag = hashtags[index];
+          return ListTile(
+            leading: CircleAvatar(
+              radius: 20,
+              backgroundColor: colorScheme.primaryContainer,
+              child: Text(
+                "#",
+                style: textTheme.titleMedium?.copyWith(color: colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
+              ),
+            ),
+            title: Text(hashtag.name, style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface)),
+            onTap: () => _selectHashtag(hashtag),
+          );
+        },
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  void _selectHashtag(MemoModelTag hashtag) {
+    // CORRECTED: addTag only takes id and name parameters
+    // The trigger character is handled internally by FlutterTagger
+    tagController.addTag(
+      id: hashtag.id ?? hashtag.name, // Use name as fallback if id is null
+      name: hashtag.name,
+    );
+
+    // Dismiss the overlay using both methods for reliability
+    animationController.reverse();
+    tagController.dismissOverlay();
   }
 }

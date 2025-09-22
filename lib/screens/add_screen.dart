@@ -37,9 +37,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   late AnimationController _animationController;
   final FocusNode _focusNode = FocusNode();
 
-  // UI State
-  late Animation<Offset> _taggerOverlayAnimation;
-
   // AddPostController instance
   late AddPostController _addPostController;
 
@@ -76,10 +73,10 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
   void _initStateTagger() {
     _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
-    _taggerOverlayAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.25),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOutSine));
+    // _taggerOverlayAnimation = Tween<Offset>(
+    //   begin: const Offset(0, 0.25),
+    //   end: Offset.zero,
+    // ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOutSine));
   }
 
   @override

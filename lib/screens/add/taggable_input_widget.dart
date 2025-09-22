@@ -1,3 +1,4 @@
+// widgets/taggable_input_widget.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertagger/fluttertagger.dart';
@@ -5,7 +6,7 @@ import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
 import 'package:mahakka/views_taggable/widgets/comment_text_field.dart';
 import 'package:mahakka/views_taggable/widgets/search_result_overlay.dart';
 
-class TaggableInputWidget extends ConsumerStatefulWidget {
+class TaggableInputWidget extends ConsumerWidget {
   final FlutterTaggerController textInputController;
   final AnimationController animationController;
   final FocusNode focusNode;
@@ -24,44 +25,20 @@ class TaggableInputWidget extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  ConsumerState<TaggableInputWidget> createState() => _TaggableInputWidgetState();
-}
-
-class _TaggableInputWidgetState extends ConsumerState<TaggableInputWidget> with SingleTickerProviderStateMixin {
-  late Animation<Offset> _taggerOverlayAnimation;
-  late SearchViewModel searchViewModel;
-
-  @override
-  void initState() {
-    super.initState();
-    _initAnimations();
-    searchViewModel = SearchViewModel();
-  }
-
-  void _initAnimations() {
-    _taggerOverlayAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.25),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: widget.animationController, curve: Curves.easeInOutSine));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
-    final TextTheme textTheme = theme.textTheme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final searchViewModel = ref.read(searchViewModelProvider.notifier);
 
     return Material(
       elevation: 4.0,
       color: theme.cardColor,
-      shadowColor: theme.shadowColor,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: FlutterTagger(
           triggerStrategy: TriggerStrategy.eager,
-          controller: widget.textInputController,
-          animationController: widget.animationController,
+          controller: textInputController,
+          animationController: animationController,
           onSearch: (query, triggerChar) {
             if (triggerChar == "@") {
               searchViewModel.searchTopic(query);
@@ -69,30 +46,24 @@ class _TaggableInputWidgetState extends ConsumerState<TaggableInputWidget> with 
               searchViewModel.searchHashtag(query);
             }
           },
-          triggerCharacterAndStyles: {
-            "@": textTheme.bodyLarge!.copyWith(color: colorScheme.secondary, fontWeight: FontWeight.bold),
-            "#": textTheme.bodyLarge!.copyWith(color: colorScheme.tertiary, fontWeight: FontWeight.bold),
-          },
-          tagTextFormatter: (id, tag, triggerChar) {
-            return "$triggerChar$id#$tag#";
-          },
-          overlayHeight: widget.overlayHeight,
-          overlay: SearchResultOverlay(animation: _taggerOverlayAnimation, tagController: widget.textInputController),
+          triggerCharacterAndStyles: _buildTriggerStyles(theme),
+          tagTextFormatter: (id, tag, triggerChar) => "$triggerChar$id#$tag#",
+          overlayHeight: overlayHeight,
+          overlay: SearchResultOverlay(tagController: textInputController, animationController: animationController),
           builder: (context, containerKey) {
             return CommentTextField(
               onInputText: (value) {
-                if (!mounted) return;
                 if (value.contains('\n')) {
-                  widget.textInputController.text = value.replaceAll("\n", "");
-                  widget.onPublish();
+                  textInputController.text = value.replaceAll("\n", "");
+                  onPublish();
                 }
               },
-              focusNode: widget.focusNode,
+              focusNode: focusNode,
               containerKey: containerKey,
-              insets: widget.viewInsets,
-              controller: widget.textInputController,
+              insets: viewInsets,
+              controller: textInputController,
               hintText: "Add a caption... use @ for topics, # for tags",
-              onSend: widget.onPublish,
+              onSend: onPublish,
             );
           },
         ),
@@ -100,9 +71,10 @@ class _TaggableInputWidgetState extends ConsumerState<TaggableInputWidget> with 
     );
   }
 
-  @override
-  void dispose() {
-    searchViewModel.clearSearch();
-    super.dispose();
+  Map<String, TextStyle> _buildTriggerStyles(ThemeData theme) {
+    return {
+      "@": theme.textTheme.bodyLarge!.copyWith(color: theme.colorScheme.secondary, fontWeight: FontWeight.bold),
+      "#": theme.textTheme.bodyLarge!.copyWith(color: theme.colorScheme.tertiary, fontWeight: FontWeight.bold),
+    };
   }
 }

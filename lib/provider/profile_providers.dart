@@ -157,6 +157,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       if (currentTabIndex == 2) {
         if (_lastTabIndex != currentTabIndex || _lastProfileIdRefreshRequest != profileId) {
           refreshUserRegisteredFlag();
+          refreshBalances();
           refreshCreatorCache(profileId);
         }
         //TODO call this refreshcreatorcache inside the timer and after save settings

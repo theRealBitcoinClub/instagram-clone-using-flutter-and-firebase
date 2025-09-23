@@ -221,7 +221,6 @@ class MemoModelCreator {
 
         // Persist changes
         await ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: true);
-        await refreshBalances(ref);
 
         print('Creator $id is now registered');
       } else {

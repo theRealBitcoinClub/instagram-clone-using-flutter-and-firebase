@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:badges/badges.dart' as badges;
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
@@ -192,18 +193,44 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
     );
   }
 
+  Widget _buildFallbackImage() {
+    return CircleAvatar(
+      radius: widget.radius,
+      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+      backgroundImage: AssetImage(widget.fallbackAsset),
+      // child: Icon(Icons.person, size: widget.radius),
+    );
+  }
+
   Widget _buildAvatarWithBadge(BuildContext context, String avatarUrl, bool hasRegistered, bool isLoading, bool isRefreshing) {
     final theme = Theme.of(context);
 
     Widget avatar = CircleAvatar(
       radius: widget.radius,
-      backgroundColor: theme.colorScheme.surfaceVariant,
-      backgroundImage: avatarUrl.isEmpty ? AssetImage(widget.fallbackAsset) as ImageProvider : NetworkImage(avatarUrl),
-      onBackgroundImageError: (exception, stackTrace) {
-        print("Error loading avatar image: $exception");
-      },
-      child: isLoading || isRefreshing ? Icon(Icons.person, size: widget.radius) : null,
+      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+      child: avatarUrl.isEmpty
+          ? _buildFallbackImage()
+          : CachedNetworkImage(
+              imageUrl: avatarUrl,
+              imageBuilder: (context, imageProvider) => CircleAvatar(
+                radius: widget.radius,
+                backgroundImage: imageProvider,
+                backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+              ),
+              placeholder: (context, url) => _buildFallbackImage(),
+              errorWidget: (context, url, error) => _buildFallbackImage(),
+            ),
     );
+
+    // CircleAvatar(
+    //   radius: widget.radius,
+    //   backgroundColor: theme.colorScheme.surfaceVariant,
+    //   backgroundImage: avatarUrl.isEmpty ? AssetImage(widget.fallbackAsset) as ImageProvider : CachedNetworkImageProvider(avatarUrl),
+    //   onBackgroundImageError: (exception, stackTrace) {
+    //     print("Error loading avatar image: $exception");
+    //   },
+    //   child: isLoading || isRefreshing ? Icon(Icons.person, size: widget.radius) : null,
+    // );
 
     if (!widget.showBadge || !hasRegistered) {
       return avatar;

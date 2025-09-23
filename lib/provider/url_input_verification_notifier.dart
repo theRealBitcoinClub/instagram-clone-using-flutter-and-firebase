@@ -21,7 +21,9 @@ class UrlInputVerificationState {
 }
 
 class UrlInputVerificationNotifier extends StateNotifier<UrlInputVerificationState> {
-  UrlInputVerificationNotifier() : super(UrlInputVerificationState());
+  final Ref ref;
+
+  UrlInputVerificationNotifier(this.ref) : super(UrlInputVerificationState());
 
   Future<void> verifyAndProcessInput(WidgetRef ref, String input) async {
     // if (input.trim().isEmpty || input == state.lastProcessedContent) {
@@ -91,19 +93,19 @@ class UrlInputVerificationNotifier extends StateNotifier<UrlInputVerificationSta
     state = state.copyWith(hasValidInput: true);
   }
 
-  void _clearOtherMediaProviders(WidgetRef ref, int index) {
+  void _clearOtherMediaProviders(ref, int index) {
     if (index != 0) ref.read(imgurUrlProvider.notifier).state = '';
     if (index != 1) ref.read(youtubeVideoIdProvider.notifier).state = '';
     if (index != 2) ref.read(ipfsCidProvider.notifier).state = '';
     if (index != 3) ref.read(odyseeUrlProvider.notifier).state = '';
   }
 
-  void reset(ref) {
+  void reset() {
     state = UrlInputVerificationState();
     _clearOtherMediaProviders(ref, -1);
   }
 }
 
 final urlInputVerificationProvider = StateNotifierProvider<UrlInputVerificationNotifier, UrlInputVerificationState>(
-  (ref) => UrlInputVerificationNotifier(),
+  (ref) => UrlInputVerificationNotifier(ref),
 );

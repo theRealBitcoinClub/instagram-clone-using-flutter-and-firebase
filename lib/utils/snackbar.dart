@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 enum SnackbarType {
   success(duration: Duration(seconds: 4), backgroundColor: Color(0xFF1B5E20), icon: Icons.check_circle_outline_rounded),
   error(duration: Duration(seconds: 6), backgroundColor: Color(0xFFB71C1C), icon: Icons.error_outline_rounded),
-  info(duration: Duration(seconds: 3), backgroundColor: Color(0xFFE65100), icon: Icons.info_outline_rounded);
+  info(duration: Duration(seconds: 5), backgroundColor: Color(0xFFE65100), icon: Icons.info_outline_rounded);
 
   final Duration duration;
   final Color backgroundColor;

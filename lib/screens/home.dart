@@ -2,6 +2,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/intros/intro_enums.dart';
+import 'package:mahakka/intros/intro_state_notifier.dart';
 import 'package:mahakka/screens/add_screen.dart';
 import 'package:mahakka/screens/feed_screen.dart';
 import 'package:mahakka/screens/profile_screen_widget.dart';
@@ -51,6 +53,13 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   }
 
   void _moveToTab(int index) {
+    if (index == AppTab.add.tabIndex) {
+      ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_create, context);
+    }
+    if (index == AppTab.profile.tabIndex) {
+      ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_profile, context);
+    }
+
     // ref.read(tabIndexProvider.notifier).setTab(index);
     // final previousTab = ref.read(tabIndexProvider);
     //

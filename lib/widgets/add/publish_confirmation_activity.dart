@@ -309,6 +309,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                 ),
               const SizedBox(height: 12),
               if (widget.post.tagIds.isNotEmpty) HashtagDisplayWidget(hashtags: widget.post.tagIds, theme: theme),
+              if (widget.post.urls.isNotEmpty) HashtagDisplayWidget(noBorder: true, hashtags: widget.post.urls, theme: theme),
               if (widget.post.tagIds.isNotEmpty) const SizedBox(height: 16),
               _buildMediaPreview(theme, colorScheme, textTheme),
               const SizedBox(height: 4),

@@ -6,6 +6,7 @@ class HashtagDisplayWidget extends StatelessWidget {
   final List<bool>? selectedHashtags;
   final Function(int)? onSelectHashtag;
   final int maxTagsCounter;
+  final bool noBorder;
 
   const HashtagDisplayWidget({
     Key? key,
@@ -13,8 +14,25 @@ class HashtagDisplayWidget extends StatelessWidget {
     required this.theme,
     this.selectedHashtags,
     this.onSelectHashtag,
-    this.maxTagsCounter = 5,
+    this.noBorder = false,
+    this.maxTagsCounter = 3,
   }) : super(key: key);
+
+  static BoxDecoration borderDecoration({
+    required bool isSelected,
+    required ThemeData theme,
+    double borderRadius = 12.0,
+    double borderWidth = 1.2,
+  }) {
+    return BoxDecoration(
+      // color: isSelected ? theme.colorScheme.primary.withOpacity(0.15) : theme.colorScheme.surfaceVariant.withOpacity(0.7),
+      borderRadius: BorderRadius.circular(borderRadius),
+      border: Border.all(
+        color: isSelected ? theme.colorScheme.primary.withAlpha(111) : theme.colorScheme.outline.withAlpha(222),
+        width: isSelected ? borderWidth + 0.3 : borderWidth,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,14 +50,7 @@ class HashtagDisplayWidget extends StatelessWidget {
 
         final widget = Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            // color: isSelected ? theme.colorScheme.primary.withOpacity(0.15) : theme.colorScheme.surfaceVariant.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isSelected ? theme.colorScheme.primary.withAlpha(111) : theme.colorScheme.outline.withAlpha(222),
-              width: 1.2,
-            ),
-          ),
+          decoration: noBorder ? null : borderDecoration(isSelected: isSelected, theme: theme),
           child: Text(
             hashtags[index],
             style: theme.textTheme.bodySmall?.copyWith(

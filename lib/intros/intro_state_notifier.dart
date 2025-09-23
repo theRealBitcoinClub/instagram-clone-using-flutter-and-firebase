@@ -69,7 +69,7 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
     final newState = <IntroType, IntroState>{};
 
     for (final introType in IntroType.values) {
-      final jsonString = prefs.getString('intro_${introType.name}');
+      final jsonString = prefs.getString('iintro_${introType.name}');
 
       if (jsonString != null) {
         try {
@@ -91,7 +91,7 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
     final steps = introType.steps.toList();
     return IntroState(
       introType: introType,
-      currentStep: steps.isNotEmpty ? steps.first : IntroStep.themeSelection,
+      currentStep: steps.isNotEmpty ? steps.first : IntroStep.main_theme,
       triggeredSteps: {},
       isCompleted: steps.isEmpty, // Mark as completed if no steps
     );
@@ -157,9 +157,9 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
     context.showSnackBar(content.snackbarText, type: SnackbarType.success);
 
     // Show triggered text after 4 seconds
-    Future.delayed(const Duration(seconds: 4), () {
+    Future.delayed(const Duration(seconds: 5), () {
       if (context.mounted) {
-        context.showSnackBar(content.triggeredText, type: SnackbarType.success);
+        context.showSnackBar(content.triggeredText, type: SnackbarType.info);
       }
     });
   }

@@ -76,10 +76,10 @@ class AddPostController extends StateNotifier<void> {
         return;
       }
 
-      final finalTextContent = _appendMediaUrlToText(textContent);
-      final topics = MemoRegExp.extractTopics(finalTextContent);
+      final topics = MemoRegExp.extractTopics(textContent);
       final topic = topics.isNotEmpty ? topics.first : "";
-      final post = _createPostFromCurrentState(finalTextContent, topic);
+      final post = _createPostFromCurrentState(textContent, topic);
+      final clearTextOriginal = post.parseUrlsClearText();
       //save ipfs cid whatever happens
       ref.read(userNotifierProvider.notifier).addIpfsUrlAndUpdate(ref.read(ipfsCidProvider));
 
@@ -93,28 +93,30 @@ class AddPostController extends StateNotifier<void> {
 
       final user = ref.read(userProvider)!;
       final translation = ref.read(postTranslationProvider);
-      final useTranslation = translation.targetLanguage != translation.originalLanguage;
+      final useTranslation = translation.targetLanguage != null && translation.targetLanguage != translation.originalLanguage;
 
       final lang = useTranslation ? translation.targetLanguage! : translation.originalLanguage!;
-      final content = useTranslation ? translation.translatedText : finalTextContent;
-      final formattedContent = "${lang.flag} $content";
+      final content = useTranslation ? translation.translatedText : clearTextOriginal;
 
-      final response = await ref.read(postRepositoryProvider).publishImageOrVideo(formattedContent, topic, validate: false);
+      MemoModelPost copyPost = post.copyWith(text: "${lang.flag} ${_appendMediaUrlToText(content)}");
+      copyPost.appendUrlsToText();
+
+      final response = await ref.read(postRepositoryProvider).publishImageOrVideo(copyPost.text!, topic, validate: false);
 
       if (response == MemoAccountantResponse.yes) {
         MemoConfetti().launch(_context);
-        ref.read(urlInputVerificationProvider.notifier).reset(ref);
+        ref.read(urlInputVerificationProvider.notifier).reset();
         _showSnackBar('Successfully published!');
-        ref.read(telegramBotPublisherProvider).publishPost(postText: formattedContent, mediaUrl: null);
+        ref.read(taggableControllerProvider).text = '';
+        ref.read(telegramBotPublisherProvider).publishPost(postText: copyPost.text!, mediaUrl: null);
       } else {
         showQrCodeDialog(context: _context, user: user, memoOnly: true);
         _showSnackBar('Publish failed: ${response.message}', isError: true);
       }
     } catch (e, s) {
-      // log("Error during publish: $e\n$s");
+      print("Error during publish: $e\n$s");
       _showSnackBar('Error during publish: $e', isError: true);
     } finally {
-      ref.read(taggableControllerProvider).text = '';
       ref.read(translatedTextProvider.notifier).state = null;
       ref.read(postTranslationProvider.notifier).reset();
       ref.read(isPublishingProvider.notifier).state = false;
@@ -150,7 +152,7 @@ class AddPostController extends StateNotifier<void> {
         .addValidator(InputValidators.verifyHashtags)
         .addValidator(InputValidators.verifyNoTopicNorTag)
         .addValidator(InputValidators.verifyTopics)
-        .addValidator(InputValidators.verifyUrl)
+        // .addValidator(InputValidators.verifyUrl)
         .addValidator(InputValidators.verifyOffensiveWords);
 
     return verifier.getResult();

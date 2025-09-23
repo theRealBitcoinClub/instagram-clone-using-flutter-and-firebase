@@ -344,7 +344,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       icon: Icon(themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
       tooltip: "Toggle Theme",
       onPressed: () {
-        ref.read(introStateNotifierProvider.notifier).triggerIntroAction(_introType, IntroStep.themeSelection, context);
+        ref.read(introStateNotifierProvider.notifier).triggerIntroAction(_introType, IntroStep.main_theme, context);
         ref.read(themeNotifierProvider.notifier).toggleTheme();
       },
     );

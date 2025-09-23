@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 // intro_enums.dart
 enum IntroType {
-  mainApp({IntroStep.themeSelection, IntroStep.createContent, IntroStep.profileAccess}),
+  mainApp({IntroStep.main_theme, IntroStep.main_create, IntroStep.main_profile}),
   feedScreen({IntroStep.discoverContent, IntroStep.interactPosts}),
   addScreen({IntroStep.createPost, IntroStep.addMedia}),
   profileScreen({IntroStep.editProfile, IntroStep.viewStats}),
@@ -15,32 +15,32 @@ enum IntroType {
 
 class IntroStep {
   // Main App Steps
-  static const themeSelection = IntroStep._(
+  static const main_theme = IntroStep._(
     'themeSelection',
     IntroContent(
       initText: "Customize Your Experience",
       snackbarText: "Perfect! You can change themes anytime",
-      triggeredText: "Themes let you personalize the app's look and feel",
+      triggeredText: "A dark theme can save a lot of battery!",
       target: IntroTarget.topRight,
     ),
   );
 
-  static const createContent = IntroStep._(
+  static const main_create = IntroStep._(
     'createContent',
     IntroContent(
-      initText: "Share Your Ideas",
+      initText: "Share Inspiring Ideas",
       snackbarText: "Great! You found the creation hub",
-      triggeredText: "Tap the + button to start sharing your content",
+      triggeredText: "Select a media type at the top to share content",
       target: IntroTarget.bottomCenter,
     ),
   );
 
-  static const profileAccess = IntroStep._(
+  static const main_profile = IntroStep._(
     'profileAccess',
     IntroContent(
-      initText: "Your Personal Space",
-      snackbarText: "Excellent! Your profile is your home base",
-      triggeredText: "Access your stats, settings, and personal content here",
+      initText: "Profile & Settings",
+      snackbarText: "Backup your mnemonic, make sure funds are SAFU",
+      triggeredText: "Backup your mnemonic, set profile data, or change tip settings with the settings button up north!",
       target: IntroTarget.bottomRight,
     ),
   );
@@ -176,11 +176,11 @@ class IntroTarget {
   const IntroTarget({required this.position, required this.rotation, this.width = 50, this.height = 50});
 
   // Predefined targets
-  static const topRight = IntroTarget(position: Offset(0.85, 0.05), rotation: 0.3);
+  static const topRight = IntroTarget(position: Offset(0.84, 0.05), rotation: 0.3);
 
   static const bottomCenter = IntroTarget(position: Offset(0.45, 0.75), rotation: 3.10);
 
-  static const bottomRight = IntroTarget(position: const Offset(0.8, 0.75), rotation: 3.0);
+  static const bottomRight = IntroTarget(position: const Offset(0.76, 0.75), rotation: 3.0);
 
   Offset getAbsolutePosition(Size screenSize) {
     return Offset(position.dx * screenSize.width, position.dy * screenSize.height);

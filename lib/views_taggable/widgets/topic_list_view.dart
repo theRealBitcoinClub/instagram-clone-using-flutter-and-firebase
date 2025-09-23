@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
-import 'package:mahakka/views_taggable/widgets/loading_indicator.dart';
 
 import '../../custom_flutter_tagger_controller.dart';
 
-class TopicListView extends ConsumerWidget {
-  const TopicListView({Key? key, required this.tagController, required this.animationController, required this.topics}) : super(key: key);
+class TaggerTopicListView extends ConsumerWidget {
+  const TaggerTopicListView({Key? key, required this.tagController, required this.topics}) : super(key: key);
 
   final CustomFlutterTaggerController tagController;
-  final AnimationController animationController;
+  // final AnimationController animationController;
   final List<MemoModelTopic> topics;
 
   @override
@@ -21,35 +20,35 @@ class TopicListView extends ConsumerWidget {
     final searchState = ref.watch(searchViewModelProvider);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 0.0),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
       ),
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 4.0, 4.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    "Topics",
-                    style: textTheme.titleLarge?.copyWith(color: colorScheme.onSurface, fontWeight: FontWeight.w600),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.close, color: colorScheme.onSurfaceVariant),
-                  onPressed: () {
-                    animationController.reverse();
-                    tagController.dismissOverlay();
-                  },
-                ),
-              ],
-            ),
-          ),
-          Divider(color: theme.dividerColor, height: 1, thickness: 0.5),
+          // Padding(
+          //   padding: const EdgeInsets.fromLTRB(0.0, 2.0, 0.0, 4.0),
+          //   child: Row(
+          //     children: [
+          //       Expanded(
+          //         child: Text(
+          //           "Topics",
+          //           style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface, fontWeight: FontWeight.w600),
+          //           textAlign: TextAlign.center,
+          //         ),
+          //       ),
+          //       // IconButton(
+          //       //   icon: Icon(Icons.close, color: colorScheme.onSurfaceVariant),
+          //       //   onPressed: () {
+          //       //     // animationController.reverse();
+          //       //     tagController.dismissOverlay();
+          //       //   },
+          //       // ),
+          //     ],
+          //   ),
+          // ),
+          // Divider(color: theme.dividerColor, height: 1, thickness: 0.5),
           Expanded(child: _buildContent(searchState, theme, colorScheme, textTheme)),
         ],
       ),
@@ -58,7 +57,7 @@ class TopicListView extends ConsumerWidget {
 
   Widget _buildContent(SearchState state, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     if (state.isLoading && topics.isEmpty) {
-      return Center(heightFactor: 6, child: LoadingWidget());
+      return Center(heightFactor: 6, child: LinearProgressIndicator());
     }
 
     if (!state.isLoading && topics.isEmpty) {
@@ -67,7 +66,7 @@ class TopicListView extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
-            "Didn't find any topics matching your search!",
+            "Write or remove letters to match any existing topic to maximize your outreach, unmatched topics automatically create new topics!",
             style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
@@ -77,13 +76,13 @@ class TopicListView extends ConsumerWidget {
 
     if (topics.isNotEmpty) {
       return ListView.builder(
-        padding: const EdgeInsets.only(bottom: 8.0, top: 4.0),
+        padding: const EdgeInsets.only(bottom: 0.0, top: 0.0),
         itemCount: topics.length,
         itemBuilder: (context, index) {
           final topic = topics[index];
           return ListTile(
             leading: CircleAvatar(
-              radius: 20,
+              radius: 16,
               backgroundColor: colorScheme.secondaryContainer,
               child: Text(
                 "@",
@@ -103,11 +102,11 @@ class TopicListView extends ConsumerWidget {
   void _selectTopic(MemoModelTopic topic) {
     // CORRECTED: addTag only takes id and name parameters
     tagController.addTag(
-      id: topic.id ?? topic.header, // Use header as fallback if id is null
-      name: topic.header,
+      id: topic.id.startsWith("@") ? topic.id.substring(1) : topic.id, // Use header as fallback if id is null
+      name: topic.header.startsWith("@") ? topic.header.substring(1) : topic.header,
     );
 
-    animationController.reverse();
-    tagController.dismissOverlay();
+    // animationController.reverse();
+    // tagController.dismissOverlay();
   }
 }

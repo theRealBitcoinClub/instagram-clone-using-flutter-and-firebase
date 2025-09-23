@@ -42,7 +42,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     // _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
 
     context.afterBuild(refreshUI: false, () {
-      ref.read(animationControllerNotifierProvider.notifier).initialize(this);
+      // ref.read(animationControllerNotifierProvider.notifier).initialize(this);
       ref.read(clipboardNotifierProvider.notifier).checkClipboard(ref);
       final controller = ref.read(addPostControllerProvider.notifier);
       controller.setContext(context);
@@ -72,9 +72,9 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   _dismissOverlay() {
-    final animationController = ref.read(animationControllerNotifierProvider);
+    // final animationController = ref.read(animationControllerNotifierProvider);
     final tagController = ref.read(taggableControllerProvider);
-    if (animationController != null) animationController.reverse();
+    // if (animationController != null) animationController.reverse();
     tagController.dismissOverlay();
   }
 

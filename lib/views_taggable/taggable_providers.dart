@@ -24,37 +24,37 @@ final taggableControllerProvider = Provider<CustomFlutterTaggerController>((ref)
 //   return controller;
 // });
 
-class AnimationControllerNotifier extends StateNotifier<AnimationController?> {
-  AnimationControllerNotifier() : super(null);
+// class AnimationControllerNotifier extends StateNotifier<AnimationController?> {
+//   AnimationControllerNotifier() : super(null);
+//
+//   void initialize(TickerProvider vsync) {
+//     state?.dispose();
+//     state = AnimationController(vsync: vsync, duration: const Duration(milliseconds: 200));
+//   }
+//
+//   // @override
+//   // void dispose() {
+//   //   state?.dispose();
+//   //   super.dispose();
+//   // }
+// }
 
-  void initialize(TickerProvider vsync) {
-    state?.dispose();
-    state = AnimationController(vsync: vsync, duration: const Duration(milliseconds: 200));
-  }
-
-  // @override
-  // void dispose() {
-  //   state?.dispose();
-  //   super.dispose();
-  // }
-}
-
-final animationControllerNotifierProvider = StateNotifierProvider<AnimationControllerNotifier, AnimationController?>((ref) {
-  return AnimationControllerNotifier();
-});
+// final animationControllerNotifierProvider = StateNotifierProvider<AnimationControllerNotifier, AnimationController?>((ref) {
+//   return AnimationControllerNotifier();
+// });
 
 // Provider for the overlay animation
-final overlayAnimationProvider = Provider<Animation<Offset>>((ref) {
-  final animationController = ref.watch(animationControllerNotifierProvider);
-
-  if (animationController == null) {
-    return AlwaysStoppedAnimation(Offset.zero);
-  }
-  return Tween<Offset>(
-    begin: const Offset(0, 0.25),
-    end: Offset.zero,
-  ).animate(CurvedAnimation(parent: animationController, curve: Curves.easeInOutSine));
-});
+// final overlayAnimationProvider = Provider<Animation<Offset>>((ref) {
+//   final animationController = ref.watch(animationControllerProvider);
+//
+//   // if (animationController == null) {
+//   //   return AlwaysStoppedAnimation(Offset.zero);
+//   // }
+//   return Tween<Offset>(
+//     begin: const Offset(0, 0.25),
+//     end: Offset.zero,
+//   ).animate(CurvedAnimation(parent: animationController, curve: Curves.easeInOutSine));
+// });
 
 // Provider for focus node
 final focusNodeProvider = Provider<FocusNode>((ref) {

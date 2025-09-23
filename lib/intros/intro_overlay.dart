@@ -73,7 +73,7 @@ class _IntroOverlayState extends ConsumerState<IntroOverlay> with SingleTickerPr
     return GestureDetector(
       onTap: _nextStep,
       child: Scaffold(
-        backgroundColor: Colors.black.withOpacity(0.7),
+        backgroundColor: Colors.black.withAlpha(222),
         body: SafeArea(
           child: AnimatedBuilder(
             animation: _opacityAnimation,
@@ -95,33 +95,33 @@ class _IntroOverlayState extends ConsumerState<IntroOverlay> with SingleTickerPr
 
     return Stack(
       children: [
-        _buildHighlight(absolutePosition, content.target),
+        // _buildHighlight(absolutePosition, content.target),
         _buildTextContent(displayText, currentIndex, steps.length),
         _buildFingerPointer(absolutePosition, content.target),
       ],
     );
   }
 
-  Widget _buildHighlight(Offset position, IntroTarget target) {
-    return Stack(
-      children: [
-        Container(color: Colors.black.withOpacity(0.7)),
-        Positioned(
-          left: position.dx - target.width / 2,
-          top: position.dy - target.height / 2,
-          child: Container(
-            width: target.width,
-            height: target.height,
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: Colors.white.withOpacity(0.2), spreadRadius: 4, blurRadius: 10)],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildHighlight(Offset position, IntroTarget target) {
+  //   return Stack(
+  //     children: [
+  //       Container(color: Colors.black.withOpacity(0.7)),
+  //       Positioned(
+  //         left: position.dx - target.width / 2,
+  //         top: position.dy - target.height / 2,
+  //         child: Container(
+  //           width: target.width,
+  //           height: target.height,
+  //           decoration: BoxDecoration(
+  //             color: Colors.transparent,
+  //             shape: BoxShape.circle,
+  //             boxShadow: [BoxShadow(color: Colors.white.withOpacity(0.2), spreadRadius: 4, blurRadius: 10)],
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildTextContent(String displayText, int currentIndex, int totalSteps) {
     return Positioned(
@@ -154,7 +154,7 @@ class _IntroOverlayState extends ConsumerState<IntroOverlay> with SingleTickerPr
             ),
             const SizedBox(height: 16),
             Text(
-              "Tap to continue",
+              "Touch where the arrow indicates to continue",
               style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, fontStyle: FontStyle.italic),
             ),
           ],

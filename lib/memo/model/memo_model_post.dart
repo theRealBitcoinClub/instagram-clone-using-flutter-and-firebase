@@ -248,6 +248,17 @@ class MemoModelPost {
         (youtubeId != null && youtubeId!.isNotEmpty);
   }
 
+  String parseUrlsClearText() {
+    final urls = MemoRegExp.extractUrls(text);
+    String result = text ?? "";
+
+    for (final url in urls) {
+      result = result.replaceAll(url, '');
+    }
+    text = result;
+    return result;
+  }
+
   static String restoreMediaUrlsCase(MemoModelPost post, String textToBeRestored) {
     String result = textToBeRestored;
 
@@ -312,5 +323,12 @@ class MemoModelPost {
   // Add method to check if post has URLs but no media
   bool get hasUrlsInText {
     return MemoRegExp.extractUrls(text).isNotEmpty;
+  }
+
+  void appendUrlsToText() {
+    if (text != null)
+      for (final url in urls) {
+        text = text! + "\n$url\n";
+      }
   }
 }

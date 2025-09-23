@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mahakka/app_utils.dart';
 
 // Assuming CustomTextField is in the same directory or correctly imported
 import '../../custom_flutter_tagger_controller.dart';
@@ -25,8 +26,8 @@ class CommentTextField extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
+  Widget build(BuildContext ctx) {
+    final ThemeData theme = Theme.of(ctx);
     final ColorScheme colorScheme = theme.colorScheme;
     // final TextTheme textTheme = theme.textTheme; // Not directly used here, but good practice to have if needed
 
@@ -89,20 +90,50 @@ class CommentTextField extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8), // Spacing between text field and send button
-              IconButton(
-                iconSize: 30, // Adjusted icon size
-                padding: const EdgeInsets.all(0.0), // Ensure good tap target size
-                visualDensity: VisualDensity.compact, // Slightly smaller visual footprint
-                // Use a themed color for the send icon.
-                // colorScheme.primary is a common choice for action buttons.
-                icon: Icon(Icons.send, size: 50, color: onSend != null ? colorScheme.primary : theme.disabledColor),
-                // tooltip: "Send",
-                onPressed: onSend, // onPressed can be null to disable the button
+              Column(
+                children: [
+                  IconButton(
+                    iconSize: 26, // Adjusted icon size
+                    padding: const EdgeInsets.all(0.0), // Ensure good tap target size
+                    visualDensity: VisualDensity.compact, // Slightly smaller visual footprint
+                    // Use a themed color for the send icon.
+                    // colorScheme.primary is a common choice for action buttons.
+                    icon: Icon(Icons.alternate_email_outlined, color: onSend != null ? colorScheme.primary : theme.disabledColor),
+                    // tooltip: "Send",
+                    onPressed: () => onActionText("@", ctx), // onPressed can be null to disable the button
+                  ),
+                  IconButton(
+                    iconSize: 50, // Adjusted icon size
+                    padding: const EdgeInsets.all(0.0), // Ensure good tap target size
+                    visualDensity: VisualDensity.compact, // Slightly smaller visual footprint
+                    // Use a themed color for the send icon.
+                    // colorScheme.primary is a common choice for action buttons.
+                    icon: Icon(Icons.send, color: onSend != null ? colorScheme.primary : theme.disabledColor),
+                    // tooltip: "Send",
+                    onPressed: onSend, // onPressed can be null to disable the button
+                  ),
+                  IconButton(
+                    iconSize: 26, // Adjusted icon size
+                    padding: EdgeInsets.all(0.0), // Ensure good tap target size
+                    visualDensity: VisualDensity.compact, // Slightly smaller visual footprint
+                    // Use a themed color for the send icon.
+                    // colorScheme.primary is a common choice for action buttons.
+                    icon: Icon(Icons.tag_outlined, color: onSend != null ? colorScheme.primary : theme.disabledColor),
+                    // tooltip: "Send",
+                    onPressed: () => onActionText("#", ctx), // onPressed can be null to disable the button
+                  ),
+                ],
               ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  void onActionText(String action, BuildContext ctx) {
+    ctx.afterLayout(() {
+      controller.text = controller.text + action;
+    }, refreshUI: true);
   }
 }

@@ -400,6 +400,10 @@ class _PostCardState extends ConsumerState<PostCard> {
 
   void _onInputText(String value) {
     if (!mounted) return;
+
+    if (value.contains("@@")) _textEditController.text = value.replaceAll("@@", "@");
+
+    if (value.contains("##")) _textEditController.text = value.replaceAll("##", "#");
     // Check if the text contains a newline character (Enter key was pressed)
     if (value.contains('\n')) {
       _textEditController.text = value.replaceAll("\n", "");
@@ -482,7 +486,7 @@ class _PostCardState extends ConsumerState<PostCard> {
         .addValidator(InputValidators.verifyMinWordCount)
         .addValidator(InputValidators.verifyHashtags)
         .addValidator(InputValidators.verifyTopics)
-        .addValidator(InputValidators.verifyUrl)
+        // .addValidator(InputValidators.verifyUrl)
         .addValidator(InputValidators.verifyNoTopicNorTag)
         .addValidator(InputValidators.verifyOffensiveWords);
 
@@ -502,6 +506,8 @@ class _PostCardState extends ConsumerState<PostCard> {
       tagIds: MemoRegExp.extractHashtags(textToSend),
       topicId: MemoRegExp.extractTopics(textToSend).isNotEmpty ? MemoRegExp.extractTopics(textToSend).first : null,
     );
+
+    postCopy.parseUrlsClearText();
 
     setState(() => _isSendingTx = true);
 
@@ -553,6 +559,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     String translation = ref.read(postTranslationProvider).translatedText;
     postCopy = postCopy.copyWith(text: translation);
+    postCopy.appendUrlsToText();
 
     var result = await ref.read(postRepositoryProvider).publishReplyTopic(postCopy);
     if (!mounted) return;
@@ -566,6 +573,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     String translation = ref.read(postTranslationProvider).translatedText;
     postCopy = postCopy.copyWith(text: translation);
+    postCopy.appendUrlsToText();
 
     var result = await ref.read(postRepositoryProvider).publishReplyHashtags(postCopy);
     if (!mounted) return;

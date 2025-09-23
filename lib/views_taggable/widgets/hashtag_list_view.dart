@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
+import 'package:mahakka/views_taggable/taggable_providers.dart';
 import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
 import 'package:mahakka/views_taggable/widgets/loading_indicator.dart';
+import 'package:mahakka/widgets/hashtag_display_widget.dart';
 
 import '../../custom_flutter_tagger_controller.dart';
 
-class HashtagListView extends ConsumerWidget {
-  const HashtagListView({Key? key, required this.tagController, required this.animationController, required this.hashtags}) : super(key: key);
+class TaggerHashtagListView extends ConsumerWidget {
+  const TaggerHashtagListView({Key? key, required this.tagController, required this.hashtags}) : super(key: key);
 
   final CustomFlutterTaggerController tagController;
-  final AnimationController animationController;
+  // final AnimationController animationController;
   final List<MemoModelTag> hashtags;
 
   @override
@@ -22,42 +25,41 @@ class HashtagListView extends ConsumerWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withAlpha(111),
-        borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
-      ),
+      // decoration: BoxDecoration(
+      //   borderRadius: const BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
+      // ),
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 4.0, 4.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    "Hashtags",
-                    style: textTheme.titleLarge?.copyWith(color: colorScheme.onSurface, fontWeight: FontWeight.w600),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.close, color: colorScheme.onSurfaceVariant),
-                  onPressed: () {
-                    // Dismiss overlay when close button is pressed
-                    animationController.reverse();
-                    tagController.dismissOverlay();
-                  },
-                ),
-              ],
-            ),
-          ),
-          Divider(color: theme.dividerColor, height: 1, thickness: 0.5),
-          Expanded(child: _buildContent(searchState, theme, colorScheme, textTheme)),
+          // Padding(
+          //   padding: const EdgeInsets.fromLTRB(16.0, 4.0, 4.0, 4.0),
+          //   child: Row(
+          //     children: [
+          //       // Expanded(
+          //       //   child: Text(
+          //       //     "Hashtags",
+          //       //     style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface, fontWeight: FontWeight.w600),
+          //       //     textAlign: TextAlign.center,
+          //       //   ),
+          //       // ),
+          //       // IconButton(
+          //       //   icon: Icon(Icons.close, color: colorScheme.onSurfaceVariant),
+          //       //   onPressed: () {
+          //       //     // Dismiss overlay when close button is pressed
+          //       //     // animationController.reverse();
+          //       //     tagController.dismissOverlay();
+          //       //   },
+          //       // ),
+          //     ],
+          //   ),
+          // ),
+          // Divider(color: theme.dividerColor, height: 1, thickness: 0.5),
+          Expanded(child: _buildContent(searchState, theme, colorScheme, textTheme, ref)),
         ],
       ),
     );
   }
 
-  Widget _buildContent(SearchState state, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+  Widget _buildContent(SearchState state, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme, WidgetRef ref) {
     if (state.isLoading && hashtags.isEmpty) {
       return Center(heightFactor: 6, child: LoadingWidget());
     }
@@ -68,7 +70,7 @@ class HashtagListView extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
-            "Didn't find any tags matching your search!",
+            "Add or remove letters to match any existing #hashtag to maximize your outreach, unmatched tags automatically create new tags!",
             style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
@@ -77,26 +79,31 @@ class HashtagListView extends ConsumerWidget {
     }
 
     if (hashtags.isNotEmpty) {
-      return ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
-        itemCount: hashtags.length,
-        itemBuilder: (context, index) {
-          final hashtag = hashtags[index];
-          return Container(
-            margin: const EdgeInsets.only(right: 2.0), // Space between items
-            child: GestureDetector(
-              onTap: () => _selectHashtag(hashtag),
-              child: Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text("#" + hashtag.name, style: textTheme.titleLarge?.copyWith(color: colorScheme.onSurface)),
+      return SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+          width: double.infinity,
+          child: Wrap(
+            direction: Axis.horizontal,
+            alignment: WrapAlignment.start,
+            runAlignment: WrapAlignment.start,
+            spacing: 8.0,
+            runSpacing: 4.0,
+            children: hashtags.map((hashtag) {
+              return GestureDetector(
+                onTap: () => _selectHashtag(hashtag),
+                child: Container(
+                  decoration: HashtagDisplayWidget.borderDecoration(isSelected: true, theme: theme),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                    child: Text("#${hashtag.name}", style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface)),
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
+              );
+            }).toList(),
+          ),
+        ),
       );
     }
 
@@ -112,7 +119,11 @@ class HashtagListView extends ConsumerWidget {
     );
 
     // Dismiss the overlay using both methods for reliability
-    animationController.reverse();
+    // animationController.reverse();
     tagController.dismissOverlay();
+  }
+
+  bool hasSelectedTag(MemoModelTag hashtag, WidgetRef ref) {
+    return MemoRegExp.extractHashtags(ref.read(taggableControllerProvider).text).contains(hashtag.name);
   }
 }

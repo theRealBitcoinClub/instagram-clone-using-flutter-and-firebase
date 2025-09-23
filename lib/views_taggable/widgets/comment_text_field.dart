@@ -133,7 +133,53 @@ class CommentTextField extends StatelessWidget {
 
   void onActionText(String action, BuildContext ctx) {
     ctx.afterLayout(() {
-      controller.text = controller.text + action;
+      final text = controller.text;
+      final selection = controller.selection;
+
+      // Get cursor position
+      final cursorPosition = selection.baseOffset;
+
+      if (cursorPosition < 0) {
+        // No cursor position, append at the end
+        controller.text = "${text.trim()} $action ";
+        controller.selection = TextSelection.collapsed(offset: controller.text.length);
+        return;
+      }
+
+      // Check whitespace before and after cursor
+      final hasSpaceBefore = cursorPosition == 0 || text[cursorPosition - 1] == ' ';
+      final hasSpaceAfter = cursorPosition == text.length || text[cursorPosition] == ' ';
+
+      // Build the new text
+      String newText;
+      int newCursorPosition;
+
+      if (hasSpaceBefore && hasSpaceAfter) {
+        // Perfect case: just insert the action
+        newText = text.replaceRange(cursorPosition, cursorPosition, action);
+        newCursorPosition = cursorPosition + action.length;
+      } else if (!hasSpaceBefore && hasSpaceAfter) {
+        // Need space before
+        newText = text.replaceRange(cursorPosition, cursorPosition, ' $action');
+        newCursorPosition = cursorPosition + action.length + 1;
+      } else if (hasSpaceBefore && !hasSpaceAfter) {
+        // Need space after
+        newText = text.replaceRange(cursorPosition, cursorPosition, '$action ');
+        newCursorPosition = cursorPosition + action.length;
+      } else {
+        // Need spaces on both sides
+        newText = text.replaceRange(cursorPosition, cursorPosition, ' $action ');
+        newCursorPosition = cursorPosition + action.length + 1;
+      }
+
+      controller.text = newText;
+      controller.selection = TextSelection.collapsed(offset: newCursorPosition);
     }, refreshUI: true);
   }
+
+  // void onActionText(String action, BuildContext ctx) {
+  //   ctx.afterLayout(() {
+  //     controller.text = "${controller.text.trim()} $action";
+  //   }, refreshUI: true);
+  // }
 }

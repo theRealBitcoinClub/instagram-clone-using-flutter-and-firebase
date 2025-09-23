@@ -11,6 +11,16 @@ import 'package:mahakka/route%20handling/auth_page.dart';
 import 'package:mahakka/theme_provider.dart';
 
 void main() async {
+  // Handle Flutter errors silently
+  // FlutterError.onError = (details) {
+  //   print('Flutter error silenced: ${details.exception}');
+  // };
+  //
+  // // Handle Dart errors
+  // PlatformDispatcher.instance.onError = (error, stack) {
+  //   print('Dart error silenced: $error');
+  //   return true; // Prevents default error handling
+  // };
   // Load .env file
   await dotenv.load(fileName: "telegram.env");
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();

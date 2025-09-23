@@ -61,7 +61,7 @@ class CachedImageManager {
   }
 
   // Download and cache image
-  Future<File> downloadAndCacheImage(String url) async {
+  Future<File?> downloadAndCacheImage(String url) async {
     final String key = _getCacheKey(url);
 
     // If already downloading, return the existing completer
@@ -86,7 +86,11 @@ class CachedImageManager {
       // Download the image
       final http.Response response = await http.get(Uri.parse(url));
       if (response.statusCode != 200) {
-        throw Exception('${response.statusCode} - Failed to download image - ${response.statusCode}');
+        var message = '${response.statusCode} - Failed to download image - ${response.statusCode}';
+        print("FAILED TO DOWNLOAD AND CACHE IMAGE $url: $message");
+        _downloadCompleters.remove(key);
+        completer.completeError(HttpSilentException(response.statusCode, url, message));
+        return null;
       }
 
       // Save to cache
@@ -107,9 +111,11 @@ class CachedImageManager {
 
       return cachedFile;
     } catch (e) {
+      print("ERROR UNEXPECTED FAILED TO DOWNLOAD AND CACHE IMAGE $url: $e");
       _downloadCompleters.remove(key);
       completer.completeError(e);
-      rethrow;
+      // rethrow;
+      return null;
     }
   }
 
@@ -175,6 +181,7 @@ class CachedImageManager {
       print('Error during cache cleanup: $e');
     }
   }
+
   // // Clean up cache based on size and age
   // Future<void> _cleanupCache() async {
   //   final Directory cacheDir = await _getCacheDir();
@@ -239,4 +246,15 @@ class CachedImageManager {
     }
     return totalSize;
   }
+}
+
+class HttpSilentException implements Exception {
+  final int statusCode;
+  final String url;
+  final String message;
+
+  HttpSilentException(this.statusCode, this.url, this.message);
+
+  @override
+  String toString() => 'HTTP $statusCode: $message ($url)';
 }

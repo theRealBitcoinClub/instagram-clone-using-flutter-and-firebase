@@ -353,39 +353,6 @@ class MemoAccountant {
     return regex.hasMatch(txid);
   }
 
-  // Optional: Method to verify transaction exists on blockchain
-  //   Future<bool> _verifyTransactionOnBlockchain(String txid, {int maxRetries = 3}) async {
-  //     try {
-  //       final bitcoinBase = await ref.read(electrumServiceProvider.future);
-  //
-  //       for (int attempt = 1; attempt <= maxRetries; attempt++) {
-  //         try {
-  //           final transaction = await bitcoinBase.getTransaction(txid);
-  //           if (transaction != null) {
-  //             print('MemoAccountant: Transaction $txid confirmed on blockchain');
-  //             return true;
-  //           }
-  //
-  //           if (attempt < maxRetries) {
-  //             print('MemoAccountant: Transaction $txid not found yet, retrying in 5 seconds...');
-  //             await Future.delayed(Duration(seconds: 5));
-  //           }
-  //         } catch (e) {
-  //           print('MemoAccountant: Error checking transaction $txid: $e');
-  //           if (attempt < maxRetries) {
-  //             await Future.delayed(Duration(seconds: 5));
-  //           }
-  //         }
-  //       }
-  //
-  //       print('MemoAccountant: Transaction $txid not found after $maxRetries attempts');
-  //       return false;
-  //     } catch (e) {
-  //       print('MemoAccountant: Error in blockchain verification: $e');
-  //       return false;
-  //     }
-  //   }
-
   // Original helper methods (unchanged)
   Future<MemoAccountantResponse> _tryPublishLike(MemoModelPost post, String wif) async {
     var mp = await MemoPublisher.create(ref, MemoBitcoinBase.reOrderTxHash(post.id!), MemoCode.postLike, wif: wif);

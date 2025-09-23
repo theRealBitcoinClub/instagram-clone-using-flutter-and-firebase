@@ -69,7 +69,7 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
     final newState = <IntroType, IntroState>{};
 
     for (final introType in IntroType.values) {
-      final jsonString = prefs.getString('iintro_${introType.name}');
+      final jsonString = prefs.getString('intro_${introType.name}');
 
       if (jsonString != null) {
         try {

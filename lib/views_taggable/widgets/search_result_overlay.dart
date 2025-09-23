@@ -9,12 +9,12 @@ import 'package:mahakka/views_taggable/widgets/topic_list_view.dart';
 class SearchResultBox extends ConsumerWidget {
   const SearchResultBox({Key? key}) : super(key: key);
 
-  _dismissOverlay(ref) {
-    // final animationController = ref.read(animationControllerNotifierProvider);
-    final tagController = ref.read(taggableControllerProvider);
-    // if (animationController != null) animationController.reverse();
-    tagController.dismissOverlay();
-  }
+  // _dismissOverlay(ref) {
+  //   // final animationController = ref.read(animationControllerNotifierProvider);
+  //   final tagController = ref.read(taggableControllerProvider);
+  //   // if (animationController != null) animationController.reverse();
+  //   tagController.dismissOverlay();
+  // }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,22 +24,23 @@ class SearchResultBox extends ConsumerWidget {
     final tagController = ref.watch(taggableControllerProvider);
     // final animation = ref.watch(overlayAnimationProvider);
 
-    return GestureDetector(
-      onTap: _dismissOverlay(ref), // Dismiss on external tap
-      behavior: HitTestBehavior.opaque,
-      child:
-          // SlideTransition(
-          //   position: animation,
-          //   child:
-          Material(
-            elevation: 4.0,
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.only(topLeft: Radius.circular(8.0), topRight: Radius.circular(8.0)),
-            child: GestureDetector(
-              onTap: () {}, // Prevent tap from bubbling up to parent
-              child: _buildContent(searchState, theme, tagController),
-            ),
-          ),
+    return
+    // GestureDetector(
+    // onTap: _dismissOverlay(ref), // Dismiss on external tap
+    // behavior: HitTestBehavior.opaque,
+    // child:
+    // SlideTransition(
+    //   position: animation,
+    //   child:
+    Material(
+      elevation: 4.0,
+      color: theme.colorScheme.surface,
+      borderRadius: const BorderRadius.only(topLeft: Radius.circular(8.0), topRight: Radius.circular(8.0)),
+      child: GestureDetector(
+        onTap: () {}, // Prevent tap from bubbling up to parent
+        child: _buildContent(searchState, theme, tagController),
+      ),
+      // ),
       // ),
     );
   }

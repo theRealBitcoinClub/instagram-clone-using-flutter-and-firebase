@@ -49,13 +49,13 @@ class TaggerTopicListView extends ConsumerWidget {
           //   ),
           // ),
           // Divider(color: theme.dividerColor, height: 1, thickness: 0.5),
-          Expanded(child: _buildContent(searchState, theme, colorScheme, textTheme)),
+          Expanded(child: _buildContent(searchState, theme, colorScheme, textTheme, ref)),
         ],
       ),
     );
   }
 
-  Widget _buildContent(SearchState state, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+  Widget _buildContent(SearchState state, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme, ref) {
     if (state.isLoading && topics.isEmpty) {
       return Center(heightFactor: 6, child: LinearProgressIndicator());
     }
@@ -90,7 +90,7 @@ class TaggerTopicListView extends ConsumerWidget {
               ),
             ),
             title: Text(topic.header, style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface)),
-            onTap: () => _selectTopic(topic),
+            onTap: () => _selectTopic(topic, ref),
           );
         },
       );
@@ -99,13 +99,14 @@ class TaggerTopicListView extends ConsumerWidget {
     return const SizedBox.shrink();
   }
 
-  void _selectTopic(MemoModelTopic topic) {
+  void _selectTopic(MemoModelTopic topic, WidgetRef ref) {
     // CORRECTED: addTag only takes id and name parameters
     tagController.addTag(
       id: topic.id.startsWith("@") ? topic.id.substring(1) : topic.id, // Use header as fallback if id is null
       name: topic.header.startsWith("@") ? topic.header.substring(1) : topic.header,
     );
 
+    ref.read(searchViewModelProvider.notifier).clearSearch();
     // animationController.reverse();
     // tagController.dismissOverlay();
   }

@@ -92,7 +92,7 @@ class TaggerHashtagListView extends ConsumerWidget {
             runSpacing: 4.0,
             children: hashtags.map((hashtag) {
               return GestureDetector(
-                onTap: () => _selectHashtag(hashtag),
+                onTap: () => _selectHashtag(hashtag, ref),
                 child: Container(
                   decoration: HashtagDisplayWidget.borderDecoration(isSelected: true, theme: theme),
                   child: Padding(
@@ -110,17 +110,18 @@ class TaggerHashtagListView extends ConsumerWidget {
     return const SizedBox.shrink();
   }
 
-  void _selectHashtag(MemoModelTag hashtag) {
+  void _selectHashtag(MemoModelTag hashtag, WidgetRef ref) {
     // CORRECTED: addTag only takes id and name parameters
     // The trigger character is handled internally by FlutterTagger
     tagController.addTag(
       id: hashtag.id ?? hashtag.name, // Use name as fallback if id is null
       name: hashtag.name,
     );
+    ref.read(searchViewModelProvider.notifier).clearSearch();
 
     // Dismiss the overlay using both methods for reliability
     // animationController.reverse();
-    tagController.dismissOverlay();
+    // tagController.dismissOverlay();
   }
 
   bool hasSelectedTag(MemoModelTag hashtag, WidgetRef ref) {

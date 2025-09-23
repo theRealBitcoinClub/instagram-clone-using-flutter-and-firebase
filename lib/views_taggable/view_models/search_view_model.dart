@@ -114,7 +114,7 @@ class SearchViewModel extends StateNotifier<SearchState> {
     if (!mounted) return;
     if (!cacheLoaded) return;
 
-    await Future.delayed(const Duration(milliseconds: 50));
+    await Future.delayed(const Duration(milliseconds: 250));
 
     final trimmedQuery = query.toLowerCase().trim();
     final results = _cachedTopics!.where((topic) => topic.header.toLowerCase().contains(trimmedQuery)).toList();
@@ -135,7 +135,7 @@ class SearchViewModel extends StateNotifier<SearchState> {
     // if (!mounted) return;
     if (!cacheLoaded) return;
 
-    await Future.delayed(const Duration(milliseconds: 50));
+    await Future.delayed(const Duration(milliseconds: 250));
 
     final trimmedQuery = query.toLowerCase().trim();
     final results = _cachedTags!.where((tag) => tag.name.toLowerCase().contains(trimmedQuery)).toList();
@@ -144,7 +144,7 @@ class SearchViewModel extends StateNotifier<SearchState> {
   }
 
   void clearSearch() {
-    state = state.copyWith(topics: [], hashtags: [], activeView: SearchResultView.none, error: null);
+    state = state.copyWith(topics: [], hashtags: [], activeView: SearchResultView.none, error: null, isLoading: false);
   }
 
   @override

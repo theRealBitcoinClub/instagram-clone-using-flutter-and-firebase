@@ -70,13 +70,13 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       },
     );
   }
-
-  _dismissOverlay() {
-    // final animationController = ref.read(animationControllerNotifierProvider);
-    final tagController = ref.read(taggableControllerProvider);
-    // if (animationController != null) animationController.reverse();
-    tagController.dismissOverlay();
-  }
+  //
+  // _dismissOverlay() {
+  //   // final animationController = ref.read(animationControllerNotifierProvider);
+  //   final tagController = ref.read(taggableControllerProvider);
+  //   // if (animationController != null) animationController.reverse();
+  //   tagController.dismissOverlay();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +95,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     return GestureDetector(
       onTap: () {
-        _dismissOverlay();
+        // _dismissOverlay();
         // ref.read(taggableControllerProvider).dismissOverlay();
         // ref.read(overlayDismissalProvider)();
         _unfocusNodes(context);
@@ -107,17 +107,18 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           toolbarHeight: 50,
           title: Row(
             children: [
-              GestureDetector(
-                onTap: () {
-                  _dismissOverlay();
-                  // ref.read(overlayDismissalProvider)();
-                },
-                child: BurnerBalanceWidget(),
-              ),
+              // GestureDetector(
+              //   onTap: () {
+              //     _dismissOverlay();
+              // ref.read(overlayDismissalProvider)();
+              // },
+              // child:
+              BurnerBalanceWidget(),
+              // ),
               Spacer(),
               GestureDetector(
                 onTap: () {
-                  _dismissOverlay();
+                  // _dismissOverlay();
                   // ref.read(overlayDismissalProvider)();
                   launchUrl(Uri.parse('https://mahakka.com'));
                 },

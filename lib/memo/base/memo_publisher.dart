@@ -52,7 +52,7 @@ class MemoPublisher {
     List<UtxoWithAddress> utxos = addUtxoAddressDetails(elctrumUtxos);
     //TODO the remove dust utxo might be helpful in any case but shouldnt be required for non memo that dont have SLP
     //TODO this removeSlp shouldnt be required in this app as the addresses dont use dev path 245
-    utxos = removeSlpUtxos(utxos);
+    // utxos = removeSlpUtxos(utxos);
 
     final BigInt walletBalance = utxos.sumOfUtxosValue();
     if (walletBalance == BigInt.zero) {

@@ -42,9 +42,6 @@ class MemoModelPost {
   String topicId;
   List<String> tagIds;
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  int? currentPreviewIndex;
-
   // --- Transient (Client-Side) Fields ---
   @JsonKey(includeFromJson: false, includeToJson: false)
   MemoModelCreator? creator;
@@ -112,6 +109,7 @@ class MemoModelPost {
     this.docSnapshot,
     this.showOnFeed,
     this.hideOnFeed,
+    this.urls = const [],
   }) {
     // Initialization logic for public constructor if needed
   }
@@ -210,6 +208,7 @@ class MemoModelPost {
     MemoModelCreator? creator,
     MemoModelTopic? topic,
     String? created,
+    List<String>? urls,
     DocumentSnapshot? docSnapshot,
   }) {
     return MemoModelPost(
@@ -232,6 +231,7 @@ class MemoModelPost {
       creator: creator ?? this.creator,
       topic: topic ?? this.topic,
       created: created ?? this.created,
+      urls: urls ?? this.urls,
       docSnapshot: docSnapshot ?? this.docSnapshot,
     );
   }
@@ -249,12 +249,13 @@ class MemoModelPost {
   }
 
   String parseUrlsClearText() {
-    final urls = MemoRegExp.extractUrls(text);
+    final urlsExtracted = MemoRegExp.extractUrls(text);
     String result = text ?? "";
 
-    for (final url in urls) {
+    for (final url in urlsExtracted) {
       result = result.replaceAll(url, '');
     }
+    urls = urlsExtracted;
     text = result;
     return result;
   }

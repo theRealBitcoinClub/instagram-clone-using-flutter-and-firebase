@@ -1,13 +1,18 @@
 // screens/memo_webview_screen.dart
+import 'dart:io';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/tab_item_data.dart';
 import 'package:mahakka/utils/snackbar.dart';
 
 import '../provider/user_provider.dart';
 import '../providers/webview_providers.dart';
+import 'css_injector.dart';
 
 // Add this provider to your webview_providers.dart or navigation_providers.dart
 // final targetUrlProvider = StateProvider<String?>((ref) => null);
@@ -34,11 +39,53 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   String _displayInAppBar = "";
   bool _isCustomUrl = false;
   bool _shouldInjectCss = true; // Track whether CSS should be injected for current URL
+  bool _hasInternetConnection = true; // Track internet connection status
 
   @override
   void initState() {
     super.initState();
-    // No need to load URL in initState anymore, it's done directly in the widget.
+    _checkInternetConnection();
+  }
+
+  // Method to check internet connection
+  Future<void> _checkInternetConnection() async {
+    try {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult == ConnectivityResult.none) {
+        setState(() {
+          _hasInternetConnection = false;
+        });
+        return;
+      }
+
+      // Additional check with HTTP request to Google
+      context.afterBuild(() async {
+        _hasInternetConnection = await _testInternetConnection();
+      }, refreshUI: true);
+
+      // setState(() {
+      //   _hasInternetConnection = response;
+      // });
+    } catch (e) {
+      setState(() {
+        _hasInternetConnection = false;
+      });
+    }
+  }
+
+  // Test internet connection by making a HEAD request to Google
+  Future<bool> _testInternetConnection() async {
+    try {
+      final client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 5);
+
+      final request = await client.headUrl(Uri.parse('https://www.google.com'));
+      final response = await request.close();
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
   }
 
   // Helper method to determine the initial URL
@@ -86,6 +133,11 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   }
 
   void _loadUrl(String url) {
+    if (!_hasInternetConnection) {
+      _checkInternetConnection(); // Re-check connection
+      return;
+    }
+
     // Determine if CSS should be injected for this URL
     final bool shouldInject =
         !url.contains('/logout') &&
@@ -151,342 +203,24 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
   }
 
   Future<void> _injectCSS() async {
-    // final theme = Theme.of(context);
-    final theme = Theme.of(context);
-    _isDarkTheme = theme.brightness == Brightness.dark;
+    final result = await CssInjector.injectCSS(webViewController: _webViewController, context: context, isDarkTheme: _isDarkTheme);
 
-    // Define theme colors
-    // final backgroundColor = _isDarkTheme ? '#121212' : '#f8f8f8';
-    final backgroundColor = _isDarkTheme ? '#121212' : '#f8f8f8';
-    final textColor = _isDarkTheme ? '#d2d2d2' : '#000';
-    final postBackground = _isDarkTheme ? '#1e1e1e' : '#fff';
-    final postOddBackground = _isDarkTheme ? '#2a2a2a' : '#f8f8f8';
-    final borderColor = _isDarkTheme ? '#333' : '#e8e8e8';
-    final nameColor = _isDarkTheme ? '#e0e0e0' : '#555';
-    final profileColor = _isDarkTheme ? '#d2d2d2' : '#333';
-    final linkColor = _isDarkTheme ? '#6eb332' : '#487521';
-    final normalLinkColor = _isDarkTheme ? '#e0e0e0' : '#444';
-    final mutedTextColor = _isDarkTheme ? '#a0a0a0' : '#666';
-    final inputBackground = _isDarkTheme ? '#2d2d2d' : '#fff';
-    final inputBorderColor = _isDarkTheme ? '#444' : '#ccc';
-    final buttonBackground = _isDarkTheme ? '#2d2d2d' : '#f0f0f0';
-    final buttonHoverBackground = _isDarkTheme ? '#3d3d3d' : '#e0e0f0';
-    final shadowColor = _isDarkTheme ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)';
+    setState(() {
+      _cssInjected = result;
+    });
+  }
 
-    String css =
-        '''
-      <style>
-      
-        /* Hide navigation and other unwanted elements */
-        .reputation-tooltip,
-        .pagination-center,
-        .load-more-wrapper,
-        .center,
-        .form-new-topic-message,
-        .block-explorer,
-        .actions,
-        .pagination-right,
-        .topics-index-head,
-        .navbar,
-        .footer,
-        #mobile-app-banner,
-        .alert-banner,
-        .posts-nav,
-        .posts-nav-dropdown,
-        .side-header-spacer,
-        .row:not(.post):not([class*="col-"]),
-        .android-link,
-        .ios-link,
-        #mobile-app-banner {
-          display: none !important;
-        }
+  // Method to retry internet connection
+  Future<void> _retryConnection() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-        /* Global styles */
-        * {
-          box-sizing: border-box !important;
-        }
-        
-        body {
-          margin: 0 !important;
-          padding: 0 !important;
-          overflow-x: hidden !important;
-          background: $backgroundColor !important;
-          color: $textColor !important;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-        }
+    await _checkInternetConnection();
 
-        /* Container adjustments */
-        .container {
-          width: 100% !important;
-          max-width: 100% !important;
-          padding: 0 12px !important;
-          margin-top: 0 !important;
-        }
-
-        /* Post styling */
-        .post {
-          background: $postBackground !important;
-          border: 1px solid $borderColor !important;
-          border-radius: 12px !important;
-          margin: 16px 0 !important;
-          padding: 16px !important;
-          box-shadow: 0 2px 8px $shadowColor !important;
-        }
-
-        .post.post-odd {
-          background: $postOddBackground !important;
-        }
-
-        /* Post header elements */
-        .post .name .post-header {
-          color: $nameColor !important;
-          font-weight: bold !important;
-          font-size: 16px !important;
-          margin-bottom: 4px !important;
-        }
-
-        .post .name .profile {
-          color: $profileColor !important;
-          text-decoration: none !important;
-        }
-
-        .post .text-muted {
-          color: $mutedTextColor !important;
-          font-size: 14px !important;
-        }
-
-        /* Post content */
-        .post .content .message {
-          color: $textColor !important;
-          font-size: 16px !important;
-          line-height: 1.5 !important;
-          margin: 12px 0 !important;
-          word-break: break-word !important;
-        }
-
-        .post .content p {
-          margin: 8px 0 !important;
-        }
-
-        /* Links */
-        a {
-          color: $linkColor !important;
-          text-decoration: none !important;
-        }
-
-        a:hover {
-          text-decoration: underline !important;
-        }
-
-        a.normal {
-          color: $normalLinkColor !important;
-        }
-
-        /* Buttons and interactive elements */
-        .btn {
-          background: $buttonBackground !important;
-          color: $textColor !important;
-          border: 1px solid $inputBorderColor !important;
-          border-radius: 4px !important;
-          padding: 6px 12px !important;
-        }
-
-        .btn:hover {
-          background: $buttonHoverBackground !important;
-        }
-
-        /* Input fields */
-        .form-control {
-          color: $textColor !important;
-          background: $inputBackground !important;
-          border: 1px solid $inputBorderColor !important;
-          border-radius: 4px !important;
-          padding: 8px 12px !important;
-        }
-
-        /* Remove any fixed positioning that might cause issues */
-        #site-wrapper.active,
-        #site-wrapper-cover.active {
-          position: relative !important;
-          overflow: visible !important;
-          height: auto !important;
-        }
-
-        /* Additional post elements */
-        .post .actions {
-          border-top: 1px solid $borderColor !important;
-          padding-top: 12px !important;
-          margin-top: 12px !important;
-        }
-
-        .post .actions a {
-          margin-right: 16px !important;
-          font-size: 14px !important;
-        }
-
-        .post .media {
-          margin: 12px 0 !important;
-          border-radius: 8px !important;
-          overflow: hidden !important;
-        }
-
-        .post .badge {
-          background: $buttonBackground !important;
-          color: $textColor !important;
-          border: 1px solid $inputBorderColor !important;
-          border-radius: 4px !important;
-          padding: 2px 6px !important;
-          font-size: 11px !important;
-        }
-
-        /* Force portrait-only layout */
-        @media (orientation: landscape) {
-          body {
-            transform: rotate(0deg) !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            overflow: hidden !important;
-          }
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 767px) {
-          .post {
-            margin-top: 5px 0 !important;
-            border-radius: 0 !important;
-            padding: 2px !important;
-            box-shadow: none !important;
-          }
-          
-          .container {
-            padding: 0 8px !important;
-          }
-          
-          .post, .content {
-            font-size: 11px !important;
-          }
-          
-        
-          #all-posts {
-              max-height: max-content;
-          }
-        
-        }
-        
-        #all-posts {
-            max-height: max-content;
-        }
-        
-        .message, .post-header, .name, .message-feed-item, .mini-profile-name {
-          background: $postBackground !important;
-        }
-        
-        /*.message .post-header .name .message-feed-item {
-          background: #ccc !important;
-        }*/
-      </style>
-    ''';
-
-    try {
-      // InAppWebView uses evaluateJavascript()
-      await _webViewController.evaluateJavascript(
-        source:
-            '''
-        (function() {
-          // First inject CSS
-          var style = document.createElement('style');
-          style.innerHTML = `$css`;
-          document.head.appendChild(style);
-          
-          // Remove unwanted elements
-          var elementsToRemove = [
-            '.pagination-center',
-            '.load-more-wrapper',
-            '.center',
-            '.form-new-topic-message',
-            '.block-explorer',
-            '.actions',
-            '.pagination-right',
-            '.topics-index-head',
-            '.navbar',
-            '.footer',
-            '#mobile-app-banner',
-            '.alert-banner',
-            '.posts-nav',
-            '.posts-nav-dropdown',
-            '.side-header-spacer',
-            '.android-link',
-            '.ios-link'
-          ];
-          
-          elementsToRemove.forEach(function(selector) {
-            var elements = document.querySelectorAll(selector);
-            elements.forEach(function(el) {
-              el.remove();
-            });
-          });
-          
-          // Remove rows that don't contain posts
-          var rows = document.querySelectorAll('.row');
-          rows.forEach(function(row) {
-            var hasPost = row.querySelector('.post');
-            var hasCol = row.querySelector('[class*="col-"]');
-            if (!hasPost && !hasCol) {
-              row.remove();
-            }
-          });
-          
-          // Force body to use theme colors
-          document.body.style.backgroundColor = '$backgroundColor';
-          document.body.style.color = '$textColor';
-          
-          // Add dark class if needed
-          if ($_isDarkTheme) {
-            document.body.classList.add('dark');
-          } else {
-            document.body.classList.remove('dark');
-          }
-          
-          // Additional theme-specific adjustments
-          var allElements = document.querySelectorAll('*');
-          allElements.forEach(function(el) {
-            // Fix any remaining background colors
-            var bgColor = window.getComputedStyle(el).backgroundColor;
-            if (bgColor === 'rgb(248, 248, 248)' || bgColor === 'rgba(0, 0, 0, 0)') {
-              el.style.backgroundColor = '$_isDarkTheme' ? '$backgroundColor' : '$postBackground';
-            }
-            
-            // Fix any remaining text colors
-            var txtColor = window.getComputedStyle(el).color;
-            if (txtColor === 'rgb(0, 0, 0)' || txtColor === 'rgb(51, 51, 51)') {
-              el.style.color = '$textColor';
-            }
-          });
-          
-          // Calculate height of removed elements and scroll down
-          setTimeout(function() {
-            // Scroll to the top of the post content
-            var firstPost = document.querySelector('.post');
-            if (firstPost) {
-              firstPost.scrollIntoView({behavior: 'smooth'});
-            }
-            
-            // Alternatively, scroll by estimated height of removed elements
-            window.scrollBy(0, 120);
-          }, 300);
-        })();
-      ''',
-      );
-
-      // Mark CSS as injected and hide loading indicator
-      setState(() {
-        _cssInjected = true;
-      });
-    } catch (e) {
-      // If injection fails, still mark as injected to avoid infinite loading
-      setState(() {
-        _cssInjected = true;
-      });
+    if (_hasInternetConnection) {
+      // Reload the current page or initial URL
+      _webViewController.reload();
     }
   }
 
@@ -563,58 +297,112 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
           body: SafeArea(
             child: Stack(
               children: [
-                // Add a container that constraints the WebView
-                Container(
-                  constraints: BoxConstraints(maxWidth: MediaQuery.of(consumerCtx).size.width),
-                  child: InAppWebView(
-                    // Your existing WebView configuration
-                    initialUrlRequest: URLRequest(url: WebUri.uri(Uri.parse(_getInitialUrl()))),
-                    initialOptions: InAppWebViewGroupOptions(
-                      crossPlatform: InAppWebViewOptions(
-                        javaScriptEnabled: true,
-                        // Disable horizontal scrolling in WebView
-                        disableHorizontalScroll: true,
+                // Internet connection error overlay
+                if (!_hasInternetConnection)
+                  Positioned.fill(
+                    child: Container(
+                      color: theme.scaffoldBackgroundColor.withOpacity(0.95),
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.wifi_off, size: 64, color: theme.colorScheme.error),
+                              const SizedBox(height: 20),
+                              Text(
+                                'No Internet Connection',
+                                style: theme.textTheme.headlineSmall?.copyWith(color: theme.colorScheme.error),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Please check your internet connection and try again.',
+                                style: theme.textTheme.bodyLarge,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Make sure your Wi-Fi or mobile data is enabled and working properly.',
+                                style: theme.textTheme.bodyMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 30),
+                              ElevatedButton.icon(
+                                onPressed: _retryConnection,
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Retry Connection'),
+                                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
+                              ),
+                              const SizedBox(height: 16),
+                              TextButton(
+                                onPressed: () {
+                                  // Open device settings
+                                  // Note: You might need a package like 'app_settings' for this
+                                  // app_settings.AppSettings.openAppSettings();
+                                },
+                                child: Text('Open Phone Settings'),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                    onWebViewCreated: (controller) {
-                      _webViewController = controller;
-                    },
-                    onLoadStart: (controller, url) {
-                      if (url != null) {
-                        setState(() {
-                          _isLoading = true;
-                          _cssInjected = false; // Reset CSS injection state
-                          _displayInAppBar = url.toString() + " is loading ...";
-                          if (ref.read(tabIndexProvider) == AppTab.memo.tabIndex)
-                            showSnackBar(_displayInAppBar, buildCtx, type: SnackbarType.info);
-                          _updateCurrentPath(url.toString());
-                        });
-                      }
-                    },
-                    onLoadStop: (controller, url) async {
-                      // Only inject CSS if it should be injected for this URL
-                      if (_shouldInjectCss) {
-                        await _injectCSS();
-                      } else {
-                        // If CSS shouldn't be injected, mark as complete immediately
-                        setState(() {
-                          _cssInjected = true;
-                        });
-                      }
-
-                      setState(() {
-                        // if (ref.read(tabIndexProvider) == AppTab.memo.tabIndex)
-                        // showSnackBar("Enjoy the content!", context, type: SnackbarType.success);
-                        _updateCurrentPath(url.toString());
-                        // Only hide loading if CSS injection is complete
-                        _isLoading = !_cssInjected;
-                      });
-                    },
                   ),
-                ),
+
+                // WebView content (only visible when there's internet connection)
+                if (_hasInternetConnection)
+                  Container(
+                    constraints: BoxConstraints(maxWidth: MediaQuery.of(consumerCtx).size.width),
+                    child: InAppWebView(
+                      // Your existing WebView configuration
+                      initialUrlRequest: URLRequest(url: WebUri.uri(Uri.parse(_getInitialUrl()))),
+                      initialOptions: InAppWebViewGroupOptions(
+                        crossPlatform: InAppWebViewOptions(
+                          javaScriptEnabled: true,
+                          // Disable horizontal scrolling in WebView
+                          disableHorizontalScroll: true,
+                        ),
+                      ),
+                      onWebViewCreated: (controller) {
+                        _webViewController = controller;
+                      },
+                      onLoadStart: (controller, url) {
+                        if (url != null) {
+                          setState(() {
+                            _isLoading = true;
+                            _cssInjected = false; // Reset CSS injection state
+                            _displayInAppBar = url.toString() + " is loading ...";
+                            if (ref.read(tabIndexProvider) == AppTab.memo.tabIndex)
+                              showSnackBar(_displayInAppBar, buildCtx, type: SnackbarType.info);
+                            _updateCurrentPath(url.toString());
+                          });
+                        }
+                      },
+                      onLoadStop: (controller, url) async {
+                        // Only inject CSS if it should be injected for this URL
+                        if (_shouldInjectCss) {
+                          await _injectCSS();
+                        } else {
+                          // If CSS shouldn't be injected, mark as complete immediately
+                          setState(() {
+                            _cssInjected = true;
+                          });
+                        }
+
+                        setState(() {
+                          // if (ref.read(tabIndexProvider) == AppTab.memo.tabIndex)
+                          // showSnackBar("Enjoy the content!", context, type: SnackbarType.success);
+                          _updateCurrentPath(url.toString());
+                          // Only hide loading if CSS injection is complete
+                          _isLoading = !_cssInjected;
+                        });
+                      },
+                    ),
+                  ),
 
                 // Loading overlay that covers the whole WebView container
-                if (_isLoading)
+                if (_isLoading && _hasInternetConnection)
                   Positioned.fill(
                     child: Container(
                       color: Theme.of(consumerCtx).brightness == Brightness.dark
@@ -624,7 +412,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                   ),
 
                 // Your loading indicator (positioned above the overlay)
-                if (_isLoading)
+                if (_isLoading && _hasInternetConnection)
                   Positioned(
                     top: 0,
                     left: 0,

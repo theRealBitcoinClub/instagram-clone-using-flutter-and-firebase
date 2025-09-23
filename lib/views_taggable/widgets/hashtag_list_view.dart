@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fluttertagger/fluttertagger.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
 import 'package:mahakka/views_taggable/widgets/loading_indicator.dart';
 
+import '../../custom_flutter_tagger_controller.dart';
+
 class HashtagListView extends ConsumerWidget {
   const HashtagListView({Key? key, required this.tagController, required this.animationController, required this.hashtags}) : super(key: key);
 
-  final FlutterTaggerController tagController;
+  final CustomFlutterTaggerController tagController;
   final AnimationController animationController;
   final List<MemoModelTag> hashtags;
 
@@ -22,7 +23,7 @@ class HashtagListView extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4.0),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: theme.colorScheme.surfaceVariant.withAlpha(111),
         borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
       ),
       child: Column(
@@ -77,21 +78,23 @@ class HashtagListView extends ConsumerWidget {
 
     if (hashtags.isNotEmpty) {
       return ListView.builder(
-        padding: const EdgeInsets.only(bottom: 8.0, top: 4.0),
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
         itemCount: hashtags.length,
         itemBuilder: (context, index) {
           final hashtag = hashtags[index];
-          return ListTile(
-            leading: CircleAvatar(
-              radius: 20,
-              backgroundColor: colorScheme.primaryContainer,
-              child: Text(
-                "#",
-                style: textTheme.titleMedium?.copyWith(color: colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
+          return Container(
+            margin: const EdgeInsets.only(right: 2.0), // Space between items
+            child: GestureDetector(
+              onTap: () => _selectHashtag(hashtag),
+              child: Card(
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text("#" + hashtag.name, style: textTheme.titleLarge?.copyWith(color: colorScheme.onSurface)),
+                ),
               ),
             ),
-            title: Text(hashtag.name, style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface)),
-            onTap: () => _selectHashtag(hashtag),
           );
         },
       );

@@ -1,16 +1,13 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fluttertagger/fluttertagger.dart';
-import 'package:mahakka/provider/navigation_providers.dart';
-import 'package:mahakka/utils/snackbar.dart';
+import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../provider/media_selection_notifier.dart';
 import '../theme_provider.dart';
+import '../views_taggable/taggable_providers.dart';
 import '../widgets/media_type_selector.dart';
 import 'add/add_post_providers.dart';
 import 'add/clipboard_monitoring_widget.dart';
@@ -32,69 +29,36 @@ class AddPost extends ConsumerStatefulWidget {
 }
 
 class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin {
-  bool hasInitialized = false;
-  // Controllers
-  late FlutterTaggerController _textInputController;
-  late AnimationController _animationController;
-  final FocusNode _focusNode = FocusNode();
-
-  // AddPostController instance
-  late AddPostController _addPostController;
-
   String _title = "Select a media type or paste a link";
   String _hint = "e.g. any media url or ipfs content id";
   var _onCreateCallback;
   var _onGalleryCallback;
+  // late AnimationController _animationController; // Local controller
 
   @override
   void initState() {
     super.initState();
     _log("initState started");
+    // _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
 
-    _textInputController = FlutterTaggerController(text: "Me gusta @Mahakka#Mahakka# Es hora de ganar #bch#bch# y #cashtoken#cashtoken#!");
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    context.afterBuild(refreshUI: false, () {
+      ref.read(animationControllerNotifierProvider.notifier).initialize(this);
       ref.read(clipboardNotifierProvider.notifier).checkClipboard(ref);
+      final controller = ref.read(addPostControllerProvider.notifier);
+      controller.setContext(context);
     });
 
-    _initStateTagger();
-
-    // Initialize the controller
-    _addPostController = AddPostController(
-      ref: ref,
-      context: context,
-      onPublish: _onPublish,
-      showErrorSnackBar: _showErrorSnackBar,
-      showSuccessSnackBar: _showSuccessSnackBar,
-      log: _log,
-    );
-
+    // context.afterLayout(() {
+    // }, refreshUI: false);
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    // });
     _log("initState completed");
-  }
-
-  void _initStateTagger() {
-    _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
-    // _taggerOverlayAnimation = Tween<Offset>(
-    //   begin: const Offset(0, 0.25),
-    //   end: Offset.zero,
-    // ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOutSine));
   }
 
   @override
   void dispose() {
-    _log("Dispose called");
-    _textInputController.dispose();
-    _animationController.dispose();
-    _focusNode.dispose();
+    // _animationController.dispose(); // Dispose local controller
     super.dispose();
-  }
-
-  void _showErrorSnackBar(String message) {
-    showSnackBar(message, context, type: SnackbarType.error);
-  }
-
-  void _showSuccessSnackBar(String message) {
-    showSnackBar(message, context, type: SnackbarType.success);
   }
 
   Widget _buildMenuTheme(ThemeState themeState, ThemeData theme) {
@@ -107,38 +71,33 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     );
   }
 
-  void _dismissTaggerOverlay() {
-    try {
-      _animationController.reverse();
-      _textInputController.dismissOverlay();
-    } catch (e) {
-      // Ignore errors if controllers are not initialized
-    }
+  _dismissOverlay() {
+    final animationController = ref.read(animationControllerNotifierProvider);
+    final tagController = ref.read(taggableControllerProvider);
+    if (animationController != null) animationController.reverse();
+    tagController.dismissOverlay();
   }
 
   @override
   Widget build(BuildContext context) {
+    //   // Override the provider with our local controller
+    //   return ProviderScope(overrides: [animationControllerProvider.overrideWithValue(_animationController)], child: _buildContent(context));
+    // }
+    //
+    // Widget _buildContent(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
     final TextTheme textTheme = theme.textTheme;
     final MediaQueryData mediaQuery = MediaQuery.of(context);
     final bool isKeyboardVisible = mediaQuery.viewInsets.bottom > 0;
-    hasInitialized = true;
     final asyncThemeState = ref.watch(themeNotifierProvider);
     final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
-    // final int currentTabIndex = ref.watch(tabIndexProvider);
-    ref.listen<int>(tabIndexProvider, (previous, current) {
-      // if (previous != current && mounted) {
-      _dismissTaggerOverlay();
-      // }
-    });
-    // if (currentTabIndex != AppTab.add.tabIndex && mounted) {
-    //   _dismissTaggerOverlay();
-    // }
 
     return GestureDetector(
       onTap: () {
-        _dismissTaggerOverlay();
+        _dismissOverlay();
+        // ref.read(taggableControllerProvider).dismissOverlay();
+        // ref.read(overlayDismissalProvider)();
         _unfocusNodes(context);
       },
       behavior: HitTestBehavior.opaque,
@@ -148,11 +107,18 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           toolbarHeight: 50,
           title: Row(
             children: [
-              BurnerBalanceWidget(),
+              GestureDetector(
+                onTap: () {
+                  _dismissOverlay();
+                  // ref.read(overlayDismissalProvider)();
+                },
+                child: BurnerBalanceWidget(),
+              ),
               Spacer(),
               GestureDetector(
                 onTap: () {
-                  _dismissTaggerOverlay();
+                  _dismissOverlay();
+                  // ref.read(overlayDismissalProvider)();
                   launchUrl(Uri.parse('https://mahakka.com'));
                 },
                 child: Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
@@ -171,14 +137,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
               ),
               if (_hasAddedMediaToPublish())
                 Padding(
-                  padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 12, left: 12, right: 12, top: 8),
-                  child: TaggableInputWidget(
-                    textInputController: _textInputController,
-                    animationController: _animationController,
-                    focusNode: _focusNode,
-                    viewInsets: MediaQuery.of(context).viewInsets,
-                    onPublish: _onPublish,
-                  ),
+                  padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 2, left: 4, right: 4, top: 8),
+                  child: TaggableInputWidget(),
                 ),
             ],
           ),
@@ -188,7 +148,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   }
 
   void _unfocusNodes(BuildContext context) {
-    _focusNode.unfocus();
+    final focusNode = ref.read(focusNodeProvider);
+    focusNode.unfocus();
     FocusScope.of(context).unfocus();
   }
 
@@ -216,8 +177,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       onMediaTypeSelected: (mediaType) {
         updateTitleAndHint(mediaType.title, mediaType.hint);
       },
-      // onIpfsCreate: _showIpfsUploadScreen,
-      // onIpfsGallery: _showIpfsGallery,
     );
   }
 
@@ -261,22 +220,15 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     });
   }
 
-  // Add these methods to _AddPostState
   void _showIpfsGallery() {
-    _addPostController.showIpfsGallery();
+    ref.read(addPostControllerProvider.notifier).showIpfsGallery();
   }
 
   void _showIpfsUploadScreen() {
-    _addPostController.showIpfsUploadScreen();
+    ref.read(addPostControllerProvider.notifier).showIpfsUploadScreen();
   }
 
-  Future<void> _onPublish() async {
-    if (!mounted) return;
-    await _addPostController.publishPost(_textInputController.text);
-  }
-
-  // Update the _hasAddedMediaToPublish method to use the controller
   bool _hasAddedMediaToPublish() {
-    return _addPostController.hasAddedMediaToPublish();
+    return ref.read(addPostControllerProvider.notifier).hasAddedMediaToPublish();
   }
 }

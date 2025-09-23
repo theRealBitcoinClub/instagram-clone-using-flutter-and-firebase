@@ -67,30 +67,6 @@ class MediaTypeSelector extends ConsumerWidget {
     final selectionState = ref.watch(mediaSelectionProvider);
     final isCheckingClipboard = ref.watch(clipboardNotifierProvider.select((state) => state.isChecking));
 
-    // if (isCheckingClipboard) {
-    //   return Container(
-    //     color: colorScheme.surfaceVariant.withOpacity(0.1),
-    //     height: 66,
-    //     child: Stack(
-    //       children: [
-    //         LinearProgressIndicator(valueColor: AlwaysStoppedAnimation(colorScheme.primary)),
-    //         // Keep the buttons visible but disabled
-    //         Opacity(
-    //           opacity: 0.5,
-    //           child: Row(
-    //             mainAxisAlignment: MainAxisAlignment.spaceAround,
-    //             crossAxisAlignment: CrossAxisAlignment.stretch,
-    //             children: MediaType.values.map((mediaType) {
-    //               final isSelected = selectionState.lastSelectedMediaType == mediaType;
-    //               return _buildMediaTypeButton(theme, mediaType, isSelected, ref);
-    //             }).toList(),
-    //           ),
-    //         ),
-    //       ],
-    //     ),
-    //   );
-    // }
-
     return Container(
       color: theme.colorScheme.surface,
       height: 66,
@@ -118,8 +94,6 @@ class MediaTypeSelector extends ConsumerWidget {
 
   Widget _buildMediaTypeButton(ThemeData theme, MediaType mediaType, bool isSelected, WidgetRef ref) {
     final colorScheme = theme.colorScheme;
-    // final isCheckingClipboard = ref.watch(clipboardNotifierProvider.select((state) => state.isChecking));
-    // final selectionColor = isSelected ? colorScheme.primary : colorScheme.primary.withOpacity(0.8);
     final selectionColor = colorScheme.primary;
     final backgroundColor = isSelected ? theme.scaffoldBackgroundColor : theme.colorScheme.surface;
 
@@ -133,14 +107,10 @@ class MediaTypeSelector extends ConsumerWidget {
             padding: EdgeInsets.zero,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
           ),
-          onPressed:
-              // isCheckingClipboard
-              //     ? null // Disable button when checking clipboard
-              //     :
-              () {
-                ref.read(mediaSelectionProvider.notifier).selectMediaType(mediaType);
-                onMediaTypeSelected(mediaType);
-              },
+          onPressed: () {
+            ref.read(mediaSelectionProvider.notifier).selectMediaType(mediaType);
+            onMediaTypeSelected(mediaType);
+          },
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

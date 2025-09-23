@@ -1,47 +1,50 @@
 // widgets/search_result_overlay.dart - WITH EXTERNAL TAP SUPPORT
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fluttertagger/fluttertagger.dart';
+import 'package:mahakka/views_taggable/taggable_providers.dart';
 import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
 import 'package:mahakka/views_taggable/widgets/hashtag_list_view.dart';
 import 'package:mahakka/views_taggable/widgets/topic_list_view.dart';
 
 class SearchResultOverlay extends ConsumerWidget {
-  final FlutterTaggerController tagController;
-  final AnimationController animationController;
-  final VoidCallback? onExternalTap;
+  const SearchResultOverlay({Key? key}) : super(key: key);
 
-  const SearchResultOverlay({Key? key, required this.tagController, required this.animationController, this.onExternalTap}) : super(key: key);
+  _dismissOverlay(ref) {
+    final animationController = ref.read(animationControllerNotifierProvider);
+    final tagController = ref.read(taggableControllerProvider);
+    if (animationController != null) animationController.reverse();
+    tagController.dismissOverlay();
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final searchState = ref.watch(searchViewModelProvider);
-
-    final animation = Tween<Offset>(
-      begin: const Offset(0, 0.25),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: animationController, curve: Curves.easeInOutSine));
+    final animationController = ref.watch(animationControllerNotifierProvider);
+    final tagController = ref.watch(taggableControllerProvider);
+    final animation = ref.watch(overlayAnimationProvider);
 
     return GestureDetector(
-      onTap: onExternalTap, // Dismiss on external tap
+      onTap: _dismissOverlay(ref), // Dismiss on external tap
       behavior: HitTestBehavior.opaque,
-      child: SlideTransition(
-        position: animation,
-        child: Material(
+      child:
+      // SlideTransition(
+      //   position: animation,
+      //   child:
+      Material(
           elevation: 4.0,
-          color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.only(topLeft: Radius.circular(8.0), topRight: Radius.circular(8.0)),
+          // color: theme.colorScheme.surfaceVariant,
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(16.0), topRight: Radius.circular(16.0)),
           child: GestureDetector(
             onTap: () {}, // Prevent tap from bubbling up to parent
-            child: _buildContent(searchState, theme),
+            child: _buildContent(searchState, theme, animationController, tagController),
           ),
         ),
-      ),
+      // ),
     );
   }
 
-  Widget _buildContent(SearchState state, ThemeData theme) {
+  Widget _buildContent(SearchState state, ThemeData theme, animationController, tagController) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }

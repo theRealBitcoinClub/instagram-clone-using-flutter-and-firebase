@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // Assuming CustomTextField is in the same directory or correctly imported
-import '../../custom_tagger.dart';
+import '../../custom_flutter_tagger_controller.dart';
 import 'custom_text_field.dart';
 
 class CommentTextField extends StatelessWidget {
@@ -42,7 +42,7 @@ class CommentTextField extends StatelessWidget {
       key: containerKey,
       // Constraints logic kept as per your original design
       constraints: BoxConstraints(maxHeight: insets == EdgeInsets.zero ? baseMaxHeight : baseMaxHeight + insets.bottom),
-      padding: const EdgeInsets.fromLTRB(4, 4, 2, 4), // Adjusted padding for better spacing
+      padding: const EdgeInsets.fromLTRB(0, 4, 2, 2), // Adjusted padding for better spacing
       // Use a themed background color. theme.canvasColor is often suitable for input areas,
       // or theme.colorScheme.surface if it's meant to look like a card.
       // theme.bottomAppBarTheme.color could also be an option if this acts like a bottom app bar.

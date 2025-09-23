@@ -51,6 +51,23 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   }
 
   void _moveToTab(int index) {
+    // ref.read(tabIndexProvider.notifier).setTab(index);
+    // final previousTab = ref.read(tabIndexProvider);
+    //
+    // // Dismiss tagger overlay when switching away from AddPost tab
+    // // if (previousTab == AppTab.add.tabIndex && index != AppTab.add.tabIndex) {
+    // // Use the provider-based dismissal
+    // // context.afterBuild(refreshUI: true);
+    // setState(() {
+    //   final anim = ref.read(animationControllerNotifierProvider);
+    //   if (anim != null) anim.reverse();
+    //   final tagController = ref.read(taggableControllerProvider);
+    //   tagController.dismissOverlay();
+    //   final overlayDismissal = ref.read(overlayDismissalProvider);
+    //   overlayDismissal();
+    // });
+    // }
+
     ref.read(tabIndexProvider.notifier).setTab(index);
     //TODO PRESERVE THE ADD_SCREEN STATE UNTIL USER DECIDES TO EXPLICITLY CHANGE A SELECTED IMAGE
     // if (index != AppTab.add.tabIndex) {

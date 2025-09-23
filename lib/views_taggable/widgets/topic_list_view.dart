@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fluttertagger/fluttertagger.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
 import 'package:mahakka/views_taggable/widgets/loading_indicator.dart';
 
+import '../../custom_flutter_tagger_controller.dart';
+
 class TopicListView extends ConsumerWidget {
   const TopicListView({Key? key, required this.tagController, required this.animationController, required this.topics}) : super(key: key);
 
-  final FlutterTaggerController tagController;
+  final CustomFlutterTaggerController tagController;
   final AnimationController animationController;
   final List<MemoModelTopic> topics;
 

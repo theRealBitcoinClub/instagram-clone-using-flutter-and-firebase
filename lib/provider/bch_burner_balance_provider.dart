@@ -8,7 +8,7 @@ import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import '../memo/base/debounced_balance_service.dart';
 import 'electrum_provider.dart';
 
-final bchBurnerBalanceProvider = StreamProvider.autoDispose<Balance>((ref) {
+final bchBurnerBalanceProvider = StreamProvider<Balance>((ref) {
   final streamController = StreamController<Balance>();
   Timer? timer;
 

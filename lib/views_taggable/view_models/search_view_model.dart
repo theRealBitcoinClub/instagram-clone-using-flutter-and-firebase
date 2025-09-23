@@ -7,12 +7,12 @@ import 'package:mahakka/memo/model/memo_model_topic.dart';
 
 enum SearchResultView { hashtag, topics, none }
 
-final searchViewModelProvider = StateNotifierProvider.autoDispose<SearchViewModel, SearchState>(
-  (ref) => SearchViewModel(topicService: ref.watch(topicServiceProvider), tagService: ref.watch(tagServiceProvider)),
-);
-
 final topicServiceProvider = Provider<TopicService>((ref) => TopicService());
 final tagServiceProvider = Provider<TagService>((ref) => TagService());
+
+final searchViewModelProvider = StateNotifierProvider<SearchViewModel, SearchState>(
+  (ref) => SearchViewModel(topicService: ref.watch(topicServiceProvider), tagService: ref.watch(tagServiceProvider)),
+);
 
 class SearchState {
   final List<MemoModelTopic> topics;
@@ -80,17 +80,19 @@ class SearchViewModel extends StateNotifier<SearchState> {
   Future<bool> _ensureCacheLoaded() async {
     if (_isTopicsCacheValid && _isTagsCacheValid) return true;
 
-    state = state.copyWith(isLoading: true, error: null);
+    // state = state.copyWith(isLoading: true, error: null);
 
     try {
       if (!_isTopicsCacheValid) {
         _cachedTopics = await _topicService.getAllTopics();
       }
+      // if (!mounted) return false;
       if (!_isTagsCacheValid) {
         _cachedTags = await _tagService.getAllTags();
       }
 
-      state = state.copyWith(isLoading: false);
+      // if (!mounted) return false;
+      // state = state.copyWith(isLoading: false);
       return true;
     } catch (error, stackTrace) {
       state = state.copyWith(isLoading: false, error: 'Failed to load cache: $error');
@@ -107,7 +109,9 @@ class SearchViewModel extends StateNotifier<SearchState> {
 
     state = state.copyWith(activeView: SearchResultView.topics, isLoading: true, error: null);
 
+    if (!mounted) return;
     final cacheLoaded = await _ensureCacheLoaded();
+    if (!mounted) return;
     if (!cacheLoaded) return;
 
     await Future.delayed(const Duration(milliseconds: 50));
@@ -126,7 +130,9 @@ class SearchViewModel extends StateNotifier<SearchState> {
 
     state = state.copyWith(activeView: SearchResultView.hashtag, isLoading: true, error: null);
 
+    // if (!mounted) return;
     final cacheLoaded = await _ensureCacheLoaded();
+    // if (!mounted) return;
     if (!cacheLoaded) return;
 
     await Future.delayed(const Duration(milliseconds: 50));

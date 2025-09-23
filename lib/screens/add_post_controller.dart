@@ -9,6 +9,7 @@ import 'package:mahakka/provider/publish_options_provider.dart';
 import 'package:mahakka/provider/url_input_verification_notifier.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
+import 'package:mahakka/views_taggable/taggable_providers.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 
@@ -24,25 +25,46 @@ import 'add/add_post_providers.dart';
 import 'ipfs_gallery_screen.dart';
 import 'ipfs_pin_claim_screen.dart';
 
-class AddPostController {
-  final WidgetRef ref;
-  final BuildContext context;
-  final VoidCallback onPublish;
-  final Function(String) showErrorSnackBar;
-  final Function(String) showSuccessSnackBar;
-  final Function(String) log;
+// Provider for AddPostController
+final addPostControllerProvider = StateNotifierProvider<AddPostController, void>((ref) {
+  return AddPostController(ref: ref);
+});
 
-  AddPostController({
-    required this.ref,
-    required this.context,
-    required this.onPublish,
-    required this.showErrorSnackBar,
-    required this.showSuccessSnackBar,
-    required this.log,
-  });
+// // Provider for the onPublish callback
+// final onPublishProvider = Provider.autoDispose<VoidCallback>((ref) {
+//   final controller = ref.watch(addPostControllerProvider.notifier);
+//   return () => controller.publishPost();
+// });
+//
+// // Provider for text controller access
+// final publishTextProvider = StateProvider.autoDispose<String>((ref) => '');
+//
+// // Provider to check if media is added
+// final hasMediaToPublishProvider = Provider.autoDispose<bool>((ref) {
+//   final controller = ref.watch(addPostControllerProvider.notifier);
+//   return controller.hasAddedMediaToPublish();
+// });
+
+class AddPostController extends StateNotifier<void> {
+  final Ref ref;
+  late BuildContext _context;
+
+  AddPostController({required this.ref}) : super(null);
+
+  void setContext(BuildContext context) {
+    _context = context;
+  }
+
+  // Helper method to show snackbars
+  void _showSnackBar(String message, {bool isError = false}) {
+    if (_context.mounted) {
+      showSnackBar(message, _context, type: isError ? SnackbarType.error : SnackbarType.success);
+    }
+  }
 
   // Publish functionality
-  Future<void> publishPost(String textContent) async {
+  Future<void> publishPost() async {
+    String textContent = ref.read(taggableControllerProvider).text;
     if (ref.read(isPublishingProvider)) return;
     ref.read(isPublishingProvider.notifier).state = true;
 
@@ -50,7 +72,7 @@ class AddPostController {
       final verification = _handleVerification(textContent);
 
       if (verification != MemoVerificationResponse.valid) {
-        showErrorSnackBar(verification.message);
+        _showSnackBar(verification.message, isError: true);
         return;
       }
 
@@ -61,10 +83,10 @@ class AddPostController {
       //save ipfs cid whatever happens
       ref.read(userNotifierProvider.notifier).addIpfsUrlAndUpdate(ref.read(ipfsCidProvider));
 
-      final shouldPublish = await PublishConfirmationActivity.show(context, post: post);
+      final shouldPublish = await PublishConfirmationActivity.show(_context, post: post);
       if (shouldPublish != true) {
         if (shouldPublish == false) {
-          showSnackBar(type: SnackbarType.info, 'Publication canceled', context);
+          _context.showSnackBar(type: SnackbarType.info, 'Publication canceled');
         }
         return;
       }
@@ -80,18 +102,19 @@ class AddPostController {
       final response = await ref.read(postRepositoryProvider).publishImageOrVideo(formattedContent, topic, validate: false);
 
       if (response == MemoAccountantResponse.yes) {
-        MemoConfetti().launch(context);
+        MemoConfetti().launch(_context);
         ref.read(urlInputVerificationProvider.notifier).reset(ref);
-        showSuccessSnackBar('Successfully published!');
+        _showSnackBar('Successfully published!');
         ref.read(telegramBotPublisherProvider).publishPost(postText: formattedContent, mediaUrl: null);
       } else {
-        showQrCodeDialog(context: context, user: user, memoOnly: true);
-        showErrorSnackBar('Publish failed: ${response.message}');
+        showQrCodeDialog(context: _context, user: user, memoOnly: true);
+        _showSnackBar('Publish failed: ${response.message}', isError: true);
       }
     } catch (e, s) {
-      log("Error during publish: $e\n$s");
-      showErrorSnackBar('Error during publish: $e');
+      // log("Error during publish: $e\n$s");
+      _showSnackBar('Error during publish: $e', isError: true);
     } finally {
+      ref.read(taggableControllerProvider).text = '';
       ref.read(translatedTextProvider.notifier).state = null;
       ref.read(postTranslationProvider.notifier).reset();
       ref.read(isPublishingProvider.notifier).state = false;
@@ -162,16 +185,16 @@ class AddPostController {
 
   // In AddPostController class
   void showIpfsUploadScreen() {
-    IpfsPinClaimScreen.show(context);
+    IpfsPinClaimScreen.show(_context);
   }
 
   void showIpfsGallery() {
     final user = ref.read(userProvider);
     if (user == null || user.ipfsCids.isEmpty) {
-      showErrorSnackBar('No IPFS images found in your gallery');
+      _showSnackBar('No IPFS images found in your gallery', isError: true);
       return;
     }
 
-    Navigator.push(context, MaterialPageRoute(builder: (context) => IPFSGalleryScreen(ipfsCids: user.ipfsCids)));
+    Navigator.push(_context, MaterialPageRoute(builder: (context) => IPFSGalleryScreen(ipfsCids: user.ipfsCids)));
   }
 }

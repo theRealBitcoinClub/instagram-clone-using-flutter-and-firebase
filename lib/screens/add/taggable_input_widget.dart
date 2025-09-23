@@ -3,21 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/screens/add_post_controller.dart';
 import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
-import 'package:mahakka/views_taggable/widgets/comment_text_field.dart';
 import 'package:mahakka/views_taggable/widgets/search_result_overlay.dart';
 
 import '../../custom_tagger.dart';
 import '../../views_taggable/taggable_providers.dart';
+import '../../views_taggable/widgets/post_composer_widget.dart';
 
 class TaggableInputWidget extends ConsumerWidget {
   const TaggableInputWidget({Key? key}) : super(key: key);
-
-  // _dismissOverlay(ref) {
-  //   // final animationController = ref.read(animationControllerNotifierProvider);
-  //   CustomFlutterTaggerController tagController = ref.read(taggableControllerProvider);
-  //   // animationController.reverse();
-  //   tagController.dismissOverlay();
-  // }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,17 +18,10 @@ class TaggableInputWidget extends ConsumerWidget {
     final searchViewModel = ref.read(searchViewModelProvider.notifier);
     final postController = ref.read(addPostControllerProvider.notifier);
     final textInputController = ref.watch(taggableControllerProvider);
-    // final animationController = ref.watch(animationControllerNotifierProvider);
     final focusNode = ref.watch(focusNodeProvider);
-    // final overlayDismissal = ref.read(overlayDismissalProvider);
     final viewInsets = MediaQuery.of(context).viewInsets;
 
-    return
-    // GestureDetector(
-    // onTap: _dismissOverlay(ref),
-    // behavior: HitTestBehavior.opaque,
-    // child:
-    Material(
+    return Material(
       elevation: 4.0,
       color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(8),
@@ -58,7 +44,7 @@ class TaggableInputWidget extends ConsumerWidget {
           // CHANGE: Pass dismissal callback to overlay
           overlay: SearchResultBox(),
           builder: (context, containerKey) {
-            return CommentTextField(
+            return PostComposerWidget(
               onInputText: (value) {
                 if (value.contains('\n')) {
                   textInputController.text = value.replaceAll("\n", ""); // ADD: widget. prefix

@@ -98,8 +98,14 @@ class AddPostController extends StateNotifier<void> {
       final lang = useTranslation ? translation.targetLanguage! : translation.originalLanguage!;
       final content = useTranslation ? translation.translatedText : clearTextOriginal;
 
-      MemoModelPost copyPost = post.copyWith(text: "${lang.flag} ${_appendMediaUrlToText(content)}");
+      MemoModelPost copyPost = post.copyWith(text: "${lang.flag} $content${getMediaUrl()}");
       copyPost.appendUrlsToText();
+
+      //VERIFY AGAIN THAT TEXT FITS AFTER TRANSLATION
+      if (_handleVerification(copyPost.text!) != MemoVerificationResponse.valid) {
+        _showSnackBar(verification.message, isError: true);
+        return;
+      }
 
       final response = await ref.read(postRepositoryProvider).publishImageOrVideo(copyPost.text!, topic, validate: false);
 
@@ -158,22 +164,22 @@ class AddPostController extends StateNotifier<void> {
     return verifier.getResult();
   }
 
-  String _appendMediaUrlToText(String text) {
+  String getMediaUrl() {
     final imgurUrl = ref.read(imgurUrlProvider);
     final youtubeId = ref.read(youtubeVideoIdProvider);
     final ipfsCid = ref.read(ipfsCidProvider);
     final odyseeUrl = ref.read(odyseeUrlProvider);
 
     if (youtubeId.isNotEmpty) {
-      return "$text https://youtu.be/$youtubeId";
+      return " https://youtu.be/$youtubeId";
     } else if (imgurUrl.isNotEmpty) {
-      return "$text $imgurUrl";
+      return " $imgurUrl";
     } else if (ipfsCid.isNotEmpty) {
-      return "$text ${IpfsConfig.preferredNode}$ipfsCid";
+      return " ${IpfsConfig.preferredNode}$ipfsCid";
     } else if (odyseeUrl.isNotEmpty) {
-      return "$text $odyseeUrl";
+      return " $odyseeUrl";
     }
-    return text;
+    return "";
   }
 
   bool hasAddedMediaToPublish() {

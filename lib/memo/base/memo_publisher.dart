@@ -62,6 +62,7 @@ class MemoPublisher {
     try {
       await base.broadcastTransaction(tx);
     } catch (e) {
+      print("UNEXPECTED ERROR ${e}");
       //TODO CHECK RPC ERROR CODE AND RETURN LOWBALANCE OR DUST
       return MemoAccountantResponse.lowBalance;
     }

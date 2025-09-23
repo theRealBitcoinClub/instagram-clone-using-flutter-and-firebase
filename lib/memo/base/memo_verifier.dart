@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:blockchain_utils/bip/bip/bip39/bip39_mnemonic_validator.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo_data_checker.dart';
+import 'package:mahakka/screens/add_post_controller.dart';
 
 enum MemoVerificationResponse {
   valid(""),
@@ -10,7 +12,8 @@ enum MemoVerificationResponse {
   // zeroTags("Add at least one visible #tag."),
   noTopicNorTag("Must include @topic or #tag."),
   moreThanOneTopic("Only one @topic allowed"),
-  tooLong("Text is too long."),
+  tooLong("Text + media Url is too long."),
+  tooLongMediaUrl("Media Url is too long."),
   tooShort("Too short. Tags count towards length."),
   minWordCountNotReached("Write more words."),
   offensiveWords("Offensive words detected."),
@@ -137,9 +140,11 @@ class MemoVerifier {
     return MemoVerificationResponse.valid;
   }
 
-  MemoVerificationResponse verifyPostLength() {
+  MemoVerificationResponse verifyPostLength({int mediaUrlLength = 0}) {
+    if (mediaUrlLength > maxPostLength) return MemoVerificationResponse.tooLongMediaUrl;
+
     final trimmedText = text.trim();
-    if (trimmedText.length > maxPostLength) {
+    if (trimmedText.length > (maxPostLength - mediaUrlLength)) {
       return MemoVerificationResponse.tooLong;
     }
     // Note: 'tooShort' might also be covered by minWordCount, decide which is primary
@@ -201,10 +206,10 @@ class MemoVerifier {
   }
 
   // --- Combined Check for Post Content (used before publishing) ---
-  MemoVerificationResponse checkAllPostValidations() {
+  MemoVerificationResponse checkAllPostValidations(Ref ref) {
     MemoVerificationResponse result;
 
-    result = verifyPostLength();
+    result = verifyPostLength(mediaUrlLength: ref.read(addPostControllerProvider.notifier).getMediaUrl().length);
     if (result != MemoVerificationResponse.valid) return result;
 
     result = verifyMinWordCount();

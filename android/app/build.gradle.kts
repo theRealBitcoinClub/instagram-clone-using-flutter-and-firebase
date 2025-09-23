@@ -29,7 +29,7 @@ val flutterCompileSdkVersion = 36
 val flutterMinSdkVersion = 27
 val flutterTargetSdkVersion = 36
 val flutterNdkVersion = "27.0.12077973"
-val flutterVersionCode = 2025092301
+val flutterVersionCode = 2025092302
 val flutterVersionName = "2.8.1-BCH"
 
 android {

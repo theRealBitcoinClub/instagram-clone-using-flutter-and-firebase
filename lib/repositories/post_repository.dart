@@ -22,7 +22,7 @@ class PostRepository {
   }
 
   Future<dynamic> publishReplyTopic(MemoModelPost post) async {
-    MemoVerificationResponse verifier = MemoVerifier(post.text!).checkAllPostValidations();
+    MemoVerificationResponse verifier = MemoVerifier(post.text!).checkAllPostValidations(ref);
     if (verifier == MemoVerificationResponse.valid) {
       return ref.read(memoAccountantProvider).publishReplyTopic(post);
     } else {
@@ -31,14 +31,14 @@ class PostRepository {
   }
 
   Future<dynamic> publishReplyHashtags(MemoModelPost post) async {
-    MemoVerificationResponse verifier = MemoVerifier(post.text!).checkAllPostValidations();
+    MemoVerificationResponse verifier = MemoVerifier(post.text!).checkAllPostValidations(ref);
     if (verifier != MemoVerificationResponse.valid) return verifier;
     return ref.read(memoAccountantProvider).publishReplyHashtags(post);
   }
 
   Future<dynamic> publishImageOrVideo(String text, String? topic, {bool validate = false}) async {
     if (validate) {
-      MemoVerificationResponse res = MemoVerifier(text).checkAllPostValidations();
+      MemoVerificationResponse res = MemoVerifier(text).checkAllPostValidations(ref);
       if (res != MemoVerificationResponse.valid) return res;
     }
     return ref.read(memoAccountantProvider).publishImgurOrYoutube(topic, text);

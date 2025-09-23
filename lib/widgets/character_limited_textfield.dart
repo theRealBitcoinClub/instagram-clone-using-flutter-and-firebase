@@ -1,13 +1,16 @@
-// character_limited_textfield.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CharacterLimitedTextField extends StatefulWidget {
+import '../screens/add_post_controller.dart';
+
+class CharacterLimitedTextField extends ConsumerStatefulWidget {
   final TextEditingController controller;
   final int maxLength;
   final String hintText;
   final ValueChanged<String>? onChanged;
   final TextStyle? normalTextStyle;
   final TextStyle? exceededTextStyle;
+  final int? minLines;
 
   const CharacterLimitedTextField({
     Key? key,
@@ -17,13 +20,14 @@ class CharacterLimitedTextField extends StatefulWidget {
     this.onChanged,
     this.normalTextStyle,
     this.exceededTextStyle,
+    this.minLines,
   }) : super(key: key);
 
   @override
   _CharacterLimitedTextFieldState createState() => _CharacterLimitedTextFieldState();
 }
 
-class _CharacterLimitedTextFieldState extends State<CharacterLimitedTextField> {
+class _CharacterLimitedTextFieldState extends ConsumerState<CharacterLimitedTextField> {
   int _remainingCharacters = 0;
   final FocusNode _focusNode = FocusNode();
 
@@ -61,22 +65,25 @@ class _CharacterLimitedTextFieldState extends State<CharacterLimitedTextField> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isExceeded = _remainingCharacters < 0;
+    // String? translation = ref.watch(translatedTextProvider.notifier).state;
+    // if (translation != null && translation.isNotEmpty)
+    //   widget.controller.text = translation;
+    // translationProvider.state.
+    var postController = ref.watch(addPostControllerProvider.notifier);
+    final isExceeded = _remainingCharacters < postController.getMediaUrl().length;
 
     return Column(
       children: [
         SizedBox(height: 8),
-        // Wrap the TextField in a GestureDetector that handles double-tap
         GestureDetector(
           onDoubleTap: () {
-            // Select all text on double tap
             _selectAllText();
           },
           behavior: HitTestBehavior.opaque,
           child: TextField(
             focusNode: _focusNode,
             maxLines: 4,
-            minLines: 1,
+            minLines: widget.minLines ?? 1,
             textInputAction: TextInputAction.newline,
             controller: widget.controller,
             onChanged: widget.onChanged,

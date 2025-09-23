@@ -103,7 +103,7 @@ class MemoScraperUtil {
     post.ipfsCid = MemoRegExp(post.text!).extractIpfsCid();
     post.imageUrl = MemoRegExp(post.text!).extractFirstWhitelistedImageUrl();
     post.videoUrl = MemoRegExp(post.text!).extractOdyseeUrl();
-    post.tagIds = post.tagIds;
+    // post.tagIds = post.tagIds;
     post.topic = topic;
     try {
       // Attempt to parse the date string.
@@ -135,7 +135,7 @@ class MemoScraperUtil {
 
   static void extractUrlsAndHashtags(MemoModelPost post) {
     MemoScraperUtil.extractYouTubeUrlAndRemoveJavaScriptFromText(post);
-    post.tagIds.addAll(MemoRegExp.extractHashtags(post.text));
-    post.urls.addAll(MemoRegExp.extractUrlsWithHttpsAlways(post.text));
+    post.tagIds = List.from(MemoRegExp.extractHashtags(post.text));
+    post.urls = List.from(MemoRegExp.extractUrlsWithHttpsAlways(post.text));
   }
 }

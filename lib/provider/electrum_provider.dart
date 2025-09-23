@@ -15,7 +15,7 @@ class ElectrumServiceNotifier extends AsyncNotifier<MemoBitcoinBase> {
   Timer? _healthCheckTimer;
   bool _isReconnecting = false;
   int _reconnectAttempts = 0;
-  static const int _maxReconnectAttempts = 5;
+  static const int _maxReconnectAttempts = 10;
   static const Duration _reconnectDelay = Duration(seconds: 3);
   static const Duration _healthCheckInterval = Duration(seconds: 30);
 

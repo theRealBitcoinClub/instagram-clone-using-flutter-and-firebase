@@ -2,6 +2,9 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/provider/translation_service.dart';
+import 'package:mahakka/screens/add_post_controller.dart';
+
+import '../memo/model/memo_model_post.dart';
 
 class PostTranslation {
   final bool publishInBothLanguages;
@@ -29,5 +32,17 @@ final postTranslationProvider = StateProvider<PostTranslation>((ref) {
 extension PostTranslationReset on StateController<PostTranslation> {
   void reset() {
     state = const PostTranslation(publishInBothLanguages: false, translatedText: "", originalLanguage: null, targetLanguage: null);
+  }
+}
+
+extension PostTranslationUtils on PostTranslation {
+  MemoModelPost applyTranslationToPost({required MemoModelPost post, required ref}) {
+    final useTranslation = targetLanguage != null && targetLanguage != originalLanguage;
+    Language? lang = useTranslation ? targetLanguage! : originalLanguage ?? null;
+    String languageFlag = lang != null ? lang.flag : "";
+    final content = useTranslation ? translatedText : post.text;
+    String mediaUrl = ref.read(addPostControllerProvider.notifier).getMediaUrl();
+
+    return post.copyWith(text: "$languageFlag $content${mediaUrl}");
   }
 }

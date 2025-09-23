@@ -79,7 +79,7 @@ class AddPostController extends StateNotifier<void> {
       final topics = MemoRegExp.extractTopics(textContent);
       final topic = topics.isNotEmpty ? topics.first : "";
       final post = _createPostFromCurrentState(textContent, topic);
-      final clearTextOriginal = post.parseUrlsClearText();
+      post.parseUrlsClearText();
       //save ipfs cid whatever happens
       ref.read(userNotifierProvider.notifier).addIpfsUrlAndUpdate(ref.read(ipfsCidProvider));
 
@@ -92,13 +92,14 @@ class AddPostController extends StateNotifier<void> {
       }
 
       final user = ref.read(userProvider)!;
-      final translation = ref.read(postTranslationProvider);
-      final useTranslation = translation.targetLanguage != null && translation.targetLanguage != translation.originalLanguage;
+      // final translation = ref.read(postTranslationProvider);
 
-      final lang = useTranslation ? translation.targetLanguage! : translation.originalLanguage!;
-      final content = useTranslation ? translation.translatedText : clearTextOriginal;
-
-      MemoModelPost copyPost = post.copyWith(text: "${lang.flag} $content${getMediaUrl()}");
+      MemoModelPost copyPost = ref.read(postTranslationProvider).applyTranslationToPost(post: post, ref: ref);
+      // final useTranslation = translation.targetLanguage != null && translation.targetLanguage != translation.originalLanguage;
+      // Language? lang = useTranslation ? translation.targetLanguage! : translation.originalLanguage ?? null;
+      // String languageFlag = lang != null ? lang.flag : "";
+      // final content = useTranslation ? translation.translatedText : clearTextOriginal;
+      // MemoModelPost copyPost = post.copyWith(text: "$languageFlag $content${getMediaUrl()}");
       copyPost.appendUrlsToText();
 
       //VERIFY AGAIN THAT TEXT FITS AFTER TRANSLATION

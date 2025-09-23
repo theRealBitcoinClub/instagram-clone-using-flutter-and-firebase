@@ -9,6 +9,7 @@ import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/repositories/creator_repository.dart';
 import 'package:mahakka/tab_item_data.dart';
+import 'package:mahakka/widgets/image_detail_dialog.dart';
 
 import '../providers/avatar_refresh_provider.dart';
 
@@ -146,7 +147,6 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
 
       await ref.read(creatorRepositoryProvider).refreshAndCacheAvatar(widget.creatorId);
 
-      // Reload the creator to get updated data
       _loadCreator();
       if (mounted) {
         setState(() {});
@@ -159,8 +159,10 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
     }
   }
 
-  void _navigateToProfile() {
-    if (!widget.enableNavigation) return;
+  void _navigateToProfile(MemoModelCreator? creator) async {
+    if (!widget.enableNavigation && creator != null) {
+      showCreatorImageDetail(context: context, creator: creator);
+    }
 
     // Set the target profile ID
     ref.read(profileTargetIdProvider.notifier).state = widget.creatorId;
@@ -182,7 +184,7 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
         final isLoading = snapshot.connectionState == ConnectionState.waiting;
 
         return GestureDetector(
-          onTap: _navigateToProfile,
+          onTap: () => _navigateToProfile(creator),
           onLongPress: _refreshAvatar,
           child: _buildAvatarWithBadge(context, avatarUrl, hasRegistered, isLoading, isRefreshing),
         );

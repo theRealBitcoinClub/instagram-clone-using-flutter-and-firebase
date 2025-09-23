@@ -160,13 +160,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       isOwnProfile: isOwnProfile,
       isRefreshingProfile: isRefreshingProfile,
       onProfileButtonPressed: () => _showSettings(creator),
-      showImageDetail: () => showCreatorImageDetail(
-        context: context,
-        theme: theme,
-        creator: creator,
-        getShowDefaultAvatar: () => false,
-        setShowDefaultAvatar: (_) {},
-      ),
+      showImageDetail: () => showCreatorImageDetail(context: context, creator: creator),
       showDefaultAvatar: false,
     );
   }

@@ -8,18 +8,9 @@ void _logDialogError(String message, [dynamic error, StackTrace? stackTrace]) {
 }
 
 class ImageDetailDialog extends StatefulWidget {
-  final ThemeData theme;
   final MemoModelCreator creator;
-  final bool Function() getShowDefaultAvatar;
-  final Function(bool) setShowDefaultAvatar;
 
-  const ImageDetailDialog({
-    Key? key,
-    required this.theme,
-    required this.creator,
-    required this.getShowDefaultAvatar,
-    required this.setShowDefaultAvatar,
-  }) : super(key: key);
+  const ImageDetailDialog({Key? key, required this.creator}) : super(key: key);
 
   @override
   _ImageDetailDialogState createState() => _ImageDetailDialogState();
@@ -50,18 +41,18 @@ class _ImageDetailDialogState extends State<ImageDetailDialog> {
         CircleAvatar(
           radius: 130,
           backgroundColor: Colors.black87,
-          backgroundImage: widget.getShowDefaultAvatar() || widget.creator.profileImageDetail().isEmpty
+          backgroundImage: widget.creator.profileImageDetail().isEmpty
               ? const AssetImage("assets/images/default_profile.png") as ImageProvider
               : NetworkImage(widget.creator.profileImageDetail()),
-          onBackgroundImageError: widget.getShowDefaultAvatar()
-              ? null
-              : (exception, stackTrace) {
-                  _logDialogError("Error loading profile image detail in dialog", exception, stackTrace);
-                  if (mounted) {
-                    widget.setShowDefaultAvatar(true);
-                    setState(() {});
-                  }
-                },
+          // onBackgroundImageError: widget.getShowDefaultAvatar()
+          //     ? null
+          //     : (exception, stackTrace) {
+          //         _logDialogError("Error loading profile image detail in dialog", exception, stackTrace);
+          //         if (mounted) {
+          //           widget.setShowDefaultAvatar(true);
+          //           setState(() {});
+          //         }
+          //       },
         ),
       ],
     );
@@ -69,25 +60,14 @@ class _ImageDetailDialogState extends State<ImageDetailDialog> {
 }
 
 // Helper function to show the dialog
-void showCreatorImageDetail({
-  required BuildContext context,
-  required ThemeData theme,
-  required MemoModelCreator creator,
-  required bool Function() getShowDefaultAvatar,
-  required Function(bool) setShowDefaultAvatar,
-}) async {
+void showCreatorImageDetail({required BuildContext context, required MemoModelCreator creator}) async {
   await creator.refreshImageDetail();
 
   if (context.mounted) {
     showDialog(
       context: context,
       builder: (ctx) {
-        return ImageDetailDialog(
-          theme: theme,
-          creator: creator,
-          getShowDefaultAvatar: getShowDefaultAvatar,
-          setShowDefaultAvatar: setShowDefaultAvatar,
-        );
+        return ImageDetailDialog(creator: creator);
       },
     );
   }

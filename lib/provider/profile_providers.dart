@@ -177,9 +177,10 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   Future<void> refreshUserRegisteredFlag() async {
     final profileId = ref.read(_currentProfileIdProvider);
     if (profileId != null && profileId.isNotEmpty) {
-      final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId);
+      CreatorRepository repository = ref.read(creatorRepositoryProvider);
+      final creator = await repository.getCreator(profileId);
       if (creator != null && !creator.hasRegisteredAsUser) {
-        await creator.refreshUserHasRegistered(ref);
+        await creator.refreshUserHasRegistered(ref, repository);
         // Update state with the refreshed creator
         final currentData = state.value;
         if (currentData != null) {
@@ -194,9 +195,10 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   Future<void> refreshBalances() async {
     final profileId = ref.read(_currentProfileIdProvider);
     if (profileId != null && profileId.isNotEmpty) {
-      final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
+      var repo = ref.read(creatorRepositoryProvider);
+      final creator = await repo.getCreator(profileId, saveToFirebase: false);
       if (creator != null) {
-        await creator.refreshBalances(ref);
+        await creator.refreshBalances(ref, repo);
         // Update state with the refreshed creator
         final currentData = state.value;
         if (currentData != null) {

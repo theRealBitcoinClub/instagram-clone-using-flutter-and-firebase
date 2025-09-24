@@ -83,8 +83,9 @@ class UserNotifier extends StateNotifier<UserState> {
         }
 
         if (freshScrapeCreatorData) {
-          var creator = await ref.read(creatorRepositoryProvider).getCreator(createdUser.id);
-          if (creator != null) creator.refreshBalances(ref);
+          var repository = ref.read(creatorRepositoryProvider);
+          var creator = await repository.getCreator(createdUser.id);
+          if (creator != null) creator.refreshBalances(ref, repository);
           createdUser = createdUser.copyWith(creator: creator);
           state = state.copyWith(user: createdUser);
         }

@@ -277,7 +277,7 @@ class CreatorRepository {
   }
 
   Future<void> refreshUserHasRegistered(MemoModelCreator creator) async {
-    creator.refreshUserHasRegistered(ref);
+    creator.refreshUserHasRegistered(ref, this);
   }
 }
 

@@ -203,7 +203,7 @@ class MemoModelCreator {
   @override
   int get hashCode => id.hashCode;
 
-  Future<MemoModelCreator> refreshUserHasRegistered(Ref ref) async {
+  Future<MemoModelCreator> refreshUserHasRegistered(Ref ref, CreatorRepository repository) async {
     // Early return if already registered
     if (hasRegisteredAsUser) {
       print('Creator $id is already registered');
@@ -217,10 +217,10 @@ class MemoModelCreator {
       if (isNowRegistered) {
         // Update the creator with registration info
         hasRegisteredAsUser = true;
-        // bchAddressCashtokenAware = userData.bchAddressCashtokenAware;
 
-        // Persist changes
-        await ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: true);
+        // Use the passed repository instead of reading from ref
+        await repository.saveToCache(this, saveToFirebase: true);
+        await refreshBalances(ref, repository);
 
         print('Creator $id is now registered');
       } else {
@@ -230,20 +230,31 @@ class MemoModelCreator {
       return this;
     } catch (e) {
       print('Error checking registration status for $id: $e');
-      return this; // Still return this even on error
+      return this;
     }
   }
 
-  Future<void> refreshBalances(Ref ref) async {
+  Future<void> refreshBalances(Ref ref, CreatorRepository repository) async {
     if (hasRegisteredAsUser) {
       await refreshBalanceMahakka(ref);
       await refreshBalanceMemo(ref);
     } else {
       await refreshBalanceMemo(ref);
     }
-    //TODO check if balance changed before save
-    ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: false);
+
+    // Use the passed repository
+    repository.saveToCache(this, saveToFirebase: false);
   }
+  // Future<void> refreshBalances(Ref ref) async {
+  //   if (hasRegisteredAsUser) {
+  //     await refreshBalanceMahakka(ref);
+  //     await refreshBalanceMemo(ref);
+  //   } else {
+  //     await refreshBalanceMemo(ref);
+  //   }
+  //   //TODO check if balance changed before save
+  //   ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: false);
+  // }
 
   //TODO why is debouncer not working as expected
   Future<void> refreshBalanceMahakka(Ref ref) async {

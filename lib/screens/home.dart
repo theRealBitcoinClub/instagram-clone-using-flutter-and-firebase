@@ -9,6 +9,7 @@ import 'package:mahakka/screens/feed_screen.dart';
 import 'package:mahakka/screens/profile_screen_widget.dart';
 import 'package:mahakka/tab_item_data.dart';
 
+import '../intros/intro_animated_icon.dart';
 import '../memo/memo_webview_screen.dart';
 import '../provider/navigation_providers.dart';
 import '../provider/scraper_provider.dart';
@@ -52,16 +53,30 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     super.dispose();
   }
 
+  // home.dart (updated _moveToTab method)
   void _moveToTab(int index) {
-    if (index == AppTab.add.tabIndex) {
+    final tabData = AppTab.values[index];
+
+    // Trigger intro actions for specific tabs
+    if (tabData == AppTab.add) {
       ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_create, context);
-    }
-    if (index == AppTab.profile.tabIndex) {
+    } else if (tabData == AppTab.profile) {
       ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_profile, context);
     }
 
     ref.read(tabIndexProvider.notifier).setTab(index);
   }
+  //
+  // void _moveToTab(int index) {
+  //   if (index == AppTab.add.tabIndex) {
+  //     ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_create, context);
+  //   }
+  //   if (index == AppTab.profile.tabIndex) {
+  //     ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_profile, context);
+  //   }
+  //
+  //   ref.read(tabIndexProvider.notifier).setTab(index);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -83,15 +98,57 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         _animationController.forward(from: 0.0);
       }
     });
+    //
+    // List<BottomNavigationBarItem> _buildBottomNavItems() {
+    //   return AppTab.values.where((tabData) => tabData.isVisibleOnBar).map((tabData) {
+    //     final isSelected = AppTab.values.indexOf(tabData) == currentTabIndex;
+    //
+    //     var barIcon = Icon(
+    //       isSelected ? tabData.active : tabData.icon,
+    //       color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
+    //     );
+    //     return BottomNavigationBarItem(tooltip: tabData.label, activeIcon: barIcon, icon: barIcon, label: "");
+    //   }).toList();
+    // }
 
-    List<BottomNavigationBarItem> _buildBottomNavItems() {
+    // home.dart (updated _buildBottomNavItems method)
+    List<BottomNavigationBarItem> buildBottomNavItems() {
       return AppTab.values.where((tabData) => tabData.isVisibleOnBar).map((tabData) {
         final isSelected = AppTab.values.indexOf(tabData) == currentTabIndex;
 
-        var barIcon = Icon(
-          isSelected ? tabData.active : tabData.icon,
-          color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
-        );
+        // Determine which intro step corresponds to this tab
+        IntroStep? introStep;
+        if (tabData == AppTab.add) {
+          introStep = IntroStep.main_create;
+        } else if (tabData == AppTab.profile) {
+          introStep = IntroStep.main_profile;
+        }
+
+        Widget barIcon;
+
+        if (introStep != null) {
+          // Use animated icon for tabs that have intro steps
+          barIcon = IntroAnimatedIcon(
+            icon: isSelected ? tabData.active : tabData.icon,
+            introType: IntroType.mainApp,
+            introStep: introStep,
+            color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
+            size: 32,
+            // padding: const EdgeInsets.all(6.0),
+            onTap: () => _moveToTab(AppTab.values.indexOf(tabData)),
+          );
+        } else {
+          // Regular icon for other tabs
+          barIcon = GestureDetector(
+            onTap: () => _moveToTab(AppTab.values.indexOf(tabData)),
+            child: Icon(
+              isSelected ? tabData.active : tabData.icon,
+              color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
+              size: 32,
+            ),
+          );
+        }
+
         return BottomNavigationBarItem(tooltip: tabData.label, activeIcon: barIcon, icon: barIcon, label: "");
       }).toList();
     }
@@ -120,7 +177,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         onTap: (index) => _moveToTab(index),
         iconSize: 32.0,
         border: Border(),
-        items: _buildBottomNavItems(),
+        items: buildBottomNavItems(),
       ),
     );
   }

@@ -12,6 +12,7 @@ import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../intros/intro_animated_icon.dart';
 import '../intros/intro_overlay.dart';
 import '../memo/model/memo_model_post.dart';
 import '../memo_data_checker.dart';
@@ -306,14 +307,39 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _buildMenuTheme(ThemeState themeState, ThemeData theme) {
-    return IconButton(
-      icon: Icon(themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
-      tooltip: "Toggle Theme",
-      onPressed: () {
-        ref.read(introStateNotifierProvider.notifier).triggerIntroAction(_introType, IntroStep.main_theme, context);
+    return // Replace your current theme IconButton with:
+    // Where you have your theme IconButton - use this:
+    IntroAnimatedIcon(
+      icon: themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined, // or your theme icon
+      introType: IntroType.mainApp,
+      introStep: IntroStep.main_theme,
+      size: 24, // Match your original icon size
+      padding: EdgeInsets.all(12), // No extra padding
+      onTap: () {
+        // Your existing theme selection logic
+        ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_theme, context);
         ref.read(themeNotifierProvider.notifier).toggleTheme();
       },
     );
+    // IntroAnimatedIcon(
+    //   icon: Icons.palette, // or your theme icon
+    //   introType: IntroType.mainApp,
+    //   introStep: IntroStep.main_theme,
+    //   size: 32,
+    //   onTap: () {
+    //     // Your existing theme selection logic
+    //     ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_theme, context);
+    //   },
+    //   isIconButton: true, // Wrap as IconButton
+    // );
+    // return IconButton(
+    //   icon: Icon(themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+    //   tooltip: "Toggle Theme",
+    //   onPressed: () {
+    //     ref.read(introStateNotifierProvider.notifier).triggerIntroAction(_introType, IntroStep.main_theme, context);
+    //     ref.read(themeNotifierProvider.notifier).toggleTheme();
+    //   },
+    // );
   }
 
   Map<ShortcutActivator, Intent> _getKeyboardShortcuts() {

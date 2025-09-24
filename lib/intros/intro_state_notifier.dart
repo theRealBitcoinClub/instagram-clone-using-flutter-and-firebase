@@ -64,12 +64,14 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
     _loadAllIntroStates();
   }
 
+  static const String key = "intro_";
+
   Future<void> _loadAllIntroStates() async {
     final prefs = await SharedPreferences.getInstance();
     final newState = <IntroType, IntroState>{};
 
     for (final introType in IntroType.values) {
-      final jsonString = prefs.getString('intro_${introType.name}');
+      final jsonString = prefs.getString('$key${introType.name}');
 
       if (jsonString != null) {
         try {
@@ -102,7 +104,7 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
     final introState = state[introType];
 
     if (introState != null) {
-      await prefs.setString('intro_${introType.name}', json.encode(introState.toJson()));
+      await prefs.setString('$key${introType.name}', json.encode(introState.toJson()));
     }
   }
 

@@ -11,9 +11,21 @@ class IntroAnimatedIcon extends ConsumerStatefulWidget {
   final IntroType introType;
   final IntroStep introStep;
   final VoidCallback? onTap;
+  final color;
+  final bool isIconButton; // Whether to wrap in IconButton
+  final EdgeInsetsGeometry padding;
 
-  const IntroAnimatedIcon({Key? key, required this.icon, required this.introType, required this.introStep, this.size = 24.0, this.onTap})
-    : super(key: key);
+  const IntroAnimatedIcon({
+    Key? key,
+    required this.icon,
+    required this.introType,
+    required this.introStep,
+    this.color,
+    this.size = 24.0,
+    this.onTap,
+    this.isIconButton = false,
+    this.padding = const EdgeInsets.all(8.0),
+  }) : super(key: key);
 
   @override
   ConsumerState<IntroAnimatedIcon> createState() => _IntroAnimatedIconState();
@@ -28,11 +40,11 @@ class _IntroAnimatedIconState extends ConsumerState<IntroAnimatedIcon> with Sing
   void initState() {
     super.initState();
 
-    _controller = AnimationController(duration: const Duration(milliseconds: 1500), vsync: this);
+    _controller = AnimationController(duration: const Duration(milliseconds: 1200), vsync: this);
 
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    _opacityAnimation = Tween<double>(begin: 1.0, end: 0.7).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _opacityAnimation = Tween<double>(begin: 1.0, end: 0.6).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _startAnimationIfNeeded();
   }
@@ -81,9 +93,9 @@ class _IntroAnimatedIconState extends ConsumerState<IntroAnimatedIcon> with Sing
 
         final theme = Theme.of(context);
         final Color backgroundColor = shouldAnimate ? theme.colorScheme.onSurface : Colors.transparent;
-        final Color iconColor = shouldAnimate ? theme.colorScheme.surface : theme.colorScheme.onSurface;
+        final Color iconColor = shouldAnimate ? theme.colorScheme.surface : widget.color ?? theme.colorScheme.onPrimary;
 
-        return AnimatedBuilder(
+        Widget iconWidget = AnimatedBuilder(
           animation: _controller,
           builder: (context, child) {
             return Transform.scale(
@@ -96,13 +108,25 @@ class _IntroAnimatedIconState extends ConsumerState<IntroAnimatedIcon> with Sing
               color: backgroundColor,
               shape: BoxShape.circle,
               boxShadow: shouldAnimate
-                  ? [BoxShadow(color: theme.colorScheme.onSurface.withOpacity(0.3), blurRadius: 8, spreadRadius: 2)]
+                  ? [BoxShadow(color: theme.colorScheme.onSurface.withOpacity(0.4), blurRadius: 10, spreadRadius: 3)]
                   : null,
             ),
-            padding: const EdgeInsets.all(8.0),
+            padding: widget.padding,
             child: Icon(widget.icon, color: iconColor, size: widget.size),
           ),
         );
+
+        // Wrap with GestureDetector if onTap is provided
+        if (widget.onTap != null) {
+          iconWidget = GestureDetector(onTap: widget.onTap, child: iconWidget);
+        }
+
+        // Wrap with IconButton if requested
+        if (widget.isIconButton) {
+          return IconButton(onPressed: widget.onTap, icon: iconWidget, iconSize: widget.size + widget.padding.vertical);
+        }
+
+        return iconWidget;
       },
     );
   }

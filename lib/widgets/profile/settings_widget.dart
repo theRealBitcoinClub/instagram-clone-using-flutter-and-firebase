@@ -37,9 +37,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   TipReceiver? _selectedTipReceiver;
   TipAmount? _selectedTipAmount;
   bool allowLogout = false;
-  String get key => 'mnemonic_backup_verified${user.id}';
-  late MemoModelCreator creator;
-  late MemoModelUser user;
+  late String _mnemonicBackupKey;
+  bool _controllersInitialized = false;
 
   late TabController _tabController;
   int _currentTabIndex = 0;
@@ -55,12 +54,9 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   @override
   void initState() {
     super.initState();
-    user = ref.read(userProvider)!;
-    creator = user.creator;
 
     _tabController = TabController(length: tabs().length, vsync: this);
     _tabController.addListener(_handleTabSelection);
-    _initializeControllers();
     _initAllowLogout();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -80,18 +76,21 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        allowLogout = prefs.getBool(key) ?? false;
+        allowLogout = prefs.getBool(_mnemonicBackupKey) ?? false;
       });
     }
   }
 
-  void _initializeControllers() {
+  void _initializeControllers(MemoModelCreator creator, MemoModelUser user) {
+    if (_controllersInitialized) return;
+
     _profileNameCtrl.text = creator.name;
     _profileTextCtrl.text = creator.profileText;
     _imgurCtrl.text = creator.profileImgurUrl ?? "";
+    _selectedTipReceiver = user.tipReceiver;
+    _selectedTipAmount = user.tipAmountEnum;
 
-    _selectedTipReceiver = ref.read(userProvider)!.tipReceiver;
-    _selectedTipAmount = ref.read(userProvider)!.tipAmountEnum;
+    _controllersInitialized = true;
   }
 
   @override
@@ -107,10 +106,70 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return _buildSettingsDialog(theme);
+    // Watch user provider - always non-null as per your requirement
+    final user = ref.watch(userProvider)!;
+    _mnemonicBackupKey = 'mnemonic_backup_verified${user.id}';
+
+    // Watch creator repository and wait for non-null value
+    // final creatorAsync = ref.watch(creatorRepositoryProvider
+    //     .select((repo) => repo.getCreator(user.id, scrapeIfNotFound: true, useCache: true)));
+    final creatorAsync = ref.watch(profileDataProvider);
+    // final creatorAsync = ref.watch(settingsCreatorProvider(user.id));
+
+    // Show loading until creator is available
+    return creatorAsync.when(
+      loading: () => _buildLoadingWidget(theme),
+      error: (error, stack) => _buildErrorWidget(theme, "Failed to load creator: $error"),
+      data: (profileData) {
+        // final actualCreator = creator ?? user.creator;
+
+        // Initialize controllers once when creator is available
+        if (!_controllersInitialized) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _initializeControllers(profileData.creator!, user);
+              });
+            }
+          });
+        }
+
+        return _buildSettingsDialog(theme, profileData.creator!, user);
+      },
+    );
   }
 
-  Widget _buildSettingsDialog(ThemeData theme) {
+  Widget _buildLoadingWidget(ThemeData theme) {
+    return Dialog(
+      backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 450),
+        child: const Center(child: CircularProgressIndicator()),
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget(ThemeData theme, String error) {
+    return Dialog(
+      backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 450),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline, color: theme.colorScheme.error, size: 48),
+            const SizedBox(height: 16),
+            Text(error, style: theme.textTheme.bodyMedium, textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsDialog(ThemeData theme, MemoModelCreator creator, MemoModelUser user) {
     return Dialog(
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -119,15 +178,13 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with tabs and close button
             _buildDialogHeader(theme),
-
-            // Tab content with animation
             Expanded(
-              child: TabBarView(controller: _tabController, children: [_buildGeneralTab(theme), _buildTipsTab(theme), _buildUserTab(theme)]),
+              child: TabBarView(
+                controller: _tabController,
+                children: [_buildGeneralTab(theme), _buildTipsTab(theme), _buildUserTab(theme, user)],
+              ),
             ),
-
-            // Bottom buttons row (appears on all tabs)
             _buildBottomButtons(theme),
           ],
         ),
@@ -144,7 +201,6 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            // Tab selector
             Expanded(
               child: TabBar(
                 controller: _tabController,
@@ -181,7 +237,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     );
   }
 
-  Widget _buildUserTab(ThemeData theme) {
+  Widget _buildUserTab(ThemeData theme, MemoModelUser user) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -252,11 +308,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Tip Receiver Selection
           _buildTipReceiverDropdown(theme),
           const SizedBox(height: 20),
-
-          // Tip Amount Selection
           _buildTipAmountDropdown(theme),
           if (isSavingProfile) const Padding(padding: EdgeInsets.only(top: 16), child: LinearProgressIndicator()),
         ],
@@ -352,20 +405,20 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     setState(() => isSavingProfile = true);
 
     try {
+      final user = ref.read(userProvider)!;
       final creatorRepo = ref.read(creatorRepositoryProvider);
       final userNotifier = ref.read(userNotifierProvider.notifier);
-      final user = ref.read(userProvider);
+      // final creatorAsync = ref.read(creatorRepositoryProvider
+      //     .select((repo) => repo.getCreator(user.id, scrapeIfNotFound: true, useCache: true)));
+      // final creatorAsync = ref.read(settingsCreatorProvider(user.id));
+      final creatorAsync = ref.read(profileDataProvider);
 
-      if (user == null) {
-        onFail();
-        return;
-      }
+      final creator = creatorAsync.value!.creator ?? user.creator;
 
       final newName = _profileNameCtrl.text.trim();
       final newText = _profileTextCtrl.text.trim();
       final newImgurUrl = _imgurCtrl.text.trim();
 
-      // Check if any changes were actually made
       var hasChangedImgur = newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl;
       final bool hasProfileChanges = (newName.isNotEmpty && newName != creator.name) || (newText != creator.profileText) || (hasChangedImgur);
 
@@ -378,7 +431,6 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         return;
       }
 
-      // Execute updates
       final results = await Future.wait([
         if (hasProfileChanges)
           creatorRepo.updateProfile(
@@ -390,7 +442,6 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         if (hasTipChanges) userNotifier.updateTipSettings(tipReceiver: _selectedTipReceiver, tipAmount: _selectedTipAmount),
       ], eagerError: false);
 
-      // Process results with partial success handling
       final Map<String, dynamic> profileResult = hasProfileChanges ? results[0] as Map<String, dynamic> : {'result': "no_changes"};
       final tipResult = hasTipChanges ? results[hasProfileChanges ? 1 : 0] : "no_changes";
 
@@ -398,19 +449,14 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       final bool tipSuccess = tipResult == "success";
 
       if (profileSuccess || tipSuccess) {
-        // Update user state with new creator data if profile was updated
         if (hasProfileChanges && profileResult.containsKey('updatedCreator')) {
-          // Option 1: If you added the updateCreatorProfile method to UserNotifier
           await userNotifier.updateCreatorProfile(profileResult['updatedCreator']);
 
           if (hasChangedImgur) {
             await creatorRepo.refreshAndCacheAvatar(user.id, forceRefreshAfterProfileUpdate: true, forceImageType: newImgurUrl.split(".").last);
           }
-          // Option 2: Alternatively, you can refresh the entire user
-          // await userNotifier.refreshUser(false);
         }
 
-        // Show appropriate success message
         if (profileResult['result'].toString().startsWith("partial_success")) {
           showSnackBar(type: SnackbarType.info, "Profile partially updated: ${profileResult['result']}", context);
         } else if (profileSuccess && tipSuccess) {
@@ -422,17 +468,14 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
           showSnackBar(type: SnackbarType.success, "Tip settings updated successfully! ✨", context);
         }
 
-        // Clear temporary values
-        ref.read(userProvider)!.temporaryTipReceiver = null;
-        ref.read(userProvider)!.temporaryTipAmount = null;
+        user.temporaryTipReceiver = null;
+        user.temporaryTipAmount = null;
 
-        // Invalidate providers to refresh data
         ref.invalidate(userProvider);
         ref.invalidate(profileDataProvider);
 
         onSuccess();
       } else {
-        // Complete failure
         final failMessage = [
           if (hasProfileChanges) "profile: ${profileResult['result']}",
           if (hasTipChanges) "tip settings: $tipResult",
@@ -444,18 +487,23 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       showSnackBar(type: SnackbarType.error, "Profile update failed: $e", context);
       onFail();
     } finally {
-      setState(() => isSavingProfile = false);
+      setState(() {
+        _controllersInitialized = false;
+        isSavingProfile = false;
+      });
+      // setState(() => );
     }
   }
 
   void _showMnemonicBackupDialog() {
+    final user = ref.read(userProvider)!;
     showDialog(
       context: context,
       builder: (ctx) => MnemonicBackupWidget(
-        mnemonic: ref.read(userProvider)!.mnemonic,
+        mnemonic: user.mnemonic,
         onVerificationComplete: () {
           SharedPreferences.getInstance().then((prefs) {
-            prefs.setBool(key, true);
+            prefs.setBool(_mnemonicBackupKey, true);
             if (mounted) {
               setState(() {
                 allowLogout = true;

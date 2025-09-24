@@ -8,3 +8,8 @@ final postCreatorProvider = FutureProvider.family<MemoModelCreator?, String>((re
   // Use the repository to get the creator. The repository handles the caching logic.
   return ref.read(creatorRepositoryProvider).getCreator(creatorId);
 });
+
+final settingsCreatorProvider = FutureProvider.family<MemoModelCreator?, String>((ref, creatorId) async {
+  // Use the repository to get the creator. The repository handles the caching logic.
+  return ref.read(creatorRepositoryProvider).getCreator(creatorId, forceScrape: false, saveToFirebase: false, useCache: true);
+});

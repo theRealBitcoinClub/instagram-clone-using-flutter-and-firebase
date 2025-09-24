@@ -43,16 +43,28 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   String? _lastProfileIdPostDataRequest;
   String? _lastProfileIdRefreshRequest;
   int? _lastTabIndex;
-  // bool _shouldForceRefresh = false;
   bool _pendingRefresh = false;
+
+  // Stream management for creator updates
+  StreamSubscription<MemoModelCreator?>? _creatorSubscription;
+  String? _currentWatchedCreatorId;
 
   @override
   Future<ProfileData> build() async {
+    ref.onDispose(() {
+      _cancelCreatorSubscription();
+      _stopAllBalanceTimers();
+    });
+
     final profileId = ref.watch(_currentProfileIdProvider);
 
     if (profileId == null || profileId.isEmpty) {
+      _cancelCreatorSubscription();
       return ProfileData(creator: null, posts: [], categorizer: PostsCategorizer.empty());
     }
+
+    // Set up creator update subscription for the current profile
+    _setupCreatorSubscription(profileId);
 
     // Handle pending refresh from previous build
     if (_pendingRefresh) {
@@ -63,7 +75,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     // Check if we should use cached data
     final now = DateTime.now();
     final shouldUseCache =
-        // !_shouldForceRefresh &&
         _lastProfileIdPostDataRequest == profileId && _lastRefreshTime != null && now.difference(_lastRefreshTime!) < Duration(minutes: 5);
 
     if (shouldUseCache && state.value != null) {
@@ -73,10 +84,54 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     return await _loadProfileData(profileId, forceScrape: true);
   }
 
+  /// Sets up a stream subscription to listen for updates to the current creator
+  void _setupCreatorSubscription(String profileId) {
+    // Only set up if we're not already watching this creator
+    if (_currentWatchedCreatorId == profileId) return;
+
+    // Cancel previous subscription (if watching a different creator)
+    _cancelCreatorSubscription();
+
+    _currentWatchedCreatorId = profileId;
+    final creatorRepo = ref.read(creatorRepositoryProvider);
+
+    print("INFO: Setting up creator update stream for profile: $profileId");
+
+    _creatorSubscription = creatorRepo.watchCreator(profileId).listen((updatedCreator) {
+      _handleCreatorUpdate(updatedCreator);
+    });
+  }
+
+  /// Handles creator updates from the stream
+  void _handleCreatorUpdate(MemoModelCreator? updatedCreator) {
+    if (updatedCreator != null && state.value != null) {
+      final currentData = state.value!;
+
+      // Only update if the creator data actually changed
+      //TODO check for other variables to indicate it has a changed state, e.g. profileimage, name, text or balances
+      // if (currentData.creator?.lastUpdated != updatedCreator.lastUpdated) {
+      print("INFO: Updating profile data with new creator data for: ${updatedCreator.id}");
+
+      state = AsyncValue.data(
+        ProfileData(creator: updatedCreator, posts: currentData.posts, categorizer: currentData.categorizer, fromCache: currentData.fromCache),
+      );
+      // }
+    }
+  }
+
+  /// Cancels the current creator subscription
+  void _cancelCreatorSubscription() {
+    if (_creatorSubscription != null) {
+      _creatorSubscription!.cancel();
+      _creatorSubscription = null;
+      print("INFO: Canceled creator update stream for profile: $_currentWatchedCreatorId");
+    }
+    _currentWatchedCreatorId = null;
+  }
+
   Future<ProfileData> _loadProfileData(String profileId, {bool forceScrape = false}) async {
     _lastProfileIdPostDataRequest = profileId;
     _lastRefreshTime = DateTime.now();
-    // _shouldForceRefresh = false;
 
     try {
       // Load creator from repository
@@ -115,7 +170,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   Future<void> refreshProfile({bool forceScrape = false}) async {
     // Schedule the refresh to happen after the current build phase
     Future.microtask(() async {
-      // _shouldForceRefresh = forceScrape;
       state = const AsyncValue.loading();
       state = await AsyncValue.guard(() async {
         final profileId = ref.read(_currentProfileIdProvider);
@@ -137,9 +191,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
         creatorId,
         hasUpdatedCallback: () {
           print("refreshCreatorCache fresh scrape success for creatorId $creatorId");
-          // Schedule the profile refresh after the cache update
-          //TODO IS THIS TRIGGERING A DUPLICATE REFRESH?
-          refreshProfile(forceScrape: false);
+          // The stream will automatically handle the update notification
         },
         nothingChangedCallback: () {
           print("refreshCreatorCache no fresh data available for creatorId $creatorId");
@@ -160,7 +212,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
           refreshBalances();
           refreshCreatorCache(profileId);
         }
-        //TODO call this refreshcreatorcache inside the timer and after save settings
         if (isOwnProfile) {
           startAutoRefreshBalanceProfile();
         }
@@ -177,17 +228,12 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   Future<void> refreshUserRegisteredFlag() async {
     final profileId = ref.read(_currentProfileIdProvider);
     if (profileId != null && profileId.isNotEmpty) {
-      CreatorRepository repository = ref.read(creatorRepositoryProvider);
-      final creator = await repository.getCreator(profileId);
+      var creatorRepository = ref.read(creatorRepositoryProvider);
+      var memoModelCreator = await creatorRepository.getCreator(profileId);
+      final creator = memoModelCreator;
       if (creator != null && !creator.hasRegisteredAsUser) {
-        await creator.refreshUserHasRegistered(ref, repository);
-        // Update state with the refreshed creator
-        final currentData = state.value;
-        if (currentData != null) {
-          state = AsyncValue.data(
-            ProfileData(creator: creator, posts: currentData.posts, categorizer: currentData.categorizer, fromCache: currentData.fromCache),
-          );
-        }
+        await creator.refreshUserHasRegistered(ref, creatorRepository);
+        // The stream will handle the update notification when saveToCache is called
       }
     }
   }
@@ -195,17 +241,11 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   Future<void> refreshBalances() async {
     final profileId = ref.read(_currentProfileIdProvider);
     if (profileId != null && profileId.isNotEmpty) {
-      var repo = ref.read(creatorRepositoryProvider);
-      final creator = await repo.getCreator(profileId, saveToFirebase: false);
+      var creatorRepository = ref.read(creatorRepositoryProvider);
+      final creator = await creatorRepository.getCreator(profileId, saveToFirebase: false);
       if (creator != null) {
-        await creator.refreshBalances(ref, repo);
-        // Update state with the refreshed creator
-        final currentData = state.value;
-        if (currentData != null) {
-          state = AsyncValue.data(
-            ProfileData(creator: creator, posts: currentData.posts, categorizer: currentData.categorizer, fromCache: currentData.fromCache),
-          );
-        }
+        await creator.refreshBalances(ref, creatorRepository);
+        // The stream will handle the update notification when saveToCache is called
       }
     }
   }
@@ -216,13 +256,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
       if (creator != null && creator.hasRegisteredAsUser) {
         await creator.refreshBalanceMahakka(ref);
-        // Update state with the refreshed creator
-        final currentData = state.value;
-        if (currentData != null) {
-          state = AsyncValue.data(
-            ProfileData(creator: creator, posts: currentData.posts, categorizer: currentData.categorizer, fromCache: currentData.fromCache),
-          );
-        }
+        // The stream will handle the update notification when saveToCache is called
       }
     }
   }
@@ -233,13 +267,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
       if (creator != null) {
         await creator.refreshBalanceMemo(ref);
-        // Update state with the refreshed creator
-        final currentData = state.value;
-        if (currentData != null) {
-          state = AsyncValue.data(
-            ProfileData(creator: creator, posts: currentData.posts, categorizer: currentData.categorizer, fromCache: currentData.fromCache),
-          );
-        }
+        // The stream will handle the update notification when saveToCache is called
       }
     }
   }
@@ -379,9 +407,12 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     }
   }
 
-  void dispose() {
-    _stopAllBalanceTimers();
-  }
+  // @override
+  // void dispose() {
+  //   _cancelCreatorSubscription();
+  //   _stopAllBalanceTimers();
+  //   super.dispose();
+  // }
 }
 
 // Keep postsStreamProvider for other parts of the app that need the stream

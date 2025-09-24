@@ -1,5 +1,7 @@
 // lib/repositories/creator_repository.dart
 
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
@@ -14,10 +16,47 @@ import 'package:mahakka/provider/isar_provider.dart';
 class CreatorRepository {
   final Ref ref;
   final Map<String, MemoModelCreator> _inMemoryCache = {};
+  final Map<String, StreamController<MemoModelCreator?>> _creatorStreamControllers = {};
 
   CreatorRepository(this.ref);
 
   Future<Isar> get _isar async => await ref.read(isarProvider.future);
+
+  // --- STREAM SUPPORT ---
+
+  /// Get a stream that emits whenever a creator is updated
+  Stream<MemoModelCreator?> watchCreator(String creatorId) {
+    if (!_creatorStreamControllers.containsKey(creatorId)) {
+      _creatorStreamControllers[creatorId] = StreamController<MemoModelCreator?>.broadcast(
+        onCancel: () {
+          // Auto-close when no listeners remain
+          if (_creatorStreamControllers[creatorId]?.hasListener == false) {
+            _creatorStreamControllers[creatorId]?.close();
+            _creatorStreamControllers.remove(creatorId);
+            print("INFO: Disposed stream controller for creator $creatorId");
+          }
+        },
+      );
+    }
+    return _creatorStreamControllers[creatorId]!.stream;
+  }
+
+  /// Notify listeners that a creator has been updated
+  void _notifyCreatorUpdated(String creatorId, MemoModelCreator? creator) {
+    final controller = _creatorStreamControllers[creatorId];
+    if (controller != null && !controller.isClosed) {
+      // Check if there are active listeners before sending
+      if (controller.hasListener) {
+        controller.add(creator);
+        print("INFO: Notified stream listeners for creator $creatorId");
+      } else {
+        // No listeners, clean up the controller
+        controller.close();
+        _creatorStreamControllers.remove(creatorId);
+        print("INFO: Cleaned up unused stream controller for creator $creatorId");
+      }
+    }
+  }
 
   // --- CACHE MANAGEMENT ---
 
@@ -61,6 +100,9 @@ class CreatorRepository {
     // Save to in-memory cache
     _inMemoryCache[creator.id] = creator;
     print("INFO: Saved creator ${creator.id} to in-memory cache.");
+
+    // Notify stream listeners about the update
+    _notifyCreatorUpdated(creator.id, creator);
   }
 
   // --- PUBLIC API ---

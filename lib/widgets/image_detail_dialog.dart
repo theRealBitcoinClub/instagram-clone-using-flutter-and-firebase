@@ -39,20 +39,11 @@ class _ImageDetailDialogState extends State<ImageDetailDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       children: [
         CircleAvatar(
-          radius: 130,
+          radius: 145,
           backgroundColor: Colors.black87,
           backgroundImage: widget.creator.profileImageDetail().isEmpty
               ? const AssetImage("assets/images/default_profile.png") as ImageProvider
               : NetworkImage(widget.creator.profileImageDetail()),
-          // onBackgroundImageError: widget.getShowDefaultAvatar()
-          //     ? null
-          //     : (exception, stackTrace) {
-          //         _logDialogError("Error loading profile image detail in dialog", exception, stackTrace);
-          //         if (mounted) {
-          //           widget.setShowDefaultAvatar(true);
-          //           setState(() {});
-          //         }
-          //       },
         ),
       ],
     );

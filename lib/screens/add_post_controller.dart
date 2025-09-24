@@ -69,7 +69,7 @@ class AddPostController extends StateNotifier<void> {
     ref.read(isPublishingProvider.notifier).state = true;
 
     try {
-      final verification = _handleVerification(textContent);
+      var verification = _handleVerification(textContent);
 
       if (verification != MemoVerificationResponse.valid) {
         _showSnackBar(verification.message, isError: true);
@@ -92,21 +92,16 @@ class AddPostController extends StateNotifier<void> {
       }
 
       final user = ref.read(userProvider)!;
-      // final translation = ref.read(postTranslationProvider);
-
       MemoModelPost copyPost = ref.read(postTranslationProvider).applyTranslationToPost(post: post, ref: ref);
-      // final useTranslation = translation.targetLanguage != null && translation.targetLanguage != translation.originalLanguage;
-      // Language? lang = useTranslation ? translation.targetLanguage! : translation.originalLanguage ?? null;
-      // String languageFlag = lang != null ? lang.flag : "";
-      // final content = useTranslation ? translation.translatedText : clearTextOriginal;
-      // MemoModelPost copyPost = post.copyWith(text: "$languageFlag $content${getMediaUrl()}");
-      copyPost.appendUrlsToText();
 
       //VERIFY AGAIN THAT TEXT FITS AFTER TRANSLATION
-      if (_handleVerification(copyPost.text!) != MemoVerificationResponse.valid) {
+      verification = _handleVerification(copyPost.text!);
+      if (verification != MemoVerificationResponse.valid) {
         _showSnackBar(verification.message, isError: true);
         return;
       }
+
+      copyPost.appendUrlsToText();
 
       final response = await ref.read(postRepositoryProvider).publishImageOrVideo(copyPost.text!, topic, validate: false);
 

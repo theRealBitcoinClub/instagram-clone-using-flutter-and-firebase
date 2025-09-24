@@ -2,7 +2,9 @@ import 'package:mahakka/config_whitelist.dart';
 
 class MemoRegExp {
   final String text;
-  static const topicRegex = r'@[a-zA-Z0-9_\-\.]+';
+  // static const topicRegex = r'\B@[a-zA-Z0-9_\-\.]+';
+  // static const topicRegex = r'@[a-zA-Z0-9_\-\.]+';
+  static const topicRegex = r'(?<!\w|https?://[^\s]*|www\.[^\s]*)@[a-zA-Z0-9_\-\.]+';
   static const hashtagRegex = r'#\w+';
   static const urlRegex = r'(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)';
   static const ipfsRegex = r'b[A-Za-z2-7]{58,}';

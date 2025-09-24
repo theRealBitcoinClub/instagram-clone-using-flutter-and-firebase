@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
+import 'package:mahakka/provider/profile_providers.dart';
 import 'package:mahakka/screens/add_screen.dart';
 import 'package:mahakka/screens/feed_screen.dart';
 import 'package:mahakka/screens/profile_screen_widget.dart';
@@ -57,26 +58,18 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   void _moveToTab(int index) {
     final tabData = AppTab.values[index];
 
-    // Trigger intro actions for specific tabs
     if (tabData == AppTab.add) {
       ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_create, context);
     } else if (tabData == AppTab.profile) {
       ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_profile, context);
     }
 
+    if (index != AppTab.profile.tabIndex) {
+      ref.read(profileDataProvider.notifier).stopAutoRefreshBalanceProfile();
+    }
+
     ref.read(tabIndexProvider.notifier).setTab(index);
   }
-  //
-  // void _moveToTab(int index) {
-  //   if (index == AppTab.add.tabIndex) {
-  //     ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_create, context);
-  //   }
-  //   if (index == AppTab.profile.tabIndex) {
-  //     ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_profile, context);
-  //   }
-  //
-  //   ref.read(tabIndexProvider.notifier).setTab(index);
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -98,18 +91,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         _animationController.forward(from: 0.0);
       }
     });
-    //
-    // List<BottomNavigationBarItem> _buildBottomNavItems() {
-    //   return AppTab.values.where((tabData) => tabData.isVisibleOnBar).map((tabData) {
-    //     final isSelected = AppTab.values.indexOf(tabData) == currentTabIndex;
-    //
-    //     var barIcon = Icon(
-    //       isSelected ? tabData.active : tabData.icon,
-    //       color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
-    //     );
-    //     return BottomNavigationBarItem(tooltip: tabData.label, activeIcon: barIcon, icon: barIcon, label: "");
-    //   }).toList();
-    // }
 
     // home.dart (updated _buildBottomNavItems method)
     List<BottomNavigationBarItem> buildBottomNavItems() {

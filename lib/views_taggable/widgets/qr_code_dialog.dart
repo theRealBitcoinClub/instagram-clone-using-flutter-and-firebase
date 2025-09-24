@@ -127,7 +127,9 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     // Only start refresh timer if general auto-refresh isn't running
     if (!isAutoRefreshRunning) {
       _balanceRefreshTimer = Timer.periodic(_refreshInterval, (_) {
-        _refreshBalance(isCashtokenTab);
+        setState(() {
+          _refreshBalance(isCashtokenTab);
+        });
       });
     }
   }

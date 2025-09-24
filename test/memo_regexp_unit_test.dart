@@ -209,8 +209,13 @@ void main() {
     });
 
     test('Static extractTopics should extract topics', () {
-      final result = MemoRegExp.extractTopics(testString);
+      var result = MemoRegExp.extractTopics(testString);
       expect(result, contains('@topic'));
+      result = MemoRegExp.extractTopics(
+        "#odysee lets get this party https://odysee.com/@ClownfishTV:b/youtube-admits-they-censored:5 started @Flavour_Trip oh yeah http://havingfun.com why not #bchbankrun",
+      );
+      expect(result, contains('@Flavour_Trip'));
+      expect(result.length, equals(1));
     });
 
     test('Static extractUrls should extract URLs', () {

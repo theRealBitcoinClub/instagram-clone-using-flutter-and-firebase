@@ -214,6 +214,8 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
         }
         if (isOwnProfile) {
           startAutoRefreshBalanceProfile();
+        } else {
+          stopAutoRefreshBalanceProfile();
         }
         // Set pending refresh flag for next build
         _pendingRefresh = true;
@@ -276,17 +278,17 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     return _isAutoRefreshRunning;
   }
 
-  void setRefreshInterval(Duration interval) {
-    _refreshBalanceInterval = interval;
-    // Restart any active timers with new interval
-    if (_balanceRefreshTimer != null) {
-      startAutoRefreshBalanceProfile();
-    } else if (_mahakkaBalanceRefreshTimer != null) {
-      startAutoRefreshMahakkaBalanceQrDialog();
-    } else if (_memoBalanceRefreshTimer != null) {
-      startAutoRefreshMemoBalanceQrDialog();
-    }
-  }
+  // void setRefreshInterval(Duration interval) {
+  //   _refreshBalanceInterval = interval;
+  //   // Restart any active timers with new interval
+  //   if (_balanceRefreshTimer != null) {
+  //     startAutoRefreshBalanceProfile();
+  //   } else if (_mahakkaBalanceRefreshTimer != null) {
+  //     startAutoRefreshMahakkaBalanceQrDialog();
+  //   } else if (_memoBalanceRefreshTimer != null) {
+  //     startAutoRefreshMemoBalanceQrDialog();
+  //   }
+  // }
 
   void stopAutoRefreshBalanceProfile() {
     if (!_isAutoRefreshRunning) return;

@@ -329,7 +329,7 @@ class MemoModelPost {
   void appendUrlsToText() {
     if (text != null)
       for (final url in urls) {
-        text = text! + "\n$url\n";
+        text = text! + " \n\n$url";
       }
   }
 }

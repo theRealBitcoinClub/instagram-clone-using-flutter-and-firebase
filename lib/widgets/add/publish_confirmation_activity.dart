@@ -93,7 +93,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       });
     });
 
-    _isNewPost = ref.read(userProvider)!.id == widget.post.creator!.id;
+    _isNewPost = widget.post.creator == null;
 
     _controller.forward();
   }

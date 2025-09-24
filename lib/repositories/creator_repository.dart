@@ -196,7 +196,7 @@ class CreatorRepository {
       }
 
       if (text != null && text != creator.profileText) {
-        Future.delayed(Duration(seconds: 1));
+        Future.delayed(Duration(seconds: 3));
         final verification = MemoVerifier(text).verifyProfileText();
         if (verification != MemoVerificationResponse.valid) {
           return {'result': verification.toString()};
@@ -212,7 +212,7 @@ class CreatorRepository {
       }
 
       if (avatar != null && avatar != creator.profileImgurUrl) {
-        Future.delayed(Duration(seconds: 1));
+        Future.delayed(Duration(seconds: 3));
         final verifiedUrl = await MemoVerifier(avatar).verifyAndBuildImgurUrl();
         if (verifiedUrl == MemoVerificationResponse.noImageNorVideo.toString()) {
           return {'result': verifiedUrl};

@@ -178,9 +178,9 @@ class IntroTarget {
   // Predefined targets
   static const topRight = IntroTarget(position: Offset(0.84, 0.05), rotation: 0.3);
 
-  static const bottomCenter = IntroTarget(position: Offset(0.45, 0.75), rotation: 3.10);
+  static const bottomCenter = IntroTarget(position: Offset(0.45, 0.72), rotation: 3.10);
 
-  static const bottomRight = IntroTarget(position: const Offset(0.76, 0.75), rotation: 3.0);
+  static const bottomRight = IntroTarget(position: const Offset(0.76, 0.72), rotation: 3.0);
 
   Offset getAbsolutePosition(Size screenSize) {
     return Offset(position.dx * screenSize.width, position.dy * screenSize.height);

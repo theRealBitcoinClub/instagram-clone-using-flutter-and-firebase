@@ -51,35 +51,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     context.afterLayout(refreshUI: true, () {
       _isRenderingContent = false;
     });
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   if (mounted) {
-    //     setState(() {
-    //       _isRenderingContent = false;
-    //     });
-    //   }
-    // });
-    // _checkIntroStatus();
   }
-  //
-  // void _checkIntroStatus() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   bool introShown = prefs.getBool('introShown') ?? false;
-  //
-  //   if (!introShown) {
-  //     setState(() {
-  //       showIntro = true;
-  //     });
-  //   }
-  // }
-  //
-  // void _completeIntro() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   await prefs.setBool('introShown', true);
-  //
-  //   setState(() {
-  //     showIntro = false;
-  //   });
-  // }
 
   void _scrollListener() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300 &&
@@ -157,12 +129,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       context.afterLayout(refreshUI: true, () {
                         _isRenderingContent = false;
                       });
-                      // WidgetsBinding.instance.addPostFrameCallback((_) {
-                      //   if (mounted) {
-                      //     setState(() {
-                      //     });
-                      //   }
-                      // });
                     },
                     child: const Text('Retry'),
                   ),

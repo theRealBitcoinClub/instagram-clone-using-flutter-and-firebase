@@ -34,46 +34,6 @@ class UserNotifier extends StateNotifier<UserState> {
   final AuthChecker _authChecker;
   final Ref ref;
 
-  // Future<String> updateTipReceiver(TipReceiver newReceiver) async {
-  //   if (state.user == null) return "user state is null";
-  //
-  //   try {
-  //     final updatedUser = state.user!.copyWith(tipReceiver: newReceiver);
-  //
-  //     // Save to Firebase
-  //     final userService = UserService();
-  //     await userService.saveUser(updatedUser);
-  //
-  //     // Update local state
-  //     state = state.copyWith(user: updatedUser);
-  //     return "success";
-  //   } catch (e) {
-  //     print("Error updating tip receiver: $e");
-  //     state = state.copyWith(error: "Failed to update tip receiver: $e");
-  //   }
-  //   return "fail updateTipReceiver";
-  // }
-  //
-  // Future<String> updateTipAmount(TipAmount newAmount) async {
-  //   if (state.user == null) return "user is null";
-  //
-  //   try {
-  //     final updatedUser = state.user!.copyWith(tipAmount: newAmount);
-  //
-  //     // Save to Firebase
-  //     final userService = UserService();
-  //     await userService.saveUser(updatedUser);
-  //
-  //     // Update local state
-  //     state = state.copyWith(user: updatedUser);
-  //     return "success";
-  //   } catch (e) {
-  //     print("Error updating tip amount: $e");
-  //     state = state.copyWith(error: "Failed to update tip amount: $e");
-  //   }
-  //   return "fail updateTipAmount";
-  // }
-
   Future<String> updateTipSettings({TipReceiver? tipReceiver, TipAmount? tipAmount}) async {
     if (state.user == null) return "user state is null";
 

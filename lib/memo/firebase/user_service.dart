@@ -17,28 +17,6 @@ class UserService {
       rethrow;
     }
   }
-  //
-  // Future<void> updateUserIpfsUrls(String userId, List<String> ipfsUrls) async {
-  //   try {
-  //     await _firestore.collection(_usersCollection).doc(userId).update({'ipfsUrls': ipfsUrls});
-  //     print("UserService: Updated IPFS URLs for user $userId");
-  //   } catch (e) {
-  //     print("UserService: Error updating IPFS URLs for user $userId: $e");
-  //     rethrow;
-  //   }
-  // }
-  //
-  // Future<void> addUserIpfsUrl(String userId, String ipfsCid) async {
-  //   try {
-  //     await _firestore.collection(_usersCollection).doc(userId).update({
-  //       'ipfsUrls': FieldValue.arrayUnion([ipfsCid]),
-  //     });
-  //     print("UserService: Added IPFS URL $ipfsCid for user $userId");
-  //   } catch (e) {
-  //     print("UserService: Error adding IPFS URL for user $userId: $e");
-  //     rethrow;
-  //   }
-  // }
 
   Future<void> deleteUser(String userId) async {
     try {

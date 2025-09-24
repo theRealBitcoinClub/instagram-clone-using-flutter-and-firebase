@@ -43,8 +43,13 @@ class CreatorRepository {
     return null;
   }
 
-  /// Saves a creator to all cache layers (memory + Isar + Firebase optionally)
   Future<void> saveToCache(MemoModelCreator creator, {bool saveToFirebase = false}) async {
+    // Save to Firebase if requested but if so do it first because the single source of truth is firebase
+    if (saveToFirebase) {
+      await ref.read(creatorServiceProvider).saveCreator(creator);
+      print("INFO: Saved creator ${creator.id} to Firebase.");
+    }
+
     final isar = await _isar;
 
     // Save to Isar
@@ -56,12 +61,6 @@ class CreatorRepository {
     // Save to in-memory cache
     _inMemoryCache[creator.id] = creator;
     print("INFO: Saved creator ${creator.id} to in-memory cache.");
-
-    // Save to Firebase if requested
-    if (saveToFirebase) {
-      await ref.read(creatorServiceProvider).saveCreator(creator);
-      print("INFO: Saved creator ${creator.id} to Firebase.");
-    }
   }
 
   // --- PUBLIC API ---
@@ -106,7 +105,8 @@ class CreatorRepository {
     // Step 4: Fallback - create minimal creator
     print("WARNING: Could not find creator $creatorId. Creating minimal creator.");
     final minimalCreator = MemoModelCreator(id: creatorId, name: "Loading...");
-    await saveToCache(minimalCreator, saveToFirebase: false); // Don't save minimal to Firebase
+    //TODO CHECK IF IT MAKES SENSE TO EVER SAVE THIS MINIMAL CREATOR, I DONT THINK SO
+    // await saveToCache(minimalCreator, saveToFirebase: false); // Don't save minimal to Firebase
     return minimalCreator;
   }
 
@@ -117,8 +117,9 @@ class CreatorRepository {
     String oldUrl = creator.profileImageAvatar();
     await creator.refreshAvatar(forceRefreshAfterProfileUpdate: forceRefreshAfterProfileUpdate, forceImageType: forceImageType);
 
+    //TODO MAYBE ADD BOOL TO ONLY SAVE ON PROFILE UPDATES BECAUSE OTHERWISE WHO CARES ABOUT CREATOR BEING ON FIREBASE AS THAT ONLY MATTERS IF THEY ARE REGISTERED USERS WITH CUSTOM IMAGE URL
     if (creator.profileImageAvatar().isNotEmpty && creator.profileImageAvatar() != oldUrl) {
-      await saveToCache(creator, saveToFirebase: false);
+      await saveToCache(creator, saveToFirebase: true);
       return creator.profileImageAvatar();
     }
     return oldUrl;
@@ -273,110 +274,6 @@ class CreatorRepository {
   Future<MemoAccountantResponse> _updateAvatarOnBlockchain(String avatar) async {
     final accountant = ref.read(memoAccountantProvider);
     return await accountant.profileSetAvatar(avatar);
-  }
-
-  // --- PROFILE UPDATE METHODS ---
-  //
-  // Future<dynamic> profileSetName(String name, MemoModelUser user) async {
-  //   final verificationResponse = MemoVerifier(name).verifyUserName();
-  //   if (verificationResponse != MemoVerificationResponse.valid) {
-  //     return verificationResponse;
-  //   }
-  //
-  //   final accountant = ref.read(memoAccountantProvider);
-  //   final response = await accountant.profileSetName(name);
-  //
-  //   switch (response) {
-  //     case MemoAccountantResponse.yes:
-  //       final updatedCreator = user.creator.copyWith(name: name);
-  //       await saveToCache(updatedCreator, saveToFirebase: true);
-  //       return "success";
-  //     case MemoAccountantResponse.noUtxo:
-  //     case MemoAccountantResponse.lowBalance:
-  //     case MemoAccountantResponse.dust:
-  //       return MemoAccountantResponse.lowBalance;
-  //     case MemoAccountantResponse.connectionError:
-  //       // TODO: Handle this case.
-  //       throw UnimplementedError();
-  //     case MemoAccountantResponse.insufficientBalanceForIpfs:
-  //       // TODO: Handle this case.
-  //       throw UnimplementedError();
-  //   }
-  // }
-  //
-  // Future<dynamic> profileSetText(String text, MemoModelUser user) async {
-  //   final verificationResponse = MemoVerifier(text).verifyProfileText();
-  //   if (verificationResponse != MemoVerificationResponse.valid) {
-  //     return verificationResponse;
-  //   }
-  //
-  //   final accountant = ref.read(memoAccountantProvider);
-  //   final response = await accountant.profileSetText(text);
-  //
-  //   switch (response) {
-  //     case MemoAccountantResponse.yes:
-  //       final updatedCreator = user.creator.copyWith(profileText: text);
-  //       await saveToCache(updatedCreator, saveToFirebase: true);
-  //       return "success";
-  //     case MemoAccountantResponse.noUtxo:
-  //     case MemoAccountantResponse.lowBalance:
-  //     case MemoAccountantResponse.dust:
-  //       return MemoAccountantResponse.lowBalance;
-  //     case MemoAccountantResponse.connectionError:
-  //       // TODO: Handle this case.
-  //       throw UnimplementedError();
-  //     case MemoAccountantResponse.insufficientBalanceForIpfs:
-  //       // TODO: Handle this case.
-  //       throw UnimplementedError();
-  //   }
-  // }
-  //
-  // Future<dynamic> profileSetAvatar(String imgur, MemoModelUser user) async {
-  //   final verifiedUrl = await MemoVerifier(imgur).verifyAndBuildImgurUrl();
-  //   if (verifiedUrl == MemoVerificationResponse.noImageNorVideo.toString()) {
-  //     return verifiedUrl;
-  //   }
-  //
-  //   final accountant = ref.read(memoAccountantProvider);
-  //   final response = await accountant.profileSetAvatar(verifiedUrl);
-  //
-  //   switch (response) {
-  //     case MemoAccountantResponse.yes:
-  //       final updatedCreator = user.creator.copyWith(profileImgurUrl: verifiedUrl);
-  //       await saveToCache(updatedCreator, saveToFirebase: true);
-  //       return "success";
-  //     case MemoAccountantResponse.noUtxo:
-  //     case MemoAccountantResponse.lowBalance:
-  //     case MemoAccountantResponse.dust:
-  //       return MemoAccountantResponse.lowBalance;
-  //     case MemoAccountantResponse.connectionError:
-  //       // TODO: Handle this case.
-  //       throw UnimplementedError();
-  //     case MemoAccountantResponse.insufficientBalanceForIpfs:
-  //       // TODO: Handle this case.
-  //       throw UnimplementedError();
-  //   }
-  // }
-
-  // --- CACHE MANAGEMENT UTILITIES ---
-
-  Future<void> clearMemoryCache() async {
-    _inMemoryCache.clear();
-    print("INFO: Cleared in-memory creator cache.");
-  }
-
-  Future<void> clearIsarCache() async {
-    final isar = await _isar;
-    await isar.writeTxn(() async {
-      await isar.memoModelCreatorDbs.clear();
-    });
-    print("INFO: Cleared Isar creator cache.");
-  }
-
-  Future<void> clearAllCache() async {
-    await clearMemoryCache();
-    await clearIsarCache();
-    print("INFO: Cleared all creator caches.");
   }
 
   Future<void> refreshUserHasRegistered(MemoModelCreator creator) async {

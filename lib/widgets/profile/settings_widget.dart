@@ -447,10 +447,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       final newImgurUrl = _imgurCtrl.text.trim();
 
       // Check if any changes were actually made
-      final bool hasProfileChanges =
-          (newName.isNotEmpty && newName != creator.name) ||
-          (newText != creator.profileText) ||
-          (newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl);
+      var hasChangedImgur = newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl;
+      final bool hasProfileChanges = (newName.isNotEmpty && newName != creator.name) || (newText != creator.profileText) || (hasChangedImgur);
 
       final bool hasTipChanges =
           (_selectedTipReceiver != null && _selectedTipReceiver != user.tipReceiver) ||
@@ -468,7 +466,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             user: user,
             name: newName.isNotEmpty && newName != creator.name ? newName : null,
             text: newText != creator.profileText ? newText : null,
-            avatar: newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl ? newImgurUrl : null,
+            avatar: hasChangedImgur ? newImgurUrl : null,
           ),
         if (hasTipChanges) userNotifier.updateTipSettings(tipReceiver: _selectedTipReceiver, tipAmount: _selectedTipAmount),
       ], eagerError: false);
@@ -486,6 +484,9 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
           // Option 1: If you added the updateCreatorProfile method to UserNotifier
           await userNotifier.updateCreatorProfile(profileResult['updatedCreator']);
 
+          if (hasChangedImgur) {
+            await creatorRepo.refreshAndCacheAvatar(user.id, forceRefreshAfterProfileUpdate: true, forceImageType: newImgurUrl.split(".").last);
+          }
           // Option 2: Alternatively, you can refresh the entire user
           // await userNotifier.refreshUser(false);
         }

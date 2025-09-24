@@ -169,88 +169,194 @@ class CreatorRepository {
     }
   }
 
+  Future<Map<String, dynamic>> updateProfile({required MemoModelUser user, String? name, String? text, String? avatar}) async {
+    try {
+      final creator = user.creator;
+      MemoModelCreator updatedCreator = creator;
+      bool hasChanges = false;
+
+      // Track individual operation results
+      final Map<String, dynamic> successfulChanges = {};
+      final Map<String, dynamic> failedChanges = {};
+
+      // Execute blockchain operations SEQUENTIALLY
+      if (name != null && name != creator.name) {
+        final verification = MemoVerifier(name).verifyUserName();
+        if (verification != MemoVerificationResponse.valid) {
+          return {'result': verification.toString()};
+        }
+
+        final result = await _updateNameOnBlockchain(name);
+        if (result == MemoAccountantResponse.yes) {
+          successfulChanges['name'] = true;
+          hasChanges = true;
+        } else {
+          failedChanges['name'] = result;
+        }
+      }
+
+      if (text != null && text != creator.profileText) {
+        Future.delayed(Duration(seconds: 1));
+        final verification = MemoVerifier(text).verifyProfileText();
+        if (verification != MemoVerificationResponse.valid) {
+          return {'result': verification.toString()};
+        }
+
+        final result = await _updateTextOnBlockchain(text);
+        if (result == MemoAccountantResponse.yes) {
+          successfulChanges['text'] = true;
+          hasChanges = true;
+        } else {
+          failedChanges['text'] = result;
+        }
+      }
+
+      if (avatar != null && avatar != creator.profileImgurUrl) {
+        Future.delayed(Duration(seconds: 1));
+        final verifiedUrl = await MemoVerifier(avatar).verifyAndBuildImgurUrl();
+        if (verifiedUrl == MemoVerificationResponse.noImageNorVideo.toString()) {
+          return {'result': verifiedUrl};
+        }
+
+        final result = await _updateAvatarOnBlockchain(verifiedUrl);
+        if (result == MemoAccountantResponse.yes) {
+          successfulChanges['avatar'] = true;
+          hasChanges = true;
+        } else {
+          failedChanges['avatar'] = result;
+        }
+      }
+
+      if (!hasChanges) {
+        return {'result': "no_changes"};
+      }
+
+      // Apply successful changes to creator object
+      updatedCreator = updatedCreator.copyWith(
+        name: (successfulChanges.containsKey('name')) ? name : creator.name,
+        profileText: (successfulChanges.containsKey('text')) ? text : creator.profileText,
+        profileImgurUrl: (successfulChanges.containsKey('avatar')) ? avatar : creator.profileImgurUrl,
+      );
+
+      // Save to Firebase if ANY changes were successful
+      if (hasChanges) {
+        await saveToCache(updatedCreator, saveToFirebase: true);
+      }
+
+      // Return both result and updated creator
+      if (successfulChanges.isNotEmpty && failedChanges.isEmpty) {
+        return {'result': "success", 'updatedCreator': updatedCreator};
+      } else if (successfulChanges.isNotEmpty && failedChanges.isNotEmpty) {
+        return {'result': "partial_success: failed: ${failedChanges.keys.join(', ')}", 'updatedCreator': updatedCreator};
+      } else {
+        return {
+          'result': "all_failed: ${failedChanges.values.join(', ')}",
+          'updatedCreator': creator, // Return original creator since no changes
+        };
+      }
+    } catch (e) {
+      print("Error updating profile: $e");
+      return {'result': "error: $e"};
+    }
+  }
+
+  Future<MemoAccountantResponse> _updateNameOnBlockchain(String name) async {
+    final accountant = ref.read(memoAccountantProvider);
+    return await accountant.profileSetName(name);
+  }
+
+  Future<MemoAccountantResponse> _updateTextOnBlockchain(String text) async {
+    final accountant = ref.read(memoAccountantProvider);
+    return await accountant.profileSetText(text);
+  }
+
+  Future<MemoAccountantResponse> _updateAvatarOnBlockchain(String avatar) async {
+    final accountant = ref.read(memoAccountantProvider);
+    return await accountant.profileSetAvatar(avatar);
+  }
+
   // --- PROFILE UPDATE METHODS ---
-
-  Future<dynamic> profileSetName(String name, MemoModelUser user) async {
-    final verificationResponse = MemoVerifier(name).verifyUserName();
-    if (verificationResponse != MemoVerificationResponse.valid) {
-      return verificationResponse;
-    }
-
-    final accountant = ref.read(memoAccountantProvider);
-    final response = await accountant.profileSetName(name);
-
-    switch (response) {
-      case MemoAccountantResponse.yes:
-        final updatedCreator = user.creator.copyWith(name: name);
-        await saveToCache(updatedCreator, saveToFirebase: true);
-        return "success";
-      case MemoAccountantResponse.noUtxo:
-      case MemoAccountantResponse.lowBalance:
-      case MemoAccountantResponse.dust:
-        return MemoAccountantResponse.lowBalance;
-      case MemoAccountantResponse.connectionError:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-      case MemoAccountantResponse.insufficientBalanceForIpfs:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-    }
-  }
-
-  Future<dynamic> profileSetText(String text, MemoModelUser user) async {
-    final verificationResponse = MemoVerifier(text).verifyProfileText();
-    if (verificationResponse != MemoVerificationResponse.valid) {
-      return verificationResponse;
-    }
-
-    final accountant = ref.read(memoAccountantProvider);
-    final response = await accountant.profileSetText(text);
-
-    switch (response) {
-      case MemoAccountantResponse.yes:
-        final updatedCreator = user.creator.copyWith(profileText: text);
-        await saveToCache(updatedCreator, saveToFirebase: true);
-        return "success";
-      case MemoAccountantResponse.noUtxo:
-      case MemoAccountantResponse.lowBalance:
-      case MemoAccountantResponse.dust:
-        return MemoAccountantResponse.lowBalance;
-      case MemoAccountantResponse.connectionError:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-      case MemoAccountantResponse.insufficientBalanceForIpfs:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-    }
-  }
-
-  Future<dynamic> profileSetAvatar(String imgur, MemoModelUser user) async {
-    final verifiedUrl = await MemoVerifier(imgur).verifyAndBuildImgurUrl();
-    if (verifiedUrl == MemoVerificationResponse.noImageNorVideo.toString()) {
-      return verifiedUrl;
-    }
-
-    final accountant = ref.read(memoAccountantProvider);
-    final response = await accountant.profileSetAvatar(verifiedUrl);
-
-    switch (response) {
-      case MemoAccountantResponse.yes:
-        final updatedCreator = user.creator.copyWith(profileImgurUrl: verifiedUrl);
-        await saveToCache(updatedCreator, saveToFirebase: true);
-        return "success";
-      case MemoAccountantResponse.noUtxo:
-      case MemoAccountantResponse.lowBalance:
-      case MemoAccountantResponse.dust:
-        return MemoAccountantResponse.lowBalance;
-      case MemoAccountantResponse.connectionError:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-      case MemoAccountantResponse.insufficientBalanceForIpfs:
-        // TODO: Handle this case.
-        throw UnimplementedError();
-    }
-  }
+  //
+  // Future<dynamic> profileSetName(String name, MemoModelUser user) async {
+  //   final verificationResponse = MemoVerifier(name).verifyUserName();
+  //   if (verificationResponse != MemoVerificationResponse.valid) {
+  //     return verificationResponse;
+  //   }
+  //
+  //   final accountant = ref.read(memoAccountantProvider);
+  //   final response = await accountant.profileSetName(name);
+  //
+  //   switch (response) {
+  //     case MemoAccountantResponse.yes:
+  //       final updatedCreator = user.creator.copyWith(name: name);
+  //       await saveToCache(updatedCreator, saveToFirebase: true);
+  //       return "success";
+  //     case MemoAccountantResponse.noUtxo:
+  //     case MemoAccountantResponse.lowBalance:
+  //     case MemoAccountantResponse.dust:
+  //       return MemoAccountantResponse.lowBalance;
+  //     case MemoAccountantResponse.connectionError:
+  //       // TODO: Handle this case.
+  //       throw UnimplementedError();
+  //     case MemoAccountantResponse.insufficientBalanceForIpfs:
+  //       // TODO: Handle this case.
+  //       throw UnimplementedError();
+  //   }
+  // }
+  //
+  // Future<dynamic> profileSetText(String text, MemoModelUser user) async {
+  //   final verificationResponse = MemoVerifier(text).verifyProfileText();
+  //   if (verificationResponse != MemoVerificationResponse.valid) {
+  //     return verificationResponse;
+  //   }
+  //
+  //   final accountant = ref.read(memoAccountantProvider);
+  //   final response = await accountant.profileSetText(text);
+  //
+  //   switch (response) {
+  //     case MemoAccountantResponse.yes:
+  //       final updatedCreator = user.creator.copyWith(profileText: text);
+  //       await saveToCache(updatedCreator, saveToFirebase: true);
+  //       return "success";
+  //     case MemoAccountantResponse.noUtxo:
+  //     case MemoAccountantResponse.lowBalance:
+  //     case MemoAccountantResponse.dust:
+  //       return MemoAccountantResponse.lowBalance;
+  //     case MemoAccountantResponse.connectionError:
+  //       // TODO: Handle this case.
+  //       throw UnimplementedError();
+  //     case MemoAccountantResponse.insufficientBalanceForIpfs:
+  //       // TODO: Handle this case.
+  //       throw UnimplementedError();
+  //   }
+  // }
+  //
+  // Future<dynamic> profileSetAvatar(String imgur, MemoModelUser user) async {
+  //   final verifiedUrl = await MemoVerifier(imgur).verifyAndBuildImgurUrl();
+  //   if (verifiedUrl == MemoVerificationResponse.noImageNorVideo.toString()) {
+  //     return verifiedUrl;
+  //   }
+  //
+  //   final accountant = ref.read(memoAccountantProvider);
+  //   final response = await accountant.profileSetAvatar(verifiedUrl);
+  //
+  //   switch (response) {
+  //     case MemoAccountantResponse.yes:
+  //       final updatedCreator = user.creator.copyWith(profileImgurUrl: verifiedUrl);
+  //       await saveToCache(updatedCreator, saveToFirebase: true);
+  //       return "success";
+  //     case MemoAccountantResponse.noUtxo:
+  //     case MemoAccountantResponse.lowBalance:
+  //     case MemoAccountantResponse.dust:
+  //       return MemoAccountantResponse.lowBalance;
+  //     case MemoAccountantResponse.connectionError:
+  //       // TODO: Handle this case.
+  //       throw UnimplementedError();
+  //     case MemoAccountantResponse.insufficientBalanceForIpfs:
+  //       // TODO: Handle this case.
+  //       throw UnimplementedError();
+  //   }
+  // }
 
   // --- CACHE MANAGEMENT UTILITIES ---
 

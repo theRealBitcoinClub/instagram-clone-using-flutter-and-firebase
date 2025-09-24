@@ -5,6 +5,7 @@ import 'package:mahakka/repositories/creator_repository.dart';
 import 'package:mahakka/resources/auth_method.dart';
 
 import '../memo/firebase/user_service.dart';
+import '../memo/model/memo_model_creator.dart';
 
 // State class for user
 class UserState {
@@ -33,44 +34,79 @@ class UserNotifier extends StateNotifier<UserState> {
   final AuthChecker _authChecker;
   final Ref ref;
 
-  Future<String> updateTipReceiver(TipReceiver newReceiver) async {
+  // Future<String> updateTipReceiver(TipReceiver newReceiver) async {
+  //   if (state.user == null) return "user state is null";
+  //
+  //   try {
+  //     final updatedUser = state.user!.copyWith(tipReceiver: newReceiver);
+  //
+  //     // Save to Firebase
+  //     final userService = UserService();
+  //     await userService.saveUser(updatedUser);
+  //
+  //     // Update local state
+  //     state = state.copyWith(user: updatedUser);
+  //     return "success";
+  //   } catch (e) {
+  //     print("Error updating tip receiver: $e");
+  //     state = state.copyWith(error: "Failed to update tip receiver: $e");
+  //   }
+  //   return "fail updateTipReceiver";
+  // }
+  //
+  // Future<String> updateTipAmount(TipAmount newAmount) async {
+  //   if (state.user == null) return "user is null";
+  //
+  //   try {
+  //     final updatedUser = state.user!.copyWith(tipAmount: newAmount);
+  //
+  //     // Save to Firebase
+  //     final userService = UserService();
+  //     await userService.saveUser(updatedUser);
+  //
+  //     // Update local state
+  //     state = state.copyWith(user: updatedUser);
+  //     return "success";
+  //   } catch (e) {
+  //     print("Error updating tip amount: $e");
+  //     state = state.copyWith(error: "Failed to update tip amount: $e");
+  //   }
+  //   return "fail updateTipAmount";
+  // }
+
+  Future<String> updateTipSettings({TipReceiver? tipReceiver, TipAmount? tipAmount}) async {
     if (state.user == null) return "user state is null";
 
     try {
-      final updatedUser = state.user!.copyWith(tipReceiver: newReceiver);
+      var updatedUser = state.user!;
+      bool hasChanges = false;
 
-      // Save to Firebase
+      if (tipReceiver != null && tipReceiver != updatedUser.tipReceiver) {
+        updatedUser = updatedUser.copyWith(tipReceiver: tipReceiver);
+        hasChanges = true;
+      }
+
+      if (tipAmount != null && tipAmount != updatedUser.tipAmountEnum) {
+        updatedUser = updatedUser.copyWith(tipAmount: tipAmount);
+        hasChanges = true;
+      }
+
+      if (!hasChanges) {
+        return "no_changes";
+      }
+
+      // Single Firebase operation
       final userService = UserService();
       await userService.saveUser(updatedUser);
 
-      // Update local state
+      // Update local state once
       state = state.copyWith(user: updatedUser);
       return "success";
     } catch (e) {
-      print("Error updating tip receiver: $e");
-      state = state.copyWith(error: "Failed to update tip receiver: $e");
+      print("Error updating tip settings: $e");
+      state = state.copyWith(error: "Failed to update tip settings: $e");
+      return "fail: $e";
     }
-    return "fail updateTipReceiver";
-  }
-
-  Future<String> updateTipAmount(TipAmount newAmount) async {
-    if (state.user == null) return "user is null";
-
-    try {
-      final updatedUser = state.user!.copyWith(tipAmount: newAmount);
-
-      // Save to Firebase
-      final userService = UserService();
-      await userService.saveUser(updatedUser);
-
-      // Update local state
-      state = state.copyWith(user: updatedUser);
-      return "success";
-    } catch (e) {
-      print("Error updating tip amount: $e");
-      state = state.copyWith(error: "Failed to update tip amount: $e");
-    }
-    return "fail updateTipAmount";
   }
 
   Future<void> refreshUser(bool freshScrapeCreatorData) async {
@@ -142,6 +178,18 @@ class UserNotifier extends StateNotifier<UserState> {
       print("Error adding IPFS URL: $e");
       state = state.copyWith(error: "Failed to add IPFS URL: $e");
       return "fail addIpfsUrl";
+    }
+  }
+
+  Future<void> updateCreatorProfile(MemoModelCreator updatedCreator) async {
+    if (state.user == null) return;
+
+    try {
+      final updatedUser = state.user!.copyWith(creator: updatedCreator);
+      state = state.copyWith(user: updatedUser);
+    } catch (e) {
+      print("Error updating creator profile in user state: $e");
+      state = state.copyWith(error: "Failed to update creator profile: $e");
     }
   }
 }

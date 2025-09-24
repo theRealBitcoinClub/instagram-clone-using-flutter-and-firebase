@@ -348,12 +348,95 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     _saveProfile(() => Navigator.of(context).pop(), () => showSnackBar(type: SnackbarType.error, "Failed to save profile.", context));
   }
 
+  // void _saveProfile(Function onSuccess, Function onFail) async {
+  //   setState(() => isSavingProfile = true);
+  //
+  //   try {
+  //     final creatorRepo = ref.read(creatorRepositoryProvider);
+  //     final user = ref.read(userProvider);
+  //     if (user == null) {
+  //       onFail();
+  //       return;
+  //     }
+  //
+  //     final newName = _profileNameCtrl.text.trim();
+  //     final newText = _profileTextCtrl.text.trim();
+  //     final newImgurUrl = _imgurCtrl.text.trim();
+  //
+  //     final updates = <String, Future<dynamic>>{};
+  //     bool changesMade = false;
+  //
+  //     // Profile updates
+  //     if (newName.isNotEmpty && newName != creator.name) {
+  //       updates['name'] = creatorRepo.profileSetName(newName, user);
+  //       changesMade = true;
+  //     }
+  //     if (newText != creator.profileText) {
+  //       updates['text'] = creatorRepo.profileSetText(newText, user);
+  //       changesMade = true;
+  //     }
+  //     if (newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl) {
+  //       updates['avatar'] = creatorRepo.profileSetAvatar(newImgurUrl, user);
+  //       changesMade = true;
+  //     }
+  //
+  //     // Tip settings updates
+  //     if (_selectedTipReceiver != null && _selectedTipReceiver != user.tipReceiver) {
+  //       updates['tip_receiver'] = ref.read(userNotifierProvider.notifier).updateTipReceiver(_selectedTipReceiver!);
+  //       changesMade = true;
+  //     }
+  //
+  //     if (_selectedTipAmount != null && _selectedTipAmount != user.tipAmountEnum) {
+  //       updates['tip_amount'] = ref.read(userNotifierProvider.notifier).updateTipAmount(_selectedTipAmount!);
+  //       changesMade = true;
+  //     }
+  //
+  //     if (!changesMade) {
+  //       showSnackBar(type: SnackbarType.info, "No changes to save. 🤔", context);
+  //       return;
+  //     }
+  //
+  //     final results = await Future.wait(
+  //       updates.entries.map((entry) async {
+  //         final result = await entry.value;
+  //         return MapEntry(entry.key, result);
+  //       }),
+  //     );
+  //
+  //     final failedUpdates = results.where((e) => e.value != "success").map((e) => '${e.key}: ${e.value}').toList();
+  //
+  //     if (failedUpdates.isNotEmpty) {
+  //       final failMessage = failedUpdates.join(', ');
+  //       showSnackBar(type: SnackbarType.info, "Update failed for: $failMessage", context);
+  //       onFail();
+  //     } else {
+  //       showSnackBar(type: SnackbarType.success, "Profile updated successfully! ✨", context);
+  //       MemoConfetti().launch(context);
+  //
+  //       // Refresh user data
+  //       ref.read(userProvider)!.temporaryTipReceiver = null;
+  //       ref.read(userProvider)!.temporaryTipAmount = null;
+  //       ref.invalidate(userProvider);
+  //       ref.invalidate(profileDataProvider); // Changed from profileCreatorStateProvider
+  //
+  //       onSuccess();
+  //     }
+  //   } catch (e) {
+  //     showSnackBar(type: SnackbarType.error, "Profile update failed: $e", context);
+  //     onFail();
+  //   } finally {
+  //     setState(() => isSavingProfile = false);
+  //   }
+  // }
+
   void _saveProfile(Function onSuccess, Function onFail) async {
     setState(() => isSavingProfile = true);
 
     try {
       final creatorRepo = ref.read(creatorRepositoryProvider);
+      final userNotifier = ref.read(userNotifierProvider.notifier);
       final user = ref.read(userProvider);
+
       if (user == null) {
         onFail();
         return;
@@ -363,63 +446,79 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       final newText = _profileTextCtrl.text.trim();
       final newImgurUrl = _imgurCtrl.text.trim();
 
-      final updates = <String, Future<dynamic>>{};
-      bool changesMade = false;
+      // Check if any changes were actually made
+      final bool hasProfileChanges =
+          (newName.isNotEmpty && newName != creator.name) ||
+          (newText != creator.profileText) ||
+          (newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl);
 
-      // Profile updates
-      if (newName.isNotEmpty && newName != creator.name) {
-        updates['name'] = creatorRepo.profileSetName(newName, user);
-        changesMade = true;
-      }
-      if (newText != creator.profileText) {
-        updates['text'] = creatorRepo.profileSetText(newText, user);
-        changesMade = true;
-      }
-      if (newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl) {
-        updates['avatar'] = creatorRepo.profileSetAvatar(newImgurUrl, user);
-        changesMade = true;
-      }
+      final bool hasTipChanges =
+          (_selectedTipReceiver != null && _selectedTipReceiver != user.tipReceiver) ||
+          (_selectedTipAmount != null && _selectedTipAmount != user.tipAmountEnum);
 
-      // Tip settings updates
-      if (_selectedTipReceiver != null && _selectedTipReceiver != user.tipReceiver) {
-        updates['tip_receiver'] = ref.read(userNotifierProvider.notifier).updateTipReceiver(_selectedTipReceiver!);
-        changesMade = true;
-      }
-
-      if (_selectedTipAmount != null && _selectedTipAmount != user.tipAmountEnum) {
-        updates['tip_amount'] = ref.read(userNotifierProvider.notifier).updateTipAmount(_selectedTipAmount!);
-        changesMade = true;
-      }
-
-      if (!changesMade) {
+      if (!hasProfileChanges && !hasTipChanges) {
         showSnackBar(type: SnackbarType.info, "No changes to save. 🤔", context);
         return;
       }
 
-      final results = await Future.wait(
-        updates.entries.map((entry) async {
-          final result = await entry.value;
-          return MapEntry(entry.key, result);
-        }),
-      );
+      // Execute updates
+      final results = await Future.wait([
+        if (hasProfileChanges)
+          creatorRepo.updateProfile(
+            user: user,
+            name: newName.isNotEmpty && newName != creator.name ? newName : null,
+            text: newText != creator.profileText ? newText : null,
+            avatar: newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl ? newImgurUrl : null,
+          ),
+        if (hasTipChanges) userNotifier.updateTipSettings(tipReceiver: _selectedTipReceiver, tipAmount: _selectedTipAmount),
+      ], eagerError: false);
 
-      final failedUpdates = results.where((e) => e.value != "success").map((e) => '${e.key}: ${e.value}').toList();
+      // Process results with partial success handling
+      final Map<String, dynamic> profileResult = hasProfileChanges ? results[0] as Map<String, dynamic> : {'result': "no_changes"};
+      final tipResult = hasTipChanges ? results[hasProfileChanges ? 1 : 0] : "no_changes";
 
-      if (failedUpdates.isNotEmpty) {
-        final failMessage = failedUpdates.join(', ');
-        showSnackBar(type: SnackbarType.info, "Update failed for: $failMessage", context);
-        onFail();
-      } else {
-        showSnackBar(type: SnackbarType.success, "Profile updated successfully! ✨", context);
-        MemoConfetti().launch(context);
+      final bool profileSuccess = profileResult['result'] == "success" || profileResult['result'].toString().startsWith("partial_success");
+      final bool tipSuccess = tipResult == "success";
 
-        // Refresh user data
+      if (profileSuccess || tipSuccess) {
+        // Update user state with new creator data if profile was updated
+        if (hasProfileChanges && profileResult.containsKey('updatedCreator')) {
+          // Option 1: If you added the updateCreatorProfile method to UserNotifier
+          await userNotifier.updateCreatorProfile(profileResult['updatedCreator']);
+
+          // Option 2: Alternatively, you can refresh the entire user
+          // await userNotifier.refreshUser(false);
+        }
+
+        // Show appropriate success message
+        if (profileResult['result'].toString().startsWith("partial_success")) {
+          showSnackBar(type: SnackbarType.info, "Profile partially updated: ${profileResult['result']}", context);
+        } else if (profileSuccess && tipSuccess) {
+          showSnackBar(type: SnackbarType.success, "Profile updated successfully! ✨", context);
+          MemoConfetti().launch(context);
+        } else if (profileSuccess) {
+          showSnackBar(type: SnackbarType.success, "Profile updated successfully! ✨", context);
+        } else if (tipSuccess) {
+          showSnackBar(type: SnackbarType.success, "Tip settings updated successfully! ✨", context);
+        }
+
+        // Clear temporary values
         ref.read(userProvider)!.temporaryTipReceiver = null;
         ref.read(userProvider)!.temporaryTipAmount = null;
+
+        // Invalidate providers to refresh data
         ref.invalidate(userProvider);
-        ref.invalidate(profileDataProvider); // Changed from profileCreatorStateProvider
+        ref.invalidate(profileDataProvider);
 
         onSuccess();
+      } else {
+        // Complete failure
+        final failMessage = [
+          if (hasProfileChanges) "profile: ${profileResult['result']}",
+          if (hasTipChanges) "tip settings: $tipResult",
+        ].join(', ');
+        showSnackBar(type: SnackbarType.error, "Update failed: $failMessage", context);
+        onFail();
       }
     } catch (e) {
       showSnackBar(type: SnackbarType.error, "Profile update failed: $e", context);

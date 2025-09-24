@@ -28,6 +28,11 @@ enum MemoAccountantResponse {
 
   const MemoAccountantResponse(this.message);
   final String message;
+
+  static String messageFromName(String name) {
+    final cleanName = name.replaceAll('MemoAccountantResponse.', '');
+    return MemoAccountantResponse.values.byName(cleanName).message;
+  }
 }
 
 // Request types for the queue

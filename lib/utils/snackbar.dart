@@ -13,16 +13,16 @@ enum SnackbarType {
   const SnackbarType({required this.duration, required this.backgroundColor, required this.icon});
 }
 
-void showSnackBar(String content, BuildContext context, {required SnackbarType type}) {
-  context.showSnackBar(content, type: type);
+void showSnackBar(String content, BuildContext context, {required SnackbarType type, bool wait = false}) {
+  context.showSnackBar(content, type: type, wait: wait);
 }
 
 extension SnackBarExtensions on BuildContext {
   // Alternative version with floating behavior
-  void showSnackBar(String content, {required SnackbarType type}) {
+  void showSnackBar(String content, {required SnackbarType type, wait = false}) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(this).clearSnackBars();
+    if (!wait) ScaffoldMessenger.of(this).clearSnackBars();
     content = content.toUpperCase();
 
     final backgroundColor = type.backgroundColor;

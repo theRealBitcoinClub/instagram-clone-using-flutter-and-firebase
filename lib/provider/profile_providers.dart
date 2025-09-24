@@ -136,7 +136,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     try {
       // Load creator from repository
       final creatorRepo = ref.read(creatorRepositoryProvider);
-      final creator = await creatorRepo.getCreator(profileId, scrapeIfNotFound: false, saveToFirebase: false, forceScrape: forceScrape);
+      final creator = await creatorRepo.getCreator(profileId, saveToFirebase: false, forceScrape: forceScrape);
 
       // Load posts
       final posts = await _loadPosts(profileId);

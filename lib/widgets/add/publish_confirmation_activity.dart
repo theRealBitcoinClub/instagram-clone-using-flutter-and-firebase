@@ -266,7 +266,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(user.creator.profileIdShort, style: textTheme.titleSmall?.copyWith(color: colorScheme.onPrimary)),
+            Text(user.profileIdShort, style: textTheme.titleSmall?.copyWith(color: colorScheme.onPrimary)),
             Text(_getTipAmountDisplay(temporaryTipAmount), style: textTheme.bodySmall?.copyWith(color: colorScheme.onPrimary.withOpacity(0.8))),
           ],
         ),

@@ -7,14 +7,14 @@ import 'package:mahakka/memo_data_checker.dart';
 import 'package:mahakka/screens/add_post_controller.dart';
 
 enum MemoVerificationResponse {
-  valid(""),
+  valid("Successfully validated!"),
   moreThanThreeTags("Please remove one tag"),
   // zeroTags("Add at least one visible #tag."),
   noTopicNorTag("Must include @topic or #tag."),
   moreThanOneTopic("Only one @topic allowed"),
   tooLong("Text + media Url is too long."),
   tooLongMediaUrl("Media Url is too long."),
-  tooShort("Too short. Tags count towards length."),
+  tooShort("Too short!"),
   minWordCountNotReached("Write more words."),
   offensiveWords("Offensive words detected."),
   email("Email not allowed."),
@@ -23,6 +23,11 @@ enum MemoVerificationResponse {
 
   const MemoVerificationResponse(this.message);
   final String message;
+
+  static String memoVerificationMessageFromName(String name) {
+    final cleanName = name.replaceAll('MemoVerificationResponse.', '');
+    return MemoVerificationResponse.values.byName(cleanName).message;
+  }
 }
 
 class MemoVerifier {

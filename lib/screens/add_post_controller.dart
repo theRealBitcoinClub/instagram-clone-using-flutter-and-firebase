@@ -147,7 +147,7 @@ class AddPostController extends StateNotifier<void> {
       tagIds: MemoRegExp.extractHashtags(textContent),
       topicId: topic ?? "",
       topic: topic != null ? MemoModelTopic(id: topic) : null,
-      creator: ref.read(userProvider)!.creator,
+      // creator: ref.read(userProvider)!.creator,
       creatorId: ref.read(userProvider)!.id,
     );
   }

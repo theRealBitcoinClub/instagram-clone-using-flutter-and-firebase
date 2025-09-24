@@ -56,6 +56,7 @@ enum TipAmount {
 
 @JsonSerializable()
 class MemoModelUser {
+  String get profileIdShort => id.substring(1, 5);
   String id;
   @JsonKey(name: 'bchAddressCashTokenAware')
   String bchAddressCashtokenAware;
@@ -77,8 +78,8 @@ class MemoModelUser {
   late ECPrivate pkBchCashtoken;
   @JsonKey(includeFromJson: false, includeToJson: false)
   late ECPrivate pkLegacy;
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  late MemoModelCreator creator;
+  // @JsonKey(includeFromJson: false, includeToJson: false)
+  // late MemoModelCreator creator;
   @JsonKey(includeFromJson: false, includeToJson: false)
   late String mnemonic;
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -133,7 +134,7 @@ class MemoModelUser {
     user.wifLegacy = pkLegacy.toWif();
     user.wifBchCashtoken = pkBchCashtoken.toWif();
     user.hasInit = true;
-    user.creator = MemoModelCreator(id: userId, name: userId, hasRegisteredAsUser: true);
+    // user.creator = MemoModelCreator(id: userId, name: userId, hasRegisteredAsUser: true);
 
     return user;
   }
@@ -168,7 +169,7 @@ class MemoModelUser {
     TipAmount tipAmount = TipAmount.survival,
     required this.pkBchCashtoken,
     required this.pkLegacy,
-    required this.creator,
+    // required this.creator,
     required this.wifBchCashtoken,
     required this.wifLegacy,
     required this.hasInit,
@@ -203,7 +204,7 @@ class MemoModelUser {
         tipAmount: tipAmount ?? this._tipAmount,
         pkBchCashtoken: pkBchCashtoken ?? this.pkBchCashtoken,
         pkLegacy: pkLegacy ?? this.pkLegacy,
-        creator: creator ?? this.creator,
+        // creator: creator ?? this.creator,
         mnemonic: mnemonic ?? this.mnemonic,
         wifBchCashtoken: wifBchCashtoken ?? this.wifBchCashtoken,
         wifLegacy: wifLegacy ?? this.wifLegacy,
@@ -227,7 +228,7 @@ class MemoModelUser {
         _tipAmount == other._tipAmount &&
         temporaryTipAmount == other.temporaryTipAmount &&
         temporaryTipReceiver == other.temporaryTipReceiver &&
-        creator == other.creator &&
+        // creator == other.creator &&
         hasInit == other.hasInit &&
         ipfsCids.length == other.ipfsCids.length &&
         ipfsCids.every((url) => other.ipfsCids.contains(url));
@@ -244,7 +245,7 @@ class MemoModelUser {
       _tipAmount,
       temporaryTipAmount,
       temporaryTipReceiver,
-      creator,
+      // creator,
       hasInit,
       Object.hashAll(ipfsCids),
     );

@@ -2,9 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/utils/snackbar.dart';
+import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/bch/mnemonic_backup_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -398,7 +400,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   }
 
   void _onSavePressed() {
-    _saveProfile(() => Navigator.of(context).pop(), () => showSnackBar(type: SnackbarType.error, "Failed to save profile.", context));
+    _saveProfile(() => Navigator.of(context).pop(), () {});
   }
 
   void _saveProfile(Function onSuccess, Function onFail) async {
@@ -413,28 +415,28 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       // final creatorAsync = ref.read(settingsCreatorProvider(user.id));
       final creatorAsync = ref.read(profileDataProvider);
 
-      final creator = creatorAsync.value!.creator ?? user.creator;
+      MemoModelCreator creator = creatorAsync.value!.creator!; // ?? user.creator;
 
       final newName = _profileNameCtrl.text.trim();
       final newText = _profileTextCtrl.text.trim();
       final newImgurUrl = _imgurCtrl.text.trim();
 
       var hasChangedImgur = newImgurUrl.isNotEmpty && newImgurUrl != creator.profileImgurUrl;
-      final bool hasProfileChanges = (newName.isNotEmpty && newName != creator.name) || (newText != creator.profileText) || (hasChangedImgur);
+      final bool hasTextInputChanges = (newName.isNotEmpty && newName != creator.name) || (newText != creator.profileText) || (hasChangedImgur);
 
       final bool hasTipChanges =
           (_selectedTipReceiver != null && _selectedTipReceiver != user.tipReceiver) ||
           (_selectedTipAmount != null && _selectedTipAmount != user.tipAmountEnum);
 
-      if (!hasProfileChanges && !hasTipChanges) {
+      if (!hasTextInputChanges && !hasTipChanges) {
         showSnackBar(type: SnackbarType.info, "No changes to save. 🤔", context);
         return;
       }
 
       final results = await Future.wait([
-        if (hasProfileChanges)
+        if (hasTextInputChanges)
           creatorRepo.updateProfile(
-            user: user,
+            creator: creator,
             name: newName.isNotEmpty && newName != creator.name ? newName : null,
             text: newText != creator.profileText ? newText : null,
             avatar: hasChangedImgur ? newImgurUrl : null,
@@ -442,14 +444,15 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         if (hasTipChanges) userNotifier.updateTipSettings(tipReceiver: _selectedTipReceiver, tipAmount: _selectedTipAmount),
       ], eagerError: false);
 
-      final Map<String, dynamic> profileResult = hasProfileChanges ? results[0] as Map<String, dynamic> : {'result': "no_changes"};
-      final tipResult = hasTipChanges ? results[hasProfileChanges ? 1 : 0] : "no_changes";
+      final Map<String, dynamic> profileResult = hasTextInputChanges ? results[0] as Map<String, dynamic> : {'result': "no_changes"};
+      final tipResult = hasTipChanges ? results[hasTextInputChanges ? 1 : 0] : "no_changes";
 
-      final bool profileSuccess = profileResult['result'] == "success" || profileResult['result'].toString().startsWith("partial_success");
-      final bool tipSuccess = tipResult == "success";
+      final bool profileUpdateSuccess =
+          profileResult['result'] == "success" || profileResult['result'].toString().startsWith("partial_success");
+      final bool tipsUpdateSuccess = tipResult == "success";
 
-      if (profileSuccess || tipSuccess) {
-        if (hasProfileChanges && profileResult.containsKey('updatedCreator')) {
+      if (profileUpdateSuccess || tipsUpdateSuccess) {
+        if (hasTextInputChanges && profileResult.containsKey('updatedCreator')) {
           await userNotifier.updateCreatorProfile(profileResult['updatedCreator']);
 
           if (hasChangedImgur) {
@@ -458,14 +461,16 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         }
 
         if (profileResult['result'].toString().startsWith("partial_success")) {
-          showSnackBar(type: SnackbarType.info, "Profile partially updated: ${profileResult['result']}", context);
-        } else if (profileSuccess && tipSuccess) {
+          showSnackBar(type: SnackbarType.info, "Partially updated: ${profileResult['result']}", context);
+        } else if (profileUpdateSuccess && tipsUpdateSuccess) {
+          showSnackBar(type: SnackbarType.success, "Profile & Tips updated successfully! ✨", context);
+          MemoConfetti().launch(context);
+        } else if (profileUpdateSuccess) {
           showSnackBar(type: SnackbarType.success, "Profile updated successfully! ✨", context);
           MemoConfetti().launch(context);
-        } else if (profileSuccess) {
-          showSnackBar(type: SnackbarType.success, "Profile updated successfully! ✨", context);
-        } else if (tipSuccess) {
-          showSnackBar(type: SnackbarType.success, "Tip settings updated successfully! ✨", context);
+        } else if (tipsUpdateSuccess) {
+          showSnackBar(type: SnackbarType.success, "Tips updated successfully! ✨", context);
+          MemoConfetti().launch(context);
         }
 
         user.temporaryTipReceiver = null;
@@ -476,15 +481,34 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
         onSuccess();
       } else {
-        final failMessage = [
-          if (hasProfileChanges) "profile: ${profileResult['result']}",
-          if (hasTipChanges) "tip settings: $tipResult",
-        ].join(', ');
-        showSnackBar(type: SnackbarType.error, "Update failed: $failMessage", context);
+        // final failMessage = [
+        //   if (hasTextInputChanges) "profile: ${profileResult['result']}",
+        //   if (hasTipChanges) "tip settings: $tipResult",
+        // ].join(', ');
+        if (hasTextInputChanges) {
+          try {
+            String msg = MemoVerificationResponse.memoVerificationMessageFromName(profileResult['result']);
+            showSnackBar(type: SnackbarType.error, "Profile: $msg", context);
+          } catch (e) {
+            showQrCodeDialog(context: context, memoOnly: true, user: user);
+            showSnackBar("Add funds to your balance!", context, type: SnackbarType.error);
+            showSnackBar(wait: true, "Name, text and image are stored on-chain, that costs tx fee!", context, type: SnackbarType.info);
+          }
+          // try {
+          //   String msgAccountant = MemoAccountantResponse.messageFromName(profileResult['failedChanges']);
+          //   showSnackBar(type: SnackbarType.error, "Profile: $msgAccountant", context);
+          // } catch (e) {}
+        }
+        // if (hasTipChanges) {
+        //   try {
+        //     String msgVerifier = MemoVerificationResponse.memoVerificationMessageFromName(tipResult.toString());
+        //     showSnackBar(type: SnackbarType.error, "Tips: $msgVerifier", context);
+        //   } catch (e) {}
+        // }
         onFail();
       }
     } catch (e) {
-      showSnackBar(type: SnackbarType.error, "Profile update failed: $e", context);
+      showSnackBar(type: SnackbarType.error, "Profile/Tips failed: $e", context);
       onFail();
     } finally {
       setState(() {

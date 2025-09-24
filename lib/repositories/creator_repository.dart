@@ -9,7 +9,6 @@ import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/isar/memo_model_creator_db.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
-import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/scraper/memo_creator_scraper.dart';
 import 'package:mahakka/provider/isar_provider.dart';
 
@@ -109,7 +108,6 @@ class CreatorRepository {
 
   Future<MemoModelCreator?> getCreator(
     String creatorId, {
-    bool scrapeIfNotFound = true,
     bool saveToFirebase = false,
     bool forceScrape = false,
     bool useCache = true, // New parameter to control cache usage
@@ -122,34 +120,25 @@ class CreatorRepository {
       }
     }
 
-    // Step 2: Try Firebase (unless forced to scrape)
-    if (!forceScrape) {
-      final firebaseCreator = await ref.read(creatorServiceProvider).getCreatorOnce(creatorId);
-      if (firebaseCreator != null) {
-        print("INFO: Fetched creator $creatorId from Firebase. Saving to cache.");
-        await saveToCache(firebaseCreator, saveToFirebase: false); // Already in Firebase
-        return firebaseCreator;
-      }
+    var resultCreator = MemoModelCreator(id: creatorId, name: "Loading...");
+
+    final firebaseCreator = await ref.read(creatorServiceProvider).getCreatorOnce(creatorId);
+    if (firebaseCreator != null) {
+      print("INFO: Fetched creator $creatorId from Firebase. Saving to cache.");
+      await saveToCache(firebaseCreator, saveToFirebase: false); // Already in Firebase
+      resultCreator = firebaseCreator;
     }
 
-    // Step 3: Scrape if requested or nothing found
-    if (scrapeIfNotFound || forceScrape) {
+    if (firebaseCreator == null || forceScrape) {
       print("INFO: Fetching fresh data for creator $creatorId from scraper.");
       final scrapedCreator = await _getFreshScrapedCreator(creatorId);
-
       if (scrapedCreator != null) {
-        print("INFO: Scraped fresh data for creator $creatorId. Saving to all storage layers.");
-        await saveToCache(scrapedCreator, saveToFirebase: saveToFirebase);
-        return scrapedCreator;
+        resultCreator = resultCreator.copyWith(profileText: scrapedCreator.profileText, name: scrapedCreator.name);
+        await saveToCache(resultCreator, saveToFirebase: saveToFirebase);
       }
     }
 
-    // Step 4: Fallback - create minimal creator
-    print("WARNING: Could not find creator $creatorId. Creating minimal creator.");
-    final minimalCreator = MemoModelCreator(id: creatorId, name: "Loading...");
-    //TODO CHECK IF IT MAKES SENSE TO EVER SAVE THIS MINIMAL CREATOR, I DONT THINK SO
-    // await saveToCache(minimalCreator, saveToFirebase: false); // Don't save minimal to Firebase
-    return minimalCreator;
+    return resultCreator;
   }
 
   Future<String?> refreshAndCacheAvatar(String creatorId, {bool forceRefreshAfterProfileUpdate = false, String? forceImageType}) async {
@@ -212,9 +201,9 @@ class CreatorRepository {
     }
   }
 
-  Future<Map<String, dynamic>> updateProfile({required MemoModelUser user, String? name, String? text, String? avatar}) async {
+  Future<Map<String, dynamic>> updateProfile({required MemoModelCreator creator, String? name, String? text, String? avatar}) async {
     try {
-      final creator = user.creator;
+      // final creator = user.creator;
       MemoModelCreator updatedCreator = creator;
       bool hasChanges = false;
 
@@ -256,12 +245,12 @@ class CreatorRepository {
 
       if (avatar != null && avatar != creator.profileImgurUrl) {
         await Future.delayed(Duration(seconds: 2));
-        final verifiedUrl = await MemoVerifier(avatar).verifyAndBuildImgurUrl();
-        if (verifiedUrl == MemoVerificationResponse.noImageNorVideo.toString()) {
-          return {'result': verifiedUrl};
+        avatar = await MemoVerifier(avatar).verifyAndBuildImgurUrl();
+        if (avatar == MemoVerificationResponse.noImageNorVideo.toString()) {
+          return {'result': avatar};
         }
 
-        final result = await _updateAvatarOnBlockchain(verifiedUrl);
+        final result = await _updateAvatarOnBlockchain(avatar);
         if (result == MemoAccountantResponse.yes) {
           successfulChanges['avatar'] = true;
           hasChanges = true;

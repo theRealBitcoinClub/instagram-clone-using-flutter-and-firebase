@@ -75,7 +75,6 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
         .read(creatorRepositoryProvider)
         .getCreator(
           widget.creatorId,
-          scrapeIfNotFound: false,
           saveToFirebase: false, // Never save to Firebase from here
         );
   }

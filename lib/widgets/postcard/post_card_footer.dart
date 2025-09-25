@@ -51,6 +51,10 @@ class PostCardFooter extends StatelessWidget {
     final MediaQueryData mediaQuery = MediaQuery.of(context);
     final bool isKeyboardVisible = mediaQuery.viewInsets.bottom > 0;
 
+    if (post.text != null && post.text!.isNotEmpty && post.hasMedia) {
+      post.text = post.text!.replaceAll(post.mediaUrl, "");
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Column(

@@ -387,6 +387,8 @@ class _PostCardState extends ConsumerState<PostCard> {
   void _onSelectTopic() {
     if (!mounted) return;
     setState(() {
+      if (widget.post.topicId.startsWith("@")) widget.post.topicId = widget.post.topicId.substring(1);
+
       _hasSelectedTopic = !_hasSelectedTopic;
       if (_hasSelectedTopic) {
         _textEditController.text = "@${widget.post.topicId} ${_textEditController.text}";

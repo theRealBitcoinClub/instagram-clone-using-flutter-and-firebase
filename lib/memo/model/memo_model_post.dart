@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart'; // For Timestamp and DocumentSnapshot
 import 'package:json_annotation/json_annotation.dart';
+import 'package:mahakka/config_ipfs.dart';
 import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
@@ -241,6 +242,15 @@ class MemoModelPost {
         (videoUrl != null && videoUrl!.isNotEmpty) ||
         (ipfsCid != null && ipfsCid!.isNotEmpty) ||
         (youtubeId != null && youtubeId!.isNotEmpty);
+  }
+
+  String get mediaUrl {
+    if (imageUrl != null && imageUrl!.isNotEmpty) return imageUrl!;
+    if (imgurUrl != null && imgurUrl!.isNotEmpty) return imgurUrl!;
+    if (videoUrl != null && videoUrl!.isNotEmpty) return videoUrl!;
+    if (ipfsCid != null && ipfsCid!.isNotEmpty) return IpfsConfig.preferredNode + ipfsCid!;
+    if (youtubeId != null && youtubeId!.isNotEmpty) return "https://youtu.be/$youtubeId";
+    return "";
   }
 
   static String restoreMediaUrlsCase(MemoModelPost post, String textToBeRestored) {

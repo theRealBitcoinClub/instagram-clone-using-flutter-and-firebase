@@ -42,17 +42,17 @@ class SearchResultBox extends ConsumerWidget {
 
     switch (state.activeView) {
       case SearchResultView.topics:
-        return TaggerTopicListView(tagController: tagController, topics: state.topics);
+        return TaggerTopicListView(tagController: tagController, topics: state.topics, searchState: state);
       case SearchResultView.hashtag:
-        return TaggerHashtagListView(tagController: tagController, hashtags: state.hashtags);
+        return TaggerHashtagListView(tagController: tagController, hashtags: state.hashtags, searchState: state);
       case SearchResultView.hintText:
         return Container(
           alignment: Alignment.center,
-          padding: const EdgeInsets.all(32.0),
+          padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
           child: Center(
             child: Text(
-              "Write @ to attach a post to any topic or # to add hashtags to your post, you can post to one topic and add up to three hashtags",
-              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              "Write @ to attach a post to any @topic or # to add #hashtags to your post. You can post to one topic and/or add up to three hashtags",
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, letterSpacing: 1.2),
             ),
           ),
         );

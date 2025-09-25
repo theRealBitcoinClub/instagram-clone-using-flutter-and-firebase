@@ -1,91 +1,88 @@
+// widgets/hashtag_list_view.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
-import 'package:mahakka/views_taggable/taggable_providers.dart';
 import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
 import 'package:mahakka/views_taggable/widgets/loading_indicator.dart';
 import 'package:mahakka/widgets/hashtag_display_widget.dart';
 
+import '../../base_scrollable_list_view.dart';
 import '../../custom_flutter_tagger_controller.dart';
 
-class TaggerHashtagListView extends ConsumerWidget {
-  const TaggerHashtagListView({Key? key, required this.tagController, required this.hashtags}) : super(key: key);
-
+class TaggerHashtagListView extends BaseScrollableListView {
   final CustomFlutterTaggerController tagController;
-  // final AnimationController animationController;
   final List<MemoModelTag> hashtags;
+  final SearchState searchState;
+
+  const TaggerHashtagListView({Key? key, required this.tagController, required this.hashtags, required this.searchState}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-    final searchState = ref.watch(searchViewModelProvider);
+  ConsumerState<TaggerHashtagListView> createState() => _TaggerHashtagListViewState();
+}
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: Column(children: [Expanded(child: _buildContent(searchState, theme, colorScheme, textTheme, ref))]),
+class _TaggerHashtagListViewState extends BaseScrollableListViewState<TaggerHashtagListView> {
+  @override
+  Widget buildContent(BuildContext context, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    return Wrap(
+      direction: Axis.horizontal,
+      alignment: WrapAlignment.start,
+      runAlignment: WrapAlignment.start,
+      spacing: 8.0,
+      runSpacing: 6.0,
+      children: widget.hashtags.map((hashtag) {
+        return GestureDetector(
+          onTap: () => _selectHashtag(hashtag),
+          child: Container(
+            decoration: HashtagDisplayWidget.borderDecoration(isSelected: true, theme: theme),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+              child: Text("#${hashtag.name}", style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface)),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
-  Widget _buildContent(SearchState state, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme, WidgetRef ref) {
-    if (state.isLoading && hashtags.isEmpty) {
-      return Center(heightFactor: 6, child: LoadingWidget());
-    }
-
-    if (!state.isLoading && hashtags.isEmpty) {
-      return Center(
-        heightFactor: 6,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            "Add or remove letters to match any existing #hashtag to maximize your outreach, unmatched tags automatically create new tags!",
-            style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
-            textAlign: TextAlign.center,
-          ),
+  @override
+  Widget buildEmptyState(BuildContext context, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    return Center(
+      heightFactor: 6,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: Text(
+          "Add or remove letters to match any existing #hashtag to maximize your outreach, unmatched tags automatically create new tags!",
+          style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 1.2),
+          textAlign: TextAlign.center,
         ),
-      );
-    }
-
-    if (hashtags.isNotEmpty) {
-      return SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-          width: double.infinity,
-          child: Wrap(
-            direction: Axis.horizontal,
-            alignment: WrapAlignment.start,
-            runAlignment: WrapAlignment.start,
-            spacing: 8.0,
-            runSpacing: 4.0,
-            children: hashtags.map((hashtag) {
-              return GestureDetector(
-                onTap: () => _selectHashtag(hashtag, ref),
-                child: Container(
-                  decoration: HashtagDisplayWidget.borderDecoration(isSelected: true, theme: theme),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                    child: Text("#${hashtag.name}", style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface)),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      );
-    }
-
-    return const SizedBox.shrink();
+      ),
+    );
   }
 
-  void _selectHashtag(MemoModelTag hashtag, WidgetRef ref) {
-    tagController.addTag(id: hashtag.id, name: hashtag.name);
+  @override
+  Widget buildLoadingState(BuildContext context, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    return Center(heightFactor: 6, child: LoadingWidget());
+  }
+
+  void _selectHashtag(MemoModelTag hashtag) {
+    widget.tagController.addTag(id: hashtag.id, name: hashtag.name);
     ref.read(searchViewModelProvider.notifier).clearSearch();
   }
 
-  bool hasSelectedTag(MemoModelTag hashtag, WidgetRef ref) {
-    return MemoRegExp.extractHashtags(ref.read(taggableControllerProvider).text).contains(hashtag.name);
+  @override
+  Widget build(BuildContext context) {
+    if (widget.searchState.isLoading && widget.hashtags.isEmpty) {
+      return buildLoadingState(context, Theme.of(context), Theme.of(context).colorScheme, Theme.of(context).textTheme);
+    }
+
+    if (!widget.searchState.isLoading && widget.hashtags.isEmpty) {
+      return buildEmptyState(context, Theme.of(context), Theme.of(context).colorScheme, Theme.of(context).textTheme);
+    }
+
+    if (widget.hashtags.isNotEmpty) {
+      return super.build(context);
+    }
+
+    return const SizedBox.shrink();
   }
 }

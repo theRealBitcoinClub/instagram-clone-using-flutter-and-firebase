@@ -309,14 +309,14 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                   child: Text(translatedText.isNotEmpty ? translatedText : widget.post.text!, style: textTheme.bodyLarge),
                 ),
               if (widget.post.urls.isNotEmpty) HashtagDisplayWidget(noBorder: true, hashtags: widget.post.urls, theme: theme),
-              if (widget.post.urls.isNotEmpty) const SizedBox(height: 12),
-              if (widget.post.tagIds.isNotEmpty) const SizedBox(height: 8),
+              if (widget.post.urls.isNotEmpty) const SizedBox(height: 8),
+              if (widget.post.urls.isEmpty && widget.post.tagIds.isEmpty) const SizedBox(height: 8),
               if (widget.post.tagIds.isNotEmpty) HashtagDisplayWidget(hashtags: widget.post.tagIds, theme: theme),
-              const SizedBox(height: 16),
+              if (widget.post.tagIds.isNotEmpty) const SizedBox(height: 8),
               _buildMediaPreview(theme, colorScheme, textTheme),
-              const SizedBox(height: 4),
+              const SizedBox(height: 0),
               TipInformationCard(post: widget.post),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(

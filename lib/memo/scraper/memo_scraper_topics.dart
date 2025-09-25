@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../firebase/post_service.dart';
 import '../firebase/topic_service.dart';
+import '../memo_reg_exp.dart';
 
 class MemoScraperTopic {
   /// Main entry point for scraping topics and their posts
@@ -306,6 +307,11 @@ class MemoScraperTopic {
 
     // Set up references and IDs
     MemoScraperUtil.linkReferencesAndSetId(post, topic, creator);
+
+    bool hasAtleastWhitelistedDomain = MemoRegExp(post.text!).hasAnyWhitelistedMediaUrl();
+    if (!hasAtleastWhitelistedDomain) {
+      post.text = TextFilter.replaceNonWhitelistedDomains(post.text!);
+    }
 
     return post;
   }

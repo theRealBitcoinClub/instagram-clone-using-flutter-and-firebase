@@ -36,7 +36,7 @@ extension PostTranslationReset on StateController<PostTranslation> {
 }
 
 extension PostTranslationUtils on PostTranslation {
-  MemoModelPost applyTranslationToPost({required MemoModelPost post, required ref}) {
+  MemoModelPost applyTranslationAndAppendMediaUrl({required MemoModelPost post, required ref}) {
     final useTranslation = targetLanguage != null && targetLanguage != originalLanguage;
     Language? lang = useTranslation ? targetLanguage! : originalLanguage ?? null;
     String languageFlag = lang != null ? lang.flag : "";

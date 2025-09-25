@@ -237,15 +237,13 @@ class MemoPostScraper {
     if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase())) && !post.hasImageMedia)
       return null;
 
-    post.text = post.text ?? "";
-
     try {
       // Alternatively, check if all URLs are whitelisted
       //TODO boost this post on feed
       bool hasOnlyWhitelistedUrls = MemoRegExp.hasOnlyWhitelistedUrls(post.urls);
 
       bool hasAtleastWhitelistedDomain = MemoRegExp(post.text!).hasAnyWhitelistedMediaUrl();
-      if (hasAtleastWhitelistedDomain) {
+      if (!hasAtleastWhitelistedDomain) {
         post.text = TextFilter.replaceNonWhitelistedDomains(post.text!);
       }
 

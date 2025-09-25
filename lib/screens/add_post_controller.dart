@@ -92,7 +92,9 @@ class AddPostController extends StateNotifier<void> {
       }
 
       final user = ref.read(userProvider)!;
-      MemoModelPost copyPost = ref.read(postTranslationProvider).applyTranslationToPost(post: post, ref: ref);
+      MemoModelPost copyPost = ref.read(postTranslationProvider).applyTranslationAndAppendMediaUrl(post: post, ref: ref);
+
+      copyPost.appendTagsTopicToText();
 
       //VERIFY AGAIN THAT TEXT FITS AFTER TRANSLATION
       verification = _handleVerification(copyPost.text!);
@@ -101,7 +103,7 @@ class AddPostController extends StateNotifier<void> {
         return;
       }
 
-      copyPost.appendUrlsTagsTopicToText();
+      copyPost.appendUrlsToText();
 
       final response = await ref.read(postRepositoryProvider).publishImageOrVideo(copyPost.text!, topic, validate: false);
 

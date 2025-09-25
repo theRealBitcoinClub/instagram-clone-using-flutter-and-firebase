@@ -375,12 +375,20 @@ class MemoModelPost {
   }
 
   void appendTopicToText() {
-    if (text != null) text = text! + " $topicId";
+    // if (!topicId.startsWith("@"))
+    //   topicId = "@" + topicId;
+
+    if (text != null) text = topicId! + " " + text!;
+  }
+
+  void appendTagsTopicToText() {
+    appendTagsToText();
+    appendTopicToText();
   }
 
   void appendUrlsTagsTopicToText() {
-    appendUrlsToText();
     appendTagsToText();
+    appendUrlsToText();
     appendTopicToText();
   }
 }

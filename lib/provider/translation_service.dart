@@ -11,18 +11,8 @@ final showOriginalTextProvider = StateProvider<bool>((ref) => true);
 class TranslationService {
   final GoogleTranslator translator = GoogleTranslator();
 
-  Future<String> translateText({required String text, String? from, required String to, List<String> excludePatterns = const []}) async {
+  Future<String> translateText({required String text, String? from, required String to}) async {
     try {
-      //TODO THE PATTERNS SHALL BE EXCLUDED FROM TRANSLATION, THEY SHALL BE CUT OUT FROM THE TEXT AND BE ATTACHED TO THE END IF THEY ARE HASHTAGS AND TO THE BEGINNING IF A TOPIC
-      //TODO FOR NOW WE EXPECT GOOGLE TRANSLATE TO SOLVE THAT BY ITSELF
-      //TODO IF ANY UNSUPPORTED LANGUAGE IS DETECTED LEAVE THE TEXT AS IS
-      // Check if text contains any excluded patterns
-      // for (final pattern in excludePatterns) {
-      //   if (text.contains(pattern)) {
-      //     return text; // Don't translate if it contains excluded pattern
-      //   }
-      // }
-
       final translation = await translator.translate(text, from: from ?? 'auto', to: to);
       return translation.text;
     } catch (e) {

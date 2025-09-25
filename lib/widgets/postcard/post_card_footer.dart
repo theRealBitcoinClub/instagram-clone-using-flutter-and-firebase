@@ -1,11 +1,11 @@
 import 'package:clipboard/clipboard.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 
+import '../../memo/base/memo_verifier.dart';
 import '../character_limited_textfield.dart';
 import '../hashtag_display_widget.dart';
 
@@ -48,6 +48,8 @@ class PostCardFooter extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     // Assuming creator null check is handled before this widget is built
     final creatorName = post.creator?.profileIdShort ?? "User"; // Fallback if creator is somehow null
+    final MediaQueryData mediaQuery = MediaQuery.of(context);
+    final bool isKeyboardVisible = mediaQuery.viewInsets.bottom > 0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -82,20 +84,26 @@ class PostCardFooter extends StatelessWidget {
           AnimatedGrowFadeIn(
             delay: const Duration(milliseconds: 200), // Optional: small delay
             show: showInput,
-            child: Column(
-              // Wrap your original content in a single child
-              mainAxisSize: MainAxisSize.min, // Important for Column to not take infinite height
-              // crossAxisAlignment: CrossAxisAlignment.start, // Or your desired alignment
-              children: [
-                CharacterLimitedTextField(
-                  controller: textEditController,
-                  maxLength: MemoVerifier.maxPostLength, // Set your desired character limit
-                  hintText: 'Write your reply...',
-                  onChanged: onInputText,
-                  normalTextStyle: theme.textTheme.bodyMedium,
-                  exceededTextStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error),
-                ),
-              ],
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 2, left: 4, right: 4, top: 8),
+              child:
+                  // TaggableInputWidget(onChanged: onInputText, onPublish: onSend),
+                  // ),
+                  Column(
+                    // Wrap your original content in a single child
+                    mainAxisSize: MainAxisSize.min, // Important for Column to not take infinite height
+                    // crossAxisAlignment: CrossAxisAlignment.start, // Or your desired alignment
+                    children: [
+                      CharacterLimitedTextField(
+                        controller: textEditController,
+                        maxLength: MemoVerifier.maxPostLength, // Set your desired character limit
+                        hintText: 'Write your reply...',
+                        onChanged: onInputText,
+                        normalTextStyle: theme.textTheme.bodyMedium,
+                        exceededTextStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error),
+                      ),
+                    ],
+                  ),
             ),
           ),
           if (post.topicId.isNotEmpty) ...[_buildTopicCheckBoxWidget(theme)],

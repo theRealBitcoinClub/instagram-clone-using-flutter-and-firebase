@@ -79,7 +79,7 @@ class AddPostController extends StateNotifier<void> {
       final topics = MemoRegExp.extractTopics(textContent);
       final topic = topics.isNotEmpty ? topics.first : "";
       final post = _createPostFromCurrentState(textContent, topic);
-      post.parseUrlsClearText();
+      post.parseUrlsTagsTopicClearText();
       //save ipfs cid whatever happens
       ref.read(userNotifierProvider.notifier).addIpfsUrlAndUpdate(ref.read(ipfsCidProvider));
 
@@ -101,7 +101,7 @@ class AddPostController extends StateNotifier<void> {
         return;
       }
 
-      copyPost.appendUrlsToText();
+      copyPost.appendUrlsTagsTopicToText();
 
       final response = await ref.read(postRepositoryProvider).publishImageOrVideo(copyPost.text!, topic, validate: false);
 

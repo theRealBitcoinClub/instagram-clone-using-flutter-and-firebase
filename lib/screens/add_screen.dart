@@ -70,21 +70,9 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
       },
     );
   }
-  //
-  // _dismissOverlay() {
-  //   // final animationController = ref.read(animationControllerNotifierProvider);
-  //   final tagController = ref.read(taggableControllerProvider);
-  //   // if (animationController != null) animationController.reverse();
-  //   tagController.dismissOverlay();
-  // }
 
   @override
   Widget build(BuildContext context) {
-    //   // Override the provider with our local controller
-    //   return ProviderScope(overrides: [animationControllerProvider.overrideWithValue(_animationController)], child: _buildContent(context));
-    // }
-    //
-    // Widget _buildContent(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
     final TextTheme textTheme = theme.textTheme;
@@ -95,9 +83,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
 
     return GestureDetector(
       onTap: () {
-        // _dismissOverlay();
-        // ref.read(taggableControllerProvider).dismissOverlay();
-        // ref.read(overlayDismissalProvider)();
         _unfocusNodes(context);
       },
       behavior: HitTestBehavior.opaque,
@@ -107,19 +92,10 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           toolbarHeight: 50,
           title: Row(
             children: [
-              // GestureDetector(
-              //   onTap: () {
-              //     _dismissOverlay();
-              // ref.read(overlayDismissalProvider)();
-              // },
-              // child:
               BurnerBalanceWidget(),
-              // ),
               Spacer(),
               GestureDetector(
                 onTap: () {
-                  // _dismissOverlay();
-                  // ref.read(overlayDismissalProvider)();
                   launchUrl(Uri.parse('https://mahakka.com'));
                 },
                 child: Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),

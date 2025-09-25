@@ -507,7 +507,7 @@ class _PostCardState extends ConsumerState<PostCard> {
       topicId: MemoRegExp.extractTopics(textToSend).isNotEmpty ? MemoRegExp.extractTopics(textToSend).first : null,
     );
 
-    postCopy.parseUrlsClearText();
+    postCopy.parseUrlsTagsTopicClearText();
 
     setState(() => _isSendingTx = true);
 
@@ -560,7 +560,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     postCopy = ref.read(postTranslationProvider).applyTranslationToPost(post: postCopy, ref: ref);
     // String translation = ref.read(postTranslationProvider).translatedText;
     // postCopy = postCopy.copyWith(text: translation);
-    postCopy.appendUrlsToText();
+    postCopy.appendUrlsTagsTopicToText();
 
     var result = await ref.read(postRepositoryProvider).publishReplyTopic(postCopy);
     if (!mounted) return;
@@ -576,7 +576,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     postCopy = ref.read(postTranslationProvider).applyTranslationToPost(post: postCopy, ref: ref);
     // String translation = ref.read(postTranslationProvider).translatedText;
     // postCopy = postCopy.copyWith(text: translation);
-    postCopy.appendUrlsToText();
+    postCopy.appendUrlsTagsTopicToText();
 
     var result = await ref.read(postRepositoryProvider).publishReplyHashtags(postCopy);
     if (!mounted) return;

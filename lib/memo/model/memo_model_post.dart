@@ -248,18 +248,6 @@ class MemoModelPost {
         (youtubeId != null && youtubeId!.isNotEmpty);
   }
 
-  String parseUrlsClearText() {
-    final urlsExtracted = MemoRegExp.extractUrls(text);
-    String result = text ?? "";
-
-    for (final url in urlsExtracted) {
-      result = result.replaceAll(url, '');
-    }
-    urls = urlsExtracted;
-    text = result;
-    return result;
-  }
-
   static String restoreMediaUrlsCase(MemoModelPost post, String textToBeRestored) {
     String result = textToBeRestored;
 
@@ -326,10 +314,73 @@ class MemoModelPost {
     return MemoRegExp.extractUrls(text).isNotEmpty;
   }
 
+  String parseUrlsClearText() {
+    final urlsExtracted = MemoRegExp.extractUrls(text);
+    String result = text ?? "";
+
+    for (final url in urlsExtracted) {
+      result = result.replaceAll(url, '');
+    }
+    urls = urlsExtracted;
+    text = result.replaceAll(RegExp(r'\s+'), ' ');
+    return result;
+  }
+
+  String parseTagsClearText() {
+    final tags = MemoRegExp.extractHashtags(text);
+    String result = text ?? "";
+
+    for (final t in tags) {
+      result = result.replaceAll(t, '');
+    }
+    tagIds = tags;
+    text = result.replaceAll(RegExp(r'\s+'), ' ');
+    return result;
+  }
+
+  String parseTopicClearText() {
+    var topics = MemoRegExp.extractTopics(text);
+    var topic = "";
+    if (topics.isNotEmpty) topic = topics.first;
+
+    String result = text ?? "";
+
+    result = result.replaceAll(topic, '');
+
+    topicId = topic;
+    text = result.replaceAll(RegExp(r'\s+'), ' ');
+    return result;
+  }
+
+  String parseUrlsTagsTopicClearText() {
+    var result = parseUrlsClearText();
+    result = parseTagsClearText();
+    result = parseTopicClearText();
+
+    return result;
+  }
+
   void appendUrlsToText() {
     if (text != null)
       for (final url in urls) {
         text = text! + " \n\n$url";
       }
+  }
+
+  void appendTagsToText() {
+    if (text != null)
+      for (final t in tagIds) {
+        text = text! + " $t";
+      }
+  }
+
+  void appendTopicToText() {
+    if (text != null) text = text! + " $topicId";
+  }
+
+  void appendUrlsTagsTopicToText() {
+    appendUrlsToText();
+    appendTagsToText();
+    appendTopicToText();
   }
 }

@@ -230,13 +230,12 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Use this page to upload an image and pin it to the IPFS network. '
-              'Your wallet must have sufficient BCH to pay for the pinning of content. '
-              'Balance will be checked automatically before proceeding.',
-              style: textTheme.bodyMedium?.copyWith(height: 1.5),
+              'Use this page to upload an image to the IPFS network. '
+              'Your wallet must have sufficient Memo balance to pay for the upload. ',
+              style: textTheme.bodyMedium?.copyWith(height: 1.5, letterSpacing: 1.2),
             ),
-            const SizedBox(height: 4),
-            Text('$_serverUrl', style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+            // const SizedBox(height: 4),
+            // Text('$_serverUrl', style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
             const SizedBox(height: 16),
 
             // File selection area
@@ -256,15 +255,15 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                           Icon(Icons.cloud_upload, size: 48, color: colorScheme.onSurfaceVariant),
                           const SizedBox(height: 8),
                           Text(
-                            'Drag and drop your file here\nor',
+                            'Select an image from your phone to be uploaded to the Inter Planetary File System - IPFS',
                             textAlign: TextAlign.center,
-                            style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                            style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 0.5),
                           ),
                           const SizedBox(height: 8),
                           ElevatedButton(
                             onPressed: _pickFile,
                             style: ElevatedButton.styleFrom(backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
-                            child: const Text('Browse Files'),
+                            child: const Text('SELECT IMAGE'),
                           ),
                         ],
                       )
@@ -276,13 +275,13 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                           if (_pinClaimPrice != null)
                             Text(
                               'Upload cost: ${(_pinClaimPrice! * 100000000).toStringAsFixed(0)} sats',
-                              style: textTheme.titleLarge?.copyWith(color: colorScheme.primary),
+                              style: textTheme.titleLarge?.copyWith(color: colorScheme.primary, letterSpacing: 1.5),
                             ),
                           const SizedBox(height: 16),
                           OutlinedButton(
                             onPressed: _removeFile,
                             style: OutlinedButton.styleFrom(foregroundColor: colorScheme.error),
-                            child: const Text('Remove File'),
+                            child: const Text('CHANGE IMAGE'),
                           ),
                         ],
                       ),
@@ -303,7 +302,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
             // Error message
             if (_error != null)
               Padding(
-                padding: const EdgeInsets.only(top: 12),
+                padding: const EdgeInsets.only(top: 6, bottom: 6),
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -311,7 +310,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                     border: Border.all(color: colorScheme.error),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(_error!, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onErrorContainer)),
+                  child: Text(_error!, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onErrorContainer, letterSpacing: 0.5)),
                 ),
               ),
 
@@ -331,7 +330,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                     ElevatedButton(
                       onPressed: _isUploading ? null : _uploadFile,
                       style: ElevatedButton.styleFrom(backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
-                      child: _isUploading ? CircularProgressIndicator(color: colorScheme.onPrimary) : const Text('Upload File'),
+                      child: _isUploading ? LinearProgressIndicator() : const Text('UPLOAD IMAGE'),
                     ),
                   if (_cid != null && _claimTxid == null)
                     ElevatedButton(
@@ -341,9 +340,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                         backgroundColor: colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,
                       ),
-                      child: (_isPinning || _isCheckingBalance)
-                          ? CircularProgressIndicator(color: colorScheme.onPrimary)
-                          : const Text('PIN IMAGE'),
+                      child: (_isPinning || _isCheckingBalance) ? LinearProgressIndicator() : const Text('PIN IMAGE'),
                     ),
                 ],
               ),

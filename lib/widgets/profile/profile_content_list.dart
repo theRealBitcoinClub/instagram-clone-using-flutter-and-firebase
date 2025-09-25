@@ -2,17 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/config_whitelist.dart';
-import 'package:mahakka/expandable_text_custom.dart';
-import 'package:mahakka/external_browser_launcher.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/providers/webview_providers.dart';
 import 'package:mahakka/theme_provider.dart';
-import 'package:mahakka/utils/snackbar.dart';
+import 'package:mahakka/views_taggable/widgets/post_expandable_text_widget.dart';
 import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 import 'package:mahakka/widgets/unified_video_player.dart';
 import 'package:mahakka/youtube_video_checker.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 void _logListError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -129,7 +124,7 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
-                        expandableTextCustom(videoPost, theme, context),
+                        PostExpandableText(post: videoPost),
                         const SizedBox(height: 8),
                       ],
                       Text(
@@ -162,10 +157,7 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
-                    expandableTextCustom(videoPost, theme, context),
-                    const SizedBox(height: 8),
-                  ],
+                  if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[PostExpandableText(post: videoPost), const SizedBox(height: 8)],
                   Text(
                     "${widget.creatorName}, ${videoPost.age}",
                     style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
@@ -215,7 +207,7 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
             const SizedBox(height: 5),
             Divider(color: theme.dividerColor.withAlpha(222), height: 1),
             const SizedBox(height: 4),
-            expandableTextCustom(post, theme, context),
+            PostExpandableText(post: post),
             const SizedBox(height: 10),
           ],
         ),
@@ -223,72 +215,72 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
     );
   }
 
-  ExpandableTextCustom expandableTextCustom(MemoModelPost post, ThemeData theme, BuildContext context) {
-    return ExpandableTextCustom(
-      post.text ?? " ",
-      expandText: ' show more',
-      collapseText: 'show less',
-      maxLines: 5,
-      linkColor: theme.colorScheme.onTertiaryFixedVariant,
-      style: theme.textTheme.bodyMedium?.copyWith(
-        fontFamily: "Open Sans",
-        fontSize: 15,
-        height: 1.4,
-        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
-      ),
-      hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
-      onHashtagTap: (String hashtag) {
-        WebViewNavigator.navigateTo(ref, WebViewShow.tag, hashtag);
-        showSnackBar("Loading $hashtag charts!", context, type: SnackbarType.success);
-        showSnackBar("$hashtag charts are loading...", context, type: SnackbarType.info);
-      },
-      mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
-      urlStyle: buildUrlStyle(theme),
-      onUrlTap: (String url) async {
-        await _onUrlTap(url, context);
-      },
-      prefixText: post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null,
-      prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
-      onPrefixTap: () {
-        WebViewNavigator.navigateTo(ref, WebViewShow.topic, post.topicId);
-        showSnackBar("Loading ${post.topicId} charts!", context, type: SnackbarType.success);
-        showSnackBar("${post.topicId} charts are loading...", context, type: SnackbarType.info);
-      },
-    );
-  }
-
-  TextStyle? buildUrlStyle(ThemeData theme) {
-    return theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant);
-  }
-
-  Future<void> _onUrlTap(String url, BuildContext context) async {
-    _logListError('URL tapped: $url');
-    Uri? uri = Uri.tryParse(url);
-    if (uri != null) {
-      if (!uri.hasScheme && (url.startsWith('www.') || RegExp(r'^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(url))) {
-        uri = Uri.parse('http://$url');
-      }
-      try {
-        if (await canLaunchUrl(uri)) {
-          ExternalBrowserLauncher launcher = ExternalBrowserLauncher(whitelistedDomains: whitelistPatterns);
-          await launcher.launchUrlWithConfirmation(context, url);
-        } else {
-          _logListError('Could not launch $uri');
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open link: $url')));
-          }
-        }
-      } catch (e) {
-        _logListError('Error launching URL $url: $e');
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error opening link: $url')));
-        }
-      }
-    } else {
-      _logListError('Invalid URL: $url');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid link format: $url')));
-      }
-    }
-  }
+  // ExpandableTextCustom expandableTextCustom(MemoModelPost post, ThemeData theme, BuildContext context) {
+  //   return ExpandableTextCustom(
+  //     post.text ?? " ",
+  //     expandText: ' show more',
+  //     collapseText: 'show less',
+  //     maxLines: 5,
+  //     linkColor: theme.colorScheme.onTertiaryFixedVariant,
+  //     style: theme.textTheme.bodyMedium?.copyWith(
+  //       fontFamily: "Open Sans",
+  //       fontSize: 15,
+  //       height: 1.4,
+  //       color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
+  //     ),
+  //     hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
+  //     onHashtagTap: (String hashtag) {
+  //       WebViewNavigator.navigateTo(ref, WebViewShow.tag, hashtag);
+  //       showSnackBar("Loading $hashtag charts!", context, type: SnackbarType.success);
+  //       showSnackBar("$hashtag charts are loading...", context, type: SnackbarType.info);
+  //     },
+  //     mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
+  //     urlStyle: buildUrlStyle(theme),
+  //     onUrlTap: (String url) async {
+  //       await _onUrlTap(url, context);
+  //     },
+  //     prefixText: post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null,
+  //     prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
+  //     onPrefixTap: () {
+  //       WebViewNavigator.navigateTo(ref, WebViewShow.topic, post.topicId);
+  //       showSnackBar("Loading ${post.topicId} charts!", context, type: SnackbarType.success);
+  //       showSnackBar("${post.topicId} charts are loading...", context, type: SnackbarType.info);
+  //     },
+  //   );
+  // }
+  //
+  // TextStyle? buildUrlStyle(ThemeData theme) {
+  //   return theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant);
+  // }
+  //
+  // Future<void> _onUrlTap(String url, BuildContext context) async {
+  //   _logListError('URL tapped: $url');
+  //   Uri? uri = Uri.tryParse(url);
+  //   if (uri != null) {
+  //     if (!uri.hasScheme && (url.startsWith('www.') || RegExp(r'^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(url))) {
+  //       uri = Uri.parse('http://$url');
+  //     }
+  //     try {
+  //       if (await canLaunchUrl(uri)) {
+  //         ExternalBrowserLauncher launcher = ExternalBrowserLauncher(whitelistedDomains: whitelistPatterns);
+  //         await launcher.launchUrlWithConfirmation(context, url);
+  //       } else {
+  //         _logListError('Could not launch $uri');
+  //         if (context.mounted) {
+  //           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open link: $url')));
+  //         }
+  //       }
+  //     } catch (e) {
+  //       _logListError('Error launching URL $url: $e');
+  //       if (context.mounted) {
+  //         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error opening link: $url')));
+  //       }
+  //     }
+  //   } else {
+  //     _logListError('Invalid URL: $url');
+  //     if (context.mounted) {
+  //       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid link format: $url')));
+  //     }
+  //   }
+  // }
 }

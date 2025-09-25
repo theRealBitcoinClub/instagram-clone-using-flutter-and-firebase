@@ -1,8 +1,8 @@
 import 'package:clipboard/clipboard.dart';
-import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/utils/snackbar.dart';
+import 'package:mahakka/views_taggable/widgets/post_expandable_text_widget.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 
 import '../../memo/base/memo_verifier.dart';
@@ -71,20 +71,21 @@ class PostCardFooter extends StatelessWidget {
                   FlutterClipboard.copy("${post.creator!.name} wrote on ${post.dateTimeFormattedSafe()}: ${post.text}" ?? "");
                   showSnackBar("Text copied to clipboard", context, type: SnackbarType.info);
                 },
-                child: ExpandableText(
-                  // Using creatorName here
-                  "$creatorName: ${post.text!}",
-                  // prefixText: post.creator != null ? "${post.creator!.profileIdShort}" : "", // Handle potential null creator
-                  prefixStyle: theme.textTheme.titleSmall?.copyWith(letterSpacing: 2.0),
-                  expandText: 'show more',
-                  collapseText: 'show less',
-                  maxLines: 6,
-                  linkColor: theme.colorScheme.primary,
-                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.3),
-                  animation: true,
-                  linkEllipsis: true,
-                  linkStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
-                ),
+                child: PostExpandableText(post: post, hidePrefix: true),
+                // ExpandableText(
+                //   // Using creatorName here
+                //   "$creatorName: ${post.text!}",
+                //   // prefixText: post.creator != null ? "${post.creator!.profileIdShort}" : "", // Handle potential null creator
+                //   prefixStyle: theme.textTheme.titleSmall?.copyWith(letterSpacing: 2.0),
+                //   expandText: 'show more',
+                //   collapseText: 'show less',
+                //   maxLines: 6,
+                //   linkColor: theme.colorScheme.primary,
+                //   style: theme.textTheme.bodyMedium?.copyWith(height: 1.3),
+                //   animation: true,
+                //   linkEllipsis: true,
+                //   linkStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                // ),
               ),
             ),
             const SizedBox(height: 2),

@@ -30,17 +30,20 @@ class ProfileTabSelector extends StatelessWidget {
     final bool isActive = viewMode == index;
     return Expanded(
       // Make each button take equal width
-      child: IconButton(
-        iconSize: 28, // Slightly adjusted size
-        visualDensity: VisualDensity.standard,
-        // padding: EdgeInsets.zero, // Remove padding if buttons are too spaced
-        icon: Icon(
-          isActive ? activeIcon : inactiveIcon,
-          color: isActive ? theme.colorScheme.onPrimary : theme.colorScheme.onPrimary.withAlpha(169),
+      child: ColoredBox(
+        color: isActive ? theme.colorScheme.onPrimary.withAlpha(66) : Colors.transparent,
+        child: IconButton(
+          iconSize: 28, // Slightly adjusted size
+          visualDensity: VisualDensity.standard,
+          // padding: EdgeInsets.zero, // Remove padding if buttons are too spaced
+          icon: Icon(
+            isActive ? activeIcon : inactiveIcon,
+            color: isActive ? theme.colorScheme.onPrimary : theme.colorScheme.onPrimary.withAlpha(169),
+          ),
+          tooltip: tooltip,
+          onPressed: () => onViewModeChanged(index),
+          splashRadius: 1, // Control splash radius
         ),
-        tooltip: tooltip,
-        onPressed: () => onViewModeChanged(index),
-        splashRadius: 24, // Control splash radius
       ),
     );
   }

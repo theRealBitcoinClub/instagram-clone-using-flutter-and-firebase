@@ -85,30 +85,22 @@ class MemoScraperUtil {
       int iEnd = text.indexOf("');", iStart);
       memoModelPost.youtubeId = text.substring(iStart + "', '".length - 1, iOptional == -1 ? iEnd : iOptional);
       memoModelPost.text = text.replaceRange(iTrigger, iEnd + 3, "");
+      memoModelPost.text = "${memoModelPost.text} https://youtu.be/${memoModelPost.youtubeId}";
     }
   }
 
   static MemoModelPost linkReferencesAndSetId(MemoModelPost post, {String? topicId, required String creatorId}) {
     post.text = post.text ?? "";
-    // if (post.uniqueContentId!.contains("post")) {
-    //   post.uniqueContentId = post.uniqueContentId!.substring("post/".length);
-    // }
-    // post.id = post.uniqueContentId!;
-    // post.topicId = topic != null ? topic.id : "";
     post.topicId = topicId ?? "";
     post.creatorId = creatorId;
     MemoScraperUtil.extractUrlsAndHashtags(post);
     post.ipfsCid = MemoRegExp(post.text!).extractIpfsCid();
     post.imageUrl = MemoRegExp(post.text!).extractFirstWhitelistedImageUrl();
     post.videoUrl = MemoRegExp(post.text!).extractOdyseeUrl();
-    // post.tagIds = post.tagIds;
-    // post.topic = topic;
+    if (post.imgurUrl != null) post.text = "${post.text!} ${post.imgurUrl!}";
     try {
-      // Attempt to parse the date string.
       post.createdDateTime = DateTime.parse(post.created!);
     } catch (e) {
-      // If parsing fails, set the current time as a fallback.
-      print("${post.created} is not a valid date string. Error parsing created string: $e. Using current time as fallback.");
       post.createdDateTime = DateTime.now();
     }
     return post;
@@ -133,7 +125,7 @@ class MemoScraperUtil {
 
   static void extractUrlsAndHashtags(MemoModelPost post) {
     MemoScraperUtil.extractYouTubeUrlAndRemoveJavaScriptFromText(post);
-    post.tagIds = List.from(MemoRegExp.extractHashtags(post.text));
+    post.tagIds = List<String>.from(MemoRegExp.extractHashtags(post.text).take(3));
     post.urls = List.from(MemoRegExp.extractUrlsWithHttpsAlways(post.text));
   }
 }

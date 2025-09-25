@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/provider/publish_options_provider.dart';
@@ -112,6 +113,7 @@ class AddPostController extends StateNotifier<void> {
         _showSnackBar('Successfully published!');
         ref.read(taggableControllerProvider).text = '';
         ref.read(telegramBotPublisherProvider).publishPost(postText: copyPost.text!, mediaUrl: null);
+        clearMediaAfterPublish();
       } else {
         showQrCodeDialog(context: _context, user: user, memoOnly: true);
         _showSnackBar('Publish failed: ${response.message}', isError: true);
@@ -177,6 +179,15 @@ class AddPostController extends StateNotifier<void> {
       return " $odyseeUrl";
     }
     return "";
+  }
+
+  void clearMediaAfterPublish() {
+    _context.afterLayout(refreshUI: true, () {
+      ref.read(imgurUrlProvider.notifier).state = '';
+      ref.read(youtubeVideoIdProvider);
+      ref.read(ipfsCidProvider);
+      ref.read(odyseeUrlProvider);
+    });
   }
 
   bool hasAddedMediaToPublish() {

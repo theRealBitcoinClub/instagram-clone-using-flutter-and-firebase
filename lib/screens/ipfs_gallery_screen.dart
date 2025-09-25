@@ -24,6 +24,7 @@ class IPFSGalleryScreen extends ConsumerWidget {
     final TextTheme textTheme = Theme.of(context).textTheme;
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDarkTheme ? Colors.black.withAlpha(133) : Colors.white.withAlpha(133);
+    final validCids = ipfsCids.where((cid) => cid.isNotEmpty).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -62,12 +63,12 @@ class IPFSGalleryScreen extends ConsumerWidget {
                     BoxShadow(color: Theme.of(context).colorScheme.shadow.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2)),
                   ],
                 ),
-                child: ipfsCids.isEmpty
+                child: validCids.isEmpty
                     ? _buildEmptyState(context)
                     : ListView.builder(
-                        itemCount: ipfsCids.length,
+                        itemCount: validCids.length,
                         itemBuilder: (context, index) {
-                          final cid = ipfsCids[index];
+                          final cid = validCids[index];
                           final isSelected = selectedCid == cid;
                           return IPFSImageCard(cid: cid, isSelected: isSelected);
                         },
@@ -77,7 +78,7 @@ class IPFSGalleryScreen extends ConsumerWidget {
           ),
 
           // Button Row
-          GalleryActionButtonRow(ipfsCids: ipfsCids),
+          GalleryActionButtonRow(),
         ],
       ),
     );
@@ -215,9 +216,7 @@ class IPFSImageCard extends ConsumerWidget {
 }
 
 class GalleryActionButtonRow extends ConsumerWidget {
-  final List<String> ipfsCids;
-
-  const GalleryActionButtonRow({Key? key, required this.ipfsCids}) : super(key: key);
+  const GalleryActionButtonRow({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

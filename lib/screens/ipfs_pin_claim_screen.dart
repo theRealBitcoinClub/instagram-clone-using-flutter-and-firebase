@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -5,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:path/path.dart' show basename;
 
@@ -17,13 +19,7 @@ class IpfsPinClaimScreen extends ConsumerStatefulWidget {
   const IpfsPinClaimScreen({Key? key}) : super(key: key);
 
   static Future<Map<String, dynamic>?> show(BuildContext context) async {
-    return await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const IpfsPinClaimScreen(),
-        fullscreenDialog: true, // Optional: makes it feel more like a modal
-      ),
-    );
+    return await Navigator.push(context, MaterialPageRoute(builder: (context) => const IpfsPinClaimScreen(), fullscreenDialog: true));
   }
 
   @override
@@ -42,12 +38,75 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
   bool _isPinning = false;
   bool _isCheckingBalance = false;
 
+  // Timer variables
+  Timer? _countdownTimer;
+  int _countdownSeconds = 99;
+  bool _showOverlay = false;
+
   final String _serverUrl = 'https://file-stage.fullstack.cash';
 
   @override
   void initState() {
     super.initState();
     print('IpfsPinClaimScreen: Initialized');
+  }
+
+  @override
+  void dispose() {
+    // Cancel and dispose the timer when the widget is disposed
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startCountdown() {
+    setState(() {
+      _showOverlay = true;
+      _countdownSeconds = 99;
+    });
+
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      setState(() {
+        if (_countdownSeconds > 0) {
+          _countdownSeconds--;
+        } else {
+          // Time's up - automatically close the screen
+          timer.cancel();
+          if (mounted) {
+            showSnackBar(
+              "WAIT SOME MORE IF YOU ARE UPLOADING A LARGE FILE OR HAVE A SLOW CONNECTION! WAGMI!",
+              context,
+              type: SnackbarType.info,
+            );
+            showSnackBar(
+              "SOME MORE PATIENCE REQUIRED! YOU MADE IT THIS FAR SO DONT GIVE UP NOW!",
+              context,
+              type: SnackbarType.error,
+              wait: true,
+            );
+            showSnackBar(
+              "YOU STILL HERE! THATS A VERY GOOD SIGN! SATOSHI NAKAMOTO LOVES YOU!",
+              context,
+              type: SnackbarType.success,
+              wait: true,
+            );
+          }
+        }
+      });
+    });
+  }
+
+  void _stopCountdown() {
+    _countdownTimer?.cancel();
+    if (mounted) {
+      setState(() {
+        _showOverlay = false;
+      });
+    }
   }
 
   Future<void> _pickFile() async {
@@ -61,7 +120,6 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
           _resetState();
         });
 
-        // Calculate price after file selection
         _calculatePrice();
       }
     } catch (e) {
@@ -150,7 +208,6 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
         return;
       }
 
-      // Proceed with pinning if balance is sufficient
       await _pinFile();
     } catch (e) {
       setState(() {
@@ -168,17 +225,19 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
       _error = null;
     });
 
+    // Start the countdown overlay
+    _startCountdown();
+
     try {
       final accountant = ref.read(memoAccountantProvider);
       final result = await accountant.pinIpfsFile(_selectedFile!, _cid!);
 
       if (result == MemoAccountantResponse.yes) {
-        // setState(() {
-        //   _isPinning = false;
-        // });
+        // Stop the countdown and pop the screen immediately
+        _stopCountdown();
         if (mounted) Navigator.pop(context);
-        // Success will be handled by the auto-pop mechanism
       } else {
+        _stopCountdown();
         setState(() {
           _error = 'Error pinning file!!!!';
           resetLoadingStates();
@@ -186,6 +245,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
         throw Exception(result.message);
       }
     } catch (e) {
+      _stopCountdown();
       _error = 'Error pinning file: ${e.toString()}';
       resetLoadingStates();
     }
@@ -216,135 +276,183 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
     });
   }
 
+  // Override the back button behavior when overlay is shown
+  Future<bool> _onWillPop() async {
+    if (_showOverlay) {
+      // Prevent back navigation when overlay is shown
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Upload and Pin Content'), backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Upload and Pin Content'),
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
+        ),
+        body: Stack(
           children: [
-            Text(
-              'Use this page to upload an image to the IPFS network. '
-              'Your wallet must have sufficient Memo balance to pay for the upload. ',
-              style: textTheme.bodyMedium?.copyWith(height: 1.5, letterSpacing: 1.2),
-            ),
-            // const SizedBox(height: 4),
-            // Text('$_serverUrl', style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
-            const SizedBox(height: 16),
-
-            // File selection area
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 2),
-                borderRadius: BorderRadius.circular(8),
-                color: colorScheme.surface,
-              ),
-              padding: const EdgeInsets.all(20),
-              height: 200,
-              child: Center(
-                child: _selectedFile == null
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.cloud_upload, size: 48, color: colorScheme.onSurfaceVariant),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Select an image from your phone to be uploaded to the Inter Planetary File System - IPFS',
-                            textAlign: TextAlign.center,
-                            style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 0.5),
-                          ),
-                          const SizedBox(height: 8),
-                          ElevatedButton(
-                            onPressed: _pickFile,
-                            style: ElevatedButton.styleFrom(backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
-                            child: const Text('SELECT IMAGE'),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(_selectedFile!.path.split('/').last, style: textTheme.titleSmall, textAlign: TextAlign.center),
-                          const SizedBox(height: 24),
-                          if (_pinClaimPrice != null)
-                            Text(
-                              'Upload cost: ${(_pinClaimPrice! * 100000000).toStringAsFixed(0)} sats',
-                              style: textTheme.titleLarge?.copyWith(color: colorScheme.primary, letterSpacing: 1.5),
-                            ),
-                          const SizedBox(height: 16),
-                          OutlinedButton(
-                            onPressed: _removeFile,
-                            style: OutlinedButton.styleFrom(foregroundColor: colorScheme.error),
-                            child: const Text('CHANGE IMAGE'),
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Loading indicator for price calculation
-            if (_isLoading)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: LinearProgressIndicator(color: colorScheme.primary),
-                ),
-              ),
-
-            // Error message
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6, bottom: 6),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colorScheme.errorContainer,
-                    border: Border.all(color: colorScheme.error),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(_error!, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onErrorContainer, letterSpacing: 0.5)),
-                ),
-              ),
-
-            const SizedBox(height: 4),
-
-            // Success messages
-            if (_cid != null) _buildSuccessCard('Upload Success', 'CID: $_cid', theme, colorScheme, textTheme),
-            if (_claimTxid != null) _buildSuccessCard('Pin Claim Success', 'Claim Txid: $_claimTxid', theme, colorScheme, textTheme),
-
-            const SizedBox(height: 4),
-
-            // Action buttons
-            Center(
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_selectedFile != null && _cid == null && _claimTxid == null)
-                    ElevatedButton(
-                      onPressed: _isUploading ? null : _uploadFile,
-                      style: ElevatedButton.styleFrom(backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
-                      child: _isUploading ? LinearProgressIndicator() : const Text('UPLOAD IMAGE'),
+                  Text(
+                    'Use this page to upload an image to the IPFS network. '
+                    'Your wallet must have sufficient Memo balance to pay for the upload. ',
+                    style: textTheme.bodyMedium?.copyWith(height: 1.5, letterSpacing: 1.2),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // File selection area
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                      color: colorScheme.surface,
                     ),
-                  if (_cid != null && _claimTxid == null)
-                    ElevatedButton(
-                      onPressed: (_isPinning || _isCheckingBalance) ? null : _checkBalanceAndPin,
-                      style: ElevatedButton.styleFrom(
-                        fixedSize: Size.fromHeight(52),
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
+                    padding: const EdgeInsets.all(20),
+                    height: 200,
+                    child: Center(
+                      child: _selectedFile == null
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: _pickFile,
+                                  style: ElevatedButton.styleFrom(backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
+                                  child: const Text('SELECT IMAGE'),
+                                ),
+                                const SizedBox(height: 8),
+                                Icon(Icons.cloud_upload, size: 48, color: colorScheme.onSurfaceVariant),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Select an image from your phone to be uploaded to the Inter Planetary File System - IPFS',
+                                  textAlign: TextAlign.center,
+                                  style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 0.5),
+                                ),
+                              ],
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(_selectedFile!.path.split('/').last, style: textTheme.titleSmall, textAlign: TextAlign.center),
+                                const SizedBox(height: 24),
+                                if (_pinClaimPrice != null)
+                                  Text(
+                                    'Upload cost: ${(_pinClaimPrice! * 100000000).toStringAsFixed(0)} sats',
+                                    style: textTheme.titleLarge?.copyWith(color: colorScheme.primary, letterSpacing: 1.5),
+                                  ),
+                                const SizedBox(height: 16),
+                                OutlinedButton(
+                                  onPressed: _removeFile,
+                                  style: OutlinedButton.styleFrom(foregroundColor: colorScheme.error),
+                                  child: const Text('CHANGE IMAGE'),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Loading indicator for price calculation
+                  if (_isLoading)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: LinearProgressIndicator(color: colorScheme.primary),
                       ),
-                      child: (_isPinning || _isCheckingBalance) ? LinearProgressIndicator() : const Text('PIN IMAGE'),
                     ),
+
+                  // Error message
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6, bottom: 6),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: colorScheme.errorContainer,
+                          border: Border.all(color: colorScheme.error),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(_error!, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onErrorContainer, letterSpacing: 0.5)),
+                      ),
+                    ),
+
+                  const SizedBox(height: 4),
+
+                  // Success messages
+                  if (_cid != null) _buildSuccessCard('Upload Success', 'CID: $_cid', theme, colorScheme, textTheme),
+                  if (_claimTxid != null) _buildSuccessCard('Pin Claim Success', 'Claim Txid: $_claimTxid', theme, colorScheme, textTheme),
+
+                  const SizedBox(height: 4),
+
+                  // Action buttons
+                  Center(
+                    child: Column(
+                      children: [
+                        if (_selectedFile != null && _cid == null && _claimTxid == null)
+                          ElevatedButton(
+                            onPressed: _isUploading ? null : _uploadFile,
+                            style: ElevatedButton.styleFrom(backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary),
+                            child: _isUploading ? const LinearProgressIndicator() : const Text('UPLOAD IMAGE'),
+                          ),
+                        if (_cid != null && _claimTxid == null)
+                          ElevatedButton(
+                            onPressed: (_isPinning || _isCheckingBalance) ? null : _checkBalanceAndPin,
+                            style: ElevatedButton.styleFrom(
+                              fixedSize: const Size.fromHeight(52),
+                              backgroundColor: colorScheme.primary,
+                              foregroundColor: colorScheme.onPrimary,
+                            ),
+                            child: (_isPinning || _isCheckingBalance) ? const LinearProgressIndicator() : const Text('PIN IMAGE'),
+                          ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
+
+            // Fullscreen overlay
+            if (_showOverlay)
+              WillPopScope(
+                onWillPop: () async => false, // Disable back button
+                child: Container(
+                  color: Colors.black.withOpacity(0.5), // 50% alpha black
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: Center(
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary, // Theme color for circle
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          _countdownSeconds.toString(),
+                          style: textTheme.headlineLarge?.copyWith(
+                            color: colorScheme.onPrimary, // onPrimary theme color
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

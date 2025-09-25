@@ -26,11 +26,47 @@ class ProfileData {
   final List<MemoModelPost> posts;
   final PostsCategorizer categorizer;
   final bool fromCache;
+  final bool postsLoaded; // Track if posts are fully loaded
+  // final DateTime? loadStartTime; // Track when loading started
 
-  ProfileData({required this.creator, required this.posts, required this.categorizer, this.fromCache = false});
+  ProfileData({
+    required this.creator,
+    required this.posts,
+    required this.categorizer,
+    this.fromCache = false,
+    this.postsLoaded = false,
+    // this.loadStartTime,
+  });
 
-  bool get isLoading => creator == null || posts.isEmpty;
-  bool get hasData => creator != null && posts.isNotEmpty;
+  bool get isLoading => creator == null || !postsLoaded;
+  bool get hasData => creator != null && postsLoaded && posts.isNotEmpty;
+
+  // Calculate minimum display time remaining
+  // Duration get minDisplayTimeRemaining {
+  //   if (loadStartTime == null) return Duration.zero;
+  //   final elapsed = DateTime.now().difference(loadStartTime!);
+  //   const minDisplayTime = Duration(seconds: 1);
+  //   return elapsed < minDisplayTime ? minDisplayTime - elapsed : Duration.zero;
+  // }
+
+  // Helper method to create a copy with updated fields
+  ProfileData copyWith({
+    MemoModelCreator? creator,
+    List<MemoModelPost>? posts,
+    PostsCategorizer? categorizer,
+    bool? fromCache,
+    bool? postsLoaded,
+    DateTime? loadStartTime,
+  }) {
+    return ProfileData(
+      creator: creator ?? this.creator,
+      posts: posts ?? this.posts,
+      categorizer: categorizer ?? this.categorizer,
+      fromCache: fromCache ?? this.fromCache,
+      postsLoaded: postsLoaded ?? this.postsLoaded,
+      // loadStartTime: loadStartTime ?? this.loadStartTime,
+    );
+  }
 }
 
 class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
@@ -49,11 +85,16 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   StreamSubscription<MemoModelCreator?>? _creatorSubscription;
   String? _currentWatchedCreatorId;
 
+  // Timer for minimum display time
+  // Timer? _minDisplayTimer;
+  // Completer<void>? _minDisplayCompleter;
+
   @override
   Future<ProfileData> build() async {
     ref.onDispose(() {
       _cancelCreatorSubscription();
       _stopAllBalanceTimers();
+      // _minDisplayTimer?.cancel();
     });
 
     final profileId = ref.watch(_currentProfileIdProvider);
@@ -72,12 +113,16 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       return await _loadProfileData(profileId, forceScrape: true);
     }
 
-    // Check if we should use cached data
-    final now = DateTime.now();
-    final shouldUseCache =
-        _lastProfileIdPostDataRequest == profileId && _lastRefreshTime != null && now.difference(_lastRefreshTime!) < Duration(minutes: 5);
+    // Always load fresh data when profileId changes
+    if (_lastProfileIdPostDataRequest != profileId) {
+      return await _loadProfileData(profileId, forceScrape: true);
+    }
 
-    if (shouldUseCache && state.value != null) {
+    // Check if we should use cached data (only if same profile and recent)
+    final now = DateTime.now();
+    final shouldUseCache = _lastRefreshTime != null && now.difference(_lastRefreshTime!) < Duration(minutes: 5) && state.value != null;
+
+    if (shouldUseCache && state.value != null && state.value!.postsLoaded) {
       return state.value!;
     }
 
@@ -107,15 +152,9 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     if (updatedCreator != null && state.value != null) {
       final currentData = state.value!;
 
-      // Only update if the creator data actually changed
-      //TODO check for other variables to indicate it has a changed state, e.g. profileimage, name, text or balances
-      // if (currentData.creator?.lastUpdated != updatedCreator.lastUpdated) {
       print("INFO: Updating profile data with new creator data for: ${updatedCreator.id}");
 
-      state = AsyncValue.data(
-        ProfileData(creator: updatedCreator, posts: currentData.posts, categorizer: currentData.categorizer, fromCache: currentData.fromCache),
-      );
-      // }
+      state = AsyncValue.data(currentData.copyWith(creator: updatedCreator));
     }
   }
 
@@ -133,10 +172,25 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     _lastProfileIdPostDataRequest = profileId;
     _lastRefreshTime = DateTime.now();
 
+    final loadStartTime = DateTime.now();
+
     try {
       // Load creator from repository
       final creatorRepo = ref.read(creatorRepositoryProvider);
       final creator = await creatorRepo.getCreator(profileId, saveToFirebase: false, forceScrape: forceScrape);
+
+      // Create initial data with creator but posts not loaded yet
+      final initialData = ProfileData(
+        creator: creator,
+        posts: [],
+        categorizer: PostsCategorizer.empty(),
+        fromCache: !forceScrape,
+        postsLoaded: false,
+        // loadStartTime: loadStartTime,
+      );
+
+      // Update state immediately with creator data (posts still loading)
+      // state = AsyncValue.data(initialData);
 
       // Load posts
       final posts = await _loadPosts(profileId);
@@ -144,15 +198,44 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       // Categorize posts
       final categorizer = PostsCategorizer.fromPosts(posts);
 
-      return ProfileData(creator: creator, posts: posts, categorizer: categorizer, fromCache: !forceScrape);
+      // Create complete data
+      final completeData = ProfileData(
+        creator: creator,
+        posts: posts,
+        categorizer: categorizer,
+        fromCache: !forceScrape,
+        postsLoaded: true,
+        // loadStartTime: loadStartTime,
+      );
+
+      // Ensure minimum display time
+      // await _ensureMinDisplayTime(loadStartTime);
+
+      return completeData;
     } catch (e) {
       // If we have a previous state, return it as fallback
       if (state.value != null) {
-        return state.value!;
+        return state.value!.copyWith(loadStartTime: loadStartTime);
       }
       rethrow;
     }
   }
+
+  /// Ensures data is displayed for at least 1 second to avoid flickering
+  // Future<void> _ensureMinDisplayTime(DateTime loadStartTime) async {
+  //   final elapsed = DateTime.now().difference(loadStartTime);
+  //   const minDisplayTime = Duration(seconds: 3);
+  //
+  //   if (elapsed < minDisplayTime) {
+  //     final remaining = minDisplayTime - elapsed;
+  //     _minDisplayCompleter = Completer<void>();
+  //     _minDisplayTimer = Timer(remaining, () {
+  //       _minDisplayCompleter?.complete();
+  //       _minDisplayCompleter = null;
+  //     });
+  //     await _minDisplayCompleter?.future;
+  //   }
+  // }
 
   Future<List<MemoModelPost>> _loadPosts(String profileId) async {
     try {
@@ -160,7 +243,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       final postsStream = postRepository.getPostsByCreatorId(profileId);
 
       // Convert stream to future for initial load with timeout
-      return await postsStream.first.timeout(Duration(seconds: 10));
+      return await postsStream.first.timeout(Duration(seconds: 15));
     } catch (e) {
       print('Error loading posts: $e');
       return [];
@@ -191,7 +274,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
         creatorId,
         hasUpdatedCallback: () {
           print("refreshCreatorCache fresh scrape success for creatorId $creatorId");
-          // The stream will automatically handle the update notification
         },
         nothingChangedCallback: () {
           print("refreshCreatorCache no fresh data available for creatorId $creatorId");
@@ -214,9 +296,10 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
         }
         if (isOwnProfile) {
           startAutoRefreshBalanceProfile();
-        } else {
-          stopAutoRefreshBalanceProfile();
         }
+        // else {
+        //   stopAutoRefreshBalanceProfile();
+        // }
         // Set pending refresh flag for next build
         _pendingRefresh = true;
         _lastProfileIdRefreshRequest = profileId;
@@ -235,7 +318,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       final creator = memoModelCreator;
       if (creator != null && !creator.hasRegisteredAsUser) {
         await creator.refreshUserHasRegistered(ref, creatorRepository);
-        // The stream will handle the update notification when saveToCache is called
       }
     }
   }
@@ -247,7 +329,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       final creator = await creatorRepository.getCreator(profileId, saveToFirebase: false);
       if (creator != null) {
         await creator.refreshBalances(ref, creatorRepository);
-        // The stream will handle the update notification when saveToCache is called
       }
     }
   }
@@ -258,7 +339,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
       if (creator != null && creator.hasRegisteredAsUser) {
         await creator.refreshBalanceMahakka(ref);
-        // The stream will handle the update notification when saveToCache is called
       }
     }
   }
@@ -269,7 +349,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
       if (creator != null) {
         await creator.refreshBalanceMemo(ref);
-        // The stream will handle the update notification when saveToCache is called
       }
     }
   }
@@ -277,18 +356,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   bool isAutoRefreshRunning() {
     return _isAutoRefreshRunning;
   }
-
-  // void setRefreshInterval(Duration interval) {
-  //   _refreshBalanceInterval = interval;
-  //   // Restart any active timers with new interval
-  //   if (_balanceRefreshTimer != null) {
-  //     startAutoRefreshBalanceProfile();
-  //   } else if (_mahakkaBalanceRefreshTimer != null) {
-  //     startAutoRefreshMahakkaBalanceQrDialog();
-  //   } else if (_memoBalanceRefreshTimer != null) {
-  //     startAutoRefreshMemoBalanceQrDialog();
-  //   }
-  // }
 
   void stopAutoRefreshBalanceProfile() {
     if (!_isAutoRefreshRunning) return;
@@ -361,7 +428,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     try {
       final currentData = state.value;
       if (currentData != null && currentData.creator != null) {
-        // Schedule balance refresh after build
         Future.microtask(() async {
           await refreshBalances();
         });
@@ -380,7 +446,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     try {
       final currentData = state.value;
       if (currentData != null && currentData.creator != null && currentData.creator!.hasRegisteredAsUser) {
-        // Schedule balance refresh after build
         Future.microtask(() async {
           await refreshMahakkaBalance();
         });
@@ -399,7 +464,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     try {
       final currentData = state.value;
       if (currentData != null && currentData.creator != null) {
-        // Schedule balance refresh after build
         Future.microtask(() async {
           await refreshMemoBalance();
         });
@@ -408,13 +472,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       print('Periodic Memo balance refresh failed: $e');
     }
   }
-
-  // @override
-  // void dispose() {
-  //   _cancelCreatorSubscription();
-  //   _stopAllBalanceTimers();
-  //   super.dispose();
-  // }
 }
 
 // Keep postsStreamProvider for other parts of the app that need the stream

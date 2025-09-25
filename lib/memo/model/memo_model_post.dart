@@ -47,9 +47,6 @@ class MemoModelPost {
   MemoModelCreator? creator;
 
   @JsonKey(includeFromJson: false, includeToJson: false)
-  MemoModelTopic? topic;
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
   final String? created;
 
   // @JsonKey(includeFromJson: false, includeToJson: false)
@@ -104,7 +101,6 @@ class MemoModelPost {
     this.topicId = '',
     this.tagIds = const [],
     this.creator,
-    this.topic,
     this.created,
     this.docSnapshot,
     this.showOnFeed,
@@ -229,7 +225,6 @@ class MemoModelPost {
       topicId: topicId ?? this.topicId,
       tagIds: tagIds ?? this.tagIds,
       creator: creator ?? this.creator,
-      topic: topic ?? this.topic,
       created: created ?? this.created,
       urls: urls ?? this.urls,
       docSnapshot: docSnapshot ?? this.docSnapshot,

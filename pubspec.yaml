@@ -1,7 +1,7 @@
 name: mahakka
 description: An app using the memo protocol to publish content to the BCH blockchain.
 publish_to: 'none'
-version: 3.2.10-BCH+2025092404
+version: 3.2.11-BCH+2025092501
 
 environment:
   sdk: '>=3.8.0 <4.0.0'
@@ -72,16 +72,16 @@ dev_dependencies:
   fake_cloud_firestore: ^4.0.0
 
 icons_launcher:
-  image_path: "assets/icon_round_1010.png"
+  image_path: "assets/icon_launcher_1024.png"
   platforms:
     android:
       enable: true
-      image_path: "assets/icon_round_1010.png"
+      image_path: "assets/icon_launcher_1024.png"
       #notification_image: "assets/icon_round_1010.png"
       #adaptive_background_color: '#000000'
-      adaptive_background_image: "assets/icon_round_1010.png"
-      adaptive_foreground_image: "assets/icon_round_1010.png"
-      adaptive_round_image: "assets/icon_round_1010.png"
+      adaptive_background_image: "assets/icon_launcher_1024.png"
+      adaptive_foreground_image: "assets/icon_launcher_1024.png"
+      adaptive_round_image: "assets/icon_launcher_1024.png"
 
 flutter:
   uses-material-design: true
@@ -93,16 +93,16 @@ flutter:
 
 flutter_native_splash:
   color: "#000000"
-  image: assets/icon_round_1010.png
+  image: assets/mahakka_gold_round_1024.png
   #branding: assets/branding-development.png
   color_dark: "#000000"
-  image_dark: assets/icon_round_1010.png
+  image_dark: assets/mahakka_gold_round_1024.png
   #branding_dark: assets/branding-development.png
 
   android_12:
-    image: assets/icon_round_200.png
+    image: assets/mahakka_gold_round_1024.png
     icon_background_color: "#000000"
-    image_dark: assets/icon_round_200.png
+    image_dark: assets/mahakka_gold_round_1024.png
     icon_background_color_dark: "#000000"
 
   web: false

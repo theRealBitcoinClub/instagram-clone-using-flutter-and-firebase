@@ -5,9 +5,6 @@ import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../model/memo_model_creator.dart';
-import '../model/memo_model_topic.dart';
-
 class MemoScraperUtil {
   static Future<Map<String, Object>> createScraper(String path, ScraperConfig cfg, {bool nocache = true, String? mockData}) async {
     return await _createScraperAny(nocache, path, cfg, mockData: mockData);
@@ -91,20 +88,21 @@ class MemoScraperUtil {
     }
   }
 
-  static MemoModelPost linkReferencesAndSetId(MemoModelPost post, MemoModelTopic? topic, MemoModelCreator creator) {
+  static MemoModelPost linkReferencesAndSetId(MemoModelPost post, {String? topicId, required String creatorId}) {
     post.text = post.text ?? "";
     // if (post.uniqueContentId!.contains("post")) {
     //   post.uniqueContentId = post.uniqueContentId!.substring("post/".length);
     // }
     // post.id = post.uniqueContentId!;
-    post.topicId = topic != null ? topic.id : "";
-    post.creatorId = creator.id;
+    // post.topicId = topic != null ? topic.id : "";
+    post.topicId = topicId ?? "";
+    post.creatorId = creatorId;
     MemoScraperUtil.extractUrlsAndHashtags(post);
     post.ipfsCid = MemoRegExp(post.text!).extractIpfsCid();
     post.imageUrl = MemoRegExp(post.text!).extractFirstWhitelistedImageUrl();
     post.videoUrl = MemoRegExp(post.text!).extractOdyseeUrl();
     // post.tagIds = post.tagIds;
-    post.topic = topic;
+    // post.topic = topic;
     try {
       // Attempt to parse the date string.
       post.createdDateTime = DateTime.parse(post.created!);
@@ -130,7 +128,7 @@ class MemoScraperUtil {
   }
 
   static bool isTextOnly(MemoModelPost post) {
-    return post.youtubeId == null && post.imgurUrl == null && post.topic == null && post.tagIds.isEmpty && post.urls.isEmpty;
+    return post.youtubeId == null && post.imgurUrl == null && post.topicId.isEmpty && post.tagIds.isEmpty && post.urls.isEmpty;
   }
 
   static void extractUrlsAndHashtags(MemoModelPost post) {

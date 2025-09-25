@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/firebase/post_service.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/memo/model/memo_model_topic.dart';
 
 import '../memo/base/memo_accountant.dart';
 import '../memo/base/memo_verifier.dart';
@@ -44,9 +45,11 @@ class PostRepository {
     return ref.read(memoAccountantProvider).publishImgurOrYoutube(topic, text);
   }
 
-  Future<void> loadTopic(MemoModelPost post) async {
+  Future<MemoModelTopic> loadTopic(MemoModelPost post) async {
+    var topic;
     if (post.topicId.isNotEmpty) {
-      post.topic = await TopicService().getTopicOnce(post.topicId);
+      topic = await TopicService().getTopicOnce(post.topicId);
     }
+    return topic;
   }
 }

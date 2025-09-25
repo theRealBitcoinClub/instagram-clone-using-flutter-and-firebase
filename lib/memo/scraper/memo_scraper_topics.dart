@@ -294,7 +294,7 @@ class MemoScraperTopic {
     // Create post object
     final MemoModelPost post = MemoModelPost(
       id: id,
-      topic: topic,
+      topicId: topic.id,
       text: postData["msg"]?.toString(),
       popularityScore: int.tryParse((postData["tipsInSatoshi"] ?? "0").toString().replaceAll(",", "")) ?? 0,
       likeCounter: likeCount,
@@ -306,7 +306,7 @@ class MemoScraperTopic {
     );
 
     // Set up references and IDs
-    MemoScraperUtil.linkReferencesAndSetId(post, topic, creator);
+    MemoScraperUtil.linkReferencesAndSetId(post, topicId: topic.id, creatorId: creator.id);
 
     bool hasAtleastWhitelistedDomain = MemoRegExp(post.text!).hasAnyWhitelistedMediaUrl();
     if (!hasAtleastWhitelistedDomain) {

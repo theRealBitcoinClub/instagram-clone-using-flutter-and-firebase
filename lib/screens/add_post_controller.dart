@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/memo_reg_exp.dart';
-import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/provider/publish_options_provider.dart';
 import 'package:mahakka/provider/url_input_verification_notifier.dart';
 import 'package:mahakka/provider/user_provider.dart';
@@ -143,7 +142,7 @@ class AddPostController extends StateNotifier<void> {
       ipfsCid: ipfsCid.isNotEmpty ? ipfsCid : null,
       tagIds: MemoRegExp.extractHashtags(textContent),
       topicId: topic ?? "",
-      topic: topic != null ? MemoModelTopic(id: topic) : null,
+      // topic: topic != null ? MemoModelTopic(id: topic) : null,
       // creator: ref.read(userProvider)!.creator,
       creatorId: ref.read(userProvider)!.id,
     );

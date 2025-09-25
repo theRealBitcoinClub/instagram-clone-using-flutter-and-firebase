@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_avif/flutter_avif.dart';
 
 // Helper for logging errors consistently if needed within these placeholder widgets
 void _logPlaceholderError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -24,7 +25,8 @@ class ProfileLoadingScaffold extends StatelessWidget {
         // title: Text(message, style: theme.appBarTheme.titleTextStyle),
       ),
       body: Center(
-        child: Image.asset("assets/icon_round_200.png", height: 120),
+        child: AvifImage(image: AssetAvifImage("assets/images/icon_round_loading_256.avif")),
+        // child: Image.asset("assets/icon_round_200.png", height: 120),
         // Column(
         //   mainAxisAlignment: MainAxisAlignment.center,
         //   children: [

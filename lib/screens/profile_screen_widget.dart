@@ -1,5 +1,7 @@
 // lib/widgets/profile/profile_screen_widget.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
@@ -36,6 +38,11 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   final ValueNotifier<int> _viewMode = ValueNotifier(0);
   bool isRefreshingProfile = false;
   bool allowLogout = false;
+  // Add these variables to track minimum display time
+  DateTime? _currentProfileLoadStartTime;
+  String? _currentProfileId;
+  Timer? _minDisplayTimer;
+  bool _minDisplayTimeElapsed = false;
 
   @override
   void initState() {
@@ -49,6 +56,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     _viewMode.dispose();
     _ytManager.dispose();
     _scrollController.dispose();
+    _minDisplayTimer?.cancel();
     super.dispose();
   }
 
@@ -58,43 +66,71 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     }
   }
 
+  void _startMinDisplayTimer() {
+    _minDisplayTimeElapsed = false;
+    _minDisplayTimer?.cancel();
+    _minDisplayTimer = Timer(Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _minDisplayTimeElapsed = true;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final loggedInUser = ref.watch(userProvider);
-    // final profileDataAsync = ref.watch(profileDataProvider);
     final currentTabIndex = ref.watch(tabIndexProvider);
+    final targetProfileId = ref.read(profileTargetIdProvider);
+
+    // Reset min display timer when profile changes
+    if (targetProfileId != _currentProfileId) {
+      _currentProfileId = targetProfileId;
+      _currentProfileLoadStartTime = DateTime.now();
+      _minDisplayTimeElapsed = false;
+      _startMinDisplayTimer();
+    }
 
     return Consumer(
       builder: (context, ref, child) {
         final profileDataAsync = ref.watch(profileDataProvider);
 
         return profileDataAsync.when(
-          // skipLoadingOnReload: true,
-          // skipLoadingOnRefresh: true,
-          data: (profileData) => _buildProfileScreen(profileData, loggedInUser, currentTabIndex, theme),
+          data: (profileData) {
+            // Check if we have the correct profile data
+            // if (targetProfileId != null && profileData.creator?.id != targetProfileId) {
+            //   return ProfileLoadingScaffold(theme: theme, message: "Loading Profile...");
+            // }
+
+            // Check if data is fully loaded (creator + posts) AND min display time has elapsed
+            final dataReady = !profileData.isLoading && profileData.postsLoaded;
+            final canDisplay = _minDisplayTimeElapsed && dataReady;
+
+            if (!canDisplay) {
+              return ProfileLoadingScaffold(theme: theme, message: dataReady ? "Finishing up..." : "Loading Posts...");
+            }
+
+            return _buildProfileScreen(profileData, loggedInUser, currentTabIndex, theme);
+          },
           loading: () => ProfileLoadingScaffold(theme: theme, message: "Loading Profile..."),
-          error: (error, stack) =>
-              ProfileErrorScaffold(theme: theme, message: "Error loading profile: $error", onRetry: () => ref.invalidate(profileDataProvider)),
+          error: (error, stack) => ProfileErrorScaffold(
+            theme: theme,
+            message: "Error loading profile: $error",
+            onRetry: () {
+              // Reset the timer on retry
+              _currentProfileLoadStartTime = DateTime.now();
+              _minDisplayTimeElapsed = false;
+              _startMinDisplayTimer();
+              ref.invalidate(profileDataProvider);
+            },
+          ),
         );
       },
     );
-    // return profileDataAsync.when(
-    //   // skipLoadingOnReload: true,
-    //   // skipLoadingOnRefresh: true,
-    //   data: (profileData) => _buildProfileScreen(profileData, loggedInUser, currentTabIndex, theme),
-    //   loading: () => ProfileLoadingScaffold(theme: theme, message: "Loading Profile..."),
-    //   error: (error, stack) => ProfileErrorScaffold(theme: theme, message: "Error loading profile: $error", onRetry: () => _safeRefresh),
-    // );
   }
 
-  // void _safeRefresh() {
-  //   Future.microtask(() {
-  //     ref.refresh(profileDataProvider);
-  //   });
-  // }
-
-  // Fix the refresh method
   Future<void> _refreshData() async {
     try {
       await ref.refresh(profileDataProvider.future);
@@ -103,7 +139,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     }
   }
 
-  // Fix safeRefresh
   void _safeRefresh() {
     Future.microtask(() {
       ref.refresh(profileDataProvider);
@@ -117,7 +152,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     }
 
     final isOwnProfile = loggedInUser?.profileIdMemoBch == creator.id;
-    // _handleTabLogic(currentTabIndex, creator.id, isOwnProfile);
 
     // Schedule tab logic to run after build
     Future.microtask(() {
@@ -125,6 +159,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     });
 
     return Scaffold(
+      key: ValueKey("profile_scaffold_${creator.id}"),
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: ProfileAppBar(creator: creator, isOwnProfile: isOwnProfile, onShowBchQrDialog: () => _showBchQrDialog(loggedInUser, theme)),
       body: RefreshIndicator(
@@ -142,17 +177,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       ),
     );
   }
-
-  // In your _ProfileScreenWidgetState class
-
-  // Future<void> _refreshData() async {
-  //   try {
-  //     _safeRefresh();
-  //   } catch (e) {
-  //     print("Error refreshing profile data: $e");
-  //     // Don't rethrow, let the error handler show the retry button
-  //   }
-  // }
 
   Widget _buildProfileHeader(MemoModelCreator creator, bool isOwnProfile, ThemeData theme) {
     return ProfileHeader(
@@ -182,8 +206,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   }
 
   Widget _buildContent(ThemeData theme, ProfileData profileData) {
-    // Show loading indicator if posts are being categorized or data is incomplete
-    if (profileData.isLoading || profileData.categorizer.isEmpty) {
+    // Show loading indicator if posts are not fully categorized
+    if (profileData.categorizer.isEmpty) {
       return _buildLoadingContent(theme);
     }
 
@@ -195,7 +219,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       valueListenable: _viewMode,
       builder: (context, viewMode, child) {
         return KeyedSubtree(
-          key: ValueKey('${profileData.creator!.id}_$viewMode'), // Unique key per profile and view mode
+          key: ValueKey('${profileData.creator!.id}_$viewMode'),
           child: _buildSliverCategorizedView(theme, profileData.creator!, profileData.categorizer, viewMode),
         );
       },

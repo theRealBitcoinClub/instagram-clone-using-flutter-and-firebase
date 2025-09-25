@@ -214,7 +214,7 @@ class MemoPostScraper {
 
     MemoModelPost post = MemoModelPost(
       id: txHash,
-      topic: topic,
+      topicId: topicHeader ?? "",
       text: text,
       // age: age,
       popularityScore: tipsInSatoshi,
@@ -224,7 +224,7 @@ class MemoPostScraper {
       tagIds: [],
       // likeCounter and replyCounter were commented out, assuming they are not used.
     );
-    MemoScraperUtil.linkReferencesAndSetId(post, topic, creator!);
+    MemoScraperUtil.linkReferencesAndSetId(post, topicId: topicHeader, creatorId: creator!.id);
 
     if (filterOn && MemoScraperUtil.isTextOnly(post)) {
       return null;

@@ -25,37 +25,7 @@ class TaggerHashtagListView extends ConsumerWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      // decoration: BoxDecoration(
-      //   borderRadius: const BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
-      // ),
-      child: Column(
-        children: [
-          // Padding(
-          //   padding: const EdgeInsets.fromLTRB(16.0, 4.0, 4.0, 4.0),
-          //   child: Row(
-          //     children: [
-          //       // Expanded(
-          //       //   child: Text(
-          //       //     "Hashtags",
-          //       //     style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface, fontWeight: FontWeight.w600),
-          //       //     textAlign: TextAlign.center,
-          //       //   ),
-          //       // ),
-          //       // IconButton(
-          //       //   icon: Icon(Icons.close, color: colorScheme.onSurfaceVariant),
-          //       //   onPressed: () {
-          //       //     // Dismiss overlay when close button is pressed
-          //       //     // animationController.reverse();
-          //       //     tagController.dismissOverlay();
-          //       //   },
-          //       // ),
-          //     ],
-          //   ),
-          // ),
-          // Divider(color: theme.dividerColor, height: 1, thickness: 0.5),
-          Expanded(child: _buildContent(searchState, theme, colorScheme, textTheme, ref)),
-        ],
-      ),
+      child: Column(children: [Expanded(child: _buildContent(searchState, theme, colorScheme, textTheme, ref))]),
     );
   }
 
@@ -111,17 +81,8 @@ class TaggerHashtagListView extends ConsumerWidget {
   }
 
   void _selectHashtag(MemoModelTag hashtag, WidgetRef ref) {
-    // CORRECTED: addTag only takes id and name parameters
-    // The trigger character is handled internally by FlutterTagger
-    tagController.addTag(
-      id: hashtag.id ?? hashtag.name, // Use name as fallback if id is null
-      name: hashtag.name,
-    );
+    tagController.addTag(id: hashtag.id, name: hashtag.name);
     ref.read(searchViewModelProvider.notifier).clearSearch();
-
-    // Dismiss the overlay using both methods for reliability
-    // animationController.reverse();
-    // tagController.dismissOverlay();
   }
 
   bool hasSelectedTag(MemoModelTag hashtag, WidgetRef ref) {

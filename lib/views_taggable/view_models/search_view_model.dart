@@ -5,7 +5,7 @@ import 'package:mahakka/memo/firebase/topic_service.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 
-enum SearchResultView { hashtag, topics, none }
+enum SearchResultView { hashtag, topics, hintText }
 
 final topicServiceProvider = Provider<TopicService>((ref) => TopicService());
 final tagServiceProvider = Provider<TagService>((ref) => TagService());
@@ -24,7 +24,7 @@ class SearchState {
   const SearchState({
     this.topics = const [],
     this.hashtags = const [],
-    this.activeView = SearchResultView.none,
+    this.activeView = SearchResultView.hintText,
     this.isLoading = false,
     this.error,
   });
@@ -144,7 +144,7 @@ class SearchViewModel extends StateNotifier<SearchState> {
   }
 
   void clearSearch() {
-    state = state.copyWith(topics: [], hashtags: [], activeView: SearchResultView.none, error: null, isLoading: false);
+    state = state.copyWith(topics: [], hashtags: [], activeView: SearchResultView.hintText, error: null, isLoading: false);
   }
 
   @override

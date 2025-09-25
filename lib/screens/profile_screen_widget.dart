@@ -40,7 +40,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   bool allowLogout = false;
   // Add these variables to track minimum display time
   DateTime? _currentProfileLoadStartTime;
-  String? _currentProfileId;
+  String? _currentProfileId = "";
   Timer? _minDisplayTimer;
   bool _minDisplayTimeElapsed = false;
 
@@ -83,7 +83,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     final theme = Theme.of(context);
     final loggedInUser = ref.watch(userProvider);
     final currentTabIndex = ref.watch(tabIndexProvider);
-    final targetProfileId = ref.read(profileTargetIdProvider);
+    String? targetProfileId = ref.read(profileTargetIdProvider);
+    // ref.read(profileTargetIdProvider.notifier) = loggedInUser.id;
 
     // Reset min display timer when profile changes
     if (targetProfileId != _currentProfileId) {
@@ -99,11 +100,12 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
         return profileDataAsync.when(
           data: (profileData) {
+            // if (targetProfileId == null) targetProfileId = loggedInUser!.id;
+            // if (targetProfileId == null)
             // Check if we have the correct profile data
             // if (targetProfileId != null && profileData.creator?.id != targetProfileId) {
             //   return ProfileLoadingScaffold(theme: theme, message: "Loading Profile...");
             // }
-
             // Check if data is fully loaded (creator + posts) AND min display time has elapsed
             final dataReady = !profileData.isLoading && profileData.postsLoaded;
             final canDisplay = _minDisplayTimeElapsed && dataReady;

@@ -40,7 +40,7 @@ class TaggableInputWidget extends ConsumerWidget {
           },
           triggerCharacterAndStyles: _buildTriggerStyles(theme),
           tagTextFormatter: (id, tag, triggerChar) => "$triggerChar$id#$tag#",
-          overlayHeight: 350, // ADD: widget. prefix
+          // overlayHeight: 350, // ADD: widget. prefix
           // CHANGE: Pass dismissal callback to overlay
           overlay: SearchResultBox(),
           builder: (context, containerKey) {

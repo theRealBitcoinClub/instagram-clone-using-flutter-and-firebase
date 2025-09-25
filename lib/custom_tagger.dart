@@ -22,7 +22,7 @@ class CustomFlutterTagger extends StatefulWidget {
     required this.onSearch,
     required this.builder,
     this.padding = EdgeInsets.zero,
-    this.overlayHeight = 200,
+    // this.overlayHeight = 200,
     this.triggerCharacterAndStyles = const {},
     this.overlayPosition = OverlayPosition.top,
     this.triggerStrategy = TriggerStrategy.deferred,
@@ -36,7 +36,7 @@ class CustomFlutterTagger extends StatefulWidget {
 
   final Widget overlay;
   final EdgeInsetsGeometry padding;
-  final double overlayHeight;
+  // final double overlayHeight;
   final TagTextFormatter? tagTextFormatter;
   final CustomFlutterTaggerController controller;
   final void Function(String)? onFormattedTextChanged;
@@ -575,14 +575,14 @@ class _CustomFlutterTaggerState extends State<CustomFlutterTagger> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 270,
+      height: 230,
       child: Column(
         children: [
           // if (!_hideOverlay)
           // AnimatedGrowFadeIn(
           //   show: !_hideOverlay,
           //   child:
-          Container(height: 130, child: widget.overlay),
+          Container(height: 90, child: widget.overlay),
           // ),
           Container(height: 140, padding: widget.padding, child: widget.builder(context, _textFieldKey)),
         ],

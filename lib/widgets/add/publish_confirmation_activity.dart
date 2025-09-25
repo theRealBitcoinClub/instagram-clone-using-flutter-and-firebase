@@ -302,6 +302,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                   // ref.read(draftPostProvider.notifier).state = widget.post;
                   // },
                 ),
+              if (widget.post.topicId.isNotEmpty) HashtagDisplayWidget(noBorder: true, hashtags: [widget.post.topicId], theme: theme),
               if (widget.post.text != null)
                 FadeTransition(
                   opacity: _textFadeAnimation,
@@ -311,7 +312,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
               if (widget.post.urls.isNotEmpty) const SizedBox(height: 12),
               if (widget.post.tagIds.isNotEmpty) const SizedBox(height: 8),
               if (widget.post.tagIds.isNotEmpty) HashtagDisplayWidget(hashtags: widget.post.tagIds, theme: theme),
-              if (widget.post.tagIds.isNotEmpty) const SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildMediaPreview(theme, colorScheme, textTheme),
               const SizedBox(height: 4),
               TipInformationCard(post: widget.post),
@@ -375,7 +376,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
         // height: kBottomNavigationBarHeight + 16,
         // padding: EdgeInsets.zero,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -391,11 +392,11 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                 onPressed: _decreaseTipAmount,
                 tooltip: 'Decrease Tip',
               ),
-              IconButton(
-                icon: Icon(size: 32, Icons.settings, color: colorBottomBarIcon),
-                onPressed: _showTipSettings,
-                tooltip: 'Tip Settings',
-              ),
+              // IconButton(
+              //   icon: Icon(size: 32, Icons.settings, color: colorBottomBarIcon),
+              //   onPressed: _showTipSettings,
+              //   tooltip: 'Tip Settings',
+              // ),
               IconButton(
                 icon: Icon(size: 36, Icons.arrow_upward, color: colorBottomBarIcon),
                 onPressed: _increaseTipAmount,

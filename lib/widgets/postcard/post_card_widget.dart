@@ -434,6 +434,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
       for (int i = 0; i < widget.post.tagIds.length; i++) {
         final String hashtag = widget.post.tagIds[i];
+        if (i >= MemoVerifier.maxHashtags) continue;
         if (!_selectedHashtags[i]) {
           final RegExp hashtagRegex = RegExp(r'(^|\s)' + RegExp.escape(hashtag) + r'(\s|$)', caseSensitive: false);
           newText = newText.replaceAll(hashtagRegex, ' ');
@@ -444,6 +445,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
       for (int i = 0; i < widget.post.tagIds.length; i++) {
         final String hashtag = widget.post.tagIds[i];
+        if (i >= MemoVerifier.maxHashtags) continue;
         if (_selectedHashtags[i]) {
           final RegExp hashtagRegex = RegExp(r'(^|\s)' + RegExp.escape(hashtag) + r'(\s|$)', caseSensitive: false);
           if (!hashtagRegex.hasMatch(newText)) {
@@ -644,17 +646,16 @@ class _PostCardState extends ConsumerState<PostCard> {
           theme,
           Card(
             color: theme.cardColor,
-            margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
+            margin: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 0.0),
             clipBehavior: Clip.antiAlias,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(height: 5),
+                SizedBox(height: 3),
                 PostCardHeader(post: widget.post, onLikePostTipCreator: _sendTipToCreator),
                 // Media section that handles all types including link preview
-                SizedBox(height: 7),
-                _buildPostMedia(theme, colorScheme, textTheme),
                 SizedBox(height: 5),
+                _buildPostMedia(theme, colorScheme, textTheme),
                 PostCardFooter(
                   post: widget.post,
                   textEditController: _textEditController,

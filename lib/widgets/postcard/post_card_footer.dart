@@ -56,40 +56,45 @@ class PostCardFooter extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: const EdgeInsets.fromLTRB(12, 12, 16, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (post.topicId.isNotEmpty) ...[_buildTopicCheckBoxWidget(theme)],
+          if (post.tagIds.isNotEmpty) ...[const SizedBox(height: 4), _buildHashtagCheckboxesWidget(theme), const SizedBox(height: 8)],
           if (post.text != null && post.text!.isNotEmpty) ...[
-            GestureDetector(
-              onDoubleTap: () {
-                FlutterClipboard.clear();
-                FlutterClipboard.copy("${post.creator!.name} wrote on ${post.dateTimeFormattedSafe()}: ${post.text}" ?? "");
-                showSnackBar("Text copied to clipboard", context, type: SnackbarType.info);
-              },
-              child: ExpandableText(
-                // Using creatorName here
-                "$creatorName: ${post.text!}",
-                // prefixText: post.creator != null ? "${post.creator!.profileIdShort}" : "", // Handle potential null creator
-                prefixStyle: theme.textTheme.titleSmall?.copyWith(letterSpacing: 2.0),
-                expandText: 'show more',
-                collapseText: 'show less',
-                maxLines: 6,
-                linkColor: theme.colorScheme.primary,
-                style: theme.textTheme.bodyMedium?.copyWith(height: 1.3),
-                animation: true,
-                linkEllipsis: true,
-                linkStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+            Padding(
+              padding: EdgeInsets.only(left: 4),
+              child: GestureDetector(
+                onDoubleTap: () {
+                  FlutterClipboard.clear();
+                  FlutterClipboard.copy("${post.creator!.name} wrote on ${post.dateTimeFormattedSafe()}: ${post.text}" ?? "");
+                  showSnackBar("Text copied to clipboard", context, type: SnackbarType.info);
+                },
+                child: ExpandableText(
+                  // Using creatorName here
+                  "$creatorName: ${post.text!}",
+                  // prefixText: post.creator != null ? "${post.creator!.profileIdShort}" : "", // Handle potential null creator
+                  prefixStyle: theme.textTheme.titleSmall?.copyWith(letterSpacing: 2.0),
+                  expandText: 'show more',
+                  collapseText: 'show less',
+                  maxLines: 6,
+                  linkColor: theme.colorScheme.primary,
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.3),
+                  animation: true,
+                  linkEllipsis: true,
+                  linkStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 2),
           ],
           // if (showInput)
           AnimatedGrowFadeIn(
             delay: const Duration(milliseconds: 200), // Optional: small delay
             show: showInput,
             child: Padding(
-              padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 2, left: 4, right: 4, top: 8),
+              padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 2, left: 4, right: 4, top: 4),
               child:
                   // TaggableInputWidget(onChanged: onInputText, onPublish: onSend),
                   // ),
@@ -110,21 +115,19 @@ class PostCardFooter extends StatelessWidget {
                   ),
             ),
           ),
-          if (post.topicId.isNotEmpty) ...[_buildTopicCheckBoxWidget(theme)],
-          if (post.tagIds.isNotEmpty) ...[const SizedBox(height: 6), _buildHashtagCheckboxesWidget(theme), const SizedBox(height: 8)],
           AnimatedGrowFadeIn(
             show: showSend,
-            delay: const Duration(milliseconds: 200), // Optional: small delay
+            delay: const Duration(milliseconds: 500), // Optional: small delay
             child: Column(
               // Wrap your original content in a single child
               mainAxisSize: MainAxisSize.min, // Important for Column to not take infinite height
               crossAxisAlignment: CrossAxisAlignment.start, // Or your desired alignment
               children: [
-                Divider(color: theme.dividerColor.withOpacity(0.5)),
-                const SizedBox(height: 4),
+                // Divider(color: theme.dividerColor.withOpacity(0.5)),
+                // const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  children: [_buildCancelButtonWidget(theme), const SizedBox(width: 8), _buildSendButtonWidget(theme)],
+                  children: [_buildCancelButtonWidget(theme), const SizedBox(width: 4), _buildSendButtonWidget(theme)],
                 ),
               ],
             ),

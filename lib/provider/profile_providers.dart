@@ -294,9 +294,9 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
           refreshBalances();
           refreshCreatorCache(profileId);
         }
-        if (isOwnProfile) {
-          startAutoRefreshBalanceProfile();
-        }
+        // if (isOwnProfile) {
+        startAutoRefreshBalanceProfile();
+        // }
         // else {
         //   stopAutoRefreshBalanceProfile();
         // }

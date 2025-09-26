@@ -403,6 +403,7 @@ class CommonTLDs {
   };
 
   // Combined pattern for regex (TLDs + image + video extensions)
-  static String get tldPattern => mostCommonTLDs.union(imageExtensionsExtended).union(videoExtensionsExtended).join('|');
+  static String get allPattern => mostCommonTLDs.union(imageExtensionsExtended).union(videoExtensionsExtended).join('|');
+  static String get tldPattern => mostCommonTLDs.join('|');
   static List<String> get mediaExtensions => [...imageExtensionsExtended, ...videoExtensionsExtended];
 }

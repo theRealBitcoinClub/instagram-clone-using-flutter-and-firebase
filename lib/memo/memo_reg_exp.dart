@@ -299,8 +299,8 @@ class MemoRegExp {
   }
 
   static List<String> extractUrlsRefined(String text) {
-    const tlds =
-        r'com|org|net|edu|gov|mil|io|co|uk|de|fr|jp|it|es|ca|au|us|br|ru|ch|se|nl|no|eu|info|biz|me|tv|cc|ws|name|mobi|asia|aero|jobs|museum|travel|cat|pro|tel|xxx|post|geo|tech|online|site|website|space|digital|cloud|link|click|blog|shop|store|art|design|dev|app|game|news|media|live|life|world|club|group|team|center|company|solutions|services|agency|network|systems|tech|engineering|consulting|management|partners|capital|ventures|investments|fund|finance|bank|insurance|legal|law|medical|health|care|pharmacy|clinic|hospital|dental|vet|edu|academy|school|college|university|institute|training|courses|education|coop|inc|llc|ltd|corp|corporation|limited|gmbh|ag|plc|sarl|bv|ab|oy|as|sk|cz|hu|pl|ro|bg|gr|hr|si|mk|al|ba|rs|me|yu|su|by|ua|kz|uz|ge|am|az|il|sa|ae|qa|om|kw|bh|eg|ma|tn|dz|ly|sd|ye|sy|jo|lb|ps|iq|ir|af|pk|in|bd|lk|np|bt|mv|mm|th|vn|kh|la|my|sg|id|ph|kr|cn|tw|hk|mo|mn|jp';
+    final tlds = (CommonTLDs.mostCommonTLDs.toList()..sort((a, b) => b.length.compareTo(a.length))).join('|');
+    // r'com|org|net|edu|gov|mil|io|co|uk|de|fr|jp|it|es|ca|au|us|br|ru|ch|se|nl|no|eu|info|biz|me|tv|cc|ws|name|mobi|asia|aero|jobs|museum|travel|cat|pro|tel|xxx|post|geo|tech|online|site|website|space|digital|cloud|link|click|blog|shop|store|art|design|dev|app|game|news|media|live|life|world|club|group|team|center|company|solutions|services|agency|network|systems|tech|engineering|consulting|management|partners|capital|ventures|investments|fund|finance|bank|insurance|legal|law|medical|health|care|pharmacy|clinic|hospital|dental|vet|edu|academy|school|college|university|institute|training|courses|education|coop|inc|llc|ltd|corp|corporation|limited|gmbh|ag|plc|sarl|bv|ab|oy|as|sk|cz|hu|pl|ro|bg|gr|hr|si|mk|al|ba|rs|me|yu|su|by|ua|kz|uz|ge|am|az|il|sa|ae|qa|om|kw|bh|eg|ma|tn|dz|ly|sd|ye|sy|jo|lb|ps|iq|ir|af|pk|in|bd|lk|np|bt|mv|mm|th|vn|kh|la|my|sg|id|ph|kr|cn|tw|hk|mo|mn|jp';
 
     final regex = RegExp(
       r'(https?://(?:www\.)?|www\.)[a-zA-Z0-9-.]+\.(?:$tlds)(?:[/?][a-zA-Z0-9\-._~:/?@!$&'
@@ -314,12 +314,14 @@ class MemoRegExp {
   }
 
   static List<String> extractUrlsRefinedExtensions(List<String> urls) {
+    final sortedExtensions = (CommonTLDs.mediaExtensions..sort((a, b) => b.length.compareTo(a.length)));
+
     return urls.map((url) {
       int? lastExtensionIndex;
 
       // Find the last occurrence of any extension in the URL
-      for (final extension in CommonTLDs.mediaExtensions) {
-        final index = url.toLowerCase().indexOf(extension);
+      for (final extension in sortedExtensions) {
+        final index = url.toLowerCase().indexOf("." + extension);
         if (index != -1) {
           final endIndex = index + extension.length;
           if (lastExtensionIndex == null || endIndex > lastExtensionIndex) {
@@ -330,7 +332,7 @@ class MemoRegExp {
 
       // Cut off at the extension if found
       if (lastExtensionIndex != null) {
-        return url.substring(0, lastExtensionIndex);
+        return url.substring(0, lastExtensionIndex + ".".length);
       }
 
       return url;

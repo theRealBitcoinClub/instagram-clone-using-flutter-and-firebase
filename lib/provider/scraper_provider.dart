@@ -55,15 +55,28 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     // Update the provider's state to loading to indicate the process has started.
     state = const AsyncValue.loading();
     print("BackgroundScraper: Starting scraping process...");
+    print("BackgroundScraper: Starting scraping process...");
+    print("BackgroundScraper: Starting scraping process...");
+    print("BackgroundScraper: Starting scraping process...");
+    print("BackgroundScraper: Starting scraping process...");
 
     try {
       // Execute the scraping tasks.
-      var cacheId = "";
-      await MemoScraperTopic().startScrapeTopics(cacheId, 0, 0);
-      await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 0, 0);
+      var cacheId = "ooookey";
+      await MemoScraperTopic().startScrapeTopics(cacheId, 100, 0);
+      await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 200, 0);
+      await MemoScraperTag(cacheId).startScrapeTags(["/most-posts"], 200, 0);
+      // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 50, 50);
+      // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 0, 0);
+      // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 0, 0);
+      // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 0, 0);
 
       // If the process succeeds, update the state to data with a null value.
       state = const AsyncValue.data(null);
+      print("BackgroundScraper: Scraping process completed.");
+      print("BackgroundScraper: Scraping process completed.");
+      print("BackgroundScraper: Scraping process completed.");
+      print("BackgroundScraper: Scraping process completed.");
       print("BackgroundScraper: Scraping process completed.");
     } catch (e, s) {
       // If an error occurs, update the state to error.

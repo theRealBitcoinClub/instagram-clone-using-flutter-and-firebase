@@ -90,6 +90,9 @@ class MemoScraperUtil {
   }
 
   static MemoModelPost linkReferencesAndSetId(MemoModelPost post, {String? topicId, required String creatorId}) {
+    if (post.text != null && post.text!.contains("hosseinzoda")) {
+      print(post.text);
+    }
     post.text = post.text ?? "";
     post.topicId = topicId ?? "";
     post.creatorId = creatorId;
@@ -124,6 +127,11 @@ class MemoScraperUtil {
   }
 
   static void extractUrlsAndHashtags(MemoModelPost post) {
+    if (post.text != null && post.text!.contains("hosseinzoda")) {
+      print(post.text);
+    }
+    post.text = post.text ?? "";
+    if (post.text!.isNotEmpty) post.text = StringUtils.ensureSpacesAroundMatches(post.text!, MemoRegExp.extractUrlsGenerously(post.text!));
     MemoScraperUtil.extractYouTubeUrlAndRemoveJavaScriptFromText(post);
     post.tagIds = List<String>.from(MemoRegExp.extractHashtags(post.text).take(3));
     post.urls = List.from(MemoRegExp.extractUrlsWithHttpsAlways(post.text));

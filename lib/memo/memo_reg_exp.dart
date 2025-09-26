@@ -1,4 +1,5 @@
 import 'package:mahakka/config_whitelist.dart';
+import 'package:mahakka/memo/top_level_domains_media_extensions.dart';
 
 class MemoRegExp {
   final String text;
@@ -178,6 +179,84 @@ class MemoRegExp {
   static List<String> extractTopics(String? text) => _extractMatches(text, topicRegex);
 
   static List<String> extractUrls(String? text) => _extractMatches(text, urlRegex);
+  // static List<String> extractUrlsNew(String? text) => _extractMatches(text, urlRegex);
+  static List<String> extractUrlsNew(String text) {
+    final regex = RegExp(r'(https?://(?:www\.)?|www\.).*?(?=(?:https?://(?:www\.)?|www\.)|$)', caseSensitive: false, dotAll: true);
+
+    final matches = regex.allMatches(text);
+    return matches.map((match) => match.group(0)!).toList();
+  }
+
+  // static final RegExp _urlRegex = RegExp(r'(?:https?://|www\.)[a-zA-Z0-9.-]+?(?:\.[a-zA-Z]{2,})+[^\s<>]*', caseSensitive: false);
+  //
+  // static List<String> extractUrlsNew2(String text) {
+  //   return _urlRegex.allMatches(text).map((match) => match.group(0)!).where((url) => _hasValidTLD(url)).toList();
+  // }
+  //
+  // static List<String> extractUrlsNew(String text) {
+  //   // Split the text by common URL starters to isolate potential URLs
+  //   final parts = text.split(RegExp(r'(?=(?:https?://|www\.))'));
+  //   final results = <String>[];
+  //
+  //   for (final part in parts) {
+  //     if (part.startsWith('http://') || part.startsWith('https://') || part.startsWith('www.')) {
+  //       // Extract the URL by finding where it ends
+  //       final urlMatch = RegExp(
+  //         r'^(https?://|www\.)[^\s<>"'
+  //         '()]+',
+  //       ).firstMatch(part);
+  //       if (urlMatch != null) {
+  //         var url = urlMatch.group(0)!;
+  //
+  //         // Clean up the URL - remove any trailing invalid characters
+  //         url = _cleanUrl(url);
+  //
+  //         // if (_isValidUrlStructure(url)) {
+  //         results.add(url);
+  //         // }
+  //       }
+  //     }
+  //   }
+  //
+  //   return results;
+  // }
+  //
+  // static String _cleanUrl(String url) {
+  //   // Remove any characters after the URL that don't belong
+  //   // Look for the end of the URL by finding invalid URL characters or next URL starter
+  //   final cleanMatch = RegExp(
+  //     r'^(.*?)(?=[a-z]+(?:https?://|www\.)|[\s<>"'
+  //     '()]|\$)',
+  //   ).firstMatch(url);
+  //   var cleaned = cleanMatch?.group(1) ?? url;
+  //
+  //   // Special case: if we have something like "whatsgoingon.comaksldhf",
+  //   // remove the part after the TLD that's not part of the path
+  //   if (cleaned.contains('.') && !cleaned.contains('/')) {
+  //     final domainMatch = RegExp(r'^([^.]+\.[a-z]{2,})').firstMatch(cleaned);
+  //     cleaned = domainMatch?.group(1) ?? cleaned;
+  //   }
+  //
+  //   return cleaned;
+  // }
+  //
+  // static bool _isValidUrlStructure(String url) {
+  //   // Basic validation - must contain a dot and look like a URL
+  //   if (!url.contains('.')) return false;
+  //
+  //   // Check if it has a valid-looking domain structure
+  //   final domainPart = url.replaceAll(RegExp(r'^(https?://|www\.)'), '');
+  //   return domainPart.contains('.') && domainPart.length > 3;
+  // }
+  //
+  // static bool _hasValidTLD(String url) {
+  //   return true;
+  //   final tldMatch = RegExp(r'\.([a-zA-Z]{2,})(?:[/?#:]|$)').firstMatch(url);
+  //   if (tldMatch == null) return false;
+  //
+  //   final tld = tldMatch.group(1)!.toLowerCase();
+  //   return CommonTLDs.mostCommonTLDs.contains(tld) || CommonTLDs.imageExtensions.contains(tld) || CommonTLDs.videoExtensions.contains(tld);
+  // }
 
   static List<String> extractUrlsWithHttpsAlways(String? text) {
     final matches = extractUrls(text);
@@ -198,6 +277,68 @@ class MemoRegExp {
       pattern,
       caseSensitive: false,
     ).allMatches(text).map((match) => match.group(0)?.trim() ?? '').where((match) => match.isNotEmpty).toList();
+  }
+
+  static List<String> extractUrlsRefinedb4(String text) {
+    // Extended list of TLDs including less common ones
+    const tlds =
+        r'com|org|net|edu|gov|mil|io|co|uk|de|fr|jp|it|es|ca|au|us|br|ru|ch|se|nl|no|eu|info|biz|me|tv|cc|ws|name|mobi|asia|aero|jobs|museum|travel|cat|pro|tel|xxx|post|geo|tech|online|site|website|space|digital|cloud|link|click|blog|shop|store|art|design|dev|app|game|news|media|live|life|world|club|group|team|center|company|solutions|services|agency|network|systems|tech|engineering|consulting|management|partners|capital|ventures|investments|fund|finance|bank|insurance|legal|law|medical|health|care|pharmacy|clinic|hospital|dental|vet|edu|academy|school|college|university|institute|training|courses|education|coop|inc|llc|ltd|corp|corporation|limited|gmbh|ag|plc|sarl|bv|ab|oy|as|sk|cz|hu|pl|ro|bg|gr|hr|si|mk|al|ba|rs|me|yu|su|by|ua|kz|uz|ge|am|az|il|sa|ae|qa|om|kw|bh|eg|ma|tn|dz|ly|sd|ye|sy|jo|lb|ps|iq|ir|af|pk|in|bd|lk|np|bt|mv|mm|th|vn|kh|la|my|sg|id|ph|kr|cn|tw|hk|mo|mn|jp';
+
+    // Image extensions
+    const imageTypes =
+        r'jpg|jpeg|png|gif|bmp|webp|svg|ico|tiff|tif|heic|heif|raw|cr2|nef|arw|dng|eps|ai|psd|sketch|xd|fig|avi|mp4|mov|wmv|flv|webm|mkv|3gp|m4v|mpg|mpeg|vob|ogv|divx|m2ts|mts|ts|mxf|arf|m4a|wav|mp3|flac|aac|ogg|wma|aiff|ape|opus|pdf|doc|docx|xls|xlsx|ppt|pptx|txt|rtf|zip|rar|7z|tar|gz|iso|dmg|exe|msi|apk|deb|rpm|pkg';
+
+    final regex = RegExp(
+      r'(https?://(?:www\.)?|www\.)[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+(?:\.[a-zA-Z]{2,})*(?:/[^\s#?]*(?:\.(?:$imageTypes)(?=[\s#?]|$))?)?[^\s#]*(?:\?[^\s#]*)?(?:#[^\s]*)?'
+          .replaceFirst(r'$imageTypes', imageTypes),
+      caseSensitive: false,
+    );
+
+    final matches = regex.allMatches(text);
+    return matches.map((match) => match.group(0)!).toList();
+  }
+
+  static List<String> extractUrlsRefined(String text) {
+    const tlds =
+        r'com|org|net|edu|gov|mil|io|co|uk|de|fr|jp|it|es|ca|au|us|br|ru|ch|se|nl|no|eu|info|biz|me|tv|cc|ws|name|mobi|asia|aero|jobs|museum|travel|cat|pro|tel|xxx|post|geo|tech|online|site|website|space|digital|cloud|link|click|blog|shop|store|art|design|dev|app|game|news|media|live|life|world|club|group|team|center|company|solutions|services|agency|network|systems|tech|engineering|consulting|management|partners|capital|ventures|investments|fund|finance|bank|insurance|legal|law|medical|health|care|pharmacy|clinic|hospital|dental|vet|edu|academy|school|college|university|institute|training|courses|education|coop|inc|llc|ltd|corp|corporation|limited|gmbh|ag|plc|sarl|bv|ab|oy|as|sk|cz|hu|pl|ro|bg|gr|hr|si|mk|al|ba|rs|me|yu|su|by|ua|kz|uz|ge|am|az|il|sa|ae|qa|om|kw|bh|eg|ma|tn|dz|ly|sd|ye|sy|jo|lb|ps|iq|ir|af|pk|in|bd|lk|np|bt|mv|mm|th|vn|kh|la|my|sg|id|ph|kr|cn|tw|hk|mo|mn|jp';
+
+    final regex = RegExp(
+      r'(https?://(?:www\.)?|www\.)[a-zA-Z0-9-.]+\.(?:$tlds)(?:[/?][a-zA-Z0-9\-._~:/?@!$&'
+              '()*+,;=%]*)?'
+          .replaceFirst(r'$tlds', tlds),
+      caseSensitive: false,
+    );
+
+    final matches = regex.allMatches(text);
+    return matches.map((match) => match.group(0)!).toList();
+  }
+
+  static List<String> extractUrlsRefinedExtensions(List<String> urls) {
+    return urls.map((url) {
+      int? lastExtensionIndex;
+
+      // Find the last occurrence of any extension in the URL
+      for (final extension in CommonTLDs.mediaExtensions) {
+        final index = url.toLowerCase().indexOf(extension);
+        if (index != -1) {
+          final endIndex = index + extension.length;
+          if (lastExtensionIndex == null || endIndex > lastExtensionIndex) {
+            lastExtensionIndex = endIndex;
+          }
+        }
+      }
+
+      // Cut off at the extension if found
+      if (lastExtensionIndex != null) {
+        return url.substring(0, lastExtensionIndex);
+      }
+
+      return url;
+    }).toList();
+  }
+
+  static extractUrlsGenerously(String text) {
+    return extractUrlsRefinedExtensions(extractUrlsRefined(text));
   }
 }
 
@@ -265,5 +406,57 @@ class TextFilter {
   static String? findFirstWhitelistedVideoUrl(String text) {
     final videoUrls = MemoRegExp.extractWhitelistedVideoUrls(text);
     return videoUrls.isNotEmpty ? videoUrls.first : null;
+  }
+}
+
+class StringUtils {
+  static String ensureSpacesAroundMatches(String text, List<String> searchStrings) {
+    if (text.isEmpty) return text;
+
+    // Reduce multiple whitespaces to single spaces first
+    String result = text.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    // Sort by length descending (longest first) to handle contained strings
+    final sortedStrings = List<String>.from(searchStrings)
+      ..removeWhere((s) => s.isEmpty)
+      ..sort((a, b) => b.length.compareTo(a.length));
+
+    for (final searchString in sortedStrings) {
+      int startIndex = 0;
+      while (startIndex < result.length) {
+        final index = result.indexOf(searchString, startIndex);
+        if (index == -1) break;
+
+        // Handle space before
+        String newBefore = '';
+        if (index > 0) {
+          if (result[index - 1] != ' ') {
+            newBefore = ' ';
+          }
+        }
+
+        // Handle space after
+        String newAfter = '';
+        final endIndex = index + searchString.length;
+        if (endIndex < result.length) {
+          if (result[endIndex] != ' ') {
+            newAfter = ' ';
+          }
+        }
+
+        if (newBefore.isNotEmpty || newAfter.isNotEmpty) {
+          final before = result.substring(0, index);
+          final after = result.substring(endIndex);
+
+          result = '$before$newBefore$searchString$newAfter$after';
+          startIndex = index + searchString.length + newBefore.length + newAfter.length;
+        } else {
+          startIndex = endIndex;
+        }
+      }
+    }
+    result = result.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    return result;
   }
 }

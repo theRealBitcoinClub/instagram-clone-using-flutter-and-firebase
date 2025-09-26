@@ -223,6 +223,48 @@ void main() {
       expect(result.length, greaterThan(0));
     });
 
+    test('Static extractUrls should extract URLs', () {
+      // final result = MemoRegExp.extractUrls("hkjdshflkdsahfhttp://whatsgoingon.comaksldhfhflkdsahfhttp://whatsgoingon.it#aksldtrretahfhttp://whats.goingon.jp?arg=v#aksl43fhfdsahfhttp://www.whats.goingon.jp?arg=vdf.jpg#akdfftywrdshfhttps://www.whats.goingon.jp?arg=vd33f.jpg&bo=adsf#a443kfdsfdshfwww.whats.goingon.jp?arg=vd33f.jpg&bo=ad.jpegsf#aksafdf");
+      var testString =
+          "hkjdshflkdsahfhttp://whatsgoingon.comaksldhfhflkdsahfhttp://whatsgoingon.it#aksl https://whats.gofgingon.jp?arg=ddvdahfhttp://whats.goingon.jp?arg=v#akslhfdsahfhttp://www.whats.goingon.jp?arg=vdf.jpg    #akdffdshf      https://www.whats.goingon.jp?arg=vd33f.jpg&bo=adsf#akfdsfdshfwww.whats.goingon.jp?arg=vd33f.jpg&bo=ad.jpegsf#akf";
+      final result = MemoRegExp.extractUrlsNew(testString);
+      expect(result[0], contains("http://whatsgoingon.comaksldhfhflkdsahf"));
+      expect(result[1], contains("http://whatsgoingon.it#aksl"));
+      expect(result[2], contains("https://whats.gofgingon.jp?arg=ddvdahf"));
+      expect(result[3], contains("http://whats.goingon.jp?arg=v#akslhfdsahf"));
+      expect(result[4], contains("http://www.whats.goingon.jp?arg=vdf.jpg"));
+      expect(result[5], contains("https://www.whats.goingon.jp?arg=vd33f.jpg&bo=adsf#akfdsfdshf"));
+      expect(result[6], contains("www.whats.goingon.jp?arg=vd33f.jpg&bo=ad.jpegsf#akf"));
+
+      expect(MemoRegExp.extractUrlsRefined(result[0]), contains("http://whatsgoingon.com"));
+      expect(MemoRegExp.extractUrlsRefined(result[1]), contains("http://whatsgoingon.it"));
+      expect(MemoRegExp.extractUrlsRefined(result[2]), contains("https://whats.gofgingon.jp?arg=ddvdahf"));
+      expect(MemoRegExp.extractUrlsRefined(result[3]), contains("http://whats.goingon.jp?arg=v"));
+      expect(MemoRegExp.extractUrlsRefined(result[4]), contains("http://www.whats.goingon.jp?arg=vdf.jpg"));
+      expect(MemoRegExp.extractUrlsRefined(result[5]), contains("https://www.whats.goingon.jp?arg=vd33f.jpg&bo=adsf"));
+      expect(
+        MemoRegExp.extractUrlsRefinedExtensions(MemoRegExp.extractUrlsRefined(result[6])),
+        contains("www.whats.goingon.jp?arg=vd33f.jpg&bo=ad.jpeg"),
+      );
+      expect(MemoRegExp.extractUrlsGenerously(result[6]), contains("www.whats.goingon.jp?arg=vd33f.jpg&bo=ad.jpeg"));
+      expect(MemoRegExp.extractUrlsGenerously(result[5]), contains("https://www.whats.goingon.jp?arg=vd33f.jpg"));
+      //TODO FOR NOW PARAMS AFTER MEDIA EXTENSION ARE CUTT OFF
+      // expect(MemoRegExp.extractUrlsGenerously(result[5]), contains("https://www.whats.goingon.jp?arg=vd33f.jpg&bo=adsf"));
+
+      //TODO CHECK THAT GENEROUSLY DOESNT CUT OFF ? nor & PARAMS, check first character after extension
+      String withSpaces = StringUtils.ensureSpacesAroundMatches(testString, result);
+      expect(
+        withSpaces,
+        contains(
+          "hkjdshflkdsahf http://whatsgoingon.comaksldhfhflkdsahf http://whatsgoingon.it#aksl https://whats.gofgingon.jp?arg=ddvdahf http://whats.goingon.jp?arg=v#akslhfdsahf http://www.whats.goingon.jp?arg=vdf.jpg #akdffdshf https://www.whats.goingon.jp?arg=vd33f.jpg&bo=adsf#akfdsfdshf www.whats.goingon.jp?arg=vd33f.jpg&bo=ad.jpegsf#akf",
+        ),
+      );
+      // expect(result[5], contains("https://www.whats.goingon.jp?arg=vd33f.jpg&bo=adsf"));
+      // expect(result[6], contains("www.whats.goingon.jp?arg=vd33f.jpg&bo=ad.jpeg"));
+      // expect(result[6], contains(""));
+      // expect(result[7], contains(""));
+    });
+
     test('Static extractHashtags should extract hashtags', () {
       final result = MemoRegExp.extractHashtags(testString);
       expect(result, contains('#hashtag'));

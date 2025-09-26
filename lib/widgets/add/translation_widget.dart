@@ -220,14 +220,14 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     );
   }
 
-  Widget _buildDetectedLanguageInfo() {
-    if (_detectedLanguage == null) return const SizedBox.shrink();
-
-    return Text(
-      'Original language: ${_detectedLanguage!.name}',
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
-    );
-  }
+  // Widget _buildDetectedLanguageInfo() {
+  //   if (_detectedLanguage == null) return const SizedBox.shrink();
+  //
+  //   return Text(
+  //     'Original language: ${_detectedLanguage!.name}',
+  //     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -248,12 +248,11 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
         ),
 
         // Show detected language info or error message
-        AnimatedGrowFadeIn(
-          show: _detectedLanguage != null && !_languageDetectionFailed && !_isAutoDetecting,
-          duration: animDuration,
-          child: _buildDetectedLanguageInfo(),
-        ),
-
+        // AnimatedGrowFadeIn(
+        //   show: _detectedLanguage != null && !_languageDetectionFailed && !_isAutoDetecting,
+        //   duration: animDuration,
+        //   child: _buildDetectedLanguageInfo(),
+        // ),
         AnimatedGrowFadeIn(show: _languageDetectionFailed && !_isAutoDetecting, duration: animDuration, child: _buildErrorText()),
 
         const SizedBox(height: 4),

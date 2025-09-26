@@ -63,9 +63,9 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     try {
       // Execute the scraping tasks.
       var cacheId = "ooookey";
-      await MemoScraperTopic().startScrapeTopics(cacheId, 100, 0);
-      await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 200, 0);
-      await MemoScraperTag(cacheId).startScrapeTags(["/most-posts"], 200, 0);
+      await MemoScraperTopic().startScrapeTopics(cacheId + "topics", 100, 0);
+      await MemoScraperTag(cacheId + "recent").startScrapeTags(["/recent"], 200, 0);
+      await MemoScraperTag(cacheId + "most").startScrapeTags(["/most-posts"], 200, 0);
       // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 50, 50);
       // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 0, 0);
       // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 0, 0);

@@ -56,7 +56,7 @@ class PostService {
     }
 
     try {
-      await _firestore.collection(_collectionName).doc(post.id).set(post.toJson(), SetOptions(merge: false));
+      await _firestore.collection(_collectionName).doc(post.id).set(post.toJson(), SetOptions(merge: true));
 
       // Add to cache only after successful save
       _addToPersistedCache(post.id!);

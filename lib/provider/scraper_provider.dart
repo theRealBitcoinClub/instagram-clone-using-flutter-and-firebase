@@ -64,9 +64,14 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
       // Execute the scraping tasks.
       var cacheId = "letsgo";
       //TODO SCRAPER RANDOMLY SELECTS OFFSETS SO THAT DIFFERENT USERS SCRAPE DIFFERENT OFFSETS?
-      await MemoScraperTopic().startScrapeTopics(cacheId + "topics", 100, 0);
-      await MemoScraperTag(cacheId + "recent").startScrapeTags(["/recent"], 200, 0);
-      await MemoScraperTag(cacheId + "most").startScrapeTags(["/most-posts"], 100, 0);
+      if (kDebugMode) {
+        await MemoScraperTopic().startScrapeTopics(cacheId + "topics", 100, 0);
+        await MemoScraperTag(cacheId + "recent").startScrapeTags(["/recent"], 200, 0);
+        await MemoScraperTag(cacheId + "most").startScrapeTags(["/most-posts"], 100, 0);
+      } else {
+        await MemoScraperTopic().startScrapeTopics(cacheId + "topics", 0, 0);
+        await MemoScraperTag(cacheId + "recent").startScrapeTags(["/recent"], 50, 0);
+      }
       // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 50, 50);P
       // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 0, 0);
       // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 0, 0);

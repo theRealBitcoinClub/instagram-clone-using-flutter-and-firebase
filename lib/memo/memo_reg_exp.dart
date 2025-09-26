@@ -187,84 +187,12 @@ class MemoRegExp {
     return matches.map((match) => match.group(0)!).toList();
   }
 
-  // static final RegExp _urlRegex = RegExp(r'(?:https?://|www\.)[a-zA-Z0-9.-]+?(?:\.[a-zA-Z]{2,})+[^\s<>]*', caseSensitive: false);
-  //
-  // static List<String> extractUrlsNew2(String text) {
-  //   return _urlRegex.allMatches(text).map((match) => match.group(0)!).where((url) => _hasValidTLD(url)).toList();
-  // }
-  //
-  // static List<String> extractUrlsNew(String text) {
-  //   // Split the text by common URL starters to isolate potential URLs
-  //   final parts = text.split(RegExp(r'(?=(?:https?://|www\.))'));
-  //   final results = <String>[];
-  //
-  //   for (final part in parts) {
-  //     if (part.startsWith('http://') || part.startsWith('https://') || part.startsWith('www.')) {
-  //       // Extract the URL by finding where it ends
-  //       final urlMatch = RegExp(
-  //         r'^(https?://|www\.)[^\s<>"'
-  //         '()]+',
-  //       ).firstMatch(part);
-  //       if (urlMatch != null) {
-  //         var url = urlMatch.group(0)!;
-  //
-  //         // Clean up the URL - remove any trailing invalid characters
-  //         url = _cleanUrl(url);
-  //
-  //         // if (_isValidUrlStructure(url)) {
-  //         results.add(url);
-  //         // }
-  //       }
-  //     }
-  //   }
-  //
-  //   return results;
-  // }
-  //
-  // static String _cleanUrl(String url) {
-  //   // Remove any characters after the URL that don't belong
-  //   // Look for the end of the URL by finding invalid URL characters or next URL starter
-  //   final cleanMatch = RegExp(
-  //     r'^(.*?)(?=[a-z]+(?:https?://|www\.)|[\s<>"'
-  //     '()]|\$)',
-  //   ).firstMatch(url);
-  //   var cleaned = cleanMatch?.group(1) ?? url;
-  //
-  //   // Special case: if we have something like "whatsgoingon.comaksldhf",
-  //   // remove the part after the TLD that's not part of the path
-  //   if (cleaned.contains('.') && !cleaned.contains('/')) {
-  //     final domainMatch = RegExp(r'^([^.]+\.[a-z]{2,})').firstMatch(cleaned);
-  //     cleaned = domainMatch?.group(1) ?? cleaned;
-  //   }
-  //
-  //   return cleaned;
-  // }
-  //
-  // static bool _isValidUrlStructure(String url) {
-  //   // Basic validation - must contain a dot and look like a URL
-  //   if (!url.contains('.')) return false;
-  //
-  //   // Check if it has a valid-looking domain structure
-  //   final domainPart = url.replaceAll(RegExp(r'^(https?://|www\.)'), '');
-  //   return domainPart.contains('.') && domainPart.length > 3;
-  // }
-  //
-  // static bool _hasValidTLD(String url) {
-  //   return true;
-  //   final tldMatch = RegExp(r'\.([a-zA-Z]{2,})(?:[/?#:]|$)').firstMatch(url);
-  //   if (tldMatch == null) return false;
-  //
-  //   final tld = tldMatch.group(1)!.toLowerCase();
-  //   return CommonTLDs.mostCommonTLDs.contains(tld) || CommonTLDs.imageExtensions.contains(tld) || CommonTLDs.videoExtensions.contains(tld);
-  // }
-
-  static List<String> extractUrlsWithHttpsAlways(String? text) {
-    final matches = extractUrls(text);
-    return matches.map((url) {
-      if (url.startsWith('www.')) {
-        return 'https://$url';
-      }
-      return url;
+  static List<String> wrapWithHttpAlways(List<String> urls) {
+    return urls.map((url) {
+      if (url.startsWith('http')) {
+        return url;
+      } else
+        return 'http://$url';
     }).toList();
   }
 

@@ -131,9 +131,10 @@ class MemoScraperUtil {
       print(post.text);
     }
     post.text = post.text ?? "";
-    if (post.text!.isNotEmpty) post.text = StringUtils.ensureSpacesAroundMatches(post.text!, MemoRegExp.extractUrlsGenerously(post.text!));
+    var extractUrlsGenerously = MemoRegExp.extractUrlsGenerously(post.text!);
+    if (post.text!.isNotEmpty) post.text = StringUtils.ensureSpacesAroundMatches(post.text!, extractUrlsGenerously);
     MemoScraperUtil.extractYouTubeUrlAndRemoveJavaScriptFromText(post);
     post.tagIds = List<String>.from(MemoRegExp.extractHashtags(post.text).take(3));
-    post.urls = List.from(MemoRegExp.extractUrlsWithHttpsAlways(post.text));
+    post.urls = List.from(MemoRegExp.wrapWithHttpAlways(extractUrlsGenerously));
   }
 }

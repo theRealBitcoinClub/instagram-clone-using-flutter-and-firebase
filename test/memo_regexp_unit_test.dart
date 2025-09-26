@@ -226,7 +226,7 @@ void main() {
     test('Static extractUrls should extract URLs', () {
       // final result = MemoRegExp.extractUrls("hkjdshflkdsahfhttp://whatsgoingon.comaksldhfhflkdsahfhttp://whatsgoingon.it#aksldtrretahfhttp://whats.goingon.jp?arg=v#aksl43fhfdsahfhttp://www.whats.goingon.jp?arg=vdf.jpg#akdfftywrdshfhttps://www.whats.goingon.jp?arg=vd33f.jpg&bo=adsf#a443kfdsfdshfwww.whats.goingon.jp?arg=vd33f.jpg&bo=ad.jpegsf#aksafdf");
       var testString =
-          "hkjdshflkdsahfhttp://whatsgoingon.comaksldhfhflkdsahfhttp://whatsgoingon.it#aksl https://whats.gofgingon.jp?arg=ddvdahfhttp://whats.goingon.jp?arg=v#akslhfdsahfhttp://www.whats.goingon.jp?arg=vdf.jpg    #akdffdshf      https://www.whats.goingon.jp?arg=vd33f.jpg&bo=adsf#akfdsfdshfwww.whats.goingon.jp?arg=vd33f.jpg&bo=ad.jpegsf#akf https://free-bch.fullstack.cash/ipfs/view/bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74  https://free-bch.fullstack.cash/ipfs/view/bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q746 adfdfdshttps://free-bch.fullstack.cash/ipfs/view/bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q745?x=p";
+          "hkjdshflkdsahfhttp://whatsgoingon.comaksldhfhflkdsahfhttp://whatsgoingon.it#aksl https://whats.gofgingon.jp?arg=ddvdahfhttp://whats.goingon.jp?arg=v#akslhfdsahfhttp://www.whats.goingon.jp?arg=vdf.jpg    #akdffdshf      https://www.whats.goingon.jp?arg=vd33f.jpg&bo=adsf#akfdsfdshfwww.whats.goingon.jp?arg=vd33f.jpg&bo=ad.jpegsf#akf https://free-bch.fullstack.cash/ipfs/view/bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74  https://free-bch.fullstack.cash/ipfs/view/bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q746 adfdfdshttps://free-bch.fullstack.cash/ipfs/view/bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q745?x=p dsfdfhttps://www.mintme.com/token/Dance-and-music/posts/%F0%9F%94%84Just-Swapped-Dance-Music-for-Aster-on-Uniswap dsufwenm";
       final result = MemoRegExp.extractUrlsNew(testString);
       expect(result[0], contains("http://whatsgoingon.comaksldhfhflkdsahf"));
       expect(result[1], contains("http://whatsgoingon.it#aksl"));
@@ -238,6 +238,10 @@ void main() {
       expect(result[7], contains("https://free-bch.fullstack.cash/ipfs/view/bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q74"));
       expect(result[8], contains("https://free-bch.fullstack.cash/ipfs/view/bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q746"));
       expect(result[9], contains("https://free-bch.fullstack.cash/ipfs/view/bafkreieujaprdsulpf5uufjndg4zeknpmhcffy7jophvv7ebcax46w2q745?x=p"));
+      expect(
+        result[10],
+        contains("https://www.mintme.com/token/Dance-and-music/posts/%F0%9F%94%84Just-Swapped-Dance-Music-for-Aster-on-Uniswap"),
+      );
 
       expect(MemoRegExp.extractUrlsRefined(result[0]), contains("http://whatsgoingon.com"));
       expect(MemoRegExp.extractUrlsRefined(result[1]), contains("http://whatsgoingon.it"));
@@ -275,6 +279,11 @@ void main() {
       );
       expect(MemoRegExp.extractUrlsGenerously(result[6]), contains("www.whats.goingon.jp?arg=vd33f.jpg&bo=ad.jpeg"));
       expect(MemoRegExp.extractUrlsGenerously(result[5]), contains("https://www.whats.goingon.jp?arg=vd33f.jpg"));
+
+      expect(
+        MemoRegExp.extractUrlsGenerously(result[10]),
+        contains("https://www.mintme.com/token/Dance-and-music/posts/%F0%9F%94%84Just-Swapped-Dance-Music-for-Aster-on-Uniswap"),
+      );
       //TODO FOR NOW PARAMS AFTER MEDIA EXTENSION ARE CUTT OFF
       // expect(MemoRegExp.extractUrlsGenerously(result[5]), contains("https://www.whats.goingon.jp?arg=vd33f.jpg&bo=adsf"));
 

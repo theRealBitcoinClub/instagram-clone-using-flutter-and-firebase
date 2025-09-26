@@ -2,11 +2,11 @@
 // This file is auto-generated. Do not edit.
 
 class FirestoreCollections {
-  static const String prefix = '_____';
-  static const String topic = '_____topics';
-  static const String user = '_____users';
-  static const String tag = '_____tags';
-  static const String creator = '_____creators';
-  static const String posts = '_____posts';
-  static const String metadata = '_____metadata';
+  static const String prefix = '_______';
+  static const String topic = '_______topics';
+  static const String user = '_______users';
+  static const String tag = '_______tags';
+  static const String creator = '_______creators';
+  static const String posts = '_______posts';
+  static const String metadata = '_______metadata';
 }

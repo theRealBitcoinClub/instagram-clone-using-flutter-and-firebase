@@ -1,27 +1,86 @@
+import 'dart:collection';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 
 import '../../config.dart';
 
-// Assuming PostFilterType is defined elsewhere and accessible if needed here
-// import 'package:mahakka/screens/feed_screen.dart'; // For PostFilterType
-
 class PostService {
-  static const String orderByField = "createdDateTime"; // Consistent field name
+  static const String orderByField = "createdDateTime";
   static const bool descendingOrder = true;
   final FirebaseFirestore _firestore;
   final String _collectionName;
+
+  // FIFO cache for tracking persisted post IDs (max 10,000 entries)
+  static final _persistedPostIds = Queue<String>();
+  static const int _maxCacheSize = 10000;
 
   PostService({FirebaseFirestore? firestore, String collectionName = FirestoreCollections.posts})
     : _firestore = firestore ?? FirebaseFirestore.instance,
       _collectionName = collectionName;
 
+  // Check if post is already persisted and add to cache if saving
+  static bool _isPostAlreadyPersisted(String postId) {
+    return _persistedPostIds.contains(postId);
+  }
+
+  // Add post ID to cache with FIFO eviction
+  static void _addToPersistedCache(String postId) {
+    if (_persistedPostIds.length >= _maxCacheSize) {
+      // Remove oldest item (FIFO)
+      _persistedPostIds.removeFirst();
+    }
+    _persistedPostIds.add(postId);
+  }
+
+  // Remove post ID from cache (useful if post gets deleted)
+  static void _removeFromPersistedCache(String postId) {
+    _persistedPostIds.remove(postId);
+  }
+
+  // Clear entire cache (useful for testing or memory management)
+  static void clearPersistedCache() {
+    _persistedPostIds.clear();
+  }
+
+  // Get current cache size for monitoring
+  static int getPersistedCacheSize() {
+    return _persistedPostIds.length;
+  }
+
+  Future<void> savePost(MemoModelPost post) async {
+    // Check if post is already persisted
+    if (_isPostAlreadyPersisted(post.id!)) {
+      print("Post ${post.id} already persisted, skipping save.");
+      return;
+    }
+
+    try {
+      await _firestore.collection(_collectionName).doc(post.id).set(post.toJson(), SetOptions(merge: false));
+
+      // Add to cache only after successful save
+      _addToPersistedCache(post.id!);
+      print("${post.id} Post saved successfully. ${post.text}");
+    } catch (e) {
+      print("Error saving post ${post.id}: $e");
+      // Don't add to cache if save failed
+    }
+  }
+
+  Future<void> deletePost(String postId) async {
+    try {
+      await _firestore.collection(_collectionName).doc(postId).delete();
+      // Remove from cache on successful deletion
+      _removeFromPersistedCache(postId);
+      print("Post $postId deleted successfully.");
+    } catch (e) {
+      print("Error deleting post $postId: $e");
+      rethrow;
+    }
+  }
+
   // --- PAGINATION METHOD (Primary method for the feed) ---
-  Future<List<MemoModelPost>> getPostsPaginated({
-    required int limit,
-    DocumentSnapshot? startAfterDoc,
-    // activeFilters are not used for Firestore query here, filtering is client-side
-  }) async {
+  Future<List<MemoModelPost>> getPostsPaginated({required int limit, DocumentSnapshot? startAfterDoc}) async {
     Query query = _firestore.collection(_collectionName).orderBy(orderByField, descending: descendingOrder);
 
     if (startAfterDoc != null) {
@@ -31,7 +90,6 @@ class PostService {
     final querySnapshot = await query.limit(limit).get();
 
     return querySnapshot.docs.map((doc) {
-      // Use the new factory constructor that includes the snapshot
       return MemoModelPost.fromSnapshot(doc);
     }).toList();
   }
@@ -40,7 +98,6 @@ class PostService {
     try {
       final DocumentSnapshot snapshot = await _firestore.collection(_collectionName).doc(postId).get();
       if (snapshot.exists) {
-        // Use fromSnapshot here as well if you might need the docSnapshot later
         return MemoModelPost.fromSnapshot(snapshot);
       } else {
         print("Post with ID $postId not found.");
@@ -52,86 +109,15 @@ class PostService {
     }
   }
 
-  // Future<void> savePost(MemoModelPost post) async {
-  //   try {
-  //     final batch = _firestore.batch();
-  //     final postRef = _firestore.collection(FirestoreCollections.posts).doc(post.id);
-  //     final counterRef = _firestore.collection(FirestoreCollections.metadata).doc(FirestoreCollections.posts);
-  //
-  //     // First, set the post
-  //     batch.set(postRef, post.toJson());
-  //
-  //     // Check if counter exists and get current count if needed
-  //     final counterDoc = await counterRef.get();
-  //
-  //     if (!counterDoc.exists) {
-  //       // Counter doesn't exist yet - initialize it with count 1
-  //       batch.set(counterRef, {
-  //         'count': await _totalPostCount(),
-  //         'lastUpdated': FieldValue.serverTimestamp(),
-  //         'initializedAt': FieldValue.serverTimestamp(),
-  //       });
-  //     } else {
-  //       // Counter exists - increment it
-  //       batch.update(counterRef, {'count': FieldValue.increment(1), 'lastUpdated': FieldValue.serverTimestamp()});
-  //     }
-  //
-  //     await batch.commit();
-  //     print("${post.id} Post saved successfully. ${post.text}");
-  //   } catch (e) {
-  //     print("Error saving post ${post.id}: $e");
-  //     rethrow;
-  //   }
-  // }
-
-  Future<void> savePost(MemoModelPost post) async {
-    try {
-      // .id should be set on the post object before calling save
-      await _firestore.collection(_collectionName).doc(post.id).set(post.toJson(), SetOptions(merge: true));
-      print("${post.id} Post saved successfully. ${post.text}");
-    } catch (e) {
-      print("Error saving post ${post.id}: $e");
-      rethrow;
-    }
-  }
-
-  Future<void> deletePost(String postId) async {
-    try {
-      await _firestore.collection(_collectionName).doc(postId).delete();
-      print("Post ${postId} deleted successfully.");
-    } catch (e) {
-      print("Error deleting post ${postId}: $e");
-      rethrow;
-    }
-  }
-
   Future<int> getTotalPostCount() async {
     try {
       final querySnapshot = await FirebaseFirestore.instance.collection(_collectionName).count().get();
       return querySnapshot.count!;
     } catch (e) {
       print('Error getting post count: $e');
-      return -1; // Return -1 to indicate error
+      return -1;
     }
   }
-
-  // Stream<MemoModelPost?> getPostStream(String postId) {
-  //   return _firestore
-  //       .collection(postsCollection)
-  //       .doc(postId)
-  //       .snapshots()
-  //       .map((snapshot) {
-  //         if (snapshot.exists) {
-  //           return MemoModelPost.fromSnapshot(snapshot);
-  //         } else {
-  //           return null;
-  //         }
-  //       })
-  //       .handleError((error) {
-  //         print("Error in post stream for $postId: $error");
-  //         return null;
-  //       });
-  // }
 
   Stream<List<MemoModelPost>> getPostsByCreatorIdStream(String creatorId) {
     return _firestore
@@ -145,18 +131,4 @@ class PostService {
           return <MemoModelPost>[];
         });
   }
-
-  //
-  // // Your original getAllPostsStream - uses fromSnapshot
-  // Stream<List<MemoModelPost>> getAllPostsStream() {
-  //   return _firestore
-  //       .collection(postsCollection)
-  //       .orderBy(orderByField, descending: descendingOrder)
-  //       .snapshots()
-  //       .map((snapshot) => snapshot.docs.map((doc) => MemoModelPost.fromSnapshot(doc)).toList())
-  //       .handleError((error) {
-  //         print("Error in all posts stream: $error");
-  //         return <MemoModelPost>[];
-  //       });
-  // }
 }

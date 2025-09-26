@@ -32,20 +32,35 @@ class _ImageDetailDialogState extends State<ImageDetailDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return SimpleDialog(
-      contentPadding: const EdgeInsets.all(20),
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final imageSize = screenWidth < screenHeight ? screenWidth : screenHeight;
+
+    return Dialog(
       backgroundColor: Colors.black87,
-      // backgroundColor: widget.theme.colorScheme.surfaceVariant.withOpacity(0.95),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      children: [
-        CircleAvatar(
-          radius: 145,
-          backgroundColor: Colors.black87,
-          backgroundImage: widget.creator.profileImageDetail().isEmpty
-              ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-              : NetworkImage(widget.creator.profileImageDetail()),
+      insetPadding: EdgeInsets.zero,
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).pop(), // Tap anywhere to close
+        child: Container(
+          width: screenWidth,
+          height: screenHeight,
+          child: Center(
+            child: Container(
+              width: imageSize * 0.8, // 80% of smallest dimension
+              height: imageSize * 0.8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                image: DecorationImage(
+                  image: widget.creator.profileImageDetail().isEmpty
+                      ? const AssetImage("assets/images/default_profile.png") as ImageProvider
+                      : NetworkImage(widget.creator.profileImageDetail()),
+                  fit: BoxFit.cover, // Ensure image covers the circle
+                ),
+              ),
+            ),
+          ),
         ),
-      ],
+      ),
     );
   }
 }

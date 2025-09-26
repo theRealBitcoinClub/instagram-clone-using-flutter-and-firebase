@@ -57,10 +57,6 @@ class MemoDataChecker {
           if (image.image.height == 81 && image.image.width == 161) {
             //THE STANDARD ERROR IMGURL
             print("INVALID IMAGE FOUND URL: ${url}");
-            print("INVALID IMAGE FOUND URL: ${url}");
-            print("INVALID IMAGE FOUND URL: ${url}");
-            print("INVALID IMAGE FOUND URL: ${url}");
-            print("INVALID IMAGE FOUND URL: ${url}");
             completer.complete(false);
           } else {
             print("VALID IMAGE FOUND URL: ${url}");
@@ -72,8 +68,6 @@ class MemoDataChecker {
       onError: (Object exception, StackTrace? stackTrace) {
         // An error occurred during image loading
         if (!completer.isCompleted) {
-          print("ERROR isImageValid");
-          print("ERROR isImageValid");
           print("ERROR isImageValid");
           completer.complete(false);
         }

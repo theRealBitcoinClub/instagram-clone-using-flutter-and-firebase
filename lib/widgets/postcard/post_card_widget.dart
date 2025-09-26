@@ -1,4 +1,3 @@
-// widgets/post_card_widget.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
@@ -6,7 +5,6 @@ import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/provider/publish_options_provider.dart';
 import 'package:mahakka/provider/user_provider.dart';
-import 'package:mahakka/repositories/post_cache_repository.dart';
 import 'package:mahakka/repositories/post_repository.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
@@ -35,7 +33,9 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
 
 class PostCard extends ConsumerStatefulWidget {
   final MemoModelPost post;
-  const PostCard(this.post, {super.key});
+  final VoidCallback? onShowSendButton; // Add callback parameter
+
+  const PostCard(this.post, {super.key, this.onShowSendButton}); // Update constructor
 
   @override
   ConsumerState<PostCard> createState() => _PostCardState();
@@ -55,6 +55,7 @@ class _PostCardState extends ConsumerState<PostCard> {
   bool hasRegisteredAsUser = false;
   bool _showYouTubePlayer = false;
   bool _isAnimatingYouTube = false;
+  bool _previousShowSendState = false; // Track previous state
 
   @override
   void initState() {
@@ -63,6 +64,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     _initializeSelectedHashtags();
     _showYouTubePlayer = false;
     _isAnimatingYouTube = false;
+    _previousShowSendState = _showSend;
   }
 
   @override
@@ -80,20 +82,9 @@ class _PostCardState extends ConsumerState<PostCard> {
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          // borderRadius: BorderRadius.circular(12),
-          border: Border(),
-          // border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-        ),
+        decoration: BoxDecoration(color: colorScheme.surface, border: Border()),
         child: ClipRRect(
-          // borderRadius: BorderRadius.circular(11.5),
-          child: UnifiedVideoPlayer(
-            type: VideoPlayerType.generic,
-            aspectRatio: 16 / 9,
-            autoPlay: false,
-            videoUrl: widget.post.videoUrl!, // Pass the video URL
-          ),
+          child: UnifiedVideoPlayer(type: VideoPlayerType.generic, aspectRatio: 16 / 9, autoPlay: false, videoUrl: widget.post.videoUrl!),
         ),
       ),
     );
@@ -107,14 +98,8 @@ class _PostCardState extends ConsumerState<PostCard> {
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
         height: _showYouTubePlayer ? 200.0 : 50.0,
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          // borderRadius: BorderRadius.circular(12),
-          // border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-          border: Border(),
-        ),
+        decoration: BoxDecoration(color: colorScheme.surface, border: Border()),
         child: ClipRRect(
-          // borderRadius: BorderRadius.circular(11.5),
           child: _showYouTubePlayer
               ? _buildYouTubePlayerWithOverlay(theme, colorScheme, textTheme)
               : _buildYouTubePlaceholder(theme, colorScheme, textTheme),
@@ -123,10 +108,8 @@ class _PostCardState extends ConsumerState<PostCard> {
     );
   }
 
-  // Add this variable to your state
   bool _showOverlayHint = true;
 
-  // Add this method to hide overlay after delay
   void _hideOverlayAfterDelay() {
     Future.delayed(const Duration(seconds: 15), () {
       if (mounted && _showYouTubePlayer) {
@@ -140,7 +123,6 @@ class _PostCardState extends ConsumerState<PostCard> {
   Widget _buildYouTubePlayerWithOverlay(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     return Stack(
       children: [
-        // YouTube Player
         UnifiedVideoPlayer(
           type: VideoPlayerType.youtube,
           videoId: widget.post.youtubeId!,
@@ -212,7 +194,6 @@ class _PostCardState extends ConsumerState<PostCard> {
   Widget _buildPostMedia(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     String imgUrl = widget.post.imageUrl ?? widget.post.imgurUrl ?? "";
 
-    // Priority: YouTube Video > Other Video > Image > IPFS > Link Preview > Fallback
     if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
       return _buildYouTubeWidget(theme, colorScheme, textTheme);
     } else if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty) {
@@ -223,9 +204,7 @@ class _PostCardState extends ConsumerState<PostCard> {
         sourceType: ImageSourceType.network,
         fitMode: ImageFitMode.contain,
         aspectRatio: 16 / 9,
-        // borderRadius: BorderRadius.circular(12),
         border: Border(),
-        // border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
         backgroundColor: colorScheme.surface,
         showLoadingProgress: true,
       );
@@ -236,8 +215,6 @@ class _PostCardState extends ConsumerState<PostCard> {
         fitMode: ImageFitMode.contain,
         aspectRatio: 16 / 9,
         border: Border(),
-        // borderRadius: BorderRadius.circular(12),
-        // border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
         backgroundColor: colorScheme.surface,
         showLoadingProgress: true,
         errorWidget: Column(
@@ -264,18 +241,17 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   void _toggleYouTubePlayer() {
-    if (_isAnimatingYouTube) return; // Prevent rapid toggling during animation
+    if (_isAnimatingYouTube) return;
 
     setState(() {
       _isAnimatingYouTube = true;
       _showYouTubePlayer = !_showYouTubePlayer;
-      _showOverlayHint = true; // Reset overlay visibility when toggling
+      _showOverlayHint = true;
     });
 
     if (_showYouTubePlayer) {
-      _hideOverlayAfterDelay(); // Start hiding timer
+      _hideOverlayAfterDelay();
     }
-    // Reset animation state after animation completes
     Future.delayed(const Duration(milliseconds: 400), () {
       if (mounted) {
         setState(() {
@@ -283,24 +259,6 @@ class _PostCardState extends ConsumerState<PostCard> {
         });
       }
     });
-  }
-
-  // Save post with cached previews to both local cache and remote storage
-  Future<void> _savePostWithCachedPreviews() async {
-    try {
-      final postService = ref.read(postServiceProvider);
-      final cacheRepository = ref.read(postCacheRepositoryProvider);
-
-      // Save to local cache
-      await cacheRepository.savePosts([widget.post]);
-
-      // Save to remote storage (Firestore)
-      await postService.savePost(widget.post);
-
-      print("Post cached previews updated successfully");
-    } catch (e) {
-      _logError("Failed to save post with cached previews", e);
-    }
   }
 
   Widget _buildFallbackWidget(ColorScheme colorScheme) {
@@ -339,13 +297,11 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   double _getMediaHeight() {
-    // For YouTube, use current height (animated between 50 and 200)
     var post = widget.post;
     if (post.youtubeId != null && post.youtubeId!.isNotEmpty) {
       return _showYouTubePlayer ? 200.0 : 50.0;
     }
 
-    // For other media types, use fixed height
     if (post.videoUrl != null && post.videoUrl!.isNotEmpty ||
         post.imageUrl != null && post.imageUrl!.isNotEmpty ||
         post.ipfsCid != null && post.ipfsCid!.isNotEmpty ||
@@ -353,7 +309,7 @@ class _PostCardState extends ConsumerState<PostCard> {
       return 200.0;
     }
 
-    return _altImageHeight * 2; // Height for fallback
+    return _altImageHeight * 2;
   }
 
   Future<void> _sendTipToCreator() async {
@@ -406,15 +362,15 @@ class _PostCardState extends ConsumerState<PostCard> {
     if (value.contains("@@")) _textEditController.text = value.replaceAll("@@", "@");
 
     if (value.contains("##")) _textEditController.text = value.replaceAll("##", "#");
-    // Check if the text contains a newline character (Enter key was pressed)
+
     if (value.contains('\n')) {
       _textEditController.text = value.replaceAll("\n", "");
-      // Enter key was pressed - trigger send action if conditions are met
       if (_showSend) {
         _onSend();
       }
-      return; // Exit early since we handled the Enter key
+      return;
     }
+
     setState(() {
       final currentTextHashtags = MemoRegExp.extractHashtags(value);
       for (int i = 0; i < _selectedHashtags.length && i < widget.post.tagIds.length; i++) {
@@ -475,10 +431,18 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     final bool meetsLengthRequirement = textWithoutKnownHashtags.length >= _minTextLength && currentText.length <= MemoVerifier.maxPostLength;
 
-    if (_hasSelectedTopic) {
-      _showSend = meetsLengthRequirement;
-    } else {
-      _showSend = hasAnySelectedOrOtherHashtagsInText && meetsLengthRequirement;
+    final bool newShowSendState = _hasSelectedTopic ? meetsLengthRequirement : hasAnySelectedOrOtherHashtagsInText && meetsLengthRequirement;
+
+    if (newShowSendState != _showSend) {
+      setState(() {
+        _showSend = newShowSendState;
+      });
+
+      // Trigger the callback when showSend changes from false to true
+      if (_showSend && !_previousShowSendState && widget.onShowSendButton != null) {
+        widget.onShowSendButton!();
+      }
+      _previousShowSendState = _showSend;
     }
   }
 
@@ -490,7 +454,6 @@ class _PostCardState extends ConsumerState<PostCard> {
         .addValidator(InputValidators.verifyMinWordCount)
         .addValidator(InputValidators.verifyHashtags)
         .addValidator(InputValidators.verifyTopics)
-        // .addValidator(InputValidators.verifyUrl)
         .addValidator(InputValidators.verifyNoTopicNorTag)
         .addValidator(InputValidators.verifyOffensiveWords);
 
@@ -527,8 +490,6 @@ class _PostCardState extends ConsumerState<PostCard> {
         showSnackBar(type: SnackbarType.error, "Failed to publish reply $e", context);
       }
     } finally {
-      // ref.read(userProvider)!.temporaryTipReceiver = null;
-      // ref.read(userProvider)!.temporaryTipAmount = null;
       if (mounted) {
         setState(() => _isSendingTx = false);
       }
@@ -562,8 +523,6 @@ class _PostCardState extends ConsumerState<PostCard> {
     if (!mounted || shouldPublish != true) return;
 
     postCopy = ref.read(postTranslationProvider).applyTranslationAndAppendMediaUrl(post: postCopy, ref: ref);
-    // String translation = ref.read(postTranslationProvider).translatedText;
-    // postCopy = postCopy.copyWith(text: translation);
     postCopy.appendUrlsTagsTopicToText();
 
     var result = await ref.read(postRepositoryProvider).publishReplyTopic(postCopy);
@@ -576,10 +535,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     if (!mounted || shouldPublish != true) return;
 
-    // final translation = ref.read(postTranslationProvider);
     postCopy = ref.read(postTranslationProvider).applyTranslationAndAppendMediaUrl(post: postCopy, ref: ref);
-    // String translation = ref.read(postTranslationProvider).translatedText;
-    // postCopy = postCopy.copyWith(text: translation);
     postCopy.appendUrlsTagsTopicToText();
 
     var result = await ref.read(postRepositoryProvider).publishReplyHashtags(postCopy);
@@ -588,12 +544,10 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   Future<bool?> _showConfirmationActivity(MemoModelPost postCopy) async {
-    // Show confirmation dialog
     final bool? shouldPublish = await PublishConfirmationActivity.show(context, post: postCopy);
     return shouldPublish;
   }
 
-  //TODO THIS CALL IS CONFUSING AS IT ONLY EXECUTES THE FIRST PART BUT BEFORE PUBLISH THEN THE LAST PART AFTER
   void _showVerificationResponse(dynamic result, BuildContext ctx, MemoModelPost? postCopy) {
     String message = "";
     bool success = false;
@@ -653,7 +607,6 @@ class _PostCardState extends ConsumerState<PostCard> {
               children: [
                 SizedBox(height: 3),
                 PostCardHeader(post: widget.post, onLikePostTipCreator: _sendTipToCreator),
-                // Media section that handles all types including link preview
                 SizedBox(height: 5),
                 _buildPostMedia(theme, colorScheme, textTheme),
                 PostCardFooter(

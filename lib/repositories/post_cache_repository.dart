@@ -4,7 +4,6 @@ import 'dart:collection';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
-import 'package:mahakka/memo/firebase/post_service_provider.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/provider/user_provider.dart';
@@ -52,7 +51,7 @@ class PostCacheRepository {
       newScore = scrapedPost.popularityScore + creatorTipAmount;
     }
 
-    if (saveToFirebase) await ref.read(postServiceProvider).savePost(post);
+    // if (saveToFirebase) await ref.read(postServiceProvider).savePost(post);
     await savePosts([post]);
     ref.read(postPopularityProvider.notifier).updatePopularityScore(postId, newScore);
   }

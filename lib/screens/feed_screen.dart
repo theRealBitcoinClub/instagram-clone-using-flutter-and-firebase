@@ -62,6 +62,25 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     }
   }
 
+  // Add this method to handle scrolling down for a specific post
+  void _scrollDownForPost(MemoModelPost post) {
+    if (!_scrollController.hasClients) return;
+
+    // Find the position of the post in the list
+    final feedState = ref.read(feedPostsProvider);
+    final postIndex = feedState.posts.indexWhere((p) => p.id == post.id);
+
+    if (postIndex != -1) {
+      final targetPosition = _scrollController.offset + 50.0;
+
+      // Ensure we don't scroll beyond the maximum scroll extent
+      final maxScrollExtent = _scrollController.position.maxScrollExtent;
+      final clampedPosition = targetPosition.clamp(_scrollController.position.minScrollExtent, maxScrollExtent);
+
+      _scrollController.animateTo(clampedPosition, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+    }
+  }
+
   @override
   void dispose() {
     _scrollController.removeListener(_scrollListener);
@@ -276,7 +295,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
         showPostImageFullscreenWidget(context: context, theme: theme, posts: validImagePosts, initialIndex: validIndex);
       },
-      child: PostCard(post, key: ValueKey(post.id)),
+      child: PostCard(
+        post,
+        key: ValueKey(post.id),
+        onShowSendButton: () => _scrollDownForPost(post), // Pass the callback
+      ),
     );
   }
 
@@ -321,25 +344,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         ref.read(themeNotifierProvider.notifier).toggleTheme();
       },
     );
-    // IntroAnimatedIcon(
-    //   icon: Icons.palette, // or your theme icon
-    //   introType: IntroType.mainApp,
-    //   introStep: IntroStep.main_theme,
-    //   size: 32,
-    //   onTap: () {
-    //     // Your existing theme selection logic
-    //     ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_theme, context);
-    //   },
-    //   isIconButton: true, // Wrap as IconButton
-    // );
-    // return IconButton(
-    //   icon: Icon(themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
-    //   tooltip: "Toggle Theme",
-    //   onPressed: () {
-    //     ref.read(introStateNotifierProvider.notifier).triggerIntroAction(_introType, IntroStep.main_theme, context);
-    //     ref.read(themeNotifierProvider.notifier).toggleTheme();
-    //   },
-    // );
   }
 
   Map<ShortcutActivator, Intent> _getKeyboardShortcuts() {

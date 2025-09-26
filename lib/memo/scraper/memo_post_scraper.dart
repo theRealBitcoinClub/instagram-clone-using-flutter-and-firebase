@@ -9,6 +9,7 @@ import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
 import '../../config_hide_on_feed_trigger.dart';
+import '../../memo_data_checker.dart';
 import '../../youtube_video_checker.dart';
 import '../memo_reg_exp.dart';
 
@@ -231,6 +232,7 @@ class MemoPostScraper {
     }
 
     if (post.youtubeId != null && !(await YouTubeVideoChecker().isVideoAvailable(post.youtubeId!))) return null;
+    if (post.imgurUrl != null && !(await MemoDataChecker().isImageValid(url: post.imgurUrl!))) return null;
 
     //TODO replace the trigger URLS, replace all the URLs except one that is used for preview
 

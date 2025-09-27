@@ -83,7 +83,7 @@ class AddPostController extends StateNotifier<void> {
       //save ipfs cid whatever happens
       ref.read(userNotifierProvider.notifier).addIpfsUrlAndUpdate(ref.read(ipfsCidProvider));
 
-      final shouldPublish = await PublishConfirmationActivity.show(_context, post: post);
+      final shouldPublish = await PublishConfirmationActivity.show(_context, post: post, isPostCreationNotReply: true);
       if (shouldPublish != true) {
         if (shouldPublish == false) {
           _context.showSnackBar(type: SnackbarType.info, 'Publication canceled');

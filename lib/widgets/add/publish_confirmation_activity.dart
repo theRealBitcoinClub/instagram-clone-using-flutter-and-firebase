@@ -22,11 +22,16 @@ import 'delete_confirmation_dialog.dart';
 
 class PublishConfirmationActivity extends ConsumerStatefulWidget {
   final MemoModelPost post;
+  final bool isPostCreationNotReply;
 
-  const PublishConfirmationActivity({Key? key, required this.post}) : super(key: key);
+  const PublishConfirmationActivity({Key? key, required this.post, required this.isPostCreationNotReply}) : super(key: key);
 
-  static Future<bool?> show(BuildContext context, {required MemoModelPost post}) {
-    return Navigator.of(context).push<bool?>(MaterialPageRoute(builder: (context) => PublishConfirmationActivity(post: post)));
+  static Future<bool?> show(BuildContext context, {required MemoModelPost post, required bool isPostCreationNotReply}) {
+    return Navigator.of(context).push<bool?>(
+      MaterialPageRoute(
+        builder: (context) => PublishConfirmationActivity(post: post, isPostCreationNotReply: isPostCreationNotReply),
+      ),
+    );
   }
 
   @override
@@ -147,7 +152,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipReceiver = values[currentIndex + 1];
       });
-      showSnackBar("Changed Tip Receiver for this Post!", context, type: SnackbarType.success);
+      showSnackBar("Tip Receiver: ${user.temporaryTipReceiver!.displayName}", context, type: SnackbarType.success);
     } else {
       showSnackBar("All the tips for this post will be burned!", context, type: SnackbarType.info);
     }
@@ -162,7 +167,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipReceiver = values[currentIndex - 1];
       });
-      showSnackBar("Changed Tip Receiver for this Post!", context, type: SnackbarType.success);
+      showSnackBar("Tip Receiver: ${user.temporaryTipReceiver!.displayName}", context, type: SnackbarType.success);
     } else {
       showSnackBar("All the tips for this post go to creator!", context, type: SnackbarType.info);
     }
@@ -316,7 +321,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
               if (widget.post.tagIds.isNotEmpty) const SizedBox(height: 8),
               _buildMediaPreview(theme, colorScheme, textTheme),
               const SizedBox(height: 0),
-              TipInformationCard(post: widget.post),
+              TipInformationCard(post: widget.post, isPostCreationNotReply: widget.isPostCreationNotReply),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -368,28 +373,29 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
         elevation: Theme.of(context).bottomAppBarTheme.elevation,
         shadowColor: Theme.of(context).colorScheme.shadow,
         surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-        height: Theme.of(context).bottomAppBarTheme.height,
-        padding: Theme.of(context).bottomAppBarTheme.padding,
+        // height: Theme.of(context).bottomAppBarTheme.height,
+        // padding: Theme.of(context).bottomAppBarTheme.padding,
         // color: colorScheme.surface,
         // elevation: 8,
         // shadowColor: colorScheme.shadow,
         // surfaceTintColor: colorScheme.surfaceTint,
         // height: kBottomNavigationBarHeight + 16,
         // padding: EdgeInsets.zero,
+        height: 60,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                icon: Icon(size: 36, Icons.arrow_back, color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon),
+                icon: Icon(size: 32, Icons.account_circle_outlined, color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon),
                 onPressed: _isNewPost
                     ? () => showSnackBar("Tip receiver is 100% burn on new publications!", context, type: SnackbarType.error)
                     : _previousTipReceiver,
                 tooltip: 'Previous Receiver',
               ),
               IconButton(
-                icon: Icon(size: 36, Icons.arrow_downward, color: colorBottomBarIcon),
+                icon: Icon(size: 36, Icons.arrow_circle_down_outlined, color: colorBottomBarIcon),
                 onPressed: _decreaseTipAmount,
                 tooltip: 'Decrease Tip',
               ),
@@ -399,12 +405,16 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
               //   tooltip: 'Tip Settings',
               // ),
               IconButton(
-                icon: Icon(size: 36, Icons.arrow_upward, color: colorBottomBarIcon),
+                icon: Icon(size: 36, Icons.arrow_circle_up_outlined, color: colorBottomBarIcon),
                 onPressed: _increaseTipAmount,
                 tooltip: 'Increase Tip',
               ),
               IconButton(
-                icon: Icon(size: 36, Icons.arrow_forward, color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon),
+                icon: Icon(
+                  size: 32,
+                  Icons.local_fire_department_outlined,
+                  color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon,
+                ),
                 onPressed: _isNewPost
                     ? () => showSnackBar("Tip receiver is 100% burn on new publications!", context, type: SnackbarType.error)
                     : _nextTipReceiver,

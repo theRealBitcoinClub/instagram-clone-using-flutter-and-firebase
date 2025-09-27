@@ -148,7 +148,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         }),
       ),
       bottomNavigationBar: CupertinoTabBar(
-        height: 70,
+        height: 60,
         backgroundColor:
             theme.bottomNavigationBarTheme.backgroundColor ??
             (theme.brightness == Brightness.light ? theme.colorScheme.surface : Colors.grey[900]),

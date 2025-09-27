@@ -544,7 +544,7 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   Future<bool?> _showConfirmationActivity(MemoModelPost postCopy) async {
-    final bool? shouldPublish = await PublishConfirmationActivity.show(context, post: postCopy);
+    final bool? shouldPublish = await PublishConfirmationActivity.show(context, post: postCopy, isPostCreationNotReply: false);
     return shouldPublish;
   }
 

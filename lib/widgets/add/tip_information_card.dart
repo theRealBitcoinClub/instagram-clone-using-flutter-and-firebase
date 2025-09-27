@@ -10,15 +10,15 @@ import '../animations/animated_grow_fade_in.dart';
 
 class TipInformationCard extends ConsumerWidget {
   final MemoModelPost post;
+  final bool isPostCreationNotReply;
 
-  const TipInformationCard({Key? key, required this.post}) : super(key: key);
+  const TipInformationCard({Key? key, required this.post, required this.isPostCreationNotReply}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider)!;
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
-    final isNewPost = user.id == post.creatorId;
 
     final tipAmount = user.temporaryTipAmount ?? user.tipAmountEnum;
     final tipTotalAmount = tipAmount.value;
@@ -29,8 +29,8 @@ class TipInformationCard extends ConsumerWidget {
     final (burnPct, creatorPct) = user.temporaryTipReceiver != null
         ? user.temporaryTipReceiver!.calculateAmounts(100)
         : user.tipReceiver.calculateAmounts(100);
-    final burnPercentage = isNewPost ? 100 : burnPct;
-    final creatorPercentage = isNewPost ? 0 : creatorPct;
+    final burnPercentage = isPostCreationNotReply ? 100 : burnPct;
+    final creatorPercentage = isPostCreationNotReply ? 0 : creatorPct;
     final burnColor = theme.colorScheme.primary;
     final creatorColor = theme.colorScheme.secondary;
 
@@ -50,7 +50,7 @@ class TipInformationCard extends ConsumerWidget {
               show: showCustomTipWarning,
               // duration: const Duration(milliseconds: 300),
               child: Text(
-                '⚠️ Custom tip ' + (isNewPost ? '' : '& receiver ') + 'for this post only',
+                '⚠️ Custom tip ' + (isPostCreationNotReply ? '' : '& receiver ') + 'for this post only',
                 style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(222), fontStyle: FontStyle.italic),
               ),
             ),

@@ -195,10 +195,11 @@ class MemoPostScraper {
     final String? creatorName = item["creatorName"]?.toString();
     final String? profileUrlRaw = item["profileUrl"]?.toString();
     MemoModelCreator? creator;
+    String creatorID = "";
     if (creatorName != null && profileUrlRaw != null && profileUrlRaw.length > _profileUrlPrefixLength) {
       // Assuming the ID is the part after the prefix (e.g., "profile/creatorId")
-      final String creatorId = profileUrlRaw.substring(_profileUrlPrefixLength);
-      creator = MemoModelCreator(name: creatorName, id: creatorId);
+      creatorID = profileUrlRaw.substring(_profileUrlPrefixLength);
+      creator = MemoModelCreator(name: creatorName, id: creatorID);
     } else {
       _logWarning("Missing creator name or valid profile URL for post item: $item");
       // Decide how to handle missing creator: skip post, use a default, etc.
@@ -222,6 +223,7 @@ class MemoPostScraper {
       created: created,
       imgurUrl: imgurUrl,
       creator: creator,
+      creatorId: creatorID,
       tagIds: [],
       // likeCounter and replyCounter were commented out, assuming they are not used.
     );

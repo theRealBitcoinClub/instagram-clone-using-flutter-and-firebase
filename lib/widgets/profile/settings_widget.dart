@@ -7,6 +7,7 @@ import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
+import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 import 'package:mahakka/widgets/bch/mnemonic_backup_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -217,7 +218,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     return Dialog(
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 450),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 410),
         child: const Center(child: CircularProgressIndicator()),
       ),
     );
@@ -227,7 +228,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     return Dialog(
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 450),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 410),
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -248,7 +249,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 400),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 410),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -259,6 +260,11 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
                 children: [_buildGeneralTab(theme), _buildTipsTab(theme), _buildUserTab(theme, user)],
               ),
             ),
+            if (isSavingProfile)
+              AnimGrowFade(
+                show: isSavingProfile,
+                child: Padding(padding: EdgeInsets.only(top: 16, bottom: 0), child: LinearProgressIndicator()),
+              ),
             _buildBottomButtons(theme),
           ],
         ),
@@ -390,7 +396,6 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             type: TextInputType.url,
             controller: _imgurCtrl,
           ),
-          if (isSavingProfile) const Padding(padding: EdgeInsets.only(top: 16), child: LinearProgressIndicator()),
         ],
       ),
     );
@@ -401,12 +406,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       padding: const EdgeInsets.all(16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildTipReceiverDropdown(theme),
-          const SizedBox(height: 20),
-          _buildTipAmountDropdown(theme),
-          if (isSavingProfile) const Padding(padding: EdgeInsets.only(top: 16), child: LinearProgressIndicator()),
-        ],
+        children: [_buildTipReceiverDropdown(theme), const SizedBox(height: 20), _buildTipAmountDropdown(theme)],
       ),
     );
   }

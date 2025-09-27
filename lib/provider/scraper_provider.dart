@@ -13,7 +13,7 @@ final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraper
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
   Duration _initialDelay = Duration(seconds: 30);
-  Duration _scrapeInterval = Duration(seconds: kDebugMode ? 300 : 30);
+  Duration _scrapeInterval = kDebugMode ? Duration(hours: 3) : Duration(seconds: 30);
 
   @override
   Future<void> build() async {

@@ -29,9 +29,9 @@ class MemoScraperUtil {
     // sqlite3 ~/.var/app/com.brave.Browser/config/BraveSoftware/Brave-Browser/Default/Cookies "SELECT name, value FROM cookies WHERE host_key LIKE '%memo.cash%';"
     final Map<String, String> braveCookies = {
       // Example cookies - REPLACE THESE WITH YOUR ACTUAL COOKIES
-      'memo_session_id': 'a364ea48847c334abec911a8635ba3afbc1c883b3b07691877a4d3ffb784ce9e',
+      'memo_session_id': 'd85267162d6dc270196c94677632319726e0b8adc44877016057afcd8cb1685f',
       // 'cf_clearance':
-      //     'Uq297M5c3k3Hi8dbGtYFWE4i8paNI.PdeMWRpAJiGSI-1757609001-1.2.1.1-d5pGOZe0d1YVPIJOTK6QnVbD0Qm9rVN5Ly0Rf5ZLTHP200AX5dFE946DC3xpXT6xjRJqX2uu56Uyhh9lg3EjTulHA6FKVFQNxerkQSk.pJGrTFvyqzAcpRVmD7Yx.EMavZPND8oBtOlQmgLdFDemJK3Vj98WlJlGMtxrLN5cceKMTXDuObFOtiwBk9mSLKSAm_.8xaus7a.gMq1OCfQhoyKPqW7mfifplCC2M_d_0as',
+      //     '72xfvgJMT5.tQoOakqcPG3vgKNZLODHEPVNtL5m6fDY-1758718396-1.2.1.1-hSvvby.7fR1u.yf5ExcQVxJJqZI8ZO00a5tBXfqyMzryc2Knq.kxIEJIMCR47Ly_S38TOzlls4VT5XzBgCeb6j2R_HUXqYLq8rOrCeyVxq7dGDFXttzPR7srerLyXe__etBcGfRMzqOymYl2CzyteMTgLlHsp1c76Hw1iaBILbjov7E1u.fqNU012fupLIMpl8SRk.xei4Y7EN1wBPMU7mI.mnjkx4VFDS6qLBO7zlc',
       // 'remember_token': 'your_remember_token_here',
       // Add other cookies you find for memo.cash
     };

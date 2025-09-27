@@ -460,6 +460,7 @@ void main() {
 
     test('Twitter regex should handle various Twitter URL formats', () {
       const twitterUrls = """
+      https://twitter.com/longandy/status/1217599943512412168
       https://twitter.com/user/status/1234567890
       https://x.com/user/status/1234567890
       https://twitter.com/user/

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
@@ -13,8 +15,10 @@ import 'memo_post_scraper.dart';
 const prefskey = "lastTagScrape123";
 
 class MemoScraperTag {
+  final Ref ref;
+  final bool saveToFirebase;
   final String cacheId;
-  MemoScraperTag(this.cacheId);
+  MemoScraperTag(this.cacheId, this.ref, this.saveToFirebase);
   final tagService = TagService();
   final postService = PostService();
 
@@ -59,6 +63,8 @@ class MemoScraperTag {
       }
     }
 
+    tagService.forceProcessBatch();
+    postService.forceProcessBatch();
     print("\nSCRAPER TAGS\nFINISHED SCRAPING TAGS");
   }
 
@@ -96,16 +102,36 @@ class MemoScraperTag {
 
         if (newPosts.isNotEmpty) {
           // Save tag if it's new (no previous posts)
-          if (tag.lastCount == 0) {
-            //TODO This be changed as soon as you need the post count data from Firebase, for now only from scrape is relevant
-            await tagService.saveTag(tag);
-          }
+          // if (tag.lastCount == 0) {
+          //TODO This be changed as soon as you need the post count data from Firebase, for now only from scrape is relevant
+          // await tagService.saveTag(tag);
+          // }
 
           // Save all new posts
-          for (final post in newPosts) {
-            //TODO GET A CHECKSTRING FROM GITHUB THAT INCLUDES 100 MOST RECENTLY SAVED POST IDS AND AVOID DOUBLE PERSIST
-            await postService.savePost(post);
+          if (kDebugMode && saveToFirebase) {
+            postService.savePostsBatch(
+              newPosts,
+              onFinish: (success, processedCount, failedPostIds) {
+                if (success) {
+                  print("✅ Batch completed! Processed $processedCount posts");
+                  if (failedPostIds != null) {
+                    print("❌ Failed posts: ${failedPostIds.join(', ')}");
+                  }
+                } else {
+                  print("❌ Batch failed");
+                }
+              },
+            );
+            // postService.savePostsBatch(newPosts);
+            //
+            // for (final post in newPosts) {
+            //   //TODO GET A CHECKSTRING FROM GITHUB THAT INCLUDES 100 MOST RECENTLY SAVED POST IDS AND AVOID DOUBLE PERSIST
+            //   await postService.savePost(post);
+            // }
           }
+
+          // ref.read(postCacheRepositoryProvider).savePosts(newPosts);
+          // ref.read(postCacheRepositoryProvider).clearPagesForFilter(null);
 
           print("\nSCRAPER TAGS\nSaved ${newPosts.length} new posts for tag: ${tag.name}");
         }
@@ -113,9 +139,21 @@ class MemoScraperTag {
         print("\nSCRAPER TAGS\nError processing tag ${tag.name}: $e");
         // Continue with other tags even if one fails
       }
-
       persistPostcountAfterSuccessfulScrape(tag);
     }
+    tagService.saveTagsBatch(
+      tagsWithNewPosts,
+      onFinish: (success, processedCount, failedIds) {
+        if (success) {
+          print("✅ Batch completed! Processed $processedCount TAGS");
+          if (failedIds != null) {
+            print("❌ Failed TAGS: ${failedIds.join(', ')}");
+          }
+        } else {
+          print("❌ Batch failed");
+        }
+      },
+    );
   }
 
   /// Scrapes new posts for a specific tag

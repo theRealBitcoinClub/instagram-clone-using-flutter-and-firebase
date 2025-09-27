@@ -130,6 +130,12 @@ class MemoRegExp {
   bool hasGithubImageUrl() => _hasUrlMatchingPattern(WhitelistMediaDomains.github);
   bool hasGitlabImageUrl() => _hasUrlMatchingPattern(WhitelistMediaDomains.gitlab);
   bool hasPsfIpfsUrl() => _hasUrlMatchingPattern(WhitelistMediaDomains.psfIpfs);
+  bool hasTwitterUrl() => _hasUrlMatchingPattern(WhitelistMediaDomains.twitter);
+  bool hasTelegramUrl() => _hasUrlMatchingPattern(WhitelistMediaDomains.telegram);
+  bool hasTwitterImageUrl() => _hasUrlMatchingPattern(WhitelistMediaDomains.twitterImages);
+  bool hasTwitterInternalUrl() => _hasUrlMatchingPattern(WhitelistMediaDomains.twitterInternal);
+  bool hasRedditUrl() => _hasUrlMatchingPattern(WhitelistMediaDomains.reddit);
+  bool hasRedditImageUrl() => _hasUrlMatchingPattern(WhitelistMediaDomains.redditImages);
   bool hasWhitelistedDomainUrl() => _hasUrlMatchingPattern(WhitelistMediaDomains.domains);
 
   // Check if has any whitelisted media URL
@@ -141,6 +147,12 @@ class MemoRegExp {
         hasGithubImageUrl() ||
         hasGitlabImageUrl() ||
         hasPsfIpfsUrl() ||
+        hasTelegramUrl() ||
+        hasTwitterUrl() ||
+        hasTwitterImageUrl() ||
+        hasTwitterInternalUrl() ||
+        hasRedditUrl() ||
+        hasRedditImageUrl() ||
         hasWhitelistedDomainUrl();
   }
 

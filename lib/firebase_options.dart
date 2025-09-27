@@ -56,11 +56,12 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDS9iR7rpqJUCt6C5WZ8T7YzwfXMGwmb6s',
-    appId: '1:310290311483:android:e57b3ba57f4e8a1911ef1e',
-    messagingSenderId: '310290311483',
-    projectId: 'pagoyayalla',
-    storageBucket: 'pagoyayalla.firebasestorage.app',
+    apiKey: 'AIzaSyAVSqLbM-MYQxUtH4A8nSwbX4HXXP6tZYI',
+    appId: '1:921905130782:android:00ab4870035358c5f3ed0f',
+    messagingSenderId: '921905130782',
+    projectId: 'bolicash',
+    databaseURL: 'https://bolicash.firebaseio.com',
+    storageBucket: 'bolicash.firebasestorage.app',
   );
 
 }

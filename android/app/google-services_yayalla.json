@@ -1,14 +1,13 @@
 {
   "project_info": {
-    "project_number": "921905130782",
-    "firebase_url": "https://bolicash.firebaseio.com",
-    "project_id": "bolicash",
-    "storage_bucket": "bolicash.firebasestorage.app"
+    "project_number": "310290311483",
+    "project_id": "pagoyayalla",
+    "storage_bucket": "pagoyayalla.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:921905130782:android:00ab4870035358c5f3ed0f",
+        "mobilesdk_app_id": "1:310290311483:android:e57b3ba57f4e8a1911ef1e",
         "android_client_info": {
           "package_name": "com.mahakka"
         }
@@ -16,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAVSqLbM-MYQxUtH4A8nSwbX4HXXP6tZYI"
+          "current_key": "AIzaSyDS9iR7rpqJUCt6C5WZ8T7YzwfXMGwmb6s"
         }
       ],
       "services": {

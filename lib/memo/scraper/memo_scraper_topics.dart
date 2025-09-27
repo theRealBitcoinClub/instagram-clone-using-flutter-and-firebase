@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/config_hide_on_feed_trigger.dart';
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
@@ -14,6 +16,11 @@ import '../firebase/post_service.dart';
 import '../firebase/topic_service.dart';
 
 class MemoScraperTopic {
+  final Ref ref;
+  final bool saveToFirebase;
+
+  MemoScraperTopic(this.ref, this.saveToFirebase);
+
   /// Main entry point for scraping topics and their posts
   /// [postsToPersist]: List to accumulate posts that need to be persisted
   /// [cacheId]: Unique identifier for caching purposes
@@ -48,6 +55,8 @@ class MemoScraperTopic {
       print("\nSCRAPER TOPICS\nScraped offset $offset - Found ${topicsWithNewPosts.length} topics with new posts");
     }
 
+    topicService.forceProcessBatch();
+    postService.forceProcessBatch();
     print("\nSCRAPER TOPICS\nFINISHED SCRAPING TOPICS: $cacheId");
     // return postsToPersist;
   }
@@ -107,13 +116,31 @@ class MemoScraperTopic {
 
           // Save topic to Firebase
           //TODO FOR NOW ONLY SAVE NEW TOPICS AS FIREBASE POSTCOUNT DATA IS NOT USED, only the scraped postcount is used for the scraper checks
-          if (topic.lastPostCount == 0) await topicService.saveTopic(topic);
+          // if (topic.lastPostCount == 0) await topicService.saveTopic(topic);
 
           // Save all new posts to Firebase
-          for (final post in newPosts) {
-            //TODO GET A CHECKSTRING FROM GITHUB THAT INCLUDES 100 MOST RECENTLY SAVED POST IDS AND AVOID DOUBLE PERSIST
-            await postService.savePost(post);
+          //TODO GET A CHECKSTRING FROM GITHUB THAT INCLUDES 100 MOST RECENTLY SAVED POST IDS AND AVOID DOUBLE PERSIST
+          if (kDebugMode && saveToFirebase) {
+            postService.savePostsBatch(
+              newPosts,
+              onFinish: (success, processedCount, failedPostIds) {
+                if (success) {
+                  print("✅ Batch completed! Processed $processedCount posts");
+                  if (failedPostIds != null) {
+                    print("❌ Failed posts: ${failedPostIds.join(', ')}");
+                  }
+                } else {
+                  print("❌ Batch failed");
+                }
+              },
+            );
+            // for (final post in newPosts) {
+            //   await postService.savePost(post);
+            // }
           }
+
+          // ref.read(postCacheRepositoryProvider).savePosts(newPosts);
+          // ref.read(postCacheRepositoryProvider).clearPagesForFilter(null);
 
           // Add to persist list if needed
           // postsToPersist.add(topic);
@@ -130,6 +157,19 @@ class MemoScraperTopic {
         // Continue with other topics even if one fails
       }
     }
+    topicService.saveTopicsBatch(
+      topicsWithNewPosts,
+      onFinish: (success, processedCount, failedIds) {
+        if (success) {
+          print("✅ Batch completed! Processed $processedCount Topics");
+          if (failedIds != null) {
+            print("❌ Failed topics: ${failedIds.join(', ')}");
+          }
+        } else {
+          print("❌ Batch failed");
+        }
+      },
+    );
   }
 
   /// Scrapes posts for a specific topic, only fetching new posts

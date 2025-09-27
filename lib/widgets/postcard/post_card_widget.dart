@@ -18,7 +18,6 @@ import '../../memo/base/text_input_verifier.dart';
 import '../../memo/memo_reg_exp.dart';
 import '../../provider/telegram_bot_publisher.dart';
 import '../../providers/post_creator_provider.dart';
-import '../../url_utils.dart';
 import '../add/publish_confirmation_activity.dart';
 import '../unified_image_widget.dart';
 import 'post_card_header.dart';
@@ -229,9 +228,10 @@ class _PostCardState extends ConsumerState<PostCard> {
         ),
       );
     } else if ((!widget.post.hasMedia && widget.post.hasUrlsInText)) {
-      final validUrl = UrlUtils.getFirstValidUrl(MemoRegExp.extractUrlsWithHttpsAlways(widget.post.text));
-      if (validUrl != null) {
-        return PreviewUrlWidget(url: validUrl);
+      // final validUrl = UrlUtils.getFirstValidUrl(MemoRegExp.extractUrlsWithHttpsAlways(widget.post.text));
+      // final validUrl = widget.post.urls[0];
+      if (widget.post.urls.isNotEmpty) {
+        return PreviewUrlWidget(url: widget.post.urls[0]);
       } else {
         return _buildFallbackWidget(colorScheme);
       }

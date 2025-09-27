@@ -13,7 +13,7 @@ final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraper
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
   Duration _initialDelay = Duration(seconds: 10);
-  Duration _scrapeInterval = Duration(seconds: kDebugMode ? 300 : 10);
+  Duration _scrapeInterval = Duration(seconds: kDebugMode ? 300 : 30);
 
   @override
   Future<void> build() async {
@@ -62,15 +62,16 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
     try {
       // Execute the scraping tasks.
-      var cacheId = "letsgo";
+      bool saveToFirebase = true;
+      var cacheId = "letsgonownew";
       //TODO SCRAPER RANDOMLY SELECTS OFFSETS SO THAT DIFFERENT USERS SCRAPE DIFFERENT OFFSETS?
       if (kDebugMode) {
-        await MemoScraperTopic().startScrapeTopics(cacheId + "topics", 100, 0);
-        await MemoScraperTag(cacheId + "recent").startScrapeTags(["/recent"], 200, 0);
-        await MemoScraperTag(cacheId + "most").startScrapeTags(["/most-posts"], 100, 0);
+        await MemoScraperTopic(ref, saveToFirebase).startScrapeTopics(cacheId + "topics", 100, 0);
+        await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], 200, 0);
+        await MemoScraperTag(cacheId + "most", ref, saveToFirebase).startScrapeTags(["/most-posts"], 100, 0);
       } else {
-        await MemoScraperTopic().startScrapeTopics(cacheId + "topics", 0, 0);
-        await MemoScraperTag(cacheId + "recent").startScrapeTags(["/recent"], 50, 0);
+        await MemoScraperTopic(ref, saveToFirebase).startScrapeTopics(cacheId + "topics", 0, 0);
+        await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], 50, 0);
       }
       // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 50, 50);P
       // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 0, 0);

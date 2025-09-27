@@ -245,14 +245,20 @@ class MemoPostScraper {
       bool hasOnlyWhitelistedUrls = MemoRegExp.hasOnlyWhitelistedUrls(post.urls);
 
       bool hasAtleastWhitelistedDomain = MemoRegExp(post.text!).hasAnyWhitelistedMediaUrl();
-      if (!hasAtleastWhitelistedDomain) {
-        post.text = TextFilter.replaceNonWhitelistedDomains(post.text!);
-      }
+      // if (!hasAtleastWhitelistedDomain) {
+      //   post.text = TextFilter.replaceNonWhitelistedDomains(post.text!);
+      // }
 
       //TODO specific posts only appear on own profile if user has sufficient token
 
       // Or if you want to be more specific about what constitutes "text URLs"
-      if (filterOn && post.imgurUrl == null && post.youtubeId == null && !hasAtleastWhitelistedDomain) {
+      if (filterOn &&
+          post.imgurUrl == null &&
+          post.youtubeId == null &&
+          post.imageUrl == null &&
+          post.ipfsCid == null &&
+          post.videoUrl == null &&
+          !hasAtleastWhitelistedDomain) {
         // If no image, and has URLs that aren't from approved media domains, skip.
         _logInfo(
           "Skipping post (only text, no imgur (let imgur & youtube pass always), has zero whitelisted domains): ${post.urls.toString()}",

@@ -52,6 +52,78 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       Tab(icon: Icon(Icons.settings), text: 'User'),
     ];
   }
+  //
+  // List<Widget> tabs({BoxDecoration? decoration}) {
+  //   Widget buildTabContent(IconData icon, String text) {
+  //     final content = Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon), SizedBox(width: 8), Text(text)]);
+  //
+  //     return decoration != null ? Container(decoration: decoration, child: content) : content;
+  //   }
+  //
+  //   return [
+  //     Tab(child: buildTabContent(Icons.account_circle_outlined, 'Creator')),
+  //     Tab(child: buildTabContent(Icons.currency_bitcoin_rounded, 'Tips')),
+  //     Tab(child: buildTabContent(Icons.settings, 'User')),
+  //   ];
+  // }
+  //
+  // Widget _buildReversedTab(String text, ThemeData theme) {
+  //   return Tab(
+  //     child: Container(
+  //       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  //       decoration: BoxDecoration(
+  //         color: theme.colorScheme.primary, // Unselected background
+  //         borderRadius: BorderRadius.circular(8),
+  //       ),
+  //       child: Text(text),
+  //     ),
+  //   );
+  // }
+  //
+  // List<Widget> tabs({BoxDecoration? decoration}) {
+  //   return _buildTabsWithDecoration(decoration);
+  // }
+  //
+  // List<Widget> _buildTabsWithDecoration(BoxDecoration? decoration) {
+  //   final tabData = [
+  //     {'icon': Icons.account_circle_outlined, 'text': 'Creator'},
+  //     {'icon': Icons.currency_bitcoin_rounded, 'text': 'Tips'},
+  //     {'icon': Icons.settings, 'text': 'User'},
+  //   ];
+  //
+  //   return tabData.map((data) {
+  //     final widget = Row(
+  //       mainAxisSize: MainAxisSize.min,
+  //       children: [Icon(data['icon'] as IconData), SizedBox(width: 8), Text(data['text'] as String)],
+  //     );
+  //
+  //     return Tab(
+  //       child: decoration != null ? Container(decoration: decoration, child: widget) : widget,
+  //     );
+  //   }).toList();
+  // }
+  // List<Widget> tabs({BoxDecoration? decoration}) {
+  //   return [
+  //     Tab(
+  //       child: Container(
+  //         decoration: decoration,
+  //         child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.account_circle_outlined), SizedBox(width: 8), Text('Creator')]),
+  //       ),
+  //     ),
+  //     Tab(
+  //       child: Container(
+  //         decoration: decoration,
+  //         child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.currency_bitcoin_rounded), SizedBox(width: 8), Text('Tips')]),
+  //       ),
+  //     ),
+  //     Tab(
+  //       child: Container(
+  //         decoration: decoration,
+  //         child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.settings), SizedBox(width: 8), Text('User')]),
+  //       ),
+  //     ),
+  //   ];
+  // }
 
   @override
   void initState() {
@@ -161,9 +233,9 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error_outline, color: theme.colorScheme.error, size: 48),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Text(error, style: theme.textTheme.bodyMedium, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             ElevatedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
           ],
         ),
@@ -176,7 +248,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 450),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 400),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -196,24 +268,29 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
   Widget _buildDialogHeader(ThemeData theme) {
     return Container(
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: theme.dividerColor.withOpacity(0.3))),
-      ),
+      // decoration: BoxDecoration(
+      //   border: Border(bottom: BorderSide(color: theme.dividerColor.withOpacity(0.3))),
+      // ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Row(
           children: [
             Expanded(
               child: TabBar(
                 controller: _tabController,
+                dividerHeight: 1,
+                dividerColor: theme.dividerColor.withAlpha(122),
                 indicatorSize: TabBarIndicatorSize.tab,
-                labelColor: theme.colorScheme.primary,
+                labelColor: theme.colorScheme.primary, // White text on colored background
                 unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
                 unselectedLabelStyle: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w400),
                 labelStyle: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 indicator: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: theme.colorScheme.primary, width: 1.5)),
+                  color: theme.colorScheme.onSurface.withAlpha(12), // Selected tab background color
+                  // borderRadius: BorderRadius.circular(8),
+                  // border: Border(bottom: BorderSide(color: theme.colorScheme.primary, width: 1.5)),
                 ),
+                indicatorPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 2),
                 tabs: tabs(),
               ),
             ),
@@ -222,13 +299,28 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       ),
     );
   }
+  //
+  // Expanded(
+  // child: TabBar(
+  // controller: _tabController,
+  // indicatorSize: TabBarIndicatorSize.tab,
+  // labelColor: theme.colorScheme.primary,
+  // unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
+  // unselectedLabelStyle: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w400),
+  // labelStyle: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+  // indicator: BoxDecoration(
+  // border: Border(bottom: BorderSide(color: theme.colorScheme.primary, width: 1.5)),
+  // ),
+  // tabs: tabs(),
+  // ),
+  // ),
 
   Widget _buildBottomButtons(ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: theme.dividerColor.withOpacity(0.3))),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      // decoration: BoxDecoration(
+      //   border: Border(top: BorderSide(color: theme.dividerColor.withOpacity(0.3))),
+      // ),
       child: Row(
         children: [
           Expanded(child: _buildCloseButton(theme)),
@@ -273,7 +365,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           SettingsInputWidget(
             theme: theme,
             icon: Icons.badge_outlined,

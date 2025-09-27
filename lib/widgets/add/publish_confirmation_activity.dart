@@ -122,9 +122,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipAmount = values[currentIndex + 1];
       });
-      showSnackBar("Increased Tip for this Post!", context, type: SnackbarType.success);
+      showSnackBar("Increased Tip: ${user.temporaryTipAmount!.value} sats", context, type: SnackbarType.success);
     } else {
-      showSnackBar("It is already the maximum!", context, type: SnackbarType.info);
+      showSnackBar("Tip is already at the maximum!", context, type: SnackbarType.info);
     }
   }
 
@@ -137,9 +137,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipAmount = values[currentIndex - 1];
       });
-      showSnackBar("Decreased Tip for this Post!", context, type: SnackbarType.success);
+      showSnackBar("Decreased Tip: ${user.temporaryTipAmount!.value} sats", context, type: SnackbarType.success);
     } else {
-      showSnackBar("Tip amount is already the minimum!", context, type: SnackbarType.info);
+      showSnackBar("Tip is already at the minimum!", context, type: SnackbarType.info);
     }
   }
 
@@ -154,7 +154,8 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       });
       showSnackBar("Tip Receiver: ${user.temporaryTipReceiver!.displayName}", context, type: SnackbarType.success);
     } else {
-      showSnackBar("All the tips for this post will be burned!", context, type: SnackbarType.info);
+      // hasReachedMaxBurn = true;
+      showSnackBar("All the tips will be burned!", context, type: SnackbarType.info);
     }
   }
 
@@ -169,7 +170,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       });
       showSnackBar("Tip Receiver: ${user.temporaryTipReceiver!.displayName}", context, type: SnackbarType.success);
     } else {
-      showSnackBar("All the tips for this post go to creator!", context, type: SnackbarType.info);
+      showSnackBar("All the tips go to creator!", context, type: SnackbarType.info);
     }
   }
 
@@ -375,12 +376,6 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
         surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
         // height: Theme.of(context).bottomAppBarTheme.height,
         // padding: Theme.of(context).bottomAppBarTheme.padding,
-        // color: colorScheme.surface,
-        // elevation: 8,
-        // shadowColor: colorScheme.shadow,
-        // surfaceTintColor: colorScheme.surfaceTint,
-        // height: kBottomNavigationBarHeight + 16,
-        // padding: EdgeInsets.zero,
         height: 60,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -399,11 +394,6 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                 onPressed: _decreaseTipAmount,
                 tooltip: 'Decrease Tip',
               ),
-              // IconButton(
-              //   icon: Icon(size: 32, Icons.settings, color: colorBottomBarIcon),
-              //   onPressed: _showTipSettings,
-              //   tooltip: 'Tip Settings',
-              // ),
               IconButton(
                 icon: Icon(size: 36, Icons.arrow_circle_up_outlined, color: colorBottomBarIcon),
                 onPressed: _increaseTipAmount,

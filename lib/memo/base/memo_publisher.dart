@@ -70,7 +70,7 @@ class MemoPublisher {
   }
 
   String _addSuperTagAndSuperTopic(String topic) {
-    _memoMessage += MemoVerifier.super_tag;
+    if (!_memoMessage.contains(MemoVerifier.super_tag)) _memoMessage += MemoVerifier.super_tag;
 
     if (topic.isEmpty) {
       if (_memoMessage.length + MemoVerifier.super_topic.length < MemoVerifier.maxPostLength) {

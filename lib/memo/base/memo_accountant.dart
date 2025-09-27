@@ -233,7 +233,11 @@ class MemoAccountant {
   }
 
   Future<MemoAccountantResponse> _executePublishReplyHashtags(MemoModelPost post, String text) async {
-    return _publishToMemo(MemoCode.profileMessage, text, tips: parseTips());
+    return _publishToMemo(
+      MemoCode.profileMessage,
+      text,
+      tips: parseTips(creatorId: post.creatorId.isNotEmpty ? post.creatorId : post.creator!.id),
+    );
   }
 
   Future<MemoAccountantResponse> _executePublishImgurOrYoutube(String? topic, String text) async {
@@ -361,7 +365,7 @@ class MemoAccountant {
   // Original helper methods (unchanged)
   Future<MemoAccountantResponse> _tryPublishLike(MemoModelPost post, String wif) async {
     var mp = await MemoPublisher.create(ref, MemoBitcoinBase.reOrderTxHash(post.id!), MemoCode.postLike, wif: wif);
-    List<MemoTip> tips = parseTips(post: post);
+    List<MemoTip> tips = parseTips(creatorId: post.creatorId.isNotEmpty ? post.creatorId : post.creator!.id);
     return mp.doPublish(tips: tips);
   }
 
@@ -369,7 +373,7 @@ class MemoAccountant {
       response != MemoAccountantResponse.yes ? MemoAccountantResponse.lowBalance : MemoAccountantResponse.yes;
 
   Future<MemoAccountantResponse> _tryPublishReplyTopic(String wif, MemoModelPost post, String postReply) async {
-    List<MemoTip> tips = parseTips(post: post);
+    List<MemoTip> tips = parseTips(creatorId: post.creatorId.isNotEmpty ? post.creatorId : post.creator!.id);
     return _publishToMemo(MemoCode.topicMessage, postReply, tips: tips, top: post.topicId);
   }
 
@@ -378,7 +382,7 @@ class MemoAccountant {
     return mp.doPublish(topic: top ?? "", tips: tips);
   }
 
-  List<MemoTip> parseTips({MemoModelPost? post, TipAmount? tipTotalAmountArg, TipReceiver? receiverArg}) {
+  List<MemoTip> parseTips({String? creatorId, TipAmount? tipTotalAmountArg, TipReceiver? receiverArg}) {
     var user = ref.read(userProvider)!;
     TipReceiver receiver = receiverArg ?? user.temporaryTipReceiver ?? user.tipReceiver;
     TipAmount tipAmount = tipTotalAmountArg ?? user.temporaryTipAmount ?? user.tipAmountEnum;
@@ -386,7 +390,7 @@ class MemoAccountant {
 
     if (tipTotalAmount == 0) return [];
 
-    if (post == null) return [MemoTip(MemoBitcoinBase.bchBurnerAddress, tipTotalAmount)];
+    if (creatorId == null) return [MemoTip(MemoBitcoinBase.bchBurnerAddress, tipTotalAmount)];
 
     // Use the enum's built-in percentage calculation
     final (burnAmount, creatorAmount) = receiver.calculateAmounts(tipTotalAmount);
@@ -396,7 +400,7 @@ class MemoAccountant {
       tips.add(MemoTip(MemoBitcoinBase.bchBurnerAddress, burnAmount));
     }
     if (creatorAmount != 0) {
-      tips.add(MemoTip(post.creatorId, creatorAmount));
+      tips.add(MemoTip(creatorId, creatorAmount));
     }
 
     return tips;

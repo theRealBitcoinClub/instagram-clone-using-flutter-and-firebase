@@ -23,7 +23,9 @@ class TipInformationCard extends ConsumerWidget {
     final tipAmount = user.temporaryTipAmount ?? user.tipAmountEnum;
     final tipTotalAmount = tipAmount.value;
 
-    final tips = ref.read(memoAccountantProvider).parseTips();
+    final tips = ref
+        .read(memoAccountantProvider)
+        .parseTips(creatorId: isPostCreationNotReply ? null : (post.creatorId.isNotEmpty ? post.creatorId : post.creator!.id));
 
     // Calculate percentages for visual representation
     final (burnPct, creatorPct) = user.temporaryTipReceiver != null

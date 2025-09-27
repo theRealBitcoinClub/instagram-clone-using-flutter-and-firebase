@@ -374,44 +374,69 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
         elevation: Theme.of(context).bottomAppBarTheme.elevation,
         shadowColor: Theme.of(context).colorScheme.shadow,
         surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-        // height: Theme.of(context).bottomAppBarTheme.height,
-        // padding: Theme.of(context).bottomAppBarTheme.padding,
         height: 60,
+        padding: EdgeInsets.zero,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+          padding: const EdgeInsets.fromLTRB(32, 0, 32, 0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                icon: Icon(size: 32, Icons.account_circle_outlined, color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon),
-                onPressed: _isNewPost
+              _buildCustomIconButton(
+                icon: Icons.account_circle_outlined,
+                size: 32,
+                color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon,
+                onTap: _isNewPost
                     ? () => showSnackBar("Tip receiver is 100% burn on new publications!", context, type: SnackbarType.error)
                     : _previousTipReceiver,
                 tooltip: 'Previous Receiver',
               ),
-              IconButton(
-                icon: Icon(size: 36, Icons.arrow_circle_down_outlined, color: colorBottomBarIcon),
-                onPressed: _decreaseTipAmount,
+              _buildCustomIconButton(
+                icon: Icons.arrow_circle_down_outlined,
+                size: 36,
+                color: colorBottomBarIcon,
+                onTap: _decreaseTipAmount,
                 tooltip: 'Decrease Tip',
               ),
-              IconButton(
-                icon: Icon(size: 36, Icons.arrow_circle_up_outlined, color: colorBottomBarIcon),
-                onPressed: _increaseTipAmount,
+              _buildCustomIconButton(
+                icon: Icons.arrow_circle_up_outlined,
+                size: 36,
+                color: colorBottomBarIcon,
+                onTap: _increaseTipAmount,
                 tooltip: 'Increase Tip',
               ),
-              IconButton(
-                icon: Icon(
-                  size: 32,
-                  Icons.local_fire_department_outlined,
-                  color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon,
-                ),
-                onPressed: _isNewPost
+              _buildCustomIconButton(
+                icon: Icons.local_fire_department_outlined,
+                size: 32,
+                color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon,
+                onTap: _isNewPost
                     ? () => showSnackBar("Tip receiver is 100% burn on new publications!", context, type: SnackbarType.error)
                     : _nextTipReceiver,
                 tooltip: 'Next Receiver',
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build custom icon buttons
+  Widget _buildCustomIconButton({
+    required IconData icon,
+    required double size,
+    required Color color,
+    required VoidCallback? onTap,
+    required String tooltip,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        width: size + 32, // Add padding around the icon
+        height: size + 32,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(size), // Circular splash
+          child: Icon(icon, size: size, color: color),
         ),
       ),
     );

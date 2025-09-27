@@ -115,7 +115,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
               introType: IntroType.mainApp,
               introStep: introStep,
               color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
-              size: 32,
+              size: 34,
               // padding: const EdgeInsets.all(6.0),
               onTap: () => _moveToTab(AppTab.values.indexOf(tabData)),
             ),
@@ -129,7 +129,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
               child: Icon(
                 isSelected ? tabData.active : tabData.icon,
                 color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
-                size: 32,
+                size: 34,
               ),
             ),
           );
@@ -139,31 +139,56 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       }).toList();
     }
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Stack(
-        children: List.generate(homeScreenItems.length, (index) {
-          return Offstage(
-            offstage: index != currentTabIndex,
-            child: TickerMode(
-              enabled: index == currentTabIndex,
-              child: FadeTransition(opacity: _animationController, child: homeScreenItems[index]),
-            ),
-          );
-        }),
-      ),
-      bottomNavigationBar: CupertinoTabBar(
-        height: 50,
-        backgroundColor:
-            theme.bottomNavigationBarTheme.backgroundColor ??
-            (theme.brightness == Brightness.light ? theme.colorScheme.surface : Colors.grey[900]),
-        activeColor: cupertinoActiveColor,
-        inactiveColor: cupertinoInactiveColor,
-        currentIndex: currentTabIndex == AppTab.memo.tabIndex ? 2 : currentTabIndex,
-        onTap: (index) => _moveToTab(index),
-        iconSize: 32.0,
-        border: Border(),
-        items: buildBottomNavItems(),
+    DateTime? _currentBackPressTime;
+
+    Future<bool> _onWillPop() async {
+      final currentTabIndex = ref.read(tabIndexProvider);
+
+      // If not on feed screen (tab 0), navigate to feed
+      if (currentTabIndex != 0) {
+        _moveToTab(0);
+        return false;
+      }
+
+      // If on feed screen, use double-tap to exit
+      DateTime now = DateTime.now();
+      if (_currentBackPressTime == null || now.difference(_currentBackPressTime!) > Duration(seconds: 1)) {
+        _currentBackPressTime = now;
+        // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Press back again to exit app'), duration: Duration(seconds: 2)));
+        return false;
+      }
+
+      return true; // Exit app
+    }
+
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: Stack(
+          children: List.generate(homeScreenItems.length, (index) {
+            return Offstage(
+              offstage: index != currentTabIndex,
+              child: TickerMode(
+                enabled: index == currentTabIndex,
+                child: FadeTransition(opacity: _animationController, child: homeScreenItems[index]),
+              ),
+            );
+          }),
+        ),
+        bottomNavigationBar: CupertinoTabBar(
+          height: 50,
+          backgroundColor:
+              theme.bottomNavigationBarTheme.backgroundColor ??
+              (theme.brightness == Brightness.light ? theme.colorScheme.surface : Colors.grey[900]),
+          activeColor: cupertinoActiveColor,
+          inactiveColor: cupertinoInactiveColor,
+          currentIndex: currentTabIndex == AppTab.memo.tabIndex ? 2 : currentTabIndex,
+          onTap: (index) => _moveToTab(index),
+          iconSize: 32.0,
+          border: Border(),
+          items: buildBottomNavItems(),
+        ),
       ),
     );
   }

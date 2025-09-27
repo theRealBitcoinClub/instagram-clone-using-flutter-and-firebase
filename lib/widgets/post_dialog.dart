@@ -7,6 +7,7 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/cached_unified_image_widget.dart';
 import 'package:mahakka/widgets/popularity_score_widget.dart';
 import 'package:mahakka/widgets/unified_image_widget.dart';
+import 'package:share_plus/share_plus.dart';
 
 class FullScreenPostActivity extends StatefulWidget {
   final List<MemoModelPost> posts;
@@ -80,8 +81,12 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
       });
       _fullscreenHintTimer.cancel();
     } else {
-      // Enter fullscreen - go to landscape
-      SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+        // DeviceOrientation.portraitUp,
+        // DeviceOrientation.portraitDown,
+      ]);
       setState(() {
         _isFullscreen = true;
         _showFullscreenHint = true;
@@ -97,7 +102,7 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
   }
 
   void _initFullScreenHintTimer() {
-    _fullscreenHintTimer = Timer(const Duration(seconds: 2), () {
+    _fullscreenHintTimer = Timer(const Duration(seconds: 5), () {
       if (mounted) {
         setState(() {
           _showFullscreenHint = false;
@@ -149,10 +154,10 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
         _overlayAnimationController.reverse();
 
         // Show fullscreen hint again after swipe if in fullscreen mode
-        if (_isFullscreen) {
-          _showFullscreenHint = true;
-          _showFullscreenHintWithTimer();
-        }
+        // if (_isFullscreen) {
+        //   _showFullscreenHint = true;
+        //   _showFullscreenHintWithTimer();
+        // }
       });
       // Animate new content in
       _contentAnimationController.forward();
@@ -178,10 +183,8 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
     }
   }
 
-  void _handleHeartAction() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Like functionality will be implemented later'), duration: Duration(seconds: 2)));
+  void _handleShareAction() {
+    SharePlus.instance.share(ShareParams(text: widget.posts[_currentIndex].mediaUrl));
   }
 
   void _handleDoubleTap() {
@@ -201,11 +204,11 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
     final isDarkTheme = widget.theme.brightness == Brightness.dark;
 
     // Theme-aware colors for app bar and overlay
-    final appBarBackgroundColor = isDarkTheme ? Colors.black.withOpacity(0.7) : Colors.white.withOpacity(0.9);
+    final appBarBackgroundColor = isDarkTheme ? Colors.black.withAlpha(222) : Colors.white.withAlpha(222);
     final appBarIconColor = isDarkTheme ? Colors.white : Colors.black;
-    final overlayColor = isDarkTheme ? Colors.black54 : Colors.white70;
+    final overlayColor = isDarkTheme ? Colors.black.withAlpha(198) : Colors.white.withAlpha(198);
     final textColor = isDarkTheme ? Colors.white : Colors.black;
-    final hintOverlayColor = isDarkTheme ? Colors.black87 : Colors.grey;
+    final hintOverlayColor = isDarkTheme ? Colors.black.withAlpha(198) : Colors.white.withAlpha(198);
 
     return Scaffold(
       backgroundColor: Colors.black, // Fixed black background
@@ -255,8 +258,9 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                   child: AppBar(
                     backgroundColor: Colors.transparent,
                     elevation: 0,
+                    toolbarHeight: 50,
                     leading: IconButton(
-                      icon: Icon(Icons.close, color: appBarIconColor),
+                      icon: Icon(size: 30, Icons.close, color: appBarIconColor),
                       onPressed: _closeActivity,
                     ),
                     title: AnimatedSwitcher(
@@ -268,7 +272,7 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                     ),
                     actions: [
                       IconButton(
-                        icon: Icon(_isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen, color: appBarIconColor),
+                        icon: Icon(size: 30, _isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen, color: appBarIconColor),
                         onPressed: _toggleFullscreen,
                       ),
                     ],
@@ -281,20 +285,20 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
             // Text overlay at bottom with animation - only visible in portrait or when not in fullscreen
             if (currentPost.text != null && currentPost.text!.isNotEmpty && (_isPortrait || !_isFullscreen))
               Positioned(
-                bottom: _isPortrait ? 80 : 0, // Adjust position based on orientation
+                bottom: _isPortrait ? 60 : 0, // Adjust position based on orientation
                 left: 0,
                 right: 0,
                 child: _isOverlayVisible
                     ? Container(
                         key: ValueKey(_currentIndex),
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                         decoration: BoxDecoration(
                           color: overlayColor,
-                          borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+                          borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
                         ),
                         constraints: const BoxConstraints(
-                          minHeight: 100, // Fixed height for exactly 5 lines
-                          maxHeight: 100, // Fixed height for exactly 5 lines
+                          minHeight: 80, // Fixed height for exactly 5 lines
+                          maxHeight: 80, // Fixed height for exactly 5 lines
                         ),
                         width: double.infinity, // Stretch full width
                         child: FadeTransition(
@@ -327,22 +331,22 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                 left: 0,
                 right: 0,
                 child: Container(
-                  color: overlayColor,
-                  height: 80,
+                  color: appBarBackgroundColor,
+                  height: 60,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.arrow_back, color: textColor, size: 36), // Increased icon size
+                        icon: Icon(Icons.arrow_circle_left_outlined, color: textColor, size: 34), // Increased icon size
                         onPressed: _navigateToPrevious,
                         disabledColor: textColor.withOpacity(0.3),
                       ),
                       IconButton(
-                        icon: Icon(Icons.favorite_border, color: textColor, size: 36), // Increased icon size
-                        onPressed: _handleHeartAction,
+                        icon: Icon(Icons.share_outlined, color: textColor, size: 34), // Increased icon size
+                        onPressed: _handleShareAction,
                       ),
                       IconButton(
-                        icon: Icon(Icons.arrow_forward, color: textColor, size: 36), // Increased icon size
+                        icon: Icon(Icons.arrow_circle_right_outlined, color: textColor, size: 34), // Increased icon size
                         onPressed: _navigateToNext,
                         disabledColor: textColor.withOpacity(0.3),
                       ),
@@ -365,8 +369,8 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                       Icon(Icons.touch_app, size: 20, color: textColor),
                       const SizedBox(width: 8),
                       Text(
-                        'Long press the screen at any place to exit',
-                        style: widget.theme.textTheme.bodyLarge?.copyWith(color: textColor, fontWeight: FontWeight.bold),
+                        'Long press to exit',
+                        style: widget.theme.textTheme.bodyLarge?.copyWith(color: textColor, fontWeight: FontWeight.w400),
                       ),
                     ],
                   ),
@@ -385,11 +389,12 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
         children: [
           Expanded(
             child: Text(
-              "${post.createdDateTime!.toString().split('.').first}",
-              style: widget.theme.textTheme.titleSmall?.copyWith(color: textColor),
+              "${post.creator == null ? post.creatorId.substring(0, 8) : post.creator!.name}",
+              style: widget.theme.textTheme.titleMedium?.copyWith(color: textColor),
             ),
           ),
-          PopularityScoreWidget(initialScore: post.popularityScore),
+          PopularityScoreWidget(initialScore: post.popularityScore, textStyle: widget.theme.textTheme.titleMedium),
+          Text(" sats, "),
           const SizedBox(width: 8),
           Text("${post.age} ago", style: widget.theme.textTheme.titleSmall?.copyWith(color: textColor)),
         ],

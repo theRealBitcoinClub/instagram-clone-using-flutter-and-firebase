@@ -102,7 +102,7 @@ class MemoScraperUtil {
     post.videoUrl = MemoRegExp(post.text!).extractOdyseeUrl();
     if (post.imgurUrl != null) post.text = "${post.text!} ${post.imgurUrl!}";
     try {
-      post.createdDateTime = DateTime.parse(post.created!);
+      post.createdDateTime = DateTime.parse(post.created!).subtract(Duration(hours: 4));
     } catch (e) {
       post.createdDateTime = DateTime.now();
     }

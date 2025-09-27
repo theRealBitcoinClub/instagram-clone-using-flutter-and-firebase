@@ -144,7 +144,7 @@ class MemoModelPost {
 
     // Convert both DateTime objects to UTC for a correct comparison.
     final DateTime nowUtc = DateTime.now().toUtc();
-    final DateTime createdUtc = createdDateTime!.subtract(Duration(hours: 4));
+    final DateTime createdUtc = createdDateTime!.subtract(Duration(hours: 0));
 
     // Calculate the difference between the two UTC times.
     final Duration difference = nowUtc.difference(createdUtc);

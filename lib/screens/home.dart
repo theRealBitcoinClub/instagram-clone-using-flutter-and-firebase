@@ -92,7 +92,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       }
     });
 
-    // home.dart (updated _buildBottomNavItems method)
     List<BottomNavigationBarItem> buildBottomNavItems() {
       return AppTab.values.where((tabData) => tabData.isVisibleOnBar).map((tabData) {
         final isSelected = AppTab.values.indexOf(tabData) == currentTabIndex;
@@ -109,23 +108,29 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
 
         if (introStep != null) {
           // Use animated icon for tabs that have intro steps
-          barIcon = IntroAnimatedIcon(
-            icon: isSelected ? tabData.active : tabData.icon,
-            introType: IntroType.mainApp,
-            introStep: introStep,
-            color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
-            size: 32,
-            // padding: const EdgeInsets.all(6.0),
-            onTap: () => _moveToTab(AppTab.values.indexOf(tabData)),
+          barIcon = Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10.0), // (70 - 32) / 2 = 19px padding
+            child: IntroAnimatedIcon(
+              icon: isSelected ? tabData.active : tabData.icon,
+              introType: IntroType.mainApp,
+              introStep: introStep,
+              color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
+              size: 32,
+              // padding: const EdgeInsets.all(6.0),
+              onTap: () => _moveToTab(AppTab.values.indexOf(tabData)),
+            ),
           );
         } else {
           // Regular icon for other tabs
-          barIcon = GestureDetector(
-            onTap: () => _moveToTab(AppTab.values.indexOf(tabData)),
-            child: Icon(
-              isSelected ? tabData.active : tabData.icon,
-              color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
-              size: 32,
+          barIcon = Padding(
+            padding: const EdgeInsets.symmetric(vertical: 18.0), // (70 - 32) / 2 = 19px padding
+            child: GestureDetector(
+              onTap: () => _moveToTab(AppTab.values.indexOf(tabData)),
+              child: Icon(
+                isSelected ? tabData.active : tabData.icon,
+                color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
+                size: 32,
+              ),
             ),
           );
         }
@@ -148,7 +153,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         }),
       ),
       bottomNavigationBar: CupertinoTabBar(
-        height: 60,
+        height: 50,
         backgroundColor:
             theme.bottomNavigationBarTheme.backgroundColor ??
             (theme.brightness == Brightness.light ? theme.colorScheme.surface : Colors.grey[900]),

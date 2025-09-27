@@ -113,7 +113,7 @@ class MemoScraperTag {
               newPosts,
               onFinish: (success, processedCount, failedPostIds) {
                 if (success) {
-                  print("✅ Batch completed! Processed $processedCount posts");
+                  if (kDebugMode) print("✅ Batch completed! Processed $processedCount posts");
                   if (failedPostIds != null) {
                     print("❌ Failed posts: ${failedPostIds.join(', ')}");
                   }
@@ -145,7 +145,7 @@ class MemoScraperTag {
       tagsWithNewPosts,
       onFinish: (success, processedCount, failedIds) {
         if (success) {
-          print("✅ Batch completed! Processed $processedCount TAGS");
+          if (kDebugMode) print("✅ Batch completed! Processed $processedCount TAGS");
           if (failedIds != null) {
             print("❌ Failed TAGS: ${failedIds.join(', ')}");
           }

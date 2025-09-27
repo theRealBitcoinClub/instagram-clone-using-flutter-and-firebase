@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 
@@ -126,7 +127,7 @@ class TopicService {
     }
 
     if (duplicateIds.isNotEmpty) {
-      print("Filtered out ${duplicateIds.length} duplicate topics: ${duplicateIds.join(', ')}");
+      if (kDebugMode) print("Filtered out ${duplicateIds.length} duplicate topics: ${duplicateIds.join(', ')}");
     }
 
     return uniqueTopics;
@@ -151,7 +152,7 @@ class TopicService {
       }
     });
 
-    print("Topic batch timer started/reset (${_batchTimeout.inMinutes} minutes)");
+    // print("Topic batch timer started/reset (${_batchTimeout.inMinutes} minutes)");
   }
 
   void _cancelTimer() {

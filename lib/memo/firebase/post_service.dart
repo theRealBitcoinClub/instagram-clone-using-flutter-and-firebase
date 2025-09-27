@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 
 import '../../config.dart';
@@ -20,7 +21,7 @@ class PostService {
   static final _batchQueue = Queue<MemoModelPost>();
   static Timer? _batchTimer;
   static const int _maxBatchSize = 500;
-  static const Duration _batchTimeout = Duration(minutes: 5);
+  static const Duration _batchTimeout = Duration(minutes: 2);
   static Function(bool success, int processedCount, List<String>? failedPostIds)? _currentOnFinishCallback;
 
   PostService({FirebaseFirestore? firestore, String collectionName = FirestoreCollections.posts})
@@ -129,7 +130,7 @@ class PostService {
     }
 
     if (duplicateIds.isNotEmpty) {
-      print("Filtered out ${duplicateIds.length} duplicates: ${duplicateIds.join(', ')}");
+      if (kDebugMode) print("Filtered out ${duplicateIds.length} duplicates: ${duplicateIds.join(', ')}");
     }
 
     return uniquePosts;
@@ -154,7 +155,7 @@ class PostService {
       }
     });
 
-    print("Batch timer started/reset (${_batchTimeout.inMinutes} minutes)");
+    // print("Batch timer started/reset (${_batchTimeout.inMinutes} minutes)");
   }
 
   void _cancelTimer() {

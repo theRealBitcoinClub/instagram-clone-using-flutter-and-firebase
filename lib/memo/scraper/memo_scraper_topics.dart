@@ -125,7 +125,7 @@ class MemoScraperTopic {
               newPosts,
               onFinish: (success, processedCount, failedPostIds) {
                 if (success) {
-                  print("✅ Batch completed! Processed $processedCount posts");
+                  if (kDebugMode) print("✅ Batch completed! Processed $processedCount posts");
                   if (failedPostIds != null) {
                     print("❌ Failed posts: ${failedPostIds.join(', ')}");
                   }
@@ -161,7 +161,7 @@ class MemoScraperTopic {
       topicsWithNewPosts,
       onFinish: (success, processedCount, failedIds) {
         if (success) {
-          print("✅ Batch completed! Processed $processedCount Topics");
+          if (kDebugMode) print("✅ Batch completed! Processed $processedCount Topics");
           if (failedIds != null) {
             print("❌ Failed topics: ${failedIds.join(', ')}");
           }

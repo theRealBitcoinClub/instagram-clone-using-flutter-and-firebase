@@ -44,22 +44,22 @@ class MemoDataChecker {
 
     Completer<bool> completer = Completer<bool>();
     final Image image = imageFile != null ? Image.file(imageFile) : Image.network(url);
-    print("URL: ${url} isImageValidCHECK height ${image.height} width ${image.width}");
+    // print("URL: ${url} isImageValidCHECK height ${image.height} width ${image.width}");
     final ImageStream stream = image.image.resolve(const ImageConfiguration());
-    print("URL: ${url} isImageValidRESOLVE height ${image.height} width ${image.width}");
+    // print("URL: ${url} isImageValidRESOLVE height ${image.height} width ${image.width}");
 
     ImageStreamListener? listener;
     listener = ImageStreamListener(
       (ImageInfo image, bool synchronousCall) {
         // The image loaded successfully
         if (!completer.isCompleted) {
-          print("isImageValid height info ${image.image.height} width info ${image.image.width}");
+          // print("isImageValid height info ${image.image.height} width info ${image.image.width}");
           if (image.image.height == 81 && image.image.width == 161) {
             //THE STANDARD ERROR IMGURL
-            print("INVALID IMAGE FOUND URL: ${url}");
+            // print("INVALID IMAGE FOUND URL: ${url}");
             completer.complete(false);
           } else {
-            print("VALID IMAGE FOUND URL: ${url}");
+            // print("VALID IMAGE FOUND URL: ${url}");
             completer.complete(true);
           }
         }
@@ -68,7 +68,7 @@ class MemoDataChecker {
       onError: (Object exception, StackTrace? stackTrace) {
         // An error occurred during image loading
         if (!completer.isCompleted) {
-          print("ERROR isImageValid");
+          // print("ERROR isImageValid");
           completer.complete(false);
         }
         stream.removeListener(listener!);

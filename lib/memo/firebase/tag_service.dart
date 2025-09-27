@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 
@@ -120,7 +121,7 @@ class TagService {
     }
 
     if (duplicateIds.isNotEmpty) {
-      print("Filtered out ${duplicateIds.length} duplicate tags: ${duplicateIds.join(', ')}");
+      if (kDebugMode) print("Filtered out ${duplicateIds.length} duplicate tags: ${duplicateIds.join(', ')}");
     }
 
     return uniqueTags;
@@ -145,7 +146,7 @@ class TagService {
       }
     });
 
-    print("Tag batch timer started/reset (${_batchTimeout.inMinutes} minutes)");
+    // print("Tag batch timer started/reset (${_batchTimeout.inMinutes} minutes)");
   }
 
   void _cancelTimer() {

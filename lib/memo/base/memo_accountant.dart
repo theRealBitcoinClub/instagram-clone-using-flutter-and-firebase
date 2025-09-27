@@ -195,7 +195,7 @@ class MemoAccountant {
   }
 
   // Balance checking method
-  Future<bool> checkBalanceForIpfsOperation(double bchCost, {double tolerancePercent = 0.2}) async {
+  Future<bool> checkBalanceForIpfsOperation(double bchCost) async {
     try {
       print('MemoAccountant: Checking balance for IPFS operation with cost: $bchCost BCH');
 
@@ -204,9 +204,9 @@ class MemoAccountant {
 
       // Convert BCH cost to satoshis
       final requiredSatoshis = (bchCost * 100000000).round();
-      final requiredWithTolerance = (requiredSatoshis * (1 + tolerancePercent)).round();
+      final requiredWithTolerance = (requiredSatoshis + MemoPublisher.minerFeeDefault.toInt()).round();
 
-      print('MemoAccountant: Current balance: ${balance.bch} sats, Required: $requiredWithTolerance sats (with $tolerancePercent% tolerance)');
+      print('MemoAccountant: Current balance: ${balance.bch} sats, Required: $requiredWithTolerance sats');
 
       return balance.bch > requiredWithTolerance;
     } catch (e) {

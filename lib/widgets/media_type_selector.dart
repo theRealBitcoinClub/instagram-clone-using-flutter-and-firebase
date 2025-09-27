@@ -73,7 +73,7 @@ class MediaTypeSelector extends ConsumerWidget {
       child: Column(
         children: [
           if (isCheckingClipboard)
-            AnimatedGrowFadeIn(
+            AnimGrowFade(
               show: isCheckingClipboard,
               child: LinearProgressIndicator(minHeight: 2, valueColor: AlwaysStoppedAnimation(colorScheme.primary)),
             ),

@@ -91,7 +91,7 @@ class PostCardFooter extends StatelessWidget {
             const SizedBox(height: 2),
           ],
           // if (showInput)
-          AnimatedGrowFadeIn(
+          AnimGrowFade(
             delay: const Duration(milliseconds: 200), // Optional: small delay
             show: showInput,
             child: Padding(
@@ -116,7 +116,7 @@ class PostCardFooter extends StatelessWidget {
                   ),
             ),
           ),
-          AnimatedGrowFadeIn(
+          AnimGrowFade(
             show: showSend,
             delay: const Duration(milliseconds: 500), // Optional: small delay
             child: Column(

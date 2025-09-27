@@ -9,7 +9,7 @@ import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/resources/auth_method.dart';
 
 import '../utils/snackbar.dart';
-import '../widgets/animations/animated_grow_fade_in.dart'; // Import your animation widget
+import '../widgets/animations/animated_grow_fade_in.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -262,9 +262,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                 const SizedBox(height: 16),
 
                 // REPLACED: TextButton with Animated ElevatedButton
-                AnimatedGrowFadeIn(
+                AnimGrowFade(
                   show: !_isInputValid, // Show only when no valid mnemonic
-                  duration: const Duration(milliseconds: 300),
+                  // duration: const Duration(milliseconds: 300),
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

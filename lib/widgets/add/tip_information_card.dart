@@ -46,9 +46,9 @@ class TipInformationCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Custom tip warning with grow/fade animation
-            AnimatedGrowFadeIn(
+            AnimGrowFade(
               show: showCustomTipWarning,
-              duration: const Duration(milliseconds: 300),
+              // duration: const Duration(milliseconds: 300),
               child: Text(
                 '⚠️ Custom tip ' + (isNewPost ? '' : '& receiver ') + 'for this post only',
                 style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(222), fontStyle: FontStyle.italic),

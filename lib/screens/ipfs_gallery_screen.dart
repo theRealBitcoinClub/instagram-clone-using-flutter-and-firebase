@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/config_ipfs.dart';
 import 'package:mahakka/provider/url_input_verification_notifier.dart';
+import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/screens/ipfs_pin_claim_screen.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -220,98 +221,40 @@ class GalleryActionButtonRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedCid = ref.watch(selectedCidProvider);
-    final hasSelection = selectedCid != null;
-    final colorScheme = Theme.of(context).colorScheme;
+    final cid = ref.watch(selectedCidProvider);
+    final hasSelection = cid != null;
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDarkTheme ? Colors.black.withAlpha(133) : Colors.white.withAlpha(133);
 
     return Container(
-      height: 80, // Fixed height
+      height: 60, // Fixed height
       color: backgroundColor, // Theme-aware background color
       child: hasSelection
-          ? AnimatedGrowFadeIn(
+          ? AnimGrowFade(
               show: hasSelection,
-              duration: const Duration(milliseconds: 300),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.error,
-                          foregroundColor: colorScheme.onError,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        onPressed: () => ref.read(selectedCidProvider.notifier).state = null,
-                        child: const Text('RESET'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.yellow[900],
-                          foregroundColor: colorScheme.onPrimary,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        onPressed: () => _shareImage(selectedCid!),
-                        child: const Text('SHARE'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        onPressed: () => _reuseImage(context, ref, selectedCid!),
-                        child: const Text('CHOOSE'),
-                      ),
-                    ),
-                  ],
-                ),
+              // duration: const Duration(milliseconds: 300),
+              child: Row(
+                children: [
+                  IconAction(text: "RESET", onTap: () => resetSelection(ref), type: IAB.cancel, icon: Icons.refresh),
+                  IconAction(text: "LINK", onTap: () => _shareImage(cid), type: IAB.alternative, icon: Icons.link),
+                  IconAction(text: "POST", onTap: () => _reuseImage(context, ref, cid), type: IAB.success, icon: Icons.check_circle_outline),
+                ],
               ),
             )
-          : AnimatedGrowFadeIn(
+          : AnimGrowFade(
               show: !hasSelection,
-              duration: const Duration(milliseconds: 300),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.error,
-                          foregroundColor: colorScheme.onPrimary,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('CANCEL'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        onPressed: () => _createNewIpfsPin(context),
-                        child: const Text('CREATE'),
-                      ),
-                    ),
-                  ],
-                ),
+              // duration: const Duration(milliseconds: 300),
+              child: Row(
+                children: [
+                  IconAction(text: "CANCEL", onTap: () => Navigator.of(context).pop(), type: IAB.cancel, icon: Icons.cancel_outlined),
+                  IconAction(text: "CREATE", onTap: () => _createNewIpfsPin(context), type: IAB.success, icon: Icons.upload),
+                ],
               ),
             ),
     );
   }
+
+  Null resetSelection(WidgetRef ref) => ref.read(selectedCidProvider.notifier).state = null;
 
   void _createNewIpfsPin(BuildContext context) {
     Navigator.pop(context);
@@ -324,7 +267,7 @@ class GalleryActionButtonRow extends ConsumerWidget {
   }
 
   void _reuseImage(context, ref, String selectedCid) {
-    ref.read(urlInputVerificationProvider.notifier).reset(ref);
+    ref.read(urlInputVerificationProvider.notifier).reset();
     ref.read(ipfsCidProvider.notifier).state = selectedCid;
     Navigator.pop(context);
   }

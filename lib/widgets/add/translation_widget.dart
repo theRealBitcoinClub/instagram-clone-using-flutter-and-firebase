@@ -174,7 +174,7 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     return GestureDetector(
       onTap: isTranslating ? null : _showLanguageSelector,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           border: Border.all(color: theme.colorScheme.outline),
           borderRadius: BorderRadius.circular(8),
@@ -220,15 +220,6 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     );
   }
 
-  // Widget _buildDetectedLanguageInfo() {
-  //   if (_detectedLanguage == null) return const SizedBox.shrink();
-  //
-  //   return Text(
-  //     'Original language: ${_detectedLanguage!.name}',
-  //     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     final isTranslating = ref.watch(isTranslatingProvider);
@@ -236,28 +227,19 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AnimatedGrowFadeIn(
+        AnimGrowFade(
           show: !_languageDetectionFailed && !_isAutoDetecting,
-          duration: animDuration,
+          // duration: animDuration,
           child: Column(
             children: [
               Row(children: [_buildTargetLanguageSelector()]),
-              const SizedBox(height: 8),
+              const SizedBox(height: 0),
             ],
           ),
         ),
-
-        // Show detected language info or error message
-        // AnimatedGrowFadeIn(
-        //   show: _detectedLanguage != null && !_languageDetectionFailed && !_isAutoDetecting,
-        //   duration: animDuration,
-        //   child: _buildDetectedLanguageInfo(),
-        // ),
-        AnimatedGrowFadeIn(show: _languageDetectionFailed && !_isAutoDetecting, duration: animDuration, child: _buildErrorText()),
-
-        const SizedBox(height: 4),
-        AnimatedGrowFadeIn(show: isTranslating || _isAutoDetecting, duration: animDuration, child: _buildProgressIndicator()),
-        const SizedBox(height: 4),
+        AnimGrowFade(show: _languageDetectionFailed && !_isAutoDetecting, child: _buildErrorText()),
+        AnimGrowFade(show: isTranslating || _isAutoDetecting, child: _buildProgressIndicator()),
+        const SizedBox(height: 6),
       ],
     );
   }

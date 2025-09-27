@@ -12,7 +12,7 @@ final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraper
 
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
-  Duration _initialDelay = Duration(seconds: 10);
+  Duration _initialDelay = Duration(seconds: 30);
   Duration _scrapeInterval = Duration(seconds: kDebugMode ? 300 : 30);
 
   @override
@@ -55,10 +55,10 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     // Update the provider's state to loading to indicate the process has started.
     state = const AsyncValue.loading();
     print("BackgroundScraper: Starting scraping process...");
-    print("BackgroundScraper: Starting scraping process...");
-    print("BackgroundScraper: Starting scraping process...");
-    print("BackgroundScraper: Starting scraping process...");
-    print("BackgroundScraper: Starting scraping process...");
+    // print("BackgroundScraper: Starting scraping process...");
+    // print("BackgroundScraper: Starting scraping process...");
+    // print("BackgroundScraper: Starting scraping process...");
+    // print("BackgroundScraper: Starting scraping process...");
 
     try {
       // Execute the scraping tasks.
@@ -66,12 +66,28 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
       var cacheId = "letsgonownew";
       //TODO SCRAPER RANDOMLY SELECTS OFFSETS SO THAT DIFFERENT USERS SCRAPE DIFFERENT OFFSETS?
       if (kDebugMode) {
-        await MemoScraperTopic(ref, saveToFirebase).startScrapeTopics(cacheId + "topics", 50, 0);
-        await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], 200, 0);
-        // await MemoScraperTag(cacheId + "most", ref, saveToFirebase).startScrapeTags(["/most-posts"], 100, 0);
+        try {
+          await MemoScraperTopic(ref, saveToFirebase).startScrapeTopics(cacheId + "topics", 50, 0);
+        } catch (e) {
+          print("BackgroundScraper: An error occurred during TOPIC scraping: $e");
+        }
+        try {
+          await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], 200, 0);
+          // await MemoScraperTag(cacheId + "most", ref, saveToFirebase).startScrapeTags(["/most-posts"], 100, 0);
+        } catch (e) {
+          print("BackgroundScraper: An error occurred during TAG scraping: $e");
+        }
       } else {
-        await MemoScraperTopic(ref, saveToFirebase).startScrapeTopics(cacheId + "topics", 0, 0);
-        await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], 50, 0);
+        try {
+          await MemoScraperTopic(ref, saveToFirebase).startScrapeTopics(cacheId + "topics", 0, 0);
+        } catch (e) {
+          print("BackgroundScraper: An error occurred during TOPIC scraping: $e");
+        }
+        try {
+          await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], 50, 0);
+        } catch (e) {
+          print("BackgroundScraper: An error occurred during TAG scraping: $e");
+        }
       }
       // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 50, 50);P
       // await MemoScraperTag(cacheId).startScrapeTags(["/recent"], 0, 0);
@@ -81,10 +97,10 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
       // If the process succeeds, update the state to data with a null value.
       state = const AsyncValue.data(null);
       print("BackgroundScraper: Scraping process completed.");
-      print("BackgroundScraper: Scraping process completed.");
-      print("BackgroundScraper: Scraping process completed.");
-      print("BackgroundScraper: Scraping process completed.");
-      print("BackgroundScraper: Scraping process completed.");
+      // print("BackgroundScraper: Scraping process completed.");
+      // print("BackgroundScraper: Scraping process completed.");
+      // print("BackgroundScraper: Scraping process completed.");
+      // print("BackgroundScraper: Scraping process completed.");
     } catch (e, s) {
       // If an error occurs, update the state to error.
       state = AsyncValue.error(e, s);

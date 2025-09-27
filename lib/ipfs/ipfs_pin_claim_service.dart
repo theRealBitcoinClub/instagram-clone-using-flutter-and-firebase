@@ -20,24 +20,20 @@ class IpfsPinClaimService {
       print('IpfsPinClaimService: Calculating BCH cost for file');
 
       var lengthSync = file.lengthSync();
-      final fileSizeInMegabytes = lengthSync / pow(10, 6); // get file size in MB
-      final fileSizeInMegabytes1024 = lengthSync / (1024 * 1024);
-      print("SIZE IN MB $fileSizeInMegabytes");
-      print("SIZE IN MB $fileSizeInMegabytes");
-      print("SIZE IN MB $fileSizeInMegabytes");
-      print("SIZE IN 1024 $fileSizeInMegabytes1024");
-      print("SIZE IN 1024 $fileSizeInMegabytes1024");
-      print("SIZE IN 1024 $fileSizeInMegabytes1024");
+      final sizeInMbPow = lengthSync / pow(10, 6); // get file size in MB
+      final sizeInMb1024 = lengthSync / (1024 * 1024);
+      print("sizeInMbPow $sizeInMbPow");
+      print("sizeInMb1024 $sizeInMb1024");
 
-      final fileSizeWithPadding = fileSizeInMegabytes1024 * 1.01;
-      print("SIZE IN fileSizeWithPadding $fileSizeWithPadding");
-      print("SIZE IN fileSizeWithPadding $fileSizeWithPadding");
-      print("SIZE IN fileSizeWithPadding $fileSizeWithPadding");
+      final size1024wPadding = sizeInMb1024 * 1.05;
+      print("size1024wPadding $size1024wPadding");
+      final sizePowPadding = sizeInMbPow * 1.05;
+      print("sizePowPadding $sizePowPadding");
 
       final response = await http.post(
         Uri.parse('$serverUrl/ipfs/getBchCost'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'sizeInMb': fileSizeWithPadding}),
+        body: json.encode({'sizeInMb': sizePowPadding}),
       );
 
       if (response.statusCode != 200) {

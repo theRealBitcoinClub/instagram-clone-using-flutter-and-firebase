@@ -1,78 +1,110 @@
 import 'package:flutter/material.dart';
 
-class AnimatedGrowFadeIn extends StatefulWidget {
+class AnimGrowFade extends StatefulWidget {
   final Widget child;
-  final bool show; // Controls visibility and triggers the animation
-  final Duration duration;
+  final bool show;
+  final Duration growDuration;
+  final Duration fadeDuration;
   final Duration delay;
-  final Curve sizeCurve;
+  final Curve growCurve;
   final Curve fadeCurve;
-  final AlignmentGeometry alignment; // For AnimatedSize, typically Alignment.topCenter for growing downwards
+  final AlignmentGeometry alignment;
 
-  const AnimatedGrowFadeIn({
+  const AnimGrowFade({
     Key? key,
     required this.child,
     required this.show,
-    this.duration = const Duration(milliseconds: 300),
-    this.delay = Duration.zero,
-    this.sizeCurve = Curves.fastOutSlowIn, // A common curve for size changes
+    this.growDuration = const Duration(milliseconds: 400),
+    this.fadeDuration = const Duration(milliseconds: 600),
+    this.delay = const Duration(milliseconds: 10),
+    this.growCurve = Curves.fastOutSlowIn,
     this.fadeCurve = Curves.easeIn,
     this.alignment = Alignment.topCenter,
   }) : super(key: key);
 
   @override
-  State<AnimatedGrowFadeIn> createState() => _AnimatedGrowFadeInState();
+  State<AnimGrowFade> createState() => _AnimGrowFadeState();
 }
 
-class _AnimatedGrowFadeInState extends State<AnimatedGrowFadeIn> with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
+class _AnimGrowFadeState extends State<AnimGrowFade> with SingleTickerProviderStateMixin {
+  late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+  bool _hasAnimatedIn = false;
+  bool _shouldShowContent = false;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(vsync: this, duration: widget.duration, value: widget.show ? 1.0 : 0.0);
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _animationController, curve: widget.fadeCurve));
+    _fadeController = AnimationController(vsync: this, duration: widget.fadeDuration);
+
+    _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: widget.fadeCurve);
+
+    if (widget.show) {
+      _startAnimation();
+    }
+  }
+
+  void _startAnimation() {
+    if (_hasAnimatedIn) return;
+
+    void startFade() {
+      setState(() {
+        _shouldShowContent = true;
+      });
+
+      Future.delayed(widget.fadeDuration, () {
+        if (mounted) {
+          _fadeController.forward();
+          _hasAnimatedIn = true;
+        }
+      });
+    }
+
+    if (widget.delay == Duration.zero) {
+      startFade();
+    } else {
+      Future.delayed(widget.delay, () {
+        if (mounted && widget.show) {
+          startFade();
+        }
+      });
+    }
   }
 
   @override
-  void didUpdateWidget(AnimatedGrowFadeIn oldWidget) {
+  void didUpdateWidget(AnimGrowFade oldWidget) {
     super.didUpdateWidget(oldWidget);
+
     if (widget.show != oldWidget.show) {
-      // Apply delay only when transitioning from hidden to shown
       if (widget.show) {
-        if (widget.delay == Duration.zero) {
-          _animationController.forward();
-        } else {
-          Future.delayed(widget.delay, () {
-            if (mounted) {
-              _animationController.forward();
-            }
-          });
-        }
+        _startAnimation();
       } else {
-        _animationController.reverse();
+        _fadeController.reverse().then((_) {
+          if (mounted) {
+            setState(() {
+              _shouldShowContent = false;
+              _hasAnimatedIn = false;
+            });
+          }
+        });
       }
     }
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: AnimatedSize(
-        duration: widget.duration,
-        curve: widget.sizeCurve,
-        alignment: widget.alignment,
-        child: widget.show ? widget.child : Container(width: double.infinity),
-      ),
+    return AnimatedSize(
+      duration: widget.growDuration,
+      curve: widget.growCurve,
+      alignment: widget.alignment,
+      child: _shouldShowContent ? FadeTransition(opacity: _fadeAnimation, child: widget.child) : const SizedBox.shrink(),
     );
   }
 }

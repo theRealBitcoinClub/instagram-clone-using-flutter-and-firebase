@@ -16,7 +16,7 @@ const network = BitcoinCashNetwork.mainnet;
 class MemoPublisher {
   // Add a final Ref field to store the Riverpod ref.
   final Ref _ref;
-  static BigInt minerFeeDefault = BtcUtils.toSatoshi("0.000007");
+  static BigInt minerFeeDefault = BtcUtils.toSatoshi("0.000009");
   late String _memoMessage;
   late MemoCode _memoAction;
   ECPrivate? _pk;

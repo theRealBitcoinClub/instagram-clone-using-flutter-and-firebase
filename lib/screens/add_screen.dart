@@ -108,7 +108,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           child: Column(
             children: [
               _buildMediaInputSection(theme, colorScheme, textTheme),
-              AnimatedGrowFadeIn(
+              AnimGrowFade(
                 show: !_hasAddedMediaToPublish(),
                 child: ClipboardMonitoringWidget(title: _title, hint: _hint, onCreate: _onCreateCallback, onGallery: _onGalleryCallback),
               ),

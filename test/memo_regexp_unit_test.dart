@@ -472,7 +472,7 @@ void main() {
       final memoRegExp = MemoRegExp(twitterUrls);
       final result = memoRegExp.extractAllWhitelistedMediaUrls();
 
-      expect(result.length, 6);
+      expect(result.length, 7);
     });
 
     test('Reddit regex should handle various Reddit URL formats', () {

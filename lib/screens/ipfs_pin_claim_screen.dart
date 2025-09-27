@@ -40,7 +40,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
 
   // Timer variables
   Timer? _countdownTimer;
-  int _countdownSeconds = 99;
+  int _countdownSeconds = 69;
   bool _showOverlay = false;
 
   final String _serverUrl = 'https://file-stage.fullstack.cash';
@@ -74,26 +74,30 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
         if (_countdownSeconds > 0) {
           _countdownSeconds--;
         } else {
-          // Time's up - automatically close the screen
-          timer.cancel();
+          // Time's up - hide the counter show some last resort snackbars to entertain the user;
+          _stopCountdown();
           if (mounted) {
+            showSnackBar("ARE YOU UPLOADING A LARGE FILE OR NOT HAZ VERY FAST CONNECTION?!", context, type: SnackbarType.info);
+            showSnackBar("WAGMI! WE ALL GONNA MAKE IT!", context, type: SnackbarType.success, wait: true);
             showSnackBar(
-              "WAIT SOME MORE IF YOU ARE UPLOADING A LARGE FILE OR HAVE A SLOW CONNECTION! WAGMI!",
-              context,
-              type: SnackbarType.info,
-            );
-            showSnackBar(
-              "SOME MORE PATIENCE REQUIRED! YOU MADE IT THIS FAR SO DONT GIVE UP NOW!",
+              "SOME MORE PATIENCE REQUIRED! YOU MADE IT THIS FAR, STAND STRONG, TAKE A DEEP BREATH!",
               context,
               type: SnackbarType.error,
               wait: true,
             );
+            showSnackBar("PLEASE HOLD THE LINE!", context, type: SnackbarType.info, wait: true);
             showSnackBar(
               "YOU STILL HERE! THATS A VERY GOOD SIGN! SATOSHI NAKAMOTO LOVES YOU!",
               context,
               type: SnackbarType.success,
               wait: true,
             );
+            showSnackBar("PLEASE REACH OUT TO MAHAKKA SUPPORT IN TELEGRAM @MAHAKKA_COM", context, type: SnackbarType.error, wait: true);
+            showSnackBar("PLEASE TAKE A SCREENSHOT SO YOU CAN PROVIDE IT @MAHAKKA_COM", context, type: SnackbarType.info, wait: true);
+            showSnackBar("SUPPORT WILL ASK FOR THAT SCREENSHOT TO MAKE A REFUND @MAHAKKA_COM", context, type: SnackbarType.success, wait: true);
+            showSnackBar("PLEASE REACH OUT TO MAHAKKA SUPPORT IN TELEGRAM @MAHAKKA_COM", context, type: SnackbarType.error, wait: true);
+            showSnackBar("PLEASE TAKE A SCREENSHOT SO YOU CAN PROVIDE IT @MAHAKKA_COM", context, type: SnackbarType.info, wait: true);
+            showSnackBar("SUPPORT WILL ASK FOR THAT SCREENSHOT TO MAKE A REFUND @MAHAKKA_COM", context, type: SnackbarType.success, wait: true);
           }
         }
       });

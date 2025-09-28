@@ -1,9 +1,8 @@
-// lib/widgets/profile/profile_screen_widget.dart
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
@@ -16,7 +15,6 @@ import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/image_detail_dialog.dart';
 import 'package:mahakka/widgets/post_dialog.dart';
 import 'package:mahakka/widgets/profile/posts_categorizer.dart';
-import 'package:mahakka/widgets/profile/profile_app_bar.dart';
 import 'package:mahakka/widgets/profile/profile_content_grid.dart';
 import 'package:mahakka/widgets/profile/profile_content_list.dart';
 import 'package:mahakka/widgets/profile/profile_header.dart';
@@ -24,6 +22,8 @@ import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 import 'package:mahakka/widgets/profile/profile_tab_selector.dart';
 import 'package:mahakka/widgets/profile/settings_widget.dart';
 import 'package:mahakka/widgets/profile/youtube_controller_manager.dart';
+
+import '../widgets/profile/profile_app_bar.dart';
 
 class ProfileScreenWidget extends ConsumerStatefulWidget {
   const ProfileScreenWidget({Key? key}) : super(key: key);
@@ -38,7 +38,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   final ValueNotifier<int> _viewMode = ValueNotifier(0);
   bool isRefreshingProfile = false;
   bool allowLogout = false;
-  // Add these variables to track minimum display time
   DateTime? _currentProfileLoadStartTime;
   String? _currentProfileId = "";
   Timer? _minDisplayTimer;
@@ -84,9 +83,13 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     final loggedInUser = ref.watch(userProvider);
     final currentTabIndex = ref.watch(tabIndexProvider);
     String? targetProfileId = ref.read(profileTargetIdProvider);
-    // ref.read(profileTargetIdProvider.notifier) = loggedInUser.id;
 
-    // Reset min display timer when profile changes
+    context.afterLayout(refreshUI: true, () {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(0.0);
+      }
+    });
+
     if (targetProfileId != _currentProfileId) {
       _currentProfileId = targetProfileId;
       _currentProfileLoadStartTime = DateTime.now();
@@ -100,13 +103,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
         return profileDataAsync.when(
           data: (profileData) {
-            // if (targetProfileId == null) targetProfileId = loggedInUser!.id;
-            // if (targetProfileId == null)
-            // Check if we have the correct profile data
-            // if (targetProfileId != null && profileData.creator?.id != targetProfileId) {
-            //   return ProfileLoadingScaffold(theme: theme, message: "Loading Profile...");
-            // }
-            // Check if data is fully loaded (creator + posts) AND min display time has elapsed
             final dataReady = !profileData.isLoading && profileData.postsLoaded;
             final canDisplay = _minDisplayTimeElapsed && dataReady;
 
@@ -121,7 +117,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
             theme: theme,
             message: "Error loading profile: $error",
             onRetry: () {
-              // Reset the timer on retry
               _currentProfileLoadStartTime = DateTime.now();
               _minDisplayTimeElapsed = false;
               _startMinDisplayTimer();
@@ -147,6 +142,46 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     });
   }
 
+  double _startDragX = 0.0;
+  double _currentDragX = 0.0;
+
+  void _handleHorizontalDragStart(DragStartDetails details) {
+    _startDragX = details.globalPosition.dx;
+    _currentDragX = _startDragX;
+  }
+
+  void _handleHorizontalDragUpdate(DragUpdateDetails details) {
+    _currentDragX = details.globalPosition.dx;
+  }
+
+  void _handleHorizontalDragEnd(DragEndDetails details) {
+    final dragDistance = _currentDragX - _startDragX;
+    final sensitivity = 50.0; // Minimum drag distance to trigger tab change
+
+    if (dragDistance < -sensitivity) {
+      // Swiped left - go to next tab
+      _navigateToAdjacentTab(1);
+    } else if (dragDistance > sensitivity) {
+      // Swiped right - go to previous tab
+      _navigateToAdjacentTab(-1);
+    }
+
+    // Reset drag values
+    _startDragX = 0.0;
+    _currentDragX = 0.0;
+  }
+
+  void _navigateToAdjacentTab(int direction) {
+    final currentIndex = _viewMode.value;
+    final List<int> availableTabs = [0, 1, 2, 4]; // Your tab indices
+    final currentTabIndex = availableTabs.indexOf(currentIndex);
+    final newTabIndex = (currentTabIndex + direction).clamp(0, availableTabs.length - 1);
+
+    if (newTabIndex != currentTabIndex) {
+      _viewMode.value = availableTabs[newTabIndex];
+    }
+  }
+
   Widget _buildProfileScreen(ProfileData profileData, MemoModelUser? loggedInUser, int currentTabIndex, ThemeData theme) {
     final creator = profileData.creator;
     if (creator == null) {
@@ -155,7 +190,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
     final isOwnProfile = loggedInUser?.profileIdMemoBch == creator.id;
 
-    // Schedule tab logic to run after build
     Future.microtask(() {
       ref.read(profileDataProvider.notifier).refreshProfileDataAndStartBalanceTimer(currentTabIndex, creator.id, isOwnProfile);
     });
@@ -163,18 +197,29 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     return Scaffold(
       key: ValueKey("profile_scaffold_${creator.id}"),
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: ProfileAppBar(creator: creator, isOwnProfile: isOwnProfile, onShowBchQrDialog: () => _showBchQrDialog(loggedInUser, theme)),
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        color: theme.colorScheme.primary,
-        backgroundColor: theme.colorScheme.surface,
-        child: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            SliverToBoxAdapter(child: _buildProfileHeader(creator, isOwnProfile, theme)),
-            _buildTabSelector(),
-            _buildContent(theme, profileData),
-          ],
+      appBar: ProfileAppBar(
+        creator: creator,
+        isOwnProfile: isOwnProfile,
+        onShowBchQrDialog: () => _showBchQrDialog(loggedInUser, theme),
+        scrollController: _scrollController,
+      ),
+      body: GestureDetector(
+        onHorizontalDragStart: _handleHorizontalDragStart,
+        onHorizontalDragUpdate: _handleHorizontalDragUpdate,
+        onHorizontalDragEnd: _handleHorizontalDragEnd,
+        behavior: HitTestBehavior.opaque,
+        child: RefreshIndicator(
+          onRefresh: _refreshData,
+          color: theme.colorScheme.primary,
+          backgroundColor: theme.colorScheme.surface,
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              SliverToBoxAdapter(child: _buildProfileHeader(creator, isOwnProfile, theme)),
+              _buildTabSelector(),
+              _buildContent(theme, profileData),
+            ],
+          ),
         ),
       ),
     );
@@ -194,13 +239,12 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   Widget _buildTabSelector() {
     return SliverPersistentHeader(
       delegate: SliverAppBarDelegate(
-        minHeight: 50,
-        maxHeight: 50,
-        child: ValueListenableBuilder<int>(
-          valueListenable: _viewMode,
-          builder: (context, viewMode, child) {
-            return ProfileTabSelector(viewMode: viewMode, onViewModeChanged: (newMode) => _viewMode.value = newMode);
-          },
+        minHeight: 60,
+        maxHeight: 60,
+        child: ProfileTabSelector(
+          viewMode: _viewMode.value,
+          onViewModeChanged: (newMode) => _viewMode.value = newMode,
+          child: Container(), // Empty container since content is in separate sliver
         ),
       ),
       pinned: true,
@@ -208,15 +252,10 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   }
 
   Widget _buildContent(ThemeData theme, ProfileData profileData) {
-    // Show loading indicator if posts are not fully categorized
     if (profileData.categorizer.isEmpty) {
       return _buildLoadingContent(theme);
     }
 
-    return _buildPostsContent(theme, profileData);
-  }
-
-  Widget _buildPostsContent(ThemeData theme, ProfileData profileData) {
     return ValueListenableBuilder<int>(
       valueListenable: _viewMode,
       builder: (context, viewMode, child) {

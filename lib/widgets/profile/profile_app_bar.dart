@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/providers/webview_providers.dart';
@@ -13,8 +14,15 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final MemoModelCreator? creator;
   final bool isOwnProfile;
   final VoidCallback onShowBchQrDialog;
+  final ScrollController scrollController;
 
-  const ProfileAppBar({Key? key, required this.creator, required this.isOwnProfile, required this.onShowBchQrDialog}) : super(key: key);
+  const ProfileAppBar({
+    Key? key,
+    required this.creator,
+    required this.isOwnProfile,
+    required this.onShowBchQrDialog,
+    required this.scrollController,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,10 +77,15 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
               ref.read(profileTargetIdProvider.notifier).state = null;
               // ref.refresh(profileDataProvider); // Changed from profileCreatorStateProvider
               // Force a complete refresh and UI rebuild
-              Future.microtask(() {
+              context.afterBuild(refreshUI: true, () {
+                if (scrollController.hasClients) {
+                  scrollController.jumpTo(0.0);
+                }
                 ref.invalidate(profileDataProvider); // Invalidate first
                 ref.refresh(profileDataProvider); // Then refresh
               });
+              // Future.microtask(() {
+              // });
             },
           ),
       ],

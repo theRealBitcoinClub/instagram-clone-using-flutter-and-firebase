@@ -7,6 +7,8 @@ class HashtagDisplayWidget extends StatelessWidget {
   final Function(int)? onSelectHashtag;
   final int maxTagsCounter;
   final bool noBorder;
+  static const borderRadius = 12.0;
+  static const borderWidth = 1.2;
 
   const HashtagDisplayWidget({
     Key? key,
@@ -18,14 +20,8 @@ class HashtagDisplayWidget extends StatelessWidget {
     this.maxTagsCounter = 3,
   }) : super(key: key);
 
-  static BoxDecoration borderDecoration({
-    required bool isSelected,
-    required ThemeData theme,
-    double borderRadius = 12.0,
-    double borderWidth = 1.2,
-  }) {
+  static BoxDecoration borderDecoration({required bool isSelected, required ThemeData theme}) {
     return BoxDecoration(
-      // color: isSelected ? theme.colorScheme.primary.withOpacity(0.15) : theme.colorScheme.surfaceVariant.withOpacity(0.7),
       borderRadius: BorderRadius.circular(borderRadius),
       border: Border.all(
         color: isSelected ? theme.colorScheme.primary.withAlpha(111) : theme.colorScheme.outline.withAlpha(222),
@@ -48,7 +44,7 @@ class HashtagDisplayWidget extends StatelessWidget {
       children: List<Widget>.generate(displayCount, (index) {
         final bool isSelected = isSelectable && selectedHashtags!.length > index && selectedHashtags![index];
 
-        final widget = Container(
+        final content = Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: noBorder ? null : borderDecoration(isSelected: isSelected, theme: theme),
           child: Text(
@@ -61,9 +57,12 @@ class HashtagDisplayWidget extends StatelessWidget {
         );
 
         if (isSelectable) {
-          return InkWell(onTap: () => onSelectHashtag!(index), borderRadius: BorderRadius.circular(16), child: widget);
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(onTap: () => onSelectHashtag!(index), borderRadius: noBorder ? null : BorderRadius.circular(12), child: content),
+          );
         } else {
-          return widget;
+          return content;
         }
       }),
     );

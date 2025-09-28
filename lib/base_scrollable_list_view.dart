@@ -60,7 +60,7 @@ abstract class BaseScrollableListViewState<T extends BaseScrollableListView> ext
           controller: _scrollController,
           scrollDirection: Axis.vertical,
           child: Container(
-            padding: EdgeInsets.only(top: 8, bottom: 8, left: 0, right: _scrollButtonWidth + 8),
+            padding: EdgeInsets.only(top: 0, bottom: 8, left: 0, right: _scrollButtonWidth + 8),
             width: double.infinity,
             child: buildContent(context, theme, colorScheme, textTheme),
           ),

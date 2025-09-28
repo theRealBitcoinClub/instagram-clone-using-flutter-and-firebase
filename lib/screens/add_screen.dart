@@ -80,46 +80,68 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final bool isKeyboardVisible = mediaQuery.viewInsets.bottom > 0;
     final asyncThemeState = ref.watch(themeNotifierProvider);
     final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
+    bool isPublishing = ref.watch(isPublishingProvider);
 
     return GestureDetector(
       onTap: () {
         _unfocusNodes(context);
       },
       behavior: HitTestBehavior.opaque,
-      child: Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        appBar: AppBar(
-          toolbarHeight: 50,
-          title: Row(
-            children: [
-              BurnerBalanceWidget(),
-              Spacer(),
-              GestureDetector(
-                onTap: () {
-                  launchUrl(Uri.parse('https://mahakka.com'));
-                },
-                child: Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
+      child: Stack(
+        children: [
+          Scaffold(
+            backgroundColor: theme.scaffoldBackgroundColor,
+            appBar: AppBar(
+              toolbarHeight: 50,
+              title: Row(
+                children: [
+                  BurnerBalanceWidget(),
+                  Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      launchUrl(Uri.parse('https://mahakka.com'));
+                    },
+                    child: Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
+                  ),
+                ],
               ),
-            ],
+              actions: [_buildMenuTheme(currentThemeState, theme)],
+            ),
+            body: SafeArea(
+              child: Column(
+                children: [
+                  _buildMediaInputSection(theme, colorScheme, textTheme),
+                  AnimGrowFade(
+                    show: !_hasAddedMediaToPublish(),
+                    child: ClipboardMonitoringWidget(title: _title, hint: _hint, onCreate: _onCreateCallback, onGallery: _onGalleryCallback),
+                  ),
+                  if (_hasAddedMediaToPublish())
+                    Padding(
+                      padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 2, left: 4, right: 4, top: 8),
+                      child: TaggableInputWidget(),
+                    ),
+                ],
+              ),
+            ),
           ),
-          actions: [_buildMenuTheme(currentThemeState, theme)],
-        ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              _buildMediaInputSection(theme, colorScheme, textTheme),
-              AnimGrowFade(
-                show: !_hasAddedMediaToPublish(),
-                child: ClipboardMonitoringWidget(title: _title, hint: _hint, onCreate: _onCreateCallback, onGallery: _onGalleryCallback),
-              ),
-              if (_hasAddedMediaToPublish())
-                Padding(
-                  padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 2, left: 4, right: 4, top: 8),
-                  child: TaggableInputWidget(),
+          if (isPublishing)
+            Container(
+              color: Colors.black.withOpacity(0.5), // 50% alpha black
+              width: double.infinity,
+              height: double.infinity,
+              child: Center(
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: colorScheme.onPrimary, // Theme color for circle
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
-            ],
-          ),
-        ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -130,7 +152,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     FocusScope.of(context).unfocus();
   }
 
-  Widget _buildMediaInputSection(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme, {double space = 16}) {
+  Widget _buildMediaInputSection(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     final imgurUrl = ref.watch(imgurUrlProvider);
     final youtubeId = ref.watch(youtubeVideoIdProvider);
     final ipfsCid = ref.watch(ipfsCidProvider);
@@ -145,7 +167,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         ref.read(mediaSelectionProvider.notifier).clearSelection();
       });
       return Expanded(
-        child: Padding(padding: EdgeInsets.all(space), child: mediaWidget),
+        child: Padding(padding: EdgeInsets.fromLTRB(8, 8, 8, 0), child: mediaWidget),
       );
     }
 

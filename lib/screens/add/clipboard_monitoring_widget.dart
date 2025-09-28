@@ -107,7 +107,7 @@ class _ClipboardMonitoringWidgetState extends ConsumerState<ClipboardMonitoringW
                   textEditingController: _controller,
                   hintText: widget.hint,
                   textInputType: TextInputType.url,
-                  borderColor: hasValidInput ? null : Colors.red,
+                  borderColor: hasValidInput ? null : theme.colorScheme.error,
                   errorText: hasValidInput
                       ? null
                       : 'Paste a valid' + (widget.title.toLowerCase().contains("ipfs") ? " Ipfs Content Id" : " Url link"),

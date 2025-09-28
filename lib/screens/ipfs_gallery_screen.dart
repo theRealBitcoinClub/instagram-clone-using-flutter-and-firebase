@@ -22,29 +22,31 @@ class IPFSGalleryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedCid = ref.watch(selectedCidProvider);
     final hasSelection = selectedCid != null;
-    final TextTheme textTheme = Theme.of(context).textTheme;
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    var themeData = Theme.of(context);
+    final TextTheme textTheme = themeData.textTheme;
+    final isDarkTheme = themeData.brightness == Brightness.dark;
     final backgroundColor = isDarkTheme ? Colors.black.withAlpha(133) : Colors.white.withAlpha(133);
     final validCids = ipfsCids.where((cid) => cid.isNotEmpty).toList();
+    var colorScheme = themeData.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         leadingWidth: 50,
         title: Text(
           hasSelection ? '${selectedCid}' : 'Tap image to select or create new one',
-          style: textTheme.titleSmall!.copyWith(letterSpacing: 0.2, fontWeight: FontWeight.w400, fontSize: 14),
+          style: textTheme.titleSmall!.copyWith(letterSpacing: 0.2, fontWeight: FontWeight.w400, fontSize: 14, color: colorScheme.onPrimary),
         ),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
         actions: [
           if (!hasSelection)
             IconButton(
-              icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+              icon: Icon(Icons.add, color: colorScheme.onPrimary),
               onPressed: () => _createNewIpfsPin(context),
               tooltip: 'Create new IPFS pin',
             )
           else
             IconButton(
-              icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onPrimary),
+              icon: Icon(Icons.refresh, color: colorScheme.onPrimary),
               onPressed: () => ref.read(selectedCidProvider.notifier).state = null,
               tooltip: 'Clear selection',
             ),
@@ -60,9 +62,7 @@ class IPFSGalleryScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: backgroundColor,
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(color: Theme.of(context).colorScheme.shadow.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2)),
-                  ],
+                  boxShadow: [BoxShadow(color: colorScheme.shadow.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
                 ),
                 child: validCids.isEmpty
                     ? _buildEmptyState(context)

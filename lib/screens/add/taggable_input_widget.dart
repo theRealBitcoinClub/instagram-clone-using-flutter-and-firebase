@@ -26,7 +26,7 @@ class TaggableInputWidget extends ConsumerWidget {
       color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
         child: CustomFlutterTagger(
           triggerStrategy: TriggerStrategy.eager,
           controller: textInputController, // ADD: widget. prefix

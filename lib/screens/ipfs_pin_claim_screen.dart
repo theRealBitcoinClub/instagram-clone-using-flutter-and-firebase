@@ -59,6 +59,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
   void dispose() {
     // Cancel and dispose the timer when the widget is disposed
     _countdownTimer?.cancel();
+    if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
     super.dispose();
   }
 
@@ -260,6 +261,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
       if (result == MemoAccountantResponse.yes) {
         // Stop the countdown and pop the screen immediately
         _stopCountdown();
+        if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
         if (mounted) Navigator.pop(context);
       } else {
         _stopCountdown();
@@ -365,11 +367,14 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                                     ),
                                     child: Padding(
                                       padding: EdgeInsets.symmetric(vertical: 2, horizontal: 12),
-                                      child: Text('SELECT IMAGE', style: textTheme.titleLarge?.copyWith(height: 1.5, letterSpacing: 1.2)),
+                                      child: Text(
+                                        'SELECT IMAGE',
+                                        style: textTheme.titleLarge?.copyWith(height: 1.5, letterSpacing: 1.2, color: colorScheme.onPrimary),
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 6),
-                                  Icon(Icons.cloud_upload, size: 48, color: colorScheme.onSurfaceVariant),
+                                  Icon(Icons.cloud_upload_outlined, size: 48, color: colorScheme.onSurfaceVariant),
                                   const SizedBox(height: 2),
                                   Text(
                                     'Select an image from your phone to be uploaded to the Inter Planetary File System - IPFS',
@@ -538,7 +543,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                         child: Text(
                           _countdownSeconds.toString(),
                           style: textTheme.headlineLarge?.copyWith(
-                            fontSize: 40,
+                            fontSize: 50,
                             color: colorScheme.onPrimary, // onPrimary theme color
                             fontWeight: FontWeight.w400,
                             letterSpacing: 1,
@@ -559,7 +564,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: colorScheme.primaryContainer,
         border: Border.all(color: colorScheme.primary, width: 2),
         borderRadius: BorderRadius.circular(8),
       ),

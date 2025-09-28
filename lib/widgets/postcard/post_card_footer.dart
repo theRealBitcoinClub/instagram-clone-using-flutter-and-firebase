@@ -9,10 +9,6 @@ import '../../memo/base/memo_verifier.dart';
 import '../character_limited_textfield.dart';
 import '../hashtag_display_widget.dart';
 
-// If _PostCardState constants like _maxTagsCounter were used, they need to be accessible
-// or passed down. For now, assuming they are either not critical or will be handled.
-// Example: const int _maxTagsCounter = 3; (if needed locally)
-
 class PostCardFooter extends StatelessWidget {
   final MemoModelPost post;
   final TextEditingController textEditController;
@@ -25,7 +21,7 @@ class PostCardFooter extends StatelessWidget {
   final VoidCallback onSelectTopic;
   final VoidCallback onSend;
   final VoidCallback onCancel;
-  final int maxTagsCounter; // Pass this if it was from _PostCardState
+  final int maxTagsCounter;
 
   const PostCardFooter({
     super.key,
@@ -40,14 +36,13 @@ class PostCardFooter extends StatelessWidget {
     required this.onSelectTopic,
     required this.onSend,
     required this.onCancel,
-    required this.maxTagsCounter, // Added
+    required this.maxTagsCounter,
   });
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    // Assuming creator null check is handled before this widget is built
-    final creatorName = post.creator?.profileIdShort ?? "User"; // Fallback if creator is somehow null
+    final creatorName = post.creator?.profileIdShort ?? "User";
     final MediaQueryData mediaQuery = MediaQuery.of(context);
     final bool isKeyboardVisible = mediaQuery.viewInsets.bottom > 0;
 
@@ -63,74 +58,56 @@ class PostCardFooter extends StatelessWidget {
           if (post.topicId.isNotEmpty) ...[_buildTopicCheckBoxWidget(theme)],
           if (post.tagIds.isNotEmpty) ...[const SizedBox(height: 4), _buildHashtagCheckboxesWidget(theme), const SizedBox(height: 8)],
           if (post.text != null && post.text!.isNotEmpty) ...[
-            Padding(
-              padding: EdgeInsets.only(left: 4),
-              child: GestureDetector(
-                onDoubleTap: () {
-                  FlutterClipboard.clear();
-                  FlutterClipboard.copy("${post.creator!.name} wrote on ${post.dateTimeFormattedSafe()}: ${post.text}" ?? "");
-                  showSnackBar("Text copied to clipboard", context, type: SnackbarType.info);
-                },
-                child: PostExpandableText(post: post, hidePrefix: true),
-                // ExpandableText(
-                //   // Using creatorName here
-                //   "$creatorName: ${post.text!}",
-                //   // prefixText: post.creator != null ? "${post.creator!.profileIdShort}" : "", // Handle potential null creator
-                //   prefixStyle: theme.textTheme.titleSmall?.copyWith(letterSpacing: 2.0),
-                //   expandText: 'show more',
-                //   collapseText: 'show less',
-                //   maxLines: 6,
-                //   linkColor: theme.colorScheme.primary,
-                //   style: theme.textTheme.bodyMedium?.copyWith(height: 1.3),
-                //   animation: true,
-                //   linkEllipsis: true,
-                //   linkStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
-                // ),
+            // Force left alignment for text
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: GestureDetector(
+                  onDoubleTap: () {
+                    FlutterClipboard.clear();
+                    FlutterClipboard.copy("${post.creator!.name} wrote on ${post.dateTimeFormattedSafe()}: ${post.text}" ?? "");
+                    showSnackBar("Text copied to clipboard", context, type: SnackbarType.info);
+                  },
+                  child: PostExpandableText(post: post, hidePrefix: true),
+                ),
               ),
             ),
             const SizedBox(height: 2),
           ],
-          // if (showInput)
           AnimGrowFade(
-            delay: const Duration(milliseconds: 200), // Optional: small delay
+            delay: const Duration(milliseconds: 200),
             show: showInput,
             child: Padding(
               padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 2, left: 4, right: 4, top: 4),
-              child:
-                  // TaggableInputWidget(onChanged: onInputText, onPublish: onSend),
-                  // ),
-                  Column(
-                    // Wrap your original content in a single child
-                    mainAxisSize: MainAxisSize.min, // Important for Column to not take infinite height
-                    // crossAxisAlignment: CrossAxisAlignment.start, // Or your desired alignment
-                    children: [
-                      CharacterLimitedTextField(
-                        controller: textEditController,
-                        maxLength: MemoVerifier.maxPostLength, // Set your desired character limit
-                        hintText: 'Write your reply...',
-                        onChanged: onInputText,
-                        normalTextStyle: theme.textTheme.bodyMedium,
-                        exceededTextStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error),
-                      ),
-                    ],
-                  ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: CharacterLimitedTextField(
+                  controller: textEditController,
+                  maxLength: MemoVerifier.maxPostLength,
+                  hintText: 'Write your reply...',
+                  onChanged: onInputText,
+                  normalTextStyle: theme.textTheme.bodyMedium,
+                  exceededTextStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error),
+                ),
+              ),
             ),
           ),
           AnimGrowFade(
             show: showSend,
-            delay: const Duration(milliseconds: 500), // Optional: small delay
-            child: Column(
-              // Wrap your original content in a single child
-              mainAxisSize: MainAxisSize.min, // Important for Column to not take infinite height
-              crossAxisAlignment: CrossAxisAlignment.start, // Or your desired alignment
-              children: [
-                // Divider(color: theme.dividerColor.withOpacity(0.5)),
-                // const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [_buildCancelButtonWidget(theme), const SizedBox(width: 4), _buildSendButtonWidget(theme)],
-                ),
-              ],
+            delay: const Duration(milliseconds: 500),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [_buildCancelButtonWidget(theme), const SizedBox(width: 4), _buildSendButtonWidget(theme)],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -139,15 +116,13 @@ class PostCardFooter extends StatelessWidget {
   }
 
   Widget _buildTopicCheckBoxWidget(ThemeData theme) {
-    final bool topicTextIsEffectivelyEmpty = post.topicId.isEmpty;
-
-    return InkWell(
-      onTap: onSelectTopic,
-      borderRadius: BorderRadius.circular(4),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 2.0),
-        child: Align(
-          alignment: topicTextIsEffectivelyEmpty ? Alignment.center : Alignment.centerLeft,
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: InkWell(
+        onTap: onSelectTopic,
+        borderRadius: BorderRadius.circular(4),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 2.0),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -159,7 +134,7 @@ class PostCardFooter extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              if (!topicTextIsEffectivelyEmpty) ...[
+              if (post.topicId.isNotEmpty) ...[
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
@@ -179,11 +154,14 @@ class PostCardFooter extends StatelessWidget {
   }
 
   Widget _buildHashtagCheckboxesWidget(ThemeData theme) {
-    return HashtagDisplayWidget(
-      hashtags: post.tagIds,
-      theme: theme,
-      selectedHashtags: selectedHashtags,
-      onSelectHashtag: (index) => onSelectHashtag(index),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: HashtagDisplayWidget(
+        hashtags: post.tagIds,
+        theme: theme,
+        selectedHashtags: selectedHashtags,
+        onSelectHashtag: (index) => onSelectHashtag(index),
+      ),
     );
   }
 

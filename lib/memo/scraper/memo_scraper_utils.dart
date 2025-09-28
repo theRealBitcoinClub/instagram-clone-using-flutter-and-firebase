@@ -127,12 +127,9 @@ class MemoScraperUtil {
   }
 
   static void extractUrlsAndHashtags(MemoModelPost post) {
-    if (post.text != null && post.text!.contains("hosseinzoda")) {
-      print(post.text);
-    }
     post.text = post.text ?? "";
     var extractUrlsGenerously = MemoRegExp.extractUrlsGenerously(post.text!);
-    if (post.text!.isNotEmpty) post.text = StringUtils.ensureSpacesAroundMatches(post.text!, extractUrlsGenerously);
+    if (post.text!.isNotEmpty) post.text = StringUtils.ensureSpacesAroundMatches(post.text!, extractUrlsGenerously).trim();
     MemoScraperUtil.extractYouTubeUrlAndRemoveJavaScriptFromText(post);
     post.tagIds = List<String>.from(MemoRegExp.extractHashtags(post.text).take(3));
     post.urls = List.from(MemoRegExp.wrapWithHttpAlways(extractUrlsGenerously));

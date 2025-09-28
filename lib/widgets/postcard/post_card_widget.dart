@@ -227,11 +227,13 @@ class _PostCardState extends ConsumerState<PostCard> {
           ],
         ),
       );
-    } else if ((!widget.post.hasMedia && widget.post.hasUrlsInText)) {
-      // final validUrl = UrlUtils.getFirstValidUrl(MemoRegExp.extractUrlsWithHttpsAlways(widget.post.text));
+    } else if ((!widget.post.hasMedia && (widget.post.hasUrlsInText || widget.post.urls.isNotEmpty))) {
+      final validUrl = MemoRegExp.extractUrls(widget.post.text);
       // final validUrl = widget.post.urls[0];
       if (widget.post.urls.isNotEmpty) {
         return PreviewUrlWidget(url: widget.post.urls[0]);
+      } else if (validUrl.isNotEmpty) {
+        return PreviewUrlWidget(url: validUrl[0]);
       } else {
         return _buildFallbackWidget(colorScheme);
       }

@@ -279,6 +279,10 @@ void main() {
       );
       expect(MemoRegExp.extractUrlsGenerously(result[6]), contains("www.whats.goingon.jp?arg=vd33f.jpg&bo=ad.jpeg"));
       expect(MemoRegExp.extractUrlsGenerously(result[5]), contains("https://www.whats.goingon.jp?arg=vd33f.jpg"));
+      expect(
+        MemoRegExp.extractUrlsGenerously("https://twitter.com/donatello/status/1972324927035547748"),
+        contains("https://twitter.com/donatello/status/1972324927035547748"),
+      );
 
       expect(
         MemoRegExp.extractUrlsGenerously(result[10]),

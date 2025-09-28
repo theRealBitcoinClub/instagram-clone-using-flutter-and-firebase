@@ -24,13 +24,21 @@ class HomeSceen extends ConsumerStatefulWidget {
 class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateMixin {
   late TabController _tabController;
   late AnimationController _animationController;
+  late AnimationController _indicatorAnimationController;
+
+  int _currentTabIndex = 0;
+  int _previousTabIndex = 0;
 
   void initState() {
     super.initState();
     final initialIndex = ref.read(tabIndexProvider);
+    _currentTabIndex = initialIndex;
+    _previousTabIndex = initialIndex;
 
     _tabController = TabController(length: AppTab.totalTabs, vsync: this, initialIndex: initialIndex);
     _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
+    _indicatorAnimationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+
     _animationController.forward(from: 0.0);
     _tabController.addListener(_tabControllerListener);
     ref.read(backgroundScraperManagerProvider);
@@ -44,11 +52,33 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     }
   }
 
+  void _animateIndicatorToTab(int targetIndex) {
+    final int startIndex = _currentTabIndex;
+    final int endIndex = targetIndex;
+    final int tabDifference = (endIndex - startIndex).abs();
+    final Duration animationDuration = Duration(milliseconds: tabDifference * 500);
+
+    // Store the previous position for animation
+    _previousTabIndex = _currentTabIndex;
+
+    // Update content immediately
+    setState(() {
+      _currentTabIndex = targetIndex;
+    });
+
+    // Reset and start the animation
+    _indicatorAnimationController.duration = animationDuration;
+    _indicatorAnimationController.stop();
+    _indicatorAnimationController.value = 0.0;
+    _indicatorAnimationController.forward();
+  }
+
   @override
   void dispose() {
     _tabController.removeListener(_tabControllerListener);
     _tabController.dispose();
     _animationController.dispose();
+    _indicatorAnimationController.dispose();
     super.dispose();
   }
 
@@ -66,12 +96,28 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     }
 
     ref.read(tabIndexProvider.notifier).setTab(index);
+    _animateIndicatorToTab(index);
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentTabIndex = ref.watch(tabIndexProvider);
+    final currentTabIndex = ref.watch(tabIndexProvider); // Watch the Riverpod state
     final ThemeData theme = Theme.of(context);
+
+    // Sync local state with Riverpod state when it changes externally
+    if (currentTabIndex != _currentTabIndex && !_indicatorAnimationController.isAnimating) {
+      _animateIndicatorToTab(currentTabIndex);
+    }
+
+    // Get only visible tabs for the bottom navigation bar
+    final visibleTabs = AppTab.values.where((tabData) => tabData.isVisibleOnBar).toList();
+    final tabCount = visibleTabs.length;
+
+    // Create mapping from actual AppTab index to visible position
+    final actualIndexToVisiblePosition = <int, int>{};
+    for (int i = 0; i < visibleTabs.length; i++) {
+      actualIndexToVisiblePosition[visibleTabs[i].tabIndex] = i;
+    }
 
     final List<Widget> homeScreenItems = [
       FeedScreen(key: PageStorageKey('FeedScreen')),
@@ -91,20 +137,18 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     Future<bool> _onWillPop() async {
       final currentTabIndex = ref.read(tabIndexProvider);
 
-      // If not on feed screen (tab 0), navigate to feed
       if (currentTabIndex != 0) {
         _moveToTab(0);
         return false;
       }
 
-      // If on feed screen, use double-tap to exit
       DateTime now = DateTime.now();
       if (_currentBackPressTime == null || now.difference(_currentBackPressTime!) > Duration(seconds: 1)) {
         _currentBackPressTime = now;
         return false;
       }
 
-      return true; // Exit app
+      return true;
     }
 
     return WillPopScope(
@@ -114,58 +158,78 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         body: Stack(
           children: List.generate(homeScreenItems.length, (index) {
             return Offstage(
-              offstage: index != currentTabIndex,
+              offstage: index != _currentTabIndex, // Use local state for display
               child: TickerMode(
-                enabled: index == currentTabIndex,
+                enabled: index == _currentTabIndex,
                 child: FadeTransition(opacity: _animationController, child: homeScreenItems[index]),
               ),
             );
           }),
         ),
         bottomNavigationBar: Container(
-          height: 60, // Exact controlled height
+          height: 60,
           decoration: BoxDecoration(
             color:
                 theme.bottomNavigationBarTheme.backgroundColor ??
                 (theme.brightness == Brightness.light ? theme.colorScheme.surface : Colors.grey[900]),
             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8.0, offset: Offset(0, -2))],
           ),
-          child: Row(
-            children: AppTab.values.where((tabData) => tabData.isVisibleOnBar).map((tabData) {
-              final isSelected = AppTab.values.indexOf(tabData) == currentTabIndex;
-              final tabIndex = AppTab.values.indexOf(tabData);
+          child: Stack(
+            children: [
+              // Animated indicator
+              AnimatedBuilder(
+                animation: _indicatorAnimationController,
+                builder: (context, child) {
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final tabWidth = screenWidth / tabCount;
 
-              return Expanded(
-                child: Material(
-                  color: Colors.transparent, // Important for tap ripple effect
-                  child: InkWell(
-                    onTap: () => _moveToTab(tabIndex),
-                    splashColor: theme.primaryColor.withOpacity(0.2),
-                    highlightColor: theme.primaryColor.withOpacity(0.1),
+                  // Calculate animated position
+                  final animatedPosition = _previousTabIndex + (_currentTabIndex - _previousTabIndex) * _indicatorAnimationController.value;
+
+                  // For hidden tabs (like memo), clamp to the nearest visible position
+                  double visiblePosition;
+                  if (actualIndexToVisiblePosition.containsKey(_currentTabIndex)) {
+                    // This is a visible tab - use the animated position
+                    visiblePosition = animatedPosition;
+                  } else {
+                    // This is a hidden tab - clamp to nearest visible position
+                    visiblePosition = animatedPosition.clamp(0, tabCount - 1).toDouble();
+                  }
+
+                  return Positioned(
+                    top: 0,
+                    left: visiblePosition * tabWidth,
                     child: Container(
-                      height: 60,
-                      child: Stack(
-                        children: [
-                          // Full-width top border indicator
-                          if (isSelected)
-                            Positioned(
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                height: 3,
-                                decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(2)),
-                              ),
-                            ),
-                          // Centered icon
-                          Center(child: _buildTabIcon(tabData, isSelected, tabIndex)),
-                        ],
+                      width: tabWidth,
+                      height: 3,
+                      decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(2)),
+                    ),
+                  );
+                },
+              ),
+
+              // Tab buttons - only show visible tabs
+              Row(
+                children: visibleTabs.asMap().entries.map((entry) {
+                  final visiblePosition = entry.key;
+                  final tabData = entry.value;
+                  final actualIndex = tabData.tabIndex;
+                  final isSelected = actualIndex == _currentTabIndex; // Use local state
+
+                  return Expanded(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _moveToTab(actualIndex),
+                        splashColor: theme.primaryColor.withOpacity(0.2),
+                        highlightColor: theme.primaryColor.withOpacity(0.1),
+                        child: Container(height: 60, child: Center(child: _buildTabIcon(tabData, isSelected, actualIndex))),
                       ),
                     ),
-                  ),
-                ),
-              );
-            }).toList(),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
         ),
       ),
@@ -190,7 +254,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         introStep: introStep,
         color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
         size: 34,
-        onTap: () => _moveToTab(tabIndex), // This will still work but the entire area is also tappable
+        onTap: () => _moveToTab(tabIndex),
       );
     } else {
       return Icon(

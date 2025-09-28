@@ -1,5 +1,4 @@
 // home.dart
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/intros/intro_enums.dart';
@@ -24,7 +23,6 @@ class HomeSceen extends ConsumerStatefulWidget {
 
 class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateMixin {
   late TabController _tabController;
-
   late AnimationController _animationController;
 
   void initState() {
@@ -54,7 +52,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     super.dispose();
   }
 
-  // home.dart (updated _moveToTab method)
   void _moveToTab(int index) {
     final tabData = AppTab.values[index];
 
@@ -75,15 +72,12 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   Widget build(BuildContext context) {
     final currentTabIndex = ref.watch(tabIndexProvider);
     final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
-    final Color cupertinoActiveColor = colorScheme.primary;
-    final Color cupertinoInactiveColor = colorScheme.onSurface.withOpacity(0.6);
 
     final List<Widget> homeScreenItems = [
       FeedScreen(key: PageStorageKey('FeedScreen')),
       AddPost(key: PageStorageKey('AddPost')),
       ProfileScreenWidget(key: PageStorageKey('ProfileScreen')),
-      MemoWebviewScreen(key: PageStorageKey('MemoWebviewScreen')), // Added webview tab
+      MemoWebviewScreen(key: PageStorageKey('MemoWebviewScreen')),
     ];
 
     ref.listen<int>(tabIndexProvider, (previous, next) {
@@ -92,8 +86,11 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       }
     });
 
+    // Build bottom navigation items with full-width indicator and no labels
     List<BottomNavigationBarItem> buildBottomNavItems() {
-      return AppTab.values.where((tabData) => tabData.isVisibleOnBar).map((tabData) {
+      final visibleTabs = AppTab.values.where((tabData) => tabData.isVisibleOnBar).toList();
+
+      return visibleTabs.map((tabData) {
         final isSelected = AppTab.values.indexOf(tabData) == currentTabIndex;
 
         // Determine which intro step corresponds to this tab
@@ -104,38 +101,59 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
           introStep = IntroStep.main_profile;
         }
 
-        Widget barIcon;
-
-        if (introStep != null) {
-          // Use animated icon for tabs that have intro steps
-          barIcon = Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10.0), // (70 - 32) / 2 = 19px padding
-            child: IntroAnimatedIcon(
-              icon: isSelected ? tabData.active : tabData.icon,
-              introType: IntroType.mainApp,
-              introStep: introStep,
-              color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
-              size: 34,
-              // padding: const EdgeInsets.all(6.0),
-              onTap: () => _moveToTab(AppTab.values.indexOf(tabData)),
-            ),
-          );
-        } else {
-          // Regular icon for other tabs
-          barIcon = Padding(
-            padding: const EdgeInsets.symmetric(vertical: 18.0), // (70 - 32) / 2 = 19px padding
-            child: GestureDetector(
-              onTap: () => _moveToTab(AppTab.values.indexOf(tabData)),
-              child: Icon(
-                isSelected ? tabData.active : tabData.icon,
-                color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
-                size: 34,
-              ),
+        // Function to create the icon with full-width top border indicator
+        Widget buildIconWidget(Widget iconWidget) {
+          return Container(
+            width: double.infinity, // Take full width of the tab
+            height: 50, // Use standard height
+            child: Stack(
+              alignment: Alignment.topCenter,
+              children: [
+                // Full-width top border indicator (1/3 of the bar width)
+                if (isSelected)
+                  Positioned(
+                    top: 0,
+                    child: Container(
+                      height: 2,
+                      width: MediaQuery.of(context).size.width / visibleTabs.length, // 1/3 of total width
+                      decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(2)),
+                    ),
+                  ),
+                // Center the icon vertically and horizontally
+                Center(child: iconWidget),
+              ],
             ),
           );
         }
 
-        return BottomNavigationBarItem(tooltip: tabData.label, activeIcon: barIcon, icon: barIcon, label: "");
+        Widget iconWidget;
+
+        if (introStep != null) {
+          // Use IntroAnimatedIcon for tabs with intro functionality
+          iconWidget = IntroAnimatedIcon(
+            icon: isSelected ? tabData.active : tabData.icon,
+            introType: IntroType.mainApp,
+            introStep: introStep,
+            color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
+            size: 34, // Restored larger icon size
+            onTap: () => _moveToTab(AppTab.values.indexOf(tabData)),
+          );
+        } else {
+          // Regular icon with gesture detector for other tabs
+          iconWidget = GestureDetector(
+            onTap: () => _moveToTab(AppTab.values.indexOf(tabData)),
+            child: Icon(
+              isSelected ? tabData.active : tabData.icon,
+              size: 34, // Restored larger icon size
+              color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
+            ),
+          );
+        }
+
+        return BottomNavigationBarItem(
+          icon: buildIconWidget(iconWidget),
+          label: '', // Empty label to remove text
+        );
       }).toList();
     }
 
@@ -154,7 +172,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       DateTime now = DateTime.now();
       if (_currentBackPressTime == null || now.difference(_currentBackPressTime!) > Duration(seconds: 1)) {
         _currentBackPressTime = now;
-        // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Press back again to exit app'), duration: Duration(seconds: 2)));
         return false;
       }
 
@@ -176,17 +193,18 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
             );
           }),
         ),
-        bottomNavigationBar: CupertinoTabBar(
-          height: 50,
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: currentTabIndex == AppTab.memo.tabIndex ? 2 : currentTabIndex,
+          onTap: _moveToTab,
+          type: BottomNavigationBarType.fixed,
           backgroundColor:
               theme.bottomNavigationBarTheme.backgroundColor ??
               (theme.brightness == Brightness.light ? theme.colorScheme.surface : Colors.grey[900]),
-          activeColor: cupertinoActiveColor,
-          inactiveColor: cupertinoInactiveColor,
-          currentIndex: currentTabIndex == AppTab.memo.tabIndex ? 2 : currentTabIndex,
-          onTap: (index) => _moveToTab(index),
-          iconSize: 32.0,
-          border: Border(),
+          selectedItemColor: theme.primaryColor,
+          unselectedItemColor: theme.primaryColor.withAlpha(222),
+          showSelectedLabels: false, // Hide labels
+          showUnselectedLabels: false, // Hide labels
+          elevation: 8.0,
           items: buildBottomNavItems(),
         ),
       ),

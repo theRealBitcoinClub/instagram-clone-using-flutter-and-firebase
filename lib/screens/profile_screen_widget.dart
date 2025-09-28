@@ -70,12 +70,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     }
   }
 
-  void _onViewModeChanged() {
-    if (_viewMode != 1) {
-      _ytManager.pauseAll();
-    }
-  }
-
   void _startMinDisplayTimer() {
     _minDisplayTimeElapsed = false;
     _minDisplayTimer?.cancel();
@@ -181,13 +175,12 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   }
 
   void _navigateToAdjacentTab(int direction) {
-    final currentIndex = _viewMode;
     final List<int> availableTabs = [0, 1, 2, 4]; // Your tab indices
-    final currentTabIndex = availableTabs.indexOf(currentIndex);
+    final currentTabIndex = availableTabs.indexOf(_viewMode);
     final newTabIndex = (currentTabIndex + direction).clamp(0, availableTabs.length - 1);
 
     if (newTabIndex != currentTabIndex) {
-      _viewMode = availableTabs[newTabIndex];
+      _updateViewMode(availableTabs[newTabIndex]);
     }
   }
 

@@ -3,7 +3,6 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:mahakka/config_ipfs.dart';
 import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
-import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 part 'memo_model_post.g.dart';
@@ -47,25 +46,27 @@ class MemoModelPost {
   @JsonKey(includeFromJson: false, includeToJson: false)
   MemoModelCreator? creator;
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
   final String? created;
 
   // @JsonKey(includeFromJson: false, includeToJson: false)
   // String? _ageCache;
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
   List<String> urls = [];
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   DocumentSnapshot? docSnapshot;
 
   // --- Private Constructor for json_serializable ---
-  // This is the constructor that json_serializable will call.
-  // It should NOT have the 'id' field as a required parameter.
   MemoModelPost._({
+    this.id,
     this.text,
     this.imgurUrl,
     this.youtubeId,
+    this.imageUrl,
+    this.videoUrl,
+    this.showOnFeed,
+    this.hideOnFeed,
+    this.ipfsCid,
     this.createdDateTime,
     this.popularityScore = 0,
     this.likeCounter,
@@ -74,18 +75,12 @@ class MemoModelPost {
     this.topicId = '',
     this.tagIds = const [],
     this.created,
+    this.urls = const [],
   }) {
-    if (this.createdDateTime == null && this.created != null && this.created!.isNotEmpty) {
-      try {
-        this.createdDateTime = DateTime.parse(this.created!);
-      } catch (e) {
-        print("Error parsing 'created' string to DateTime: $e");
-      }
-    }
+    _initializeCreatedDateTime();
   }
 
   // --- Public Constructor for manual creation ---
-  // You can keep a public constructor for creating new posts before saving.
   MemoModelPost({
     required this.id,
     this.text,
@@ -94,6 +89,8 @@ class MemoModelPost {
     this.videoUrl,
     this.imageUrl,
     this.ipfsCid,
+    this.showOnFeed,
+    this.hideOnFeed,
     this.createdDateTime,
     this.popularityScore = 0,
     this.likeCounter,
@@ -103,12 +100,20 @@ class MemoModelPost {
     this.tagIds = const [],
     this.creator,
     this.created,
-    this.docSnapshot,
-    this.showOnFeed,
-    this.hideOnFeed,
     this.urls = const [],
+    this.docSnapshot,
   }) {
-    // Initialization logic for public constructor if needed
+    _initializeCreatedDateTime();
+  }
+
+  void _initializeCreatedDateTime() {
+    if (createdDateTime == null && created != null && created!.isNotEmpty) {
+      try {
+        createdDateTime = DateTime.parse(created!);
+      } catch (e) {
+        print("Error parsing 'created' string to DateTime: $e");
+      }
+    }
   }
 
   // --- JSON Serialization ---
@@ -203,7 +208,6 @@ class MemoModelPost {
     String? topicId,
     List<String>? tagIds,
     MemoModelCreator? creator,
-    MemoModelTopic? topic,
     String? created,
     List<String>? urls,
     DocumentSnapshot? docSnapshot,

@@ -128,7 +128,7 @@ class MemoScraperUtil {
 
   static void extractUrlsAndHashtags(MemoModelPost post) {
     post.text = post.text ?? "";
-    var extractUrlsGenerously = MemoRegExp.extractUrlsGenerously(post.text!);
+    List<String> extractUrlsGenerously = MemoRegExp.extractUrlsGenerously(post.text!);
     if (post.text!.isNotEmpty) post.text = StringUtils.ensureSpacesAroundMatches(post.text!, extractUrlsGenerously).trim();
     MemoScraperUtil.extractYouTubeUrlAndRemoveJavaScriptFromText(post);
     post.tagIds = List<String>.from(MemoRegExp.extractHashtags(post.text).take(3));

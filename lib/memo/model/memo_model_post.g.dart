@@ -15,6 +15,8 @@ MemoModelPost _$MemoModelPostFromJson(Map<String, dynamic> json) =>
       videoUrl: json['videoUrl'] as String?,
       imageUrl: json['imageUrl'] as String?,
       ipfsCid: json['ipfsCid'] as String?,
+      showOnFeed: json['showOnFeed'] as bool?,
+      hideOnFeed: json['hideOnFeed'] as bool?,
       createdDateTime: _dateTimeFromJson(json['createdDateTime'] as Timestamp?),
       popularityScore: (json['popularityScore'] as num?)?.toInt() ?? 0,
       likeCounter: (json['likeCounter'] as num?)?.toInt(),
@@ -26,8 +28,10 @@ MemoModelPost _$MemoModelPostFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           const [],
-      showOnFeed: json['showOnFeed'] as bool?,
-      hideOnFeed: json['hideOnFeed'] as bool?,
+      created: json['created'] as String?,
+      urls:
+          (json['urls'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$MemoModelPostToJson(MemoModelPost instance) =>
@@ -49,4 +53,6 @@ Map<String, dynamic> _$MemoModelPostToJson(MemoModelPost instance) =>
       'creatorId': instance.creatorId,
       'topicId': instance.topicId,
       'tagIds': instance.tagIds,
+      if (instance.created case final value?) 'created': value,
+      'urls': instance.urls,
     };

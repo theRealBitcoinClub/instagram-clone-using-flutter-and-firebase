@@ -239,8 +239,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   Widget _buildTabSelector() {
     return SliverPersistentHeader(
       delegate: SliverAppBarDelegate(
-        minHeight: 60,
-        maxHeight: 60,
+        minHeight: ProfileTabSelector.height,
+        maxHeight: ProfileTabSelector.height,
         child: ProfileTabSelector(
           viewMode: _viewMode.value,
           onViewModeChanged: (newMode) => _viewMode.value = newMode,

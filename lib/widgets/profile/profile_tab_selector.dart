@@ -6,6 +6,7 @@ class ProfileTabSelector extends StatefulWidget {
   final int viewMode;
   final ValueChanged<int> onViewModeChanged;
   final Widget child;
+  static const double height = 50;
 
   const ProfileTabSelector({Key? key, required this.viewMode, required this.onViewModeChanged, required this.child}) : super(key: key);
 
@@ -106,10 +107,12 @@ class _ProfileTabSelectorState extends State<ProfileTabSelector> with SingleTick
         // Tab selector buttons
         Container(
           color: theme.colorScheme.primary,
-          height: 60,
+          height: ProfileTabSelector.height,
           child: TabBar(
+            padding: EdgeInsets.zero,
+            dividerHeight: 0,
             controller: _tabController,
-            indicator: BoxDecoration(color: theme.colorScheme.onPrimary.withAlpha(66)),
+            indicator: BoxDecoration(color: Colors.black.withAlpha(45)),
             indicatorSize: TabBarIndicatorSize.tab,
             labelColor: theme.colorScheme.onPrimary,
             unselectedLabelColor: theme.colorScheme.onPrimary.withAlpha(169),

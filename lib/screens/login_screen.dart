@@ -238,9 +238,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 120),
+                const SizedBox(height: 90),
                 Image.asset('assets/icon_round_200.png', height: 120),
-                const SizedBox(height: 56),
+                const SizedBox(height: 48),
                 TextField(
                   minLines: 3,
                   maxLines: 3,

@@ -1,7 +1,7 @@
 name: mahakka
 description: An app using the memo protocol to publish content to the BCH blockchain.
 publish_to: 'none'
-version: 3.4.5-BCH+2025092707
+version: 3.4.6-BCH+2025092708
 
 environment:
   sdk: '>=3.8.0 <4.0.0'

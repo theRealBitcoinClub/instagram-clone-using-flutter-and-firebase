@@ -13,8 +13,11 @@ enum MemoVerificationResponse {
   noTopicNorTag("Must include @topic or #tag."),
   moreThanOneTopic("Only one @topic allowed"),
   tooLong("Text + media Url is too long."),
+  tooLongProfileText("Text/Bio is too long."),
+  tooLongProfileName("Name is too long."),
   tooLongMediaUrl("Media Url is too long."),
-  tooShort("Too short!"),
+  tooShort("Please add some text!"),
+  tooShortProfileName("Name is too short!"),
   minWordCountNotReached("Write more words."),
   offensiveWords("Offensive words detected."),
   email("Email not allowed."),
@@ -58,9 +61,9 @@ class MemoVerifier {
   MemoVerifier(this.text);
 
   MemoVerificationResponse verifyUserName() {
-    if (text.length > maxProfileNameLength) return MemoVerificationResponse.tooLong;
+    if (text.length > maxProfileNameLength) return MemoVerificationResponse.tooLongProfileName;
 
-    if (text.isEmpty || text.length < minProfileNameLength) return MemoVerificationResponse.tooShort;
+    if (text.isEmpty || text.length < minProfileNameLength) return MemoVerificationResponse.tooShortProfileName;
 
     return MemoVerificationResponse.valid;
   }
@@ -68,7 +71,7 @@ class MemoVerifier {
   MemoVerificationResponse verifyProfileText() {
     if (text.isEmpty || text.length < minProfileTextLength) return MemoVerificationResponse.tooShort;
 
-    if (text.length > maxProfileTextLength) return MemoVerificationResponse.tooLong;
+    if (text.length > maxProfileTextLength) return MemoVerificationResponse.tooLongProfileText;
 
     return MemoVerificationResponse.valid;
   }

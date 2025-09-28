@@ -353,6 +353,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
       _hasSelectedTopic = !_hasSelectedTopic;
       if (_hasSelectedTopic) {
+        _textEditController.text = _textEditController.text.replaceAll("@${widget.post.topicId}", "").trim();
         _textEditController.text = "@${widget.post.topicId} ${_textEditController.text}";
       } else {
         _textEditController.text = _textEditController.text.replaceAll("@${widget.post.topicId}", "").trim();
@@ -379,8 +380,10 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     setState(() {
       final currentTextHashtags = MemoRegExp.extractHashtags(value);
+      final currentTextHashtagsLower = currentTextHashtags.map((tag) => tag.toLowerCase()).toSet();
+
       for (int i = 0; i < _selectedHashtags.length && i < widget.post.tagIds.length; i++) {
-        _selectedHashtags[i] = currentTextHashtags.contains(widget.post.tagIds[i]);
+        _selectedHashtags[i] = currentTextHashtagsLower.contains(widget.post.tagIds[i].toLowerCase());
       }
       _evaluateShowSendButton(value);
     });

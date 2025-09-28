@@ -35,7 +35,8 @@ class ProfileScreenWidget extends ConsumerStatefulWidget {
 class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with TickerProviderStateMixin {
   final YouTubeControllerManager _ytManager = YouTubeControllerManager();
   final ScrollController _scrollController = ScrollController();
-  final ValueNotifier<int> _viewMode = ValueNotifier(0);
+  // final ValueNotifier<int> _viewMode = ValueNotifier(0);
+  int _viewMode = 0;
   bool isRefreshingProfile = false;
   bool allowLogout = false;
   DateTime? _currentProfileLoadStartTime;
@@ -46,21 +47,33 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   @override
   void initState() {
     super.initState();
-    _viewMode.addListener(_onViewModeChanged);
+    // _viewMode.addListener(_onViewModeChanged);
   }
 
   @override
   void dispose() {
-    _viewMode.removeListener(_onViewModeChanged);
-    _viewMode.dispose();
+    // _viewMode.removeListener(_onViewModeChanged);
+    // _viewMode.dispose();
     _ytManager.dispose();
     _scrollController.dispose();
     _minDisplayTimer?.cancel();
     super.dispose();
   }
 
+  void _updateViewMode(int newMode) {
+    if (newMode != _viewMode) {
+      setState(() {
+        _viewMode = newMode;
+      });
+      // Handle video pausing
+      if (newMode != 1) {
+        _ytManager.pauseAll();
+      }
+    }
+  }
+
   void _onViewModeChanged() {
-    if (_viewMode.value != 1) {
+    if (_viewMode != 1) {
       _ytManager.pauseAll();
     }
   }
@@ -68,7 +81,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   void _startMinDisplayTimer() {
     _minDisplayTimeElapsed = false;
     _minDisplayTimer?.cancel();
-    _minDisplayTimer = Timer(Duration(seconds: 5), () {
+    _minDisplayTimer = Timer(Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
           _minDisplayTimeElapsed = true;
@@ -82,7 +95,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     final theme = Theme.of(context);
     final loggedInUser = ref.watch(userProvider);
     final currentTabIndex = ref.watch(tabIndexProvider);
-    String? targetProfileId = ref.read(profileTargetIdProvider);
+    String? targetProfileId = ref.watch(profileTargetIdProvider);
 
     context.afterLayout(refreshUI: true, () {
       if (_scrollController.hasClients) {
@@ -172,13 +185,13 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   }
 
   void _navigateToAdjacentTab(int direction) {
-    final currentIndex = _viewMode.value;
+    final currentIndex = _viewMode;
     final List<int> availableTabs = [0, 1, 2, 4]; // Your tab indices
     final currentTabIndex = availableTabs.indexOf(currentIndex);
     final newTabIndex = (currentTabIndex + direction).clamp(0, availableTabs.length - 1);
 
     if (newTabIndex != currentTabIndex) {
-      _viewMode.value = availableTabs[newTabIndex];
+      _viewMode = availableTabs[newTabIndex];
     }
   }
 
@@ -242,8 +255,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
         minHeight: ProfileTabSelector.height,
         maxHeight: ProfileTabSelector.height,
         child: ProfileTabSelector(
-          viewMode: _viewMode.value,
-          onViewModeChanged: (newMode) => _viewMode.value = newMode,
+          viewMode: _viewMode,
+          onViewModeChanged: _updateViewMode,
           child: Container(), // Empty container since content is in separate sliver
         ),
       ),
@@ -256,15 +269,15 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       return _buildLoadingContent(theme);
     }
 
-    return ValueListenableBuilder<int>(
-      valueListenable: _viewMode,
-      builder: (context, viewMode, child) {
-        return KeyedSubtree(
-          key: ValueKey('${profileData.creator!.id}_$viewMode'),
-          child: _buildSliverCategorizedView(theme, profileData.creator!, profileData.categorizer, viewMode),
-        );
-      },
+    // return ValueListenableBuilder<int>(
+    //   valueListenable: _viewMode,
+    //   builder: (context, viewMode, child) {
+    return KeyedSubtree(
+      key: ValueKey('${profileData.creator!.id}_$_viewMode'),
+      child: _buildSliverCategorizedView(theme, profileData.creator!, profileData.categorizer, _viewMode),
     );
+    // },
+    // );
   }
 
   Widget _buildLoadingContent(ThemeData theme) {

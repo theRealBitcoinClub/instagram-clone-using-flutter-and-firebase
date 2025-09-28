@@ -75,17 +75,10 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
             tooltip: "View My Profile",
             onPressed: () {
               ref.read(profileTargetIdProvider.notifier).state = null;
-              // ref.refresh(profileDataProvider); // Changed from profileCreatorStateProvider
-              // Force a complete refresh and UI rebuild
               context.afterBuild(refreshUI: true, () {
-                if (scrollController.hasClients) {
-                  scrollController.jumpTo(0.0);
-                }
                 ref.invalidate(profileDataProvider); // Invalidate first
                 ref.refresh(profileDataProvider); // Then refresh
               });
-              // Future.microtask(() {
-              // });
             },
           ),
       ],

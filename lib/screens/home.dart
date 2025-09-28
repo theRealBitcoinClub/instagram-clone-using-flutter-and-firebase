@@ -24,10 +24,12 @@ class HomeSceen extends ConsumerStatefulWidget {
 class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateMixin {
   late TabController _tabController;
   late AnimationController _animationController;
-  late AnimationController _indicatorAnimationController;
+  late AnimationController _indicatorAnimCtrl;
 
   int _currentTabIndex = 0;
   int _previousTabIndex = 0;
+  static const animDuration = 250;
+  static const duration = Duration(milliseconds: animDuration);
 
   void initState() {
     super.initState();
@@ -36,8 +38,8 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     _previousTabIndex = initialIndex;
 
     _tabController = TabController(length: AppTab.totalTabs, vsync: this, initialIndex: initialIndex);
-    _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
-    _indicatorAnimationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
+    _animationController = AnimationController(vsync: this, duration: duration);
+    _indicatorAnimCtrl = AnimationController(vsync: this, duration: duration);
 
     _animationController.forward(from: 0.0);
     _tabController.addListener(_tabControllerListener);
@@ -56,21 +58,16 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     final int startIndex = _currentTabIndex;
     final int endIndex = targetIndex;
     final int tabDifference = (endIndex - startIndex).abs();
-    final Duration animationDuration = Duration(milliseconds: tabDifference * 500);
-
-    // Store the previous position for animation
+    final Duration animationDuration = Duration(milliseconds: tabDifference * animDuration);
     _previousTabIndex = _currentTabIndex;
-
-    // Update content immediately
     setState(() {
       _currentTabIndex = targetIndex;
     });
 
-    // Reset and start the animation
-    _indicatorAnimationController.duration = animationDuration;
-    _indicatorAnimationController.stop();
-    _indicatorAnimationController.value = 0.0;
-    _indicatorAnimationController.forward();
+    _indicatorAnimCtrl.duration = animationDuration;
+    _indicatorAnimCtrl.stop();
+    _indicatorAnimCtrl.value = 0.0;
+    _indicatorAnimCtrl.forward();
   }
 
   @override
@@ -78,7 +75,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     _tabController.removeListener(_tabControllerListener);
     _tabController.dispose();
     _animationController.dispose();
-    _indicatorAnimationController.dispose();
+    _indicatorAnimCtrl.dispose();
     super.dispose();
   }
 
@@ -105,7 +102,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     final ThemeData theme = Theme.of(context);
 
     // Sync local state with Riverpod state when it changes externally
-    if (currentTabIndex != _currentTabIndex && !_indicatorAnimationController.isAnimating) {
+    if (currentTabIndex != _currentTabIndex && !_indicatorAnimCtrl.isAnimating) {
       _animateIndicatorToTab(currentTabIndex);
     }
 
@@ -178,7 +175,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
             children: [
               // Animated indicator
               AnimatedBuilder(
-                animation: _indicatorAnimationController,
+                animation: _indicatorAnimCtrl,
                 builder: (context, child) {
                   if (_currentTabIndex == AppTab.memo.tabIndex) {
                     return SizedBox.shrink();
@@ -186,27 +183,11 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
                   final screenWidth = MediaQuery.of(context).size.width;
                   final tabWidth = screenWidth / tabCount;
 
-                  // Calculate animated position
-                  final animatedPosition = _previousTabIndex + (_currentTabIndex - _previousTabIndex) * _indicatorAnimationController.value;
-
-                  // For hidden tabs (like memo), clamp to the nearest visible position
-                  // double visiblePosition;
-                  //
-                  // if (actualIndexToVisiblePosition.containsKey(_currentTabIndex)) {
-                  //   // This is a visible tab - use the animated position
-                  //   visiblePosition = animatedPosition;
-                  // } else {
-                  //   // This is a hidden tab - clamp to nearest visible position
-                  //   visiblePosition = animatedPosition.clamp(0, tabCount - 1).toDouble();
-                  // }
-                  // In the AnimatedBuilder, replace the position calculation with this:
                   double visiblePosition;
                   if (_previousTabIndex == AppTab.memo.tabIndex) {
-                    // Coming from invisible tab - show instantly at current position
                     visiblePosition = _currentTabIndex.toDouble();
                   } else {
-                    // Normal animation
-                    visiblePosition = _previousTabIndex + (_currentTabIndex - _previousTabIndex) * _indicatorAnimationController.value;
+                    visiblePosition = _previousTabIndex + (_currentTabIndex - _previousTabIndex) * _indicatorAnimCtrl.value;
                   }
 
                   return Positioned(
@@ -221,10 +202,8 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
                 },
               ),
 
-              // Tab buttons - only show visible tabs
               Row(
                 children: visibleTabs.asMap().entries.map((entry) {
-                  final visiblePosition = entry.key;
                   final tabData = entry.value;
                   final actualIndex = tabData.tabIndex;
                   final isSelected = actualIndex == _currentTabIndex; // Use local state

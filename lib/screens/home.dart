@@ -86,82 +86,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       }
     });
 
-    // Build bottom navigation items with full-width indicator and no labels
-    List<BottomNavigationBarItem> buildBottomNavItems() {
-      final visibleTabs = AppTab.values.where((tabData) => tabData.isVisibleOnBar).toList();
-
-      return visibleTabs.map((tabData) {
-        final isSelected = AppTab.values.indexOf(tabData) == currentTabIndex;
-
-        // Determine which intro step corresponds to this tab
-        IntroStep? introStep;
-        if (tabData == AppTab.add) {
-          introStep = IntroStep.main_create;
-        } else if (tabData == AppTab.profile) {
-          introStep = IntroStep.main_profile;
-        }
-
-        // Function to create the icon with full-width top border indicator
-        Widget buildIconWidget(Widget iconWidget) {
-          return Container(
-            width: double.infinity, // Take full width of the tab
-            height: 60, // Custom height for the entire bar
-            child: Stack(
-              alignment: Alignment.topCenter,
-              children: [
-                // Full-width top border indicator (1/3 of the bar width) - positioned at absolute top
-                if (isSelected)
-                  Positioned(
-                    top: 0, // Absolutely at the top
-                    child: Container(
-                      height: 3,
-                      width: MediaQuery.of(context).size.width / visibleTabs.length,
-                      decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(2)),
-                    ),
-                  ),
-                // Center the icon vertically
-                Center(
-                  child: Container(
-                    margin: EdgeInsets.only(top: 3), // Small margin to account for the border
-                    child: iconWidget,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        Widget iconWidget;
-
-        if (introStep != null) {
-          // Use IntroAnimatedIcon for tabs with intro functionality
-          iconWidget = IntroAnimatedIcon(
-            icon: isSelected ? tabData.active : tabData.icon,
-            introType: IntroType.mainApp,
-            introStep: introStep,
-            color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
-            size: 34, // Restored larger icon size
-            onTap: () => _moveToTab(AppTab.values.indexOf(tabData)),
-          );
-        } else {
-          // Regular icon with gesture detector for other tabs
-          iconWidget = GestureDetector(
-            onTap: () => _moveToTab(AppTab.values.indexOf(tabData)),
-            child: Icon(
-              isSelected ? tabData.active : tabData.icon,
-              size: 34, // Restored larger icon size
-              color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
-            ),
-          );
-        }
-
-        return BottomNavigationBarItem(
-          icon: buildIconWidget(iconWidget),
-          label: '', // Empty label to remove text
-        );
-      }).toList();
-    }
-
     DateTime? _currentBackPressTime;
 
     Future<bool> _onWillPop() async {
@@ -212,26 +136,31 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
               final tabIndex = AppTab.values.indexOf(tabData);
 
               return Expanded(
-                child: GestureDetector(
-                  onTap: () => _moveToTab(tabIndex),
-                  child: Container(
-                    height: 60,
-                    child: Stack(
-                      children: [
-                        // Full-width top border indicator
-                        if (isSelected)
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              height: 3,
-                              decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(2)),
+                child: Material(
+                  color: Colors.transparent, // Important for tap ripple effect
+                  child: InkWell(
+                    onTap: () => _moveToTab(tabIndex),
+                    splashColor: theme.primaryColor.withOpacity(0.2),
+                    highlightColor: theme.primaryColor.withOpacity(0.1),
+                    child: Container(
+                      height: 60,
+                      child: Stack(
+                        children: [
+                          // Full-width top border indicator
+                          if (isSelected)
+                            Positioned(
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              child: Container(
+                                height: 3,
+                                decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(2)),
+                              ),
                             ),
-                          ),
-                        // Centered icon
-                        Center(child: _buildTabIcon(tabData, isSelected, tabIndex)),
-                      ],
+                          // Centered icon
+                          Center(child: _buildTabIcon(tabData, isSelected, tabIndex)),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -243,7 +172,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     );
   }
 
-  // Add this helper method:
+  // Helper method to build tab icon
   Widget _buildTabIcon(AppTab tabData, bool isSelected, int tabIndex) {
     final ThemeData theme = Theme.of(context);
     IntroStep? introStep;
@@ -261,7 +190,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         introStep: introStep,
         color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
         size: 34,
-        onTap: () => _moveToTab(tabIndex),
+        onTap: () => _moveToTab(tabIndex), // This will still work but the entire area is also tappable
       );
     } else {
       return Icon(

@@ -105,22 +105,27 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         Widget buildIconWidget(Widget iconWidget) {
           return Container(
             width: double.infinity, // Take full width of the tab
-            height: 50, // Use standard height
+            height: 60, // Custom height for the entire bar
             child: Stack(
               alignment: Alignment.topCenter,
               children: [
-                // Full-width top border indicator (1/3 of the bar width)
+                // Full-width top border indicator (1/3 of the bar width) - positioned at absolute top
                 if (isSelected)
                   Positioned(
-                    top: 0,
+                    top: 0, // Absolutely at the top
                     child: Container(
-                      height: 2,
-                      width: MediaQuery.of(context).size.width / visibleTabs.length, // 1/3 of total width
+                      height: 3,
+                      width: MediaQuery.of(context).size.width / visibleTabs.length,
                       decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(2)),
                     ),
                   ),
-                // Center the icon vertically and horizontally
-                Center(child: iconWidget),
+                // Center the icon vertically
+                Center(
+                  child: Container(
+                    margin: EdgeInsets.only(top: 3), // Small margin to account for the border
+                    child: iconWidget,
+                  ),
+                ),
               ],
             ),
           );
@@ -193,21 +198,77 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
             );
           }),
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: currentTabIndex == AppTab.memo.tabIndex ? 2 : currentTabIndex,
-          onTap: _moveToTab,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor:
-              theme.bottomNavigationBarTheme.backgroundColor ??
-              (theme.brightness == Brightness.light ? theme.colorScheme.surface : Colors.grey[900]),
-          selectedItemColor: theme.primaryColor,
-          unselectedItemColor: theme.primaryColor.withAlpha(222),
-          showSelectedLabels: false, // Hide labels
-          showUnselectedLabels: false, // Hide labels
-          elevation: 8.0,
-          items: buildBottomNavItems(),
+        bottomNavigationBar: Container(
+          height: 60, // Exact controlled height
+          decoration: BoxDecoration(
+            color:
+                theme.bottomNavigationBarTheme.backgroundColor ??
+                (theme.brightness == Brightness.light ? theme.colorScheme.surface : Colors.grey[900]),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8.0, offset: Offset(0, -2))],
+          ),
+          child: Row(
+            children: AppTab.values.where((tabData) => tabData.isVisibleOnBar).map((tabData) {
+              final isSelected = AppTab.values.indexOf(tabData) == currentTabIndex;
+              final tabIndex = AppTab.values.indexOf(tabData);
+
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => _moveToTab(tabIndex),
+                  child: Container(
+                    height: 60,
+                    child: Stack(
+                      children: [
+                        // Full-width top border indicator
+                        if (isSelected)
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              height: 3,
+                              decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(2)),
+                            ),
+                          ),
+                        // Centered icon
+                        Center(child: _buildTabIcon(tabData, isSelected, tabIndex)),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
+  }
+
+  // Add this helper method:
+  Widget _buildTabIcon(AppTab tabData, bool isSelected, int tabIndex) {
+    final ThemeData theme = Theme.of(context);
+    IntroStep? introStep;
+
+    if (tabData == AppTab.add) {
+      introStep = IntroStep.main_create;
+    } else if (tabData == AppTab.profile) {
+      introStep = IntroStep.main_profile;
+    }
+
+    if (introStep != null) {
+      return IntroAnimatedIcon(
+        icon: isSelected ? tabData.active : tabData.icon,
+        introType: IntroType.mainApp,
+        introStep: introStep,
+        color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
+        size: 34,
+        onTap: () => _moveToTab(tabIndex),
+      );
+    } else {
+      return Icon(
+        isSelected ? tabData.active : tabData.icon,
+        size: 34,
+        color: isSelected ? theme.primaryColor : theme.primaryColor.withAlpha(222),
+      );
+    }
   }
 }

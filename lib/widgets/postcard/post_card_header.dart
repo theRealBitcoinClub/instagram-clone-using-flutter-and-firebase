@@ -70,13 +70,16 @@ class PostCardHeader extends ConsumerWidget {
                   child: Row(
                     children: [
                       Text(
-                        "${creator.profileIdShort}  ",
+                        "${creator.profileIdShort} ",
                         style: theme.textTheme.titleSmall?.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.w400),
                       ),
-                      Text(
-                        creator.nameMaxLengthAware,
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
+                      SizedBox(
+                        width: 205,
+                        child: Text(
+                          creator.nameMaxLengthAware,
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),

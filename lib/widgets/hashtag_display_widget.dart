@@ -44,7 +44,7 @@ class HashtagDisplayWidget extends StatelessWidget {
       children: List<Widget>.generate(displayCount, (index) {
         final bool isSelected = isSelectable && selectedHashtags!.length > index && selectedHashtags![index];
 
-        final content = Container(
+        final widget = Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: noBorder ? null : borderDecoration(isSelected: isSelected, theme: theme),
           child: Text(
@@ -57,12 +57,13 @@ class HashtagDisplayWidget extends StatelessWidget {
         );
 
         if (isSelectable) {
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(onTap: () => onSelectHashtag!(index), borderRadius: noBorder ? null : BorderRadius.circular(12), child: content),
+          return GestureDetector(
+            onTap: () => onSelectHashtag!(index),
+            behavior: HitTestBehavior.opaque, // This makes the entire area tappable
+            child: widget,
           );
         } else {
-          return content;
+          return widget;
         }
       }),
     );

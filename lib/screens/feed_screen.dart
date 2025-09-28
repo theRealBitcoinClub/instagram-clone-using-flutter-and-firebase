@@ -265,8 +265,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
-  GestureDetector wrapInDoubleTapDetectorImagesOnly(MemoModelPost post, BuildContext context, FeedState feedState, ThemeData theme) {
+  Widget wrapInDoubleTapDetectorImagesOnly(MemoModelPost post, BuildContext context, FeedState feedState, ThemeData theme) {
     return GestureDetector(
+      behavior: HitTestBehavior.translucent,
       onDoubleTap: () async {
         final imageUrl = post.imgurUrl ?? post.imageUrl ?? "";
         final ipfsId = post.ipfsCid ?? "";

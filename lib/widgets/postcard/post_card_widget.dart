@@ -276,21 +276,27 @@ class _PostCardState extends ConsumerState<PostCard> {
       alignment: Alignment.center,
       children: [
         wrappedInAnimationWidget,
-        SendingAnimation(
-          isSending: _isSendingTx,
-          mediaHeight: _getMediaHeight(),
-          onEnd: () {
-            if (mounted) setState(() => _isSendingTx = false);
-          },
-          theme: theme,
+
+        IgnorePointer(
+          child: SendingAnimation(
+            isSending: _isSendingTx,
+            mediaHeight: _getMediaHeight(),
+            onEnd: () {
+              if (mounted) setState(() => _isSendingTx = false);
+            },
+            theme: theme,
+          ),
         ),
-        LikeSucceededAnimation(
-          isAnimating: _isAnimatingLike,
-          mediaHeight: _getMediaHeight(),
-          onEnd: () {
-            if (mounted) setState(() => _isAnimatingLike = false);
-          },
-          theme: theme,
+
+        IgnorePointer(
+          child: LikeSucceededAnimation(
+            isAnimating: _isAnimatingLike,
+            mediaHeight: _getMediaHeight(),
+            onEnd: () {
+              if (mounted) setState(() => _isAnimatingLike = false);
+            },
+            theme: theme,
+          ),
         ),
       ],
     );

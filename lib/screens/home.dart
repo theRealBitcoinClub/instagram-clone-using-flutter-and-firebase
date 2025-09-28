@@ -37,7 +37,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
 
     _tabController = TabController(length: AppTab.totalTabs, vsync: this, initialIndex: initialIndex);
     _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
-    _indicatorAnimationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _indicatorAnimationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
 
     _animationController.forward(from: 0.0);
     _tabController.addListener(_tabControllerListener);
@@ -180,6 +180,9 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
               AnimatedBuilder(
                 animation: _indicatorAnimationController,
                 builder: (context, child) {
+                  if (_currentTabIndex == AppTab.memo.tabIndex) {
+                    return SizedBox.shrink();
+                  }
                   final screenWidth = MediaQuery.of(context).size.width;
                   final tabWidth = screenWidth / tabCount;
 
@@ -187,13 +190,23 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
                   final animatedPosition = _previousTabIndex + (_currentTabIndex - _previousTabIndex) * _indicatorAnimationController.value;
 
                   // For hidden tabs (like memo), clamp to the nearest visible position
+                  // double visiblePosition;
+                  //
+                  // if (actualIndexToVisiblePosition.containsKey(_currentTabIndex)) {
+                  //   // This is a visible tab - use the animated position
+                  //   visiblePosition = animatedPosition;
+                  // } else {
+                  //   // This is a hidden tab - clamp to nearest visible position
+                  //   visiblePosition = animatedPosition.clamp(0, tabCount - 1).toDouble();
+                  // }
+                  // In the AnimatedBuilder, replace the position calculation with this:
                   double visiblePosition;
-                  if (actualIndexToVisiblePosition.containsKey(_currentTabIndex)) {
-                    // This is a visible tab - use the animated position
-                    visiblePosition = animatedPosition;
+                  if (_previousTabIndex == AppTab.memo.tabIndex) {
+                    // Coming from invisible tab - show instantly at current position
+                    visiblePosition = _currentTabIndex.toDouble();
                   } else {
-                    // This is a hidden tab - clamp to nearest visible position
-                    visiblePosition = animatedPosition.clamp(0, tabCount - 1).toDouble();
+                    // Normal animation
+                    visiblePosition = _previousTabIndex + (_currentTabIndex - _previousTabIndex) * _indicatorAnimationController.value;
                   }
 
                   return Positioned(

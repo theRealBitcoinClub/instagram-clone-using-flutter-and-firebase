@@ -35,11 +35,9 @@ class ProfileScreenWidget extends ConsumerStatefulWidget {
 class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with TickerProviderStateMixin {
   final YouTubeControllerManager _ytManager = YouTubeControllerManager();
   final ScrollController _scrollController = ScrollController();
-  // final ValueNotifier<int> _viewMode = ValueNotifier(0);
   int _viewMode = 0;
   bool isRefreshingProfile = false;
   bool allowLogout = false;
-  DateTime? _currentProfileLoadStartTime;
   String? _currentProfileId = "";
   Timer? _minDisplayTimer;
   bool _minDisplayTimeElapsed = false;
@@ -105,8 +103,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
     if (targetProfileId != _currentProfileId) {
       _currentProfileId = targetProfileId;
-      _currentProfileLoadStartTime = DateTime.now();
-      _minDisplayTimeElapsed = false;
       _startMinDisplayTimer();
     }
 
@@ -130,10 +126,10 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
             theme: theme,
             message: "Error loading profile: $error",
             onRetry: () {
-              _currentProfileLoadStartTime = DateTime.now();
-              _minDisplayTimeElapsed = false;
               _startMinDisplayTimer();
               ref.invalidate(profileDataProvider);
+              ref.refresh(profileDataProvider);
+              ref.read(profileTargetIdProvider.notifier).state = null;
             },
           ),
         );

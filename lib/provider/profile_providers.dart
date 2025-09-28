@@ -41,14 +41,6 @@ class ProfileData {
   bool get isLoading => creator == null || !postsLoaded;
   bool get hasData => creator != null && postsLoaded && posts.isNotEmpty;
 
-  // Calculate minimum display time remaining
-  // Duration get minDisplayTimeRemaining {
-  //   if (loadStartTime == null) return Duration.zero;
-  //   final elapsed = DateTime.now().difference(loadStartTime!);
-  //   const minDisplayTime = Duration(seconds: 1);
-  //   return elapsed < minDisplayTime ? minDisplayTime - elapsed : Duration.zero;
-  // }
-
   // Helper method to create a copy with updated fields
   ProfileData copyWith({
     MemoModelCreator? creator,
@@ -221,22 +213,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     }
   }
 
-  /// Ensures data is displayed for at least 1 second to avoid flickering
-  // Future<void> _ensureMinDisplayTime(DateTime loadStartTime) async {
-  //   final elapsed = DateTime.now().difference(loadStartTime);
-  //   const minDisplayTime = Duration(seconds: 3);
-  //
-  //   if (elapsed < minDisplayTime) {
-  //     final remaining = minDisplayTime - elapsed;
-  //     _minDisplayCompleter = Completer<void>();
-  //     _minDisplayTimer = Timer(remaining, () {
-  //       _minDisplayCompleter?.complete();
-  //       _minDisplayCompleter = null;
-  //     });
-  //     await _minDisplayCompleter?.future;
-  //   }
-  // }
-
   Future<List<MemoModelPost>> _loadPosts(String profileId) async {
     try {
       final postRepository = ref.read(postRepositoryProvider);
@@ -291,12 +267,13 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       if (currentTabIndex == 2) {
         if (_lastTabIndex != currentTabIndex || _lastProfileIdRefreshRequest != profileId) {
           refreshUserRegisteredFlag();
-          refreshBalances();
           refreshCreatorCache(profileId);
+          refreshBalances();
         }
-        // if (isOwnProfile) {
-        startAutoRefreshBalanceProfile();
-        // }
+        if (isOwnProfile) {
+          startAutoRefreshBalanceProfile();
+        }
+
         // else {
         //   stopAutoRefreshBalanceProfile();
         // }
@@ -370,20 +347,20 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     _isAutoRefreshRunning = true;
     _startBalanceRefreshTimerProfile();
   }
-
-  void startAutoRefreshMahakkaBalanceQrDialog() {
-    if (!_isAutoRefreshRunning) {
-      _stopAllBalanceTimers();
-      _startMahakkaBalanceRefreshTimerQrDialog();
-    }
-  }
-
-  void startAutoRefreshMemoBalanceQrDialog() {
-    if (!_isAutoRefreshRunning) {
-      _stopAllBalanceTimers();
-      _startMemoBalanceRefreshTimerQrDialog();
-    }
-  }
+  //
+  // void startAutoRefreshMahakkaBalanceQrDialog() {
+  //   if (!_isAutoRefreshRunning) {
+  //     _stopAllBalanceTimers();
+  //     _startMahakkaBalanceRefreshTimerQrDialog();
+  //   }
+  // }
+  //
+  // void startAutoRefreshMemoBalanceQrDialog() {
+  //   if (!_isAutoRefreshRunning) {
+  //     _stopAllBalanceTimers();
+  //     _startMemoBalanceRefreshTimerQrDialog();
+  //   }
+  // }
 
   void _startBalanceRefreshTimerProfile() {
     _balanceRefreshTimer?.cancel();
@@ -392,19 +369,19 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     });
   }
 
-  void _startMahakkaBalanceRefreshTimerQrDialog() {
-    _mahakkaBalanceRefreshTimer?.cancel();
-    _mahakkaBalanceRefreshTimer = Timer.periodic(_refreshBalanceInterval, (_) async {
-      await _refreshMahakkaBalancePeriodicallyOnQrDialog();
-    });
-  }
-
-  void _startMemoBalanceRefreshTimerQrDialog() {
-    _memoBalanceRefreshTimer?.cancel();
-    _memoBalanceRefreshTimer = Timer.periodic(_refreshBalanceInterval, (_) async {
-      await _refreshMemoBalancePeriodicallyOnQrDialog();
-    });
-  }
+  // void _startMahakkaBalanceRefreshTimerQrDialog() {
+  //   _mahakkaBalanceRefreshTimer?.cancel();
+  //   _mahakkaBalanceRefreshTimer = Timer.periodic(_refreshBalanceInterval, (_) async {
+  //     await _refreshMahakkaBalancePeriodicallyOnQrDialog();
+  //   });
+  // }
+  //
+  // void _startMemoBalanceRefreshTimerQrDialog() {
+  //   _memoBalanceRefreshTimer?.cancel();
+  //   _memoBalanceRefreshTimer = Timer.periodic(_refreshBalanceInterval, (_) async {
+  //     await _refreshMemoBalancePeriodicallyOnQrDialog();
+  //   });
+  // }
 
   void _stopAllBalanceTimers({bool stopProfileRefresh = false}) {
     if (stopProfileRefresh) {
@@ -437,41 +414,42 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     }
   }
 
-  Future<void> _refreshMahakkaBalancePeriodicallyOnQrDialog() async {
-    final profileId = ref.read(_currentProfileIdProvider);
-    if (profileId == null || profileId.isEmpty || state.isLoading) {
-      return;
-    }
-
-    try {
-      final currentData = state.value;
-      if (currentData != null && currentData.creator != null && currentData.creator!.hasRegisteredAsUser) {
-        Future.microtask(() async {
-          await refreshMahakkaBalance();
-        });
-      }
-    } catch (e) {
-      print('Periodic Mahakka balance refresh failed: $e');
-    }
-  }
-
-  Future<void> _refreshMemoBalancePeriodicallyOnQrDialog() async {
-    final profileId = ref.read(_currentProfileIdProvider);
-    if (profileId == null || profileId.isEmpty || state.isLoading) {
-      return;
-    }
-
-    try {
-      final currentData = state.value;
-      if (currentData != null && currentData.creator != null) {
-        Future.microtask(() async {
-          await refreshMemoBalance();
-        });
-      }
-    } catch (e) {
-      print('Periodic Memo balance refresh failed: $e');
-    }
-  }
+  //
+  // Future<void> _refreshMahakkaBalancePeriodicallyOnQrDialog() async {
+  //   final profileId = ref.read(_currentProfileIdProvider);
+  //   if (profileId == null || profileId.isEmpty || state.isLoading) {
+  //     return;
+  //   }
+  //
+  //   try {
+  //     final currentData = state.value;
+  //     if (currentData != null && currentData.creator != null && currentData.creator!.hasRegisteredAsUser) {
+  //       Future.microtask(() async {
+  //         await refreshMahakkaBalance();
+  //       });
+  //     }
+  //   } catch (e) {
+  //     print('Periodic Mahakka balance refresh failed: $e');
+  //   }
+  // }
+  //
+  // Future<void> _refreshMemoBalancePeriodicallyOnQrDialog() async {
+  //   final profileId = ref.read(_currentProfileIdProvider);
+  //   if (profileId == null || profileId.isEmpty || state.isLoading) {
+  //     return;
+  //   }
+  //
+  //   try {
+  //     final currentData = state.value;
+  //     if (currentData != null && currentData.creator != null) {
+  //       Future.microtask(() async {
+  //         await refreshMemoBalance();
+  //       });
+  //     }
+  //   } catch (e) {
+  //     print('Periodic Memo balance refresh failed: $e');
+  //   }
+  // }
 }
 
 // Keep postsStreamProvider for other parts of the app that need the stream

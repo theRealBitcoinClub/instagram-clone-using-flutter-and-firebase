@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../config.dart';
+
 // Provider for the metadata service
 final postMetadataServiceProvider = Provider<PostMetadataService>((ref) {
   return PostMetadataService(FirebaseFirestore.instance);
@@ -12,9 +14,9 @@ class PostMetadataService {
   PostMetadataService(this._firestore);
 
   // Collection names (should match what you use in savePost)
-  static const String postsCollection = 'posts';
-  static const String metadataCollection = 'metadata';
-  static const String postsCounterDoc = 'posts';
+  static const String postsCollection = FirestoreCollections.posts;
+  static const String metadataCollection = FirestoreCollections.metadata;
+  static const String postsCounterDoc = FirestoreCollections.posts;
 
   /// Gets the current post count from metadata
   Future<int> getPostCount() async {

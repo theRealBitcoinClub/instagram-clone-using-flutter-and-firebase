@@ -166,7 +166,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     if (isCashtokenTab) {
       final bch = creator?.balanceBch ?? 0;
       final token = creator?.balanceToken ?? 0;
-      return 'BCH: ${_formatBalance(bch)} sats  -  ${MemoBitcoinBase.tokenTicker}: ${_formatBalance(token)} token';
+      return 'BCH: ${_formatBalance(bch)}  -  ${MemoBitcoinBase.tokenTicker}: ${_formatBalance(token)}';
     } else {
       final balance = creator?.balanceMemo ?? 0;
       return 'Balance: ${_formatBalance(balance)} sats';

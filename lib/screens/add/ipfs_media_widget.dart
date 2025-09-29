@@ -1,9 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/config_ipfs.dart';
 import 'package:mahakka/widgets/red_action_button.dart';
 
+import '../../widgets/unified_image_widget.dart';
 import 'add_post_providers.dart';
 
 class IpfsMediaWidget extends ConsumerWidget {
@@ -32,26 +32,24 @@ class IpfsMediaWidget extends ConsumerWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(11.5),
-              child: CachedNetworkImage(
-                imageUrl: ipfsUrl,
-                fit: BoxFit.contain,
-                errorWidget: (context, error, stackTrace) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.cloud_off_outlined, color: colorScheme.error, size: 36),
-                        const SizedBox(height: 8),
-                        Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
-                        const SizedBox(height: 8),
-                        Text("CID: $cid", style: textTheme.bodySmall),
-                      ],
-                    ),
-                  );
-                },
-                progressIndicatorBuilder: (context, child, loadingProgress) {
-                  return Center(child: CircularProgressIndicator(value: loadingProgress.totalSize != null ? loadingProgress.progress : null));
-                },
+              child: UnifiedImageWidget(
+                imageUrl: cid!,
+                sourceType: ImageSourceType.ipfs,
+                fitMode: ImageFitMode.contain,
+                aspectRatio: 16 / 9,
+                border: Border(),
+                backgroundColor: colorScheme.surface,
+                showLoadingProgress: true,
+                errorWidget: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.cloud_off_outlined, color: colorScheme.error.withAlpha(153), size: 36),
+                    const SizedBox(height: 8),
+                    Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+                    const SizedBox(height: 8),
+                    Text("$cid", style: textTheme.bodySmall!.copyWith(color: theme.colorScheme.onSurface)),
+                  ],
+                ),
               ),
             ),
           ),

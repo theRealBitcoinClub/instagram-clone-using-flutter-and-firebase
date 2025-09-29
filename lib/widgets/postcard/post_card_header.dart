@@ -51,7 +51,7 @@ class PostCardHeader extends ConsumerWidget {
     final displayScore = updatedScore ?? post.popularityScore;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16).copyWith(right: 8),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12).copyWith(right: 4),
       child: Row(
         children: [
           CachedAvatar(
@@ -59,7 +59,7 @@ class PostCardHeader extends ConsumerWidget {
             creatorId: creator.id,
             radius: 26,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,7 +74,7 @@ class PostCardHeader extends ConsumerWidget {
                         style: theme.textTheme.titleSmall?.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.w400),
                       ),
                       SizedBox(
-                        width: 205,
+                        width: 180,
                         child: Text(
                           creator.nameMaxLengthAware,
                           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),

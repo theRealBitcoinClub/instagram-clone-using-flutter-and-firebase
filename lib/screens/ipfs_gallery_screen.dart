@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
@@ -7,6 +6,7 @@ import 'package:mahakka/provider/url_input_verification_notifier.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/screens/ipfs_pin_claim_screen.dart';
 import 'package:mahakka/theme_provider.dart';
+import 'package:mahakka/widgets/unified_image_widget.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../widgets/animations/animated_grow_fade_in.dart';
@@ -149,23 +149,28 @@ class IPFSImageCard extends ConsumerWidget {
                     children: [
                       // Image
                       Container(
-                        height: 300,
+                        // height: 300,
                         decoration: BoxDecoration(
                           // borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
                           color: backgroundColor,
                         ),
-                        child: CachedNetworkImage(
-                          alignment: Alignment.bottomCenter,
-                          imageUrl: imageUrl,
-                          fit: BoxFit.contain,
-                          width: double.infinity,
-                          placeholder: (context, url) => Container(
-                            color: colorScheme.surfaceVariant,
-                            child: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary))),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            color: colorScheme.errorContainer,
-                            child: Center(child: Icon(Icons.broken_image_outlined, size: 48, color: colorScheme.onErrorContainer)),
+                        child: UnifiedImageWidget(
+                          imageUrl: cid,
+                          sourceType: ImageSourceType.ipfs,
+                          fitMode: ImageFitMode.contain,
+                          // aspectRatio: 16 / 9,
+                          border: Border(),
+                          backgroundColor: colorScheme.surface,
+                          showLoadingProgress: true,
+                          errorWidget: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.cloud_off_outlined, color: colorScheme.error.withAlpha(153), size: 36),
+                              const SizedBox(height: 8),
+                              Text("Error loading IPFS content", style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+                              const SizedBox(height: 8),
+                              Text("$cid", style: theme.textTheme.bodySmall!.copyWith(color: theme.colorScheme.onSurface)),
+                            ],
                           ),
                         ),
                       ),

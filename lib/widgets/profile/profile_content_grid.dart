@@ -1,11 +1,10 @@
 // lib/widgets/profile/profile_content_grid.dart
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mahakka/config_ipfs.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/widgets/cached_unified_image_widget.dart';
 import 'package:mahakka/widgets/profile/profile_placeholders.dart';
-import 'package:mahakka/widgets/unified_image_widget.dart';
 
 void _logGridError(String message, [dynamic error, StackTrace? stackTrace]) {
   print('ERROR: ProfileContentGrid - $message');
@@ -28,7 +27,7 @@ class ProfileContentGrid extends StatelessWidget {
     }
 
     return SliverPadding(
-      padding: const EdgeInsets.all(0.0),
+      padding: const EdgeInsets.fromLTRB(0, 2, 0, 0),
       sliver: SliverGrid.builder(
         itemCount: posts.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -52,17 +51,32 @@ class ProfileContentGrid extends StatelessWidget {
             return imagePlaceholder;
           }
 
-          CachedUnifiedImageWidget img = CachedUnifiedImageWidget(
+          // CachedUnifiedImageWidget img = CachedUnifiedImageWidget(
+          //   imageUrl: imageUrl,
+          //   sourceType: ImageSourceType.network,
+          //   backgroundColor: Colors.black,
+          //   fitMode: ImageFitMode.contain,
+          //   aspectRatio: 1.0,
+          //   borderRadius: BorderRadius.zero,
+          //   showLoadingProgress: true,
+          //   placeholder: Container(
+          //     color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+          //     child: Icon(Icons.broken_image_outlined, size: 40, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
+          //   ),
+          //
+          var img = CachedNetworkImage(
+            alignment: Alignment.bottomCenter,
             imageUrl: imageUrl,
-            sourceType: ImageSourceType.network,
-            backgroundColor: Colors.black,
-            fitMode: ImageFitMode.contain,
-            aspectRatio: 1.0,
-            borderRadius: BorderRadius.zero,
-            showLoadingProgress: true,
-            placeholder: Container(
-              color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
-              child: Icon(Icons.broken_image_outlined, size: 40, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
+            fit: BoxFit.contain,
+            width: double.infinity,
+
+            placeholder: (context, url) => Container(
+              color: theme.colorScheme.surface,
+              child: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary))),
+            ),
+            errorWidget: (context, url, error) => Container(
+              color: theme.colorScheme.errorContainer,
+              child: Center(child: Icon(Icons.broken_image_outlined, size: 48, color: theme.colorScheme.onErrorContainer)),
             ),
           );
 

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 
@@ -53,7 +54,7 @@ class _ImageDetailDialogState extends State<ImageDetailDialog> {
                 image: DecorationImage(
                   image: widget.creator.profileImageDetail().isEmpty
                       ? const AssetImage("assets/images/default_profile.png") as ImageProvider
-                      : NetworkImage(widget.creator.profileImageDetail()),
+                      : CachedNetworkImageProvider(widget.creator.profileImageDetail()),
                   fit: BoxFit.cover, // Ensure image covers the circle
                 ),
               ),

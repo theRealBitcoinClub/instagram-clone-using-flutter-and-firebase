@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mahakka/config_ipfs.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/widgets/cached_unified_image_widget.dart';
 import 'package:mahakka/widgets/popularity_score_widget.dart';
 import 'package:mahakka/widgets/unified_image_widget.dart';
 import 'package:share_plus/share_plus.dart';
@@ -233,14 +232,16 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                     width: double.infinity, // Ensure full width
                     height: double.infinity,
                     child: Center(
-                      child: CachedUnifiedImageWidget(
-                        width: double.infinity, // Ensure full width
-                        height: double.infinity,
-                        border: Border.all(color: Colors.black),
-                        backgroundColor: Colors.black,
-                        imageUrl: post.imgurUrl ?? post.imageUrl ?? IpfsConfig.preferredNode + post.ipfsCid!,
-                        fitMode: ImageFitMode.contain, // Use fitWidth to fill width while maintaining aspect ratio
-                      ),
+                      child: UnifiedImageWidget(imageUrl: post.imgurUrl ?? post.imageUrl ?? IpfsConfig.preferredNode + post.ipfsCid!),
+
+                      //   CachedUnifiedImageWidget(
+                      //     width: double.infinity, // Ensure full width
+                      //     height: double.infinity,
+                      //     border: Border.all(color: Colors.black),
+                      //     backgroundColor: Colors.black,
+                      //     imageUrl: post.imgurUrl ?? post.imageUrl ?? IpfsConfig.preferredNode + post.ipfsCid!,
+                      //     fitMode: ImageFitMode.contain, // Use fitWidth to fill width while maintaining aspect ratio
+                      //   ),
                     ),
                   );
                 },

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_avif/flutter_avif.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,7 +27,7 @@ class UnifiedImageWidget extends ConsumerStatefulWidget {
   final ImageFitMode fitMode;
   final double? width;
   final double? height;
-  final double aspectRatio;
+  final double? aspectRatio;
   final BorderRadiusGeometry borderRadius;
   final BoxBorder? border;
   final Color? backgroundColor;
@@ -44,7 +45,7 @@ class UnifiedImageWidget extends ConsumerStatefulWidget {
     this.fitMode = ImageFitMode.cover,
     this.width,
     this.height,
-    this.aspectRatio = 16 / 9,
+    this.aspectRatio,
     this.borderRadius = BorderRadius.zero,
     this.border,
     this.backgroundColor,
@@ -132,7 +133,7 @@ class UnifiedImageWidgetState extends ConsumerState<UnifiedImageWidget> {
       ),
       child: ClipRRect(
         borderRadius: widget.borderRadius,
-        child: widget.aspectRatio > 0 ? AspectRatio(aspectRatio: widget.aspectRatio, child: imageWidget) : imageWidget,
+        child: widget.aspectRatio != null ? AspectRatio(aspectRatio: widget.aspectRatio!, child: imageWidget) : imageWidget,
       ),
     );
   }
@@ -144,6 +145,9 @@ class UnifiedImageWidgetState extends ConsumerState<UnifiedImageWidget> {
         fit: getBoxFit(currentFitMode),
         width: widget.width,
         height: widget.height ?? widget.width ?? 48,
+        errorBuilder: (context, error, stackTrace) {
+          return widget.errorWidget ?? _buildErrorWidget('SVG Load Error', colorScheme, textTheme);
+        },
         placeholderBuilder: (context) => widget.placeholder ?? _buildDefaultPlaceholder(colorScheme),
       );
     } catch (e) {
@@ -194,40 +198,30 @@ class UnifiedImageWidgetState extends ConsumerState<UnifiedImageWidget> {
   }
 
   Widget buildRasterImage(String url, ColorScheme colorScheme, TextTheme textTheme) {
-    return Image.network(
-      url,
+    return CachedNetworkImage(
+      imageUrl: url,
       fit: getBoxFit(currentFitMode),
       width: widget.width,
       height: widget.height,
-      errorBuilder: (context, error, stackTrace) {
-        return widget.errorWidget ?? _buildErrorWidget('Activate your VPN!', colorScheme, textTheme);
-      },
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-
+      alignment: Alignment.center,
+      progressIndicatorBuilder: (context, url, downloadProgress) {
         if (!widget.showLoadingProgress) {
           return widget.placeholder ?? _buildDefaultPlaceholder(colorScheme);
         }
 
         return Center(
           child: CircularProgressIndicator(
-            value: loadingProgress.expectedTotalBytes != null
-                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                : null,
+            value: downloadProgress.totalSize != null ? downloadProgress.downloaded / downloadProgress.totalSize! : null,
             valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
             backgroundColor: colorScheme.surfaceVariant,
           ),
         );
       },
-      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-        if (wasSynchronouslyLoaded) return child;
-        return AnimatedOpacity(
-          opacity: frame == null ? 0 : 1,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-          child: child,
-        );
+      errorWidget: (context, url, error) {
+        return widget.errorWidget ?? _buildErrorWidget('Activate your VPN!', colorScheme, textTheme);
       },
+      fadeInDuration: const Duration(milliseconds: 300),
+      fadeOutDuration: const Duration(milliseconds: 300),
     );
   }
 

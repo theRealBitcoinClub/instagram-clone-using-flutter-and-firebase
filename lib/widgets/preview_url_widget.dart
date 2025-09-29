@@ -15,7 +15,7 @@ class PreviewUrlWidget extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      height: 200,
+      height: 125,
       decoration: BoxDecoration(
         color: colorScheme.surface,
         // borderRadius: BorderRadius.circular(0),
@@ -55,7 +55,7 @@ class PreviewUrlWidget extends StatelessWidget {
   Widget _buildLoadingWidget(ColorScheme colorScheme, TextTheme textTheme) {
     return Container(
       width: double.infinity,
-      height: 200,
+      height: 125,
       color: colorScheme.surfaceVariant,
       child: Center(
         child: Column(
@@ -77,7 +77,7 @@ class PreviewUrlWidget extends StatelessWidget {
   Widget _buildErrorWidget(ColorScheme colorScheme, TextTheme textTheme) {
     return Container(
       width: double.infinity,
-      height: 200,
+      height: 125,
       color: colorScheme.surfaceVariant,
       child: Center(
         child: Column(

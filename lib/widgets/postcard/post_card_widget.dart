@@ -109,7 +109,7 @@ class _PostCardState extends ConsumerState<PostCard> {
   bool _showOverlayHint = true;
 
   void _hideOverlayAfterDelay() {
-    Future.delayed(const Duration(seconds: 15), () {
+    Future.delayed(const Duration(seconds: 5), () {
       if (mounted && _showYouTubePlayer) {
         setState(() {
           _showOverlayHint = false;
@@ -150,7 +150,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                   Icon(Icons.touch_app, color: Colors.white, size: 20),
                   const SizedBox(width: 6),
                   Text(
-                    "Long press near video corner to minimize",
+                    "Long press to minimize",
                     style: textTheme.bodySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 14),
                   ),
                 ],

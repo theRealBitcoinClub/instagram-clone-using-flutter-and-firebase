@@ -416,10 +416,10 @@ void showPostImageFullscreenWidget({
       pageBuilder: (context, animation, secondaryAnimation) {
         return FullScreenPostActivity(posts: posts, initialIndex: initialIndex, theme: theme);
       },
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(opacity: animation, child: child);
-      },
-      transitionDuration: const Duration(milliseconds: 300),
+      // transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      //   return FadeTransition(opacity: animation, child: child);
+      // },
+      // transitionDuration: const Duration(milliseconds: 100),
     ),
   );
 }

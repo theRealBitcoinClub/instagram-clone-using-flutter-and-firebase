@@ -65,6 +65,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.7.0"
+  asn1lib:
+    dependency: transitive
+    description:
+      name: asn1lib
+      sha256: "9a8f69025044eb466b9b60ef3bc3ac99b4dc6c158ae9c56d25eeccf5bc56d024"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.6.5"
   async:
     dependency: transitive
     description:
@@ -346,7 +354,7 @@ packages:
     source: hosted
     version: "0.3.4+2"
   crypto:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: crypto
       sha256: "1e445881f28f22d6140f181e07737b22f1e099a5e1ff94b0af2f9e4a463f4855"
@@ -393,6 +401,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.11"
+  encrypt:
+    dependency: "direct main"
+    description:
+      name: encrypt
+      sha256: "62d9aa4670cc2a8798bab89b39fc71b6dfbacf615de6cf5001fb39f7e4a996a2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.3"
   equatable:
     dependency: transitive
     description:
@@ -506,66 +522,66 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_avif
-      sha256: "2e086140fabffb760f4be32ec2726e644074f5ecac8a4c8f52cfccc0cf6e5a9c"
+      sha256: "6035f073189c1ae134affa73338c2eca79bf412e9abdb8f8628fdefcccff4444"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "3.1.0"
   flutter_avif_android:
     dependency: transitive
     description:
       name: flutter_avif_android
-      sha256: ecfc88ac7bda09308089e71c8d214650bb7861c6c68028d7b2827681466de332
+      sha256: "1da135ea0d74225fae3154f954f9ba4cf7aa5e56b30d9851fcfc0ddecab9d8c5"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "3.1.0"
   flutter_avif_ios:
     dependency: transitive
     description:
       name: flutter_avif_ios
-      sha256: e528daf284a366e1838977005193d63f021c6727852d22afcea69b283ad02af2
+      sha256: "3daaa599d8fe0193d3ade6cafa1fd4f166d4063b8d499c7c311ce1d170b2759f"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "3.1.0"
   flutter_avif_linux:
     dependency: transitive
     description:
       name: flutter_avif_linux
-      sha256: a23ae19bd62daf42d717e1ff95030e80679de16ba40fdb8c753e046629d6ae15
+      sha256: dd6179edca12c720761b3acc678d7f15208eb8647adbac5a6a90f52d4ba56e2d
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "3.1.0"
   flutter_avif_macos:
     dependency: transitive
     description:
       name: flutter_avif_macos
-      sha256: "576f4991feea4fb24eb846e2fa3a5b829c2f1eae83ec312e8e99b5b09357cc84"
+      sha256: "8e39f365dfc5713d4527f07a92399184857ea30eced85f82171bfd0a45e2c73b"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "3.1.0"
   flutter_avif_platform_interface:
     dependency: transitive
     description:
       name: flutter_avif_platform_interface
-      sha256: "4a5929c24c3a3cab8c243109be938e680af03b5802a249e964d447ed89b26f49"
+      sha256: f5c110bdb7de2d4ab4902bfe2ec331fe24bc19b6d54f00ac4fa165effc0edcda
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "3.1.0"
   flutter_avif_web:
     dependency: transitive
     description:
       name: flutter_avif_web
-      sha256: "7acc416904f52eb8623b537574d12143ce3b9095a82f68fbfb97eeea846bb998"
+      sha256: db2ff395b08cbfe9116e48ac65c428ba21a9159972ea019f8d7be580ff6cf6e8
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "3.1.0"
   flutter_avif_windows:
     dependency: transitive
     description:
       name: flutter_avif_windows
-      sha256: "08a787a5379e68844e883bfc81f2f6fb94d3d9c9a87dc6889b02cf6bab16127e"
+      sha256: e0c7722df305a6621f4ecdd83098025c705bcf0e8ce9519e03c6f515abcf351d
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "3.1.0"
   flutter_cache_manager:
     dependency: transitive
     description:
@@ -686,6 +702,54 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.6.1"
+  flutter_secure_storage:
+    dependency: "direct main"
+    description:
+      name: flutter_secure_storage
+      sha256: "9cad52d75ebc511adfae3d447d5d13da15a55a92c9410e50f67335b6d21d16ea"
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.2.4"
+  flutter_secure_storage_linux:
+    dependency: transitive
+    description:
+      name: flutter_secure_storage_linux
+      sha256: be76c1d24a97d0b98f8b54bce6b481a380a6590df992d0098f868ad54dc8f688
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.3"
+  flutter_secure_storage_macos:
+    dependency: transitive
+    description:
+      name: flutter_secure_storage_macos
+      sha256: "6c0a2795a2d1de26ae202a0d78527d163f4acbb11cde4c75c670f3a0fc064247"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.3"
+  flutter_secure_storage_platform_interface:
+    dependency: transitive
+    description:
+      name: flutter_secure_storage_platform_interface
+      sha256: cf91ad32ce5adef6fba4d736a542baca9daf3beac4db2d04be350b87f69ac4a8
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.2"
+  flutter_secure_storage_web:
+    dependency: transitive
+    description:
+      name: flutter_secure_storage_web
+      sha256: f4ebff989b4f07b2656fb16b47852c0aab9fed9b4ec1c70103368337bc1886a9
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.1"
+  flutter_secure_storage_windows:
+    dependency: transitive
+    description:
+      name: flutter_secure_storage_windows
+      sha256: b20b07cb5ed4ed74fc567b78a72936203f587eba460af1df11281c9326cd3709
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.2"
   flutter_staggered_grid_view:
     dependency: "direct main"
     description:
@@ -1148,10 +1212,10 @@ packages:
     dependency: transitive
     description:
       name: pointycastle
-      sha256: "92aa3841d083cc4b0f4709b5c74fd6409a3e6ba833ffc7dc6a8fee096366acf5"
+      sha256: "4be0097fcf3fd3e8449e53730c631200ebc7b88016acecab2b0da2f0149222fe"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.0"
+    version: "3.9.1"
   pool:
     dependency: transitive
     description:

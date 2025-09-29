@@ -10,7 +10,7 @@ import 'intros/intro_state_notifier.dart';
 
 class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidget {
   const AppBarBurnMahakkaTheme({super.key});
-  static const double height = 45;
+  static const double height = 40;
 
   @override
   Size get preferredSize => const Size.fromHeight(height);
@@ -24,9 +24,10 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
     return AppBar(
       centerTitle: true,
       toolbarHeight: height,
+      leading: Padding(padding: EdgeInsetsGeometry.fromLTRB(9, 0, 0, 0), child: BurnerBalanceWidget()),
+      leadingWidth: 81,
       title: Row(
         children: [
-          BurnerBalanceWidget(),
           const Spacer(),
           GestureDetector(
             onTap: () => ExternalBrowserLauncher().launchUrlWithConfirmation(context, 'https://mahakka.com'),
@@ -51,7 +52,7 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
       introType: IntroType.mainApp,
       introStep: IntroStep.main_theme,
       size: 24,
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.fromLTRB(0, 0, 9, 0),
       onTap: () {
         ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_theme, context);
         ref.read(themeNotifierProvider.notifier).toggleTheme();

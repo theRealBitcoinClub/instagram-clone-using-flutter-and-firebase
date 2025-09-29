@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/app_utils.dart';
-import 'package:mahakka/config_ipfs.dart';
 import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart';
@@ -14,7 +13,6 @@ import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 import '../intros/intro_animated_icon.dart';
 import '../intros/intro_overlay.dart';
 import '../memo/model/memo_model_post.dart';
-import '../memo_data_checker.dart';
 import '../widgets/post_counter_widget.dart';
 import '../widgets/post_dialog.dart';
 
@@ -257,16 +255,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           showSnackBar("No valid image available for this post", context, type: SnackbarType.info);
           return;
         }
+        //
+        // if (imageUrl.isNotEmpty && !(await ref.read(imageValidationProvider(imageUrl).future))) {
+        //   showSnackBar("Image is not accessible, active VPN!", context, type: SnackbarType.error);
+        //   return;
+        // }
 
-        if (imageUrl.isNotEmpty && !(await ref.read(imageValidationProvider(imageUrl).future))) {
-          showSnackBar("Image is not accessible, active VPN!", context, type: SnackbarType.error);
-          return;
-        }
-
-        if (ipfsId.isNotEmpty && !(await ref.read(imageValidationProvider(IpfsConfig.preferredNode + ipfsId).future))) {
-          showSnackBar("Incompatible IPFS format!", context, type: SnackbarType.error);
-          return;
-        }
+        // if (ipfsId.isNotEmpty && !(await ref.read(imageValidationProvider(IpfsConfig.preferredNode + ipfsId).future))) {
+        //   showSnackBar("Incompatible IPFS format!", context, type: SnackbarType.error);
+        //   return;
+        // }
 
         final validImagePosts = feedState.posts.where(_hasValidImageUrl).toList();
         final validIndex = validImagePosts.indexWhere((p) => p.id == post.id);

@@ -208,13 +208,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   void _generateMnemonic() {
     _mnemonicController.text = Mnemonic.generate(Language.english, length: MnemonicLength.words12).sentence;
 
-    // Focus on the textfield and open keyboard
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _mnemonicFocusNode.requestFocus();
-
-      // Optional: Move cursor to the end
-      _mnemonicController.selection = TextSelection.fromPosition(TextPosition(offset: _mnemonicController.text.length));
-    });
+    // // Focus on the textfield and open keyboard
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   _mnemonicFocusNode.requestFocus();
+    //
+    //   // Optional: Move cursor to the end
+    //   _mnemonicController.selection = TextSelection.fromPosition(TextPosition(offset: _mnemonicController.text.length));
+    // });
 
     _validateMnemonic();
   }
@@ -238,9 +238,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 90),
+                const SizedBox(height: 81),
                 Image.asset('assets/icon_round_200.png', height: 120),
-                const SizedBox(height: 48),
+                const SizedBox(height: 45),
                 TextField(
                   minLines: 3,
                   maxLines: 3,
@@ -259,7 +259,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                     contentPadding: const EdgeInsets.all(8),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 9),
 
                 // REPLACED: TextButton with Animated ElevatedButton
                 AnimGrowFade(
@@ -272,7 +272,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red, // Red background
                         foregroundColor: Colors.white, // White text
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
                         textStyle: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -284,9 +284,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                   ),
                 ),
 
-                const SizedBox(height: 8),
+                if (_isLoading) const SizedBox(height: 6),
                 if (_isLoading) LinearProgressIndicator(),
-                const SizedBox(height: 8),
+                const SizedBox(height: 9),
                 SizedBox(
                   width: double.infinity,
                   height: 50,

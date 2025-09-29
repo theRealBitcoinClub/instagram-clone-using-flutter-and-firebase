@@ -84,9 +84,11 @@ class UserNotifier extends StateNotifier<UserState> {
 
         if (freshScrapeCreatorData) {
           var repository = ref.read(creatorRepositoryProvider);
-          var creator = await repository.getCreator(createdUser.id);
-          if (creator != null) creator.refreshBalances(ref, repository);
-          createdUser = createdUser.copyWith(creator: creator);
+          var creator = await repository.getCreator(createdUser.id, forceScrape: true, useCache: false, saveToFirebase: false);
+          if (creator != null) {
+            creator.refreshBalances(ref, repository);
+            repository.saveToCache(creator, saveToFirebase: true);
+          }
           state = state.copyWith(user: createdUser);
         }
 
@@ -143,11 +145,11 @@ class UserNotifier extends StateNotifier<UserState> {
   }
 
   Future<void> updateCreatorProfile(MemoModelCreator updatedCreator) async {
-    if (state.user == null) return;
-
+    // if (state.user == null) return;
     try {
-      final updatedUser = state.user!.copyWith(creator: updatedCreator);
-      state = state.copyWith(user: updatedUser);
+      ref.read(creatorRepositoryProvider).saveToCache(updatedCreator, saveToFirebase: true);
+      // final updatedUser = state.user!.copyWith(creator: updatedCreator);
+      // state = state.copyWith(user: updatedUser);
     } catch (e) {
       print("Error updating creator profile in user state: $e");
       state = state.copyWith(error: "Failed to update creator profile: $e");

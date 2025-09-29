@@ -61,6 +61,7 @@ class MemoModelCreator {
     this.created = "",
     this.lastActionDate = "",
     this.profileImgurUrl,
+    this.bchAddressCashtokenAware = "",
     this.hasRegisteredAsUser = false,
     this.lastRegisteredCheck,
     this.profileImageAvatarSerialized,
@@ -135,7 +136,7 @@ class MemoModelCreator {
 
   Future<bool> _checkProfileImageAvatar({bool forceRefreshAfterProfileUpdate = false, String? forcedImageType}) async {
     if (forceRefreshAfterProfileUpdate) {
-      profileImageAvatarSerialized == null;
+      profileImageAvatarSerialized = null;
       _isCheckingAvatar = false;
       _hasCheckedUrlAvatarCount = 0;
     }
@@ -156,6 +157,7 @@ class MemoModelCreator {
         //TODO you mixing things here must separate concerns better
         // _creatorService.saveCreator(this);
         _hasCheckedUrlAvatarCount = 0;
+        _isCheckingAvatar = false;
         return true;
       }
     }
@@ -183,6 +185,7 @@ class MemoModelCreator {
         profileImageDetailSerialized = url;
         // ref.read(creatorServiceProvider).saveCreator(this);
         _hasCheckedUrlDetailCount = 0;
+        _isCheckingDetail = false;
         return true;
       }
     }
@@ -243,19 +246,8 @@ class MemoModelCreator {
       await refreshBalanceMemo(ref);
     }
 
-    // Use the passed repository
     repository.saveToCache(this, saveToFirebase: false);
   }
-  // Future<void> refreshBalances(Ref ref) async {
-  //   if (hasRegisteredAsUser) {
-  //     await refreshBalanceMahakka(ref);
-  //     await refreshBalanceMemo(ref);
-  //   } else {
-  //     await refreshBalanceMemo(ref);
-  //   }
-  //   //TODO check if balance changed before save
-  //   ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: false);
-  // }
 
   //TODO why is debouncer not working as expected
   Future<void> refreshBalanceMahakka(Ref ref) async {
@@ -301,6 +293,7 @@ class MemoModelCreator {
         followerCount: followerCount ?? this.followerCount,
         actions: actions ?? this.actions,
         created: created ?? this.created,
+        bchAddressCashtokenAware: bchAddressCashtokenAware ?? this.bchAddressCashtokenAware,
         lastActionDate: lastActionDate ?? this.lastActionDate,
         profileImgurUrl: profileImgurUrl ?? this.profileImgurUrl,
         hasRegisteredAsUser: hasRegisteredAsUser ?? this.hasRegisteredAsUser,

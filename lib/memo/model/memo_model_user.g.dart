@@ -8,19 +8,27 @@ part of 'memo_model_user.dart';
 
 MemoModelUser _$MemoModelUserFromJson(Map<String, dynamic> json) =>
     MemoModelUser(
-      id: json['id'] as String,
-      bchAddressCashtokenAware: json['bchAddressCashTokenAware'] as String,
-      legacyAddressMemoBch: json['legacyAddressMemoBch'] as String,
-      legacyAddressMemoBchAsCashaddress:
-          json['legacyAddressMemoBchAsCashaddress'] as String,
-      tipReceiver: $enumDecode(_$TipReceiverEnumMap, json['tipReceiver']),
-      tipAmount: $enumDecode(_$TipAmountEnumMap, json['tipAmount']),
-      ipfsCids:
-          (json['ipfsCids'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          [],
-    );
+        id: json['id'] as String,
+        bchAddressCashtokenAware: json['bchAddressCashTokenAware'] as String,
+        legacyAddressMemoBch: json['legacyAddressMemoBch'] as String,
+        legacyAddressMemoBchAsCashaddress:
+            json['legacyAddressMemoBchAsCashaddress'] as String,
+        tipReceiver: $enumDecode(_$TipReceiverEnumMap, json['tipReceiver']),
+        tipAmount: $enumDecode(_$TipAmountEnumMap, json['tipAmount']),
+        ipfsCids:
+            (json['ipfsCids'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
+      )
+      ..tipReceiverSerialized = $enumDecode(
+        _$TipReceiverEnumMap,
+        json['tipReceiverSerialized'],
+      )
+      ..tipAmountSerialized = $enumDecode(
+        _$TipAmountEnumMap,
+        json['tipAmountSerialized'],
+      );
 
 Map<String, dynamic> _$MemoModelUserToJson(MemoModelUser instance) =>
     <String, dynamic>{
@@ -29,6 +37,9 @@ Map<String, dynamic> _$MemoModelUserToJson(MemoModelUser instance) =>
       'legacyAddressMemoBch': instance.legacyAddressMemoBch,
       'legacyAddressMemoBchAsCashaddress':
           instance.legacyAddressMemoBchAsCashaddress,
+      'tipReceiverSerialized':
+          _$TipReceiverEnumMap[instance.tipReceiverSerialized]!,
+      'tipAmountSerialized': _$TipAmountEnumMap[instance.tipAmountSerialized]!,
       'ipfsCids': instance.ipfsCids,
       'tipAmount': instance.tipAmount,
       'tipReceiver': _$TipReceiverEnumMap[instance.tipReceiver]!,

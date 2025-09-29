@@ -17,6 +17,7 @@ MemoModelCreator _$MemoModelCreatorFromJson(
   created: json['created'] as String? ?? "",
   lastActionDate: json['lastActionDate'] as String? ?? "",
   profileImgurUrl: json['profileImgurUrl'] as String?,
+  bchAddressCashtokenAware: json['bchAddressCashtokenAware'] as String? ?? "",
   hasRegisteredAsUser: json['hasRegisteredAsUser'] as bool? ?? false,
   lastRegisteredCheck:
       json['lastRegisteredCheck'] == null
@@ -24,7 +25,7 @@ MemoModelCreator _$MemoModelCreatorFromJson(
           : DateTime.parse(json['lastRegisteredCheck'] as String),
   profileImageAvatarSerialized: json['profileImageAvatarSerialized'] as String?,
   profileImageDetailSerialized: json['profileImageDetailSerialized'] as String?,
-)..bchAddressCashtokenAware = json['bchAddressCashtokenAware'] as String;
+);
 
 Map<String, dynamic> _$MemoModelCreatorToJson(MemoModelCreator instance) =>
     <String, dynamic>{

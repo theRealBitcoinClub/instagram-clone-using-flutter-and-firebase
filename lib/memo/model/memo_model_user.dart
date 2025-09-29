@@ -2,7 +2,6 @@ import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
-import 'package:mahakka/memo/model/memo_model_creator.dart';
 
 part 'memo_model_user.g.dart';
 
@@ -65,9 +64,12 @@ class MemoModelUser {
   @JsonKey(name: 'legacyAddressMemoBchAsCashaddress')
   String legacyAddressMemoBchAsCashaddress;
 
-  // Fields to be serialized
-  TipReceiver _tipReceiver;
-  TipAmount _tipAmount;
+  // Serialized fields - renamed for clarity but maintaining backwards compatibility
+  @JsonKey(name: 'tipReceiverSerialized')
+  TipReceiver tipReceiverSerialized;
+  @JsonKey(name: 'tipAmountSerialized')
+  TipAmount tipAmountSerialized;
+
   @JsonKey(includeFromJson: false, includeToJson: false)
   TipAmount? temporaryTipAmount;
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -78,8 +80,6 @@ class MemoModelUser {
   late ECPrivate pkBchCashtoken;
   @JsonKey(includeFromJson: false, includeToJson: false)
   late ECPrivate pkLegacy;
-  // @JsonKey(includeFromJson: false, includeToJson: false)
-  // late MemoModelCreator creator;
   @JsonKey(includeFromJson: false, includeToJson: false)
   late String mnemonic;
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -100,8 +100,8 @@ class MemoModelUser {
     required TipReceiver tipReceiver,
     required TipAmount tipAmount,
     List<String>? ipfsCids,
-  }) : _tipReceiver = tipReceiver,
-       _tipAmount = tipAmount,
+  }) : tipReceiverSerialized = tipReceiver,
+       tipAmountSerialized = tipAmount,
        ipfsCids = ipfsCids ?? [];
 
   factory MemoModelUser.fromMnemonic({required String mnemonic}) {
@@ -134,7 +134,6 @@ class MemoModelUser {
     user.wifLegacy = pkLegacy.toWif();
     user.wifBchCashtoken = pkBchCashtoken.toWif();
     user.hasInit = true;
-    // user.creator = MemoModelCreator(id: userId, name: userId, hasRegisteredAsUser: true);
 
     return user;
   }
@@ -147,43 +146,42 @@ class MemoModelUser {
     return legacyAddressMemoBch;
   }
 
+  // Maintain backwards compatibility with existing getter names
   int get tipAmount {
-    return temporaryTipAmount != null ? temporaryTipAmount!.value : _tipAmount.value;
+    return temporaryTipAmount != null ? temporaryTipAmount!.value : tipAmountSerialized.value;
   }
 
   TipAmount get tipAmountEnum {
-    return temporaryTipAmount ?? _tipAmount;
+    return temporaryTipAmount ?? tipAmountSerialized;
   }
 
   TipAmount get tipAmountEnumPersistent {
-    return _tipAmount;
+    return tipAmountSerialized;
   }
 
   TipReceiver get tipReceiverPersistent {
-    return _tipReceiver;
+    return tipReceiverSerialized;
   }
 
   TipReceiver get tipReceiver {
-    return temporaryTipReceiver ?? _tipReceiver;
+    return temporaryTipReceiver ?? tipReceiverSerialized;
   }
 
   MemoModelUser._({
-    required this.mnemonic,
     required this.id,
     required this.bchAddressCashtokenAware,
     required this.legacyAddressMemoBch,
     required this.legacyAddressMemoBchAsCashaddress,
-    TipReceiver tipReceiver = TipReceiver.both,
-    TipAmount tipAmount = TipAmount.survival,
+    required this.tipReceiverSerialized,
+    required this.tipAmountSerialized,
+    required this.mnemonic,
     required this.pkBchCashtoken,
     required this.pkLegacy,
-    // required this.creator,
     required this.wifBchCashtoken,
     required this.wifLegacy,
     required this.hasInit,
     required this.ipfsCids,
-  }) : _tipReceiver = tipReceiver,
-       _tipAmount = tipAmount;
+  });
 
   MemoModelUser copyWith({
     String? id,
@@ -196,7 +194,6 @@ class MemoModelUser {
     TipReceiver? temporaryTipReceiver,
     ECPrivate? pkBchCashtoken,
     ECPrivate? pkLegacy,
-    MemoModelCreator? creator,
     String? mnemonic,
     String? wifBchCashtoken,
     String? wifLegacy,
@@ -208,16 +205,15 @@ class MemoModelUser {
         bchAddressCashtokenAware: bchAddressCashtokenAware ?? this.bchAddressCashtokenAware,
         legacyAddressMemoBch: legacyAddressMemoBch ?? this.legacyAddressMemoBch,
         legacyAddressMemoBchAsCashaddress: legacyAddressMemoBchAsCashaddress ?? this.legacyAddressMemoBchAsCashaddress,
-        tipReceiver: tipReceiver ?? this._tipReceiver,
-        tipAmount: tipAmount ?? this._tipAmount,
+        tipReceiverSerialized: tipReceiver ?? this.tipReceiverSerialized,
+        tipAmountSerialized: tipAmount ?? this.tipAmountSerialized,
         pkBchCashtoken: pkBchCashtoken ?? this.pkBchCashtoken,
         pkLegacy: pkLegacy ?? this.pkLegacy,
-        // creator: creator ?? this.creator,
         mnemonic: mnemonic ?? this.mnemonic,
         wifBchCashtoken: wifBchCashtoken ?? this.wifBchCashtoken,
         wifLegacy: wifLegacy ?? this.wifLegacy,
         hasInit: hasInit ?? this.hasInit,
-        ipfsCids: ipfsCids ?? this.ipfsCids,
+        ipfsCids: ipfsCids ?? List.from(this.ipfsCids),
       )
       ..temporaryTipAmount = temporaryTipAmount ?? this.temporaryTipAmount
       ..temporaryTipReceiver = temporaryTipReceiver ?? this.temporaryTipReceiver;
@@ -232,11 +228,10 @@ class MemoModelUser {
         bchAddressCashtokenAware == other.bchAddressCashtokenAware &&
         legacyAddressMemoBch == other.legacyAddressMemoBch &&
         legacyAddressMemoBchAsCashaddress == other.legacyAddressMemoBchAsCashaddress &&
-        _tipReceiver == other._tipReceiver &&
-        _tipAmount == other._tipAmount &&
+        tipReceiverSerialized == other.tipReceiverSerialized &&
+        tipAmountSerialized == other.tipAmountSerialized &&
         temporaryTipAmount == other.temporaryTipAmount &&
         temporaryTipReceiver == other.temporaryTipReceiver &&
-        // creator == other.creator &&
         hasInit == other.hasInit &&
         ipfsCids.length == other.ipfsCids.length &&
         ipfsCids.every((url) => other.ipfsCids.contains(url));
@@ -249,11 +244,10 @@ class MemoModelUser {
       bchAddressCashtokenAware,
       legacyAddressMemoBch,
       legacyAddressMemoBchAsCashaddress,
-      _tipReceiver,
-      _tipAmount,
+      tipReceiverSerialized,
+      tipAmountSerialized,
       temporaryTipAmount,
       temporaryTipReceiver,
-      // creator,
       hasInit,
       Object.hashAll(ipfsCids),
     );

@@ -111,7 +111,7 @@ class MemoModelPost {
       try {
         createdDateTime = DateTime.parse(created!);
       } catch (e) {
-        print("Error parsing 'created' string to DateTime: $e");
+        // print("Error parsing 'created' string to DateTime: $e");
       }
     }
   }
@@ -320,7 +320,8 @@ class MemoModelPost {
 
   // Add method to check if post has URLs but no media
   bool get hasUrlsInText {
-    return MemoRegExp.extractUrls(text).isNotEmpty;
+    if (text == null || text!.isEmpty) return false;
+    return MemoRegExp.extractUrlsGenerously(text!).isNotEmpty;
   }
 
   String parseUrlsClearText() {

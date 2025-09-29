@@ -83,20 +83,20 @@ class PreviewUrlWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, color: colorScheme.error, size: 40),
+            Icon(Icons.error_outline, color: colorScheme.onSurface.withAlpha(153), size: 40),
             const SizedBox(height: 12),
-            Text("Could not load preview", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+            Text("Could not load preview", style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface)),
             const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                "URL: ${_truncateUrl(url)}",
-                style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 16),
+            //   child: Text(
+            //     "URL: ${_truncateUrl(url)}",
+            //     style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            //     textAlign: TextAlign.center,
+            //     maxLines: 2,
+            //     overflow: TextOverflow.ellipsis,
+            //   ),
+            // ),
           ],
         ),
       ),

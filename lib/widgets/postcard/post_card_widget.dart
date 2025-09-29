@@ -219,21 +219,23 @@ class _PostCardState extends ConsumerState<PostCard> {
         errorWidget: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_outlined, color: colorScheme.error, size: 36),
+            Icon(Icons.cloud_off_outlined, color: colorScheme.onSurface.withAlpha(153), size: 36),
             const SizedBox(height: 8),
-            Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+            Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface)),
             const SizedBox(height: 8),
-            Text("${widget.post.ipfsCid}", style: textTheme.bodySmall!.copyWith(color: theme.colorScheme.error.withAlpha(169))),
+            Text("${widget.post.ipfsCid}", style: textTheme.bodySmall!.copyWith(color: theme.colorScheme.onSurface)),
           ],
         ),
       );
-    } else if ((!widget.post.hasMedia && (widget.post.hasUrlsInText || widget.post.urls.isNotEmpty))) {
-      final validUrl = MemoRegExp.extractUrls(widget.post.text);
-      // final validUrl = widget.post.urls[0];
+    } else if ((!widget.post.hasMedia &&
+        widget.post.text != null &&
+        widget.post.text!.isNotEmpty &&
+        (widget.post.hasUrlsInText || widget.post.urls.isNotEmpty))) {
+      final validUrl = MemoRegExp.extractUrlsGenerously(widget.post.text!);
       if (widget.post.urls.isNotEmpty) {
-        return PreviewUrlWidget(url: widget.post.urls[0]);
+        return PreviewUrlWidget(url: widget.post.urls[0].trim());
       } else if (validUrl.isNotEmpty) {
-        return PreviewUrlWidget(url: validUrl[0]);
+        return PreviewUrlWidget(url: validUrl[0].trim());
       } else {
         return _buildFallbackWidget(colorScheme);
       }

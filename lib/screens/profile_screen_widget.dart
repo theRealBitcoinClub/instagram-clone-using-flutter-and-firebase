@@ -73,7 +73,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   void _startMinDisplayTimer() {
     _minDisplayTimeElapsed = false;
     _minDisplayTimer?.cancel();
-    _minDisplayTimer = Timer(Duration(seconds: 3), () {
+    _minDisplayTimer = Timer(Duration(seconds: 5), () {
       if (mounted) {
         setState(() {
           _minDisplayTimeElapsed = true;

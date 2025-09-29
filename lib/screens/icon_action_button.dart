@@ -23,7 +23,7 @@ class IconAction extends StatelessWidget {
         case IAB.success:
           return Colors.green[900]!;
         case IAB.alternative:
-          return Colors.yellow[900]!;
+          return Colors.blue[900]!;
       }
     }
 

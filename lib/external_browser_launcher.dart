@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/memo_reg_exp.dart';
+import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -45,23 +46,6 @@ class ExternalBrowserLauncher {
     }
 
     return MemoRegExp.isUrlWhitelisted(url);
-
-    // // Check against regex patterns if provided
-    // if (whitelistPatterns != null) {
-    //   for (final pattern in whitelistPatterns!) {
-    //     try {
-    //       final regex = RegExp(pattern, caseSensitive: false);
-    //       if (regex.hasMatch(url)) {
-    //         return true;
-    //       }
-    //     } catch (e) {
-    //       // Handle invalid regex patterns gracefully
-    //       debugPrint('Invalid regex pattern: $pattern');
-    //     }
-    //   }
-    // }
-    //
-    // return false;
   }
 
   Future<void> _launchBrowser(String url) async {
@@ -112,7 +96,7 @@ class _UrlConfirmationDialog extends StatelessWidget {
 
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(9),
         side: BorderSide(
           color: isDarkTheme ? theme.colorScheme.outline.withOpacity(0.3) : theme.colorScheme.outline.withOpacity(0.1),
           width: 1,
@@ -122,7 +106,7 @@ class _UrlConfirmationDialog extends StatelessWidget {
       elevation: isDarkTheme ? 8 : 4,
       shadowColor: isDarkTheme ? Colors.black.withOpacity(0.5) : null,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -172,54 +156,33 @@ class _UrlConfirmationDialog extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             // Buttons row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // Cancel button
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _getButtonColor(Colors.red.shade600, Colors.red.shade400),
-                    foregroundColor: Colors.white,
-                    textStyle: theme.textTheme.labelLarge,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                border: Border(),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconAction(text: "cancel", size: 12, onTap: () => Navigator.of(context).pop(), type: IAB.cancel, icon: Icons.cancel_outlined),
+                  IconAction(
+                    text: "share",
+                    size: 12,
+                    onTap: () => Navigator.of(context).pop(),
+                    type: IAB.alternative,
+                    icon: Icons.share_outlined,
                   ),
-                  child: const Text('Cancel'),
-                ),
-                const SizedBox(width: 12),
-                // Share button
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    onShare();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _getButtonColor(Colors.blue.shade600, Colors.blue.shade400),
-                    foregroundColor: Colors.white,
-                    textStyle: theme.textTheme.labelLarge,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  IconAction(
+                    text: "yes",
+                    size: 12,
+                    onTap: () => Navigator.of(context).pop(),
+                    type: IAB.success,
+                    icon: Icons.check_circle_outline,
                   ),
-                  child: const Text('Share'),
-                ),
-                const SizedBox(width: 12),
-                // Confirm button
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    onConfirm();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _getButtonColor(Colors.green.shade600, Colors.green.shade400),
-                    foregroundColor: Colors.white,
-                    textStyle: theme.textTheme.labelLarge,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: const Text('Yes'),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

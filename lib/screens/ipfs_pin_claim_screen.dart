@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
+import 'package:mahakka/external_browser_launcher.dart';
 import 'package:mahakka/memo/base/memo_publisher.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/theme_provider.dart';
@@ -406,9 +407,26 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                                   if (_pinClaimPrice != null)
                                     AnimGrowFade(
                                       show: _pinClaimPrice != null,
-                                      child: Text(
-                                        'Upload price: ${((_pinClaimPrice! * 100000000) + MemoPublisher.minerFeeDefault.toInt()).toStringAsFixed(0)} sats',
-                                        style: textTheme.titleLarge?.copyWith(color: colorScheme.onSurface, letterSpacing: 1.5),
+                                      child: GestureDetector(
+                                        onTap: () => ExternalBrowserLauncher().launchUrlWithConfirmation(
+                                          context,
+                                          "https://psffpp.com/docs/overview/#payment",
+                                        ),
+                                        child: Container(
+                                          width: double.infinity,
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center, // Center the content
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                'Upload price: ${((_pinClaimPrice! * 100000000) + MemoPublisher.minerFeeDefault.toInt()).toStringAsFixed(0)} sats',
+                                                style: textTheme.titleLarge?.copyWith(color: colorScheme.onSurface, letterSpacing: 1.5),
+                                              ),
+                                              SizedBox(width: 9),
+                                              Icon(Icons.info_outline_rounded, size: 22, color: colorScheme.onSurface),
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   const SizedBox(height: 16),

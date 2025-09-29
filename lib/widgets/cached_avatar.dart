@@ -221,16 +221,6 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
             ),
     );
 
-    // CircleAvatar(
-    //   radius: widget.radius,
-    //   backgroundColor: theme.colorScheme.surfaceVariant,
-    //   backgroundImage: avatarUrl.isEmpty ? AssetImage(widget.fallbackAsset) as ImageProvider : CachedNetworkImageProvider(avatarUrl),
-    //   onBackgroundImageError: (exception, stackTrace) {
-    //     print("Error loading avatar image: $exception");
-    //   },
-    //   child: isLoading || isRefreshing ? Icon(Icons.person, size: widget.radius) : null,
-    // );
-
     if (!widget.showBadge || !hasRegistered) {
       return avatar;
     }
@@ -239,12 +229,12 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
       position: badges.BadgePosition.topEnd(top: -2, end: -6),
       showBadge: true,
       onTap: () {},
-      badgeContent: Icon(Icons.currency_bitcoin_rounded, color: theme.colorScheme.onPrimary, size: 15),
-      badgeAnimation: badges.BadgeAnimation.fade(
-        animationDuration: Duration(milliseconds: 5000),
-        loopAnimation: true,
-        colorChangeAnimationCurve: Curves.fastOutSlowIn,
-      ),
+      badgeContent: Icon(Icons.currency_bitcoin_rounded, color: theme.colorScheme.onPrimary, size: widget.radius / 2),
+      // badgeAnimation: badges.BadgeAnimation.fade(
+      //   animationDuration: Duration(milliseconds: 5000),
+      //   loopAnimation: true,
+      //   colorChangeAnimationCurve: Curves.fastOutSlowIn,
+      // ),
       badgeStyle: badges.BadgeStyle(
         shape: badges.BadgeShape.circle,
         badgeColor: theme.colorScheme.primary,

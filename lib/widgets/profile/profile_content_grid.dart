@@ -65,22 +65,6 @@ class ProfileContentGrid extends StatelessWidget {
             ),
           );
 
-          // var img = CachedNetworkImage(
-          //   alignment: Alignment.bottomCenter,
-          //   imageUrl: imageUrl,
-          //   fit: BoxFit.contain,
-          //   width: double.infinity,
-          //
-          //   placeholder: (context, url) => Container(
-          //     color: theme.colorScheme.surface,
-          //     child: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary))),
-          //   ),
-          //   errorWidget: (context, url, error) => Container(
-          //     color: theme.colorScheme.errorContainer,
-          //     child: Center(child: Icon(Icons.broken_image_outlined, size: 48, color: theme.colorScheme.onErrorContainer)),
-          //   ),
-          // );
-
           return GestureDetector(
             onTap: () => onPostImageTap(index),
             child: AspectRatio(aspectRatio: 1, child: img),

@@ -37,8 +37,8 @@ class TipInformationCard extends ConsumerWidget {
     final creatorColor = theme.colorScheme.secondary;
 
     final showCustomTipWarning =
-        (user.temporaryTipAmount != null && user.temporaryTipAmount != user.tipAmountEnum) ||
-        (user.temporaryTipReceiver != null && user.temporaryTipReceiver != user.tipReceiver);
+        (user.temporaryTipAmount != null && user.temporaryTipAmount != user.tipAmountEnumPersistent) ||
+        (user.temporaryTipReceiver != null && user.temporaryTipReceiver != user.tipReceiverPersistent);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -51,13 +51,16 @@ class TipInformationCard extends ConsumerWidget {
             AnimGrowFade(
               show: showCustomTipWarning,
               // duration: const Duration(milliseconds: 300),
-              child: Text(
-                '⚠️ Custom tip ' + (isPostCreationNotReply ? '' : '& receiver ') + 'for this post only',
-                style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(222), fontStyle: FontStyle.italic),
+              child: Column(
+                children: [
+                  Text(
+                    '⚠️ Custom tip ' + (isPostCreationNotReply ? '' : '& receiver ') + 'for this post only',
+                    style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(222), fontStyle: FontStyle.italic),
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
             ),
-
-            if (showCustomTipWarning) const SizedBox(height: 8),
 
             // Total amount with animation
             _buildAnimatedInfoRow('Tip Total', '${_formatSatoshi(tipTotalAmount)} satoshis', theme, tipTotalAmount),

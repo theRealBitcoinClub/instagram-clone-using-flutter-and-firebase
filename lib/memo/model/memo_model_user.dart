@@ -155,8 +155,16 @@ class MemoModelUser {
     return temporaryTipAmount ?? _tipAmount;
   }
 
+  TipAmount get tipAmountEnumPersistent {
+    return _tipAmount;
+  }
+
+  TipReceiver get tipReceiverPersistent {
+    return _tipReceiver;
+  }
+
   TipReceiver get tipReceiver {
-    return temporaryTipReceiver != null ? temporaryTipReceiver! : _tipReceiver;
+    return temporaryTipReceiver ?? _tipReceiver;
   }
 
   MemoModelUser._({

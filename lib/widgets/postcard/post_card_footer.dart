@@ -51,7 +51,7 @@ class PostCardFooter extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(12, 0, 16, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -122,7 +122,7 @@ class PostCardFooter extends StatelessWidget {
         onTap: onSelectTopic,
         borderRadius: BorderRadius.circular(4),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 2.0),
+          padding: const EdgeInsets.fromLTRB(0, 2, 0, 0),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -135,7 +135,7 @@ class PostCardFooter extends StatelessWidget {
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               if (post.topicId.isNotEmpty) ...[
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 Flexible(
                   child: Text(
                     post.topicId,
@@ -156,11 +156,14 @@ class PostCardFooter extends StatelessWidget {
   Widget _buildHashtagCheckboxesWidget(ThemeData theme) {
     return Align(
       alignment: Alignment.centerLeft,
-      child: HashtagDisplayWidget(
-        hashtags: post.tagIds,
-        theme: theme,
-        selectedHashtags: selectedHashtags,
-        onSelectHashtag: (index) => onSelectHashtag(index),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(0, 2, 0, 0),
+        child: HashtagDisplayWidget(
+          hashtags: post.tagIds,
+          theme: theme,
+          selectedHashtags: selectedHashtags,
+          onSelectHashtag: (index) => onSelectHashtag(index),
+        ),
       ),
     );
   }

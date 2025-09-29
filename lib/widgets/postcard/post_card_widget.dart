@@ -191,39 +191,46 @@ class _PostCardState extends ConsumerState<PostCard> {
 
   Widget _buildPostMedia(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     String imgUrl = widget.post.imageUrl ?? widget.post.imgurUrl ?? "";
+    var insets = EdgeInsets.fromLTRB(0, 6, 0, 9);
 
     if (widget.post.youtubeId != null && widget.post.youtubeId!.isNotEmpty) {
-      return _buildYouTubeWidget(theme, colorScheme, textTheme);
+      return Padding(padding: insets, child: _buildYouTubeWidget(theme, colorScheme, textTheme));
     } else if (widget.post.videoUrl != null && widget.post.videoUrl!.isNotEmpty) {
-      return _buildVideoWidget(theme, colorScheme, textTheme);
+      return Padding(padding: insets, child: _buildVideoWidget(theme, colorScheme, textTheme));
     } else if (imgUrl.isNotEmpty) {
-      return UnifiedImageWidget(
-        imageUrl: imgUrl,
-        sourceType: ImageSourceType.network,
-        fitMode: ImageFitMode.contain,
-        aspectRatio: 16 / 9,
-        border: Border(),
-        backgroundColor: colorScheme.surface,
-        showLoadingProgress: true,
+      return Padding(
+        padding: insets,
+        child: UnifiedImageWidget(
+          imageUrl: imgUrl,
+          sourceType: ImageSourceType.network,
+          fitMode: ImageFitMode.contain,
+          aspectRatio: 16 / 9,
+          border: Border(),
+          backgroundColor: colorScheme.surface,
+          showLoadingProgress: true,
+        ),
       );
     } else if (widget.post.ipfsCid != null && widget.post.ipfsCid!.isNotEmpty) {
-      return UnifiedImageWidget(
-        imageUrl: widget.post.ipfsCid!,
-        sourceType: ImageSourceType.ipfs,
-        fitMode: ImageFitMode.contain,
-        // aspectRatio: 16 / 9,
-        border: Border(),
-        backgroundColor: colorScheme.surface,
-        showLoadingProgress: true,
-        errorWidget: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.cloud_off_outlined, color: colorScheme.onSurface.withAlpha(153), size: 36),
-            const SizedBox(height: 8),
-            Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface)),
-            const SizedBox(height: 8),
-            Text("${widget.post.ipfsCid}", style: textTheme.bodySmall!.copyWith(color: theme.colorScheme.onSurface)),
-          ],
+      return Padding(
+        padding: insets,
+        child: UnifiedImageWidget(
+          imageUrl: widget.post.ipfsCid!,
+          sourceType: ImageSourceType.ipfs,
+          fitMode: ImageFitMode.contain,
+          // aspectRatio: 16 / 9,
+          border: Border(),
+          backgroundColor: colorScheme.surface,
+          showLoadingProgress: true,
+          errorWidget: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.cloud_off_outlined, color: colorScheme.onSurface.withAlpha(153), size: 36),
+              const SizedBox(height: 8),
+              Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface)),
+              const SizedBox(height: 8),
+              Text("${widget.post.ipfsCid}", style: textTheme.bodySmall!.copyWith(color: theme.colorScheme.onSurface)),
+            ],
+          ),
         ),
       );
     } else if ((!widget.post.hasMedia &&
@@ -232,9 +239,15 @@ class _PostCardState extends ConsumerState<PostCard> {
         (widget.post.hasUrlsInText || widget.post.urls.isNotEmpty))) {
       final validUrl = MemoRegExp.extractUrlsGenerously(widget.post.text!);
       if (widget.post.urls.isNotEmpty) {
-        return PreviewUrlWidget(url: widget.post.urls[0].trim());
+        return Padding(
+          padding: insets,
+          child: PreviewUrlWidget(url: widget.post.urls[0].trim()),
+        );
       } else if (validUrl.isNotEmpty) {
-        return PreviewUrlWidget(url: validUrl[0].trim());
+        return Padding(
+          padding: insets,
+          child: PreviewUrlWidget(url: validUrl[0].trim()),
+        );
       } else {
         return _buildFallbackWidget(colorScheme);
       }
@@ -265,7 +278,9 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   Widget _buildFallbackWidget(ColorScheme colorScheme) {
-    return Container(
+    return Divider(color: colorScheme.surfaceVariant.withAlpha(153), height: 9, thickness: 1);
+
+    Container(
       height: _altImageHeight,
       color: colorScheme.surface,
       child: Center(
@@ -619,7 +634,6 @@ class _PostCardState extends ConsumerState<PostCard> {
               children: [
                 SizedBox(height: 3),
                 PostCardHeader(post: widget.post, onLikePostTipCreator: _sendTipToCreator),
-                SizedBox(height: 5),
                 _buildPostMedia(theme, colorScheme, textTheme),
                 PostCardFooter(
                   post: widget.post,

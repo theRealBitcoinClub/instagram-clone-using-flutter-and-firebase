@@ -22,14 +22,15 @@ class TextInputFieldAddDialog extends StatelessWidget {
     return TextField(
       controller: textEditingController,
       decoration: InputDecoration(
+        hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: colorScheme.onSurface.withAlpha(153)),
         filled: true,
         fillColor: colorScheme.surface,
         hintText: hintText,
         border: const OutlineInputBorder(),
         focusedBorder: borderColor != null ? OutlineInputBorder(borderSide: BorderSide(color: borderColor!, width: 2.0)) : null,
         enabledBorder: borderColor != null ? OutlineInputBorder(borderSide: BorderSide(color: borderColor!, width: 1.0)) : null,
-        errorText: errorText,
-        errorStyle: TextStyle(fontSize: 12, letterSpacing: 1.2, height: 3, color: colorScheme.error, fontWeight: FontWeight.bold),
+        // errorText: errorText,
+        errorStyle: Theme.of(context).textTheme.bodySmall!.copyWith(color: colorScheme.error, height: 2),
       ),
       keyboardType: textInputType,
     );

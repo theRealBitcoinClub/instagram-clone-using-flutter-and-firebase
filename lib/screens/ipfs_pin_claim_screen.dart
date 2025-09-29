@@ -328,7 +328,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: AppBarBurnMahakkaTheme.height,
-          title: Text('Upload and Pin Content', style: theme.appBarTheme.titleTextStyle!.copyWith(color: colorScheme.onPrimary.withAlpha(222))),
+          title: Text('Upload and Pin images to the IPFS', style: textTheme.bodyMedium!.copyWith(color: colorScheme.onPrimary.withAlpha(222))),
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
           actions: [AppBarBurnMahakkaTheme.buildThemeIcon(ref.read(themeStateProvider), ref, context)],
@@ -342,8 +342,8 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                 children: [
                   Text(
                     'Use this page to upload an image to the IPFS network. '
-                    'Your wallet must have sufficient Memo balance to pay for the upload. ',
-                    style: textTheme.bodyMedium?.copyWith(height: 1.5, letterSpacing: 1.2),
+                    'Your wallet must have sufficient Memo balance to pay for the upload. Select an image to check the cost!',
+                    style: textTheme.bodyMedium?.copyWith(height: 1.5, letterSpacing: 1),
                   ),
                   const SizedBox(height: 16),
 
@@ -396,7 +396,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                                 children: [
                                   Text(
                                     _selectedFile!.path.split('/').last,
-                                    style: textTheme.titleSmall!.copyWith(
+                                    style: textTheme.bodySmall!.copyWith(
                                       letterSpacing: 1,
                                       fontStyle: FontStyle.italic,
                                       color: colorScheme.primary,
@@ -420,7 +420,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                                             children: [
                                               Text(
                                                 'Upload price: ${((_pinClaimPrice! * 100000000) + MemoPublisher.minerFeeDefault.toInt()).toStringAsFixed(0)} sats',
-                                                style: textTheme.titleLarge?.copyWith(color: colorScheme.onSurface, letterSpacing: 1.5),
+                                                style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface, letterSpacing: 1.5),
                                               ),
                                               SizedBox(width: 9),
                                               Icon(Icons.info_outline_rounded, size: 22, color: colorScheme.onSurface),
@@ -433,8 +433,8 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                                   OutlinedButton(
                                     onPressed: _removeFile,
                                     style: ButtonStyle(
-                                      foregroundColor: MaterialStateProperty.all(colorScheme.error),
-                                      side: MaterialStateProperty.all(BorderSide(color: colorScheme.error)),
+                                      foregroundColor: MaterialStateProperty.all(colorScheme.error.withAlpha(153)),
+                                      side: MaterialStateProperty.all(BorderSide(color: colorScheme.error.withAlpha(153))),
                                     ),
                                     child: const Text('CHANGE IMAGE'),
                                   ),

@@ -30,7 +30,7 @@ class AddPost extends ConsumerStatefulWidget {
 
 class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin {
   String _title = "Select a media type or paste a link";
-  String _hint = "e.g. any media url or ipfs content id";
+  String _hint = "paste any media url or ipfs content id";
   var _onCreateCallback;
   var _onGalleryCallback;
   // late AnimationController _animationController; // Local controller

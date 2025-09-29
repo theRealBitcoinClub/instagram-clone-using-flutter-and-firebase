@@ -87,8 +87,6 @@ class PostCardFooter extends StatelessWidget {
                   maxLength: MemoVerifier.maxPostLength,
                   hintText: 'Write your reply...',
                   onChanged: onInputText,
-                  normalTextStyle: theme.textTheme.bodyMedium,
-                  exceededTextStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error),
                 ),
               ),
             ),
@@ -135,13 +133,13 @@ class PostCardFooter extends StatelessWidget {
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               if (post.topicId.isNotEmpty) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: 2),
                 Flexible(
                   child: Text(
                     post.topicId,
-                    style: theme.textTheme.labelLarge?.copyWith(
+                    style: theme.textTheme.bodyLarge?.copyWith(
                       color: hasSelectedTopic ? theme.colorScheme.primary : theme.colorScheme.onSurface,
-                      fontWeight: hasSelectedTopic ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: FontWeight.normal,
                     ),
                   ),
                 ),

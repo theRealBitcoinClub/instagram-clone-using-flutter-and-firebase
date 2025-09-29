@@ -41,7 +41,7 @@ class SettingsOptionWidget extends StatelessWidget {
         children: [
           Icon(icon, color: color.withOpacity(0.8), size: 20),
           const SizedBox(width: 16),
-          Text(text, style: theme.textTheme.bodyLarge?.copyWith(color: color)),
+          Text(text, style: theme.textTheme.bodyLarge?.copyWith(color: color, letterSpacing: 1)),
         ],
       ),
     );

@@ -33,7 +33,7 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
             onTap: () => ExternalBrowserLauncher().launchUrlWithConfirmation(context, 'https://mahakka.com'),
             child: Text(
               "mahakka.com",
-              style: theme.appBarTheme.titleTextStyle!.copyWith(
+              style: theme.textTheme.titleMedium!.copyWith(
                 letterSpacing: 1,
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.onPrimary.withAlpha(222),

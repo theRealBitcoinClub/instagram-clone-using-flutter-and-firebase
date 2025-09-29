@@ -36,7 +36,7 @@ class _TaggerHashtagListViewState extends BaseScrollableListViewState<TaggerHash
             decoration: HashtagDisplayWidget.borderDecoration(isSelected: true, theme: theme),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-              child: Text("#${hashtag.name}", style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface)),
+              child: Text("#${hashtag.name}", style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface)),
             ),
           ),
         );
@@ -52,7 +52,7 @@ class _TaggerHashtagListViewState extends BaseScrollableListViewState<TaggerHash
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
         child: Text(
           "Add or remove letters to match any existing #hashtag to maximize your outreach, unmatched tags automatically create new tags!",
-          style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 1.2),
+          style: textTheme.bodyMedium!.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 1.2),
           textAlign: TextAlign.center,
         ),
       ),

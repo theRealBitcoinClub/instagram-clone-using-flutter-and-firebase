@@ -35,7 +35,7 @@ class PostComposerWidget extends StatelessWidget {
     return Container(
       key: containerKey,
       constraints: BoxConstraints(maxHeight: insets == EdgeInsets.zero ? baseMaxHeight : baseMaxHeight + insets.bottom),
-      padding: const EdgeInsets.fromLTRB(0, 2, 2, 2),
+      padding: const EdgeInsets.fromLTRB(10, 2, 2, 0),
       child: Column(
         mainAxisAlignment: columnMainAxisAlignment,
         mainAxisSize: MainAxisSize.min,

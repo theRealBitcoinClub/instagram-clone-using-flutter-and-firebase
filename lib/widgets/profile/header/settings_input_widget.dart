@@ -27,7 +27,7 @@ class SettingsInputWidget extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.only(top: type == TextInputType.multiline ? 8.0 : 0.0),
-            child: Icon(icon, color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7) ?? theme.colorScheme.onSurfaceVariant, size: 24),
+            child: Icon(icon, color: theme.colorScheme.onSurface.withOpacity(0.7), size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -35,6 +35,7 @@ class SettingsInputWidget extends StatelessWidget {
               controller: controller,
               keyboardType: type,
               maxLines: maxLines,
+              style: theme.textTheme.bodyMedium,
               decoration: InputDecoration(
                 hintText: hintText,
                 isDense: true,

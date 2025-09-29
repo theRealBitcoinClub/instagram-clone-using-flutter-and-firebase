@@ -312,7 +312,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                               const SizedBox(height: 20),
                               Text(
                                 'No Internet Connection',
-                                style: theme.textTheme.headlineSmall?.copyWith(color: theme.colorScheme.error),
+                                style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.error),
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 16),

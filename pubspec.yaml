@@ -1,7 +1,7 @@
 name: mahakka
 description: An app using the memo protocol to publish content to the BCH blockchain.
 publish_to: 'none'
-version: 3.5.18-BCH+2025092906
+version: 3.6.0-BCH+2025092907
 
 environment:
   sdk: '>=3.8.0 <4.0.0'
@@ -93,6 +93,52 @@ flutter:
     - assets/
     - assets/images/
     - shorebird.yaml
+
+  fonts:
+    # Source Sans 3 - Main UI font for publications and body text
+    - family: Source Sans 3
+      fonts:
+        - asset: assets/fonts/SourceSans3/SourceSans3-Light.ttf
+          weight: 300
+        - asset: assets/fonts/SourceSans3/SourceSans3-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/SourceSans3/SourceSans3-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/SourceSans3/SourceSans3-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/SourceSans3/SourceSans3-Bold.ttf
+          weight: 700
+
+    # JetBrains Mono - For hashtags, code snippets, technical elements
+    - family: JetBrains Mono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMono-Light.ttf
+          weight: 300
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMono-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMono-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMono-Bold.ttf
+          weight: 700
+
+    # Cascadia Code - Alternative monospace for variety or specific use cases
+    - family: Cascadia Code
+      fonts:
+        - asset: assets/fonts/CascadiaCode/CascadiaCode-Light.ttf
+          weight: 300
+        - asset: assets/fonts/CascadiaCode/CascadiaCode-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/CascadiaCode/CascadiaCode-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/CascadiaCode/CascadiaCode-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/CascadiaCode/CascadiaCode-Bold.ttf
+          weight: 700
 
 flutter_native_splash:
   color: "#000000"

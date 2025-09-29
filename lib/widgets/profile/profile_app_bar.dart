@@ -49,31 +49,21 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 });
               },
             ),
-      title: creator?.id != null && creator!.id.isNotEmpty
-          ? TextButton(
-              onPressed: () {
-                if (creator?.id != null && creator!.id.isNotEmpty) {
-                  WebViewNavigator.navigateTo(ref, WebViewShow.url, "https://memo.cash/profile/${creator!.id}");
-                }
-              },
-              style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
-              child: Text(
-                creator!.id,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: (theme.appBarTheme.titleTextStyle?.color ?? colorScheme.onSurface).withOpacity(0.7),
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            )
-          : Text(
-              isOwnProfile ? "My Profile" : "Profile",
-              style:
-                  theme.appBarTheme.titleTextStyle?.copyWith(
-                    fontSize: theme.textTheme.bodySmall?.fontSize,
-                    color: (theme.appBarTheme.titleTextStyle?.color ?? colorScheme.onSurface).withOpacity(0.7),
-                  ) ??
-                  theme.textTheme.bodySmall?.copyWith(color: (theme.textTheme.bodySmall?.color ?? colorScheme.onSurface).withOpacity(0.7)),
-            ),
+      title: TextButton(
+        onPressed: () {
+          if (creator?.id != null && creator!.id.isNotEmpty) {
+            WebViewNavigator.navigateTo(ref, WebViewShow.url, "https://memo.cash/profile/${creator!.id}");
+          }
+        },
+        style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
+        child: Text(
+          creator!.id,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: (theme.appBarTheme.titleTextStyle?.color ?? colorScheme.onSurface).withOpacity(0.7),
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       actions: [AppBarBurnMahakkaTheme.buildThemeIcon(currentThemeState, ref, context)],
     );
   }

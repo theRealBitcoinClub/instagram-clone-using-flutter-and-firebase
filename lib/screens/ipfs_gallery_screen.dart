@@ -36,7 +36,7 @@ class IPFSGalleryScreen extends ConsumerWidget {
         leadingWidth: 50,
         title: Text(
           hasSelection ? '${selectedCid}' : 'Tap image to select or create new one',
-          style: textTheme.titleSmall!.copyWith(letterSpacing: 0.2, fontWeight: FontWeight.w400, fontSize: 14, color: colorScheme.onPrimary),
+          style: textTheme.bodySmall!.copyWith(color: colorScheme.onPrimary),
         ),
         leading: IconButton(icon: const Icon(Icons.cancel_outlined), onPressed: () => Navigator.pop(context)),
         actions: [
@@ -198,7 +198,7 @@ class IPFSImageCard extends ConsumerWidget {
                     padding: const EdgeInsets.all(12.0),
                     child: Text(
                       cid,
-                      style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7), fontFamily: 'Monospace'),
+                      style: theme.textTheme.labelSmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                     ),

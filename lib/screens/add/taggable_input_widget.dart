@@ -55,7 +55,7 @@ class TaggableInputWidget extends ConsumerWidget {
               containerKey: containerKey,
               insets: viewInsets, // ADD: widget. prefix
               controller: textInputController, // ADD: widget. prefix
-              hintText: "Tell us what's on your mind...",
+              hintText: "Tap here to write the description for the media",
               onSend: postController.publishPost, // ADD: widget. prefix
             );
           },

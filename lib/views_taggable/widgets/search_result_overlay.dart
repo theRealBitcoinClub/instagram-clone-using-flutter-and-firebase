@@ -52,7 +52,7 @@ class SearchResultBox extends ConsumerWidget {
           child: Center(
             child: Text(
               "Write @ to attach a post to any @topic or # to add #hashtags to your post. You can post to one topic and/or add up to three hashtags",
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, letterSpacing: 1.2),
+              style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.onSurfaceVariant, letterSpacing: 1.2),
             ),
           ),
         );

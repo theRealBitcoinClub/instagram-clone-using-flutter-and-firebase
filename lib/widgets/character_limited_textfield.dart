@@ -8,8 +8,6 @@ class CharacterLimitedTextField extends ConsumerStatefulWidget {
   final int maxLength;
   final String hintText;
   final ValueChanged<String>? onChanged;
-  final TextStyle? normalTextStyle;
-  final TextStyle? exceededTextStyle;
   final int? minLines;
 
   const CharacterLimitedTextField({
@@ -18,8 +16,6 @@ class CharacterLimitedTextField extends ConsumerStatefulWidget {
     required this.maxLength,
     this.hintText = '',
     this.onChanged,
-    this.normalTextStyle,
-    this.exceededTextStyle,
     this.minLines,
   }) : super(key: key);
 
@@ -88,6 +84,7 @@ class _CharacterLimitedTextFieldState extends ConsumerState<CharacterLimitedText
             controller: widget.controller,
             onChanged: widget.onChanged,
             decoration: InputDecoration(
+              errorStyle: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.error),
               hintText: widget.hintText,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(4),
@@ -106,7 +103,7 @@ class _CharacterLimitedTextFieldState extends ConsumerState<CharacterLimitedText
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
-            style: widget.normalTextStyle,
+            style: theme.textTheme.bodyMedium,
             buildCounter: (BuildContext context, {required int currentLength, required int? maxLength, required bool isFocused}) {
               return const SizedBox.shrink();
             },

@@ -73,7 +73,7 @@ class ProfileHeader extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               name.isNotEmpty ? name : "Anonymous",
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium,
             ),
             Spacer(),
             if (creator.profileIdShort.isNotEmpty) Text(creator.profileIdShort, style: _profileIdStyle(theme)),
@@ -84,7 +84,7 @@ class ProfileHeader extends StatelessWidget {
   }
 
   TextStyle? _profileIdStyle(ThemeData theme) {
-    return theme.textTheme.titleSmall?.copyWith(letterSpacing: 1.5, color: theme.colorScheme.onSurfaceVariant);
+    return theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
   }
 
   Widget _buildProfileText(MemoModelCreator creator, ThemeData theme) {
@@ -101,7 +101,7 @@ class ProfileHeader extends StatelessWidget {
           maxLines: 2,
           linkColor: theme.colorScheme.primary,
           style: _profileTextStyle(theme),
-          linkStyle: _profileLinkStyle(theme),
+          // linkStyle: _profileLinkStyle(theme),
         ),
       ),
     );

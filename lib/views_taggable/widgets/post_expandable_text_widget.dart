@@ -23,18 +23,18 @@ class PostExpandableText extends ConsumerWidget {
       maxLines: 5,
       linkColor: theme.colorScheme.onTertiaryFixedVariant,
       style: theme.textTheme.bodyMedium?.copyWith(
-        fontFamily: "Open Sans",
-        fontSize: 15,
-        height: 1.4,
+        // fontFamily: "Cascadia Code",
+        // fontSize: 15,
+        // height: 1.4,
         color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
       ),
-      hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
+      hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant),
       onHashtagTap: (String hashtag) {
         WebViewNavigator.navigateTo(ref, WebViewShow.tag, hashtag);
         showSnackBar("Loading $hashtag charts!", context, type: SnackbarType.success);
         showSnackBar("$hashtag charts are loading...", context, type: SnackbarType.info);
       },
-      mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
+      mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant),
       urlStyle: _buildUrlStyle(theme),
       onUrlTap: (String url) async {
         await _onUrlTap(url, context, ref);
@@ -50,11 +50,11 @@ class PostExpandableText extends ConsumerWidget {
   }
 
   TextStyle? _buildUrlStyle(ThemeData theme) {
-    return theme.textTheme.bodyMedium?.copyWith(
-      color: theme.colorScheme.onTertiaryFixedVariant.withAlpha(189),
-      fontStyle: FontStyle.italic,
+    return theme.textTheme.labelSmall!.copyWith(
+      // color: theme.colorScheme.onTertiaryFixedVariant.withAlpha(189),
+      // fontStyle: FontStyle.italic,
       // decoration: TextDecoration.underline,
-      fontWeight: FontWeight.w600,
+      // fontWeight: FontWeight.w600,
     );
   }
 

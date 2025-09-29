@@ -22,34 +22,77 @@ TextTheme _buildTextTheme(TextTheme base, Color textColor, Color displayColor) {
   return base
       .copyWith(
         // Headlines - Could use a more distinct "elegant" font if you add one via google_fonts
-        displayLarge: base.displayLarge?.copyWith(fontSize: 48.0, fontWeight: FontWeight.w300, color: displayColor, letterSpacing: -1.5),
-        displayMedium: base.displayMedium?.copyWith(fontSize: 34.0, fontWeight: FontWeight.w400, color: displayColor, letterSpacing: -0.5),
-        displaySmall: base.displaySmall?.copyWith(fontSize: 24.0, fontWeight: FontWeight.w400, color: displayColor),
+        // displayLarge: base.displayLarge?.copyWith(fontSize: 48.0, fontWeight: FontWeight.w300, color: displayColor, letterSpacing: -1.5),
+        // displayMedium: base.displayMedium?.copyWith(fontSize: 34.0, fontWeight: FontWeight.w400, color: displayColor, letterSpacing: -0.5),
+        // displaySmall: base.displaySmall?.copyWith(fontSize: 24.0, fontWeight: FontWeight.w400, color: displayColor),
 
-        headlineMedium: base.headlineMedium?.copyWith(fontSize: 20.0, fontWeight: FontWeight.w500, color: textColor, letterSpacing: 0.15),
-        headlineSmall: base.headlineSmall?.copyWith(fontSize: 18.0, fontWeight: FontWeight.w500, color: textColor, letterSpacing: 0.1),
-
-        titleLarge: base.titleLarge?.copyWith(fontSize: 16.0, fontWeight: FontWeight.w500, color: textColor, letterSpacing: 0.15),
-        titleMedium: base.titleMedium?.copyWith(fontSize: 14.0, fontWeight: FontWeight.w400, color: textColor, letterSpacing: 0.1),
-        titleSmall: base.titleSmall?.copyWith(fontSize: 12.0, fontWeight: FontWeight.w500, color: textColor, letterSpacing: 0.05),
-
-        bodyLarge: base.bodyLarge?.copyWith(fontSize: 16.0, fontWeight: FontWeight.w400, color: textColor, letterSpacing: 0.5),
-        bodyMedium: base.bodyMedium?.copyWith(
-          fontSize: 14.0,
-          fontWeight: FontWeight.w400,
+        // headlineMedium: base.headlineMedium?.copyWith(fontSize: 20.0, fontWeight: FontWeight.w500, color: textColor, letterSpacing: 0.15),
+        // headlineSmall: base.headlineSmall?.copyWith(fontSize: 18.0, fontWeight: FontWeight.w500, color: textColor, letterSpacing: 0.1),
+        titleLarge: base.titleLarge?.copyWith(
+          fontFamily: "JetBrains Mono",
+          fontSize: 15.0,
+          fontWeight: FontWeight.w700,
           color: textColor,
-          letterSpacing: 0.25,
-        ), // Default text
-        bodySmall: base.bodySmall?.copyWith(fontSize: 12.0, fontWeight: FontWeight.w400, color: textColor, letterSpacing: 0.4),
-
-        labelLarge: base.labelLarge?.copyWith(
+          letterSpacing: 0,
+        ),
+        titleMedium: base.titleMedium?.copyWith(
+          fontFamily: "JetBrains Mono",
           fontSize: 14.0,
           fontWeight: FontWeight.w500,
           color: textColor,
-          letterSpacing: 1.25,
+          letterSpacing: 0,
+        ),
+        titleSmall: base.titleSmall?.copyWith(
+          fontFamily: "JetBrains Mono",
+          fontSize: 13.0,
+          fontWeight: FontWeight.w400,
+          color: textColor,
+          letterSpacing: 0,
+        ),
+
+        bodyLarge: base.bodyLarge?.copyWith(
+          fontFamily: "Source Sans 3",
+          fontSize: 15.0,
+          fontWeight: FontWeight.w700,
+          color: textColor,
+          letterSpacing: 0.5,
+        ),
+        bodyMedium: base.bodyMedium?.copyWith(
+          fontSize: 14.0,
+          fontFamily: "Source Sans 3",
+          fontWeight: FontWeight.w500,
+          color: textColor,
+          letterSpacing: 0.25,
+        ), // Default text
+        bodySmall: base.bodySmall?.copyWith(
+          fontFamily: "Source Sans 3",
+          fontSize: 13.0,
+          fontWeight: FontWeight.w400,
+          color: textColor,
+          letterSpacing: 0.4,
+        ),
+
+        labelLarge: base.labelLarge?.copyWith(
+          fontFamily: "Cascadia Code",
+          fontSize: 15.0,
+          fontWeight: FontWeight.w700,
+          color: textColor,
+          letterSpacing: 0,
         ), // For buttons
-        labelMedium: base.labelMedium?.copyWith(fontSize: 12.0, fontWeight: FontWeight.w400, color: textColor, letterSpacing: 0.5),
-        labelSmall: base.labelSmall?.copyWith(fontSize: 10.0, fontWeight: FontWeight.w400, color: textColor, letterSpacing: 1.5),
+        labelMedium: base.labelMedium?.copyWith(
+          fontFamily: "Cascadia Code",
+          fontSize: 14.0,
+          fontWeight: FontWeight.w500,
+          color: textColor,
+          letterSpacing: 0,
+        ),
+        labelSmall: base.labelSmall?.copyWith(
+          fontFamily: "Cascadia Code",
+          fontSize: 13.0,
+          fontWeight: FontWeight.w400,
+          color: textColor,
+          letterSpacing: 0,
+        ),
       )
       .apply(
         // You can apply a global font family here if you have one

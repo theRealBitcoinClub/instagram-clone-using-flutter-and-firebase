@@ -93,8 +93,8 @@ class _ClipboardMonitoringWidgetState extends ConsumerState<ClipboardMonitoringW
         children: [
           // Title
           Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
-            child: Text(widget.title, style: theme.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.w500, letterSpacing: 1)),
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: Text(widget.title, style: theme.textTheme.titleMedium),
           ),
 
           // Input field and actions in a Row
@@ -107,14 +107,12 @@ class _ClipboardMonitoringWidgetState extends ConsumerState<ClipboardMonitoringW
                   textEditingController: _controller,
                   hintText: widget.hint,
                   textInputType: TextInputType.url,
-                  borderColor: hasValidInput ? null : theme.colorScheme.error,
+                  // borderColor: hasValidInput ? null : theme.colorScheme.error,
                   errorText: hasValidInput
                       ? null
                       : 'Paste a valid' + (widget.title.toLowerCase().contains("ipfs") ? " Ipfs Content Id" : " Url link"),
                 ),
               ),
-
-              const SizedBox(width: 8),
             ],
           ),
 

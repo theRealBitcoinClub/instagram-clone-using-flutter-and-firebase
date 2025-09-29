@@ -49,8 +49,9 @@ class HashtagDisplayWidget extends StatelessWidget {
           decoration: noBorder ? null : borderDecoration(isSelected: isSelected, theme: theme),
           child: Text(
             hashtags[index],
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w400,
+              // fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
             ),
           ),

@@ -30,10 +30,10 @@ class _TaggerTopicListViewState extends BaseScrollableListViewState<TaggerTopicL
             backgroundColor: colorScheme.primary.withAlpha(159),
             child: Text(
               "@",
-              style: textTheme.titleMedium?.copyWith(color: colorScheme.onPrimary, fontWeight: FontWeight.bold),
+              style: textTheme.bodyMedium?.copyWith(color: colorScheme.onPrimary, fontWeight: FontWeight.bold),
             ),
           ),
-          title: Text(topic.header, style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface)),
+          title: Text(topic.header, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface)),
           onTap: () => _selectTopic(topic),
         );
       }).toList(),
@@ -48,7 +48,7 @@ class _TaggerTopicListViewState extends BaseScrollableListViewState<TaggerTopicL
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
         child: Text(
           "Write or remove letters to match any existing topic to maximize your outreach, unmatched topics automatically create new topics!",
-          style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 1.2),
+          style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 1.2),
           textAlign: TextAlign.center,
         ),
       ),

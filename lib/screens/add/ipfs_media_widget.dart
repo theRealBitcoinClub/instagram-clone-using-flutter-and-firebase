@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/config_ipfs.dart';
 import 'package:mahakka/widgets/red_action_button.dart';
 
 import '../../widgets/unified_image_widget.dart';
@@ -17,7 +16,6 @@ class IpfsMediaWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cid = ipfsCid ?? ref.watch(ipfsCidProvider);
-    final ipfsUrl = '${IpfsConfig.preferredNode}$cid';
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -65,7 +63,7 @@ class IpfsMediaWidget extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "IPFS CID: $cid",
+                    "Inter Planetary File System - Content Identifier: $cid",
                     style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                     textAlign: TextAlign.center,
                   ),

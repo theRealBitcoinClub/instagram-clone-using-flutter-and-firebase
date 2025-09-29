@@ -582,9 +582,9 @@ class _CustomFlutterTaggerState extends State<CustomFlutterTagger> {
           // AnimatedGrowFadeIn(
           //   show: !_hideOverlay,
           //   child:
-          Container(height: 90, child: widget.overlay),
+          Container(height: 90, padding: EdgeInsets.zero, child: widget.overlay),
           // ),
-          Container(height: 140, padding: widget.padding, child: widget.builder(context, _textFieldKey)),
+          Container(height: 130, padding: EdgeInsets.zero, child: widget.builder(context, _textFieldKey)),
         ],
       ),
     );

@@ -47,12 +47,6 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
   // ADD THESE NEW ANIMATION CONTROLLERS
   late AnimationController _textFadeController;
   late Animation<double> _textFadeAnimation;
-  // Add this new animation controller for button transitions
-  // late AnimationController _buttonFadeController;
-  // late Animation<double> _buttonFadeAnimation;
-  // late bool _isFirstSourceSelection; // ADD THIS FLAG
-  // late bool _isUpdatingSourceLanguage; // ADD THIS FLAG
-
   // ADD TRANSLATION SECTION FADE ANIMATION CONTROLLER
   late AnimationController _translationSectionController;
   late Animation<double> _translationSectionAnimation;
@@ -65,35 +59,22 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
     _controller = AnimationController(duration: const Duration(milliseconds: 500), vsync: this);
     _opacityAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     _originalText = widget.post.text ?? '';
-    // _isUpdatingSourceLanguage = false; // INITIALIZE THE FLAG
-    // _isFirstSourceSelection = true; // INITIALIZE THE FLAG
     _translationSectionController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
     _translationSectionAnimation = CurvedAnimation(
       parent: _translationSectionController,
       curve: Curves.easeInOut,
     ); // Start with translation section visible if hasTranslation is true
-    // if (ref.read(publishOptionsProvider).showTranslationWidget) {
     _translationSectionController.forward();
-    // }
-    // ADD TEXT FADE ANIMATION CONTROLLER
     _textFadeController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
     _textFadeAnimation = CurvedAnimation(parent: _textFadeController, curve: Curves.easeInOut);
-
-    // ADD BUTTON FADE ANIMATION CONTROLLER
-    // _buttonFadeController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
-    // _buttonFadeAnimation = CurvedAnimation(parent: _buttonFadeController, curve: Curves.easeInOut);
-
-    // Initialize temporary values with user's current settings
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = ref.read(userProvider)!;
       user.temporaryTipAmount = user.tipAmountEnum;
       user.temporaryTipReceiver = user.tipReceiver;
 
-      // ADD THIS: Start text fade-in animation after the main animation
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           _textFadeController.forward();
-          // _buttonFadeController.forward();
         }
       });
     });
@@ -108,7 +89,6 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
     // DISPOSE TEXT FADE CONTROLLER
     _textFadeController.dispose();
     _translationSectionController.dispose(); // ADD THIS
-    // _buttonFadeController.dispose(); // ADD THIS
     _controller.dispose();
     super.dispose();
   }
@@ -272,7 +252,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(user.profileIdShort, style: textTheme.titleSmall?.copyWith(color: colorScheme.onPrimary)),
+            Text(user.profileIdShort, style: textTheme.labelSmall?.copyWith(color: colorScheme.onPrimary)),
             Text(_getTipAmountDisplay(temporaryTipAmount), style: textTheme.bodySmall?.copyWith(color: colorScheme.onPrimary.withOpacity(0.8))),
           ],
         ),
@@ -301,25 +281,20 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                   translationSectionAnimation: _translationSectionAnimation,
                   textFadeController: _textFadeController,
                   textFadeAnimation: _textFadeAnimation,
-                  // buttonFadeController: _buttonFadeController,
-                  // buttonFadeAnimation: _buttonFadeAnimation,
-                  // onTextChanged: () {
-                  // Update draft post provider when text changes
-                  // ref.read(draftPostProvider.notifier).state = widget.post;
-                  // },
                 ),
               if (widget.post.topicId.isNotEmpty) HashtagDisplayWidget(noBorder: true, hashtags: [widget.post.topicId], theme: theme),
               if (widget.post.text != null)
                 FadeTransition(
                   opacity: _textFadeAnimation,
-                  child: Text(translatedText.isNotEmpty ? translatedText : widget.post.text!, style: textTheme.bodyLarge),
+                  child: Text(
+                    translatedText.isNotEmpty ? translatedText : widget.post.text!,
+                    style: textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w400),
+                  ),
                 ),
               if (widget.post.urls.isNotEmpty) HashtagDisplayWidget(noBorder: true, hashtags: widget.post.urls, theme: theme),
               if (widget.post.urls.isEmpty) const SizedBox(height: 8),
-              // if (widget.post.urls.isEmpty && widget.post.tagIds.isEmpty) const SizedBox(height: 8),
-              // if (widget.post.tagIds.isNotEmpty ) const SizedBox(height: 8),
               if (widget.post.tagIds.isNotEmpty) HashtagDisplayWidget(hashtags: widget.post.tagIds, theme: theme),
-              if (widget.post.tagIds.isNotEmpty) const SizedBox(height: 8),
+              if (widget.post.tagIds.isNotEmpty) const SizedBox(height: 12),
               _buildMediaPreview(theme, colorScheme, textTheme),
               const SizedBox(height: 0),
               TipInformationCard(post: widget.post, isPostCreationNotReply: widget.isPostCreationNotReply),

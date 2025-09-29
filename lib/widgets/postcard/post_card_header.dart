@@ -48,21 +48,15 @@ class PostCardHeader extends ConsumerWidget {
                   onTap: () => _navigateToProfile(context, ref, creator.id), // Pass ref
                   child: Row(
                     children: [
-                      Text(
-                        "${creator.profileIdShort} ",
-                        style: theme.textTheme.titleSmall?.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.w400),
-                      ),
+                      Text("${creator.profileIdShort} ", style: theme.textTheme.titleSmall),
                       SizedBox(
                         width: 180,
-                        child: Text(
-                          creator.nameMaxLengthAware,
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Text(creator.nameMaxLengthAware, style: theme.textTheme.titleMedium, overflow: TextOverflow.ellipsis),
                       ),
                     ],
                   ),
                 ),
+                SizedBox(height: 3),
                 Row(
                   children: [
                     if (post.createdDateTime != null)

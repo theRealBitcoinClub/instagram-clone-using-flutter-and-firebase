@@ -58,10 +58,10 @@ class SettingsButton extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             text,
-            style: theme.textTheme.labelLarge?.copyWith(
+            style: theme.textTheme.labelMedium!.copyWith(
               // Use a standard text style from theme
               color: buttonTextColor,
-              fontWeight: FontWeight.bold, // Keep bold if that's the desired style
+              // fontWeight: FontWeight.bold, // Keep bold if that's the desired style
             ),
           ),
         ),

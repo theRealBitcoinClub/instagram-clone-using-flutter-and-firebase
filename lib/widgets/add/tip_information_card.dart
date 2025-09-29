@@ -54,8 +54,8 @@ class TipInformationCard extends ConsumerWidget {
               child: Column(
                 children: [
                   Text(
-                    '⚠️ Custom tip ' + (isPostCreationNotReply ? '' : '& receiver ') + 'for this post only',
-                    style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(222), fontStyle: FontStyle.italic),
+                    'Custom tip ' + (isPostCreationNotReply ? '' : '& receiver ') + 'for this post only',
+                    style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(222)),
                   ),
                   const SizedBox(height: 8),
                 ],

@@ -15,7 +15,7 @@ class MediaPlaceholderWidget extends StatelessWidget {
     required this.onTap,
     this.iconSize = 50,
     this.borderRadius = 12,
-    this.borderWidth = 1.5,
+    this.borderWidth = 1,
   }) : super(key: key);
 
   @override
@@ -34,16 +34,16 @@ class MediaPlaceholderWidget extends StatelessWidget {
             decoration: BoxDecoration(
               color: colorScheme.surface,
               borderRadius: BorderRadius.circular(borderRadius),
-              border: Border.all(color: colorScheme.primary, width: borderWidth),
+              border: Border.all(color: colorScheme.onSurface, width: borderWidth),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(iconData, size: iconSize, color: colorScheme.primary),
+                Icon(iconData, size: iconSize, color: colorScheme.onSurface),
                 const SizedBox(height: 8),
                 Text(
                   label,
-                  style: textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w400),
+                  style: textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant),
                   textAlign: TextAlign.center,
                 ),
               ],

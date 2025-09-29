@@ -78,7 +78,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
       setState(() {
         if (_countdownSeconds > 0) {
           if (_countdownSeconds == 60) showSnackBar("http://psfoundation.info made this feature possible!", context, type: SnackbarType.info);
-          if (_countdownSeconds == 49) showSnackBar("BCH first block is block number #478558", context, type: SnackbarType.info);
+          if (_countdownSeconds == 49) showSnackBar("BCH fork block is number #478558", context, type: SnackbarType.info);
           if (_countdownSeconds == 38) showSnackBar("BCH independence day is August 1st 2017", context, type: SnackbarType.info);
           if (_countdownSeconds == 27) showSnackBar("Satoshi Nakamoto is the real Bitcoin Jesus", context, type: SnackbarType.info);
           if (_countdownSeconds == 16) showSnackBar("BCH birthday is 3rd January 2009", context, type: SnackbarType.info);

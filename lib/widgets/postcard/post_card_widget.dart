@@ -50,7 +50,6 @@ class _PostCardState extends ConsumerState<PostCard> {
   bool _hasSelectedTopic = false;
   late List<bool> _selectedHashtags;
   late TextEditingController _textEditController;
-  bool hasRegisteredAsUser = false;
   bool _showYouTubePlayer = false;
   bool _isAnimatingYouTube = false;
   bool _previousShowSendState = false; // Track previous state

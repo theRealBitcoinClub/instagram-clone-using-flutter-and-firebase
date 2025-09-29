@@ -25,7 +25,7 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
       centerTitle: true,
       toolbarHeight: height,
       leading: Padding(padding: EdgeInsetsGeometry.fromLTRB(9, 0, 0, 0), child: BurnerBalanceWidget()),
-      leadingWidth: 81,
+      leadingWidth: 99,
       title: Row(
         children: [
           const Spacer(),

@@ -204,13 +204,15 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
           height: fixedHeight,
           color: _colorScheme.surface,
           child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(_colorScheme.primary)),
-                const SizedBox(height: 16),
-                Text('Checking video availability...', style: _textTheme.bodyMedium?.copyWith(color: _colorScheme.onSurface)),
-              ],
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(_colorScheme.primary)),
+                  const SizedBox(height: 16),
+                  Text('Checking video availability...', style: _textTheme.bodyMedium?.copyWith(color: _colorScheme.onSurface)),
+                ],
+              ),
             ),
           ),
         );
@@ -230,29 +232,31 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.remove_circle_outline, color: _colorScheme.error, size: 48),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Video Removed',
-                    style: _textTheme.bodyLarge?.copyWith(color: _colorScheme.onSurface, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'This video has been removed from YouTube and is no longer available.',
-                    style: _textTheme.bodyMedium?.copyWith(color: _colorScheme.onSurface.withOpacity(0.8)),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Video ID: ${widget.videoId}',
-                    style: _textTheme.bodySmall?.copyWith(color: _colorScheme.onSurface.withOpacity(0.6)),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.remove_circle_outline, color: _colorScheme.error, size: 48),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Video Removed',
+                      style: _textTheme.bodyLarge?.copyWith(color: _colorScheme.onSurface, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'This video has been removed from YouTube and is no longer available.',
+                      style: _textTheme.bodyMedium?.copyWith(color: _colorScheme.onSurface.withOpacity(0.8)),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Video ID: ${widget.videoId}',
+                      style: _textTheme.bodySmall?.copyWith(color: _colorScheme.onSurface.withOpacity(0.6)),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -281,40 +285,42 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
       color: _colorScheme.surface,
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Video Playback Error',
-                style: _textTheme.bodyLarge?.copyWith(color: _colorScheme.onSurface, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'This video cannot be played in the embedded player due to copyright or embedding restrictions.',
-                style: _textTheme.bodyMedium?.copyWith(color: _colorScheme.onSurface.withOpacity(0.8)),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Video ID: $_youtubeErrorVideoId',
-                style: _textTheme.bodySmall?.copyWith(color: _colorScheme.onSurface.withOpacity(0.6)),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: _openInBrowser,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _colorScheme.error,
-                  foregroundColor: _colorScheme.onError,
-                  elevation: 4,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.all(12.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Video Playback Error',
+                  style: _textTheme.bodyLarge?.copyWith(color: _colorScheme.onSurface, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                 ),
-                icon: Icon(Icons.open_in_browser, size: 20),
-                label: Text('Open in Browser', style: _textTheme.bodyMedium),
-              ),
-            ],
+                const SizedBox(height: 9),
+                Text(
+                  'This video cannot be played in the embedded player due to copyright or embedding restrictions.',
+                  style: _textTheme.bodyMedium?.copyWith(color: _colorScheme.onSurface.withOpacity(0.8)),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Video ID: $_youtubeErrorVideoId',
+                  style: _textTheme.bodySmall?.copyWith(color: _colorScheme.onSurface.withOpacity(0.6)),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 9),
+                ElevatedButton.icon(
+                  onPressed: _openInBrowser,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _colorScheme.error,
+                    foregroundColor: _colorScheme.onError,
+                    elevation: 4,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                  icon: Icon(Icons.open_in_browser, size: 20),
+                  label: Text('Open in Browser', style: _textTheme.bodyMedium),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -383,13 +389,15 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
       height: height,
       color: _colorScheme.surface,
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(_colorScheme.primary)),
-            const SizedBox(height: 16),
-            Text('Loading video...', style: _textTheme.bodyMedium?.copyWith(color: _colorScheme.onSurface)),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(_colorScheme.primary)),
+              const SizedBox(height: 16),
+              Text('Loading video...', style: _textTheme.bodyMedium?.copyWith(color: _colorScheme.onSurface)),
+            ],
+          ),
         ),
       ),
     );
@@ -402,25 +410,27 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, color: _colorScheme.error, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                'Failed to load video',
-                style: _textTheme.bodyLarge?.copyWith(color: _colorScheme.onSurface, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                error,
-                style: _textTheme.bodySmall?.copyWith(color: _colorScheme.onSurface.withOpacity(0.7)),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, color: _colorScheme.error, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load video',
+                  style: _textTheme.bodyLarge?.copyWith(color: _colorScheme.onSurface, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  error,
+                  style: _textTheme.bodySmall?.copyWith(color: _colorScheme.onSurface.withOpacity(0.7)),
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -432,17 +442,19 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
       height: height,
       color: _colorScheme.surface.withOpacity(0.5),
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: _colorScheme.onSurface.withOpacity(0.5), size: 36),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: _textTheme.bodyMedium?.copyWith(color: _colorScheme.onSurface.withOpacity(0.7)),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: _colorScheme.onSurface.withOpacity(0.5), size: 36),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: _textTheme.bodyMedium?.copyWith(color: _colorScheme.onSurface.withOpacity(0.7)),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );

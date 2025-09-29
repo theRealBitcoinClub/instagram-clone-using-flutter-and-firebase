@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
+import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/widgets/profile/header/stat_widget.dart';
 
 import '../../../memo/model/memo_model_creator.dart';
@@ -59,8 +60,11 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: GestureDetector(
-                        onTap: () =>
-                            WebViewNavigator.navigateTo(ref, WebViewShow.url, MemoBitcoinBase.explorerUrl + creator.bchAddressCashtokenAware),
+                        onTap: () => WebViewNavigator.navigateTo(
+                          ref,
+                          WebViewShow.url,
+                          MemoBitcoinBase.explorerUrl + (ref.read(userProvider)!.bchAddressCashtokenAware ?? creator.bchAddressCashtokenAware),
+                        ),
 
                         child: StatWidget(title: 'BCH', count: creator.balanceBch, theme: theme),
                       ),

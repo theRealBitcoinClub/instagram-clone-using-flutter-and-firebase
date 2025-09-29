@@ -59,7 +59,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
   void dispose() {
     // Cancel and dispose the timer when the widget is disposed
     _countdownTimer?.cancel();
-    if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
+    // if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
     super.dispose();
   }
 
@@ -519,6 +519,11 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                       ],
                     ),
                   ),
+                  if (_selectedFile != null)
+                    AnimGrowFade(
+                      show: _selectedFile != null,
+                      child: Column(children: [SizedBox(height: 16), Image.file(_selectedFile!, width: 500)]),
+                    ),
                 ],
               ),
             ),

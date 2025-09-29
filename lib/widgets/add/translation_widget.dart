@@ -203,33 +203,39 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
   }
 
   Widget _buildProgressIndicator() {
-    final isTranslating = ref.watch(isTranslatingProvider);
-
-    return LinearProgressIndicator(
-      minHeight: 2,
-      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
-      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
-      borderRadius: BorderRadius.circular(2),
+    return Column(
+      children: [
+        SizedBox(height: 4),
+        LinearProgressIndicator(
+          minHeight: 4,
+          backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+          valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ],
     );
   }
 
   Widget _buildErrorText() {
-    return Text(
-      'Unsupported language, publish text as is or cancel to retry',
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.error),
+    return Column(
+      children: [
+        SizedBox(height: 4),
+        Text(
+          'Unsupported language, publish text as is or cancel to retry',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.error),
+        ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final isTranslating = ref.watch(isTranslatingProvider);
-    const animDuration = const Duration(milliseconds: 250);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AnimGrowFade(
           show: !_languageDetectionFailed && !_isAutoDetecting,
-          // duration: animDuration,
           child: Column(
             children: [
               Row(children: [_buildTargetLanguageSelector()]),
@@ -237,9 +243,9 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
             ],
           ),
         ),
+        const SizedBox(height: 4),
         AnimGrowFade(show: _languageDetectionFailed && !_isAutoDetecting, child: _buildErrorText()),
         AnimGrowFade(show: isTranslating || _isAutoDetecting, child: _buildProgressIndicator()),
-        const SizedBox(height: 6),
       ],
     );
   }

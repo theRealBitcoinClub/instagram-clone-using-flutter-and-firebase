@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 
 enum SnackbarType {
-  success(duration: Duration(seconds: 4), backgroundColor: Color(0xFF1B5E20), icon: Icons.check_circle_outline_rounded),
-  error(duration: Duration(seconds: 6), backgroundColor: Color(0xFFB71C1C), icon: Icons.error_outline_rounded),
-  info(duration: Duration(seconds: 5), backgroundColor: Color(0xFFE65100), icon: Icons.info_outline_rounded);
+  success(duration: Duration(seconds: 5), backgroundColor: Color(0xFF1B5E20), icon: Icons.check_circle_outline_rounded),
+  error(duration: Duration(seconds: 7), backgroundColor: Color(0xFFB71C1C), icon: Icons.error_outline_rounded),
+  info(duration: Duration(seconds: 6), backgroundColor: Color(0xFFE65100), icon: Icons.info_outline_rounded);
 
   final Duration duration;
   final Color backgroundColor;
@@ -44,7 +44,7 @@ extension SnackBarExtensions on BuildContext {
         backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating, // Changed to floating
         elevation: 6.0,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)), // All corners rounded for floating
         ),

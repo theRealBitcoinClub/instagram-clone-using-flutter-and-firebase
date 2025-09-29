@@ -2,8 +2,10 @@
 
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/provider/navigation_providers.dart';
@@ -261,9 +263,9 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     });
   }
 
-  void refreshProfileDataAndStartBalanceTimer(int currentTabIndex, String profileId, bool isOwnProfile) {
+  void refreshProfileDataAndStartBalanceTimer(int currentTabIndex, String profileId, bool isOwnProfile, BuildContext ctx) {
     // Schedule the operation to happen after build
-    Future.microtask(() {
+    ctx.afterBuild(refreshUI: false, () {
       if (currentTabIndex == 2) {
         if (_lastTabIndex != currentTabIndex || _lastProfileIdRefreshRequest != profileId) {
           refreshUserRegisteredFlag();

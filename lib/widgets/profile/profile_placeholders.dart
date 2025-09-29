@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_avif/flutter_avif.dart';
+import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 
 // Helper for logging errors consistently if needed within these placeholder widgets
 void _logPlaceholderError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -17,25 +18,9 @@ class ProfileLoadingScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
-        elevation: 0,
-        // Optional: Add a title if you want something more than a blank app bar
-        // title: Text(message, style: theme.appBarTheme.titleTextStyle),
-      ),
-      body: Center(
-        child: AvifImage(image: AssetAvifImage("assets/images/icon_round_loading_256.avif")),
-        // child: Image.asset("assets/icon_round_200.png", height: 120),
-        // Column(
-        //   mainAxisAlignment: MainAxisAlignment.center,
-        //   children: [
-        //     const CircularProgressIndicator(),
-        //     const SizedBox(height: 20),
-        //     Text(message, style: theme.textTheme.titleMedium),
-        //   ],
-        // ),
-      ),
+      backgroundColor: Colors.black,
+      appBar: AppBarBurnMahakkaTheme(),
+      body: Center(child: AvifImage(image: AssetAvifImage("assets/images/icon_round_loading_256.avif"), height: 200, width: 200)),
     );
   }
 }

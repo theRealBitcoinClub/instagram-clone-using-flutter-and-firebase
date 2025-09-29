@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
-import 'package:mahakka/widgets/burner_balance_widget.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:mahakka/widgets/circular_loading_overlay.dart';
 
 import '../provider/media_selection_notifier.dart';
 import '../theme_provider.dart';
@@ -91,22 +91,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         children: [
           Scaffold(
             backgroundColor: theme.scaffoldBackgroundColor,
-            appBar: AppBar(
-              toolbarHeight: 50,
-              title: Row(
-                children: [
-                  BurnerBalanceWidget(),
-                  Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      launchUrl(Uri.parse('https://mahakka.com'));
-                    },
-                    child: Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
-                  ),
-                ],
-              ),
-              actions: [_buildMenuTheme(currentThemeState, theme)],
-            ),
+            appBar: AppBarBurnMahakkaTheme(),
             body: SafeArea(
               child: Column(
                 children: [
@@ -124,23 +109,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
               ),
             ),
           ),
-          if (isPublishing)
-            Container(
-              color: Colors.black.withOpacity(0.5), // 50% alpha black
-              width: double.infinity,
-              height: double.infinity,
-              child: Center(
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: colorScheme.onPrimary, // Theme color for circle
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              ),
-            ),
+          if (isPublishing) CircularLoadingOverlay(),
         ],
       ),
     );

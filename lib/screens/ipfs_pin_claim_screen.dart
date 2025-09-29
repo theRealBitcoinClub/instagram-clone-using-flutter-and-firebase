@@ -6,8 +6,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/memo/base/memo_publisher.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
+import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
@@ -324,9 +326,11 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Upload and Pin Content'),
+          toolbarHeight: AppBarBurnMahakkaTheme.height,
+          title: Text('Upload and Pin Content', style: theme.appBarTheme.titleTextStyle!.copyWith(color: colorScheme.onPrimary.withAlpha(222))),
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
+          actions: [AppBarBurnMahakkaTheme.buildThemeIcon(ref.read(themeStateProvider), ref, context)],
         ),
         body: Stack(
           children: [

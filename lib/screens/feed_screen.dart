@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/config_ipfs.dart';
 import 'package:mahakka/intros/intro_enums.dart';
@@ -8,9 +9,7 @@ import 'package:mahakka/intros/intro_state_notifier.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
-import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../intros/intro_animated_icon.dart';
 import '../intros/intro_overlay.dart';
@@ -97,30 +96,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final asyncThemeState = ref.watch(themeNotifierProvider);
-    final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
-    final ThemeData theme = currentThemeState.currentTheme;
-
     final feedState = ref.watch(feedPostsProvider);
     final shouldShowIntro = ref.read(introStateNotifierProvider.notifier).shouldShow(_introType);
 
     return Scaffold(
       backgroundColor: Colors.black.withAlpha(21),
-      appBar: AppBar(
-        centerTitle: true,
-        toolbarHeight: 50,
-        title: Row(
-          children: [
-            BurnerBalanceWidget(),
-            Spacer(),
-            GestureDetector(
-              onTap: () => launchUrl(Uri.parse('https://mahakka.com')),
-              child: Text("mahakka.com", style: theme.appBarTheme.titleTextStyle),
-            ),
-          ],
-        ),
-        actions: [_buildMenuTheme(currentThemeState, theme)],
-      ),
+      appBar: AppBarBurnMahakkaTheme(),
       body: Stack(
         children: [
           // Show progress indicator during initial rendering
@@ -165,7 +146,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 const PostCounterWidget(),
 
                 // Feed content
-                Expanded(child: _buildFeedBody(theme, feedState)),
+                Expanded(child: _buildFeedBody(feedState)),
               ],
             ),
           ),
@@ -203,7 +184,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     return (imgurUrl != null && imgurUrl.isNotEmpty) || (imageUrl != null && imageUrl.isNotEmpty) || (ipfsUrl != null && ipfsUrl.isNotEmpty);
   }
 
-  Widget _buildFeedBody(ThemeData theme, FeedState feedState) {
+  Widget _buildFeedBody(FeedState feedState) {
+    ThemeData theme = Theme.of(context);
     if (feedState.posts.isEmpty && !feedState.isLoadingInitial && !feedState.isLoadingMore) {
       return _buildRefreshableNoPostsWidget(theme, _widgetNoFeed(theme));
     }
@@ -330,17 +312,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
-  Widget _buildMenuTheme(ThemeState themeState, ThemeData theme) {
-    return // Replace your current theme IconButton with:
-    // Where you have your theme IconButton - use this:
-    IntroAnimatedIcon(
-      icon: themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined, // or your theme icon
+  Widget _buildMenuTheme(ThemeState themeState) {
+    return IntroAnimatedIcon(
+      icon: themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
       introType: IntroType.mainApp,
       introStep: IntroStep.main_theme,
-      size: 24, // Match your original icon size
-      padding: EdgeInsets.all(12), // No extra padding
+      size: 24,
+      padding: EdgeInsets.all(12),
       onTap: () {
-        // Your existing theme selection logic
         ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_theme, context);
         ref.read(themeNotifierProvider.notifier).toggleTheme();
       },

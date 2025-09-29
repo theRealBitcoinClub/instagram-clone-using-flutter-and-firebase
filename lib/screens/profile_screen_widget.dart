@@ -73,7 +73,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   void _startMinDisplayTimer() {
     _minDisplayTimeElapsed = false;
     _minDisplayTimer?.cancel();
-    _minDisplayTimer = Timer(Duration(seconds: 5), () {
+    _minDisplayTimer = Timer(Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
           _minDisplayTimeElapsed = true;
@@ -107,9 +107,9 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
         return profileDataAsync.when(
           data: (profileData) {
             final dataReady = !profileData.isLoading && profileData.postsLoaded;
-            final canDisplay = _minDisplayTimeElapsed && dataReady;
+            final hasSeenLoadingEnough = _minDisplayTimeElapsed && dataReady;
 
-            if (!canDisplay) {
+            if (!hasSeenLoadingEnough) {
               return ProfileLoadingScaffold(theme: theme, message: dataReady ? "Finishing up..." : "Loading Posts...");
             }
 
@@ -192,9 +192,10 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
     final isOwnProfile = loggedInUser?.profileIdMemoBch == creator.id;
 
-    Future.microtask(() {
-      ref.read(profileDataProvider.notifier).refreshProfileDataAndStartBalanceTimer(currentTabIndex, creator.id, isOwnProfile);
-    });
+    // context.afterBuild(refreshUI: true, () {
+    ref.read(profileDataProvider.notifier).refreshProfileDataAndStartBalanceTimer(currentTabIndex, creator.id, isOwnProfile, context);
+    // _updateViewMode(1);
+    // });
 
     return Scaffold(
       key: ValueKey("profile_scaffold_${creator.id}"),

@@ -2,13 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/providers/webview_providers.dart';
-import 'package:mahakka/tab_item_data.dart';
 
 import '../../provider/profile_providers.dart';
+import '../../theme_provider.dart';
 
 class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final MemoModelCreator? creator;
@@ -26,21 +27,28 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ThemeData theme = Theme.of(context);
+    final currentThemeState = ref.watch(themeStateProvider);
+    final ThemeData theme = currentThemeState.currentTheme;
     final ColorScheme colorScheme = theme.colorScheme;
 
     return AppBar(
-      toolbarHeight: 50,
+      toolbarHeight: AppBarBurnMahakkaTheme.height,
       elevation: 4,
       centerTitle: false,
       titleSpacing: NavigationToolbar.kMiddleSpacing,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () {
-          ref.read(profileTargetIdProvider.notifier).state = null;
-          ref.read(tabIndexProvider.notifier).setTab(AppTab.feed.tabIndex);
-        },
-      ),
+      leading: isOwnProfile
+          ? IconButton(icon: const Icon(Icons.qr_code_scanner_rounded), tooltip: "Show Deposit QR", onPressed: onShowBchQrDialog)
+          : IconButton(
+              icon: const Icon(Icons.home_filled),
+              tooltip: "View My Profile",
+              onPressed: () {
+                ref.read(profileTargetIdProvider.notifier).state = null;
+                context.afterBuild(refreshUI: true, () {
+                  ref.invalidate(profileDataProvider); // Invalidate first
+                  ref.refresh(profileDataProvider); // Then refresh
+                });
+              },
+            ),
       title: creator?.id != null && creator!.id.isNotEmpty
           ? TextButton(
               onPressed: () {
@@ -66,25 +74,10 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   ) ??
                   theme.textTheme.bodySmall?.copyWith(color: (theme.textTheme.bodySmall?.color ?? colorScheme.onSurface).withOpacity(0.7)),
             ),
-      actions: [
-        if (isOwnProfile)
-          IconButton(icon: const Icon(Icons.qr_code_scanner_rounded), tooltip: "Show Deposit QR", onPressed: onShowBchQrDialog)
-        else
-          IconButton(
-            icon: const Icon(Icons.home_filled),
-            tooltip: "View My Profile",
-            onPressed: () {
-              ref.read(profileTargetIdProvider.notifier).state = null;
-              context.afterBuild(refreshUI: true, () {
-                ref.invalidate(profileDataProvider); // Invalidate first
-                ref.refresh(profileDataProvider); // Then refresh
-              });
-            },
-          ),
-      ],
+      actions: [AppBarBurnMahakkaTheme.buildThemeIcon(currentThemeState, ref, context)],
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(40);
+  Size get preferredSize => const Size.fromHeight(AppBarBurnMahakkaTheme.height);
 }

@@ -1,10 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/config_ipfs.dart';
 import 'package:mahakka/provider/url_input_verification_notifier.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/screens/ipfs_pin_claim_screen.dart';
+import 'package:mahakka/theme_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../widgets/animations/animated_grow_fade_in.dart';
@@ -24,23 +26,24 @@ class IPFSGalleryScreen extends ConsumerWidget {
     final hasSelection = selectedCid != null;
     var themeData = Theme.of(context);
     final TextTheme textTheme = themeData.textTheme;
-    final isDarkTheme = themeData.brightness == Brightness.dark;
-    final backgroundColor = isDarkTheme ? Colors.black.withAlpha(133) : Colors.white.withAlpha(133);
-    final validCids = ipfsCids.where((cid) => cid.isNotEmpty).toList();
+    final backgroundColor = ref.watch(isDarkModeProvider) ? Colors.black.withAlpha(133) : Colors.white.withAlpha(133);
+    final validCids = ipfsCids.reversed.where((cid) => cid.isNotEmpty).toList();
     var colorScheme = themeData.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: AppBarBurnMahakkaTheme.height,
         leadingWidth: 50,
         title: Text(
           hasSelection ? '${selectedCid}' : 'Tap image to select or create new one',
           style: textTheme.titleSmall!.copyWith(letterSpacing: 0.2, fontWeight: FontWeight.w400, fontSize: 14, color: colorScheme.onPrimary),
         ),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
+        leading: IconButton(icon: const Icon(Icons.cancel_outlined), onPressed: () => Navigator.pop(context)),
         actions: [
+          AppBarBurnMahakkaTheme.buildThemeIcon(ref.read(themeStateProvider), ref, context),
           if (!hasSelection)
             IconButton(
-              icon: Icon(Icons.add, color: colorScheme.onPrimary),
+              icon: Icon(Icons.upload_outlined, color: colorScheme.onPrimary),
               onPressed: () => _createNewIpfsPin(context),
               tooltip: 'Create new IPFS pin',
             )
@@ -247,7 +250,7 @@ class GalleryActionButtonRow extends ConsumerWidget {
               child: Row(
                 children: [
                   IconAction(text: "CANCEL", onTap: () => Navigator.of(context).pop(), type: IAB.cancel, icon: Icons.cancel_outlined),
-                  IconAction(text: "CREATE", onTap: () => _createNewIpfsPin(context), type: IAB.success, icon: Icons.upload),
+                  IconAction(text: "CREATE", onTap: () => _createNewIpfsPin(context), type: IAB.success, icon: Icons.upload_outlined),
                 ],
               ),
             ),

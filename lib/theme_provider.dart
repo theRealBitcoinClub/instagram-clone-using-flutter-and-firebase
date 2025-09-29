@@ -80,3 +80,11 @@ class ThemeNotifier extends StateNotifier<AsyncValue<ThemeState>> {
 final themeNotifierProvider = StateNotifierProvider<ThemeNotifier, AsyncValue<ThemeState>>((ref) {
   return ThemeNotifier();
 });
+// Helper providers to reduce boilerplate
+final themeStateProvider = Provider<ThemeState>((ref) {
+  return ref.watch(themeNotifierProvider).maybeWhen(data: (state) => state, orElse: () => defaultThemeState);
+});
+
+final isDarkModeProvider = Provider<bool>((ref) {
+  return ref.watch(themeStateProvider).isDarkMode;
+});

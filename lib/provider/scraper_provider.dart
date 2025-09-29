@@ -63,7 +63,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     try {
       // Execute the scraping tasks.
       bool saveToFirebase = true;
-      bool deepScrape = true;
+      bool deepScrape = false;
       var cacheId = "letsgonownew";
       //TODO SCRAPER RANDOMLY SELECTS OFFSETS SO THAT DIFFERENT USERS SCRAPE DIFFERENT OFFSETS?
       if (kDebugMode) {
@@ -80,12 +80,12 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
         }
       } else {
         try {
-          await MemoScraperTopic(ref, saveToFirebase).startScrapeTopics(cacheId + "topics", 0, 0);
+          await MemoScraperTopic(ref, false).startScrapeTopics(cacheId + "topics", 0, 0);
         } catch (e) {
           print("BackgroundScraper: An error occurred during TOPIC scraping: $e");
         }
         try {
-          await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], 25, 0);
+          await MemoScraperTag(cacheId + "recent", ref, false).startScrapeTags(["/recent"], 25, 0);
         } catch (e) {
           print("BackgroundScraper: An error occurred during TAG scraping: $e");
         }

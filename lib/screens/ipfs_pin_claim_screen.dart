@@ -231,7 +231,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
         setState(() {
           _error = 'Insufficient balance for IPFS operation. Please add more BCH to your wallet.';
           _isCheckingBalance = false;
-          showQrCodeDialog(context: context, user: ref.read(userProvider), memoOnly: true);
+          showQrCodeDialog(ctx: context, user: ref.read(userProvider), memoOnly: true);
           showSnackBar(_error!, context, type: SnackbarType.error);
         });
         return;

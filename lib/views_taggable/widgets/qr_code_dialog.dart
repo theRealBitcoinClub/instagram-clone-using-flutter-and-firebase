@@ -1,10 +1,7 @@
-// lib/views_taggable/widgets/qr_code_dialog.dart
-
 import 'dart:async';
 
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:clipboard/clipboard.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
@@ -39,35 +36,41 @@ class QrCodeDialog extends ConsumerStatefulWidget {
 class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   late bool _isCashtokenFormat;
   late Future<void> _initFuture;
-  Timer? _balanceRefreshTimer;
-  final Duration _refreshInterval = Duration(seconds: kDebugMode ? 3 : 3);
   bool _isToggleEnabled = true;
+  var toggleKey;
 
   @override
   void initState() {
     super.initState();
-    _initFuture = _loadToggleState();
+    toggleKey = 'qr_code_toggle_state${widget.memoProfileId}';
+    _initFuture = _loadToggleState(context);
   }
 
   @override
   void dispose() {
-    _balanceRefreshTimer?.cancel();
+    // Stop QR dialog refresh when dialog is disposed
+    ref.read(profileDataProvider.notifier).stopQrDialogRefresh();
     super.dispose();
   }
 
-  Future<void> _loadToggleState() async {
+  Future<void> _loadToggleState(BuildContext ctx) async {
     final prefs = await SharedPreferences.getInstance();
     _isToggleEnabled = widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty;
     if (widget.memoOnly) _isToggleEnabled = false;
     final bool defaultState = _isToggleEnabled;
 
-    _isCashtokenFormat = prefs.getBool('qr_code_toggle_state') ?? defaultState;
+    // Only use saved state if it's valid for current dialog
+    final savedState = prefs.getBool(toggleKey);
+    _isCashtokenFormat = (savedState != null && _isToggleEnabled) ? savedState : defaultState;
 
+    // Reset to default if saved state is invalid for current address
     if (_isCashtokenFormat && !_isToggleEnabled) {
       _isCashtokenFormat = false;
+      await _saveToggleState(false);
     }
-    // Start/restart the refresh timer for the selected tab
-    _startBalanceRefresh(_isCashtokenFormat);
+
+    // Start QR dialog refresh with the selected mode
+    _startQrDialogRefresh(ctx);
 
     if (mounted) {
       setState(() {});
@@ -76,7 +79,12 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 
   Future<void> _saveToggleState(bool value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('qr_code_toggle_state', value);
+    await prefs.setBool(toggleKey, value);
+  }
+
+  void _startQrDialogRefresh(BuildContext ctx) {
+    final profileNotifier = ref.read(profileDataProvider.notifier);
+    profileNotifier.startQrDialogRefresh(_isCashtokenFormat, ctx);
   }
 
   String convertToBchFormat(String legacyAddress) {
@@ -118,42 +126,16 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     }
   }
 
-  void _startBalanceRefresh(bool isCashtokenTab) {
-    _balanceRefreshTimer?.cancel();
+  void _toggleFormat(bool isCashtoken, BuildContext ctx) async {
+    if (!mounted) return;
 
-    final profileNotifier = ref.read(profileDataProvider.notifier);
-    final isAutoRefreshRunning = profileNotifier.isAutoRefreshRunning();
-
-    // Only start refresh timer if general auto-refresh isn't running
-    if (!isAutoRefreshRunning) {
-      _balanceRefreshTimer = Timer.periodic(_refreshInterval, (_) {
-        setState(() {
-          _refreshBalance(isCashtokenTab);
-        });
-      });
-    }
-  }
-
-  void _refreshBalance(bool isCashtokenTab) {
-    final profileNotifier = ref.read(profileDataProvider.notifier);
-
-    if (isCashtokenTab) {
-      profileNotifier.refreshMahakkaBalance();
-    } else {
-      profileNotifier.refreshMemoBalance();
-    }
-  }
-
-  void _toggleFormat(bool isCashtoken) async {
     setState(() {
       _isCashtokenFormat = isCashtoken;
     });
 
-    // Immediately refresh the balance for the selected tab
-    _refreshBalance(isCashtoken);
-
-    // Start/restart the refresh timer for the selected tab
-    _startBalanceRefresh(isCashtoken);
+    // Update QR dialog refresh mode in provider
+    final profileNotifier = ref.read(profileDataProvider.notifier);
+    profileNotifier.setQrDialogMode(isCashtoken, ctx);
 
     await _saveToggleState(isCashtoken);
   }
@@ -174,8 +156,8 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
+  Widget build(BuildContext dialogCtx) {
+    final ThemeData theme = Theme.of(dialogCtx);
     final ColorScheme colorScheme = theme.colorScheme;
     final TextTheme textTheme = theme.textTheme;
 
@@ -185,7 +167,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 
     return FutureBuilder(
       future: _initFuture,
-      builder: (context, snapshot) {
+      builder: (builderCtx, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Dialog(
             child: Padding(
@@ -226,7 +208,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                     ),
                     IconButton(
                       icon: Icon(Icons.close, color: colorScheme.onSurface),
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => closeDialog(dialogCtx),
                       tooltip: 'Close',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -237,7 +219,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                 if (_isToggleEnabled) const SizedBox(height: 6),
 
                 // Tab-like selector
-                if (_isToggleEnabled) _buildTabSelector(theme, colorScheme),
+                if (_isToggleEnabled) _buildTabSelector(theme, colorScheme, dialogCtx),
 
                 const SizedBox(height: 16),
 
@@ -249,10 +231,11 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                   },
                   child: GestureDetector(
                     onTap: () {
-                      _copyToClipboard(context, addressToShow, "Address copied!");
+                      _copyToClipboard(dialogCtx, addressToShow, "Address copied!");
                     },
                     onLongPress: () {
-                      Navigator.of(context).pop();
+                      closeDialog(dialogCtx);
+                      // Navigator.of(dialogCtx).pop();
                     },
                     child: Container(
                       key: ValueKey(addressToShow),
@@ -295,7 +278,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () => _copyToClipboard(context, addressToShow, "Address copied!"),
+                        onPressed: () => _copyToClipboard(dialogCtx, addressToShow, "Address copied!"),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colorScheme.primary,
                           foregroundColor: Colors.white,
@@ -330,7 +313,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     );
   }
 
-  Widget _buildTabSelector(ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildTabSelector(ThemeData theme, ColorScheme colorScheme, dialogCtx) {
     return Container(
       height: 40,
       decoration: BoxDecoration(color: colorScheme.surfaceVariant.withOpacity(0.3), borderRadius: BorderRadius.circular(8)),
@@ -341,7 +324,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
             child: GestureDetector(
               onTap: () {
                 if (_isCashtokenFormat) {
-                  _toggleFormat(false);
+                  _toggleFormat(false, dialogCtx);
                 }
               },
               child: Container(
@@ -368,7 +351,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
             child: GestureDetector(
               onTap: () {
                 if (!_isCashtokenFormat) {
-                  _toggleFormat(true);
+                  _toggleFormat(true, dialogCtx);
                 }
               },
               child: Container(
@@ -393,14 +376,19 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
       ),
     );
   }
+
+  void closeDialog(BuildContext ctx) {
+    ref.read(profileDataProvider.notifier).stopQrDialogRefresh();
+    Navigator.of(ctx).pop();
+  }
 }
 
 // --- Simplified BCH QR Code Dialog Helper ---
-void showQrCodeDialog({required BuildContext context, MemoModelUser? user, MemoModelCreator? creator, bool memoOnly = false}) {
+void showQrCodeDialog({required BuildContext ctx, MemoModelUser? user, MemoModelCreator? creator, bool memoOnly = false}) {
   if (creator != null) {
     showDialog(
-      context: context,
-      builder: (dialogCtx) {
+      context: ctx,
+      builder: (ctx) {
         return QrCodeDialog(
           cashtokenAddress: creator.hasRegisteredAsUserFixed ? creator.bchAddressCashtokenAware : null,
           legacyAddress: creator.id,
@@ -411,8 +399,8 @@ void showQrCodeDialog({required BuildContext context, MemoModelUser? user, MemoM
     );
   } else if (user != null) {
     showDialog(
-      context: context,
-      builder: (dialogCtx) {
+      context: ctx,
+      builder: (ctx) {
         return QrCodeDialog(
           cashtokenAddress: user.bchAddressCashtokenAware,
           legacyAddress: user.legacyAddressMemoBch,

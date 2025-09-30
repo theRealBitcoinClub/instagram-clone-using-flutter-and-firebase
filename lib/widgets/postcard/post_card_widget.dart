@@ -605,7 +605,7 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   void showQrQuickDeposit(BuildContext ctx) {
-    showQrCodeDialog(context: ctx, user: ref.read(userProvider), memoOnly: true);
+    showQrCodeDialog(ctx: ctx, user: ref.read(userProvider), memoOnly: true);
   }
 
   @override

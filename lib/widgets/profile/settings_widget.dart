@@ -503,7 +503,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             String msg = MemoVerificationResponse.memoVerificationMessageFromName(profileResult['result']);
             showSnackBar(type: SnackbarType.error, "Profile: $msg", context);
           } catch (e) {
-            showQrCodeDialog(context: context, memoOnly: true, user: user);
+            showQrCodeDialog(ctx: context, memoOnly: true, user: user);
             showSnackBar("Add funds to your balance!", context, type: SnackbarType.error);
             showSnackBar(wait: true, "Name, text and image are stored on-chain, that costs tx fee!", context, type: SnackbarType.info);
           }

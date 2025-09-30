@@ -1,5 +1,3 @@
-// lib/providers/profile_providers.dart
-
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
@@ -29,16 +27,8 @@ class ProfileData {
   final PostsCategorizer categorizer;
   final bool fromCache;
   final bool postsLoaded; // Track if posts are fully loaded
-  // final DateTime? loadStartTime; // Track when loading started
 
-  ProfileData({
-    required this.creator,
-    required this.posts,
-    required this.categorizer,
-    this.fromCache = false,
-    this.postsLoaded = false,
-    // this.loadStartTime,
-  });
+  ProfileData({required this.creator, required this.posts, required this.categorizer, this.fromCache = false, this.postsLoaded = false});
 
   bool get isLoading => creator == null || !postsLoaded;
   bool get hasData => creator != null && postsLoaded && posts.isNotEmpty;
@@ -50,7 +40,6 @@ class ProfileData {
     PostsCategorizer? categorizer,
     bool? fromCache,
     bool? postsLoaded,
-    DateTime? loadStartTime,
   }) {
     return ProfileData(
       creator: creator ?? this.creator,
@@ -58,15 +47,12 @@ class ProfileData {
       categorizer: categorizer ?? this.categorizer,
       fromCache: fromCache ?? this.fromCache,
       postsLoaded: postsLoaded ?? this.postsLoaded,
-      // loadStartTime: loadStartTime ?? this.loadStartTime,
     );
   }
 }
 
 class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   Timer? _balanceRefreshTimer;
-  Timer? _mahakkaBalanceRefreshTimer;
-  Timer? _memoBalanceRefreshTimer;
   Duration _refreshBalanceInterval = Duration(seconds: kDebugMode ? 5 : 5);
   bool _isAutoRefreshRunning = false;
   DateTime? _lastRefreshTime;
@@ -75,20 +61,21 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   int? _lastTabIndex;
   bool _pendingRefresh = false;
 
+  // QR Dialog specific state
+  bool _isQrDialogOpen = false;
+  bool _isQrCashtokenMode = false;
+  Timer? _qrDialogRefreshTimer;
+  final Duration _qrRefreshInterval = Duration(seconds: kDebugMode ? 3 : 3);
+
   // Stream management for creator updates
   StreamSubscription<MemoModelCreator?>? _creatorSubscription;
   String? _currentWatchedCreatorId;
-
-  // Timer for minimum display time
-  // Timer? _minDisplayTimer;
-  // Completer<void>? _minDisplayCompleter;
 
   @override
   Future<ProfileData> build() async {
     ref.onDispose(() {
       _cancelCreatorSubscription();
-      _stopAllBalanceTimers();
-      // _minDisplayTimer?.cancel();
+      _stopAllTimers();
     });
 
     final profileId = ref.watch(_currentProfileIdProvider);
@@ -180,11 +167,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
         categorizer: PostsCategorizer.empty(),
         fromCache: !forceScrape,
         postsLoaded: false,
-        // loadStartTime: loadStartTime,
       );
-
-      // Update state immediately with creator data (posts still loading)
-      // state = AsyncValue.data(initialData);
 
       // Load posts
       final posts = await _loadPosts(profileId);
@@ -193,23 +176,13 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       final categorizer = PostsCategorizer.fromPosts(posts);
 
       // Create complete data
-      final completeData = ProfileData(
-        creator: creator,
-        posts: posts,
-        categorizer: categorizer,
-        fromCache: !forceScrape,
-        postsLoaded: true,
-        // loadStartTime: loadStartTime,
-      );
-
-      // Ensure minimum display time
-      // await _ensureMinDisplayTime(loadStartTime);
+      final completeData = ProfileData(creator: creator, posts: posts, categorizer: categorizer, fromCache: !forceScrape, postsLoaded: true);
 
       return completeData;
     } catch (e) {
       // If we have a previous state, return it as fallback
       if (state.value != null) {
-        return state.value!.copyWith(loadStartTime: loadStartTime);
+        return state.value!;
       }
       rethrow;
     }
@@ -276,9 +249,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
           startAutoRefreshBalanceProfile();
         }
 
-        // else {
-        //   stopAutoRefreshBalanceProfile();
-        // }
         // Set pending refresh flag for next build
         _pendingRefresh = true;
         _lastProfileIdRefreshRequest = profileId;
@@ -295,7 +265,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       var creatorRepository = ref.read(creatorRepositoryProvider);
       var memoModelCreator = await creatorRepository.getCreator(profileId);
       final creator = memoModelCreator;
-      // if (creator != null) { //TODO REMOVE THIS IN A FEW WEEKS WHEN ALL THE OLD USERS HAVE FIXED THE FLAG
       if (creator != null && !creator.hasRegisteredAsUserFixed) {
         await creator.refreshUserHasRegistered(ref, creatorRepository);
       }
@@ -313,24 +282,78 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     }
   }
 
-  Future<void> refreshMahakkaBalance() async {
+  Future<void> refreshMahakkaBalance(BuildContext ctx) async {
     final profileId = ref.read(_currentProfileIdProvider);
     if (profileId != null && profileId.isNotEmpty) {
       final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
       if (creator != null && creator.hasRegisteredAsUserFixed) {
         await creator.refreshBalanceMahakka(ref);
+        _notifyStateUpdate(ctx);
       }
     }
   }
 
-  Future<void> refreshMemoBalance() async {
+  Future<void> refreshMemoBalance(BuildContext ctx) async {
     final profileId = ref.read(_currentProfileIdProvider);
     if (profileId != null && profileId.isNotEmpty) {
       final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
       if (creator != null) {
         await creator.refreshBalanceMemo(ref);
+        _notifyStateUpdate(ctx);
       }
     }
+  }
+
+  void _notifyStateUpdate(BuildContext ctx) {
+    if (state.value != null && ctx.mounted) {
+      state = AsyncValue.data(state.value!);
+    }
+  }
+
+  // QR Dialog Methods
+  void startQrDialogRefresh(bool isCashtokenMode, BuildContext ctx) {
+    _isQrDialogOpen = true;
+    _isQrCashtokenMode = isCashtokenMode;
+
+    _stopQrDialogTimer(); // Stop existing timer first
+
+    print("INFO: Starting QR dialog refresh timer (cashtoken: $isCashtokenMode)");
+
+    _qrDialogRefreshTimer = Timer.periodic(_qrRefreshInterval, (_) {
+      if (_isQrDialogOpen && ctx.mounted) {
+        _refreshQrDialogBalance(ctx);
+      }
+    });
+
+    // Do immediate refresh
+    _refreshQrDialogBalance(ctx);
+  }
+
+  void stopQrDialogRefresh() {
+    _isQrDialogOpen = false;
+    _stopQrDialogTimer();
+    print("INFO: Stopped QR dialog refresh timer");
+  }
+
+  void setQrDialogMode(bool isCashtokenMode, BuildContext ctx) {
+    _isQrCashtokenMode = isCashtokenMode;
+    // Immediate refresh when mode changes
+    _refreshQrDialogBalance(ctx);
+  }
+
+  void _refreshQrDialogBalance(BuildContext ctx) {
+    if (!_isQrDialogOpen || !ctx.mounted) return;
+
+    if (_isQrCashtokenMode) {
+      refreshMahakkaBalance(ctx);
+    } else {
+      refreshMemoBalance(ctx);
+    }
+  }
+
+  void _stopQrDialogTimer() {
+    _qrDialogRefreshTimer?.cancel();
+    _qrDialogRefreshTimer = null;
   }
 
   bool isAutoRefreshRunning() {
@@ -339,31 +362,17 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
 
   void stopAutoRefreshBalanceProfile() {
     if (!_isAutoRefreshRunning) return;
-    _stopAllBalanceTimers(stopProfileRefresh: true);
+    _stopProfileRefreshTimer();
     _isAutoRefreshRunning = false;
   }
 
   void startAutoRefreshBalanceProfile() {
     if (_isAutoRefreshRunning) return;
 
-    _stopAllBalanceTimers(stopProfileRefresh: true);
+    _stopProfileRefreshTimer();
     _isAutoRefreshRunning = true;
     _startBalanceRefreshTimerProfile();
   }
-  //
-  // void startAutoRefreshMahakkaBalanceQrDialog() {
-  //   if (!_isAutoRefreshRunning) {
-  //     _stopAllBalanceTimers();
-  //     _startMahakkaBalanceRefreshTimerQrDialog();
-  //   }
-  // }
-  //
-  // void startAutoRefreshMemoBalanceQrDialog() {
-  //   if (!_isAutoRefreshRunning) {
-  //     _stopAllBalanceTimers();
-  //     _startMemoBalanceRefreshTimerQrDialog();
-  //   }
-  // }
 
   void _startBalanceRefreshTimerProfile() {
     _balanceRefreshTimer?.cancel();
@@ -372,31 +381,14 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     });
   }
 
-  // void _startMahakkaBalanceRefreshTimerQrDialog() {
-  //   _mahakkaBalanceRefreshTimer?.cancel();
-  //   _mahakkaBalanceRefreshTimer = Timer.periodic(_refreshBalanceInterval, (_) async {
-  //     await _refreshMahakkaBalancePeriodicallyOnQrDialog();
-  //   });
-  // }
-  //
-  // void _startMemoBalanceRefreshTimerQrDialog() {
-  //   _memoBalanceRefreshTimer?.cancel();
-  //   _memoBalanceRefreshTimer = Timer.periodic(_refreshBalanceInterval, (_) async {
-  //     await _refreshMemoBalancePeriodicallyOnQrDialog();
-  //   });
-  // }
+  void _stopProfileRefreshTimer() {
+    _balanceRefreshTimer?.cancel();
+    _balanceRefreshTimer = null;
+  }
 
-  void _stopAllBalanceTimers({bool stopProfileRefresh = false}) {
-    if (stopProfileRefresh) {
-      _balanceRefreshTimer?.cancel();
-      _balanceRefreshTimer = null;
-    }
-
-    _mahakkaBalanceRefreshTimer?.cancel();
-    _memoBalanceRefreshTimer?.cancel();
-
-    _mahakkaBalanceRefreshTimer = null;
-    _memoBalanceRefreshTimer = null;
+  void _stopAllTimers() {
+    _stopProfileRefreshTimer();
+    _stopQrDialogTimer();
   }
 
   Future<void> _refreshBalancesPeriodicallyOnProfile() async {
@@ -416,43 +408,6 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       print('Periodic balance refresh failed: $e');
     }
   }
-
-  //
-  // Future<void> _refreshMahakkaBalancePeriodicallyOnQrDialog() async {
-  //   final profileId = ref.read(_currentProfileIdProvider);
-  //   if (profileId == null || profileId.isEmpty || state.isLoading) {
-  //     return;
-  //   }
-  //
-  //   try {
-  //     final currentData = state.value;
-  //     if (currentData != null && currentData.creator != null && currentData.creator!.hasRegisteredAsUser) {
-  //       Future.microtask(() async {
-  //         await refreshMahakkaBalance();
-  //       });
-  //     }
-  //   } catch (e) {
-  //     print('Periodic Mahakka balance refresh failed: $e');
-  //   }
-  // }
-  //
-  // Future<void> _refreshMemoBalancePeriodicallyOnQrDialog() async {
-  //   final profileId = ref.read(_currentProfileIdProvider);
-  //   if (profileId == null || profileId.isEmpty || state.isLoading) {
-  //     return;
-  //   }
-  //
-  //   try {
-  //     final currentData = state.value;
-  //     if (currentData != null && currentData.creator != null) {
-  //       Future.microtask(() async {
-  //         await refreshMemoBalance();
-  //       });
-  //     }
-  //   } catch (e) {
-  //     print('Periodic Memo balance refresh failed: $e');
-  //   }
-  // }
 }
 
 // Keep postsStreamProvider for other parts of the app that need the stream

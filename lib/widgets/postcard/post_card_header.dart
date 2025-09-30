@@ -30,15 +30,15 @@ class PostCardHeader extends ConsumerWidget {
     final displayScore = updatedScore ?? post.popularityScore;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12).copyWith(right: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12).copyWith(right: 3),
       child: Row(
         children: [
           CachedAvatar(
             key: ValueKey('post_avatar_${creator.id}_${post.id}'), // Include refresh state in key
             creatorId: creator.id,
-            radius: 26,
+            radius: 27,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 9),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,7 +50,7 @@ class PostCardHeader extends ConsumerWidget {
                     children: [
                       Text("${creator.profileIdShort} ", style: theme.textTheme.titleSmall),
                       SizedBox(
-                        width: 180,
+                        width: 171,
                         child: Text(creator.nameMaxLengthAware, style: theme.textTheme.titleMedium, overflow: TextOverflow.ellipsis),
                       ),
                     ],
@@ -75,12 +75,12 @@ class PostCardHeader extends ConsumerWidget {
           ),
           PopularityScoreWidget(initialScore: displayScore, postId: post.id),
           // Text("${post.popularityScore}", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400)),
-          SizedBox(width: 4),
+          SizedBox(width: 3),
           IconButton(
-            padding: EdgeInsets.all(10),
+            padding: EdgeInsets.all(9),
             icon: const Icon(Icons.thumb_up_alt_outlined),
             onPressed: onLikePostTipCreator, // This is for the "Tip Creator" action
-            iconSize: 22,
+            iconSize: 21,
             visualDensity: VisualDensity.compact,
           ),
         ],

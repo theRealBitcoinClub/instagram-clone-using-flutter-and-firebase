@@ -12,12 +12,14 @@ class WrappedAnimatedIntroTarget extends ConsumerStatefulWidget {
   final VoidCallback? onTap;
   final Duration animationDuration;
   final double animationScale;
+  final bool? doNotAnimate;
 
   const WrappedAnimatedIntroTarget({
     Key? key,
     required this.child,
     required this.introType,
     required this.introStep,
+    this.doNotAnimate,
     this.onTap,
     this.animationDuration = const Duration(milliseconds: 1200),
     this.animationScale = 1.1,
@@ -35,6 +37,7 @@ class _WrappedAnimatedIntroTargetState extends ConsumerState<WrappedAnimatedIntr
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(duration: widget.animationDuration, vsync: this);
     _scaleAnimation = Tween<double>(
       begin: 1.0,
@@ -81,7 +84,7 @@ class _WrappedAnimatedIntroTargetState extends ConsumerState<WrappedAnimatedIntr
     return Consumer(
       builder: (context, ref, child) {
         final introState = ref.watch(introStateNotifierProvider)[widget.introType];
-        final shouldAnimate = _shouldAnimate(introState);
+        final shouldAnimate = widget.doNotAnimate ?? _shouldAnimate(introState);
 
         if (shouldAnimate && !_controller.isAnimating) {
           _controller.repeat(reverse: true);

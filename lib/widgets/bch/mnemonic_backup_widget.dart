@@ -24,10 +24,10 @@ class _MnemonicBackupWidgetState extends State<MnemonicBackupWidget> {
     final _firstWordCtrl = TextEditingController();
     final _lastWordCtrl = TextEditingController();
     final _formKey = GlobalKey<FormState>();
-
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
+        var textTheme2 = Theme.of(dialogContext).textTheme;
         return AlertDialog(
           title: const Text("Verify Backup"),
           content: Form(
@@ -36,10 +36,11 @@ class _MnemonicBackupWidgetState extends State<MnemonicBackupWidget> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 const Text("To confirm, enter the first and last words of your mnemonic phrase:"),
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
                 TextFormField(
+                  style: textTheme2.bodyLarge!.copyWith(fontWeight: FontWeight.w400),
                   controller: _firstWordCtrl,
-                  decoration: const InputDecoration(labelText: "First Word"),
+                  decoration: InputDecoration(labelText: "First Word", labelStyle: textTheme2.bodyMedium, hintStyle: textTheme2.bodyMedium),
                   onChanged: (_) {
                     if (_didAttemptConfirm) _formKey.currentState?.validate();
                   },
@@ -52,8 +53,9 @@ class _MnemonicBackupWidgetState extends State<MnemonicBackupWidget> {
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
+                  style: textTheme2.bodyLarge!.copyWith(fontWeight: FontWeight.w400),
                   controller: _lastWordCtrl,
-                  decoration: const InputDecoration(labelText: "Last Word"),
+                  decoration: InputDecoration(labelText: "Last Word", labelStyle: textTheme2.bodyMedium, hintStyle: textTheme2.bodyMedium),
                   onChanged: (_) {
                     if (_didAttemptConfirm) _formKey.currentState?.validate();
                   },
@@ -104,7 +106,7 @@ class _MnemonicBackupWidgetState extends State<MnemonicBackupWidget> {
               decoration: const InputDecoration(labelText: '12-word mnemonic', border: OutlineInputBorder()),
               style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w400),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             const Text(
               "By clicking 'I have backed it up', you take full responsibility for its safekeeping, anyone who has this phrase can access your wallet",
             ),

@@ -6,9 +6,9 @@ import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
-import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/provider/profile_providers.dart';
 import 'package:mahakka/provider/user_provider.dart';
+import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/sliver_app_bar_delegate.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
@@ -82,7 +82,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final loggedInUser = ref.watch(userProvider);
-    final currentTabIndex = ref.watch(tabIndexProvider);
+    final currentTabIndex = ref.watch(currentTabIndexProvider);
     String? targetProfileId = ref.watch(profileTargetIdProvider);
     _showIntro = ref.read(introStateNotifierProvider.notifier).shouldShow(_introType);
 
@@ -120,7 +120,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
               _startMinDisplayTimer();
               ref.invalidate(profileDataProvider);
               ref.refresh(profileDataProvider);
-              ref.read(profileTargetIdProvider.notifier).state = null;
+              ref.read(navigationStateProvider.notifier).navigateToOwnProfile();
             },
           ),
         );

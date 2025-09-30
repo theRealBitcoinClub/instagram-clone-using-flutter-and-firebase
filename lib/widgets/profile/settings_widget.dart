@@ -12,12 +12,10 @@ import 'package:mahakka/widgets/bch/mnemonic_backup_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../provider/navigation_providers.dart';
 import '../../provider/profile_providers.dart';
 import '../../provider/user_provider.dart';
+import '../../providers/navigation_providers.dart';
 import '../../repositories/creator_repository.dart';
-import '../../resources/auth_method.dart';
-import '../../tab_item_data.dart';
 import 'header/settings_input_widget.dart';
 import 'header/settings_option_widget.dart';
 
@@ -553,8 +551,9 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   }
 
   void _logout() {
-    ref.read(authCheckerProvider).logOut();
-    ref.read(profileTargetIdProvider.notifier).state = null;
-    ref.read(tabIndexProvider.notifier).setTab(AppTab.feed.tabIndex);
+    ref.read(navigationStateProvider.notifier).logoutAndNavigateToFeed();
+    // ref.read(authCheckerProvider).logOut();
+    // ref.read(profileTargetIdProvider.notifier).state = null;
+    // ref.read(tabIndexProvider.notifier).setTab(AppTab.feed.tabIndex);
   }
 }

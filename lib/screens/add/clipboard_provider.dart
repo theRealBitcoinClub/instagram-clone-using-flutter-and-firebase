@@ -1,7 +1,7 @@
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/providers/navigation_providers.dart';
 
-import '../../provider/navigation_providers.dart';
 import '../../provider/url_input_verification_notifier.dart';
 import '../../tab_item_data.dart';
 
@@ -29,7 +29,7 @@ class ClipboardNotifier extends StateNotifier<ClipboardState> {
   Future<void> checkClipboard(WidgetRef ref) async {
     if (state.isChecking) return;
 
-    final currentTab = ref.read(tabIndexProvider);
+    final currentTab = ref.read(currentTabIndexProvider);
     if (currentTab != AppTab.add.tabIndex) return;
 
     try {
@@ -47,6 +47,10 @@ class ClipboardNotifier extends StateNotifier<ClipboardState> {
         await ref.read(urlInputVerificationProvider.notifier).verifyAndProcessInput(ref, urlFromClipboard);
 
         final hasValidData = ref.read(urlInputVerificationProvider).hasValidInput;
+
+        if (hasValidData) {
+          FlutterClipboard.clear();
+        }
 
         state = state.copyWith(lastClipboardContent: urlFromClipboard, hasValidClipboardData: hasValidData);
       }

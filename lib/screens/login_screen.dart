@@ -244,6 +244,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                 TextField(
                   minLines: 3,
                   maxLines: 3,
+                  style: textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w400),
                   focusNode: _mnemonicFocusNode,
                   controller: _mnemonicController,
                   keyboardType: TextInputType.text,

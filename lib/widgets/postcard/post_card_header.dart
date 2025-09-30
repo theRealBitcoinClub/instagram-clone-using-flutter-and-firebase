@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-// Import the new navigation provider
-import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/widgets/popularity_score_widget.dart';
 
 import '../../provider/post_update_provider.dart';
-import '../../tab_item_data.dart';
+import '../../providers/navigation_providers.dart';
 import '../cached_avatar.dart';
 
 class PostCardHeader extends ConsumerWidget {
@@ -17,8 +15,9 @@ class PostCardHeader extends ConsumerWidget {
   const PostCardHeader({super.key, required this.post, required this.onLikePostTipCreator});
 
   void _navigateToProfile(BuildContext context, WidgetRef ref, String creatorId) {
-    ref.read(profileTargetIdProvider.notifier).state = creatorId;
-    ref.read(tabIndexProvider.notifier).setTab(AppTab.profile.tabIndex);
+    ref.read(navigationStateProvider.notifier).navigateToCreatorProfile(creatorId);
+    // ref.read(profileTargetIdProvider.notifier).state = creatorId;
+    // ref.read(tabIndexProvider.notifier).setTab(AppTab.profile.tabIndex);
   }
 
   @override

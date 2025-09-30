@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
-import 'package:mahakka/provider/user_provider.dart';
+import 'package:mahakka/providers/navigation_providers.dart';
+import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/profile/header/stat_widget.dart';
 
 import '../../../memo/model/memo_model_creator.dart';
-import '../../../providers/webview_providers.dart';
 import '../../../views_taggable/widgets/qr_code_dialog.dart';
 import '../../cached_avatar.dart';
 import '../profile_buttons.dart';
@@ -30,8 +30,8 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colorScheme = theme.colorScheme;
-    final creatorProfileImg = creator.profileImgurUrl ?? creator.profileImageAvatar();
+    // final colorScheme = theme.colorScheme;
+    // final creatorProfileImg = creator.profileImgurUrl ?? creator.profileImageAvatar();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 16, 12),
@@ -60,28 +60,39 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: GestureDetector(
-                        onTap: () => WebViewNavigator.navigateTo(
-                          ref,
-                          WebViewShow.url,
-                          MemoBitcoinBase.explorerUrl + (ref.read(userProvider)!.bchAddressCashtokenAware ?? creator.bchAddressCashtokenAware),
-                        ),
+                        onTap: () => creator.bchAddressCashtokenAware.isEmpty
+                            ? showSnackBar("User has not registered on Mahakka", context, type: SnackbarType.info)
+                            : ref
+                                  .read(navigationStateProvider.notifier)
+                                  .navigateToUrl(MemoBitcoinBase.explorerUrl + creator.bchAddressCashtokenAware),
 
+                        // WebViewNavigator.navigateTo(
+                        // ref,
+                        // WebViewShow.url,
+                        // MemoBitcoinBase.explorerUrl + (ref.read(userProvider)!.bchAddressCashtokenAware ?? creator.bchAddressCashtokenAware),
+                        // ),
                         child: StatWidget(title: 'BCH', count: creator.balanceBch, theme: theme),
                       ),
                     ),
                     Expanded(
                       child: GestureDetector(
-                        onTap: () => WebViewNavigator.navigateTo(ref, WebViewShow.url, MemoBitcoinBase.tokenUrl),
+                        onTap: () => creator.bchAddressCashtokenAware.isEmpty
+                            ? showSnackBar("User has not registered on Mahakka", context, type: SnackbarType.info)
+                            : ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cauldronSwapTokenUrl),
+                        // onTap: () => WebViewNavigator.navigateTo(ref, WebViewShow.url, MemoBitcoinBase.tokenUrl),
                         child: StatWidget(title: MemoBitcoinBase.tokenTicker, count: creator.balanceToken, theme: theme),
                       ),
                     ),
                     Expanded(
                       child: GestureDetector(
-                        onTap: () => WebViewNavigator.navigateTo(
-                          ref,
-                          WebViewShow.url,
-                          MemoBitcoinBase.memoExplorerUrlPrefix + creator.id + MemoBitcoinBase.memoExplorerUrlSuffix,
-                        ),
+                        onTap: () => ref
+                            .read(navigationStateProvider.notifier)
+                            .navigateToUrl(MemoBitcoinBase.memoExplorerUrlPrefix + creator.id + MemoBitcoinBase.memoExplorerUrlSuffix),
+                        // WebViewNavigator.navigateTo(
+                        // ref,
+                        // WebViewShow.url,
+                        // MemoBitcoinBase.memoExplorerUrlPrefix + creator.id + MemoBitcoinBase.memoExplorerUrlSuffix,
+                        // ),
                         child: StatWidget(title: 'MEMO', count: creator.balanceMemo, theme: theme),
                       ),
                     ),

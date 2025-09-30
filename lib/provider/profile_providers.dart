@@ -6,16 +6,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/repositories/creator_repository.dart';
 import 'package:mahakka/repositories/post_repository.dart';
 import 'package:mahakka/widgets/profile/posts_categorizer.dart';
 
+import '../providers/navigation_providers.dart';
+
 // Provider for the current profile ID
 final _currentProfileIdProvider = Provider<String?>((ref) {
   final loggedInUser = ref.watch(userProvider);
-  return ref.watch(profileTargetIdProvider) ?? loggedInUser?.profileIdMemoBch;
+  var watch = ref.watch(profileTargetIdProvider);
+  return watch.isEmpty ? loggedInUser?.profileIdMemoBch : watch;
 });
 
 // Combined provider that ensures posts are only loaded after creator is loaded
@@ -54,7 +56,7 @@ class ProfileData {
 class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   Timer? _balanceRefreshTimer;
   Duration _refreshBalanceInterval = Duration(seconds: kDebugMode ? 5 : 5);
-  bool _isAutoRefreshRunning = false;
+  // bool _isAutoRefreshRunning = false;
   DateTime? _lastRefreshTime;
   String? _lastProfileIdPostDataRequest;
   String? _lastProfileIdRefreshRequest;
@@ -135,7 +137,14 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
 
       print("INFO: Updating profile data with new creator data for: ${updatedCreator.id}");
 
-      state = AsyncValue.data(currentData.copyWith(creator: updatedCreator));
+      Future.microtask(() {
+        try {
+          state = AsyncValue.data(currentData.copyWith(creator: updatedCreator));
+        } catch (e) {
+          print("Profile data state update failed (safe during navigation): $e");
+        }
+      });
+      // state = AsyncValue.data(currentData.copyWith(creator: updatedCreator));
     }
   }
 
@@ -356,21 +365,16 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     _qrDialogRefreshTimer = null;
   }
 
-  bool isAutoRefreshRunning() {
-    return _isAutoRefreshRunning;
-  }
-
   void stopAutoRefreshBalanceProfile() {
-    if (!_isAutoRefreshRunning) return;
+    // if (!_isAutoRefreshRunning) return;
     _stopProfileRefreshTimer();
-    _isAutoRefreshRunning = false;
+    // _isAutoRefreshRunning = false;
   }
 
   void startAutoRefreshBalanceProfile() {
-    if (_isAutoRefreshRunning) return;
-
+    // if (_isAutoRefreshRunning) return;
     _stopProfileRefreshTimer();
-    _isAutoRefreshRunning = true;
+    // _isAutoRefreshRunning = true;
     _startBalanceRefreshTimerProfile();
   }
 
@@ -384,6 +388,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   void _stopProfileRefreshTimer() {
     _balanceRefreshTimer?.cancel();
     _balanceRefreshTimer = null;
+    // _isAutoRefreshRunning = false;
   }
 
   void _stopAllTimers() {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/provider/bch_burner_balance_provider.dart';
-import 'package:mahakka/providers/webview_providers.dart';
+import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/widgets/popularity_score_widget.dart';
 
@@ -20,7 +20,9 @@ class BurnerBalanceWidget extends ConsumerWidget {
     final asyncBurnerBalance = ref.watch(bchBurnerBalanceProvider);
 
     return GestureDetector(
-      onTap: () => WebViewNavigator.navigateTo(ref, WebViewShow.url, "${MemoBitcoinBase.explorerUrl}${MemoBitcoinBase.bchBurnerAddress}"),
+      onTap: () =>
+          ref.read(navigationStateProvider.notifier).navigateToUrl("${MemoBitcoinBase.explorerUrl}${MemoBitcoinBase.bchBurnerAddress}"),
+      // onTap: () => WebViewNavigator.navigateTo(ref, WebViewShow.url, "${MemoBitcoinBase.explorerUrl}${MemoBitcoinBase.bchBurnerAddress}"),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

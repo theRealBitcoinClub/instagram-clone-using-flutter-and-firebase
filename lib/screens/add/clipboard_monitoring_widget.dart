@@ -128,7 +128,7 @@ class _ClipboardMonitoringWidgetState extends ConsumerState<ClipboardMonitoringW
       padding: EdgeInsets.symmetric(vertical: 16, horizontal: 0),
       child: Row(
         children: [
-          if (widget.onCreate != null) MediaPlaceholderWidget(label: "CREATE", iconData: Icons.add, onTap: widget.onCreate!),
+          if (widget.onCreate != null) MediaPlaceholderWidget(label: "UPLOAD", iconData: Icons.cloud_upload_outlined, onTap: widget.onCreate!),
           if (widget.onCreate != null && widget.onGallery != null) const SizedBox(width: 12),
           if (widget.onGallery != null) MediaPlaceholderWidget(label: "GALLERY", iconData: Icons.image_search, onTap: widget.onGallery!),
         ],

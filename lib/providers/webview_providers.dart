@@ -1,9 +1,6 @@
 // providers/webview_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../provider/navigation_providers.dart';
-import '../tab_item_data.dart';
-
 final tagIdProvider = StateProvider<String?>((ref) => null);
 final topicIdProvider = StateProvider<String?>((ref) => null);
 final targetUrlProvider = StateProvider<String?>((ref) => null);
@@ -13,7 +10,7 @@ enum WebViewShow { tag, topic, url }
 
 // Add this to webview_providers.dart
 class WebViewNavigator {
-  static void navigateTo(WidgetRef ref, WebViewShow target, String value) {
+  static void navigateTo(Ref ref, WebViewShow target, String value) {
     // Reset all providers first
     ref.read(targetUrlProvider.notifier).state = null;
     ref.read(tagIdProvider.notifier).state = null;
@@ -32,8 +29,7 @@ class WebViewNavigator {
         ref.read(targetUrlProvider.notifier).state = value;
         break;
     }
-
     // Navigate to the memo tab
-    ref.read(tabIndexProvider.notifier).setTab(AppTab.memo.tabIndex);
+    // ref.read(tabIndexProvider.notifier).setTab(AppTab.memo.tabIndex);
   }
 }

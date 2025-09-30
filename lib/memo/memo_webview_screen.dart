@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_utils.dart';
-import 'package:mahakka/provider/navigation_providers.dart';
+import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/tab_item_data.dart';
 import 'package:mahakka/utils/snackbar.dart';
 
@@ -373,7 +373,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                             _isLoading = true;
                             _cssInjected = false; // Reset CSS injection state
                             _displayInAppBar = url.toString() + " is loading ...";
-                            if (ref.read(tabIndexProvider) == AppTab.memo.tabIndex)
+                            if (ref.read(currentTabIndexProvider) == AppTab.memo.tabIndex)
                               showSnackBar(_displayInAppBar, buildCtx, type: SnackbarType.info);
                             _updateCurrentPath(url.toString());
                           });

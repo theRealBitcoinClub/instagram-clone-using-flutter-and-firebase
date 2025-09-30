@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../expandable_text_custom.dart';
 import '../../memo/model/memo_model_post.dart';
-import '../../providers/webview_providers.dart';
+import '../../providers/navigation_providers.dart';
 import '../../utils/snackbar.dart'; // Adjust import path
 
 class PostExpandableText extends ConsumerWidget {
@@ -30,9 +30,10 @@ class PostExpandableText extends ConsumerWidget {
       ),
       hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant),
       onHashtagTap: (String hashtag) {
-        WebViewNavigator.navigateTo(ref, WebViewShow.tag, hashtag);
-        showSnackBar("Loading $hashtag charts!", context, type: SnackbarType.success);
-        showSnackBar("$hashtag charts are loading...", context, type: SnackbarType.info);
+        ref.read(navigationStateProvider.notifier).navigateToTag(hashtag, context: context);
+        // WebViewNavigator.navigateTo(ref, WebViewShow.tag, hashtag);
+        // showSnackBar("Loading $hashtag charts!", context, type: SnackbarType.success);
+        showSnackBar("$hashtag charts are loading...", context, type: SnackbarType.info, wait: true);
       },
       mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant),
       urlStyle: _buildUrlStyle(theme),
@@ -42,9 +43,10 @@ class PostExpandableText extends ConsumerWidget {
       prefixText: hidePrefix != null && hidePrefix! ? "" : (post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null),
       prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
       onPrefixTap: () {
-        WebViewNavigator.navigateTo(ref, WebViewShow.topic, post.topicId);
-        showSnackBar("Loading ${post.topicId} charts!", context, type: SnackbarType.success);
-        showSnackBar("${post.topicId} charts are loading...", context, type: SnackbarType.info);
+        ref.read(navigationStateProvider.notifier).navigateToTopic(post.topicId, context: context);
+        // WebViewNavigator.navigateTo(ref, WebViewShow.topic, post.topicId);
+        // showSnackBar("Loading ${post.topicId} charts!", context, type: SnackbarType.success);
+        showSnackBar("${post.topicId} charts are loading...", context, type: SnackbarType.info, wait: true);
       },
     );
   }
@@ -60,7 +62,8 @@ class PostExpandableText extends ConsumerWidget {
 
   Future<void> _onUrlTap(String url, BuildContext context, WidgetRef ref) async {
     try {
-      WebViewNavigator.navigateTo(ref, WebViewShow.url, url);
+      ref.read(navigationStateProvider.notifier).navigateToUrl(url, context: context);
+      // WebViewNavigator.navigateTo(ref, WebViewShow.url, url);
     } catch (e) {
       showSnackBar("Error opening URL", context, type: SnackbarType.error);
     }

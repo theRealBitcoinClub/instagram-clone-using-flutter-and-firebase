@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/external_browser_launcher.dart';
+import 'package:mahakka/providers/navigation_providers.dart';
+import 'package:mahakka/tab_item_data.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
 
@@ -46,6 +48,20 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
   }
 
   static Widget buildThemeIcon(ThemeState themeState, WidgetRef ref, BuildContext context) {
+    var icon = Icon(size: 24, themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined);
+    if (ref.read(currentTabIndexProvider) == AppTab.profile.tabIndex)
+      return WrappedAnimatedIntroTarget(
+        doNotAnimate: false,
+        introType: IntroType.mainApp,
+        introStep: IntroStep.mainTheme,
+        onTap: () {
+          // ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainTheme, context);
+          ref.read(themeNotifierProvider.notifier).toggleTheme();
+        },
+        child: icon,
+      );
+    // return IconButton(padding: EdgeInsets.zero, onPressed: () => ref.read(themeNotifierProvider.notifier).toggleTheme(), icon: icon);
+
     return WrappedAnimatedIntroTarget(
       introType: IntroType.mainApp,
       introStep: IntroStep.mainTheme,
@@ -53,7 +69,7 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
         // ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainTheme, context);
         ref.read(themeNotifierProvider.notifier).toggleTheme();
       },
-      child: Icon(size: 24, themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+      child: icon,
     );
     // return IntroAnimatedIcon(
     //   icon: themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,

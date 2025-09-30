@@ -7,10 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
-import 'package:mahakka/tab_item_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../provider/navigation_providers.dart';
 import '../provider/user_provider.dart';
 
 // 1. (Optional but good practice) Define a provider for AuthChecker itself
@@ -167,8 +165,8 @@ class AuthChecker {
       await _secureStorage.delete(key: "encryption_key");
 
       _ref.read(userNotifierProvider.notifier).clearUser();
-      _ref.read(profileTargetIdProvider.notifier).state = null;
-      _ref.read(tabIndexProvider.notifier).setTab(AppTab.feed.tabIndex);
+      // _ref.read(profileTargetIdProvider.notifier).state = null;
+      // _ref.read(tabIndexProvider.notifier).setTab(AppTab.feed.tabIndex);
 
       // Invalidate the hash provider
       _ref.invalidate(mnemonicHashProvider);

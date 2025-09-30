@@ -46,13 +46,6 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     _initFuture = _loadToggleState(context);
   }
 
-  @override
-  void dispose() {
-    // Stop QR dialog refresh when dialog is disposed
-    ref.read(profileDataProvider.notifier).stopQrDialogRefresh();
-    super.dispose();
-  }
-
   Future<void> _loadToggleState(BuildContext ctx) async {
     final prefs = await SharedPreferences.getInstance();
     _isToggleEnabled = widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty;
@@ -148,10 +141,10 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     if (isCashtokenTab) {
       final bch = creator?.balanceBch ?? 0;
       final token = creator?.balanceToken ?? 0;
-      return 'BCH: ${_formatBalance(bch)}  -  ${MemoBitcoinBase.tokenTicker}: ${_formatBalance(token)}';
+      return 'BCH: ${_formatBalance(bch)} sats\n${MemoBitcoinBase.tokenTicker}: ${_formatBalance(token)} units';
     } else {
       final balance = creator?.balanceMemo ?? 0;
-      return 'Balance: ${_formatBalance(balance)} sats';
+      return 'MEMO: ${_formatBalance(balance)} sats';
     }
   }
 

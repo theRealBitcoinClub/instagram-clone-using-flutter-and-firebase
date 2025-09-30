@@ -7,12 +7,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
-import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/repositories/creator_repository.dart';
-import 'package:mahakka/tab_item_data.dart';
 import 'package:mahakka/widgets/image_detail_dialog.dart';
 
 import '../providers/avatar_refresh_provider.dart';
+import '../providers/navigation_providers.dart';
 
 class CachedAvatar extends ConsumerStatefulWidget {
   final String creatorId;
@@ -164,10 +163,11 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
       showCreatorImageDetail(context: context, creator: creator);
     }
 
-    // Set the target profile ID
-    ref.read(profileTargetIdProvider.notifier).state = widget.creatorId;
-    // Switch to the profile tab
-    ref.read(tabIndexProvider.notifier).setTab(AppTab.profile.tabIndex);
+    ref.read(navigationStateProvider.notifier).navigateFromAvatarToProfile(widget.creatorId);
+    // // Set the target profile ID
+    // ref.read(profileTargetIdProvider.notifier).state = widget.creatorId;
+    // // Switch to the profile tab
+    // ref.read(tabIndexProvider.notifier).setTab(AppTab.profile.tabIndex);
   }
 
   @override

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
-import 'package:mahakka/provider/profile_providers.dart';
+import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/screens/add_screen.dart';
 import 'package:mahakka/screens/feed_screen.dart';
 import 'package:mahakka/screens/profile_screen_widget.dart';
@@ -11,7 +11,7 @@ import 'package:mahakka/tab_item_data.dart';
 
 import '../intros/intro_animated_icon.dart';
 import '../memo/memo_webview_screen.dart';
-import '../provider/navigation_providers.dart';
+import '../provider/profile_providers.dart';
 import '../provider/scraper_provider.dart';
 
 class HomeSceen extends ConsumerStatefulWidget {
@@ -33,7 +33,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
 
   void initState() {
     super.initState();
-    final initialIndex = ref.read(tabIndexProvider);
+    final initialIndex = ref.read(currentTabIndexProvider);
     _currentTabIndex = initialIndex;
     _previousTabIndex = initialIndex;
 
@@ -42,17 +42,18 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     _indicatorAnimCtrl = AnimationController(vsync: this, duration: duration);
 
     _animationController.forward(from: 0.0);
-    _tabController.addListener(_tabControllerListener);
+    // _tabController.addListener(_tabControllerListener);
     ref.read(backgroundScraperManagerProvider);
   }
 
-  void _tabControllerListener() {
-    if (_tabController.indexIsChanging || _tabController.index != ref.read(tabIndexProvider)) {
-      if (_tabController.index != ref.read(tabIndexProvider)) {
-        ref.read(tabIndexProvider.notifier).setTab(_tabController.index);
-      }
-    }
-  }
+  // void _tabControllerListener() {
+  //   if (_tabController.indexIsChanging || _tabController.index != ref.read(currentTabIndexProvider)) {
+  //     if (_tabController.index != ref.read(currentTabIndexProvider)) {
+  //       // ref.read(navigationStateProvider.notifier).setTab(_tabController.index);
+  //       // ref.read(currentTabIndexProvider.notifier).setTab(_tabController.index);
+  //     }
+  //   }
+  // }
 
   void _animateIndicatorToTab(int targetIndex) {
     final int startIndex = _currentTabIndex;
@@ -72,7 +73,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
 
   @override
   void dispose() {
-    _tabController.removeListener(_tabControllerListener);
+    // _tabController.removeListener(_tabControllerListener);
     _tabController.dispose();
     _animationController.dispose();
     _indicatorAnimCtrl.dispose();
@@ -82,24 +83,47 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   void _moveToTab(int index) {
     final tabData = AppTab.values[index];
 
-    if (tabData == AppTab.add) {
-      ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainCreate, context);
-    } else if (tabData == AppTab.profile) {
-      ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainProfile, context);
-    }
-
     if (index != AppTab.profile.tabIndex) {
       ref.read(profileDataProvider.notifier).stopAutoRefreshBalanceProfile();
-      ref.read(profileTargetIdProvider.notifier).state = null;
+    } else {
+      ref.read(profileDataProvider.notifier).startAutoRefreshBalanceProfile();
     }
 
-    ref.read(tabIndexProvider.notifier).setTab(index);
+    if (tabData == AppTab.add) {
+      ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainCreate, context);
+      ref.read(navigationStateProvider.notifier).navigateToAddPost();
+    } else if (tabData == AppTab.profile) {
+      ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainProfile, context);
+      ref.read(navigationStateProvider.notifier).navigateToOwnProfile();
+    } else {
+      ref.read(navigationStateProvider.notifier).navigateToFeed();
+    }
+
+    // ref.read(navigationStateProvider.notifier).setTab(index);
     _animateIndicatorToTab(index);
   }
 
+  // void _moveToTab(int index) {
+  //   final tabData = AppTab.values[index];
+  //
+  //   if (tabData == AppTab.add) {
+  //     ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainCreate, context);
+  //   } else if (tabData == AppTab.profile) {
+  //     ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainProfile, context);
+  //   }
+  //
+  //   if (index != AppTab.profile.tabIndex) {
+  //     ref.read(profileDataProvider.notifier).stopAutoRefreshBalanceProfile();
+  //     ref.read(profileTargetIdProvider.notifier).state = null;
+  //   }
+  //
+  //   ref.read(tabIndexProvider.notifier).setTab(index);
+  //   _animateIndicatorToTab(index);
+  // }
+
   @override
   Widget build(BuildContext context) {
-    final currentTabIndex = ref.watch(tabIndexProvider); // Watch the Riverpod state
+    final currentTabIndex = ref.watch(currentTabIndexProvider); // Watch the Riverpod state
     final ThemeData theme = Theme.of(context);
 
     // Sync local state with Riverpod state when it changes externally
@@ -124,7 +148,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       MemoWebviewScreen(key: PageStorageKey('MemoWebviewScreen')),
     ];
 
-    ref.listen<int>(tabIndexProvider, (previous, next) {
+    ref.listen<int>(currentTabIndexProvider, (previous, next) {
       if (previous != next) {
         _animationController.forward(from: 0.0);
       }
@@ -133,9 +157,10 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     DateTime? _currentBackPressTime;
 
     Future<bool> _onWillPop() async {
-      final currentTabIndex = ref.read(tabIndexProvider);
+      final currentTabIndex = ref.read(currentTabIndexProvider);
 
       if (currentTabIndex != 0) {
+        // ref.read(navigationStateProvider.notifier).navigateBackToFeed();
         _moveToTab(0);
         return false;
       }

@@ -83,9 +83,9 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     final tabData = AppTab.values[index];
 
     if (tabData == AppTab.add) {
-      ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_create, context);
+      ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainCreate, context);
     } else if (tabData == AppTab.profile) {
-      ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_profile, context);
+      ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainProfile, context);
     }
 
     if (index != AppTab.profile.tabIndex) {
@@ -234,9 +234,9 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     IntroStep? introStep;
 
     if (tabData == AppTab.add) {
-      introStep = IntroStep.main_create;
+      introStep = IntroStep.mainCreate;
     } else if (tabData == AppTab.profile) {
-      introStep = IntroStep.main_profile;
+      introStep = IntroStep.mainProfile;
     }
 
     if (introStep != null) {

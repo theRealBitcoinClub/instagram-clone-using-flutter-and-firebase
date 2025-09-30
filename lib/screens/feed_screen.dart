@@ -34,7 +34,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   final FocusNode _listViewFocusNode = FocusNode();
   bool _isRenderingContent = true;
   Object? _loadingError;
-  // bool showIntro = true;
+  final _introType = IntroType.mainApp;
 
   @override
   void initState() {
@@ -89,8 +89,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   bool isFilterActive(PostFilterType filterType) {
     return ref.watch(feedPostsProvider).activeFilter == filterType;
   }
-
-  final _introType = IntroType.mainApp;
 
   @override
   Widget build(BuildContext context) {
@@ -314,11 +312,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     return IntroAnimatedIcon(
       icon: themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
       introType: IntroType.mainApp,
-      introStep: IntroStep.main_theme,
+      introStep: IntroStep.mainTheme,
       size: 24,
       padding: EdgeInsets.all(12),
       onTap: () {
-        ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_theme, context);
+        ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainTheme, context);
         ref.read(themeNotifierProvider.notifier).toggleTheme();
       },
     );

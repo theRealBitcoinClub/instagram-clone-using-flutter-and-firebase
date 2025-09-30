@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/add/tip_information_card.dart';
 import 'package:mahakka/widgets/add/translation_widget.dart';
@@ -242,9 +243,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 50,
+        toolbarHeight: AppBarBurnMahakkaTheme.height,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onPrimary),
+          icon: Icon(Icons.cancel_outlined, color: colorScheme.onPrimary),
           onPressed: () => _showDeleteConfirmation(),
         ),
         backgroundColor: colorScheme.primary,
@@ -263,8 +264,6 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
             tooltip: 'Confirm and Send',
           ),
         ],
-        elevation: 4,
-        shadowColor: colorScheme.shadow,
       ),
       body: FadeTransition(
         opacity: _opacityAnimation,

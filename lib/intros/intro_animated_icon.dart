@@ -112,7 +112,11 @@ class _IntroAnimatedIconState extends ConsumerState<IntroAnimatedIcon> with Sing
                   : null,
             ),
             padding: widget.padding,
-            child: Icon(widget.icon, color: iconColor, size: widget.size),
+            child: Padding(
+              padding: EdgeInsets.zero,
+              // padding: widget.padding,
+              child: Icon(widget.icon, color: iconColor, size: widget.size),
+            ),
           ),
         );
 

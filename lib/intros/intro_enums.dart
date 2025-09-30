@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 // intro_enums.dart
 enum IntroType {
-  mainApp({IntroStep.main_theme, IntroStep.main_create, IntroStep.main_profile}),
+  mainApp({IntroStep.mainTheme, IntroStep.mainCreate, IntroStep.mainProfile}),
   feedScreen({IntroStep.discoverContent, IntroStep.interactPosts}),
   addScreen({IntroStep.createPost, IntroStep.addMedia}),
-  profileScreen({IntroStep.editProfile, IntroStep.viewStats}),
+  // profileScreen({IntroStep.profileBalance, IntroStep.profileSettings, IntroStep.profileQrCode}),
+  profileScreen({IntroStep.profileQrCode}),
   webviewScreen({IntroStep.navigateWeb, IntroStep.bookmarkContent}),
   postCard({IntroStep.likePost, IntroStep.sharePost});
 
@@ -15,7 +16,7 @@ enum IntroType {
 
 class IntroStep {
   // Main App Steps
-  static const main_theme = IntroStep._(
+  static const mainTheme = IntroStep._(
     'themeSelection',
     IntroContent(
       initText: "Customize Your Experience",
@@ -25,7 +26,7 @@ class IntroStep {
     ),
   );
 
-  static const main_create = IntroStep._(
+  static const mainCreate = IntroStep._(
     'createContent',
     IntroContent(
       initText: "Share Inspiring Ideas",
@@ -35,12 +36,12 @@ class IntroStep {
     ),
   );
 
-  static const main_profile = IntroStep._(
+  static const mainProfile = IntroStep._(
     'profileAccess',
     IntroContent(
       initText: "Profile & Settings",
-      snackbarText: "Backup your mnemonic, make sure funds are SAFU",
-      triggeredText: "Backup your mnemonic, set profile data, or change tip settings with the settings button up north!",
+      snackbarText: "This is your profile page, posts are categorized!",
+      triggeredText: "Backup your mnemonic, set profile data, or change tip settings!",
       target: IntroTarget.bottomRight,
     ),
   );
@@ -88,25 +89,45 @@ class IntroStep {
   );
 
   // Profile Screen Steps
-  static const editProfile = IntroStep._(
+  static const profileSettings = IntroStep._(
     'editProfile',
     IntroContent(
       initText: "Personalize Your Profile",
-      snackbarText: "Make it yours! Customize your profile",
-      triggeredText: "Update your bio, avatar, and profile settings",
-      target: IntroTarget.topRight,
+      snackbarText: "The profile is stored on the BCH blockchain",
+      triggeredText: "Update your name, bio, avatar, and tip settings",
+      target: IntroTarget.profileSettings,
     ),
   );
 
-  static const viewStats = IntroStep._(
+  static const profileBalance = IntroStep._(
     'viewStats',
     IntroContent(
-      initText: "Track Your Progress",
-      snackbarText: "See your impact! Check your stats",
-      triggeredText: "Monitor your followers, likes, and engagement metrics",
-      target: IntroTarget.bottomCenter,
+      initText: "The app supports BCH, Cashtoken & Memo",
+      snackbarText: "Depositing tokens unlocks extra features",
+      triggeredText: "You need some balance to modify your profile!",
+      target: IntroTarget.profileStats,
     ),
   );
+
+  static const profileQrCode = IntroStep._(
+    'viewStats',
+    IntroContent(
+      initText: "Add some sats to your balance",
+      snackbarText: "Copy your address and send 10k sats",
+      triggeredText: "Visit Telegram @mahakka_com for free sats",
+      target: IntroTarget.topLeft,
+    ),
+  );
+
+  // static const profileViewmode = IntroStep._(
+  //   'viewStats',
+  //   IntroContent(
+  //     initText: "Choose your favourite category",
+  //     snackbarText: "Images, Videos, Hashtags & Topics",
+  //     triggeredText: "You can also swipe left & right to switch categories",
+  //     target: IntroTarget.profileViewmode,
+  //   ),
+  // );
 
   // Webview Screen Steps
   static const navigateWeb = IntroStep._(
@@ -177,6 +198,9 @@ class IntroTarget {
 
   // Predefined targets
   static const topRight = IntroTarget(position: Offset(0.84, 0.05), rotation: 0.3);
+  static const topLeft = IntroTarget(position: Offset(0.10, 0.05), rotation: 5.7);
+  static const profileSettings = IntroTarget(position: Offset(0.6, 0.20), rotation: 0);
+  static const profileStats = IntroTarget(position: Offset(0.4, 0.1), rotation: 1.5);
 
   static const bottomCenter = IntroTarget(position: Offset(0.45, 0.72), rotation: 3.10);
 

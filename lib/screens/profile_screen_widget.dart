@@ -23,6 +23,9 @@ import 'package:mahakka/widgets/profile/profile_tab_selector.dart';
 import 'package:mahakka/widgets/profile/settings_widget.dart';
 import 'package:mahakka/widgets/profile/youtube_controller_manager.dart';
 
+import '../intros/intro_enums.dart';
+import '../intros/intro_overlay.dart';
+import '../intros/intro_state_notifier.dart';
 import '../widgets/profile/profile_app_bar.dart';
 
 class ProfileScreenWidget extends ConsumerStatefulWidget {
@@ -36,22 +39,15 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   final YouTubeControllerManager _ytManager = YouTubeControllerManager();
   final ScrollController _scrollController = ScrollController();
   int _viewMode = 0;
-  bool isRefreshingProfile = false;
-  bool allowLogout = false;
+  bool _isRefreshingProfile = false;
   String? _currentProfileId = "";
   Timer? _minDisplayTimer;
   bool _minDisplayTimeElapsed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // _viewMode.addListener(_onViewModeChanged);
-  }
+  bool _showIntro = true;
+  final _introType = IntroType.profileScreen;
 
   @override
   void dispose() {
-    // _viewMode.removeListener(_onViewModeChanged);
-    // _viewMode.dispose();
     _ytManager.dispose();
     _scrollController.dispose();
     _minDisplayTimer?.cancel();
@@ -88,6 +84,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     final loggedInUser = ref.watch(userProvider);
     final currentTabIndex = ref.watch(tabIndexProvider);
     String? targetProfileId = ref.watch(profileTargetIdProvider);
+    _showIntro = ref.read(introStateNotifierProvider.notifier).shouldShow(_introType);
 
     context.afterLayout(refreshUI: true, () {
       if (_scrollController.hasClients) {
@@ -206,24 +203,29 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
         onShowBchQrDialog: () => _showBchQrDialog(loggedInUser, theme),
         scrollController: _scrollController,
       ),
-      body: GestureDetector(
-        onHorizontalDragStart: _handleHorizontalDragStart,
-        onHorizontalDragUpdate: _handleHorizontalDragUpdate,
-        onHorizontalDragEnd: _handleHorizontalDragEnd,
-        behavior: HitTestBehavior.opaque,
-        child: RefreshIndicator(
-          onRefresh: _refreshData,
-          color: theme.colorScheme.primary,
-          backgroundColor: theme.colorScheme.surface,
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              SliverToBoxAdapter(child: _buildProfileHeader(creator, isOwnProfile, theme)),
-              _buildTabSelector(),
-              _buildContent(theme, profileData),
-            ],
+      body: Stack(
+        children: [
+          GestureDetector(
+            onHorizontalDragStart: _handleHorizontalDragStart,
+            onHorizontalDragUpdate: _handleHorizontalDragUpdate,
+            onHorizontalDragEnd: _handleHorizontalDragEnd,
+            behavior: HitTestBehavior.opaque,
+            child: RefreshIndicator(
+              onRefresh: _refreshData,
+              color: theme.colorScheme.primary,
+              backgroundColor: theme.colorScheme.surface,
+              child: CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  SliverToBoxAdapter(child: _buildProfileHeader(creator, isOwnProfile, theme)),
+                  _buildTabSelector(),
+                  _buildContent(theme, profileData),
+                ],
+              ),
+            ),
           ),
-        ),
+          if (_showIntro) IntroOverlay(introType: _introType, onComplete: () {}),
+        ],
       ),
     );
   }
@@ -232,7 +234,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     return ProfileHeader(
       creator: creator,
       isOwnProfile: isOwnProfile,
-      isRefreshingProfile: isRefreshingProfile,
+      isRefreshingProfile: _isRefreshingProfile,
       onProfileButtonPressed: () => _showSettings(creator),
       showImageDetail: () => showCreatorImageDetail(context: context, creator: creator),
       showDefaultAvatar: false,
@@ -258,16 +260,10 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     if (profileData.categorizer.isEmpty) {
       return _buildLoadingContent(theme);
     }
-
-    // return ValueListenableBuilder<int>(
-    //   valueListenable: _viewMode,
-    //   builder: (context, viewMode, child) {
     return KeyedSubtree(
       key: ValueKey('${profileData.creator!.id}_$_viewMode'),
       child: _buildSliverCategorizedView(theme, profileData.creator!, profileData.categorizer, _viewMode),
     );
-    // },
-    // );
   }
 
   Widget _buildLoadingContent(ThemeData theme) {

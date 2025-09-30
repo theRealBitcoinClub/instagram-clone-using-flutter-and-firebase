@@ -7,6 +7,7 @@ import 'package:mahakka/widgets/burner_balance_widget.dart';
 import 'intros/intro_animated_icon.dart';
 import 'intros/intro_enums.dart';
 import 'intros/intro_state_notifier.dart';
+import 'intros/wrapped_animated_intro_target.dart';
 
 class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidget {
   const AppBarBurnMahakkaTheme({super.key});
@@ -47,14 +48,23 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
   }
 
   static Widget buildThemeIcon(ThemeState themeState, WidgetRef ref, BuildContext context) {
+    return WrappedAnimatedIntroTarget(
+      introType: IntroType.mainApp,
+      introStep: IntroStep.mainTheme,
+      onTap: () {
+        // ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainTheme, context);
+        ref.read(themeNotifierProvider.notifier).toggleTheme();
+      },
+      child: Icon(size: 24, themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+    );
     return IntroAnimatedIcon(
       icon: themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
       introType: IntroType.mainApp,
-      introStep: IntroStep.main_theme,
+      introStep: IntroStep.mainTheme,
       size: 24,
       padding: const EdgeInsets.fromLTRB(0, 0, 9, 0),
       onTap: () {
-        ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.main_theme, context);
+        ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainTheme, context);
         ref.read(themeNotifierProvider.notifier).toggleTheme();
       },
     );

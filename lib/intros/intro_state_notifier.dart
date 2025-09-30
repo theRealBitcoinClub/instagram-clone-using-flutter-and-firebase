@@ -64,7 +64,7 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
     _loadAllIntroStates();
   }
 
-  static const String key = "iiiintroo_";
+  static const String key = "iiiiintroo_";
 
   Future<void> _loadAllIntroStates() async {
     final prefs = await SharedPreferences.getInstance();
@@ -93,7 +93,7 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
     final steps = introType.steps.toList();
     return IntroState(
       introType: introType,
-      currentStep: steps.isNotEmpty ? steps.first : IntroStep.main_theme,
+      currentStep: steps.isNotEmpty ? steps.first : IntroStep.mainTheme,
       triggeredSteps: {},
       isCompleted: steps.isEmpty, // Mark as completed if no steps
     );
@@ -146,7 +146,7 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
       state = {...state, introType: completedState};
       _saveIntroState(introType);
 
-      _showCompletionConfetti(context);
+      // _showCompletionConfetti(context);
     }
   }
 

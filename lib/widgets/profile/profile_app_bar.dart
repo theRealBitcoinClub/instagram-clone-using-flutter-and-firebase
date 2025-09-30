@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/app_utils.dart';
+import 'package:mahakka/intros/intro_enums.dart';
+import 'package:mahakka/intros/wrapped_animated_intro_target.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/provider/navigation_providers.dart';
 import 'package:mahakka/providers/webview_providers.dart';
@@ -36,8 +38,24 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
       elevation: 4,
       centerTitle: false,
       titleSpacing: NavigationToolbar.kMiddleSpacing,
+      automaticallyImplyLeading: true,
+      leadingWidth: 40,
       leading: isOwnProfile
-          ? IconButton(icon: const Icon(Icons.qr_code_scanner_rounded), tooltip: "Show Deposit QR", onPressed: onShowBchQrDialog)
+          ? WrappedAnimatedIntroTarget(
+              introType: IntroType.profileScreen,
+              introStep: IntroStep.profileQrCode,
+              onTap: onShowBchQrDialog,
+              child: const Icon(Icons.qr_code_scanner_rounded),
+              // IconButton(
+              //   padding: EdgeInsets.zero,
+              //   icon: const Icon(Icons.qr_code_scanner_rounded),
+              //   tooltip: "Show Deposit QR",
+              // onPressed: () {
+              //   // ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.profileScreen, IntroStep.profileQrCode, context);
+              //   onShowBchQrDialog();
+              // },
+              // ),
+            )
           : IconButton(
               icon: const Icon(Icons.home_filled),
               tooltip: "View My Profile",

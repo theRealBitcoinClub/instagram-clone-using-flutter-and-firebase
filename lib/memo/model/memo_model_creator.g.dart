@@ -18,7 +18,7 @@ MemoModelCreator _$MemoModelCreatorFromJson(
   lastActionDate: json['lastActionDate'] as String? ?? "",
   profileImgurUrl: json['profileImgurUrl'] as String?,
   bchAddressCashtokenAware: json['bchAddressCashtokenAware'] as String? ?? "",
-  hasRegisteredAsUser: json['hasRegisteredAsUser'] as bool? ?? false,
+  hasRegisteredAsUserFixed: json['hasRegisteredAsUserFixed'] as bool? ?? false,
   lastRegisteredCheck:
       json['lastRegisteredCheck'] == null
           ? null
@@ -38,7 +38,7 @@ Map<String, dynamic> _$MemoModelCreatorToJson(MemoModelCreator instance) =>
       'lastActionDate': instance.lastActionDate,
       'bchAddressCashtokenAware': instance.bchAddressCashtokenAware,
       'profileImgurUrl': instance.profileImgurUrl,
-      'hasRegisteredAsUser': instance.hasRegisteredAsUser,
+      'hasRegisteredAsUserFixed': instance.hasRegisteredAsUserFixed,
       'lastRegisteredCheck': instance.lastRegisteredCheck?.toIso8601String(),
       'profileImageAvatarSerialized': instance.profileImageAvatarSerialized,
       'profileImageDetailSerialized': instance.profileImageDetailSerialized,

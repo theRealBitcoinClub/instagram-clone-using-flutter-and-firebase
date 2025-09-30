@@ -403,12 +403,12 @@ void showQrCodeDialog({required BuildContext context, MemoModelUser? user, MemoM
       return QrCodeDialog(
         cashtokenAddress: user != null
             ? user.bchAddressCashtokenAware
-            : creator!.hasRegisteredAsUser
+            : creator!.hasRegisteredAsUserFixed
             ? creator.bchAddressCashtokenAware
             : null,
         legacyAddress: user != null
             ? user.legacyAddressMemoBch
-            : creator!.hasRegisteredAsUser
+            : creator!.hasRegisteredAsUserFixed
             ? creator.id
             : creator.id,
         memoProfileId: creator != null ? creator.id : user!.id,

@@ -96,7 +96,7 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
 
     try {
       final creator = await _creatorFuture;
-      if (creator != null && !creator.hasRegisteredAsUser) {
+      if (creator != null && !creator.hasRegisteredAsUserFixed) {
         await _refreshUserRegistration(creator);
         _lastRegistrationChecks[widget.creatorId] = now;
       }
@@ -180,7 +180,7 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
       builder: (context, snapshot) {
         final creator = snapshot.data;
         final avatarUrl = creator?.profileImageAvatar() ?? '';
-        final hasRegistered = creator?.hasRegisteredAsUser ?? false;
+        final hasRegistered = creator?.hasRegisteredAsUserFixed ?? false;
         final isLoading = snapshot.connectionState == ConnectionState.waiting;
 
         return GestureDetector(

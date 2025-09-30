@@ -95,17 +95,14 @@ class _MnemonicBackupWidgetState extends State<MnemonicBackupWidget> {
       content: SingleChildScrollView(
         child: ListBody(
           children: <Widget>[
-            const Text(
-              "⚠️ This is your secret recovery phrase. Write it down and store it safely!",
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-            ),
+            const Text("⚠️ This is your secret recovery phrase. Write it down and store it safely!", style: TextStyle(color: Colors.red)),
             const SizedBox(height: 16),
             TextField(
               controller: TextEditingController(text: widget.mnemonic),
               readOnly: true,
               maxLines: null,
               decoration: const InputDecoration(labelText: '12-word mnemonic', border: OutlineInputBorder()),
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w400),
             ),
             const SizedBox(height: 16),
             const Text(

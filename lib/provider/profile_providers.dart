@@ -295,7 +295,8 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       var creatorRepository = ref.read(creatorRepositoryProvider);
       var memoModelCreator = await creatorRepository.getCreator(profileId);
       final creator = memoModelCreator;
-      if (creator != null && !creator.hasRegisteredAsUser) {
+      // if (creator != null) { //TODO REMOVE THIS IN A FEW WEEKS WHEN ALL THE OLD USERS HAVE FIXED THE FLAG
+      if (creator != null && !creator.hasRegisteredAsUserFixed) {
         await creator.refreshUserHasRegistered(ref, creatorRepository);
       }
     }
@@ -316,7 +317,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     final profileId = ref.read(_currentProfileIdProvider);
     if (profileId != null && profileId.isNotEmpty) {
       final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
-      if (creator != null && creator.hasRegisteredAsUser) {
+      if (creator != null && creator.hasRegisteredAsUserFixed) {
         await creator.refreshBalanceMahakka(ref);
       }
     }

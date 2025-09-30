@@ -120,7 +120,7 @@ class PostCardFooter extends StatelessWidget {
         onTap: onSelectTopic,
         borderRadius: BorderRadius.circular(4),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(0, 2, 0, 0),
+          padding: const EdgeInsets.fromLTRB(0, 2, 9, 0),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

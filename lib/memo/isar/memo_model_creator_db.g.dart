@@ -50,9 +50,9 @@ const MemoModelCreatorDbSchema = CollectionSchema(
       name: r'followerCount',
       type: IsarType.long,
     ),
-    r'hasRegisteredAsUser': PropertySchema(
+    r'hasRegisteredAsUserFixed': PropertySchema(
       id: 8,
-      name: r'hasRegisteredAsUser',
+      name: r'hasRegisteredAsUserFixed',
       type: IsarType.bool,
     ),
     r'lastActionDate': PropertySchema(
@@ -60,19 +60,34 @@ const MemoModelCreatorDbSchema = CollectionSchema(
       name: r'lastActionDate',
       type: IsarType.string,
     ),
-    r'lastUpdated': PropertySchema(
+    r'lastRegisteredCheck': PropertySchema(
       id: 10,
+      name: r'lastRegisteredCheck',
+      type: IsarType.dateTime,
+    ),
+    r'lastUpdated': PropertySchema(
+      id: 11,
       name: r'lastUpdated',
       type: IsarType.dateTime,
     ),
-    r'name': PropertySchema(id: 11, name: r'name', type: IsarType.string),
+    r'name': PropertySchema(id: 12, name: r'name', type: IsarType.string),
+    r'profileImageAvatarSerialized': PropertySchema(
+      id: 13,
+      name: r'profileImageAvatarSerialized',
+      type: IsarType.string,
+    ),
+    r'profileImageDetailSerialized': PropertySchema(
+      id: 14,
+      name: r'profileImageDetailSerialized',
+      type: IsarType.string,
+    ),
     r'profileImgurUrl': PropertySchema(
-      id: 12,
+      id: 15,
       name: r'profileImgurUrl',
       type: IsarType.string,
     ),
     r'profileText': PropertySchema(
-      id: 13,
+      id: 16,
       name: r'profileText',
       type: IsarType.string,
     ),
@@ -119,6 +134,18 @@ int _memoModelCreatorDbEstimateSize(
   bytesCount += 3 + object.lastActionDate.length * 3;
   bytesCount += 3 + object.name.length * 3;
   {
+    final value = object.profileImageAvatarSerialized;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.profileImageDetailSerialized;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.profileImgurUrl;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -142,12 +169,15 @@ void _memoModelCreatorDbSerialize(
   writer.writeString(offsets[5], object.created);
   writer.writeString(offsets[6], object.creatorId);
   writer.writeLong(offsets[7], object.followerCount);
-  writer.writeBool(offsets[8], object.hasRegisteredAsUser);
+  writer.writeBool(offsets[8], object.hasRegisteredAsUserFixed);
   writer.writeString(offsets[9], object.lastActionDate);
-  writer.writeDateTime(offsets[10], object.lastUpdated);
-  writer.writeString(offsets[11], object.name);
-  writer.writeString(offsets[12], object.profileImgurUrl);
-  writer.writeString(offsets[13], object.profileText);
+  writer.writeDateTime(offsets[10], object.lastRegisteredCheck);
+  writer.writeDateTime(offsets[11], object.lastUpdated);
+  writer.writeString(offsets[12], object.name);
+  writer.writeString(offsets[13], object.profileImageAvatarSerialized);
+  writer.writeString(offsets[14], object.profileImageDetailSerialized);
+  writer.writeString(offsets[15], object.profileImgurUrl);
+  writer.writeString(offsets[16], object.profileText);
 }
 
 MemoModelCreatorDb _memoModelCreatorDbDeserialize(
@@ -165,12 +195,15 @@ MemoModelCreatorDb _memoModelCreatorDbDeserialize(
   object.created = reader.readString(offsets[5]);
   object.creatorId = reader.readString(offsets[6]);
   object.followerCount = reader.readLong(offsets[7]);
-  object.hasRegisteredAsUser = reader.readBool(offsets[8]);
+  object.hasRegisteredAsUserFixed = reader.readBool(offsets[8]);
   object.lastActionDate = reader.readString(offsets[9]);
-  object.lastUpdated = reader.readDateTime(offsets[10]);
-  object.name = reader.readString(offsets[11]);
-  object.profileImgurUrl = reader.readStringOrNull(offsets[12]);
-  object.profileText = reader.readString(offsets[13]);
+  object.lastRegisteredCheck = reader.readDateTimeOrNull(offsets[10]);
+  object.lastUpdated = reader.readDateTime(offsets[11]);
+  object.name = reader.readString(offsets[12]);
+  object.profileImageAvatarSerialized = reader.readStringOrNull(offsets[13]);
+  object.profileImageDetailSerialized = reader.readStringOrNull(offsets[14]);
+  object.profileImgurUrl = reader.readStringOrNull(offsets[15]);
+  object.profileText = reader.readString(offsets[16]);
   return object;
 }
 
@@ -202,12 +235,18 @@ P _memoModelCreatorDbDeserializeProp<P>(
     case 9:
       return (reader.readString(offset)) as P;
     case 10:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 11:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 12:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 13:
+      return (reader.readStringOrNull(offset)) as P;
+    case 14:
+      return (reader.readStringOrNull(offset)) as P;
+    case 15:
+      return (reader.readStringOrNull(offset)) as P;
+    case 16:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1132,10 +1171,13 @@ extension MemoModelCreatorDbQueryFilter
   }
 
   QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
-  hasRegisteredAsUserEqualTo(bool value) {
+  hasRegisteredAsUserFixedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'hasRegisteredAsUser', value: value),
+        FilterCondition.equalTo(
+          property: r'hasRegisteredAsUserFixed',
+          value: value,
+        ),
       );
     });
   }
@@ -1337,6 +1379,79 @@ extension MemoModelCreatorDbQueryFilter
   }
 
   QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  lastRegisteredCheckIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'lastRegisteredCheck'),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  lastRegisteredCheckIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'lastRegisteredCheck'),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  lastRegisteredCheckEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lastRegisteredCheck', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  lastRegisteredCheckGreaterThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lastRegisteredCheck',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  lastRegisteredCheckLessThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lastRegisteredCheck',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  lastRegisteredCheckBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lastRegisteredCheck',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
   lastUpdatedEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1528,6 +1643,370 @@ extension MemoModelCreatorDbQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'name', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageAvatarSerializedIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'profileImageAvatarSerialized'),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageAvatarSerializedIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(
+          property: r'profileImageAvatarSerialized',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageAvatarSerializedEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'profileImageAvatarSerialized',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageAvatarSerializedGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'profileImageAvatarSerialized',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageAvatarSerializedLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'profileImageAvatarSerialized',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageAvatarSerializedBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'profileImageAvatarSerialized',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageAvatarSerializedStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'profileImageAvatarSerialized',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageAvatarSerializedEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'profileImageAvatarSerialized',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageAvatarSerializedContains(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'profileImageAvatarSerialized',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageAvatarSerializedMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'profileImageAvatarSerialized',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageAvatarSerializedIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'profileImageAvatarSerialized',
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageAvatarSerializedIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          property: r'profileImageAvatarSerialized',
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageDetailSerializedIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'profileImageDetailSerialized'),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageDetailSerializedIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(
+          property: r'profileImageDetailSerialized',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageDetailSerializedEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'profileImageDetailSerialized',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageDetailSerializedGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'profileImageDetailSerialized',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageDetailSerializedLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'profileImageDetailSerialized',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageDetailSerializedBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'profileImageDetailSerialized',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageDetailSerializedStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'profileImageDetailSerialized',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageDetailSerializedEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'profileImageDetailSerialized',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageDetailSerializedContains(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'profileImageDetailSerialized',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageDetailSerializedMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'profileImageDetailSerialized',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageDetailSerializedIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'profileImageDetailSerialized',
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterFilterCondition>
+  profileImageDetailSerializedIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          property: r'profileImageDetailSerialized',
+          value: '',
+        ),
       );
     });
   }
@@ -1954,16 +2433,16 @@ extension MemoModelCreatorDbQuerySortBy
   }
 
   QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
-  sortByHasRegisteredAsUser() {
+  sortByHasRegisteredAsUserFixed() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hasRegisteredAsUser', Sort.asc);
+      return query.addSortBy(r'hasRegisteredAsUserFixed', Sort.asc);
     });
   }
 
   QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
-  sortByHasRegisteredAsUserDesc() {
+  sortByHasRegisteredAsUserFixedDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hasRegisteredAsUser', Sort.desc);
+      return query.addSortBy(r'hasRegisteredAsUserFixed', Sort.desc);
     });
   }
 
@@ -1978,6 +2457,20 @@ extension MemoModelCreatorDbQuerySortBy
   sortByLastActionDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastActionDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
+  sortByLastRegisteredCheck() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastRegisteredCheck', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
+  sortByLastRegisteredCheckDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastRegisteredCheck', Sort.desc);
     });
   }
 
@@ -2006,6 +2499,34 @@ extension MemoModelCreatorDbQuerySortBy
   sortByNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
+  sortByProfileImageAvatarSerialized() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'profileImageAvatarSerialized', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
+  sortByProfileImageAvatarSerializedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'profileImageAvatarSerialized', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
+  sortByProfileImageDetailSerialized() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'profileImageDetailSerialized', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
+  sortByProfileImageDetailSerializedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'profileImageDetailSerialized', Sort.desc);
     });
   }
 
@@ -2153,16 +2674,16 @@ extension MemoModelCreatorDbQuerySortThenBy
   }
 
   QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
-  thenByHasRegisteredAsUser() {
+  thenByHasRegisteredAsUserFixed() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hasRegisteredAsUser', Sort.asc);
+      return query.addSortBy(r'hasRegisteredAsUserFixed', Sort.asc);
     });
   }
 
   QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
-  thenByHasRegisteredAsUserDesc() {
+  thenByHasRegisteredAsUserFixedDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hasRegisteredAsUser', Sort.desc);
+      return query.addSortBy(r'hasRegisteredAsUserFixed', Sort.desc);
     });
   }
 
@@ -2195,6 +2716,20 @@ extension MemoModelCreatorDbQuerySortThenBy
   }
 
   QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
+  thenByLastRegisteredCheck() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastRegisteredCheck', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
+  thenByLastRegisteredCheckDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastRegisteredCheck', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
   thenByLastUpdated() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastUpdated', Sort.asc);
@@ -2219,6 +2754,34 @@ extension MemoModelCreatorDbQuerySortThenBy
   thenByNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
+  thenByProfileImageAvatarSerialized() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'profileImageAvatarSerialized', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
+  thenByProfileImageAvatarSerializedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'profileImageAvatarSerialized', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
+  thenByProfileImageDetailSerialized() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'profileImageDetailSerialized', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QAfterSortBy>
+  thenByProfileImageDetailSerializedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'profileImageDetailSerialized', Sort.desc);
     });
   }
 
@@ -2313,9 +2876,9 @@ extension MemoModelCreatorDbQueryWhereDistinct
   }
 
   QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QDistinct>
-  distinctByHasRegisteredAsUser() {
+  distinctByHasRegisteredAsUserFixed() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'hasRegisteredAsUser');
+      return query.addDistinctBy(r'hasRegisteredAsUserFixed');
     });
   }
 
@@ -2330,6 +2893,13 @@ extension MemoModelCreatorDbQueryWhereDistinct
   }
 
   QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QDistinct>
+  distinctByLastRegisteredCheck() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastRegisteredCheck');
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QDistinct>
   distinctByLastUpdated() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastUpdated');
@@ -2340,6 +2910,26 @@ extension MemoModelCreatorDbQueryWhereDistinct
   distinctByName({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QDistinct>
+  distinctByProfileImageAvatarSerialized({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'profileImageAvatarSerialized',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, MemoModelCreatorDb, QDistinct>
+  distinctByProfileImageDetailSerialized({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'profileImageDetailSerialized',
+        caseSensitive: caseSensitive,
+      );
     });
   }
 
@@ -2423,9 +3013,9 @@ extension MemoModelCreatorDbQueryProperty
   }
 
   QueryBuilder<MemoModelCreatorDb, bool, QQueryOperations>
-  hasRegisteredAsUserProperty() {
+  hasRegisteredAsUserFixedProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'hasRegisteredAsUser');
+      return query.addPropertyName(r'hasRegisteredAsUserFixed');
     });
   }
 
@@ -2433,6 +3023,13 @@ extension MemoModelCreatorDbQueryProperty
   lastActionDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastActionDate');
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, DateTime?, QQueryOperations>
+  lastRegisteredCheckProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastRegisteredCheck');
     });
   }
 
@@ -2446,6 +3043,20 @@ extension MemoModelCreatorDbQueryProperty
   QueryBuilder<MemoModelCreatorDb, String, QQueryOperations> nameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, String?, QQueryOperations>
+  profileImageAvatarSerializedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'profileImageAvatarSerialized');
+    });
+  }
+
+  QueryBuilder<MemoModelCreatorDb, String?, QQueryOperations>
+  profileImageDetailSerializedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'profileImageDetailSerialized');
     });
   }
 

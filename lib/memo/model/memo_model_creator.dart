@@ -27,7 +27,7 @@ class MemoModelCreator {
   String lastActionDate = "";
   String bchAddressCashtokenAware = "";
   String? profileImgurUrl;
-  bool hasRegisteredAsUser = false;
+  bool hasRegisteredAsUserFixed = false;
   DateTime? lastRegisteredCheck;
   String? profileImageAvatarSerialized;
   String? profileImageDetailSerialized;
@@ -62,7 +62,7 @@ class MemoModelCreator {
     this.lastActionDate = "",
     this.profileImgurUrl,
     this.bchAddressCashtokenAware = "",
-    this.hasRegisteredAsUser = false,
+    this.hasRegisteredAsUserFixed = false,
     this.lastRegisteredCheck,
     this.profileImageAvatarSerialized,
     this.profileImageDetailSerialized,
@@ -208,7 +208,7 @@ class MemoModelCreator {
 
   Future<MemoModelCreator> refreshUserHasRegistered(Ref ref, CreatorRepository repository) async {
     // Early return if already registered
-    if (hasRegisteredAsUser) {
+    if (hasRegisteredAsUserFixed) {
       print('Creator $id is already registered');
       return this;
     }
@@ -219,7 +219,7 @@ class MemoModelCreator {
 
       if (isNowRegistered) {
         // Update the creator with registration info
-        hasRegisteredAsUser = true;
+        hasRegisteredAsUserFixed = true;
         bchAddressCashtokenAware = userData.bchAddressCashtokenAware;
 
         // Use the passed repository instead of reading from ref
@@ -239,7 +239,7 @@ class MemoModelCreator {
   }
 
   Future<void> refreshBalances(Ref ref, CreatorRepository repository) async {
-    if (hasRegisteredAsUser) {
+    if (hasRegisteredAsUserFixed) {
       await refreshBalanceMahakka(ref);
       await refreshBalanceMemo(ref);
     } else {
@@ -274,7 +274,7 @@ class MemoModelCreator {
     String? lastActionDate,
     String? bchAddressCashtokenAware,
     String? profileImgurUrl,
-    bool? hasRegisteredAsUser,
+    bool? hasRegisteredAsUserFixed,
     DateTime? lastRegisteredCheck,
     String? profileImageAvatarSerialized,
     String? profileImageDetailSerialized,
@@ -296,7 +296,7 @@ class MemoModelCreator {
         bchAddressCashtokenAware: bchAddressCashtokenAware ?? this.bchAddressCashtokenAware,
         lastActionDate: lastActionDate ?? this.lastActionDate,
         profileImgurUrl: profileImgurUrl ?? this.profileImgurUrl,
-        hasRegisteredAsUser: hasRegisteredAsUser ?? this.hasRegisteredAsUser,
+        hasRegisteredAsUserFixed: hasRegisteredAsUserFixed ?? this.hasRegisteredAsUserFixed,
         lastRegisteredCheck: lastRegisteredCheck ?? this.lastRegisteredCheck,
         profileImageAvatarSerialized: profileImageAvatarSerialized ?? this.profileImageAvatarSerialized,
         profileImageDetailSerialized: profileImageDetailSerialized ?? this.profileImageDetailSerialized,

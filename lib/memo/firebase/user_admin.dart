@@ -164,7 +164,7 @@ class _AdminUsersListPageState extends ConsumerState<AdminUsersListPage> {
                         // _buildPropertyRow('Imgur URL:', creator?.profileImgurUrl ?? 'N/A', maxLines: 1),
                         // _buildPropertyRow('YouTube URL:', creator?.profileYoutubeId ?? 'N/A', maxLines: 1),
                         _buildPropertyRow('Timestamp:', creator?.created.toString() ?? 'N/A'),
-                        _buildPropertyRow('Has Registered:', creator?.hasRegisteredAsUser.toString() ?? 'N/A'),
+                        _buildPropertyRow('Has Registered:', creator?.hasRegisteredAsUserFixed.toString() ?? 'N/A'),
                       ],
                     ),
                   ),

@@ -19,12 +19,17 @@ class MemoModelCreatorDb {
   late String lastActionDate;
   late String? profileImgurUrl;
 
+  // Additional fields from MemoModelCreator
+  late bool hasRegisteredAsUserFixed;
+  late String bchAddressCashtokenAware;
+  late DateTime? lastRegisteredCheck;
+  late String? profileImageAvatarSerialized;
+  late String? profileImageDetailSerialized;
+
   // Non-serializable String and Int fields
   late int balanceBch;
   late int balanceMemo;
   late int balanceToken;
-  late bool hasRegisteredAsUser;
-  late String bchAddressCashtokenAware;
 
   // Additional cache metadata
   late DateTime lastUpdated;
@@ -42,11 +47,14 @@ class MemoModelCreatorDb {
       ..created = creator.created
       ..lastActionDate = creator.lastActionDate
       ..profileImgurUrl = creator.profileImgurUrl
+      ..hasRegisteredAsUserFixed = creator.hasRegisteredAsUserFixed
+      ..bchAddressCashtokenAware = creator.bchAddressCashtokenAware
+      ..lastRegisteredCheck = creator.lastRegisteredCheck
+      ..profileImageAvatarSerialized = creator.profileImageAvatarSerialized
+      ..profileImageDetailSerialized = creator.profileImageDetailSerialized
       ..balanceBch = creator.balanceBch
       ..balanceMemo = creator.balanceMemo
       ..balanceToken = creator.balanceToken
-      ..hasRegisteredAsUser = creator.hasRegisteredAsUser
-      ..bchAddressCashtokenAware = creator.bchAddressCashtokenAware
       ..lastUpdated = DateTime.now();
   }
 
@@ -61,14 +69,17 @@ class MemoModelCreatorDb {
       created: created,
       lastActionDate: lastActionDate,
       profileImgurUrl: profileImgurUrl,
+      hasRegisteredAsUserFixed: hasRegisteredAsUserFixed,
+      bchAddressCashtokenAware: bchAddressCashtokenAware,
+      lastRegisteredCheck: lastRegisteredCheck,
+      profileImageAvatarSerialized: profileImageAvatarSerialized,
+      profileImageDetailSerialized: profileImageDetailSerialized,
     );
 
     // Set the non-serializable fields
     creator.balanceBch = balanceBch;
     creator.balanceMemo = balanceMemo;
     creator.balanceToken = balanceToken;
-    creator.bchAddressCashtokenAware = bchAddressCashtokenAware;
-    creator.hasRegisteredAsUser = hasRegisteredAsUser;
 
     return creator;
   }

@@ -73,15 +73,22 @@ class PostCardHeader extends ConsumerWidget {
               ],
             ),
           ),
-          PopularityScoreWidget(initialScore: displayScore, postId: post.id),
-          // Text("${post.popularityScore}", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400)),
-          SizedBox(width: 3),
-          IconButton(
-            padding: EdgeInsets.all(9),
-            icon: const Icon(Icons.thumb_up_alt_outlined),
-            onPressed: onLikePostTipCreator, // This is for the "Tip Creator" action
-            iconSize: 21,
-            visualDensity: VisualDensity.compact,
+          GestureDetector(
+            onTap: onLikePostTipCreator,
+            child: Row(
+              children: [
+                PopularityScoreWidget(initialScore: displayScore, postId: post.id),
+                // Text("${post.popularityScore}", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400)),
+                SizedBox(width: 3),
+                IconButton(
+                  padding: EdgeInsets.all(9),
+                  icon: const Icon(Icons.thumb_up_alt_outlined),
+                  onPressed: onLikePostTipCreator, // This is for the "Tip Creator" action
+                  iconSize: 21,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
+            ),
           ),
         ],
       ),

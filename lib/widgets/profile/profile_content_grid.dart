@@ -55,7 +55,7 @@ class ProfileContentGrid extends StatelessWidget {
             imageUrl: imageUrl,
             sourceType: ImageSourceType.network,
             backgroundColor: Colors.black,
-            fitMode: ImageFitMode.contain,
+            fitMode: ImageFitMode.cover,
             aspectRatio: 1.0,
             borderRadius: BorderRadius.zero,
             showLoadingProgress: true,

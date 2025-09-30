@@ -396,11 +396,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                                 children: [
                                   Text(
                                     _selectedFile!.path.split('/').last,
-                                    style: textTheme.bodySmall!.copyWith(
-                                      letterSpacing: 1,
-                                      fontStyle: FontStyle.italic,
-                                      color: colorScheme.primary,
-                                    ),
+                                    style: textTheme.bodySmall!.copyWith(letterSpacing: 0.5, color: colorScheme.secondary),
                                     textAlign: TextAlign.center,
                                   ),
                                   const SizedBox(height: 24),
@@ -433,8 +429,8 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                                   OutlinedButton(
                                     onPressed: _removeFile,
                                     style: ButtonStyle(
-                                      foregroundColor: MaterialStateProperty.all(colorScheme.error.withAlpha(153)),
-                                      side: MaterialStateProperty.all(BorderSide(color: colorScheme.error.withAlpha(153))),
+                                      foregroundColor: MaterialStateProperty.all(colorScheme.error.withAlpha(198)),
+                                      side: MaterialStateProperty.all(BorderSide(color: colorScheme.error.withAlpha(198))),
                                     ),
                                     child: const Text('CHANGE IMAGE'),
                                   ),

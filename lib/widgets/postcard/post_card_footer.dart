@@ -64,10 +64,10 @@ class PostCardFooter extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.only(left: 4),
                 child: GestureDetector(
-                  onDoubleTap: () {
+                  onTap: () {
                     FlutterClipboard.clear();
                     FlutterClipboard.copy("${post.creator!.name} wrote on ${post.dateTimeFormattedSafe()}: ${post.text}" ?? "");
-                    showSnackBar("Text copied to clipboard", context, type: SnackbarType.info);
+                    showSnackBar("Text copied to clipboard", context, type: SnackbarType.success);
                   },
                   child: PostExpandableText(post: post, hidePrefix: true),
                 ),

@@ -94,7 +94,7 @@ class MediaTypeSelector extends ConsumerWidget {
 
   Widget _buildMediaTypeButton(ThemeData theme, MediaType mediaType, bool isSelected, WidgetRef ref) {
     final colorScheme = theme.colorScheme;
-    final selectionColor = isSelected ? colorScheme.primary : colorScheme.onSurface;
+    final selectionColor = isSelected ? colorScheme.secondary : colorScheme.onSurface;
     final backgroundColor = isSelected ? theme.scaffoldBackgroundColor : theme.colorScheme.surface;
 
     return Expanded(

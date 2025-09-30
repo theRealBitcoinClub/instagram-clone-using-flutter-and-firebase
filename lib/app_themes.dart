@@ -155,13 +155,13 @@ final ThemeData lightTheme = ThemeData(
     onTertiaryFixedVariant: primaryGreen,
     primary: primaryGreen,
     onPrimary: Colors.white, // Text/icons on primary color
-    secondary: lightGreenAccent, // Lighter green for accents
-    onSecondary: primaryDarkGrey, // Text/icons on secondary color
+    secondary: darkGreenShade, // Lighter green for accents
+    onSecondary: primaryLightGrey, // Text/icons on secondary color
     surface: secondaryLightGrey, // Cards, sheets, dialogs
     onSurface: textOnLight, // Main text color
     background: secondaryLightGrey, // Overall background
     onBackground: textOnLight,
-    error: Colors.redAccent, // Standard error color
+    error: Colors.red, // Standard error color
     onError: Colors.white,
     surfaceVariant: primaryLightGrey, // For slightly different surfaces
     onSurfaceVariant: textOnLight, // Text on surfaceVariant
@@ -308,7 +308,7 @@ final ThemeData darkTheme = ThemeData(
     onSurface: textOnDark, // Main text color
     background: primaryDarkGrey, // Overall background
     onBackground: textOnDark,
-    error: Colors.red,
+    error: Colors.redAccent,
     onError: Colors.white,
     surfaceVariant: const Color(0xFF424242), // Slightly different dark surfaces
     onSurfaceVariant: textOnDark,

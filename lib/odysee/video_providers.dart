@@ -67,10 +67,10 @@ final chewieControllerProvider = FutureProvider.autoDispose
 
       // Define theme-aware colors
       final primaryColor = colorScheme.primary;
-      final secondaryColor = colorScheme.secondary;
+      // final secondaryColor = colorScheme.secondary;
       final surfaceColor = colorScheme.surface;
       final onSurfaceColor = colorScheme.onSurface;
-      final backgroundColor = isDark ? Colors.black : Colors.white;
+      // final backgroundColor = isDark ? Colors.black : Colors.white;
       final progressBackgroundColor = isDark ? Colors.white30 : Colors.black26;
 
       // Create ChewieController with theme-aware colors

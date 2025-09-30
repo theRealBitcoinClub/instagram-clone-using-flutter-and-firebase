@@ -397,23 +397,30 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 
 // --- Simplified BCH QR Code Dialog Helper ---
 void showQrCodeDialog({required BuildContext context, MemoModelUser? user, MemoModelCreator? creator, bool memoOnly = false}) {
-  showDialog(
-    context: context,
-    builder: (dialogCtx) {
-      return QrCodeDialog(
-        cashtokenAddress: user != null
-            ? user.bchAddressCashtokenAware
-            : creator!.hasRegisteredAsUserFixed
-            ? creator.bchAddressCashtokenAware
-            : null,
-        legacyAddress: user != null
-            ? user.legacyAddressMemoBch
-            : creator!.hasRegisteredAsUserFixed
-            ? creator.id
-            : creator.id,
-        memoProfileId: creator != null ? creator.id : user!.id,
-        memoOnly: memoOnly,
-      );
-    },
-  );
+  if (creator != null) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return QrCodeDialog(
+          cashtokenAddress: creator.hasRegisteredAsUserFixed ? creator.bchAddressCashtokenAware : null,
+          legacyAddress: creator.id,
+          memoProfileId: creator.id,
+          memoOnly: memoOnly,
+        );
+      },
+    );
+  } else if (user != null) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return QrCodeDialog(
+          cashtokenAddress: user.bchAddressCashtokenAware,
+          legacyAddress: user.legacyAddressMemoBch,
+          memoProfileId: user.id,
+          memoOnly: memoOnly,
+        );
+      },
+    );
+  } else
+    throw Exception("This shall not happen");
 }

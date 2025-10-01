@@ -39,7 +39,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   TipAmount? _selectedTipAmount;
   bool allowLogout = false;
   late String _mnemonicBackupKey;
-  bool _controllersInitialized = false;
+  bool _inputControllersInitialized = false;
 
   late TabController _tabController;
   int _currentTabIndex = 0;
@@ -83,7 +83,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   }
 
   void _initializeControllers(MemoModelCreator creator, MemoModelUser user) {
-    if (_controllersInitialized) return;
+    if (_inputControllersInitialized) return;
 
     _profileNameCtrl.text = creator.name;
     _profileTextCtrl.text = creator.profileText;
@@ -91,7 +91,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     _selectedTipReceiver = user.tipReceiver;
     _selectedTipAmount = user.tipAmountEnum;
 
-    _controllersInitialized = true;
+    _inputControllersInitialized = true;
   }
 
   @override
@@ -125,7 +125,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         // final actualCreator = creator ?? user.creator;
 
         // Initialize controllers once when creator is available
-        if (!_controllersInitialized) {
+        if (!_inputControllersInitialized) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               setState(() {
@@ -488,8 +488,14 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         user.temporaryTipAmount = null;
 
         ref.invalidate(userProvider);
+        ref.read(profileDataProvider.notifier).refreshCreatorCache(ref.read(userProvider)!.id);
+        ref.read(profileDataProvider.notifier).forceRefreshAfterProfileSavedOnSettings();
         ref.invalidate(profileDataProvider);
+        ref.refresh(profileDataProvider);
 
+        setState(() {
+          _inputControllersInitialized = false;
+        });
         onSuccess();
       } else {
         // final failMessage = [
@@ -523,7 +529,6 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       onFail();
     } finally {
       setState(() {
-        _controllersInitialized = false;
         isSavingProfile = false;
       });
       // setState(() => );

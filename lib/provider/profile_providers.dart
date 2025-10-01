@@ -254,11 +254,16 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     });
   }
 
+  void forceRefreshAfterProfileSavedOnSettings() {
+    _cache.remove(ref.read(userProvider)!.id);
+    // _forceRefresh = true;
+  }
+
   void refreshProfileDataAndStartBalanceTimer(int currentTabIndex, String profileId, bool isOwnProfile, BuildContext ctx) {
     ctx.afterBuild(refreshUI: false, () {
       if (currentTabIndex == 2) {
         if (_lastTabIndex != currentTabIndex || _lastProfileIdRefreshRequest != profileId) {
-          _forceRefresh = true;
+          // _forceRefresh = true;
           refreshUserRegisteredFlag();
           refreshCreatorCache(profileId);
           refreshBalances();

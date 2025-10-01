@@ -9,4 +9,6 @@ A blockchain-based social media platform built on Bitcoin Cash.
 - Hashtags & Channel
 - Token economy
 
-Visit the site: https://mahakka.github.io
+Website: https://mahakka.com
+
+Mirror: https://mahakka-MKA.github.io

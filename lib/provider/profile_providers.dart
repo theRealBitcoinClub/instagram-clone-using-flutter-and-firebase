@@ -33,7 +33,7 @@ class ProfileData {
   ProfileData({required this.creator, required this.posts, required this.categorizer, this.fromCache = false, this.postsLoaded = false});
 
   bool get isLoading => creator == null || !postsLoaded;
-  bool get hasData => creator != null && postsLoaded && posts.isNotEmpty;
+  // bool get hasData => creator != null && postsLoaded && posts.isNotEmpty;
 
   // Helper method to create a copy with updated fields
   ProfileData copyWith({
@@ -61,7 +61,8 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   String? _lastProfileIdPostDataRequest;
   String? _lastProfileIdRefreshRequest;
   int? _lastTabIndex;
-  bool _pendingRefresh = false;
+  bool _forceRefresh = false;
+  // bool _isAwaitingFreshData = false;
 
   // QR Dialog specific state
   bool _isQrDialogOpen = false;
@@ -84,22 +85,31 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
 
     if (profileId == null || profileId.isEmpty) {
       _cancelCreatorSubscription();
-      return ProfileData(creator: null, posts: [], categorizer: PostsCategorizer.empty());
+      return ProfileData(creator: null, posts: [], categorizer: PostsCategorizer.empty(), postsLoaded: false, fromCache: false);
     }
+
+    // Load creator from repository
+    final creatorRepo = ref.read(creatorRepositoryProvider);
+    final creator = await creatorRepo.getCreator(profileId, saveToFirebase: false, forceScrape: false);
+
+    // Create initial data with creator but posts not loaded yet
+    final initialData = ProfileData(creator: creator, posts: [], categorizer: PostsCategorizer.empty(), fromCache: false, postsLoaded: false);
+
+    state = AsyncData(initialData);
 
     // Set up creator update subscription for the current profile
     _setupCreatorSubscription(profileId);
 
     // Handle pending refresh from previous build
-    if (_pendingRefresh) {
-      _pendingRefresh = false;
-      return await _loadProfileData(profileId, forceScrape: true);
-    }
-
-    // Always load fresh data when profileId changes
-    if (_lastProfileIdPostDataRequest != profileId) {
-      return await _loadProfileData(profileId, forceScrape: true);
-    }
+    // if (_forceRefresh) {
+    //   _forceRefresh = false;
+    //   return await _loadProfileData(profileId, forceScrape: true);
+    // }
+    //
+    // // Always load fresh data when profileId changes
+    // if (_lastProfileIdPostDataRequest != profileId) {
+    //   return await _loadProfileData(profileId, forceScrape: true);
+    // }
 
     // Check if we should use cached data (only if same profile and recent)
     final now = DateTime.now();
@@ -162,21 +172,21 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     _lastProfileIdPostDataRequest = profileId;
     _lastRefreshTime = DateTime.now();
 
-    final loadStartTime = DateTime.now();
-
     try {
       // Load creator from repository
       final creatorRepo = ref.read(creatorRepositoryProvider);
       final creator = await creatorRepo.getCreator(profileId, saveToFirebase: false, forceScrape: forceScrape);
 
       // Create initial data with creator but posts not loaded yet
-      final initialData = ProfileData(
-        creator: creator,
-        posts: [],
-        categorizer: PostsCategorizer.empty(),
-        fromCache: !forceScrape,
-        postsLoaded: false,
-      );
+      // final initialData = ProfileData(
+      //   creator: creator,
+      //   posts: [],
+      //   categorizer: PostsCategorizer.empty(),
+      //   fromCache: !forceScrape,
+      //   postsLoaded: false,
+      // );
+      //
+      // state = AsyncData(initialData);
 
       // Load posts
       final posts = await _loadPosts(profileId);
@@ -210,20 +220,20 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     }
   }
 
-  Future<void> refreshProfile({bool forceScrape = false}) async {
-    // Schedule the refresh to happen after the current build phase
-    Future.microtask(() async {
-      state = const AsyncValue.loading();
-      state = await AsyncValue.guard(() async {
-        final profileId = ref.read(_currentProfileIdProvider);
-        if (profileId == null || profileId.isEmpty) {
-          return ProfileData(creator: null, posts: [], categorizer: PostsCategorizer.empty());
-        }
-
-        return await _loadProfileData(profileId, forceScrape: forceScrape);
-      });
-    });
-  }
+  // Future<void> refreshProfile({bool forceScrape = false}) async {
+  //   // Schedule the refresh to happen after the current build phase
+  //   Future.microtask(() async {
+  //     state = const AsyncValue.loading();
+  //     state = await AsyncValue.guard(() async {
+  //       final profileId = ref.read(_currentProfileIdProvider);
+  //       if (profileId == null || profileId.isEmpty) {
+  //         return ProfileData(creator: null, posts: [], categorizer: PostsCategorizer.empty());
+  //       }
+  //
+  //       return await _loadProfileData(profileId, forceScrape: forceScrape);
+  //     });
+  //   });
+  // }
 
   Future<void> refreshCreatorCache(String creatorId) async {
     final creatorRepository = ref.read(creatorRepositoryProvider);
@@ -246,22 +256,28 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   }
 
   void refreshProfileDataAndStartBalanceTimer(int currentTabIndex, String profileId, bool isOwnProfile, BuildContext ctx) {
+    // _isAwaitingFreshData = true;
     // Schedule the operation to happen after build
     ctx.afterBuild(refreshUI: false, () {
+      // _isAwaitingFreshData = false;
       if (currentTabIndex == 2) {
         if (_lastTabIndex != currentTabIndex || _lastProfileIdRefreshRequest != profileId) {
+          // _isAwaitingFreshData = false;
+          _forceRefresh = true;
           refreshUserRegisteredFlag();
           refreshCreatorCache(profileId);
           refreshBalances();
         }
         if (isOwnProfile) {
+          // _isAwaitingFreshData = false;
+          // _isAwaitingFreshData = false;
           startAutoRefreshBalanceProfile();
         }
 
-        // Set pending refresh flag for next build
-        _pendingRefresh = true;
+        // _isAwaitingFreshData = false;
         _lastProfileIdRefreshRequest = profileId;
       } else {
+        // _isAwaitingFreshData = false;
         stopAutoRefreshBalanceProfile();
       }
       _lastTabIndex = currentTabIndex;

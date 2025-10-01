@@ -69,7 +69,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   void _startMinDisplayTimer() {
     _minDisplayTimeElapsed = false;
     _minDisplayTimer?.cancel();
-    _minDisplayTimer = Timer(Duration(seconds: 3), () {
+    _minDisplayTimer = Timer(Duration(milliseconds: 1111), () {
       if (mounted) {
         setState(() {
           _minDisplayTimeElapsed = true;
@@ -117,7 +117,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
             theme: theme,
             message: "Error loading profile: $error",
             onRetry: () {
-              _startMinDisplayTimer();
+              // _startMinDisplayTimer();
               ref.invalidate(profileDataProvider);
               ref.refresh(profileDataProvider);
               ref.read(navigationStateProvider.notifier).navigateToOwnProfile();
@@ -128,19 +128,19 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     );
   }
 
-  Future<void> _refreshData() async {
-    try {
-      await ref.refresh(profileDataProvider.future);
-    } catch (e) {
-      print("Error refreshing profile data: $e");
-    }
-  }
-
-  void _safeRefresh() {
-    Future.microtask(() {
-      ref.refresh(profileDataProvider);
-    });
-  }
+  // Future<void> _refreshData() async {
+  //   try {
+  //     await ref.refresh(profileDataProvider.future);
+  //   } catch (e) {
+  //     print("Error refreshing profile data: $e");
+  //   }
+  // }
+  //
+  // void _safeRefresh() {
+  //   Future.microtask(() {
+  //     ref.refresh(profileDataProvider);
+  //   });
+  // }
 
   double _startDragX = 0.0;
   double _currentDragX = 0.0;
@@ -184,7 +184,11 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   Widget _buildProfileScreen(ProfileData profileData, MemoModelUser? loggedInUser, int currentTabIndex, ThemeData theme) {
     final creator = profileData.creator;
     if (creator == null) {
-      return ProfileErrorScaffold(theme: theme, message: "Profile not found or an error occurred.", onRetry: () => _safeRefresh);
+      return ProfileErrorScaffold(
+        theme: theme,
+        message: "Profile not found or an error occurred.",
+        onRetry: () => ref.read(navigationStateProvider.notifier).navigateToOwnProfile(),
+      );
     }
 
     final isOwnProfile = loggedInUser?.profileIdMemoBch == creator.id;
@@ -210,20 +214,22 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
             onHorizontalDragUpdate: _handleHorizontalDragUpdate,
             onHorizontalDragEnd: _handleHorizontalDragEnd,
             behavior: HitTestBehavior.opaque,
-            child: RefreshIndicator(
-              onRefresh: _refreshData,
-              color: theme.colorScheme.primary,
-              backgroundColor: theme.colorScheme.surface,
-              child: CustomScrollView(
-                controller: _scrollController,
-                slivers: [
-                  SliverToBoxAdapter(child: _buildProfileHeader(creator, isOwnProfile, theme)),
-                  _buildTabSelector(),
-                  _buildContent(theme, profileData),
-                ],
-              ),
-            ),
+            child:
+                // RefreshIndicator(
+                //   onRefresh: _refreshData,
+                //   color: theme.colorScheme.primary,
+                //   backgroundColor: theme.colorScheme.surface,
+                //   child:
+                CustomScrollView(
+                  controller: _scrollController,
+                  slivers: [
+                    SliverToBoxAdapter(child: _buildProfileHeader(creator, isOwnProfile, theme)),
+                    _buildTabSelector(),
+                    _buildContent(theme, profileData),
+                  ],
+                ),
           ),
+          // ),
           if (_showIntro) IntroOverlay(introType: _introType, onComplete: () {}),
         ],
       ),

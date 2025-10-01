@@ -279,7 +279,9 @@ class MemoRegExp {
     }).toList();
   }
 
-  static extractUrlsGenerously(String text) {
+  static List<String> extractUrlsGenerously(String? text) {
+    if (text == null) return [];
+
     return extractUrlsRefinedExtensions(extractUrlsRefined(text));
   }
 }
@@ -351,7 +353,7 @@ class TextFilter {
   }
 }
 
-class StringUtils {
+class MemoStringUtils {
   static String ensureSpacesAroundMatches(String text, List<String> searchStrings) {
     if (text.isEmpty) return text;
 
@@ -400,5 +402,26 @@ class StringUtils {
     result = result.replaceAll(RegExp(r'\s+'), ' ').trim();
 
     return result;
+  }
+
+  static String removeEmoticons(String text) {
+    if (text.isEmpty) return text;
+
+    // Unicode ranges for emoticons and emoji
+    final emoticonRegex = RegExp(
+      r'[\u{1F600}-\u{1F64F}' // Emoticons
+      r'\u{1F300}-\u{1F5FF}' // Misc Symbols and Pictographs
+      r'\u{1F680}-\u{1F6FF}' // Transport & Map Symbols
+      r'\u{1F1E0}-\u{1F1FF}' // Flags (iOS)
+      r'\u{2600}-\u{26FF}' // Misc symbols
+      r'\u{2700}-\u{27BF}' // Dingbats
+      r'\u{FE00}-\u{FE0F}' // Variation Selectors
+      r'\u{1F900}-\u{1F9FF}' // Supplemental Symbols and Pictographs
+      r'\u{1F018}-\u{1F270}' // Various
+      r'\u{238C}]', // Miscellaneous Technical
+      unicode: true,
+    );
+
+    return text.replaceAll(emoticonRegex, '').trim();
   }
 }

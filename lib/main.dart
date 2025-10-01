@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -9,6 +11,77 @@ import 'package:mahakka/firebase_options.dart';
 import 'package:mahakka/provider/isar_provider.dart';
 import 'package:mahakka/route%20handling/auth_page.dart';
 import 'package:mahakka/theme_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError('SharedPreferencesProvider was not initialized');
+});
+
+final sharedPreferencesInitializerProvider = FutureProvider<SharedPreferences>((ref) async {
+  return await SharedPreferences.getInstance();
+});
+
+// final languageCodeProvider = StateProvider<String?>((ref) {
+//   final prefs = ref.read(sharedPreferencesProvider);
+//   return prefs.getString('user_language') ?? SystemLanguage.getLanguageCode();
+// });
+
+final languageCodeProvider = StateProvider<String>((ref) {
+  try {
+    final prefs = ref.read(sharedPreferencesProvider);
+    return prefs.getString('user_language') ?? SystemLanguage.getLanguageCode();
+  } catch (e) {
+    // Fallback to system language if SharedPreferences fails
+    return SystemLanguage.getLanguageCode();
+  }
+});
+
+Future<bool> setUserLanguage(WidgetRef ref, String languageCode) async {
+  try {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final success = await prefs.setString('user_language', languageCode);
+    if (success) {
+      ref.read(languageCodeProvider.notifier).state = languageCode;
+    }
+    return success;
+  } catch (e) {
+    return false;
+  }
+}
+
+class SystemLanguage {
+  /// Get system language with multiple fallback methods
+  static String getLanguageCode([BuildContext? context]) {
+    // Try Flutter context first (most reliable in widget tree)
+    if (context != null) {
+      try {
+        final Locale locale = Localizations.localeOf(context);
+        return locale.languageCode;
+      } catch (e) {
+        // Fall through to other methods
+      }
+    }
+
+    // Try dart:ui window locale
+    try {
+      return ui.window.locale.languageCode;
+    } catch (e) {
+      // Fall through to platform
+    }
+
+    return '';
+  }
+
+  /// Get all supported locales from the system
+  static List<Locale> getSystemLocales() {
+    return ui.window.locales;
+  }
+
+  /// Get the primary system locale
+  static Locale getSystemLocale() {
+    return ui.window.locale;
+  }
+}
 
 void main() async {
   // Handle Flutter errors silently
@@ -27,7 +100,11 @@ void main() async {
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(const ProviderScope(child: MyApp()));
+  // runApp(const ProviderScope(child: MyApp()));
+  // Initialize SharedPreferences before running the app
+  final sharedPreferences = await SharedPreferences.getInstance();
+
+  runApp(ProviderScope(overrides: [sharedPreferencesProvider.overrideWithValue(sharedPreferences)], child: const MyApp()));
 }
 
 class MyApp extends ConsumerWidget {

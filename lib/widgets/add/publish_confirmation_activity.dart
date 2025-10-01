@@ -52,7 +52,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
   late AnimationController _translationSectionController;
   late Animation<double> _translationSectionAnimation;
 
-  final detectedLanguageProvider = StateProvider<Language?>((ref) => null);
+  final detectedLanguageProvider = StateProvider<MahakkaLanguage?>((ref) => null);
 
   @override
   void initState() {

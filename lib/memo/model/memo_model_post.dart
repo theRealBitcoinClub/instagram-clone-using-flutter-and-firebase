@@ -324,71 +324,97 @@ class MemoModelPost {
     return MemoRegExp.extractUrlsGenerously(text!).isNotEmpty;
   }
 
-  String parseUrlsClearText() {
-    final urlsExtracted = MemoRegExp.extractUrls(text);
-    String result = text ?? "";
+  String parseUrlsClearText({bool modifyTextProperty = true, bool parseGenerously = false, String? textParam}) {
+    final urlsExtracted = parseGenerously ? MemoRegExp.extractUrlsGenerously(text) : MemoRegExp.extractUrls(text);
+    String result = textParam ?? text ?? "";
 
     for (final url in urlsExtracted) {
       result = result.replaceAll(url, '');
     }
     urls = urlsExtracted;
-    text = result.replaceAll(RegExp(r'\s+'), ' ');
+    result = result.replaceAll(RegExp(r'\s+'), ' ');
+
+    if (modifyTextProperty) text = result;
+
     return result;
   }
 
-  String parseTagsClearText() {
+  String parseTagsClearText({bool modifyTextProperty = true, String? textParam}) {
     final tags = MemoRegExp.extractHashtags(text);
-    String result = text ?? "";
+    String result = textParam ?? text ?? "";
 
     for (final t in tags) {
       result = result.replaceAll(t, '');
     }
     tagIds = tags;
-    text = result.replaceAll(RegExp(r'\s+'), ' ');
+    result = result.replaceAll(RegExp(r'\s+'), ' ');
+
+    if (modifyTextProperty) text = result;
+
     return result;
   }
 
-  String parseTopicClearText() {
+  String parseTopicClearText({bool modifyTextProperty = true, String? textParam}) {
     var topics = MemoRegExp.extractTopics(text);
     var topic = "";
     if (topics.isNotEmpty) topic = topics.first;
 
-    String result = text ?? "";
+    String result = textParam ?? text ?? "";
 
     result = result.replaceAll(topic, '');
 
     topicId = topic;
-    text = result.replaceAll(RegExp(r'\s+'), ' ');
-    return result;
-  }
+    result = result.replaceAll(RegExp(r'\s+'), ' ');
 
-  String parseUrlsTagsTopicClearText() {
-    var result = parseUrlsClearText();
-    result = parseTagsClearText();
-    result = parseTopicClearText();
+    if (modifyTextProperty) text = result;
 
     return result;
   }
 
-  void appendUrlsToText() {
-    if (text != null)
+  String parseUrlsTagsTopicClearText({bool modifyTextProperty = true, bool parseGenerously = false, String? textParam}) {
+    var result = parseUrlsClearText(modifyTextProperty: modifyTextProperty, parseGenerously: parseGenerously, textParam: textParam);
+    result = parseTagsClearText(modifyTextProperty: modifyTextProperty, textParam: result);
+    result = parseTopicClearText(modifyTextProperty: modifyTextProperty, textParam: result);
+
+    return result;
+  }
+
+  String? appendUrlsToText({String? textParam}) {
+    String? result = textParam ?? text ?? null;
+
+    if (result != null)
       for (final url in urls) {
-        text = text! + " \n\n$url";
+        result = "$result $url";
       }
+
+    if (textParam == null) text = result;
+
+    return result;
   }
 
-  void appendTagsToText() {
-    if (text != null)
+  String? appendTagsToText({String? textParam}) {
+    String? result = textParam ?? text ?? null;
+
+    if (result != null)
       for (final t in tagIds) {
-        text = text! + " $t";
+        result = "$result $t";
       }
+
+    if (textParam == null) text = result;
+
+    return result;
   }
 
-  void appendTopicToText() {
+  String? appendTopicToText({String? textParam}) {
+    String? result = textParam ?? text ?? null;
     // if (!topicId.startsWith("@"))
     //   topicId = "@" + topicId;
 
-    if (text != null) text = topicId! + " " + text!;
+    if (result != null) result = "${topicId} ${result}";
+
+    if (textParam == null) text = result;
+
+    return result;
   }
 
   void appendTagsTopicToText() {
@@ -396,9 +422,13 @@ class MemoModelPost {
     appendTopicToText();
   }
 
-  void appendUrlsTagsTopicToText() {
-    appendTagsToText();
-    appendUrlsToText();
-    appendTopicToText();
+  String? appendUrlsTagsTopicToText({String? textParam}) {
+    String? result = textParam ?? text ?? null;
+
+    result = appendTagsToText(textParam: result);
+    result = appendUrlsToText(textParam: result);
+    result = appendTopicToText(textParam: result);
+
+    return result?.trim();
   }
 }

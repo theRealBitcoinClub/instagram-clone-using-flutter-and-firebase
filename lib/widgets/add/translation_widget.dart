@@ -135,7 +135,7 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     bool languageDetectionFailed = ref.watch(languageDetectionFailedProvider);
     bool isAutoDetecting = ref.watch(isAutoDetectingProvider);
     bool isTranslating = ref.watch(isTranslatingProvider);
-    Language targetLanguage = ref.watch(targetLanguageProvider);
+    MahakkaLanguage targetLanguage = ref.watch(targetLanguageProvider);
     print("\n\n\nLANGUAGE WIDGET STATE:");
     print("\n\n\nLANGUAGE WIDGET STATE languageDetectionFailed: $languageDetectionFailed");
     print("\n\n\nLANGUAGE WIDGET STATE isAutoDetecting: $isAutoDetecting");

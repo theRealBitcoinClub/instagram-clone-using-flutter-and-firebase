@@ -1,38 +1,33 @@
+// Updated PostExpandableText widget
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../expandable_text_custom.dart';
 import '../../memo/model/memo_model_post.dart';
 import '../../providers/navigation_providers.dart';
-import '../../utils/snackbar.dart'; // Adjust import path
+import '../../utils/snackbar.dart';
+import 'animated_translated_text.dart';
 
 class PostExpandableText extends ConsumerWidget {
   final MemoModelPost post;
   final bool? hidePrefix;
+  final bool? doTranslate;
 
-  const PostExpandableText({Key? key, required this.post, this.hidePrefix}) : super(key: key);
+  const PostExpandableText({Key? key, required this.post, this.hidePrefix, this.doTranslate}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    return ExpandableTextCustom(
-      post.text ?? "",
-      expandText: ' show more',
-      collapseText: 'show less',
+    return AnimatedTranslatedText(
+      post: post,
+      originalText: post.text ?? "",
+      doTranslate: doTranslate ?? false,
+      style: theme.textTheme.bodyMedium?.copyWith(color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85)),
       maxLines: 5,
       linkColor: theme.colorScheme.onTertiaryFixedVariant,
-      style: theme.textTheme.bodyMedium?.copyWith(
-        // fontFamily: "Cascadia Code",
-        // fontSize: 15,
-        // height: 1.4,
-        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
-      ),
       hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant),
       onHashtagTap: (String hashtag) {
         ref.read(navigationStateProvider.notifier).navigateToTag(hashtag, context: context);
-        // WebViewNavigator.navigateTo(ref, WebViewShow.tag, hashtag);
-        // showSnackBar("Loading $hashtag charts!", type: SnackbarType.success);
         showSnackBar("$hashtag charts are loading...", type: SnackbarType.info, wait: true);
       },
       mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant),
@@ -44,46 +39,20 @@ class PostExpandableText extends ConsumerWidget {
       prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
       onPrefixTap: () {
         ref.read(navigationStateProvider.notifier).navigateToTopic(post.topicId, context: context);
-        // WebViewNavigator.navigateTo(ref, WebViewShow.topic, post.topicId);
-        // showSnackBar("Loading ${post.topicId} charts!", type: SnackbarType.success);
         showSnackBar("${post.topicId} charts are loading...", type: SnackbarType.info, wait: true);
       },
     );
   }
 
   TextStyle? _buildUrlStyle(ThemeData theme) {
-    return theme.textTheme.labelSmall!.copyWith(
-      // color: theme.colorScheme.onTertiaryFixedVariant.withAlpha(189),
-      // fontStyle: FontStyle.italic,
-      // decoration: TextDecoration.underline,
-      // fontWeight: FontWeight.w600,
-    );
+    return theme.textTheme.labelSmall!.copyWith();
   }
 
   Future<void> _onUrlTap(String url, BuildContext context, WidgetRef ref) async {
     try {
       ref.read(navigationStateProvider.notifier).navigateToUrl(url, context: context);
-      // WebViewNavigator.navigateTo(ref, WebViewShow.url, url);
     } catch (e) {
       showSnackBar("Error opening URL", type: SnackbarType.error);
     }
-  }
-}
-
-// Alternative version using a Provider if you need to create a provider for the post
-final postProvider = Provider.family<MemoModelPost, String>((ref, postId) {
-  // You'll need to implement how to fetch the post by ID
-  throw UnimplementedError('Implement post fetching logic');
-});
-
-class PostExpandableTextWithProvider extends ConsumerWidget {
-  final String postId;
-
-  const PostExpandableTextWithProvider({Key? key, required this.postId}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final post = ref.watch(postProvider(postId));
-    return PostExpandableText(post: post);
   }
 }

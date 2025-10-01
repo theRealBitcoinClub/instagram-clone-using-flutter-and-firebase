@@ -1,7 +1,10 @@
 // translation_service.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/main.dart';
+import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/provider/translation_cache.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:translator/translator.dart';
 
@@ -17,7 +20,7 @@ final textAnimationProvider = StateProvider<double>((ref) => 1.0);
 final showOriginalTextProvider = StateProvider<bool>((ref) => true);
 final isTranslatingProvider = StateProvider<bool>((ref) => false);
 final translatedTextProvider = StateProvider<String?>((ref) => null);
-final detectedLanguageProvider = StateProvider<Language?>((ref) => null);
+final detectedLanguageProvider = StateProvider<MahakkaLanguage?>((ref) => null);
 final languageDetectionFailedProvider = StateProvider<bool>((ref) => false);
 final isAutoDetectingProvider = StateProvider<bool>((ref) => false);
 
@@ -26,6 +29,64 @@ class TranslationService {
   final GoogleTranslator translator = GoogleTranslator();
 
   TranslationService(this._ref);
+
+  Future<String> translatePostForViewer(MemoModelPost post, bool doTranslate, String text, BuildContext context, String langCode) async {
+    if (post.text == null || post.text!.isEmpty) return "";
+
+    final cache = _ref.read(translationCacheProvider);
+    if (!doTranslate || text.trim().isEmpty) {
+      return text;
+    }
+
+    String systemLangCode = _ref.read(languageCodeProvider);
+    // final String systemLangCode = SystemLanguage.getLanguageCode(context);
+    // var systemLangCode = "de";
+    if (systemLangCode.isEmpty) {
+      return text;
+    }
+
+    final cachedTranslation = cache.get(post.id!, systemLangCode);
+    if (cachedTranslation != null) {
+      return cachedTranslation;
+    }
+
+    try {
+      String result = post.parseUrlsTagsTopicClearText(modifyTextProperty: false, parseGenerously: true);
+      result = MemoStringUtils.removeEmoticons(result);
+
+      Translation translation = await translateAuto(text: result, to: systemLangCode);
+
+      String? translatedWithMeta = post.appendUrlsTagsTopicToText(textParam: translation.text);
+
+      if (translation.sourceLanguage.code != systemLangCode && translatedWithMeta != null) {
+        cache.put(post.id!, systemLangCode, translatedWithMeta);
+        return translatedWithMeta;
+      }
+      return post.text!;
+    } catch (e) {
+      return text;
+    }
+  }
+  //
+  // Future<String> translatePostForViewer(bool doTranslate, String text, context) async {
+  //   String systemLang = _ref.read(languageCodeProvider);
+  //   if (systemLang.isNotEmpty && doTranslate && text.trim().isNotEmpty) {
+  //     var translator = _ref.read(translationServiceProvider);
+  //     String langCode = await translator.detectLanguage(text);
+  //     return await translator.translateText(text: text, from: langCode, to: systemLang);
+  //   }
+  //   return text;
+  // }
+
+  // Core translation methods
+  Future<Translation> translateAuto({required String text, required String to}) async {
+    try {
+      return await translator.translate(text, from: 'auto', to: to);
+      // return translation.text;
+    } catch (e) {
+      throw Exception('Translation failed: $e');
+    }
+  }
 
   // Core translation methods
   Future<String> translateText({required String text, String? from, required String to}) async {
@@ -173,12 +234,12 @@ class TranslationService {
 
 // State class to hold translation state
 class TranslationState {
-  final Language? detectedLanguage;
+  final MahakkaLanguage? detectedLanguage;
   final bool languageDetectionFailed;
   final bool isAutoDetecting;
   final bool isTranslating;
   final String? translatedText;
-  final Language targetLanguage;
+  final MahakkaLanguage targetLanguage;
 
   TranslationState({
     required this.detectedLanguage,
@@ -194,12 +255,17 @@ class TranslationState {
 class PostTranslation {
   final bool publishInBothLanguages;
   final String translatedText;
-  final Language? originalLanguage;
-  final Language? targetLanguage;
+  final MahakkaLanguage? originalLanguage;
+  final MahakkaLanguage? targetLanguage;
 
   const PostTranslation({required this.publishInBothLanguages, required this.translatedText, this.originalLanguage, this.targetLanguage});
 
-  PostTranslation copyWith({bool? publishInBothLanguages, String? translatedText, Language? originalLanguage, Language? targetLanguage}) {
+  PostTranslation copyWith({
+    bool? publishInBothLanguages,
+    String? translatedText,
+    MahakkaLanguage? originalLanguage,
+    MahakkaLanguage? targetLanguage,
+  }) {
     return PostTranslation(
       publishInBothLanguages: publishInBothLanguages ?? this.publishInBothLanguages,
       translatedText: translatedText ?? this.translatedText,
@@ -211,7 +277,7 @@ class PostTranslation {
   // Apply translation and append media URL
   MemoModelPost applyTranslationAndAppendMediaUrl({required MemoModelPost post, required ref}) {
     final useTranslation = targetLanguage != null && targetLanguage != originalLanguage;
-    Language? lang = useTranslation ? targetLanguage! : originalLanguage ?? null;
+    MahakkaLanguage? lang = useTranslation ? targetLanguage! : originalLanguage ?? null;
     String languageFlag = lang != null ? lang.flag : "";
     final content = useTranslation ? translatedText : post.text;
 
@@ -234,41 +300,56 @@ extension PostTranslationReset on StateController<PostTranslation> {
 }
 
 // Language model and providers
-class Language {
+class MahakkaLanguage {
   final String code;
   final String name;
   final String flag;
 
-  const Language({required this.code, required this.name, required this.flag});
+  const MahakkaLanguage({required this.code, required this.name, required this.flag});
 
   @override
   String toString() => name;
 
   @override
-  bool operator ==(Object other) => identical(this, other) || other is Language && runtimeType == other.runtimeType && code == other.code;
+  bool operator ==(Object other) =>
+      identical(this, other) || other is MahakkaLanguage && runtimeType == other.runtimeType && code == other.code;
 
   @override
   int get hashCode => code.hashCode;
+
+  static MahakkaLanguage? getLanguageByCode(String languageCode) {
+    // Handle case-insensitive matching and variations
+    final normalizedCode = languageCode.toLowerCase().trim();
+
+    for (final language in availableLanguages) {
+      if (language.code.toLowerCase() == normalizedCode) {
+        return language;
+      }
+    }
+
+    // Return null if no match found
+    return null;
+  }
 }
 
 const availableLanguages = [
-  Language(code: 'auto', name: 'Auto', flag: ''),
-  Language(code: 'zh-cn', name: '中国人', flag: '🇨🇳'),
-  Language(code: 'de', name: 'Deutsch', flag: '🇩🇪'),
-  Language(code: 'en', name: 'English', flag: '🇬🇧'),
-  Language(code: 'es', name: 'Español', flag: '🇪🇸'),
-  Language(code: 'tl', name: 'Filipino', flag: '🇵🇭'),
-  Language(code: 'fr', name: 'Français', flag: '🇫🇷'),
-  Language(code: 'it', name: 'Italiano', flag: '🇮🇹'),
-  Language(code: 'ja', name: 'Japans', flag: '🇯🇵'),
-  Language(code: 'ru', name: 'Русский', flag: '🇷🇺'),
+  MahakkaLanguage(code: 'auto', name: 'Auto', flag: ''),
+  MahakkaLanguage(code: 'zh-cn', name: '中国人', flag: '🇨🇳'),
+  MahakkaLanguage(code: 'de', name: 'Deutsch', flag: '🇩🇪'),
+  MahakkaLanguage(code: 'en', name: 'English', flag: '🇬🇧'),
+  MahakkaLanguage(code: 'es', name: 'Español', flag: '🇪🇸'),
+  MahakkaLanguage(code: 'tl', name: 'Filipino', flag: '🇵🇭'),
+  MahakkaLanguage(code: 'fr', name: 'Français', flag: '🇫🇷'),
+  MahakkaLanguage(code: 'it', name: 'Italiano', flag: '🇮🇹'),
+  MahakkaLanguage(code: 'ja', name: 'Japans', flag: '🇯🇵'),
+  MahakkaLanguage(code: 'ru', name: 'Русский', flag: '🇷🇺'),
 ];
 
-final targetLanguageProvider = StateProvider<Language>((ref) {
+final targetLanguageProvider = StateProvider<MahakkaLanguage>((ref) {
   return availableLanguages.firstWhere((lang) => lang.code == 'auto');
 });
 
-extension TargetLanguageReset on StateController<Language> {
+extension TargetLanguageReset on StateController<MahakkaLanguage> {
   void reset() {
     state = availableLanguages.firstWhere((lang) => lang.code == 'auto');
   }

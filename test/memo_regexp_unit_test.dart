@@ -292,7 +292,7 @@ void main() {
       // expect(MemoRegExp.extractUrlsGenerously(result[5]), contains("https://www.whats.goingon.jp?arg=vd33f.jpg&bo=adsf"));
 
       //TODO CHECK THAT GENEROUSLY DOESNT CUT OFF ? nor & PARAMS, check first character after extension
-      String withSpaces = StringUtils.ensureSpacesAroundMatches(testString, result);
+      String withSpaces = MemoStringUtils.ensureSpacesAroundMatches(testString, result);
       expect(
         withSpaces,
         contains(

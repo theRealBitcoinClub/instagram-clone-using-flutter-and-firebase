@@ -50,7 +50,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     final prefs = await SharedPreferences.getInstance();
     _isToggleEnabled = widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty;
     if (widget.memoOnly) _isToggleEnabled = false;
-    final bool defaultState = _isToggleEnabled;
+    final bool defaultState = false; //DEFAULT STATE IS MEMO AFTER INSTALL
 
     // Only use saved state if it's valid for current dialog
     final savedState = prefs.getBool(toggleKey);

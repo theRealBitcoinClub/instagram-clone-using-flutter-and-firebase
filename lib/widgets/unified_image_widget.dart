@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../config_ipfs.dart';
+import 'animations/animated_grow_fade_in.dart';
 
 enum ImageSourceType {
   network, // For HTTP URLs
@@ -225,6 +226,18 @@ class UnifiedImageWidgetState extends ConsumerState<UnifiedImageWidget> {
       },
       fadeInDuration: const Duration(milliseconds: 300),
       fadeOutDuration: const Duration(milliseconds: 300),
+      imageBuilder: (context, imageProvider) {
+        return AnimGrowFade(
+          show: true,
+          child: Image(
+            image: imageProvider,
+            fit: BoxFit.contain, // This maintains aspect ratio
+            width: double.infinity, // Fill available width
+            // Don't set height - let it determine height naturally
+            alignment: Alignment.center,
+          ),
+        );
+      },
     );
   }
 

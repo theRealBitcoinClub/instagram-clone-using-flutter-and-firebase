@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
+import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/add/tip_information_card.dart';
 import 'package:mahakka/widgets/add/translation_widget.dart';
 
 import '../../memo/model/memo_model_post.dart';
 import '../../memo/model/memo_model_user.dart';
-import '../../provider/publish_options_provider.dart';
 import '../../provider/translation_service.dart';
 import '../../provider/user_provider.dart';
 import '../../screens/add/imgur_media_widget.dart';
@@ -66,9 +66,11 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       curve: Curves.easeInOut,
     ); // Start with translation section visible if hasTranslation is true
     _translationSectionController.forward();
+
     _textFadeController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
     _textFadeAnimation = CurvedAnimation(parent: _textFadeController, curve: Curves.easeInOut);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+
+    context.afterLayout(refreshUI: false, () {
       final user = ref.read(userProvider)!;
       user.temporaryTipAmount = user.tipAmountEnum;
       user.temporaryTipReceiver = user.tipReceiver;
@@ -196,7 +198,11 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
   }
 
   void _resetTranslation() {
-    ref.read(postTranslationProvider.notifier).reset();
+    ref.read(translationServiceProvider).resetTranslationStateAfterPublish();
+
+    setState(() {
+      widget.post.text = _originalText;
+    });
   }
 
   Widget _buildMediaPreview(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
@@ -276,6 +282,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
               if (widget.post.text != null)
                 TranslationWidget(
                   post: widget.post,
+                  originalText: _originalText,
                   translationSectionController: _translationSectionController,
                   translationSectionAnimation: _translationSectionAnimation,
                   textFadeController: _textFadeController,

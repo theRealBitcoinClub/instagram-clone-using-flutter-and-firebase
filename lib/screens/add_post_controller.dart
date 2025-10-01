@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/memo_reg_exp.dart';
-import 'package:mahakka/provider/publish_options_provider.dart';
 import 'package:mahakka/provider/url_input_verification_notifier.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
@@ -122,8 +121,7 @@ class AddPostController extends StateNotifier<void> {
       print("Error during publish: $e\n$s");
       _showSnackBar('Error during publish: $e', isError: true);
     } finally {
-      ref.read(translatedTextProvider.notifier).state = null;
-      ref.read(postTranslationProvider.notifier).reset();
+      ref.read(translationServiceProvider).resetTranslationStateAfterPublish();
       ref.read(isPublishingProvider.notifier).state = false;
     }
   }

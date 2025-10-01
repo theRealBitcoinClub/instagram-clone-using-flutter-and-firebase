@@ -29,7 +29,6 @@ class AnimGrowFade extends StatefulWidget {
 class _AnimGrowFadeState extends State<AnimGrowFade> with SingleTickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-  bool _hasAnimatedIn = false;
   bool _shouldShowContent = false;
 
   @override
@@ -37,7 +36,6 @@ class _AnimGrowFadeState extends State<AnimGrowFade> with SingleTickerProviderSt
     super.initState();
 
     _fadeController = AnimationController(vsync: this, duration: widget.fadeDuration);
-
     _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: widget.fadeCurve);
 
     if (widget.show) {
@@ -46,8 +44,6 @@ class _AnimGrowFadeState extends State<AnimGrowFade> with SingleTickerProviderSt
   }
 
   void _startAnimation() {
-    if (_hasAnimatedIn) return;
-
     void startFade() {
       setState(() {
         _shouldShowContent = true;
@@ -56,7 +52,6 @@ class _AnimGrowFadeState extends State<AnimGrowFade> with SingleTickerProviderSt
       Future.delayed(widget.fadeDuration, () {
         if (mounted) {
           _fadeController.forward();
-          _hasAnimatedIn = true;
         }
       });
     }
@@ -72,6 +67,16 @@ class _AnimGrowFadeState extends State<AnimGrowFade> with SingleTickerProviderSt
     }
   }
 
+  void _hideAnimation() {
+    _fadeController.reverse().then((_) {
+      if (mounted) {
+        setState(() {
+          _shouldShowContent = false;
+        });
+      }
+    });
+  }
+
   @override
   void didUpdateWidget(AnimGrowFade oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -80,14 +85,7 @@ class _AnimGrowFadeState extends State<AnimGrowFade> with SingleTickerProviderSt
       if (widget.show) {
         _startAnimation();
       } else {
-        _fadeController.reverse().then((_) {
-          if (mounted) {
-            setState(() {
-              _shouldShowContent = false;
-              _hasAnimatedIn = false;
-            });
-          }
-        });
+        _hideAnimation();
       }
     }
   }

@@ -72,21 +72,20 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> wit
             mainAxisSize: MainAxisSize.min,
             children: [
               // Header with close button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Cancel Post?', style: widget.theme.textTheme.titleLarge),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //   children: [
+              //     Text('', style: widget.theme.textTheme.titleMedium),
+              //     IconButton(
+              //       icon: const Icon(Icons.close),
+              //       onPressed: () {
+              //         Navigator.of(context).pop();
+              //       },
+              //     ),
+              //   ],
+              // ),
+              //
+              // const SizedBox(height: 16),
               Text('Do you want to cancel this post? ', style: widget.theme.textTheme.bodyLarge, textAlign: TextAlign.left),
 
               const SizedBox(height: 16),
@@ -115,7 +114,7 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> wit
                               widget.onCancel();
                             }
                           : null,
-                      child: const Text('CANCEL POST'),
+                      child: const Text('CANCEL'),
                     ),
                   ),
 
@@ -130,7 +129,7 @@ class _DeleteConfirmationDialogState extends State<DeleteConfirmationDialog> wit
                       onPressed: () {
                         widget.onContinue();
                       },
-                      child: const Text('KEEP EDITING'),
+                      child: const Text('PUBLISH'),
                     ),
                   ),
                 ],

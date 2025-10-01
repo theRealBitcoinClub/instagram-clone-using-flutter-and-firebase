@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/provider/publish_options_provider.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/repositories/post_repository.dart';
 import 'package:mahakka/utils/snackbar.dart';
@@ -16,6 +15,7 @@ import 'package:mahakka/widgets/unified_video_player.dart';
 import '../../memo/base/text_input_verifier.dart';
 import '../../memo/memo_reg_exp.dart';
 import '../../provider/telegram_bot_publisher.dart';
+import '../../provider/translation_service.dart';
 import '../../providers/post_creator_provider.dart';
 import '../add/publish_confirmation_activity.dart';
 import '../unified_image_widget.dart';
@@ -602,6 +602,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     } else if (message.isNotEmpty && mounted) {
       showSnackBar(type: SnackbarType.error, message, ctx);
     }
+    ref.read(translationServiceProvider).resetTranslationStateAfterPublish();
   }
 
   void showQrQuickDeposit(BuildContext ctx) {

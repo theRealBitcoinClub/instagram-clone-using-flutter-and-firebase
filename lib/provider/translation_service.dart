@@ -153,7 +153,10 @@ class TranslationService {
     required BuildContext context,
     required Function(String) onTextChanged,
     required MemoModelPost post,
+    required ref,
   }) async {
+    if (ref.read(isTranslatingProvider)) return;
+
     final selectedLang = availableLanguages.firstWhere((lang) => lang.code == selectedLangCode, orElse: () => availableLanguages[1]);
 
     final detectedLanguage = _ref.read(detectedLanguageProvider);

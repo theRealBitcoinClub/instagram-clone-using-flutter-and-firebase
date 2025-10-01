@@ -44,7 +44,8 @@ class _PostCardState extends ConsumerState<PostCard> {
   static const int _maxTagsCounter = 3;
   static const int _minTextLength = 20;
   bool _isAnimatingLike = false;
-  bool _isSendingTx = false;
+  bool _isSendingLikeTx = false;
+  bool _isSendingReplyTx = false;
   bool _showInput = false;
   bool _showSend = false;
   bool _hasSelectedTopic = false;
@@ -296,10 +297,10 @@ class _PostCardState extends ConsumerState<PostCard> {
 
         IgnorePointer(
           child: SendingAnimation(
-            isSending: _isSendingTx,
+            isSending: _isSendingLikeTx,
             mediaHeight: _getMediaHeight(),
             onEnd: () {
-              if (mounted) setState(() => _isSendingTx = false);
+              if (mounted) setState(() => _isSendingLikeTx = false);
             },
             theme: theme,
           ),
@@ -337,7 +338,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
   Future<void> _sendTipToCreator() async {
     if (!mounted) return;
-    setState(() => _isSendingTx = true);
+    setState(() => _isSendingLikeTx = true);
 
     try {
       MemoAccountant account = ref.read(memoAccountantProvider);
@@ -345,7 +346,7 @@ class _PostCardState extends ConsumerState<PostCard> {
       if (!mounted) return;
 
       setState(() {
-        _isSendingTx = false;
+        _isSendingLikeTx = false;
         if (response == MemoAccountantResponse.yes) {
           _isAnimatingLike = true;
         } else {
@@ -357,7 +358,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     } catch (e, s) {
       _logError("Error sending tip", e, s);
       if (mounted) {
-        setState(() => _isSendingTx = false);
+        setState(() => _isSendingLikeTx = false);
         showSnackBar(type: SnackbarType.error, "Failed to send tip. Please check your connection.", context);
       }
     }
@@ -502,7 +503,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     postCopy.parseUrlsTagsTopicClearText();
 
-    setState(() => _isSendingTx = true);
+    setState(() => _isSendingReplyTx = true);
 
     try {
       if (_hasSelectedTopic) {
@@ -517,7 +518,7 @@ class _PostCardState extends ConsumerState<PostCard> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isSendingTx = false);
+        setState(() => _isSendingReplyTx = false);
       }
     }
   }

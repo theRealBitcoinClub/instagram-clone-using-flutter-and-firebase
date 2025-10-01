@@ -60,10 +60,11 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     if (selectedLangCode != null) {
       await translationService.handleLanguageSelection(
         selectedLangCode: selectedLangCode,
-        originalText: widget.post.text ?? '',
+        originalText: widget.originalText,
         context: context,
         onTextChanged: _animateTextChange,
         post: widget.post,
+        ref: ref,
       );
     }
   }
@@ -84,14 +85,14 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(width: 4),
+            const SizedBox(width: 3),
             Text(
               "${targetLanguage.flag}  ${targetLanguage.name}",
               style: textTheme.bodyMedium?.copyWith(
                 color: isTranslating ? theme.colorScheme.onSurface.withOpacity(0.5) : theme.colorScheme.onSurface,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 3),
             Icon(
               Icons.arrow_drop_down,
               size: 20,
@@ -106,13 +107,13 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
   Widget _buildProgressIndicator(BuildContext context) {
     return Column(
       children: [
-        const SizedBox(height: 4),
         LinearProgressIndicator(
           minHeight: 4,
           backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
           valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
           borderRadius: BorderRadius.circular(2),
         ),
+        const SizedBox(height: 6),
       ],
     );
   }
@@ -120,11 +121,11 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
   Widget _buildErrorText(BuildContext context) {
     return Column(
       children: [
-        const SizedBox(height: 4),
         Text(
           'Unsupported language, publish text as is or cancel to retry',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.error),
         ),
+        const SizedBox(height: 6),
       ],
     );
   }
@@ -159,11 +160,10 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
           child: Column(
             children: [
               Row(children: [_buildTargetLanguageSelector(context, ref, isTranslating, targetLanguage)]),
-              const SizedBox(height: 0),
+              const SizedBox(height: 6),
             ],
           ),
         ),
-        const SizedBox(height: 4),
         AnimGrowFade(show: languageDetectionFailed && !isAutoDetecting, child: _buildErrorText(context)),
         AnimGrowFade(show: isTranslating || isAutoDetecting, child: _buildProgressIndicator(context)),
       ],

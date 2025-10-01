@@ -1,49 +1,47 @@
-// repositories/post_cache_repository.dart
-
 import 'dart:collection';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
-import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/memo/model/memo_model_user.dart';
-import 'package:mahakka/provider/user_provider.dart';
 
 import '../memo/isar/memo_model_post_db.dart';
+import '../memo/model/memo_model_post.dart';
+import '../memo/model/memo_model_user.dart';
 import '../provider/isar_provider.dart';
+import '../provider/popularity_score_cache.dart';
 import '../provider/post_update_provider.dart';
+import '../provider/user_provider.dart';
 
 final postCacheRepositoryProvider = Provider((ref) => PostCacheRepository(ref));
 
 class PostCacheRepository {
   final Ref ref;
 
-  // Memory cache for fast individual post access
+  // Memory cache for posts - NO TIME EXPIRATION NEEDED
   final _memoryCache = LinkedHashMap<String, MemoModelPost>();
-  static const int _maxMemoryCacheSize = 200; // Keep 200 most recent posts in memory
+  static const int _maxMemoryCacheSize = 500;
 
-  // Memory cache for paginated results (page-based caching)
-  final _pageCache = LinkedHashMap<String, List<String>>(); // cacheKey -> list of post IDs
-  static const int _maxPageCacheSize = 50; // Keep 50 most recent pages in memory
+  // Memory cache for paginated results - NO TIME EXPIRATION NEEDED
+  final _pageCache = LinkedHashMap<String, List<String>>();
+  static const int _maxPageCacheSize = 50;
+
+  // Popularity score cache - THIS STILL NEEDS EXPIRATION
+  final PopularityScoreCache _popularityCache = PopularityScoreCache();
 
   PostCacheRepository(this.ref);
 
   Future<Isar> get _isar async => await ref.read(isarProvider.future);
 
   Future<void> updatePopularityScore(String postId, {int tipAmount = 0, MemoModelPost? scrapedPost, bool saveToFirebase = false}) async {
-    MemoModelPost post = (await getPost(postId))!;
+    MemoModelPost? post = await getPost(postId);
+    if (post == null) return;
 
     final TipReceiver receiver = ref.read(userProvider)!.tipReceiver;
-
-    // If all tips go to the app (burn), no need to update popularity
     if (receiver == TipReceiver.app) return;
 
-    // Use the enum's built-in calculation method instead of manual switch
     final (int burnAmount, int creatorAmount) = receiver.calculateAmounts(tipAmount);
-
-    // For popularity score, we only care about the creator's portion
     final int creatorTipAmount = creatorAmount;
 
-    var newScore;
+    int newScore;
     if (scrapedPost == null) {
       print("UPDATE POPULARITY FETCH UP TO DATE SCORE FAILED");
       newScore = post.popularityScore + creatorTipAmount;
@@ -51,8 +49,19 @@ class PostCacheRepository {
       newScore = scrapedPost.popularityScore + creatorTipAmount;
     }
 
-    // if (saveToFirebase) await ref.read(postServiceProvider).savePost(post);
-    await savePosts([post]);
+    // Update popularity cache (this still needs expiration)
+    _popularityCache.put(postId, newScore);
+
+    // Update memory cache if post exists
+    if (_memoryCache.containsKey(postId)) {
+      final updatedPost = _memoryCache[postId]!.copyWith(popularityScore: newScore);
+      _memoryCache[postId] = updatedPost;
+    }
+
+    // Update disk cache
+    final updatedPost = post.copyWith(popularityScore: newScore);
+    await savePosts([updatedPost]);
+
     ref.read(postPopularityProvider.notifier).updatePopularityScore(postId, newScore);
   }
 
@@ -61,28 +70,30 @@ class PostCacheRepository {
   void _addToMemoryCache(MemoModelPost post) {
     if (post.id == null) return;
 
-    // Add to memory cache (LRU behavior)
+    // NO TIME-BASED CLEANUP - posts are immutable
     _memoryCache.remove(post.id!);
     _memoryCache[post.id!] = post;
 
-    // Enforce size limit
+    // Only enforce size limit
     if (_memoryCache.length > _maxMemoryCacheSize) {
-      _memoryCache.remove(_memoryCache.keys.first);
+      final lruKey = _memoryCache.keys.first;
+      _memoryCache.remove(lruKey);
     }
   }
 
   void _addPageToMemoryCache(String cacheKey, List<MemoModelPost> posts) {
-    // Store only post IDs for page cache to save memory
     final postIds = posts.where((p) => p.id != null).map((p) => p.id!).toList();
+
+    // NO TIME-BASED CLEANUP - pages are immutable
     _pageCache.remove(cacheKey);
     _pageCache[cacheKey] = postIds;
 
-    // Enforce size limit
+    // Only enforce size limit
     if (_pageCache.length > _maxPageCacheSize) {
-      _pageCache.remove(_pageCache.keys.first);
+      final lruKey = _pageCache.keys.first;
+      _pageCache.remove(lruKey);
     }
 
-    // Also add individual posts to memory cache
     for (final post in posts) {
       if (post.id != null) {
         _addToMemoryCache(post);
@@ -97,17 +108,14 @@ class PostCacheRepository {
 
   // --- Core Cache Operations ---
 
-  // Save or update posts (both memory and disk)
   Future<void> savePosts(List<MemoModelPost> posts) async {
     final validPosts = posts.where((post) => post.id != null && post.id!.isNotEmpty).toList();
     if (validPosts.isEmpty) return;
 
-    // Update memory cache
     for (final post in validPosts) {
       _addToMemoryCache(post);
     }
 
-    // Update disk cache
     final isar = await _isar;
     final postsDb = validPosts.map((post) => MemoModelPostDb.fromAppModel(post)).toList();
 
@@ -116,88 +124,89 @@ class PostCacheRepository {
     });
   }
 
-  // Get a post by ID - check memory first, then disk
   Future<MemoModelPost?> getPost(String postId) async {
-    // First check memory cache
+    // Check memory cache - NO EXPIRATION CHECK
     final memoryCached = _memoryCache[postId];
     if (memoryCached != null) {
-      return memoryCached;
+      return _enhancePostWithLatestPopularity(memoryCached);
     }
 
-    // Then check disk cache
+    // Check disk cache
     final isar = await _isar;
     final postDb = await isar.memoModelPostDbs.get(postId.hashCode);
 
     if (postDb != null) {
       final post = postDb.toAppModel();
       _addToMemoryCache(post);
-      return post;
+      return _enhancePostWithLatestPopularity(post);
     }
 
     return null;
   }
 
-  // --- Pagination Support (10 posts per page) ---
+  MemoModelPost _enhancePostWithLatestPopularity(MemoModelPost post) {
+    final latestScore = _popularityCache.get(post.id!);
+    if (latestScore != null && latestScore != post.popularityScore) {
+      return post.copyWith(popularityScore: latestScore);
+    }
+    return post;
+  }
 
-  // Generate cache key for paginated queries
+  // --- Pagination Support ---
+
   String _getPageCacheKey(int pageNumber, String? filter) {
     return 'page_${filter ?? 'all'}_$pageNumber';
   }
 
-  // Save a page of posts to cache
   Future<void> savePage(List<MemoModelPost> posts, int pageNumber, {String? filter}) async {
     if (posts.isEmpty) return;
 
     final cacheKey = _getPageCacheKey(pageNumber, filter);
 
-    // Save to memory cache
     _addPageToMemoryCache(cacheKey, posts);
-    //TODO check how to avoid save twice to cache
-    // Save individual posts to disk
     await savePosts(posts);
 
-    // Save page metadata to disk (optional, for persistence across app restarts)
     final isar = await _isar;
-    //always silent because data that triggers an update is always from firebase after scraping
-    await isar.writeTxn(silent: true, () async {
-      // You could store page metadata here if needed
-    });
+    await isar.writeTxn(silent: true, () async {});
   }
 
-  // Get a page from cache - returns null if not cached or stale
   Future<List<MemoModelPost>?> getPage(int pageNumber, {String? filter, Duration maxAge = const Duration(minutes: 15)}) async {
     final cacheKey = _getPageCacheKey(pageNumber, filter);
 
-    // First check memory cache
+    // IGNORE maxAge parameter - posts are immutable, cache never expires
     final memoryPageIds = _pageCache[cacheKey];
     if (memoryPageIds != null) {
-      // Get posts from memory cache
-      final posts = memoryPageIds.map((id) => _memoryCache[id]).whereType<MemoModelPost>().toList();
+      final posts = <MemoModelPost>[];
+      for (final id in memoryPageIds) {
+        final post = _memoryCache[id];
+        if (post != null) {
+          posts.add(_enhancePostWithLatestPopularity(post));
+        }
+      }
+
       if (posts.length == memoryPageIds.length) {
-        return posts; // Full page found in memory
+        return posts;
+      } else {
+        // Some posts missing from memory cache, remove the page
+        _pageCache.remove(cacheKey);
       }
     }
-
-    // If not in memory, try to reconstruct from disk cache
-    // This is more complex and may not be needed for your use case
-    // For simplicity, we'll primarily use memory cache for pages
 
     return null;
   }
 
-  // Check if a page is available in cache
   bool hasPage(int pageNumber, {String? filter}) {
     final cacheKey = _getPageCacheKey(pageNumber, filter);
+
+    // Simply check if page exists - no expiration
     return _pageCache.containsKey(cacheKey);
   }
 
-  // Clear cache for a specific page
   void clearPage(int pageNumber, {String? filter}) {
     final cacheKey = _getPageCacheKey(pageNumber, filter);
     _pageCache.remove(cacheKey);
   }
 
-  // Clear all pages for a filter (useful when filter changes)
   void clearPagesForFilter(String? filter) {
     final keysToRemove = _pageCache.keys.where((key) => key.contains('_${filter ?? 'all'}_')).toList();
     for (final key in keysToRemove) {
@@ -207,17 +216,12 @@ class PostCacheRepository {
 
   // --- Profile Posts Support ---
 
-  // Cache profile posts (used by profile screen)
   Future<void> cacheProfilePosts(String creatorId, List<MemoModelPost> posts) async {
-    // Save individual posts
     await savePosts(posts);
-
-    // Also cache as a "page" for potential reuse
     final cacheKey = 'profile_$creatorId';
     _addPageToMemoryCache(cacheKey, posts);
   }
 
-  // Get cached profile posts
   Future<List<MemoModelPost>> getCachedProfilePosts(String creatorId) async {
     final cacheKey = 'profile_$creatorId';
     final memoryPageIds = _pageCache[cacheKey];
@@ -225,19 +229,12 @@ class PostCacheRepository {
     if (memoryPageIds != null) {
       final posts = memoryPageIds.map((id) => _memoryCache[id]).whereType<MemoModelPost>().toList();
       if (posts.isNotEmpty) {
-        return posts;
+        return posts.map(_enhancePostWithLatestPopularity).toList();
       }
     }
 
-    // Fall back to querying disk cache by creatorId using filter
     final isar = await _isar;
-    final postsDb = await isar.memoModelPostDbs
-        .where()
-        .filter()
-        .creatorIdEqualTo(creatorId) // Now works with filter()
-        .sortByCreatedDateTimeDesc()
-        .limit(100)
-        .findAll();
+    final postsDb = await isar.memoModelPostDbs.where().filter().creatorIdEqualTo(creatorId).sortByCreatedDateTimeDesc().limit(100).findAll();
 
     final posts = postsDb.map((db) => db.toAppModel()).toList();
 
@@ -254,10 +251,10 @@ class PostCacheRepository {
     final isar = await _isar;
     final cutoff = DateTime.now().toUtc().subtract(maxAge);
 
-    // Clear memory cache
-    clearMemoryCache();
+    // Only clear popularity cache (posts don't expire)
+    _popularityCache.clearExpired();
 
-    // Clear old disk cache entries
+    // Disk cache cleanup for very old entries (optional housekeeping)
     return await isar.writeTxn(() async {
       return await isar.memoModelPostDbs.where().cachedAtLessThan(cutoff).deleteAll();
     });
@@ -265,6 +262,7 @@ class PostCacheRepository {
 
   Future<void> clearAllCache() async {
     clearMemoryCache();
+    _popularityCache.clearExpired();
 
     final isar = await _isar;
     await isar.writeTxn(() async {
@@ -272,16 +270,13 @@ class PostCacheRepository {
     });
   }
 
-  // Get cache statistics
   Map<String, dynamic> getCacheStats() {
-    return {'memoryPosts': _memoryCache.length, 'memoryPages': _pageCache.length, 'totalMemoryItems': _memoryCache.length + _pageCache.length};
+    return {'memoryPosts': _memoryCache.length, 'memoryPages': _pageCache.length, 'popularityScores': _popularityCache.scoreCache.length};
   }
 
-  // Preload posts into memory cache
   Future<void> preloadPosts(List<String> postIds) async {
     final postsToLoad = <String>[];
 
-    // Filter out posts already in memory
     for (final postId in postIds) {
       if (!_memoryCache.containsKey(postId)) {
         postsToLoad.add(postId);
@@ -290,7 +285,6 @@ class PostCacheRepository {
 
     if (postsToLoad.isEmpty) return;
 
-    // Load missing posts from disk
     final isar = await _isar;
     final postsDb = await isar.memoModelPostDbs.getAll(postsToLoad.map((id) => id.hashCode).toList());
 

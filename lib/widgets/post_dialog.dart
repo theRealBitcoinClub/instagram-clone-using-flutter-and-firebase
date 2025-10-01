@@ -232,7 +232,10 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
                     width: double.infinity, // Ensure full width
                     height: double.infinity,
                     child: Center(
-                      child: UnifiedImageWidget(imageUrl: post.imgurUrl ?? post.imageUrl ?? IpfsConfig.preferredNode + post.ipfsCid!),
+                      child: UnifiedImageWidget(
+                        backgroundColor: Colors.black,
+                        imageUrl: post.imgurUrl ?? post.imageUrl ?? IpfsConfig.preferredNode + post.ipfsCid!,
+                      ),
 
                       //   CachedUnifiedImageWidget(
                       //     width: double.infinity, // Ensure full width

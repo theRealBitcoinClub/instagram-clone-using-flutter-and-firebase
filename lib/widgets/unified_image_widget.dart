@@ -119,6 +119,9 @@ class UnifiedImageWidgetState extends ConsumerState<UnifiedImageWidget> {
       imageWidget = buildRasterImage(resolvedUrl, effectiveColorScheme, effectiveTextTheme);
     }
 
+    // Apply minimum height constraint for loading states
+    imageWidget = ConstrainedBox(constraints: const BoxConstraints(minHeight: 200), child: imageWidget);
+
     // Apply constraints and container styling
     return Container(
       width: widget.width,

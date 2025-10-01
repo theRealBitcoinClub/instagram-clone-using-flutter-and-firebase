@@ -192,10 +192,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
       final authChecker = ref.read(authCheckerProvider);
       String res = await authChecker.loginInWithMnemonic(_processedMnemonic);
       if (res != "success") {
-        if (mounted) showSnackBar(type: SnackbarType.error, "Unexpected error: $res", context);
+        if (mounted) showSnackBar(type: SnackbarType.error, "Unexpected error: $res");
       }
     } catch (e) {
-      if (mounted) showSnackBar(type: SnackbarType.error, "Login failed: $e", context);
+      if (mounted) showSnackBar(type: SnackbarType.error, "Login failed: $e");
     } finally {
       if (mounted) {
         setState(() {

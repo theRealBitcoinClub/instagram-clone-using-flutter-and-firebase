@@ -32,6 +32,10 @@ void main() async {
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
+  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
+  // Helper getter for easy access to the current state
+  static ScaffoldMessengerState? get scaffoldMessengerState => scaffoldMessengerKey.currentState;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,6 +46,7 @@ class MyApp extends ConsumerWidget {
       data: (isar) => themeState.when(
         data: (loadedThemeState) {
           return MaterialApp(
+            scaffoldMessengerKey: scaffoldMessengerKey,
             debugShowCheckedModeBanner: false,
             title: 'mahakka.com',
             theme: loadedThemeState.currentTheme,

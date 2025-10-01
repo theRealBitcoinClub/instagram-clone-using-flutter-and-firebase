@@ -80,37 +80,31 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
 
       setState(() {
         if (_countdownSeconds > 0) {
-          if (_countdownSeconds == 60) showSnackBar("http://psfoundation.info made this feature possible!", context, type: SnackbarType.info);
-          if (_countdownSeconds == 49) showSnackBar("BCH fork block is number #478558", context, type: SnackbarType.info);
-          if (_countdownSeconds == 38) showSnackBar("BCH independence day is August 1st 2017", context, type: SnackbarType.info);
-          if (_countdownSeconds == 27) showSnackBar("Satoshi Nakamoto is the real Bitcoin Jesus", context, type: SnackbarType.info);
-          if (_countdownSeconds == 16) showSnackBar("BCH birthday is 3rd January 2009", context, type: SnackbarType.info);
+          if (_countdownSeconds == 60) showSnackBar("http://psfoundation.info made this feature possible!", type: SnackbarType.info);
+          if (_countdownSeconds == 49) showSnackBar("BCH fork block is number #478558", type: SnackbarType.info);
+          if (_countdownSeconds == 38) showSnackBar("BCH independence day is August 1st 2017", type: SnackbarType.info);
+          if (_countdownSeconds == 27) showSnackBar("Satoshi Nakamoto is the real Bitcoin Jesus", type: SnackbarType.info);
+          if (_countdownSeconds == 16) showSnackBar("BCH birthday is 3rd January 2009", type: SnackbarType.info);
           _countdownSeconds--;
         } else {
           // Time's up - hide the counter show some last resort snackbars to entertain the user;
           _stopCountdown();
           if (mounted) {
-            showSnackBar("ARE YOU UPLOADING A LARGE FILE OR NOT HAZ VERY FAST CONNECTION?!", context, type: SnackbarType.info);
-            showSnackBar("WAGMI! WE ALL GONNA MAKE IT!", context, type: SnackbarType.success, wait: true);
+            showSnackBar("ARE YOU UPLOADING A LARGE FILE OR NOT HAZ VERY FAST CONNECTION?!", type: SnackbarType.info);
+            showSnackBar("WAGMI! WE ALL GONNA MAKE IT!", type: SnackbarType.success, wait: true);
             showSnackBar(
               "SOME MORE PATIENCE REQUIRED! YOU MADE IT THIS FAR, STAND STRONG, TAKE A DEEP BREATH!",
-              context,
               type: SnackbarType.error,
               wait: true,
             );
-            showSnackBar("PLEASE HOLD THE LINE!", context, type: SnackbarType.info, wait: true);
-            showSnackBar(
-              "YOU STILL HERE! THATS A VERY GOOD SIGN! SATOSHI NAKAMOTO LOVES YOU!",
-              context,
-              type: SnackbarType.success,
-              wait: true,
-            );
-            showSnackBar("PLEASE REACH OUT TO MAHAKKA SUPPORT IN TELEGRAM @MAHAKKA_COM", context, type: SnackbarType.error, wait: true);
-            showSnackBar("PLEASE TAKE A SCREENSHOT SO YOU CAN PROVIDE IT @MAHAKKA_COM", context, type: SnackbarType.info, wait: true);
-            showSnackBar("SUPPORT WILL ASK FOR THAT SCREENSHOT TO MAKE A REFUND @MAHAKKA_COM", context, type: SnackbarType.success, wait: true);
-            showSnackBar("PLEASE REACH OUT TO MAHAKKA SUPPORT IN TELEGRAM @MAHAKKA_COM", context, type: SnackbarType.error, wait: true);
-            showSnackBar("PLEASE TAKE A SCREENSHOT SO YOU CAN PROVIDE IT @MAHAKKA_COM", context, type: SnackbarType.info, wait: true);
-            showSnackBar("SUPPORT WILL ASK FOR THAT SCREENSHOT TO MAKE A REFUND @MAHAKKA_COM", context, type: SnackbarType.success, wait: true);
+            showSnackBar("PLEASE HOLD THE LINE!", type: SnackbarType.info, wait: true);
+            showSnackBar("YOU STILL HERE! THATS A VERY GOOD SIGN! SATOSHI NAKAMOTO LOVES YOU!", type: SnackbarType.success, wait: true);
+            showSnackBar("PLEASE REACH OUT TO MAHAKKA SUPPORT IN TELEGRAM @MAHAKKA_COM", type: SnackbarType.error, wait: true);
+            showSnackBar("PLEASE TAKE A SCREENSHOT SO YOU CAN PROVIDE IT @MAHAKKA_COM", type: SnackbarType.info, wait: true);
+            showSnackBar("SUPPORT WILL ASK FOR THAT SCREENSHOT TO MAKE A REFUND @MAHAKKA_COM", type: SnackbarType.success, wait: true);
+            showSnackBar("PLEASE REACH OUT TO MAHAKKA SUPPORT IN TELEGRAM @MAHAKKA_COM", type: SnackbarType.error, wait: true);
+            showSnackBar("PLEASE TAKE A SCREENSHOT SO YOU CAN PROVIDE IT @MAHAKKA_COM", type: SnackbarType.info, wait: true);
+            showSnackBar("SUPPORT WILL ASK FOR THAT SCREENSHOT TO MAKE A REFUND @MAHAKKA_COM", type: SnackbarType.success, wait: true);
           }
         }
       });
@@ -200,7 +194,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
           _isUploading = false;
         });
         if (!_isPinning || !_isCheckingBalance) {
-          showSnackBar("Upload successfull, now its pinning to the IPFS!", context, type: SnackbarType.success);
+          showSnackBar("Upload successfull, now its pinning to the IPFS!", type: SnackbarType.success);
           _checkBalanceAndPin();
         }
         ;
@@ -232,7 +226,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
           _error = 'Insufficient balance for IPFS operation. Please add more BCH to your wallet.';
           _isCheckingBalance = false;
           showQrCodeDialog(ctx: context, user: ref.read(userProvider), memoOnly: true);
-          showSnackBar(_error!, context, type: SnackbarType.error);
+          showSnackBar(_error!, type: SnackbarType.error);
         });
         return;
       }

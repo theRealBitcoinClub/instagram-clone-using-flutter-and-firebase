@@ -61,7 +61,7 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
                     Expanded(
                       child: GestureDetector(
                         onTap: () => creator.bchAddressCashtokenAware.isEmpty
-                            ? showSnackBar("User has not registered on Mahakka", context, type: SnackbarType.info)
+                            ? showSnackBar("User has not registered on Mahakka", type: SnackbarType.info)
                             : ref
                                   .read(navigationStateProvider.notifier)
                                   .navigateToUrl(MemoBitcoinBase.explorerUrl + creator.bchAddressCashtokenAware),
@@ -77,7 +77,7 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
                     Expanded(
                       child: GestureDetector(
                         onTap: () => creator.bchAddressCashtokenAware.isEmpty
-                            ? showSnackBar("User has not registered on Mahakka", context, type: SnackbarType.info)
+                            ? showSnackBar("User has not registered on Mahakka", type: SnackbarType.info)
                             : ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cauldronSwapTokenUrl),
                         // onTap: () => WebViewNavigator.navigateTo(ref, WebViewShow.url, MemoBitcoinBase.tokenUrl),
                         child: StatWidget(title: MemoBitcoinBase.tokenTicker, count: creator.balanceToken, theme: theme),

@@ -440,7 +440,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
           (_selectedTipAmount != null && _selectedTipAmount != user.tipAmountEnum);
 
       if (!hasTextInputChanges && !hasTipChanges) {
-        showSnackBar(type: SnackbarType.info, "No changes to save. 🤔", context);
+        showSnackBar(type: SnackbarType.info, "No changes to save. 🤔");
         return;
       }
 
@@ -472,15 +472,15 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         }
 
         if (profileResult['result'].toString().startsWith("partial_success")) {
-          showSnackBar(type: SnackbarType.info, "Partially updated: ${profileResult['result']}", context);
+          showSnackBar(type: SnackbarType.info, "Partially updated: ${profileResult['result']}");
         } else if (profileUpdateSuccess && tipsUpdateSuccess) {
-          showSnackBar(type: SnackbarType.success, "Profile & Tips updated successfully! ✨", context);
+          showSnackBar(type: SnackbarType.success, "Profile & Tips updated successfully! ✨");
           MemoConfetti().launch(context);
         } else if (profileUpdateSuccess) {
-          showSnackBar(type: SnackbarType.success, "Profile updated successfully! ✨", context);
+          showSnackBar(type: SnackbarType.success, "Profile updated successfully! ✨");
           MemoConfetti().launch(context);
         } else if (tipsUpdateSuccess) {
-          showSnackBar(type: SnackbarType.success, "Tips updated successfully! ✨", context);
+          showSnackBar(type: SnackbarType.success, "Tips updated successfully! ✨");
           MemoConfetti().launch(context);
         }
 
@@ -505,27 +505,27 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         if (hasTextInputChanges) {
           try {
             String msg = MemoVerificationResponse.memoVerificationMessageFromName(profileResult['result']);
-            showSnackBar(type: SnackbarType.error, "Profile: $msg", context);
+            showSnackBar(type: SnackbarType.error, "Profile: $msg");
           } catch (e) {
             showQrCodeDialog(ctx: context, memoOnly: true, user: user);
-            showSnackBar("Add funds to your balance!", context, type: SnackbarType.error);
-            showSnackBar(wait: true, "Name, text and image are stored on-chain, that costs tx fee!", context, type: SnackbarType.info);
+            showSnackBar("Add funds to your balance!", type: SnackbarType.error);
+            showSnackBar(wait: true, "Name, text and image are stored on-chain, that costs tx fee!", type: SnackbarType.info);
           }
           // try {
           //   String msgAccountant = MemoAccountantResponse.messageFromName(profileResult['failedChanges']);
-          //   showSnackBar(type: SnackbarType.error, "Profile: $msgAccountant", context);
+          //   showSnackBar(type: SnackbarType.error, "Profile: $msgAccountant");
           // } catch (e) {}
         }
         // if (hasTipChanges) {
         //   try {
         //     String msgVerifier = MemoVerificationResponse.memoVerificationMessageFromName(tipResult.toString());
-        //     showSnackBar(type: SnackbarType.error, "Tips: $msgVerifier", context);
+        //     showSnackBar(type: SnackbarType.error, "Tips: $msgVerifier");
         //   } catch (e) {}
         // }
         onFail();
       }
     } catch (e) {
-      showSnackBar(type: SnackbarType.error, "Profile/Tips failed: $e", context);
+      showSnackBar(type: SnackbarType.error, "Profile/Tips failed: $e");
       onFail();
     } finally {
       setState(() {

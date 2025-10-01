@@ -156,20 +156,20 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
 
   void _showStepCompletionSnackbar(BuildContext context, IntroContent content) {
     // Show initial snackbar
-    context.showSnackBar(content.snackbarText, type: SnackbarType.success);
+    showSnackBar(content.snackbarText, type: SnackbarType.success);
 
     // Show triggered text after 4 seconds
     Future.delayed(const Duration(seconds: 5), () {
-      if (context.mounted) {
-        context.showSnackBar(content.triggeredText, type: SnackbarType.info);
-      }
+      // if (context.mounted) {
+      showSnackBar(content.triggeredText, type: SnackbarType.info);
+      // }
     });
   }
 
-  void _showCompletionConfetti(BuildContext context) {
-    // Confetti implementation
-    context.showSnackBar("🎉 Tutorial completed! You're ready to explore!", type: SnackbarType.success);
-  }
+  // void _showCompletionConfetti(BuildContext context) {
+  //   // Confetti implementation
+  //   context.showSnackBar("🎉 Tutorial completed! You're ready to explore!", type: SnackbarType.success);
+  // }
 
   void resetIntro(IntroType introType) {
     final initialState = _createInitialState(introType);

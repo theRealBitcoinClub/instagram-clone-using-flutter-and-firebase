@@ -312,7 +312,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
         builder: (context) => SettingsWidget(initialTab: SettingsTab.creator),
       );
     } else {
-      showSnackBar(type: SnackbarType.info, "Follow/Message functionality is coming soon!", context);
+      showSnackBar(type: SnackbarType.info, "Follow/Message functionality is coming soon!");
     }
   }
 
@@ -320,7 +320,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     if (loggedInUser != null) {
       showQrCodeDialog(ctx: context, user: loggedInUser);
     } else {
-      showSnackBar(type: SnackbarType.error, "User data not available for QR code.", context);
+      showSnackBar(type: SnackbarType.error, "User data not available for QR code.");
     }
   }
 }

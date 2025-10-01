@@ -56,7 +56,7 @@ class TranslationService {
       final detectedLangCode = await detectLanguage(originalText);
 
       if (detectedLangCode == "error") {
-        showSnackBar("Error on translation request", context, type: SnackbarType.error);
+        showSnackBar("Error on translation request", type: SnackbarType.error);
         _ref.read(languageDetectionFailedProvider.notifier).state = true;
         _ref.read(detectedLanguageProvider.notifier).state = null;
         return;
@@ -70,7 +70,7 @@ class TranslationService {
       _ref.read(languageDetectionFailedProvider.notifier).state = languageDetectionFailed;
 
       if (!languageDetectionFailed) {
-        showSnackBar("Detected language: ${detectedLanguage.name}", context, type: SnackbarType.success);
+        showSnackBar("Detected language: ${detectedLanguage.name}", type: SnackbarType.success);
       }
 
       // Set initial target language to detected language
@@ -80,7 +80,7 @@ class TranslationService {
             .read(postTranslationProvider)
             .copyWith(originalLanguage: detectedLanguage, targetLanguage: detectedLanguage);
       } else {
-        showSnackBar("Unsupported language detected", context, type: SnackbarType.info);
+        showSnackBar("Unsupported language detected", type: SnackbarType.info);
       }
     } catch (e) {
       _ref.read(languageDetectionFailedProvider.notifier).state = true;
@@ -119,7 +119,7 @@ class TranslationService {
 
       onTextChanged(translated);
     } catch (e) {
-      showSnackBar("Translation failed: ${e.toString()}", context, type: SnackbarType.error);
+      showSnackBar("Translation failed: ${e.toString()}", type: SnackbarType.error);
     } finally {
       _ref.read(isTranslatingProvider.notifier).state = false;
     }

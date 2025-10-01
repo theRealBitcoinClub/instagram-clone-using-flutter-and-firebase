@@ -48,7 +48,7 @@ class _IntroOverlayState extends ConsumerState<IntroOverlay> with SingleTickerPr
       notifier.manuallyAdvanceStep(widget.introType, context);
     } else {
       // Show hint that user needs to perform the action
-      context.showSnackBar("Tap the suggested action to continue!", type: SnackbarType.info);
+      showSnackBar("Tap the suggested action to continue!", type: SnackbarType.info);
       return;
     }
 

@@ -78,7 +78,7 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
 
     // Show snackbar if provided
     if (snackbarMessage != null && context != null && context.mounted) {
-      context.showSnackBar(snackbarMessage, type: SnackbarType.success);
+      showSnackBar(snackbarMessage, type: SnackbarType.success);
     }
   }
 

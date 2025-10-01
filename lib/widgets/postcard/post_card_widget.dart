@@ -350,8 +350,8 @@ class _PostCardState extends ConsumerState<PostCard> {
         if (response == MemoAccountantResponse.yes) {
           _isAnimatingLike = true;
         } else {
+          showSnackBar(type: SnackbarType.info, response.message);
           showQrQuickDeposit(context);
-          showSnackBar(type: SnackbarType.info, response.message, context);
           _logError("Accountant error during tip: ${response.name}", response);
         }
       });
@@ -359,7 +359,7 @@ class _PostCardState extends ConsumerState<PostCard> {
       _logError("Error sending tip", e, s);
       if (mounted) {
         setState(() => _isSendingLikeTx = false);
-        showSnackBar(type: SnackbarType.error, "Failed to send tip. Please check your connection.", context);
+        showSnackBar(type: SnackbarType.error, "Failed to send tip. Please check your connection.");
       }
     }
   }
@@ -514,7 +514,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     } catch (e, s) {
       _logError("Error during reply publication", e, s);
       if (mounted) {
-        showSnackBar(type: SnackbarType.error, "Failed to publish reply $e", context);
+        showSnackBar(type: SnackbarType.error, "Failed to publish reply $e");
       }
     } finally {
       if (mounted) {
@@ -598,10 +598,10 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     if (success) {
       _clearAndConfetti();
-      showSnackBar(type: SnackbarType.success, message, ctx);
+      showSnackBar(type: SnackbarType.success, message);
       ref.read(telegramBotPublisherProvider).publishPost(postText: postCopy!.text!);
     } else if (message.isNotEmpty && mounted) {
-      showSnackBar(type: SnackbarType.error, message, ctx);
+      showSnackBar(type: SnackbarType.error, message);
     }
     ref.read(translationServiceProvider).resetTranslationStateAfterPublish();
   }

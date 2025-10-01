@@ -59,7 +59,7 @@ class _ClipboardMonitoringWidgetState extends ConsumerState<ClipboardMonitoringW
             _hasAutoClosed = true;
           });
           // Show success feedback instead of closing
-          showSnackBar("Media detected successfully!", context, type: SnackbarType.success);
+          showSnackBar("Media detected successfully!", type: SnackbarType.success);
         }
       });
     }

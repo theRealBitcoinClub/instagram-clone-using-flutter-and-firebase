@@ -57,7 +57,7 @@ class AddPostController extends StateNotifier<void> {
   // Helper method to show snackbars
   void _showSnackBar(String message, {bool isError = false}) {
     if (_context.mounted) {
-      showSnackBar(message, _context, type: isError ? SnackbarType.error : SnackbarType.success);
+      showSnackBar(message, type: isError ? SnackbarType.error : SnackbarType.success);
     }
   }
 
@@ -85,7 +85,7 @@ class AddPostController extends StateNotifier<void> {
       final shouldPublish = await PublishConfirmationActivity.show(_context, post: post, isPostCreationNotReply: true);
       if (shouldPublish != true) {
         if (shouldPublish == false) {
-          _context.showSnackBar(type: SnackbarType.info, 'Publication canceled');
+          showSnackBar(type: SnackbarType.info, 'Publication canceled');
         }
         return;
       }

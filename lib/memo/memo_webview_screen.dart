@@ -147,7 +147,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
 
     setState(() {
       _displayInAppBar = "$url requested ...";
-      context.showSnackBar(_displayInAppBar, type: SnackbarType.success);
+      showSnackBar(_displayInAppBar, type: SnackbarType.success);
       _isLoading = true;
       _cssInjected = false;
       _shouldInjectCss = shouldInject;
@@ -374,7 +374,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                             _cssInjected = false; // Reset CSS injection state
                             _displayInAppBar = url.toString() + " is loading ...";
                             if (ref.read(currentTabIndexProvider) == AppTab.memo.tabIndex)
-                              showSnackBar(_displayInAppBar, buildCtx, type: SnackbarType.info);
+                              showSnackBar(_displayInAppBar, type: SnackbarType.info);
                             _updateCurrentPath(url.toString());
                           });
                         }

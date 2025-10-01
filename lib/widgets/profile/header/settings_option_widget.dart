@@ -32,7 +32,7 @@ class SettingsOptionWidget extends StatelessWidget {
             Navigator.of(dialogContext).pop();
             onSelect();
           }
-        : () => showSnackBar(type: SnackbarType.error, "You have to backup your mnemonic first.", dialogContext);
+        : () => showSnackBar(type: SnackbarType.error, "You have to backup your mnemonic first.");
 
     return SimpleDialogOption(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),

@@ -28,7 +28,9 @@ class ExternalBrowserLauncher {
           url: url,
           isWhitelisted: isWhitelisted,
           onConfirm: () => _launchBrowser(url),
-          onShare: () => _shareUrl(url),
+          onShare: () {
+            SharePlus.instance.share(ShareParams(text: url));
+          },
           theme: theme,
           isDarkTheme: isDarkTheme,
         );
@@ -55,9 +57,9 @@ class ExternalBrowserLauncher {
     }
   }
 
-  Future<void> _shareUrl(String url) async {
-    await Share.share(url, subject: 'Check out this link', sharePositionOrigin: const Rect.fromLTWH(0, 0, 100, 100));
-  }
+  // Future<void> _shareUrl(String url) async {
+  //   await Share.share(url, subject: 'Check out this link', sharePositionOrigin: const Rect.fromLTWH(0, 0, 100, 100));
+  // }
 }
 
 class _UrlConfirmationDialog extends StatelessWidget {
@@ -170,14 +172,20 @@ class _UrlConfirmationDialog extends StatelessWidget {
                   IconAction(
                     text: "share",
                     size: 12,
-                    onTap: () => Navigator.of(context).pop(),
+                    onTap: () {
+                      // Navigator.of(context).pop();
+                      onShare();
+                    },
                     type: IAB.alternative,
                     icon: Icons.share_outlined,
                   ),
                   IconAction(
                     text: "yes",
                     size: 12,
-                    onTap: () => Navigator.of(context).pop(),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      onConfirm();
+                    },
                     type: IAB.success,
                     icon: Icons.check_circle_outline,
                   ),

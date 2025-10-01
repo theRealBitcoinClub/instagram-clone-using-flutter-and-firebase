@@ -250,17 +250,17 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         final imageUrl = post.imgurUrl ?? post.imageUrl ?? "";
         final ipfsId = post.ipfsCid ?? "";
         if (imageUrl.isEmpty && ipfsId.isEmpty) {
-          showSnackBar("No valid image available for this post", context, type: SnackbarType.info);
+          showSnackBar("No valid image available for this post", type: SnackbarType.info);
           return;
         }
         //
         // if (imageUrl.isNotEmpty && !(await ref.read(imageValidationProvider(imageUrl).future))) {
-        //   showSnackBar("Image is not accessible, active VPN!", context, type: SnackbarType.error);
+        //   showSnackBar("Image is not accessible, active VPN!",type: SnackbarType.error);
         //   return;
         // }
 
         // if (ipfsId.isNotEmpty && !(await ref.read(imageValidationProvider(IpfsConfig.preferredNode + ipfsId).future))) {
-        //   showSnackBar("Incompatible IPFS format!", context, type: SnackbarType.error);
+        //   showSnackBar("Incompatible IPFS format!",type: SnackbarType.error);
         //   return;
         // }
 
@@ -268,7 +268,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         final validIndex = validImagePosts.indexWhere((p) => p.id == post.id);
 
         if (validIndex == -1) {
-          showSnackBar("Could not open image viewer", context, type: SnackbarType.error);
+          showSnackBar("Could not open image viewer", type: SnackbarType.error);
           return;
         }
 

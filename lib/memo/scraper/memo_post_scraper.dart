@@ -236,6 +236,8 @@ class MemoPostScraper {
     if (post.youtubeId != null && !(await YouTubeVideoChecker().isVideoAvailable(post.youtubeId!))) return null;
     if (post.imgurUrl != null && !(await MemoDataChecker().isImageValid(url: post.imgurUrl!))) return null;
 
+    //TODO MAKE SURE THAT TWITTER IMAGE POSTS ARE NOT DISMISSED BUT SHALL ONLY HAVE EMPTY MEDIA ID SO THAT THE USER CAN STILL HIT THE LINK IN DESCRIPTION
+
     //TODO replace the trigger URLS, replace all the URLs except one that is used for preview
 
     if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase())) && !post.hasImageMedia)

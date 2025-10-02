@@ -162,7 +162,7 @@ final postTranslationViewerProvider = FutureProvider.family<String, PostTranslat
   final requestId = '${params.post.id}|${params.doTranslate}|${params.text.hashCode}|${params.languageCode}';
 
   return sequencer.enqueue(requestId, () async {
-    print("🎯 SEQUENCER: Processing translation for post: ${params.post.id}");
+    // print("🎯 SEQUENCER: Processing translation for post: ${params.post.id}");
 
     final result = await translationService.translatePostForViewer(
       params.post,
@@ -175,7 +175,7 @@ final postTranslationViewerProvider = FutureProvider.family<String, PostTranslat
     // Store result in cache
     await translationCache.put(params.post.id!, params.languageCode, result);
 
-    print("🎯 SEQUENCER: Completed translation for post: ${params.post.id}");
+    // print("🎯 SEQUENCER: Completed translation for post: ${params.post.id}");
     return result;
   });
 });

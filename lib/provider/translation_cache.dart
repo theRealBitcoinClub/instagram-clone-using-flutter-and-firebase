@@ -1,75 +1,127 @@
 // translation_cache.dart
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar_community/isar.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/provider/translation_sequencer.dart';
 import 'package:mahakka/provider/translation_service.dart';
 
+import '../memo/isar/cached_translation_db.dart';
+import 'isar_provider.dart';
+
 class TranslationCache {
-  static const int _maxSize = 1233;
-  static final Map<String, String> _cache123 = {};
-  static final List<String> _keys123 = [];
+  static const int _maxSize = 3333;
+  static const int _cleanupThreshold = 4000; // ~20% tolerance
 
+  TranslationCache(this.ref);
+  final Ref ref;
+
+  // Use the public method from the model class
   String _generateKey(String postId, String languageCode) {
-    return '__$postId|$languageCode';
+    return CachedTranslationDb.generateCacheKey(postId, languageCode);
   }
 
-  String? get(String postId, String languageCode) {
-    final key = _generateKey(postId, languageCode);
-    return _cache123[key];
+  Future<String?> get(String postId, String languageCode) async {
+    final isar = await ref.read(isarProvider.future);
+    final cacheKey = _generateKey(postId, languageCode);
+
+    final cached = await isar.cachedTranslationDbs.where().cacheKeyEqualTo(cacheKey).findFirst();
+
+    return cached?.translatedText;
   }
 
-  void put(String postId, String languageCode, String translatedText) {
-    final key = _generateKey(postId, languageCode);
+  Future<void> put(String postId, String languageCode, String translatedText) async {
+    final isar = await ref.read(isarProvider.future);
 
-    // If key already exists, remove it to update its position
-    if (_cache123.containsKey(key)) {
-      _keys123.remove(key);
-    }
+    await isar.writeTxn(() async {
+      final cacheKey = _generateKey(postId, languageCode);
 
-    // Add to cache
-    _cache123[key] = translatedText;
-    _keys123.add(key);
+      // Check if exists using indexed cacheKey
+      final existing = await isar.cachedTranslationDbs.where().cacheKeyEqualTo(cacheKey).findFirst();
 
-    // Enforce FIFO size limit
-    if (_keys123.length > _maxSize) {
-      final oldestKey = _keys123.removeAt(0);
-      _cache123.remove(oldestKey);
-    }
+      if (existing != null) {
+        // Update existing
+        existing.translatedText = translatedText;
+        await isar.cachedTranslationDbs.put(existing);
+      } else {
+        // Create new entry
+        final newEntry = CachedTranslationDb.fromTranslation(postId, languageCode, translatedText);
+        await isar.cachedTranslationDbs.put(newEntry);
+
+        // Only enforce size limit when we're over tolerance threshold
+        await _enforceSizeLimitIfNeeded(isar);
+      }
+    });
   }
 
-  void clear() {
-    _cache123.clear();
-    _keys123.clear();
+  Future<void> clear() async {
+    final isar = await ref.read(isarProvider.future);
+    await isar.writeTxn(() async {
+      await isar.cachedTranslationDbs.clear();
+    });
   }
 
-  int get size => _cache123.length;
+  Future<int> get size async {
+    final isar = await ref.read(isarProvider.future);
+    return await isar.cachedTranslationDbs.count();
+  }
+
+  /// Enforce FIFO size limit only when significantly over limit
+  Future<void> _enforceSizeLimitIfNeeded(Isar isar) async {
+    final currentSize = await isar.cachedTranslationDbs.count();
+    if (currentSize <= _cleanupThreshold) return;
+
+    final entriesToRemove = currentSize - _maxSize;
+
+    // Auto-increment IDs are naturally ordered by insertion order (FIFO)
+    // Just get the first N entries - they're the oldest
+    final oldEntries = await isar.cachedTranslationDbs
+        .where()
+        .limit(entriesToRemove) // No sort needed - natural order is FIFO!
+        .findAll();
+
+    await isar.cachedTranslationDbs.deleteAll(oldEntries.map((e) => e.id).toList());
+
+    print('🧹 TranslationCache: Removed $entriesToRemove entries (was $currentSize)');
+  }
 
   @override
   String toString() {
-    return 'TranslationCache(size: $size, keys: $_keys123)';
+    return 'TranslationCache(maxSize: $_maxSize, cleanupThreshold: $_cleanupThreshold)';
   }
 }
 
 // Provider for the cache
 final translationCacheProvider = Provider<TranslationCache>((ref) {
-  return TranslationCache();
+  return TranslationCache(ref);
 });
 
-// // Add to your translation_service.dart
-// final postTranslationViewerProvider = FutureProvider.family<String, PostTranslationParams>((ref, params) async {
-//   final translationService = ref.read(translationServiceProvider);
-//
-//   return translationService.translatePostForViewerWithCache(params.postId, params.doTranslate, params.text, params.context);
-// });
+// Update your Isar provider to include the new schema:
+// isar_provider.dart - Add this to your existing provider
+/*
+final isarProvider = FutureProvider<Isar>((ref) async {
+  final dir = await getApplicationDocumentsDirectory();
 
+  final isar = await Isar.open(
+    directory: dir.path,
+    [
+      MemoModelPostDbSchema,
+      MemoModelCreatorDbSchema,
+      CachedTranslationDbSchema, // Add the new schema
+    ],
+    name: 'mahakka_db',
+  );
+  return isar;
+});
+*/
+
+// The rest of your existing code remains the same:
 class PostTranslationParams {
   final MemoModelPost post;
   final bool doTranslate;
   final String text;
   final BuildContext context;
-  final String languageCode; // Add this
+  final String languageCode;
 
   const PostTranslationParams({
     required this.post,
@@ -95,9 +147,18 @@ class PostTranslationParams {
 
 final postTranslationViewerProvider = FutureProvider.family<String, PostTranslationParams>((ref, params) async {
   final translationService = ref.read(translationServiceProvider);
+  final translationCache = ref.read(translationCacheProvider);
   final sequencer = ref.read(translationSequencerProvider);
 
-  // Create a unique request ID to deduplicate simultaneous requests for same post
+  // Check cache first
+  final cachedTranslation = await translationCache.get(params.post.id!, params.languageCode);
+  if (cachedTranslation != null) {
+    print("📚 TranslationCache: Cache HIT for post: ${params.post.id}, lang: ${params.languageCode}");
+    return cachedTranslation;
+  }
+
+  print("📚 TranslationCache: Cache MISS for post: ${params.post.id}, lang: ${params.languageCode}");
+
   final requestId = '${params.post.id}|${params.doTranslate}|${params.text.hashCode}|${params.languageCode}';
 
   return sequencer.enqueue(requestId, () async {
@@ -111,6 +172,9 @@ final postTranslationViewerProvider = FutureProvider.family<String, PostTranslat
       params.languageCode,
     );
 
+    // Store result in cache
+    await translationCache.put(params.post.id!, params.languageCode, result);
+
     print("🎯 SEQUENCER: Completed translation for post: ${params.post.id}");
     return result;
   });
@@ -119,178 +183,3 @@ final postTranslationViewerProvider = FutureProvider.family<String, PostTranslat
 final translationSequencerProvider = Provider<TranslationSequencer>((ref) {
   return TranslationSequencer();
 });
-
-class SimpleMutex {
-  Completer<void>? _lockCompleter;
-
-  Future<T> protect<T>(Future<T> Function() operation) async {
-    // Wait for existing lock to be released
-    while (_lockCompleter != null) {
-      await _lockCompleter!.future;
-    }
-
-    // Acquire lock
-    _lockCompleter = Completer<void>();
-
-    try {
-      return await operation();
-    } finally {
-      // Release lock
-      _lockCompleter?.complete();
-      _lockCompleter = null;
-    }
-  }
-
-  bool get isLocked => _lockCompleter != null;
-}
-
-class TranslationSequencer {
-  final SimpleMutex _mutex = SimpleMutex();
-  final Map<String, Completer<String>> _pendingRequests = {};
-
-  Future<String> enqueue(String requestId, Future<String> Function() operation) async {
-    // If there's already a pending request with the same ID, return its future
-    if (_pendingRequests.containsKey(requestId)) {
-      print("🎯 SEQUENCER: Returning existing future for: $requestId");
-      return _pendingRequests[requestId]!.future;
-    }
-
-    // Create new completer for this request
-    final requestCompleter = Completer<String>();
-    _pendingRequests[requestId] = requestCompleter;
-
-    try {
-      // Use mutex to ensure only one operation runs at a time
-      final result = await _mutex.protect(() async {
-        print("🎯 SEQUENCER: Starting operation for: $requestId");
-
-        final result = await operation();
-
-        print("🎯 SEQUENCER: Completed operation for: $requestId");
-
-        return result;
-      });
-
-      // Complete the request completer with the result
-      requestCompleter.complete(result);
-      return result;
-    } catch (e, stack) {
-      requestCompleter.completeError(e, stack);
-      rethrow;
-    } finally {
-      _pendingRequests.remove(requestId);
-    }
-  }
-
-  void clear() {
-    _pendingRequests.clear();
-  }
-
-  int get pendingCount => _pendingRequests.length;
-  bool get isLocked => _mutex.isLocked;
-}
-// You'll need to add the mutex package to your pubspec.yaml:
-// dependencies:
-//   async: ^2.11.0
-// import 'package:async/async.dart';
-
-// class TranslationSequencer {
-//   Completer<void>? _currentCompleter;
-//   final Map<String, Completer<String>> _pendingRequests = {};
-//
-//   Future<String> enqueue(String requestId, Future<String> Function() operation) async {
-//     // If there's already a pending request with the same ID, return its future
-//     if (_pendingRequests.containsKey(requestId)) {
-//       print("🎯 SEQUENCER: Returning existing future for: $requestId");
-//       return _pendingRequests[requestId]!.future;
-//     }
-//
-//     // Create new completer for this request
-//     final requestCompleter = Completer<String>();
-//     _pendingRequests[requestId] = requestCompleter;
-//
-//     // Wait for current operation to complete (if any)
-//     if (_currentCompleter != null) {
-//       print("🎯 SEQUENCER: Waiting for previous operation to complete...");
-//       await _currentCompleter!.future;
-//     }
-//
-//     // Set up the current operation completer
-//     _currentCompleter = Completer<void>();
-//
-//     print("🎯 SEQUENCER: Starting operation for: $requestId");
-//
-//     try {
-//       // Execute the operation
-//       final result = await operation();
-//
-//       // Complete the request completer
-//       requestCompleter.complete(result);
-//
-//       print("🎯 SEQUENCER: Completed operation for: $requestId");
-//       return result;
-//     } catch (e) {
-//       requestCompleter.completeError(e);
-//       rethrow;
-//     } finally {
-//       // Clean up and complete the sequence
-//       _pendingRequests.remove(requestId);
-//       _currentCompleter?.complete();
-//       _currentCompleter = null;
-//       print("🎯 SEQUENCER: Sequence slot freed for next operation");
-//     }
-//   }
-//
-//   void clear() {
-//     _currentCompleter?.complete();
-//     _currentCompleter = null;
-//     _pendingRequests.clear();
-//   }
-//
-//   int get pendingCount => _pendingRequests.length;
-//
-//   bool get isProcessing => _currentCompleter != null;
-// }
-
-// class TranslationSequencer {
-//   Completer<void> _currentCompleter = Completer<void>()..complete();
-//   final Map<String, Completer<String>> _pendingRequests = {};
-//
-//   Future<String> enqueue(String requestId, Future<String> Function() operation) async {
-//     // If there's already a pending request with the same ID, return its future
-//     if (_pendingRequests.containsKey(requestId)) {
-//       return _pendingRequests[requestId]!.future;
-//     }
-//
-//     // Wait for current operation to complete
-//     await _currentCompleter.future;
-//
-//     // Create new completer for this request
-//     final completer = Completer<String>();
-//     _pendingRequests[requestId] = completer;
-//
-//     // Set up the next operation
-//     _currentCompleter = Completer<void>();
-//
-//     try {
-//       // Execute the operation
-//       final result = await operation();
-//       completer.complete(result);
-//       return result;
-//     } catch (e) {
-//       completer.completeError(e);
-//       rethrow;
-//     } finally {
-//       // Clean up and complete the sequence
-//       _pendingRequests.remove(requestId);
-//       _currentCompleter.complete();
-//     }
-//   }
-//
-//   void clear() {
-//     _currentCompleter = Completer<void>()..complete();
-//     _pendingRequests.clear();
-//   }
-//
-//   int get pendingCount => _pendingRequests.length;
-// }

@@ -22,56 +22,69 @@ const MemoModelPostDbSchema = CollectionSchema(
       name: r'cachedAt',
       type: IsarType.dateTime,
     ),
+    r'created': PropertySchema(id: 1, name: r'created', type: IsarType.string),
     r'createdDateTime': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'createdDateTime',
       type: IsarType.dateTime,
-    ),
-    r'createdString': PropertySchema(
-      id: 2,
-      name: r'createdString',
-      type: IsarType.string,
     ),
     r'creatorId': PropertySchema(
       id: 3,
       name: r'creatorId',
       type: IsarType.string,
     ),
-    r'id': PropertySchema(id: 4, name: r'id', type: IsarType.string),
-    r'imgurUrl': PropertySchema(
+    r'hideOnFeed': PropertySchema(
+      id: 4,
+      name: r'hideOnFeed',
+      type: IsarType.bool,
+    ),
+    r'imageUrl': PropertySchema(
       id: 5,
+      name: r'imageUrl',
+      type: IsarType.string,
+    ),
+    r'imgurUrl': PropertySchema(
+      id: 6,
       name: r'imgurUrl',
       type: IsarType.string,
     ),
-    r'isExpired': PropertySchema(
-      id: 6,
-      name: r'isExpired',
-      type: IsarType.bool,
-    ),
+    r'ipfsCid': PropertySchema(id: 7, name: r'ipfsCid', type: IsarType.string),
     r'likeCounter': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'likeCounter',
       type: IsarType.long,
     ),
     r'popularityScore': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'popularityScore',
       type: IsarType.long,
     ),
+    r'postId': PropertySchema(id: 10, name: r'postId', type: IsarType.string),
     r'replyCounter': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'replyCounter',
       type: IsarType.long,
     ),
+    r'showOnFeed': PropertySchema(
+      id: 12,
+      name: r'showOnFeed',
+      type: IsarType.bool,
+    ),
     r'tagIds': PropertySchema(
-      id: 10,
+      id: 13,
       name: r'tagIds',
       type: IsarType.stringList,
     ),
-    r'text': PropertySchema(id: 11, name: r'text', type: IsarType.string),
-    r'topicId': PropertySchema(id: 12, name: r'topicId', type: IsarType.string),
+    r'text': PropertySchema(id: 14, name: r'text', type: IsarType.string),
+    r'topicId': PropertySchema(id: 15, name: r'topicId', type: IsarType.string),
+    r'urls': PropertySchema(id: 16, name: r'urls', type: IsarType.stringList),
+    r'videoUrl': PropertySchema(
+      id: 17,
+      name: r'videoUrl',
+      type: IsarType.string,
+    ),
     r'youtubeId': PropertySchema(
-      id: 13,
+      id: 18,
       name: r'youtubeId',
       type: IsarType.string,
     ),
@@ -81,16 +94,16 @@ const MemoModelPostDbSchema = CollectionSchema(
   serialize: _memoModelPostDbSerialize,
   deserialize: _memoModelPostDbDeserialize,
   deserializeProp: _memoModelPostDbDeserializeProp,
-  idName: r'isarId',
+  idName: r'id',
   indexes: {
-    r'id': IndexSchema(
-      id: -3268401673993471357,
-      name: r'id',
+    r'postId': IndexSchema(
+      id: -544810920068516617,
+      name: r'postId',
       unique: true,
       replace: false,
       properties: [
         IndexPropertySchema(
-          name: r'id',
+          name: r'postId',
           type: IndexType.hash,
           caseSensitive: true,
         ),
@@ -158,19 +171,6 @@ const MemoModelPostDbSchema = CollectionSchema(
         ),
       ],
     ),
-    r'cachedAt': IndexSchema(
-      id: -699654806693614168,
-      name: r'cachedAt',
-      unique: false,
-      replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'cachedAt',
-          type: IndexType.value,
-          caseSensitive: false,
-        ),
-      ],
-    ),
   },
   links: {},
   embeddedSchemas: {},
@@ -188,19 +188,31 @@ int _memoModelPostDbEstimateSize(
 ) {
   var bytesCount = offsets.last;
   {
-    final value = object.createdString;
+    final value = object.created;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
   }
   bytesCount += 3 + object.creatorId.length * 3;
-  bytesCount += 3 + object.id.length * 3;
+  {
+    final value = object.imageUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   {
     final value = object.imgurUrl;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
   }
+  {
+    final value = object.ipfsCid;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.postId.length * 3;
   bytesCount += 3 + object.tagIds.length * 3;
   {
     for (var i = 0; i < object.tagIds.length; i++) {
@@ -215,6 +227,19 @@ int _memoModelPostDbEstimateSize(
     }
   }
   bytesCount += 3 + object.topicId.length * 3;
+  bytesCount += 3 + object.urls.length * 3;
+  {
+    for (var i = 0; i < object.urls.length; i++) {
+      final value = object.urls[i];
+      bytesCount += value.length * 3;
+    }
+  }
+  {
+    final value = object.videoUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   {
     final value = object.youtubeId;
     if (value != null) {
@@ -231,19 +256,24 @@ void _memoModelPostDbSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDateTime(offsets[0], object.cachedAt);
-  writer.writeDateTime(offsets[1], object.createdDateTime);
-  writer.writeString(offsets[2], object.createdString);
+  writer.writeString(offsets[1], object.created);
+  writer.writeDateTime(offsets[2], object.createdDateTime);
   writer.writeString(offsets[3], object.creatorId);
-  writer.writeString(offsets[4], object.id);
-  writer.writeString(offsets[5], object.imgurUrl);
-  writer.writeBool(offsets[6], object.isExpired);
-  writer.writeLong(offsets[7], object.likeCounter);
-  writer.writeLong(offsets[8], object.popularityScore);
-  writer.writeLong(offsets[9], object.replyCounter);
-  writer.writeStringList(offsets[10], object.tagIds);
-  writer.writeString(offsets[11], object.text);
-  writer.writeString(offsets[12], object.topicId);
-  writer.writeString(offsets[13], object.youtubeId);
+  writer.writeBool(offsets[4], object.hideOnFeed);
+  writer.writeString(offsets[5], object.imageUrl);
+  writer.writeString(offsets[6], object.imgurUrl);
+  writer.writeString(offsets[7], object.ipfsCid);
+  writer.writeLong(offsets[8], object.likeCounter);
+  writer.writeLong(offsets[9], object.popularityScore);
+  writer.writeString(offsets[10], object.postId);
+  writer.writeLong(offsets[11], object.replyCounter);
+  writer.writeBool(offsets[12], object.showOnFeed);
+  writer.writeStringList(offsets[13], object.tagIds);
+  writer.writeString(offsets[14], object.text);
+  writer.writeString(offsets[15], object.topicId);
+  writer.writeStringList(offsets[16], object.urls);
+  writer.writeString(offsets[17], object.videoUrl);
+  writer.writeString(offsets[18], object.youtubeId);
 }
 
 MemoModelPostDb _memoModelPostDbDeserialize(
@@ -254,18 +284,25 @@ MemoModelPostDb _memoModelPostDbDeserialize(
 ) {
   final object = MemoModelPostDb();
   object.cachedAt = reader.readDateTime(offsets[0]);
-  object.createdDateTime = reader.readDateTimeOrNull(offsets[1]);
-  object.createdString = reader.readStringOrNull(offsets[2]);
+  object.created = reader.readStringOrNull(offsets[1]);
+  object.createdDateTime = reader.readDateTimeOrNull(offsets[2]);
   object.creatorId = reader.readString(offsets[3]);
-  object.id = reader.readString(offsets[4]);
-  object.imgurUrl = reader.readStringOrNull(offsets[5]);
-  object.likeCounter = reader.readLongOrNull(offsets[7]);
-  object.popularityScore = reader.readLong(offsets[8]);
-  object.replyCounter = reader.readLongOrNull(offsets[9]);
-  object.tagIds = reader.readStringList(offsets[10]) ?? [];
-  object.text = reader.readStringOrNull(offsets[11]);
-  object.topicId = reader.readString(offsets[12]);
-  object.youtubeId = reader.readStringOrNull(offsets[13]);
+  object.hideOnFeed = reader.readBoolOrNull(offsets[4]);
+  object.id = id;
+  object.imageUrl = reader.readStringOrNull(offsets[5]);
+  object.imgurUrl = reader.readStringOrNull(offsets[6]);
+  object.ipfsCid = reader.readStringOrNull(offsets[7]);
+  object.likeCounter = reader.readLongOrNull(offsets[8]);
+  object.popularityScore = reader.readLong(offsets[9]);
+  object.postId = reader.readString(offsets[10]);
+  object.replyCounter = reader.readLongOrNull(offsets[11]);
+  object.showOnFeed = reader.readBoolOrNull(offsets[12]);
+  object.tagIds = reader.readStringList(offsets[13]) ?? [];
+  object.text = reader.readStringOrNull(offsets[14]);
+  object.topicId = reader.readString(offsets[15]);
+  object.urls = reader.readStringList(offsets[16]) ?? [];
+  object.videoUrl = reader.readStringOrNull(offsets[17]);
+  object.youtubeId = reader.readStringOrNull(offsets[18]);
   return object;
 }
 
@@ -279,30 +316,40 @@ P _memoModelPostDbDeserializeProp<P>(
     case 0:
       return (reader.readDateTime(offset)) as P;
     case 1:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 2:
       return (reader.readStringOrNull(offset)) as P;
+    case 2:
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 3:
       return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 5:
       return (reader.readStringOrNull(offset)) as P;
     case 6:
-      return (reader.readBool(offset)) as P;
-    case 7:
-      return (reader.readLongOrNull(offset)) as P;
-    case 8:
-      return (reader.readLong(offset)) as P;
-    case 9:
-      return (reader.readLongOrNull(offset)) as P;
-    case 10:
-      return (reader.readStringList(offset) ?? []) as P;
-    case 11:
       return (reader.readStringOrNull(offset)) as P;
-    case 12:
+    case 7:
+      return (reader.readStringOrNull(offset)) as P;
+    case 8:
+      return (reader.readLongOrNull(offset)) as P;
+    case 9:
+      return (reader.readLong(offset)) as P;
+    case 10:
       return (reader.readString(offset)) as P;
+    case 11:
+      return (reader.readLongOrNull(offset)) as P;
+    case 12:
+      return (reader.readBoolOrNull(offset)) as P;
     case 13:
+      return (reader.readStringList(offset) ?? []) as P;
+    case 14:
+      return (reader.readStringOrNull(offset)) as P;
+    case 15:
+      return (reader.readString(offset)) as P;
+    case 16:
+      return (reader.readStringList(offset) ?? []) as P;
+    case 17:
+      return (reader.readStringOrNull(offset)) as P;
+    case 18:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -310,7 +357,7 @@ P _memoModelPostDbDeserializeProp<P>(
 }
 
 Id _memoModelPostDbGetId(MemoModelPostDb object) {
-  return object.isarId;
+  return object.id;
 }
 
 List<IsarLinkBase<dynamic>> _memoModelPostDbGetLinks(MemoModelPostDb object) {
@@ -321,68 +368,70 @@ void _memoModelPostDbAttach(
   IsarCollection<dynamic> col,
   Id id,
   MemoModelPostDb object,
-) {}
+) {
+  object.id = id;
+}
 
 extension MemoModelPostDbByIndex on IsarCollection<MemoModelPostDb> {
-  Future<MemoModelPostDb?> getById(String id) {
-    return getByIndex(r'id', [id]);
+  Future<MemoModelPostDb?> getByPostId(String postId) {
+    return getByIndex(r'postId', [postId]);
   }
 
-  MemoModelPostDb? getByIdSync(String id) {
-    return getByIndexSync(r'id', [id]);
+  MemoModelPostDb? getByPostIdSync(String postId) {
+    return getByIndexSync(r'postId', [postId]);
   }
 
-  Future<bool> deleteById(String id) {
-    return deleteByIndex(r'id', [id]);
+  Future<bool> deleteByPostId(String postId) {
+    return deleteByIndex(r'postId', [postId]);
   }
 
-  bool deleteByIdSync(String id) {
-    return deleteByIndexSync(r'id', [id]);
+  bool deleteByPostIdSync(String postId) {
+    return deleteByIndexSync(r'postId', [postId]);
   }
 
-  Future<List<MemoModelPostDb?>> getAllById(List<String> idValues) {
-    final values = idValues.map((e) => [e]).toList();
-    return getAllByIndex(r'id', values);
+  Future<List<MemoModelPostDb?>> getAllByPostId(List<String> postIdValues) {
+    final values = postIdValues.map((e) => [e]).toList();
+    return getAllByIndex(r'postId', values);
   }
 
-  List<MemoModelPostDb?> getAllByIdSync(List<String> idValues) {
-    final values = idValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'id', values);
+  List<MemoModelPostDb?> getAllByPostIdSync(List<String> postIdValues) {
+    final values = postIdValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'postId', values);
   }
 
-  Future<int> deleteAllById(List<String> idValues) {
-    final values = idValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'id', values);
+  Future<int> deleteAllByPostId(List<String> postIdValues) {
+    final values = postIdValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'postId', values);
   }
 
-  int deleteAllByIdSync(List<String> idValues) {
-    final values = idValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'id', values);
+  int deleteAllByPostIdSync(List<String> postIdValues) {
+    final values = postIdValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'postId', values);
   }
 
-  Future<Id> putById(MemoModelPostDb object) {
-    return putByIndex(r'id', object);
+  Future<Id> putByPostId(MemoModelPostDb object) {
+    return putByIndex(r'postId', object);
   }
 
-  Id putByIdSync(MemoModelPostDb object, {bool saveLinks = true}) {
-    return putByIndexSync(r'id', object, saveLinks: saveLinks);
+  Id putByPostIdSync(MemoModelPostDb object, {bool saveLinks = true}) {
+    return putByIndexSync(r'postId', object, saveLinks: saveLinks);
   }
 
-  Future<List<Id>> putAllById(List<MemoModelPostDb> objects) {
-    return putAllByIndex(r'id', objects);
+  Future<List<Id>> putAllByPostId(List<MemoModelPostDb> objects) {
+    return putAllByIndex(r'postId', objects);
   }
 
-  List<Id> putAllByIdSync(
+  List<Id> putAllByPostIdSync(
     List<MemoModelPostDb> objects, {
     bool saveLinks = true,
   }) {
-    return putAllByIndexSync(r'id', objects, saveLinks: saveLinks);
+    return putAllByIndexSync(r'postId', objects, saveLinks: saveLinks);
   }
 }
 
 extension MemoModelPostDbQueryWhereSort
     on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QWhere> {
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhere> anyIsarId() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
@@ -396,114 +445,105 @@ extension MemoModelPostDbQueryWhereSort
       );
     });
   }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhere> anyCachedAt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'cachedAt'),
-      );
-    });
-  }
 }
 
 extension MemoModelPostDbQueryWhere
     on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QWhereClause> {
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  isarIdEqualTo(Id isarId) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> idEqualTo(
+    Id id,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(lower: isarId, upper: isarId),
-      );
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  isarIdNotEqualTo(Id isarId) {
+  idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(
-              IdWhereClause.lessThan(upper: isarId, includeUpper: false),
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
             )
             .addWhereClause(
-              IdWhereClause.greaterThan(lower: isarId, includeLower: false),
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
             );
       } else {
         return query
             .addWhereClause(
-              IdWhereClause.greaterThan(lower: isarId, includeLower: false),
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
             )
             .addWhereClause(
-              IdWhereClause.lessThan(upper: isarId, includeUpper: false),
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
             );
       }
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  isarIdGreaterThan(Id isarId, {bool include = false}) {
+  idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        IdWhereClause.greaterThan(lower: isarId, includeLower: include),
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  isarIdLessThan(Id isarId, {bool include = false}) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> idLessThan(
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        IdWhereClause.lessThan(upper: isarId, includeUpper: include),
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  isarIdBetween(
-    Id lowerIsarId,
-    Id upperIsarId, {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.between(
-          lower: lowerIsarId,
+          lower: lowerId,
           includeLower: includeLower,
-          upper: upperIsarId,
+          upper: upperId,
           includeUpper: includeUpper,
         ),
       );
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause> idEqualTo(
-    String id,
-  ) {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
+  postIdEqualTo(String postId) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'id', value: [id]),
+        IndexWhereClause.equalTo(indexName: r'postId', value: [postId]),
       );
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  idNotEqualTo(String id) {
+  postIdNotEqualTo(String postId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(
               IndexWhereClause.between(
-                indexName: r'id',
+                indexName: r'postId',
                 lower: [],
-                upper: [id],
+                upper: [postId],
                 includeUpper: false,
               ),
             )
             .addWhereClause(
               IndexWhereClause.between(
-                indexName: r'id',
-                lower: [id],
+                indexName: r'postId',
+                lower: [postId],
                 includeLower: false,
                 upper: [],
               ),
@@ -512,17 +552,17 @@ extension MemoModelPostDbQueryWhere
         return query
             .addWhereClause(
               IndexWhereClause.between(
-                indexName: r'id',
-                lower: [id],
+                indexName: r'postId',
+                lower: [postId],
                 includeLower: false,
                 upper: [],
               ),
             )
             .addWhereClause(
               IndexWhereClause.between(
-                indexName: r'id',
+                indexName: r'postId',
                 lower: [],
-                upper: [id],
+                upper: [postId],
                 includeUpper: false,
               ),
             );
@@ -1102,106 +1142,6 @@ extension MemoModelPostDbQueryWhere
       }
     });
   }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  cachedAtEqualTo(DateTime cachedAt) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'cachedAt', value: [cachedAt]),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  cachedAtNotEqualTo(DateTime cachedAt) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'cachedAt',
-                lower: [],
-                upper: [cachedAt],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'cachedAt',
-                lower: [cachedAt],
-                includeLower: false,
-                upper: [],
-              ),
-            );
-      } else {
-        return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'cachedAt',
-                lower: [cachedAt],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'cachedAt',
-                lower: [],
-                upper: [cachedAt],
-                includeUpper: false,
-              ),
-            );
-      }
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  cachedAtGreaterThan(DateTime cachedAt, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'cachedAt',
-          lower: [cachedAt],
-          includeLower: include,
-          upper: [],
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  cachedAtLessThan(DateTime cachedAt, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'cachedAt',
-          lower: [],
-          upper: [cachedAt],
-          includeUpper: include,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  cachedAtBetween(
-    DateTime lowerCachedAt,
-    DateTime upperCachedAt, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'cachedAt',
-          lower: [lowerCachedAt],
-          includeLower: includeLower,
-          upper: [upperCachedAt],
-          includeUpper: includeUpper,
-        ),
-      );
-    });
-  }
 }
 
 extension MemoModelPostDbQueryFilter
@@ -1257,6 +1197,165 @@ extension MemoModelPostDbQueryFilter
           upper: upper,
           includeUpper: includeUpper,
         ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  createdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'created'),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  createdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'created'),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  createdEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'created',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  createdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'created',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  createdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'created',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  createdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'created',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  createdStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'created',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  createdEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'created',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  createdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'created',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  createdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'created',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  createdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'created', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  createdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'created', value: ''),
       );
     });
   }
@@ -1330,165 +1429,6 @@ extension MemoModelPostDbQueryFilter
           upper: upper,
           includeUpper: includeUpper,
         ),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'createdString'),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'createdString'),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringEqualTo(String? value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'createdString',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'createdString',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringLessThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'createdString',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringBetween(
-    String? lower,
-    String? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'createdString',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringStartsWith(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'createdString',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringEndsWith(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'createdString',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'createdString',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'createdString',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'createdString', value: ''),
-      );
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  createdStringIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'createdString', value: ''),
       );
     });
   }
@@ -1635,45 +1575,62 @@ extension MemoModelPostDbQueryFilter
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idEqualTo(String value, {bool caseSensitive = true}) {
+  hideOnFeedIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'id',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        const FilterCondition.isNull(property: r'hideOnFeed'),
       );
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
+  hideOnFeedIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'hideOnFeed'),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  hideOnFeedEqualTo(bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'hideOnFeed', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  idGreaterThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(
           include: include,
           property: r'id',
           value: value,
-          caseSensitive: caseSensitive,
         ),
       );
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idLessThan(String value, {bool include = false, bool caseSensitive = true}) {
+  idLessThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.lessThan(
           include: include,
           property: r'id',
           value: value,
-          caseSensitive: caseSensitive,
         ),
       );
     });
@@ -1681,8 +1638,95 @@ extension MemoModelPostDbQueryFilter
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
   idBetween(
-    String lower,
-    String upper, {
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  imageUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'imageUrl'),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  imageUrlIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'imageUrl'),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  imageUrlEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'imageUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  imageUrlGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'imageUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  imageUrlLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'imageUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  imageUrlBetween(
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -1690,7 +1734,7 @@ extension MemoModelPostDbQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.between(
-          property: r'id',
+          property: r'imageUrl',
           lower: lower,
           includeLower: includeLower,
           upper: upper,
@@ -1702,11 +1746,11 @@ extension MemoModelPostDbQueryFilter
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idStartsWith(String value, {bool caseSensitive = true}) {
+  imageUrlStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.startsWith(
-          property: r'id',
+          property: r'imageUrl',
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1715,11 +1759,11 @@ extension MemoModelPostDbQueryFilter
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idEndsWith(String value, {bool caseSensitive = true}) {
+  imageUrlEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.endsWith(
-          property: r'id',
+          property: r'imageUrl',
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1728,11 +1772,11 @@ extension MemoModelPostDbQueryFilter
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idContains(String value, {bool caseSensitive = true}) {
+  imageUrlContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.contains(
-          property: r'id',
+          property: r'imageUrl',
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1741,11 +1785,11 @@ extension MemoModelPostDbQueryFilter
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idMatches(String pattern, {bool caseSensitive = true}) {
+  imageUrlMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.matches(
-          property: r'id',
+          property: r'imageUrl',
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -1754,19 +1798,19 @@ extension MemoModelPostDbQueryFilter
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idIsEmpty() {
+  imageUrlIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: ''),
+        FilterCondition.equalTo(property: r'imageUrl', value: ''),
       );
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  idIsNotEmpty() {
+  imageUrlIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'id', value: ''),
+        FilterCondition.greaterThan(property: r'imageUrl', value: ''),
       );
     });
   }
@@ -1931,65 +1975,160 @@ extension MemoModelPostDbQueryFilter
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  isExpiredEqualTo(bool value) {
+  ipfsCidIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'isExpired', value: value),
+        const FilterCondition.isNull(property: r'ipfsCid'),
       );
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  isarIdEqualTo(Id value) {
+  ipfsCidIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'isarId', value: value),
+        const FilterCondition.isNotNull(property: r'ipfsCid'),
       );
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  isarIdGreaterThan(Id value, {bool include = false}) {
+  ipfsCidEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'ipfsCid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  ipfsCidGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(
           include: include,
-          property: r'isarId',
+          property: r'ipfsCid',
           value: value,
+          caseSensitive: caseSensitive,
         ),
       );
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  isarIdLessThan(Id value, {bool include = false}) {
+  ipfsCidLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.lessThan(
           include: include,
-          property: r'isarId',
+          property: r'ipfsCid',
           value: value,
+          caseSensitive: caseSensitive,
         ),
       );
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
-  isarIdBetween(
-    Id lower,
-    Id upper, {
+  ipfsCidBetween(
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.between(
-          property: r'isarId',
+          property: r'ipfsCid',
           lower: lower,
           includeLower: includeLower,
           upper: upper,
           includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
         ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  ipfsCidStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'ipfsCid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  ipfsCidEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'ipfsCid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  ipfsCidContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'ipfsCid',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  ipfsCidMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'ipfsCid',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  ipfsCidIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'ipfsCid', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  ipfsCidIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'ipfsCid', value: ''),
       );
     });
   }
@@ -2123,6 +2262,147 @@ extension MemoModelPostDbQueryFilter
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postIdEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'postId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'postId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'postId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'postId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postIdStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'postId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postIdEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'postId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'postId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'postId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'postId', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'postId', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
   replyCounterIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2191,6 +2471,33 @@ extension MemoModelPostDbQueryFilter
           upper: upper,
           includeUpper: includeUpper,
         ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  showOnFeedIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'showOnFeed'),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  showOnFeedIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'showOnFeed'),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  showOnFeedEqualTo(bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'showOnFeed', value: value),
       );
     });
   }
@@ -2690,6 +2997,359 @@ extension MemoModelPostDbQueryFilter
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsElementEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'urls',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'urls',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'urls',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'urls',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsElementStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'urls',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsElementEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'urls',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'urls',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'urls',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'urls', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'urls', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'urls', length, true, length, true);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'urls', 0, true, 0, true);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'urls', 0, false, 999999, true);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsLengthLessThan(int length, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'urls', 0, true, length, include);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsLengthGreaterThan(int length, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'urls', length, include, 999999, true);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  urlsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'urls',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  videoUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'videoUrl'),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  videoUrlIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'videoUrl'),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  videoUrlEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'videoUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  videoUrlGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'videoUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  videoUrlLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'videoUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  videoUrlBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'videoUrl',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  videoUrlStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'videoUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  videoUrlEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'videoUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  videoUrlContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'videoUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  videoUrlMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'videoUrl',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  videoUrlIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'videoUrl', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  videoUrlIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'videoUrl', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
   youtubeIdIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2871,6 +3531,19 @@ extension MemoModelPostDbQuerySortBy
     });
   }
 
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByCreated() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'created', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  sortByCreatedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'created', Sort.desc);
+    });
+  }
+
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
   sortByCreatedDateTime() {
     return QueryBuilder.apply(this, (query) {
@@ -2882,20 +3555,6 @@ extension MemoModelPostDbQuerySortBy
   sortByCreatedDateTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdDateTime', Sort.desc);
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByCreatedString() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'createdString', Sort.asc);
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByCreatedStringDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'createdString', Sort.desc);
     });
   }
 
@@ -2913,15 +3572,31 @@ extension MemoModelPostDbQuerySortBy
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortById() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  sortByHideOnFeed() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'id', Sort.asc);
+      return query.addSortBy(r'hideOnFeed', Sort.asc);
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByIdDesc() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  sortByHideOnFeedDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'id', Sort.desc);
+      return query.addSortBy(r'hideOnFeed', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  sortByImageUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imageUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  sortByImageUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imageUrl', Sort.desc);
     });
   }
 
@@ -2939,17 +3614,16 @@ extension MemoModelPostDbQuerySortBy
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByIsExpired() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByIpfsCid() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isExpired', Sort.asc);
+      return query.addSortBy(r'ipfsCid', Sort.asc);
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  sortByIsExpiredDesc() {
+  sortByIpfsCidDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isExpired', Sort.desc);
+      return query.addSortBy(r'ipfsCid', Sort.desc);
     });
   }
 
@@ -2981,6 +3655,19 @@ extension MemoModelPostDbQuerySortBy
     });
   }
 
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> sortByPostId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'postId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  sortByPostIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'postId', Sort.desc);
+    });
+  }
+
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
   sortByReplyCounter() {
     return QueryBuilder.apply(this, (query) {
@@ -2992,6 +3679,20 @@ extension MemoModelPostDbQuerySortBy
   sortByReplyCounterDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'replyCounter', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  sortByShowOnFeed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showOnFeed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  sortByShowOnFeedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showOnFeed', Sort.desc);
     });
   }
 
@@ -3018,6 +3719,20 @@ extension MemoModelPostDbQuerySortBy
   sortByTopicIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'topicId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  sortByVideoUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'videoUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  sortByVideoUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'videoUrl', Sort.desc);
     });
   }
 
@@ -3052,6 +3767,19 @@ extension MemoModelPostDbQuerySortThenBy
     });
   }
 
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByCreated() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'created', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  thenByCreatedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'created', Sort.desc);
+    });
+  }
+
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
   thenByCreatedDateTime() {
     return QueryBuilder.apply(this, (query) {
@@ -3063,20 +3791,6 @@ extension MemoModelPostDbQuerySortThenBy
   thenByCreatedDateTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdDateTime', Sort.desc);
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByCreatedString() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'createdString', Sort.asc);
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByCreatedStringDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'createdString', Sort.desc);
     });
   }
 
@@ -3094,6 +3808,20 @@ extension MemoModelPostDbQuerySortThenBy
     });
   }
 
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  thenByHideOnFeed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hideOnFeed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  thenByHideOnFeedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hideOnFeed', Sort.desc);
+    });
+  }
+
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -3103,6 +3831,20 @@ extension MemoModelPostDbQuerySortThenBy
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  thenByImageUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imageUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  thenByImageUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'imageUrl', Sort.desc);
     });
   }
 
@@ -3120,30 +3862,16 @@ extension MemoModelPostDbQuerySortThenBy
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByIsExpired() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByIpfsCid() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isExpired', Sort.asc);
+      return query.addSortBy(r'ipfsCid', Sort.asc);
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByIsExpiredDesc() {
+  thenByIpfsCidDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isExpired', Sort.desc);
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByIsarId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isarId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
-  thenByIsarIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isarId', Sort.desc);
+      return query.addSortBy(r'ipfsCid', Sort.desc);
     });
   }
 
@@ -3175,6 +3903,19 @@ extension MemoModelPostDbQuerySortThenBy
     });
   }
 
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy> thenByPostId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'postId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  thenByPostIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'postId', Sort.desc);
+    });
+  }
+
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
   thenByReplyCounter() {
     return QueryBuilder.apply(this, (query) {
@@ -3186,6 +3927,20 @@ extension MemoModelPostDbQuerySortThenBy
   thenByReplyCounterDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'replyCounter', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  thenByShowOnFeed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showOnFeed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  thenByShowOnFeedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showOnFeed', Sort.desc);
     });
   }
 
@@ -3216,6 +3971,20 @@ extension MemoModelPostDbQuerySortThenBy
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  thenByVideoUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'videoUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  thenByVideoUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'videoUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
   thenByYoutubeId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'youtubeId', Sort.asc);
@@ -3239,20 +4008,18 @@ extension MemoModelPostDbQueryWhereDistinct
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
-  distinctByCreatedDateTime() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByCreated({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'createdDateTime');
+      return query.addDistinctBy(r'created', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
-  distinctByCreatedString({bool caseSensitive = true}) {
+  distinctByCreatedDateTime() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(
-        r'createdString',
-        caseSensitive: caseSensitive,
-      );
+      return query.addDistinctBy(r'createdDateTime');
     });
   }
 
@@ -3263,11 +4030,18 @@ extension MemoModelPostDbQueryWhereDistinct
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctById({
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
+  distinctByHideOnFeed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'hideOnFeed');
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByImageUrl({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'id', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'imageUrl', caseSensitive: caseSensitive);
     });
   }
 
@@ -3279,10 +4053,11 @@ extension MemoModelPostDbQueryWhereDistinct
     });
   }
 
-  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
-  distinctByIsExpired() {
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByIpfsCid({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'isExpired');
+      return query.addDistinctBy(r'ipfsCid', caseSensitive: caseSensitive);
     });
   }
 
@@ -3300,10 +4075,25 @@ extension MemoModelPostDbQueryWhereDistinct
     });
   }
 
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByPostId({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'postId', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
   distinctByReplyCounter() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'replyCounter');
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
+  distinctByShowOnFeed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'showOnFeed');
     });
   }
 
@@ -3329,6 +4119,20 @@ extension MemoModelPostDbQueryWhereDistinct
     });
   }
 
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByUrls() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'urls');
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct> distinctByVideoUrl({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'videoUrl', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
   distinctByYoutubeId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -3339,15 +4143,21 @@ extension MemoModelPostDbQueryWhereDistinct
 
 extension MemoModelPostDbQueryProperty
     on QueryBuilder<MemoModelPostDb, MemoModelPostDb, QQueryProperty> {
-  QueryBuilder<MemoModelPostDb, int, QQueryOperations> isarIdProperty() {
+  QueryBuilder<MemoModelPostDb, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'isarId');
+      return query.addPropertyName(r'id');
     });
   }
 
   QueryBuilder<MemoModelPostDb, DateTime, QQueryOperations> cachedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'cachedAt');
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, String?, QQueryOperations> createdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'created');
     });
   }
 
@@ -3358,22 +4168,21 @@ extension MemoModelPostDbQueryProperty
     });
   }
 
-  QueryBuilder<MemoModelPostDb, String?, QQueryOperations>
-  createdStringProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'createdString');
-    });
-  }
-
   QueryBuilder<MemoModelPostDb, String, QQueryOperations> creatorIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'creatorId');
     });
   }
 
-  QueryBuilder<MemoModelPostDb, String, QQueryOperations> idProperty() {
+  QueryBuilder<MemoModelPostDb, bool?, QQueryOperations> hideOnFeedProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'id');
+      return query.addPropertyName(r'hideOnFeed');
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, String?, QQueryOperations> imageUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'imageUrl');
     });
   }
 
@@ -3383,9 +4192,9 @@ extension MemoModelPostDbQueryProperty
     });
   }
 
-  QueryBuilder<MemoModelPostDb, bool, QQueryOperations> isExpiredProperty() {
+  QueryBuilder<MemoModelPostDb, String?, QQueryOperations> ipfsCidProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'isExpired');
+      return query.addPropertyName(r'ipfsCid');
     });
   }
 
@@ -3402,9 +4211,21 @@ extension MemoModelPostDbQueryProperty
     });
   }
 
+  QueryBuilder<MemoModelPostDb, String, QQueryOperations> postIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'postId');
+    });
+  }
+
   QueryBuilder<MemoModelPostDb, int?, QQueryOperations> replyCounterProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'replyCounter');
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, bool?, QQueryOperations> showOnFeedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'showOnFeed');
     });
   }
 
@@ -3424,6 +4245,18 @@ extension MemoModelPostDbQueryProperty
   QueryBuilder<MemoModelPostDb, String, QQueryOperations> topicIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'topicId');
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, List<String>, QQueryOperations> urlsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'urls');
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, String?, QQueryOperations> videoUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'videoUrl');
     });
   }
 

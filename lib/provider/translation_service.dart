@@ -45,7 +45,7 @@ class TranslationService {
       return text;
     }
 
-    final cachedTranslation = cache.get(post.id!, systemLangCode);
+    String? cachedTranslation = await cache.get(post.id!, systemLangCode);
     if (cachedTranslation != null) {
       return cachedTranslation;
     }

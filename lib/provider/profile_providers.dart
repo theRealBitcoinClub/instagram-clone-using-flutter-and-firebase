@@ -201,7 +201,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       final creatorRepo = ref.read(creatorRepositoryProvider);
       final creator = await creatorRepo.getCreator(profileId, saveToFirebase: false, forceScrape: forceScrape);
 
-      final posts = await _loadPosts(profileId);
+      final posts = await _loadPostsForProfile(profileId);
 
       final categorizer = PostsCategorizer.fromPosts(posts);
 
@@ -223,12 +223,12 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     }
   }
 
-  Future<List<MemoModelPost>> _loadPosts(String profileId) async {
+  Future<List<MemoModelPost>> _loadPostsForProfile(String profileId) async {
     try {
       final postRepository = ref.read(postRepositoryProvider);
       final postsStream = postRepository.getPostsByCreatorId(profileId);
 
-      return await postsStream.first.timeout(Duration(seconds: 15));
+      return await postsStream.first.timeout(Duration(seconds: 30));
     } catch (e) {
       print('Error loading posts: $e');
       return [];

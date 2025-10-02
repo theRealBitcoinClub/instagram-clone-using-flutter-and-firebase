@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 
 import '../../config.dart';
+import '../../repositories/post_cache_repository.dart';
 
 class PostService {
   static const String orderByField = "createdDateTime";
@@ -303,7 +304,68 @@ class PostService {
     }
   }
 
-  Stream<List<MemoModelPost>> getPostsByCreatorIdStream(String creatorId) {
+  Stream<List<MemoModelPost>> getPostsByCreatorIdStream(String creatorId, ref) {
+    final controller = StreamController<List<MemoModelPost>>();
+    final postCache = ref.read(postCacheRepositoryProvider);
+
+    () async {
+      try {
+        // 1. Get cached posts first
+        final cachedPosts = await _getCachedPostsFirst(creatorId, ref);
+        if (cachedPosts.isNotEmpty) {
+          print("📚 Using cached profile posts for creator: $creatorId");
+          controller.add(cachedPosts); // Emit cached data immediately
+        }
+
+        // 2. Subscribe to Firebase stream for live updates
+        final firebaseSubscription = _getFirebasePostsStream(creatorId, ref).listen(
+          (firebasePosts) async {
+            // Emit Firebase data
+            controller.add(firebasePosts);
+
+            // Update cache in background (don't await to avoid blocking)
+            if (firebasePosts.isNotEmpty) {
+              postCache.cacheProfilePosts(creatorId, firebasePosts);
+            }
+          },
+          onError: (error) {
+            print("❌ Error in Firebase stream for creator $creatorId: $error");
+            controller.addError(error);
+          },
+          onDone: () {
+            if (!controller.isClosed) {
+              controller.close();
+            }
+          },
+        );
+
+        // 3. Cancel Firebase subscription when controller closes
+        controller.onCancel = () {
+          firebaseSubscription.cancel();
+        };
+      } catch (e) {
+        print("❌ Error in getPostsByCreatorIdStream: $e");
+        if (!controller.isClosed) {
+          controller.addError(e);
+          controller.close();
+        }
+      }
+    }();
+
+    return controller.stream;
+  }
+
+  Future<List<MemoModelPost>> _getCachedPostsFirst(String creatorId, ref) async {
+    try {
+      final postCache = ref.read(postCacheRepositoryProvider);
+      return await postCache.getCachedProfilePosts(creatorId);
+    } catch (e) {
+      print("❌ Error reading cached profile posts: $e");
+      return [];
+    }
+  }
+
+  Stream<List<MemoModelPost>> _getFirebasePostsStream(String creatorId, ref) {
     return _firestore
         .collection(_collectionName)
         .where('creatorId', isEqualTo: creatorId)
@@ -315,4 +377,70 @@ class PostService {
           return <MemoModelPost>[];
         });
   }
+
+  // Stream<List<MemoModelPost>> getPostsByCreatorIdStream(String creatorId, ref) {
+  //   final postCache = ref.read(postCacheRepositoryProvider);
+  //
+  //   return Stream.fromFuture(_getCachedPostsFirst(creatorId, ref)).asyncExpand((cachedPosts) {
+  //     if (cachedPosts.isNotEmpty) {
+  //       // Return cached posts immediately, then stream from Firebase
+  //       return Stream.value(cachedPosts).asyncMap((_) => _getFirebasePostsStream(creatorId, ref));
+  //     } else {
+  //       // No cache, go directly to Firebase
+  //       return _getFirebasePostsStream(creatorId, ref);
+  //     }
+  //   });
+  // }
+  //
+  // Future<List<MemoModelPost>> _getCachedPostsFirst(String creatorId, ref) async {
+  //   try {
+  //     final postCache = ref.read(postCacheRepositoryProvider);
+  //     final cachedPosts = await postCache.getCachedProfilePosts(creatorId);
+  //
+  //     if (cachedPosts.isNotEmpty) {
+  //       print("📚 Using cached profile posts for creator: $creatorId");
+  //       return cachedPosts;
+  //     }
+  //     return [];
+  //   } catch (e) {
+  //     print("❌ Error reading cached profile posts: $e");
+  //     return [];
+  //   }
+  // }
+  //
+  // Stream<List<MemoModelPost>> _getFirebasePostsStream(String creatorId, ref) {
+  //   return _firestore
+  //       .collection(_collectionName)
+  //       .where('creatorId', isEqualTo: creatorId)
+  //       .orderBy(orderByField, descending: descendingOrder)
+  //       .snapshots()
+  //       .asyncMap((snapshot) async {
+  //         final posts = snapshot.docs.map((doc) => MemoModelPost.fromSnapshot(doc)).toList();
+  //
+  //         // Cache the results for next time
+  //         if (posts.isNotEmpty) {
+  //           final postCache = ref.read(postCacheRepositoryProvider);
+  //           await postCache.cacheProfilePosts(creatorId, posts);
+  //         }
+  //
+  //         return posts;
+  //       })
+  //       .handleError((error) {
+  //         print("Error fetching posts for creator $creatorId: $error.");
+  //         return <MemoModelPost>[];
+  //       });
+  // }
+
+  // Stream<List<MemoModelPost>> getPostsByCreatorIdStream(String creatorId) {
+  //   return _firestore
+  //       .collection(_collectionName)
+  //       .where('creatorId', isEqualTo: creatorId)
+  //       .orderBy(orderByField, descending: descendingOrder)
+  //       .snapshots()
+  //       .map((snapshot) => snapshot.docs.map((doc) => MemoModelPost.fromSnapshot(doc)).toList())
+  //       .handleError((error) {
+  //         print("Error fetching posts for creator $creatorId: $error.");
+  //         return <MemoModelPost>[];
+  //       });
+  // }
 }

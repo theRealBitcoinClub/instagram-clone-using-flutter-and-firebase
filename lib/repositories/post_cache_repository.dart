@@ -31,8 +31,11 @@ class PostCacheRepository {
 
   Future<Isar> get _isar async => await ref.read(isarProvider.future);
 
+  static const int _maxDiskCacheSize = 5000; // Increased disk cache size
+  static const int _diskCleanupThreshold = 6000; // 20% tolerance (6000 items)
+
   Future<void> updatePopularityScore(String postId, {int tipAmount = 0, MemoModelPost? scrapedPost, bool saveToFirebase = false}) async {
-    MemoModelPost? post = await getPost(postId);
+    MemoModelPost? post = await _getPostWithPopularityScore(postId);
     if (post == null) return;
 
     final TipReceiver receiver = ref.read(userProvider)!.tipReceiver;
@@ -101,10 +104,10 @@ class PostCacheRepository {
     }
   }
 
-  void clearMemoryCache() {
-    _memoryCache.clear();
-    _pageCache.clear();
-  }
+  // void clearMemoryCache() {
+  //   _memoryCache.clear();
+  //   _pageCache.clear();
+  // }
 
   // --- Core Cache Operations ---
 
@@ -120,20 +123,59 @@ class PostCacheRepository {
     final postsDb = validPosts.map((post) => MemoModelPostDb.fromAppModel(post)).toList();
 
     await isar.writeTxn(() async {
+      // Use upsert to handle duplicates via the unique postId index
       await isar.memoModelPostDbs.putAll(postsDb);
+
+      // Enforce FIFO size limit with tolerance
+      await _enforceDiskSizeLimit(isar);
     });
   }
 
-  Future<MemoModelPost?> getPost(String postId) async {
+  // Future<void> savePosts(List<MemoModelPost> posts) async {
+  //   final validPosts = posts.where((post) => post.id != null && post.id!.isNotEmpty).toList();
+  //   if (validPosts.isEmpty) return;
+  //
+  //   for (final post in validPosts) {
+  //     _addToMemoryCache(post);
+  //   }
+  //
+  //   final isar = await _isar;
+  //   final postsDb = validPosts.map((post) => MemoModelPostDb.fromAppModel(post)).toList();
+  //
+  //   await isar.writeTxn(() async {
+  //     await isar.memoModelPostDbs.putAll(postsDb);
+  //   });
+  // }
+
+  /// Enforce FIFO size limit only when significantly over limit
+  Future<void> _enforceDiskSizeLimit(Isar isar) async {
+    final currentSize = await isar.memoModelPostDbs.count();
+    if (currentSize <= _diskCleanupThreshold) return;
+
+    final entriesToRemove = currentSize - _maxDiskCacheSize;
+
+    // Fast FIFO using primary key sort (autoIncrement ID = insertion order)
+    final oldEntries = await isar.memoModelPostDbs
+        .where()
+        .limit(entriesToRemove) // No sort needed - natural order is FIFO!
+        .findAll();
+
+    await isar.memoModelPostDbs.deleteAll(oldEntries.map((e) => e.id).toList());
+
+    print('🧹 PostCache: Removed $entriesToRemove entries (was $currentSize)');
+  }
+
+  // Update getPost to use the postId index:
+  Future<MemoModelPost?> _getPostWithPopularityScore(String postId) async {
     // Check memory cache - NO EXPIRATION CHECK
     final memoryCached = _memoryCache[postId];
     if (memoryCached != null) {
       return _enhancePostWithLatestPopularity(memoryCached);
     }
 
-    // Check disk cache
+    // Check disk cache using postId index
     final isar = await _isar;
-    final postDb = await isar.memoModelPostDbs.get(postId.hashCode);
+    final postDb = await isar.memoModelPostDbs.where().postIdEqualTo(postId).findFirst();
 
     if (postDb != null) {
       final post = postDb.toAppModel();
@@ -195,17 +237,17 @@ class PostCacheRepository {
     return null;
   }
 
-  bool hasPage(int pageNumber, {String? filter}) {
-    final cacheKey = _getPageCacheKey(pageNumber, filter);
-
-    // Simply check if page exists - no expiration
-    return _pageCache.containsKey(cacheKey);
-  }
-
-  void clearPage(int pageNumber, {String? filter}) {
-    final cacheKey = _getPageCacheKey(pageNumber, filter);
-    _pageCache.remove(cacheKey);
-  }
+  // bool hasPage(int pageNumber, {String? filter}) {
+  //   final cacheKey = _getPageCacheKey(pageNumber, filter);
+  //
+  //   // Simply check if page exists - no expiration
+  //   return _pageCache.containsKey(cacheKey);
+  // }
+  //
+  // void clearPage(int pageNumber, {String? filter}) {
+  //   final cacheKey = _getPageCacheKey(pageNumber, filter);
+  //   _pageCache.remove(cacheKey);
+  // }
 
   void clearPagesForFilter(String? filter) {
     final keysToRemove = _pageCache.keys.where((key) => key.contains('_${filter ?? 'all'}_')).toList();
@@ -247,52 +289,58 @@ class PostCacheRepository {
 
   // --- Cache Management ---
 
-  Future<int> clearExpiredCache({Duration maxAge = const Duration(days: 7)}) async {
-    final isar = await _isar;
-    final cutoff = DateTime.now().toUtc().subtract(maxAge);
+  // Future<int> clearExpiredCache({Duration maxAge = const Duration(days: 7)}) async {
+  //   final isar = await _isar;
+  //   final cutoff = DateTime.now().toUtc().subtract(maxAge);
+  //
+  //   // Only clear popularity cache (posts don't expire)
+  //   _popularityCache.clearExpired();
+  //
+  //   // Disk cache cleanup for very old entries (optional housekeeping)
+  //   return await isar.writeTxn(() async {
+  //     return await isar.memoModelPostDbs.where().cachedAtLessThan(cutoff).deleteAll();
+  //   });
+  // }
+  //
+  // Future<void> clearAllCache() async {
+  //   clearMemoryCache();
+  //   _popularityCache.clearExpired();
+  //
+  //   final isar = await _isar;
+  //   await isar.writeTxn(() async {
+  //     await isar.memoModelPostDbs.clear();
+  //   });
+  // }
+  //
+  // Map<String, dynamic> getCacheStats() {
+  //   return {'memoryPosts': _memoryCache.length, 'memoryPages': _pageCache.length, 'popularityScores': _popularityCache.scoreCache.length};
+  // }
 
-    // Only clear popularity cache (posts don't expire)
-    _popularityCache.clearExpired();
-
-    // Disk cache cleanup for very old entries (optional housekeeping)
-    return await isar.writeTxn(() async {
-      return await isar.memoModelPostDbs.where().cachedAtLessThan(cutoff).deleteAll();
-    });
-  }
-
-  Future<void> clearAllCache() async {
-    clearMemoryCache();
-    _popularityCache.clearExpired();
-
-    final isar = await _isar;
-    await isar.writeTxn(() async {
-      await isar.memoModelPostDbs.clear();
-    });
-  }
-
-  Map<String, dynamic> getCacheStats() {
-    return {'memoryPosts': _memoryCache.length, 'memoryPages': _pageCache.length, 'popularityScores': _popularityCache.scoreCache.length};
-  }
-
-  Future<void> preloadPosts(List<String> postIds) async {
-    final postsToLoad = <String>[];
-
-    for (final postId in postIds) {
-      if (!_memoryCache.containsKey(postId)) {
-        postsToLoad.add(postId);
-      }
-    }
-
-    if (postsToLoad.isEmpty) return;
-
-    final isar = await _isar;
-    final postsDb = await isar.memoModelPostDbs.getAll(postsToLoad.map((id) => id.hashCode).toList());
-
-    for (final postDb in postsDb) {
-      if (postDb != null) {
-        final post = postDb.toAppModel();
-        _addToMemoryCache(post);
-      }
-    }
-  }
+  // Update preloadPosts to use postId index:
+  // Future<void> preloadPosts(List<String> postIds) async {
+  //   final postsToLoad = <String>[];
+  //
+  //   for (final postId in postIds) {
+  //     if (!_memoryCache.containsKey(postId)) {
+  //       postsToLoad.add(postId);
+  //     }
+  //   }
+  //
+  //   if (postsToLoad.isEmpty) return;
+  //
+  //   final isar = await _isar;
+  //
+  //   // Load posts using postId index in batches for efficiency
+  //   for (final postId in postsToLoad) {
+  //     final postDb = await isar.memoModelPostDbs
+  //         .where()
+  //         .postIdEqualTo(postId)
+  //         .findFirst();
+  //
+  //     if (postDb != null) {
+  //       final post = postDb.toAppModel();
+  //       _addToMemoryCache(post);
+  //     }
+  //   }
+  // }
 }

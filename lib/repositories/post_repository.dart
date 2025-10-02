@@ -19,7 +19,7 @@ class PostRepository {
   PostRepository(this.ref);
 
   Stream<List<MemoModelPost>> getPostsByCreatorId(String creatorId) {
-    return ref.read(postServiceProvider).getPostsByCreatorIdStream(creatorId);
+    return ref.read(postServiceProvider).getPostsByCreatorIdStream(creatorId, ref);
   }
 
   Future<dynamic> publishReplyTopic(MemoModelPost post) async {

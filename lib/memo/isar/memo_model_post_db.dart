@@ -7,16 +7,19 @@ part 'memo_model_post_db.g.dart';
 
 @Collection()
 class MemoModelPostDb {
-  // Use the post ID hash as the primary key instead of auto-increment
-  // This ensures data integrity and prevents duplicates
-  Id get isarId => id.hashCode;
+  Id id = Isar.autoIncrement; // Fast FIFO with primary key sort
 
-  @Index(unique: true)
-  late String id; // The original Firestore document ID
+  @Index(unique: true) // Fast lookups by postId
+  late String postId; // The original Firestore document ID
 
   late String? text;
   late String? imgurUrl;
   late String? youtubeId;
+  late String? imageUrl;
+  late String? videoUrl;
+  late String? ipfsCid;
+  late bool? showOnFeed;
+  late bool? hideOnFeed;
 
   @Index()
   late DateTime? createdDateTime;
@@ -31,16 +34,18 @@ class MemoModelPostDb {
   @Index(composite: [CompositeIndex('createdDateTime')])
   late String topicId;
 
-  @Index() // Add index for tagIds if you need to query by tags
+  @Index()
   late List<String> tagIds;
 
   // Store the original created string for compatibility
-  late String? createdString;
+  late String? created;
 
-  // Cache timestamp (though objects are immutable, useful for cache management)
-  @enumerated // Store as int64 for better performance
-  @Index()
+  // Cache timestamp (for optional housekeeping, not expiration)
+  @enumerated
   late DateTime cachedAt;
+
+  // Store URLs extracted from text for faster access
+  late List<String> urls;
 
   MemoModelPostDb();
 
@@ -51,45 +56,53 @@ class MemoModelPostDb {
     }
 
     return MemoModelPostDb()
-      ..id = post.id!
+      ..postId = post.id!
       ..text = post.text
       ..imgurUrl = post.imgurUrl
       ..youtubeId = post.youtubeId
+      ..imageUrl = post.imageUrl
+      ..videoUrl = post.videoUrl
+      ..ipfsCid = post.ipfsCid
+      ..showOnFeed = post.showOnFeed
+      ..hideOnFeed = post.hideOnFeed
       ..createdDateTime = post.createdDateTime
       ..popularityScore = post.popularityScore
       ..likeCounter = post.likeCounter
       ..replyCounter = post.replyCounter
       ..creatorId = post.creatorId
       ..topicId = post.topicId
-      ..tagIds =
-          List<String>.from(post.tagIds) // Create a copy
-      ..createdString = post.created
-      ..cachedAt = DateTime.now().toUtc(); // Use UTC for consistency
+      ..tagIds = List<String>.from(post.tagIds)
+      ..created = post.created
+      ..urls = List<String>.from(post.urls)
+      ..cachedAt = DateTime.now().toUtc();
   }
 
   // Convert back to app model
   MemoModelPost toAppModel() {
     return MemoModelPost(
-      id: id,
+      id: postId, // Use the stored postId
       text: text,
       imgurUrl: imgurUrl,
       youtubeId: youtubeId,
+      imageUrl: imageUrl,
+      videoUrl: videoUrl,
+      ipfsCid: ipfsCid,
+      showOnFeed: showOnFeed,
+      hideOnFeed: hideOnFeed,
       createdDateTime: createdDateTime,
       popularityScore: popularityScore,
       likeCounter: likeCounter,
       replyCounter: replyCounter,
       creatorId: creatorId,
       topicId: topicId,
-      tagIds: List<String>.from(tagIds), // Create a copy
-      created: createdString,
+      tagIds: List<String>.from(tagIds),
+      created: created,
+      urls: List<String>.from(urls),
     );
   }
 
-  // Since objects are immutable, we don't need staleness check
-  // But we can keep this for cache management if needed
-  bool get isExpired {
-    // Even though posts are immutable, we might want to refresh after a long time
-    const maxCacheDuration = Duration(days: 30); // 30 days cache
-    return DateTime.now().toUtc().difference(cachedAt) > maxCacheDuration;
+  @override
+  String toString() {
+    return 'MemoModelPostDb(id: $id, postId: $postId, text: $text)';
   }
 }

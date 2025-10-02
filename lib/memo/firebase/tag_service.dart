@@ -393,21 +393,22 @@ class TagService {
     }
   }
 
-  // Original increment method (for backward compatibility)
-  Future<void> incrementPostCountForTags(List<String> tagIds) async {
-    if (tagIds.isEmpty) return;
-
-    WriteBatch batch = _firestore.batch();
-    for (String tagId in tagIds) {
-      DocumentReference tagRef = _firestore.collection(_tagsCollection).doc(tagId);
-      batch.update(tagRef, {'postCount': FieldValue.increment(1)});
-    }
-    try {
-      await batch.commit();
-      print("Incremented postCount for tags: ${tagIds.join(', ')}");
-    } catch (e) {
-      print("Error incrementing postCount for tags: $e");
-      rethrow;
-    }
-  }
+  //
+  // // Original increment method (for backward compatibility)
+  // Future<void> incrementPostCountForTags(List<String> tagIds) async {
+  //   if (tagIds.isEmpty) return;
+  //
+  //   WriteBatch batch = _firestore.batch();
+  //   for (String tagId in tagIds) {
+  //     DocumentReference tagRef = _firestore.collection(_tagsCollection).doc(tagId);
+  //     batch.update(tagRef, {'postCount': FieldValue.increment(1)});
+  //   }
+  //   try {
+  //     await batch.commit();
+  //     print("Incremented postCount for tags: ${tagIds.join(', ')}");
+  //   } catch (e) {
+  //     print("Error incrementing postCount for tags: $e");
+  //     rethrow;
+  //   }
+  // }
 }

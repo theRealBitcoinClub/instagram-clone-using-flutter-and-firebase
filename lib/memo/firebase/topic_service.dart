@@ -104,22 +104,23 @@ class TopicService {
     final duplicateIds = <String>[];
 
     for (final topic in topics) {
-      if (topic.id == null || topic.id!.isEmpty) {
-        print("Topic has null or empty ID, skipping");
+      final topicId = topic.id;
+      if (topicId.isEmpty) {
+        print("Topic has empty ID, skipping");
         continue;
       }
 
-      final sanitizedId = sanitizeFirestoreId(topic.id!);
+      final sanitizedId = sanitizeFirestoreId(topicId);
 
       // Check memory cache first
-      if (_batchQueue.any((t) => sanitizeFirestoreId(t.id!) == sanitizedId)) {
-        duplicateIds.add(topic.id!);
+      if (_batchQueue.any((t) => sanitizeFirestoreId(t.id) == sanitizedId)) {
+        duplicateIds.add(topicId);
         continue;
       }
 
       // Check persisted cache
       if (_isTopicAlreadyPersisted(sanitizedId)) {
-        duplicateIds.add(topic.id!);
+        duplicateIds.add(topicId);
         continue;
       }
 
@@ -180,20 +181,21 @@ class TopicService {
       int successfulSaves = 0;
 
       for (final topic in topicsToProcess) {
-        if (topic.id == null || topic.id!.isEmpty) {
-          print("Skipping topic with null or empty ID");
-          failedTopicIds.add('null_id_${topicsToProcess.indexOf(topic)}');
+        final topicId = topic.id;
+        if (topicId.isEmpty) {
+          print("Skipping topic with empty ID");
+          failedTopicIds.add('empty_id_${topicsToProcess.indexOf(topic)}');
           continue;
         }
 
         try {
-          final String safeTopicId = sanitizeFirestoreId(topic.id!);
+          final String safeTopicId = sanitizeFirestoreId(topicId);
           final docRef = _firestore.collection(_collectionName).doc(safeTopicId);
           batch.set(docRef, topic.toJson(), SetOptions(merge: true));
           successfulSaves++;
         } catch (e) {
-          print("Error adding topic ${topic.id} to batch: $e");
-          failedTopicIds.add(topic.id!);
+          print("Error adding topic $topicId to batch: $e");
+          failedTopicIds.add(topicId);
         }
       }
 
@@ -203,8 +205,9 @@ class TopicService {
 
         // Add successful topics to persistence cache
         for (final topic in topicsToProcess) {
-          if (topic.id != null && !failedTopicIds.contains(topic.id)) {
-            _addToPersistedCache(sanitizeFirestoreId(topic.id!));
+          final topicId = topic.id;
+          if (topicId.isNotEmpty && !failedTopicIds.contains(topicId)) {
+            _addToPersistedCache(sanitizeFirestoreId(topicId));
           }
         }
       } else {
@@ -215,27 +218,30 @@ class TopicService {
     } catch (e) {
       print("❌ Topic batch commit failed: $e");
 
-      _executeCallbackIfNeeded(false, 0, topicsToProcess.where((t) => t.id != null).map((t) => t.id!).toList());
+      final failedIds = topicsToProcess.where((t) => t.id.isNotEmpty).map((t) => t.id).toList();
+      _executeCallbackIfNeeded(false, 0, failedIds.isNotEmpty ? failedIds : null);
     }
   }
 
   void _executeCallbackIfNeeded(bool success, int processedCount, List<String>? failedTopicIds) {
-    if (_currentOnFinishCallback != null) {
-      _currentOnFinishCallback!(success, processedCount, failedTopicIds);
+    final callback = _currentOnFinishCallback;
+    if (callback != null) {
+      callback(success, processedCount, failedTopicIds);
       _currentOnFinishCallback = null;
     }
   }
 
   // Original single save method (for backward compatibility)
   Future<void> saveTopic(MemoModelTopic topic) async {
-    if (topic.id == null || topic.id!.isEmpty) {
-      throw ArgumentError("Topic ID cannot be null or empty");
+    final topicId = topic.id;
+    if (topicId.isEmpty) {
+      throw ArgumentError("Topic ID cannot be empty");
     }
 
-    final String safeTopicId = sanitizeFirestoreId(topic.id!);
+    final String safeTopicId = sanitizeFirestoreId(topicId);
 
     if (_isTopicAlreadyPersisted(safeTopicId)) {
-      print("Topic ${topic.id} already persisted, skipping save.");
+      print("Topic $topicId already persisted, skipping save.");
       return;
     }
 
@@ -244,9 +250,9 @@ class TopicService {
       final Map<String, dynamic> topicJson = topic.toJson();
       await docRef.set(topicJson, SetOptions(merge: true));
       _addToPersistedCache(safeTopicId);
-      print("Topic ${topic.id} saved successfully.");
+      print("Topic $topicId saved successfully.");
     } catch (e) {
-      print("Error saving topic ${topic.id}: $e");
+      print("Error saving topic $topicId: $e");
       rethrow;
     }
   }
@@ -296,9 +302,9 @@ class TopicService {
       final String safeTopicId = sanitizeFirestoreId(topicId);
       await _firestore.collection(_collectionName).doc(safeTopicId).delete();
       _removeFromPersistedCache(safeTopicId);
-      print("Topic ${topicId} deleted successfully.");
+      print("Topic $topicId deleted successfully.");
     } catch (e) {
-      print("Error deleting topic ${topicId}: $e");
+      print("Error deleting topic $topicId: $e");
       rethrow;
     }
   }

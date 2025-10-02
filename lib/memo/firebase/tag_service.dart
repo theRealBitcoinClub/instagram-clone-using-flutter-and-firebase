@@ -100,20 +100,21 @@ class TagService {
     final duplicateIds = <String>[];
 
     for (final tag in tags) {
-      if (tag.id == null || tag.id!.isEmpty) {
-        print("Tag has null or empty ID, skipping");
+      final tagId = tag.id;
+      if (tagId.isEmpty) {
+        print("Tag has empty ID, skipping");
         continue;
       }
 
       // Check memory cache first
-      if (_batchQueue.any((t) => t.id == tag.id)) {
-        duplicateIds.add(tag.id!);
+      if (_batchQueue.any((t) => t.id == tagId)) {
+        duplicateIds.add(tagId);
         continue;
       }
 
       // Check persisted cache
-      if (_isTagAlreadyPersisted(tag.id!)) {
-        duplicateIds.add(tag.id!);
+      if (_isTagAlreadyPersisted(tagId)) {
+        duplicateIds.add(tagId);
         continue;
       }
 
@@ -174,19 +175,20 @@ class TagService {
       int successfulSaves = 0;
 
       for (final tag in tagsToProcess) {
-        if (tag.id == null || tag.id!.isEmpty) {
-          print("Skipping tag with null or empty ID");
-          failedTagIds.add('null_id_${tagsToProcess.indexOf(tag)}');
+        final tagId = tag.id;
+        if (tagId.isEmpty) {
+          print("Skipping tag with empty ID");
+          failedTagIds.add('empty_id_${tagsToProcess.indexOf(tag)}');
           continue;
         }
 
         try {
-          final docRef = _firestore.collection(_tagsCollection).doc(tag.id);
+          final docRef = _firestore.collection(_tagsCollection).doc(tagId);
           batch.set(docRef, tag.toJson(), SetOptions(merge: true));
           successfulSaves++;
         } catch (e) {
-          print("Error adding tag ${tag.id} to batch: $e");
-          failedTagIds.add(tag.id!);
+          print("Error adding tag $tagId to batch: $e");
+          failedTagIds.add(tagId);
         }
       }
 
@@ -196,8 +198,9 @@ class TagService {
 
         // Add successful tags to persistence cache
         for (final tag in tagsToProcess) {
-          if (tag.id != null && !failedTagIds.contains(tag.id)) {
-            _addToPersistedCache(tag.id!);
+          final tagId = tag.id;
+          if (tagId.isNotEmpty && !failedTagIds.contains(tagId)) {
+            _addToPersistedCache(tagId);
           }
         }
       } else {
@@ -208,35 +211,38 @@ class TagService {
     } catch (e) {
       print("❌ Tag batch commit failed: $e");
 
-      _executeCallbackIfNeeded(false, 0, tagsToProcess.where((t) => t.id != null).map((t) => t.id!).toList());
+      final failedIds = tagsToProcess.where((t) => t.id.isNotEmpty).map((t) => t.id).toList();
+      _executeCallbackIfNeeded(false, 0, failedIds.isNotEmpty ? failedIds : null);
     }
   }
 
   void _executeCallbackIfNeeded(bool success, int processedCount, List<String>? failedTagIds) {
-    if (_currentOnFinishCallback != null) {
-      _currentOnFinishCallback!(success, processedCount, failedTagIds);
+    final callback = _currentOnFinishCallback;
+    if (callback != null) {
+      callback(success, processedCount, failedTagIds);
       _currentOnFinishCallback = null;
     }
   }
 
   // Original single save method (for backward compatibility)
   Future<void> saveTag(MemoModelTag tag) async {
-    if (tag.id == null || tag.id!.isEmpty) {
-      throw ArgumentError("Tag ID cannot be null or empty");
+    final tagId = tag.id;
+    if (tagId.isEmpty) {
+      throw ArgumentError("Tag ID cannot be empty");
     }
 
-    if (_isTagAlreadyPersisted(tag.id!)) {
-      print("Tag ${tag.id} already persisted, skipping save.");
+    if (_isTagAlreadyPersisted(tagId)) {
+      print("Tag $tagId already persisted, skipping save.");
       return;
     }
 
     try {
-      final DocumentReference docRef = _firestore.collection(_tagsCollection).doc(tag.id);
+      final DocumentReference docRef = _firestore.collection(_tagsCollection).doc(tagId);
       await docRef.set(tag.toJson(), SetOptions(merge: true));
-      _addToPersistedCache(tag.id!);
-      print("Tag '${tag.id}' saved successfully.");
+      _addToPersistedCache(tagId);
+      print("Tag '$tagId' saved successfully.");
     } catch (e) {
-      print("Error saving tag '${tag.id}': $e");
+      print("Error saving tag '$tagId': $e");
       rethrow;
     }
   }
@@ -320,9 +326,9 @@ class TagService {
     try {
       await _firestore.collection(_tagsCollection).doc(tagId).delete();
       _removeFromPersistedCache(tagId);
-      print("Tag '${tagId}' deleted successfully.");
+      print("Tag '$tagId' deleted successfully.");
     } catch (e) {
-      print("Error deleting tag '${tagId}': $e");
+      print("Error deleting tag '$tagId': $e");
       rethrow;
     }
   }

@@ -22,13 +22,41 @@ import '../memo/isar/memo_model_post_db.dart';
 
 // Update your existing Isar provider to include the new schema:
 // isar_provider.dart
-final isarProvider = FutureProvider<Isar>((ref) async {
+final creatorIsarProvider = FutureProvider<Isar>((ref) async {
   final dir = await getApplicationDocumentsDirectory();
 
   final isar = await Isar.open(directory: dir.path, [
-    MemoModelPostDbSchema,
     MemoModelCreatorDbSchema,
     CachedTranslationDbSchema, // Add the new schema
-  ], name: 'mahakka_db2');
+  ], name: 'creators');
   return isar;
+});
+
+final translationIsarProvider = FutureProvider<Isar>((ref) async {
+  final dir = await getApplicationDocumentsDirectory();
+
+  final isar = await Isar.open(directory: dir.path, [
+    MemoModelCreatorDbSchema,
+    CachedTranslationDbSchema, // Add the new schema
+  ], name: 'translations');
+  return isar;
+});
+
+// In your isar_provider.dart
+final feedPostsIsarProvider = FutureProvider<Isar>((ref) async {
+  final dir = await getApplicationDocumentsDirectory();
+  return await Isar.open(
+    directory: dir.path,
+    [MemoModelPostDbSchema],
+    name: 'feed_posts', // Different database name
+  );
+});
+
+final profilePostsIsarProvider = FutureProvider<Isar>((ref) async {
+  final dir = await getApplicationDocumentsDirectory();
+  return await Isar.open(
+    directory: dir.path,
+    [MemoModelPostDbSchema],
+    name: 'profile_posts', // Different database name
+  );
 });

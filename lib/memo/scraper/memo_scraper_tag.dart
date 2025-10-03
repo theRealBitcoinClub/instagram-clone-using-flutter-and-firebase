@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
+import 'package:mahakka/memo/firebase/post_scraper_firebase_service.dart';
 import 'package:mahakka/memo/firebase/tag_service.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../firebase/post_service.dart';
 import '../model/memo_model_post.dart';
 import 'memo_post_scraper.dart';
 
@@ -20,7 +20,7 @@ class MemoScraperTag {
   final String cacheId;
   MemoScraperTag(this.cacheId, this.ref, this.saveToFirebase);
   final tagService = TagService();
-  final postService = PostService();
+  final postService = PostScraperFirebaseService();
 
   /// Main entry point for scraping tags and their posts
   /// [orderBy]: List of sorting methods to scrape (e.g., ['popular', 'new'])

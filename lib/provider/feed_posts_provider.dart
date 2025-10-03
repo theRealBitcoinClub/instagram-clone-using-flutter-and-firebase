@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/memo/firebase/post_service.dart';
+import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/repositories/post_cache_repository.dart';
-import 'package:mahakka/screens/feed_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../memo/firebase/post_service_provider.dart'; // For PostFilterType
+import '../memo/firebase/post_service_feed.dart';
+import '../repositories/feed_post_cache.dart';
+import '../repositories/post_repository.dart';
 
 // --- State for the Feed ---
 class FeedState {
@@ -13,27 +14,20 @@ class FeedState {
   final bool isLoadingInitial;
   final bool isLoadingMore;
   final String? errorMessage;
-  final DocumentSnapshot? lastDocument;
-  final PostFilterType? activeFilter;
   final bool isUsingCache;
   final int totalPostCount;
   final bool isRefreshing;
-  //TODO Post Counter is tricky because it must persist the last post count and
-  // there might be posts included in the total number that are not visible on the feed (videos)
-  final bool showPostCounter; // Add this field
+  final bool hasReachedCacheEnd;
 
   FeedState({
     this.posts = const [],
     this.isLoadingInitial = true,
     this.isLoadingMore = false,
     this.errorMessage,
-    this.lastDocument,
-    this.activeFilter,
     this.isUsingCache = false,
     this.totalPostCount = 0,
     this.isRefreshing = false,
-    //TODO check that the feed_screen is repainted
-    this.showPostCounter = false, // Initialize to false
+    this.hasReachedCacheEnd = false,
   });
 
   FeedState copyWith({
@@ -41,380 +35,332 @@ class FeedState {
     bool? isLoadingInitial,
     bool? isLoadingMore,
     String? errorMessage,
-    DocumentSnapshot? lastDocument,
     bool? isUsingCache,
     bool clearErrorMessage = false,
-    PostFilterType? activeFilter,
     int? totalPostCount,
     bool? isRefreshing,
-    bool? showPostCounter, // Add to copyWith
+    bool? hasReachedCacheEnd,
   }) {
+    print('FPPR:🔄 FeedState.copyWith called - clearErrorMessage: $clearErrorMessage');
+    print('FPPR:   Current posts: ${this.posts.length}, new posts: ${posts?.length}');
     return FeedState(
       posts: posts ?? this.posts,
       isLoadingInitial: isLoadingInitial ?? this.isLoadingInitial,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       errorMessage: clearErrorMessage ? null : errorMessage ?? this.errorMessage,
-      lastDocument: lastDocument ?? this.lastDocument,
-      activeFilter: activeFilter ?? this.activeFilter,
       isUsingCache: isUsingCache ?? this.isUsingCache,
       isRefreshing: isRefreshing ?? this.isRefreshing,
       totalPostCount: totalPostCount ?? this.totalPostCount,
-      showPostCounter: showPostCounter ?? this.showPostCounter, // Include in copy
+      hasReachedCacheEnd: hasReachedCacheEnd ?? this.hasReachedCacheEnd,
     );
   }
 
-  get hasMorePosts {
-    return posts.length < totalPostCount;
+  bool get hasMorePosts {
+    final hasMore = posts.length < totalPostCount;
+    print('FPPR:📊 FeedState.hasMorePosts: $hasMore (posts: ${posts.length}, total: $totalPostCount)');
+    return hasMore;
   }
 }
 
 // --- StateNotifier ---
 class FeedPostsNotifier extends StateNotifier<FeedState> {
-  final PostService _postService;
-  final PostCacheRepository _cacheRepository;
-  final int _pageSize = 10; // Changed from 50 to 10
+  final PostServiceFeed _postService;
+  final FeedPostCache _cacheRepository;
+  final int _pageSize = 10;
 
-  int _lastKnownPostCount = 0; // Track last known count for comparison
+  static const String _lastTotalCountKey = 'last_total_post_count';
+  SharedPreferences? _prefs;
 
   FeedPostsNotifier(this._postService, this._cacheRepository) : super(FeedState()) {
-    fetchInitialPosts();
-    _setupPostCounterListener();
-  }
-
-  // Add post counter listener
-  void _setupPostCounterListener() {
-    // Listen to Firestore for post count changes
-    FirebaseFirestore.instance.collection('metadata').doc('posts').snapshots().listen((snapshot) {
-      if (snapshot.exists && mounted) {
-        final newCount = snapshot.data()?['count'] as int? ?? 0;
-
-        // Show counter if count increased since last check and we have posts loaded
-        if (newCount > _lastKnownPostCount && state.posts.isNotEmpty) {
-          state = state.copyWith(
-            showPostCounter: true,
-            totalPostCount: newCount, // Also update total count
-          );
-        }
-
-        // Update last known count
-        _lastKnownPostCount = newCount;
-      }
+    print('FPPR:🚀 FeedPostsNotifier constructor called');
+    _initSharedPreferences().then((_) {
+      fetchInitialPosts();
     });
   }
 
-  // Method to hide the post counter
-  void hidePostCounter() {
-    if (state.showPostCounter) {
-      state = state.copyWith(showPostCounter: false);
-    }
-  }
-
-  // Method to manually show the post counter (if needed)
-  void showPostCounter() {
-    if (!state.showPostCounter) {
-      state = state.copyWith(showPostCounter: true);
-    }
+  Future<void> _initSharedPreferences() async {
+    _prefs = await SharedPreferences.getInstance();
+    print('FPPR:💾 SharedPreferences initialized');
   }
 
   @override
   void dispose() {
-    // Clean up any resources if needed
+    print('FPPR:♻️ FeedPostsNotifier dispose called');
     super.dispose();
   }
 
   Future<void> fetchInitialPosts() async {
-    // Reset state for a new initial fetch, keeping the current activeFilter
-    state = FeedState(
-      isLoadingInitial: true,
-      activeFilter: state.activeFilter,
-      lastDocument: null,
-      // hasMorePosts: true,
-      posts: [],
-      isUsingCache: false,
-    );
-    await _fetchPostsPage(isInitial: true);
+    print('FPPR:🔄 fetchInitialPosts called');
+    state = FeedState(isLoadingInitial: true, posts: [], isUsingCache: false, hasReachedCacheEnd: false);
+    print('FPPR:✅ State reset for initial fetch');
+    await _loadInitialData();
   }
 
   Future<void> fetchMorePosts() async {
-    if (state.isLoadingMore || !state.hasMorePosts) return;
+    print('FPPR:📥 fetchMorePosts called - isLoadingMore: ${state.isLoadingMore}, hasMorePosts: ${state.hasMorePosts}');
 
-    state = state.copyWith(
-      isLoadingMore: true,
-      clearErrorMessage: true,
-      isLoadingInitial: false,
-      lastDocument: state.lastDocument,
-      // hasMorePosts: state.hasMorePosts,
-      posts: state.posts,
-      activeFilter: state.activeFilter,
-      errorMessage: null,
-    );
-    await _fetchPostsPage(isInitial: false);
-  }
-  // In your feed_posts_provider.dart - FIXED VERSION
-
-  Future<void> _fetchPostsPage({required bool isInitial}) async {
-    try {
-      final DocumentSnapshot? cursorForThisFetch = isInitial ? null : state.lastDocument;
-
-      // Calculate current page number
-      var totalPostsLoadedCounter = state.posts.length;
-      final pageIndex = isInitial ? 1 : (totalPostsLoadedCounter ~/ _pageSize) + 1;
-      final cacheKey = _getCacheKey(pageIndex);
-
-      List<MemoModelPost> newPosts;
-      bool fromCache = false;
-
-      if (isInitial) {
-        // Get total count on initial load
-        final totalCount = await _postService.getTotalPostCount();
-        if (totalCount != -1) {
-          state = state.copyWith(totalPostCount: totalCount);
-        }
-        // Try cache first for initial load
-        final cachedPosts = await _cacheRepository.getPage(pageIndex, filter: state.activeFilter?.name);
-        if (cachedPosts != null && cachedPosts.isNotEmpty) {
-          newPosts = cachedPosts;
-          fromCache = true;
-          print("\nFEED POSTS PROVIDER\nUsing cached page $pageIndex with ${newPosts.length} posts");
-        } else {
-          // Fall back to network
-          newPosts = await _postService.getPostsPaginated(limit: _pageSize, startAfterDoc: cursorForThisFetch);
-          // Cache the new results
-          if (newPosts.isNotEmpty) {
-            await _cacheRepository.savePage(newPosts, pageIndex, filter: state.activeFilter?.name);
-          }
-        }
-      } else {
-        // For "load more", always use network to ensure correct pagination
-        newPosts = await _postService.getPostsPaginated(limit: _pageSize, startAfterDoc: cursorForThisFetch);
-
-        // **CRITICAL FIX: Check for duplicates before adding to state**
-        //TODO THIS SHOULDNT BE HAPPENING FIX THE ALGORITHM INSTEAD
-        final existingPostIds = state.posts.map((post) => post.id).whereType<String>().toSet();
-        final uniqueNewPosts = newPosts.where((post) => post.id != null && !existingPostIds.contains(post.id)).toList();
-
-        // If we filtered out duplicates, use the unique ones
-        if (uniqueNewPosts.length != newPosts.length) {
-          print("\nFEED POSTS PROVIDER\nFiltered out ${newPosts.length - uniqueNewPosts.length} duplicate posts");
-          newPosts = uniqueNewPosts;
-        }
-
-        // Cache the new results
-        if (newPosts.isNotEmpty) {
-          await _cacheRepository.savePage(newPosts, pageIndex, filter: state.activeFilter?.name);
-        }
-      }
-
-      if (!mounted) return;
-
-      DocumentSnapshot? newLastDocumentForState = newPosts.isNotEmpty ? newPosts.last.docSnapshot : null;
-
-      state = state.copyWith(
-        posts: isInitial ? newPosts : [...state.posts, ...newPosts],
-        isLoadingInitial: false,
-        isLoadingMore: false,
-        activeFilter: state.activeFilter,
-        clearErrorMessage: true,
-        lastDocument: newLastDocumentForState ?? (isInitial ? null : state.lastDocument),
-        // hasMorePosts: newPosts.length == _pageSize, // Still check against original page size
-        errorMessage: null,
-        isUsingCache: fromCache,
-      );
-    } catch (e, s) {
-      _logFeedError("Error fetching posts page", e, s);
-
-      // On error, try to serve from cache for initial load
-      if (isInitial && mounted) {
-        final currentPage = 1;
-        final cachedPosts = await _cacheRepository.getPage(currentPage, filter: state.activeFilter?.name);
-        if (cachedPosts != null && cachedPosts.isNotEmpty) {
-          // **CHECK FOR DUPLICATES IN CACHE FALLBACK TOO**
-          //TODO THIS IS SO GAY NEEDS TO BE FIXED
-          final existingPostIds = state.posts.map((post) => post.id).whereType<String>().toSet();
-          final uniqueCachedPosts = cachedPosts.where((post) => post.id != null && !existingPostIds.contains(post.id)).toList();
-
-          state = state.copyWith(
-            posts: uniqueCachedPosts,
-            isLoadingInitial: false,
-            lastDocument: uniqueCachedPosts.isNotEmpty ? uniqueCachedPosts.last.docSnapshot : null,
-            // hasMorePosts: uniqueCachedPosts.length == _pageSize,
-            isUsingCache: true,
-            errorMessage: uniqueCachedPosts.length < cachedPosts.length
-                ? "Using cached data (some duplicates filtered)"
-                : "Using cached data (offline mode)",
-          );
-          return;
-        }
-      }
-
-      if (mounted) {
-        state = state.copyWith(
-          isLoadingInitial: false,
-          isLoadingMore: false,
-          errorMessage: "Failed to load posts. Please try again.",
-          isUsingCache: false,
-        );
-      }
-    }
-  }
-
-  String _getCacheKey(int pageNumber) {
-    return 'feed_${state.activeFilter?.name ?? 'all'}_page_$pageNumber';
-  }
-
-  void setFilter(PostFilterType? filterType) {
-    if (state.activeFilter == filterType) return;
-
-    // Clear cache for the old filter when changing filters
-    if (state.activeFilter != null) {
-      _cacheRepository.clearPagesForFilter(state.activeFilter?.name);
+    if (state.isLoadingMore || !state.hasMorePosts) {
+      print('FPPR:⏸️ fetchMorePosts skipped - condition not met');
+      return;
     }
 
-    state = state.copyWith(activeFilter: filterType);
-    fetchInitialPosts();
+    state = state.copyWith(isLoadingMore: true, clearErrorMessage: true);
+    print('FPPR:✅ State updated for loading more posts');
+
+    await _loadMorePosts();
   }
 
-  void clearFilter() {
-    if (state.activeFilter == null) return;
-
-    // Clear cache for the current filter
-    _cacheRepository.clearPagesForFilter(state.activeFilter?.name);
-
-    state = state.copyWith(activeFilter: null);
-    fetchInitialPosts();
-  }
-
-  // Future<void> _performRefresh([int? newTotalCount]) async {
-  //   // Clear cache for current filter and reload
-  //   _cacheRepository.clearPagesForFilter(state.activeFilter?.name);
-  //   fetchInitialPosts();
-  // }
-  Future<void> refreshFeed() async {
+  Future<void> _loadInitialData() async {
+    print('FPPR:📄 _loadInitialData called');
     try {
-      // Hide counter when refresh starts
-      hidePostCounter();
-
-      // First check the current total post count from Firebase
+      // Get current total count from Firebase
       final int currentTotalCount = await _postService.getTotalPostCount();
+      print('FPPR:📊 Current total post count: $currentTotalCount');
 
       if (currentTotalCount == -1) {
-        await _performFullRefresh();
-        return;
+        throw Exception('Failed to get total post count');
       }
 
-      final int previousTotalCount = state.totalPostCount;
-      final int newPostsCount = currentTotalCount - previousTotalCount;
+      // Get previous total count from SharedPreferences
+      final int previousTotalCount = _prefs?.getInt(_lastTotalCountKey) ?? 0;
+      print('FPPR:📊 Previous total post count: $previousTotalCount');
 
-      if (newPostsCount <= 0) {
-        print('\nFEED POSTS PROVIDER\nNo new posts, total count unchanged: $currentTotalCount');
-        state = state.copyWith(totalPostCount: currentTotalCount, isRefreshing: false);
-        return;
+      // Update stored total count
+      await _prefs?.setInt(_lastTotalCountKey, currentTotalCount);
+
+      state = state.copyWith(totalPostCount: currentTotalCount);
+
+      if (currentTotalCount > previousTotalCount) {
+        // New posts available - fetch and cache them
+        await _fetchAndCacheNewPosts(previousTotalCount, currentTotalCount);
+      } else {
+        // No new posts - load from cache
+        await _loadFromCache(isInitial: true);
+      }
+    } catch (e, s) {
+      print('FPPR:❌ _loadInitialData ERROR: $e');
+      _logFeedError("Error loading initial data", e, s);
+
+      // Fallback: try to load from cache
+      await _loadFromCache(isInitial: true, fallback: true);
+    }
+  }
+
+  Future<void> _fetchAndCacheNewPosts(int previousCount, int currentCount) async {
+    print('FPPR:🔄 _fetchAndCacheNewPosts - previous: $previousCount, current: $currentCount');
+
+    final int newPostsCount = currentCount - previousCount;
+    print('FPPR:📥 Fetching $newPostsCount new posts from Firebase');
+
+    try {
+      // Fetch all new posts from Firebase
+      final List<MemoModelPost> newPosts = await _postService.getPostsPaginated(
+        limit: previousCount == 0 ? _pageSize : newPostsCount,
+        startAfterDoc: null,
+      );
+
+      print('FPPR:🌐 New posts fetched: ${newPosts.length}');
+
+      if (newPosts.isNotEmpty) {
+        // Cache all new posts
+        print('FPPR:💾 Caching ${newPosts.length} new posts');
+        await _cacheRepository.saveFeedPosts(newPosts);
+        print('FPPR:✅ New posts cached successfully');
       }
 
+      // Now load from cache (which includes the new posts)
+      await _loadFromCache(isInitial: true);
+    } catch (e, s) {
+      print('FPPR:❌ _fetchAndCacheNewPosts ERROR: $e');
+      _logFeedError("Error fetching and caching new posts", e, s);
+      throw e;
+    }
+  }
+
+  Future<void> _loadFromCache({bool isInitial = true, bool fallback = false}) async {
+    print('FPPR:💾 _loadFromCache - isInitial: $isInitial, fallback: $fallback');
+
+    try {
+      final pageNumber = isInitial ? 1 : (state.posts.length ~/ _pageSize) + 1;
+      print('FPPR:📄 Loading page $pageNumber from cache');
+
+      final cachedPosts = await _cacheRepository.getFeedPage(pageNumber);
+      print('FPPR:💾 Cache result - posts: ${cachedPosts?.length}');
+
+      if (cachedPosts != null && cachedPosts.isNotEmpty) {
+        // Successfully loaded from cache
+        final newPosts = isInitial ? cachedPosts : [...state.posts, ...cachedPosts];
+
+        state = state.copyWith(
+          posts: newPosts,
+          isLoadingInitial: false,
+          isLoadingMore: false,
+          isUsingCache: true,
+          hasReachedCacheEnd: cachedPosts.length < _pageSize,
+          clearErrorMessage: true,
+        );
+
+        print('FPPR:✅ Loaded ${cachedPosts.length} posts from cache - total: ${state.posts.length}');
+
+        // If we got less than a full page from cache, we've reached cache end
+        if (cachedPosts.length < _pageSize && state.hasMorePosts) {
+          print('FPPR:🏁 Reached end of cache, next load will use network');
+        }
+      } else {
+        // No posts in cache
+        if (isInitial) {
+          if (fallback) {
+            // Even fallback failed - go to network
+            print('FPPR:🌐 Cache fallback failed, fetching from network');
+            await _fetchFromNetwork(isInitial: true);
+          } else {
+            // First load with no cache - go to network
+            print('FPPR:🌐 No cache available, fetching from network');
+            await _fetchFromNetwork(isInitial: true);
+          }
+        } else {
+          // Loading more but cache is empty
+          state = state.copyWith(isLoadingMore: false, hasReachedCacheEnd: true);
+          print('FPPR:🏁 No more posts in cache');
+        }
+      }
+    } catch (e, s) {
+      print('FPPR:❌ _loadFromCache ERROR: $e');
+      _logFeedError("Error loading from cache", e, s);
+
+      if (isInitial && !fallback) {
+        await _fetchFromNetwork(isInitial: true);
+      } else {
+        state = state.copyWith(isLoadingInitial: false, isLoadingMore: false, errorMessage: "Failed to load posts");
+      }
+    }
+  }
+
+  Future<void> _loadMorePosts() async {
+    print('FPPR:📥 _loadMorePosts called');
+
+    if (state.hasReachedCacheEnd) {
+      // Load from network using last post ID as cursor
+      await _fetchFromNetwork(isInitial: false);
+    } else {
+      // Load next page from cache
+      await _loadFromCache(isInitial: false);
+    }
+  }
+
+  Future<void> _fetchFromNetwork({bool isInitial = true}) async {
+    print('FPPR:🌐 _fetchFromNetwork - isInitial: $isInitial');
+
+    try {
+      DocumentSnapshot? startAfterDoc;
+
+      if (!isInitial && state.posts.isNotEmpty) {
+        // Use last post's ID as cursor (since postId = Firestore document ID)
+        final lastPost = state.posts.last;
+        if (lastPost.id != null) {
+          print('FPPR:📄 Using last post ID as cursor: ${lastPost.id}');
+          // We need to get the document snapshot for the last post
+          // This would require a method in PostService to get document by ID
+          startAfterDoc = await _getDocumentSnapshot(lastPost.id!);
+        }
+      }
+
+      final newPosts = await _postService.getPostsPaginated(limit: _pageSize, startAfterDoc: startAfterDoc);
+
+      print('FPPR:🌐 Network fetch completed - posts: ${newPosts.length}');
+
+      if (newPosts.isNotEmpty) {
+        // Cache the new posts
+        await _cacheRepository.saveFeedPosts(newPosts);
+        print('FPPR:💾 Cached ${newPosts.length} posts from network');
+
+        // Update state
+        final updatedPosts = isInitial ? newPosts : [...state.posts, ...newPosts];
+
+        state = state.copyWith(
+          posts: updatedPosts,
+          isLoadingInitial: false,
+          isLoadingMore: false,
+          isUsingCache: false,
+          hasReachedCacheEnd: newPosts.length < _pageSize,
+          clearErrorMessage: true,
+        );
+
+        print('FPPR:✅ Updated state with ${newPosts.length} new posts - total: ${state.posts.length}');
+      } else {
+        // No more posts from network
+        state = state.copyWith(isLoadingInitial: false, isLoadingMore: false, hasReachedCacheEnd: true);
+        print('FPPR:🏁 No more posts available from network');
+      }
+    } catch (e, s) {
+      print('FPPR:❌ _fetchFromNetwork ERROR: $e');
+      _logFeedError("Error fetching from network", e, s);
+
+      state = state.copyWith(isLoadingInitial: false, isLoadingMore: false, errorMessage: "Failed to load posts from network");
+    }
+  }
+
+  Future<DocumentSnapshot?> _getDocumentSnapshot(String postId) async {
+    // This method would need to be implemented in PostService
+    // to get a DocumentSnapshot by post ID
+    print('FPPR:🔍 Getting document snapshot for post: $postId');
+    // Placeholder implementation - you'll need to implement this
+    try {
+      // Assuming posts are stored in a 'posts' collection
+      final doc = await FirebaseFirestore.instance.collection(FirestoreCollections.posts).doc(postId).get();
+      return doc.exists ? doc : null;
+    } catch (e) {
+      print('FPPR:❌ Error getting document snapshot: $e');
+      return null;
+    }
+  }
+
+  //TODO THIS LOGIC IS VERY DUPLICATE TO loadinitialdata
+  Future<void> refreshFeed() async {
+    print('FPPR:🔄 refreshFeed called');
+
+    try {
       state = state.copyWith(isRefreshing: true);
 
-      print('\nFEED POSTS PROVIDER\nFound $newPostsCount new posts, fetching all at once...');
+      // Get current total count
+      final int currentTotalCount = await _postService.getTotalPostCount();
+      print('FPPR:📊 Current total count: $currentTotalCount');
 
-      final List<MemoModelPost> allNewPosts = await _postService.getPostsPaginated(limit: newPostsCount, startAfterDoc: null);
+      if (currentTotalCount == -1) {
+        throw Exception('Failed to get total post count');
+      }
 
-      if (!mounted) return;
+      // Get previous total count
+      final int previousTotalCount = _prefs?.getInt(_lastTotalCountKey) ?? 0;
+      print('FPPR:📊 Previous total count: $previousTotalCount');
 
-      await _mergeNewPostsWithExisting(allNewPosts, currentTotalCount);
+      // Update stored count
+      await _prefs?.setInt(_lastTotalCountKey, currentTotalCount);
+
+      if (currentTotalCount > previousTotalCount) {
+        // Fetch and cache new posts
+        await _fetchAndCacheNewPosts(previousTotalCount, currentTotalCount);
+      } else {
+        //TODO WHY LOAD ANYTHING HERE???
+        // No new posts - just reload from cache
+        await _loadFromCache(isInitial: true);
+        state = state.copyWith(isRefreshing: false);
+      }
+
+      print('FPPR:✅ Refresh completed');
     } catch (e, s) {
+      print('FPPR:❌ refreshFeed ERROR: $e');
       _logFeedError("Error during refresh", e, s);
-      await _performFullRefresh();
+
+      state = state.copyWith(isRefreshing: false, errorMessage: "Refresh failed");
     }
-  }
-
-  Future<void> _mergeNewPostsWithExisting(List<MemoModelPost> allNewPosts, int currentTotalCount) async {
-    final List<MemoModelPost> existingPosts = state.posts;
-
-    if (allNewPosts.isEmpty) {
-      state = state.copyWith(isRefreshing: false, totalPostCount: currentTotalCount);
-      return;
-    }
-
-    // Remove any duplicates (in case of overlap)
-    //TODO THERE CAN NOT BE ANY OVERLAP OR SOMETHING IS WRONG IN THE ALGORITHM
-    final existingPostIds = existingPosts.map((post) => post.id).whereType<String>().toSet();
-    final uniqueNewPosts = allNewPosts.where((post) => post.id != null && !existingPostIds.contains(post.id)).toList();
-
-    if (uniqueNewPosts.isEmpty) {
-      state = state.copyWith(isRefreshing: false, totalPostCount: currentTotalCount);
-      return;
-    }
-
-    // Merge new posts at the beginning (newest first)
-    final List<MemoModelPost> mergedPosts = [...uniqueNewPosts, ...existingPosts];
-    //
-    if (allNewPosts.isEmpty) {
-      state = state.copyWith(isRefreshing: false, totalPostCount: currentTotalCount);
-      return;
-    }
-
-    // Merge new posts at the beginning (newest first)
-    // final List<MemoModelPost> mergedPosts = [...allNewPosts, ...existingPosts];
-
-    //TODO NOTHING CHANGED FOR HAS MORE WITH MERGING AS MERGE IS INSERTED AT THE TOP OF LIST
-    // Recalculate pagination state
-    // final bool hasMore = mergedPosts.length > _pageSize || (state.lastDocument != null && mergedPosts.isNotEmpty);
-
-    // Get the last document for pagination (should be the last post in the list)
-    // final DocumentSnapshot? newLastDocument = mergedPosts.isNotEmpty ? mergedPosts.last.docSnapshot : null;
-
-    state = state.copyWith(
-      posts: mergedPosts,
-      isRefreshing: false,
-      totalPostCount: currentTotalCount,
-      // lastDocument: newLastDocument, //TODO check this, must not be updated at all as the end of the list remained unchanged and the endless scrolling continues where it was before
-      // hasMorePosts: hasMore,
-    );
-
-    // Update cache - we need to recache all pages since structure changed
-    await _recacheAllPages(mergedPosts);
-  }
-
-  Future<void> _recacheAllPages(List<MemoModelPost> allPosts) async {
-    // Clear existing cache for this filter
-    _cacheRepository.clearPagesForFilter(state.activeFilter?.name);
-
-    // Split into pages and cache each page
-    for (int i = 0; i < allPosts.length; i += _pageSize) {
-      final end = (i + _pageSize < allPosts.length) ? i + _pageSize : allPosts.length;
-      final pagePosts = allPosts.sublist(i, end);
-      final pageNumber = (i ~/ _pageSize) + 1;
-
-      await _cacheRepository.savePage(pagePosts, pageNumber, filter: state.activeFilter?.name);
-    }
-  }
-
-  Future<void> _performFullRefresh() async {
-    // Clear cache for current filter
-    _cacheRepository.clearPagesForFilter(state.activeFilter?.name);
-
-    // Get current total count
-    final totalCount = await _postService.getTotalPostCount();
-
-    // Reset state for refresh
-    state = state.copyWith(
-      isLoadingInitial: true,
-      lastDocument: null,
-      // hasMorePosts: true,
-      posts: [],
-      isUsingCache: false,
-      clearErrorMessage: true,
-      totalPostCount: totalCount != -1 ? totalCount : state.totalPostCount,
-      isRefreshing: false,
-      // newPosts: [],
-    );
-
-    await _fetchPostsPage(isInitial: true);
   }
 }
 
 // --- Provider Definition ---
 final feedPostsProvider = StateNotifierProvider<FeedPostsNotifier, FeedState>((ref) {
-  return FeedPostsNotifier(ref.read(postServiceProvider), ref.read(postCacheRepositoryProvider));
+  print('FPPR:🏭 feedPostsProvider creating FeedPostsNotifier');
+  return FeedPostsNotifier(ref.read(postServiceFeedProvider), ref.read(feedPostCacheProvider));
 });
 
 // Helper for logging

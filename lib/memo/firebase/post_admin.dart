@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import for DocumentSnapshot
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/firebase/post_service.dart';
+import 'package:mahakka/memo/firebase/post_service_feed.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 
 // Callback type definition
@@ -16,7 +16,7 @@ class AdminPostsListPage extends StatefulWidget {
 }
 
 class _AdminPostsListPageState extends State<AdminPostsListPage> {
-  final PostService _postService = PostService();
+  final PostServiceFeed _postService = PostServiceFeed();
   final int _postsPerPage = 20; // Number of posts to fetch per page
 
   // State variables for pagination
@@ -107,29 +107,29 @@ class _AdminPostsListPageState extends State<AdminPostsListPage> {
         );
       },
     );
-
-    if (confirmDelete == true) {
-      try {
-        await _postService.deletePost(postId);
-        // Remove the post from the local list to update the UI
-        setState(() {
-          _posts.removeWhere((post) => post.id == postId);
-          widget.onCountChanged(_posts.length); // Update the total count
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Post "$postId" deleted successfully'), backgroundColor: Colors.green));
-        }
-      } catch (e) {
-        print("Error deleting post: $e");
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to delete post "$postId": $e'), backgroundColor: Colors.red));
-        }
-      }
-    }
+    //
+    // if (confirmDelete == true) {
+    //   try {
+    //     await _postService.deletePost(postId);
+    //     // Remove the post from the local list to update the UI
+    //     setState(() {
+    //       _posts.removeWhere((post) => post.id == postId);
+    //       widget.onCountChanged(_posts.length); // Update the total count
+    //     });
+    //     if (mounted) {
+    //       ScaffoldMessenger.of(
+    //         context,
+    //       ).showSnackBar(SnackBar(content: Text('Post "$postId" deleted successfully'), backgroundColor: Colors.green));
+    //     }
+    //   } catch (e) {
+    //     print("Error deleting post: $e");
+    //     if (mounted) {
+    //       ScaffoldMessenger.of(
+    //         context,
+    //       ).showSnackBar(SnackBar(content: Text('Failed to delete post "$postId": $e'), backgroundColor: Colors.red));
+    //     }
+    //   }
+    // }
   }
 
   @override

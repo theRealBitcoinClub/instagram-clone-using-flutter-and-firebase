@@ -52,6 +52,7 @@ class MemoVerifier {
   static int maxPostLength = 207 - super_tag.length - super_topic.length; // Example, adjust as needed
   static const int minWordCount = 1; // Example for posts
 
+  static const int maxProfileImgurUrlLength = 200;
   static const int maxProfileNameLength = 30;
   static const int minProfileNameLength = 3;
   //memo has 217
@@ -148,11 +149,12 @@ class MemoVerifier {
     return MemoVerificationResponse.valid;
   }
 
-  MemoVerificationResponse verifyPostLength({int mediaUrlLength = 0}) {
-    if (mediaUrlLength > maxPostLength) return MemoVerificationResponse.tooLongMediaUrl;
+  MemoVerificationResponse verifyPostLength({String mediaUrl = ''}) {
+    if (mediaUrl.length > maxPostLength) return MemoVerificationResponse.tooLongMediaUrl;
+    final checkText = mediaUrl.isNotEmpty ? text.replaceAll(mediaUrl, "") : mediaUrl;
 
-    final trimmedText = text.trim();
-    if (trimmedText.length > (maxPostLength - mediaUrlLength)) {
+    final trimmedText = checkText.trim();
+    if (trimmedText.length > (maxPostLength - mediaUrl.length)) {
       return MemoVerificationResponse.tooLong;
     }
     // Note: 'tooShort' might also be covered by minWordCount, decide which is primary
@@ -217,17 +219,17 @@ class MemoVerifier {
   MemoVerificationResponse checkAllPostValidations(Ref ref) {
     MemoVerificationResponse result;
 
-    result = verifyPostLength(mediaUrlLength: ref.read(addPostControllerProvider.notifier).getMediaUrl().length);
+    result = verifyPostLength(mediaUrl: ref.read(addPostControllerProvider.notifier).getMediaUrl());
     if (result != MemoVerificationResponse.valid) return result;
 
     result = verifyMinWordCount();
     if (result != MemoVerificationResponse.valid) return result;
 
-    result = verifyNoEmail();
-    if (result != MemoVerificationResponse.valid) return result;
+    // result = verifyNoEmail();
+    // if (result != MemoVerificationResponse.valid) return result;
 
-    result = verifyUrls();
-    if (result != MemoVerificationResponse.valid) return result;
+    // result = verifyUrls();
+    // if (result != MemoVerificationResponse.valid) return result;
 
     result = verifyOffensiveWords();
     if (result != MemoVerificationResponse.valid) return result;

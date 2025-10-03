@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 
-import '../memo/base/debounced_balance_service.dart';
 import 'electrum_provider.dart';
 
 final bchBurnerBalanceProvider = StreamProvider<Balance>((ref) {
@@ -20,6 +19,7 @@ final bchBurnerBalanceProvider = StreamProvider<Balance>((ref) {
   timer = Timer.periodic(const Duration(seconds: kDebugMode ? 100 : 10), (_) async {
     try {
       final balance = await _fetchBalance(ref);
+      print('Update burner balance: $balance');
       streamController.add(balance);
     } catch (error) {
       // Handle error, optionally add error state to stream
@@ -38,6 +38,6 @@ final bchBurnerBalanceProvider = StreamProvider<Balance>((ref) {
 
 Future<Balance> _fetchBalance(Ref ref) async {
   final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-  DebouncedBalanceService debouncedBalanceService = DebouncedBalanceService(base);
-  return await debouncedBalanceService.getBalances(MemoBitcoinBase.bchBurnerAddress);
+  // DebouncedBalanceService debouncedBalanceService = DebouncedBalanceService(balanceService: base);
+  return await base.getBalances(MemoBitcoinBase.bchBurnerAddress);
 }

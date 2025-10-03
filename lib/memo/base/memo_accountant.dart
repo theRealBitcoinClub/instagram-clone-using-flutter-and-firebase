@@ -7,11 +7,11 @@ import 'package:mahakka/memo/base/memo_publisher.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/memo/model/memo_tip.dart';
+import 'package:mahakka/provider/popularity_score_cache.dart';
 
 import '../../ipfs/ipfs_pin_claim_service.dart';
 import '../../provider/electrum_provider.dart';
 import '../../provider/user_provider.dart';
-import '../../repositories/post_cache_repository.dart';
 import '../../screens/add/add_post_providers.dart';
 import '../scraper/memo_post_scraper.dart';
 import 'memo_bitcoin_base.dart';
@@ -226,7 +226,7 @@ class MemoAccountant {
     MemoAccountantResponse response = await _tryPublishLike(post, user.wifLegacy);
 
     if (response == MemoAccountantResponse.yes) {
-      ref.read(postCacheRepositoryProvider).updatePopularityScore(post.id!, tipAmount: user.tipAmount, scrapedPost: scrapedPost);
+      ref.read(popularityScoreCacheProvider).updatePopularityScore(post.id!, tipAmount: user.tipAmount, scrapedPost: scrapedPost);
     }
 
     return _memoAccountantResponse(response);

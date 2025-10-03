@@ -9,7 +9,7 @@ import 'package:mahakka/intros/wrapped_animated_intro_target.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
 
-import '../../provider/profile_providers.dart';
+import '../../provider/profile_data_model_provider.dart';
 import '../../theme_provider.dart';
 
 class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
@@ -45,25 +45,15 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
               introStep: IntroStep.profileQrCode,
               onTap: onShowBchQrDialog,
               child: const Icon(Icons.qr_code_scanner_rounded),
-              // IconButton(
-              //   padding: EdgeInsets.zero,
-              //   icon: const Icon(Icons.qr_code_scanner_rounded),
-              //   tooltip: "Show Deposit QR",
-              // onPressed: () {
-              //   // ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.profileScreen, IntroStep.profileQrCode, context);
-              //   onShowBchQrDialog();
-              // },
-              // ),
             )
           : IconButton(
               icon: const Icon(Icons.home_filled),
               tooltip: "View My Profile",
               onPressed: () {
                 ref.read(navigationStateProvider.notifier).navigateToOwnProfile();
-                // ref.read(profileTargetIdProvider.notifier).state = null;
                 context.afterBuild(refreshUI: true, () {
-                  ref.invalidate(profileDataProvider); // Invalidate first
-                  ref.refresh(profileDataProvider); // Then refresh
+                  ref.invalidate(profileDataNotifier); // Invalidate first
+                  ref.refresh(profileDataNotifier); // Then refresh
                 });
               },
             ),

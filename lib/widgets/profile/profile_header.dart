@@ -8,7 +8,6 @@ import 'header/top_details_row.dart';
 
 class ProfileHeader extends StatelessWidget {
   final bool isOwnProfile;
-  final bool isRefreshingProfile;
   final VoidCallback onProfileButtonPressed;
   final VoidCallback showImageDetail;
   final bool showDefaultAvatar;
@@ -17,7 +16,6 @@ class ProfileHeader extends StatelessWidget {
   const ProfileHeader({
     Key? key,
     required this.isOwnProfile,
-    required this.isRefreshingProfile,
     required this.onProfileButtonPressed,
     required this.showImageDetail,
     required this.showDefaultAvatar,
@@ -36,7 +34,6 @@ class ProfileHeader extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (isRefreshingProfile) _buildProgressIndicator(),
           ProfileAvatarBalancesButtonRow(
             creator: creator,
             theme: theme,
@@ -69,12 +66,7 @@ class ProfileHeader extends StatelessWidget {
         child: Row(
           spacing: 6.0,
           children: [
-            Text(
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              name.isNotEmpty ? name : "Anonymous",
-              style: theme.textTheme.titleMedium,
-            ),
+            Text(maxLines: 1, overflow: TextOverflow.ellipsis, name.isNotEmpty ? name : "Anonymous", style: theme.textTheme.titleMedium),
             Spacer(),
             if (creator.profileIdShort.isNotEmpty) Text(creator.profileIdShort, style: _profileIdStyle(theme)),
           ],

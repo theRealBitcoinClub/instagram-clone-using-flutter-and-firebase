@@ -12,6 +12,8 @@ import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/scraper/memo_creator_scraper.dart';
 import 'package:mahakka/provider/isar_provider.dart';
 
+import '../providers/avatar_refresh_provider.dart';
+
 class CreatorRepository {
   final Ref ref;
   final Map<String, MemoModelCreator> _inMemoryCache = {};
@@ -19,7 +21,7 @@ class CreatorRepository {
 
   CreatorRepository(this.ref);
 
-  Future<Isar> get _isar async => await ref.read(isarProvider.future);
+  Future<Isar> get _isar async => await ref.read(creatorIsarProvider.future);
 
   // --- STREAM SUPPORT ---
 
@@ -142,6 +144,7 @@ class CreatorRepository {
   }
 
   Future<String?> refreshAndCacheAvatar(String creatorId, {bool forceRefreshAfterProfileUpdate = false, String? forceImageType}) async {
+    ref.read(avatarRefreshStateProvider.notifier).setRefreshing(creatorId, true);
     final creator = await _getFromCache(creatorId);
     if (creator == null) return null;
 
@@ -153,18 +156,13 @@ class CreatorRepository {
       await saveToCache(creator, saveToFirebase: true);
       return creator.profileImageAvatar();
     }
+    ref.read(avatarRefreshStateProvider.notifier).completeRefresh(creatorId);
     return oldUrl;
   }
 
-  Future<void> refreshCreatorCache(
-    String creatorId, {
-    required hasUpdatedCallback,
-    required nothingChangedCallback,
-    required scrapeFailedCallback,
-  }) async {
+  Future<void> refreshCreatorCache(String creatorId) async {
     final scrapedCreator = await _getFreshScrapedCreator(creatorId);
     if (scrapedCreator == null) {
-      scrapeFailedCallback();
       return;
     }
 
@@ -175,7 +173,6 @@ class CreatorRepository {
         cachedCreator != null && scrapedCreator.name == cachedCreator.name && scrapedCreator.profileText == cachedCreator.profileText;
 
     if (hasSameData) {
-      nothingChangedCallback();
       return;
     }
 
@@ -184,7 +181,6 @@ class CreatorRepository {
 
     print("INFO: New data found for creator $creatorId. Updating all storage layers.");
     await saveToCache(updatedCreator, saveToFirebase: false);
-    hasUpdatedCallback();
   }
 
   // --- PRIVATE METHODS ---

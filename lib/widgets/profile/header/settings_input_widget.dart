@@ -7,6 +7,7 @@ class SettingsInputWidget extends StatelessWidget {
   final TextInputType type;
   final TextEditingController controller;
   final int maxLines;
+  final int? maxLength;
 
   const SettingsInputWidget({
     Key? key,
@@ -15,6 +16,7 @@ class SettingsInputWidget extends StatelessWidget {
     required this.hintText,
     required this.type,
     required this.controller,
+    this.maxLength,
     this.maxLines = 1,
   }) : super(key: key);
 
@@ -23,15 +25,16 @@ class SettingsInputWidget extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
-        crossAxisAlignment: type == TextInputType.multiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.only(top: type == TextInputType.multiline ? 8.0 : 0.0),
-            child: Icon(icon, color: theme.colorScheme.onSurface.withOpacity(0.7), size: 24),
+            padding: EdgeInsets.only(top: 3),
+            child: Icon(icon, color: theme.colorScheme.onSurface.withOpacity(0.7), size: 27),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: TextField(
+              maxLength: maxLength,
               controller: controller,
               keyboardType: type,
               maxLines: maxLines,

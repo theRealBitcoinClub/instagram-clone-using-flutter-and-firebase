@@ -71,11 +71,6 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
     // Update navigation state
     state = state.copyWith(currentTabIndex: tabIndex, profileTargetId: actualProfileTargetId, isViewingOwnProfile: actualIsOwnProfile);
 
-    // Handle profile-specific logic THIS IS HANDLED IN HOME.DART
-    // if (tabIndex != AppTab.profile.tabIndex) {
-    //   _ref.read(profileDataProvider.notifier).stopAutoRefreshBalanceProfile();
-    // }
-
     // Show snackbar if provided
     if (snackbarMessage != null && context != null && context.mounted) {
       showSnackBar(snackbarMessage, type: SnackbarType.success);

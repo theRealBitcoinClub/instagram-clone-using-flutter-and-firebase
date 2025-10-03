@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
+import 'package:mahakka/provider/profile_balance_provider.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/screens/add_screen.dart';
 import 'package:mahakka/screens/feed_screen.dart';
@@ -11,7 +12,6 @@ import 'package:mahakka/tab_item_data.dart';
 
 import '../intros/intro_animated_icon.dart';
 import '../memo/memo_webview_screen.dart';
-import '../provider/profile_providers.dart';
 import '../provider/scraper_provider.dart';
 
 class HomeSceen extends ConsumerStatefulWidget {
@@ -84,9 +84,9 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     final tabData = AppTab.values[index];
 
     if (index != AppTab.profile.tabIndex) {
-      ref.read(profileDataProvider.notifier).stopAutoRefreshBalanceProfile();
+      ref.read(profileBalanceProvider).stopAutoRefreshBalanceProfile();
     } else {
-      ref.read(profileDataProvider.notifier).startAutoRefreshBalanceProfile();
+      ref.read(profileBalanceProvider).startAutoRefreshBalanceProfile();
     }
 
     if (tabData == AppTab.add) {

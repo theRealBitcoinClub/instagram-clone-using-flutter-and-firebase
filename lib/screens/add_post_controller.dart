@@ -29,21 +29,6 @@ final addPostControllerProvider = StateNotifierProvider<AddPostController, void>
   return AddPostController(ref: ref);
 });
 
-// // Provider for the onPublish callback
-// final onPublishProvider = Provider.autoDispose<VoidCallback>((ref) {
-//   final controller = ref.watch(addPostControllerProvider.notifier);
-//   return () => controller.publishPost();
-// });
-//
-// // Provider for text controller access
-// final publishTextProvider = StateProvider.autoDispose<String>((ref) => '');
-//
-// // Provider to check if media is added
-// final hasMediaToPublishProvider = Provider.autoDispose<bool>((ref) {
-//   final controller = ref.watch(addPostControllerProvider.notifier);
-//   return controller.hasAddedMediaToPublish();
-// });
-
 class AddPostController extends StateNotifier<void> {
   final Ref ref;
   late BuildContext _context;
@@ -77,7 +62,7 @@ class AddPostController extends StateNotifier<void> {
 
       final topics = MemoRegExp.extractTopics(textContent);
       final topic = topics.isNotEmpty ? topics.first : "";
-      final post = _createPostFromCurrentState(textContent, topic);
+      final post = createPostFromCurrentState(textContent, topic);
       post.parseUrlsTagsTopicClearText();
       //save ipfs cid whatever happens
       ref.read(userNotifierProvider.notifier).addIpfsUrlAndUpdate(ref.read(ipfsCidProvider));
@@ -126,7 +111,7 @@ class AddPostController extends StateNotifier<void> {
     }
   }
 
-  MemoModelPost _createPostFromCurrentState(String textContent, String? topic) {
+  MemoModelPost createPostFromCurrentState(String textContent, String? topic) {
     final imgurUrl = ref.read(imgurUrlProvider);
     final youtubeId = ref.read(youtubeVideoIdProvider);
     final ipfsCid = ref.read(ipfsCidProvider);
@@ -142,8 +127,7 @@ class AddPostController extends StateNotifier<void> {
       ipfsCid: ipfsCid.isNotEmpty ? ipfsCid : null,
       tagIds: MemoRegExp.extractHashtags(textContent),
       topicId: topic ?? "",
-      // topic: topic != null ? MemoModelTopic(id: topic) : null,
-      // creator: ref.read(userProvider)!.creator,
+      created: DateTime.now().toUtc().toString(),
       creatorId: ref.read(userProvider)!.id,
     );
   }

@@ -22,7 +22,7 @@ class TranslationCache {
   }
 
   Future<String?> get(String postId, String languageCode) async {
-    final isar = await ref.read(isarProvider.future);
+    final isar = await ref.read(translationIsarProvider.future);
     final cacheKey = _generateKey(postId, languageCode);
 
     final cached = await isar.cachedTranslationDbs.where().cacheKeyEqualTo(cacheKey).findFirst();
@@ -31,7 +31,7 @@ class TranslationCache {
   }
 
   Future<void> put(String postId, String languageCode, String translatedText) async {
-    final isar = await ref.read(isarProvider.future);
+    final isar = await ref.read(translationIsarProvider.future);
 
     await isar.writeTxn(() async {
       final cacheKey = _generateKey(postId, languageCode);
@@ -55,14 +55,14 @@ class TranslationCache {
   }
 
   Future<void> clear() async {
-    final isar = await ref.read(isarProvider.future);
+    final isar = await ref.read(translationIsarProvider.future);
     await isar.writeTxn(() async {
       await isar.cachedTranslationDbs.clear();
     });
   }
 
   Future<int> get size async {
-    final isar = await ref.read(isarProvider.future);
+    final isar = await ref.read(translationIsarProvider.future);
     return await isar.cachedTranslationDbs.count();
   }
 
@@ -95,25 +95,6 @@ class TranslationCache {
 final translationCacheProvider = Provider<TranslationCache>((ref) {
   return TranslationCache(ref);
 });
-
-// Update your Isar provider to include the new schema:
-// isar_provider.dart - Add this to your existing provider
-/*
-final isarProvider = FutureProvider<Isar>((ref) async {
-  final dir = await getApplicationDocumentsDirectory();
-
-  final isar = await Isar.open(
-    directory: dir.path,
-    [
-      MemoModelPostDbSchema,
-      MemoModelCreatorDbSchema,
-      CachedTranslationDbSchema, // Add the new schema
-    ],
-    name: 'mahakka_db',
-  );
-  return isar;
-});
-*/
 
 // The rest of your existing code remains the same:
 class PostTranslationParams {

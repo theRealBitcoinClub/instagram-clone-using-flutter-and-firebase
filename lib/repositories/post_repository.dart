@@ -1,26 +1,19 @@
-// repositories/post_repository.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/memo/firebase/post_service.dart';
+import 'package:mahakka/memo/firebase/post_service_feed.dart';
+import 'package:mahakka/memo/firebase/post_service_profile.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/memo/model/memo_model_topic.dart';
 
 import '../memo/base/memo_accountant.dart';
 import '../memo/base/memo_verifier.dart';
-import '../memo/firebase/topic_service.dart';
 
-// Assuming you have a postServiceProvider
-final postServiceProvider = Provider((ref) => PostService());
-
+final postServiceProfileProvider = Provider((ref) => PostServiceProfile());
+final postServiceFeedProvider = Provider((ref) => PostServiceFeed());
 final postRepositoryProvider = Provider((ref) => PostRepository(ref));
 
 class PostRepository {
   final Ref ref;
 
   PostRepository(this.ref);
-
-  Stream<List<MemoModelPost>> getPostsByCreatorId(String creatorId) {
-    return ref.read(postServiceProvider).getPostsByCreatorIdStream(creatorId, ref);
-  }
 
   Future<dynamic> publishReplyTopic(MemoModelPost post) async {
     MemoVerificationResponse verifier = MemoVerifier(post.text!).checkAllPostValidations(ref);
@@ -43,13 +36,5 @@ class PostRepository {
       if (res != MemoVerificationResponse.valid) return res;
     }
     return ref.read(memoAccountantProvider).publishImgurOrYoutube(topic, text);
-  }
-
-  Future<MemoModelTopic> loadTopic(MemoModelPost post) async {
-    var topic;
-    if (post.topicId.isNotEmpty) {
-      topic = await TopicService().getTopicOnce(post.topicId);
-    }
-    return topic;
   }
 }

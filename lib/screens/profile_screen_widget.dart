@@ -6,7 +6,6 @@ import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
-import 'package:mahakka/provider/profile_providers.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/sliver_app_bar_delegate.dart';
@@ -26,6 +25,7 @@ import 'package:mahakka/widgets/profile/youtube_controller_manager.dart';
 import '../intros/intro_enums.dart';
 import '../intros/intro_overlay.dart';
 import '../intros/intro_state_notifier.dart';
+import '../provider/profile_data_model_provider.dart';
 import '../widgets/profile/profile_app_bar.dart';
 
 class ProfileScreenWidget extends ConsumerStatefulWidget {
@@ -39,7 +39,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   final YouTubeControllerManager _ytManager = YouTubeControllerManager();
   final ScrollController _scrollController = ScrollController();
   int _viewMode = 0;
-  bool _isRefreshingProfile = false;
   String? _currentProfileId = "";
   Timer? _minDisplayTimer;
   bool _minDisplayTimeElapsed = false;
@@ -99,7 +98,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
     return Consumer(
       builder: (context, ref, child) {
-        final profileDataAsync = ref.watch(profileDataProvider);
+        final profileDataAsync = ref.watch(profileDataNotifier);
 
         return profileDataAsync.when(
           data: (profileData) {
@@ -118,8 +117,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
             message: "Error loading profile: $error",
             onRetry: () {
               // _startMinDisplayTimer();
-              ref.invalidate(profileDataProvider);
-              ref.refresh(profileDataProvider);
+              ref.invalidate(profileDataNotifier);
+              ref.refresh(profileDataNotifier);
               ref.read(navigationStateProvider.notifier).navigateToOwnProfile();
             },
           ),
@@ -127,20 +126,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       },
     );
   }
-
-  // Future<void> _refreshData() async {
-  //   try {
-  //     await ref.refresh(profileDataProvider.future);
-  //   } catch (e) {
-  //     print("Error refreshing profile data: $e");
-  //   }
-  // }
-  //
-  // void _safeRefresh() {
-  //   Future.microtask(() {
-  //     ref.refresh(profileDataProvider);
-  //   });
-  // }
 
   double _startDragX = 0.0;
   double _currentDragX = 0.0;
@@ -156,17 +141,14 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
 
   void _handleHorizontalDragEnd(DragEndDetails details) {
     final dragDistance = _currentDragX - _startDragX;
-    final sensitivity = 50.0; // Minimum drag distance to trigger tab change
+    final sensitivity = 50.0;
 
     if (dragDistance < -sensitivity) {
-      // Swiped left - go to next tab
       _navigateToAdjacentTab(1);
     } else if (dragDistance > sensitivity) {
-      // Swiped right - go to previous tab
       _navigateToAdjacentTab(-1);
     }
 
-    // Reset drag values
     _startDragX = 0.0;
     _currentDragX = 0.0;
   }
@@ -192,11 +174,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     }
 
     final isOwnProfile = loggedInUser?.profileIdMemoBch == creator.id;
-
-    // context.afterBuild(refreshUI: true, () {
-    ref.read(profileDataProvider.notifier).refreshProfileDataAndStartBalanceTimer(currentTabIndex, creator.id, isOwnProfile, context);
-    // _updateViewMode(1);
-    // });
+    ref.read(profileDataNotifier.notifier).refreshCreatorDataOnProfileLoad(currentTabIndex, creator.id, isOwnProfile, context);
 
     return Scaffold(
       key: ValueKey("profile_scaffold_${creator.id}"),
@@ -214,22 +192,15 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
             onHorizontalDragUpdate: _handleHorizontalDragUpdate,
             onHorizontalDragEnd: _handleHorizontalDragEnd,
             behavior: HitTestBehavior.opaque,
-            child:
-                // RefreshIndicator(
-                //   onRefresh: _refreshData,
-                //   color: theme.colorScheme.primary,
-                //   backgroundColor: theme.colorScheme.surface,
-                //   child:
-                CustomScrollView(
-                  controller: _scrollController,
-                  slivers: [
-                    SliverToBoxAdapter(child: _buildProfileHeader(creator, isOwnProfile, theme)),
-                    _buildTabSelector(),
-                    _buildContent(theme, profileData),
-                  ],
-                ),
+            child: CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                SliverToBoxAdapter(child: _buildProfileHeader(creator, isOwnProfile, theme)),
+                _buildTabSelector(),
+                _buildContent(theme, profileData),
+              ],
+            ),
           ),
-          // ),
           if (_showIntro) IntroOverlay(introType: _introType, onComplete: () {}),
         ],
       ),
@@ -240,7 +211,6 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     return ProfileHeader(
       creator: creator,
       isOwnProfile: isOwnProfile,
-      isRefreshingProfile: _isRefreshingProfile,
       onProfileButtonPressed: () => _showSettings(creator),
       showImageDetail: () => showCreatorImageDetail(context: context, creator: creator),
       showDefaultAvatar: false,
@@ -290,9 +260,9 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
           creatorName: creator.name,
         );
       case 2: // Tagged (text only)
-        return ProfileContentList.generic(posts: categorizer.taggedPosts, creatorName: creator.name);
+        return ProfileContentList.generic(posts: categorizer.taggedPosts, creatorName: creator.name, isTopicList: false);
       case 4: // Topics (text only)
-        return ProfileContentList.generic(posts: categorizer.topicPosts, creatorName: creator.name);
+        return ProfileContentList.generic(posts: categorizer.topicPosts, creatorName: creator.name, isTopicList: true);
       default:
         return EmptySliverContent(message: "Select a view to see posts.", theme: theme);
     }

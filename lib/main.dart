@@ -21,11 +21,6 @@ final sharedPreferencesInitializerProvider = FutureProvider<SharedPreferences>((
   return await SharedPreferences.getInstance();
 });
 
-// final languageCodeProvider = StateProvider<String?>((ref) {
-//   final prefs = ref.read(sharedPreferencesProvider);
-//   return prefs.getString('user_language') ?? SystemLanguage.getLanguageCode();
-// });
-
 final languageCodeProvider = StateProvider<String>((ref) {
   try {
     final prefs = ref.read(sharedPreferencesProvider);
@@ -50,34 +45,25 @@ Future<bool> setUserLanguage(WidgetRef ref, String languageCode) async {
 }
 
 class SystemLanguage {
-  /// Get system language with multiple fallback methods
   static String getLanguageCode([BuildContext? context]) {
-    // Try Flutter context first (most reliable in widget tree)
     if (context != null) {
       try {
         final Locale locale = Localizations.localeOf(context);
         return locale.languageCode;
-      } catch (e) {
-        // Fall through to other methods
-      }
+      } catch (e) {}
     }
 
-    // Try dart:ui window locale
     try {
       return ui.window.locale.languageCode;
-    } catch (e) {
-      // Fall through to platform
-    }
+    } catch (e) {}
 
     return '';
   }
 
-  /// Get all supported locales from the system
   static List<Locale> getSystemLocales() {
     return ui.window.locales;
   }
 
-  /// Get the primary system locale
   static Locale getSystemLocale() {
     return ui.window.locale;
   }
@@ -117,7 +103,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<ThemeState> themeState = ref.watch(themeNotifierProvider);
-    final AsyncValue<Isar> isar = ref.watch(isarProvider);
+    final AsyncValue<Isar> isar = ref.watch(translationIsarProvider);
 
     return isar.when(
       data: (isar) => themeState.when(

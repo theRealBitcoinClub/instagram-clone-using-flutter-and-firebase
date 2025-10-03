@@ -231,7 +231,7 @@ class UnifiedImageWidgetState extends ConsumerState<UnifiedImageWidget> {
           show: true,
           child: Image(
             image: imageProvider,
-            fit: BoxFit.contain, // This maintains aspect ratio
+            fit: getBoxFit(currentFitMode),
             width: double.infinity, // Fill available width
             // Don't set height - let it determine height naturally
             alignment: Alignment.center,

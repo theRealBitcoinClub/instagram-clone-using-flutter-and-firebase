@@ -12,7 +12,7 @@ import 'package:mahakka/widgets/bch/mnemonic_backup_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../provider/profile_providers.dart';
+import '../../provider/profile_data_model_provider.dart';
 import '../../provider/user_provider.dart';
 import '../../providers/navigation_providers.dart';
 import '../../repositories/creator_repository.dart';
@@ -106,25 +106,15 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    // Watch user provider - always non-null as per your requirement
     final user = ref.watch(userProvider)!;
     _mnemonicBackupKey = 'mnemonic_backup_verified${user.id}';
 
-    // Watch creator repository and wait for non-null value
-    // final creatorAsync = ref.watch(creatorRepositoryProvider
-    //     .select((repo) => repo.getCreator(user.id, scrapeIfNotFound: true, useCache: true)));
-    final creatorAsync = ref.watch(profileDataProvider);
-    // final creatorAsync = ref.watch(settingsCreatorProvider(user.id));
+    final profileDataAsync = ref.watch(profileDataNotifier);
 
-    // Show loading until creator is available
-    return creatorAsync.when(
+    return profileDataAsync.when(
       loading: () => _buildLoadingWidget(theme),
       error: (error, stack) => _buildErrorWidget(theme, "Failed to load creator: $error"),
       data: (profileData) {
-        // final actualCreator = creator ?? user.creator;
-
-        // Initialize controllers once when creator is available
         if (!_inputControllersInitialized) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
@@ -144,7 +134,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     return Dialog(
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 390),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 441),
         child: const Center(child: CircularProgressIndicator()),
       ),
     );
@@ -154,7 +144,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     return Dialog(
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 390),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 441),
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -175,7 +165,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 390),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 441),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -284,6 +274,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         children: [
           const SizedBox(height: 8),
           SettingsInputWidget(
+            maxLength: MemoVerifier.maxProfileNameLength,
             theme: theme,
             icon: Icons.badge_outlined,
             hintText: "Name",
@@ -292,6 +283,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
           ),
           const SizedBox(height: 0),
           SettingsInputWidget(
+            maxLength: MemoVerifier.maxProfileTextLength,
             theme: theme,
             icon: Icons.notes_outlined,
             hintText: "Bio/Text",
@@ -301,6 +293,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
           ),
           const SizedBox(height: 0),
           SettingsInputWidget(
+            // maxLength: MemoVerifier.maxProfileImgurUrlLength,
             theme: theme,
             icon: Icons.image_outlined,
             hintText: "e.g. https://imgur.com/X32JJS",
@@ -424,7 +417,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       // final creatorAsync = ref.read(creatorRepositoryProvider
       //     .select((repo) => repo.getCreator(user.id, scrapeIfNotFound: true, useCache: true)));
       // final creatorAsync = ref.read(settingsCreatorProvider(user.id));
-      final creatorAsync = ref.read(profileDataProvider);
+      final creatorAsync = ref.read(profileDataNotifier);
 
       MemoModelCreator creator = creatorAsync.value!.creator!; // ?? user.creator;
 
@@ -487,11 +480,13 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         user.temporaryTipReceiver = null;
         user.temporaryTipAmount = null;
 
+        // ✅ ONLY KEEP THIS LINE - refresh user data
         ref.invalidate(userProvider);
-        ref.read(profileDataProvider.notifier).refreshCreatorCache(ref.read(userProvider)!.id);
-        ref.read(profileDataProvider.notifier).forceRefreshAfterProfileSavedOnSettings();
-        ref.invalidate(profileDataProvider);
-        ref.refresh(profileDataProvider);
+        // ref.invalidate(userProvider);
+        // ref.read(profileDataProvider.notifier).refreshCreatorCache(ref.read(userProvider)!.id);
+        // ref.read(profileDataProvider.notifier).forceRefreshAfterProfileSavedOnSettings();
+        // ref.invalidate(profileDataProvider);
+        // ref.refresh(profileDataProvider);
 
         setState(() {
           _inputControllersInitialized = false;

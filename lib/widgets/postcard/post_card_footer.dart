@@ -19,7 +19,7 @@ class PostCardFooter extends StatelessWidget {
   final ValueChanged<String> onInputText;
   final ValueChanged<int> onSelectHashtag;
   final VoidCallback onSelectTopic;
-  final VoidCallback onSend;
+  final onSend;
   final VoidCallback onCancel;
   final int maxTagsCounter;
 
@@ -42,7 +42,6 @@ class PostCardFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final creatorName = post.creator?.profileIdShort ?? "User";
     final MediaQueryData mediaQuery = MediaQuery.of(context);
     final bool isKeyboardVisible = mediaQuery.viewInsets.bottom > 0;
 
@@ -93,7 +92,7 @@ class PostCardFooter extends StatelessWidget {
           ),
           AnimGrowFade(
             show: showSend,
-            delay: const Duration(milliseconds: 500),
+            // delay: const Duration(milliseconds: 500),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Column(
@@ -102,7 +101,13 @@ class PostCardFooter extends StatelessWidget {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
-                    children: [_buildCancelButtonWidget(theme), const SizedBox(width: 4), _buildSendButtonWidget(theme)],
+                    children: [
+                      _buildCancelButtonWidget(theme),
+                      post.hasMedia ? const SizedBox(width: 9) : SizedBox.shrink(),
+                      post.hasMedia ? _buildRepostButtonWidget(theme) : SizedBox.shrink(),
+                      const SizedBox(width: 9),
+                      _buildSendButtonWidget(theme),
+                    ],
                   ),
                 ],
               ),
@@ -178,18 +183,34 @@ class PostCardFooter extends StatelessWidget {
         textStyle: theme.textTheme.labelLarge,
       ),
       onPressed: onCancel,
-      child: const Text("Cancel"),
+      child: const Text("Reset"),
+    );
+  }
+
+  Widget _buildRepostButtonWidget(ThemeData theme) {
+    return TextButton(
+      style: TextButton.styleFrom(
+        foregroundColor: Colors.yellow[900],
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: Colors.yellow[900]!.withOpacity(0.5)),
+        ),
+        textStyle: theme.textTheme.labelLarge,
+      ),
+      onPressed: () => onSend(isRepost: true),
+      child: const Text("Repost"),
     );
   }
 
   Widget _buildSendButtonWidget(ThemeData theme) {
     String buttonText = "Post";
     if (hasSelectedTopic && selectedHashtags.any((s) => s)) {
-      buttonText = "Reply to Topic with tags";
+      buttonText = "Reply w/ tags";
     } else if (hasSelectedTopic) {
-      buttonText = "Reply to Topic";
+      buttonText = "Topic reply";
     } else if (selectedHashtags.any((s) => s)) {
-      buttonText = "Post with tags";
+      buttonText = "Post /w tags";
     }
 
     return ElevatedButton(

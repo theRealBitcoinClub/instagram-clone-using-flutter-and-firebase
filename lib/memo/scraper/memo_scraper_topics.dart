@@ -4,6 +4,7 @@ import 'package:mahakka/config_hide_on_feed_trigger.dart';
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
+import 'package:mahakka/memo/firebase/post_scraper_firebase_service.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
@@ -12,7 +13,6 @@ import 'package:mahakka/memo_data_checker.dart';
 import 'package:mahakka/youtube_video_checker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../firebase/post_service.dart';
 import '../firebase/topic_service.dart';
 
 class MemoScraperTopic {
@@ -29,7 +29,7 @@ class MemoScraperTopic {
   Future<void> startScrapeTopics(String cacheId, int startOffset, int endOffset) async {
     final prefs = await SharedPreferences.getInstance();
     final topicService = TopicService();
-    final postService = PostService();
+    final postService = PostScraperFirebaseService();
 
     for (int offset = startOffset; offset >= endOffset; offset -= 25) {
       // Scrape topics for current offset
@@ -102,7 +102,7 @@ class MemoScraperTopic {
     List<MemoModelTopic> topicsWithNewPosts,
     String cacheId,
     TopicService topicService,
-    PostService postService,
+    PostScraperFirebaseService postService,
     // List<MemoModelTopic> postsToPersist,
   ) async {
     for (final topic in topicsWithNewPosts) {

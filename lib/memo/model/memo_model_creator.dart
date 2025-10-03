@@ -4,7 +4,6 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:mahakka/memo/base/debounced_balance_service.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/firebase/creator_service.dart';
@@ -252,16 +251,16 @@ class MemoModelCreator {
   //TODO why is debouncer not working as expected
   Future<void> refreshBalanceMahakka(Ref ref) async {
     final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-    DebouncedBalanceService debouncedBalanceService = DebouncedBalanceService(base);
-    Balance balances = await debouncedBalanceService.getBalances(bchAddressCashtokenAware);
+    // DebouncedBalanceService debouncedBalanceService = DebouncedBalanceService(balanceService: base);
+    Balance balances = await base.getBalances(bchAddressCashtokenAware);
     balanceBch = balances.bch;
     balanceToken = balances.token;
   }
 
   Future<void> refreshBalanceMemo(Ref ref) async {
     final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-    DebouncedBalanceService debouncedBalanceService = DebouncedBalanceService(base);
-    balanceMemo = await debouncedBalanceService.getBalances(id).then((value) => value.bch);
+    // DebouncedBalanceService debouncedBalanceService = DebouncedBalanceService(balanceService: base);
+    balanceMemo = await base.getBalances(id).then((value) => value.bch);
   }
 
   MemoModelCreator copyWith({

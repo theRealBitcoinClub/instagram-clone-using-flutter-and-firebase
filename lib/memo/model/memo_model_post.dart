@@ -429,6 +429,10 @@ class MemoModelPost {
     result = appendUrlsToText(textParam: result);
     result = appendTopicToText(textParam: result);
 
+    if (textParam == null) {
+      text = result?.trim();
+    }
+
     return result?.trim();
   }
 }

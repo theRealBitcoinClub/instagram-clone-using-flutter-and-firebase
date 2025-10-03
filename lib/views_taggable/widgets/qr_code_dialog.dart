@@ -5,13 +5,14 @@ import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
+import 'package:mahakka/provider/profile_balance_provider.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../memo/model/memo_model_creator.dart';
 import '../../memo/model/memo_model_user.dart';
-import '../../provider/profile_providers.dart';
+import '../../provider/profile_data_model_provider.dart';
 import '../../utils/snackbar.dart';
 
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -76,8 +77,8 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   }
 
   void _startQrDialogRefresh(BuildContext ctx) {
-    final profileNotifier = ref.read(profileDataProvider.notifier);
-    profileNotifier.startQrDialogRefresh(_isCashtokenFormat, ctx);
+    // final profileNotifier = ref.read(profileDataProvider.notifier);
+    ref.read(profileBalanceProvider).startQrDialogRefresh(_isCashtokenFormat, ctx);
   }
 
   String convertToBchFormat(String legacyAddress) {
@@ -127,8 +128,8 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     });
 
     // Update QR dialog refresh mode in provider
-    final profileNotifier = ref.read(profileDataProvider.notifier);
-    profileNotifier.setQrDialogMode(isCashtoken, ctx);
+    // final profileNotifier = ref.read(profileDataProvider.notifier);
+    ref.read(profileBalanceProvider).setQrDialogMode(isCashtoken, ctx);
 
     await _saveToggleState(isCashtoken);
   }
@@ -155,7 +156,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     final TextTheme textTheme = theme.textTheme;
 
     // Watch for creator updates using the new provider
-    final profileData = ref.watch(profileDataProvider);
+    final profileData = ref.watch(profileDataNotifier);
     final creator = profileData.value?.creator;
 
     return FutureBuilder(
@@ -371,7 +372,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   }
 
   void closeDialog(BuildContext ctx) {
-    ref.read(profileDataProvider.notifier).stopQrDialogRefresh();
+    ref.read(profileBalanceProvider).stopQrDialogRefresh();
     Navigator.of(ctx).pop();
   }
 }

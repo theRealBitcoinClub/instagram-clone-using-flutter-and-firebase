@@ -67,16 +67,6 @@ class TranslationService {
       return text;
     }
   }
-  //
-  // Future<String> translatePostForViewer(bool doTranslate, String text, context) async {
-  //   String systemLang = _ref.read(languageCodeProvider);
-  //   if (systemLang.isNotEmpty && doTranslate && text.trim().isNotEmpty) {
-  //     var translator = _ref.read(translationServiceProvider);
-  //     String langCode = await translator.detectLanguage(text);
-  //     return await translator.translateText(text: text, from: langCode, to: systemLang);
-  //   }
-  //   return text;
-  // }
 
   // Core translation methods
   Future<Translation> translateAuto({required String text, required String to}) async {

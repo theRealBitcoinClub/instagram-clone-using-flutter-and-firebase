@@ -40,7 +40,7 @@ class MemoVerifierDecorator {
 /// to be used with TextInputVerifier.
 class InputValidators {
   static MemoVerificationResponse verifyPostLength(String text) {
-    return MemoVerifier(text.trim()).verifyPostLength(mediaUrlLength: 0);
+    return MemoVerifier(text.trim()).verifyPostLength();
   }
 
   static MemoVerificationResponse verifyMinWordCount(String text) {

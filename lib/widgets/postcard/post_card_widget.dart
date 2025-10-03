@@ -17,6 +17,7 @@ import '../../memo/memo_reg_exp.dart';
 import '../../provider/telegram_bot_publisher.dart';
 import '../../provider/translation_service.dart';
 import '../../providers/post_creator_provider.dart';
+import '../../screens/add/add_post_providers.dart';
 import '../add/publish_confirmation_activity.dart';
 import '../unified_image_widget.dart';
 import 'post_card_header.dart';
@@ -473,7 +474,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     }
   }
 
-  void _onSend() async {
+  void _onSend({bool isRepost = false}) async {
     if (!mounted) return;
     final String textToSend = _textEditController.text.trim();
     final verifier = MemoVerifierDecorator(textToSend)
@@ -490,13 +491,22 @@ class _PostCardState extends ConsumerState<PostCard> {
       return;
     }
 
+    if (isRepost) {
+      ref.read(imgurUrlProvider.notifier).state = widget.post.imgurUrl ?? "";
+      ref.read(youtubeVideoIdProvider.notifier).state = widget.post.youtubeId ?? "";
+      ref.read(ipfsCidProvider.notifier).state = widget.post.ipfsCid ?? "";
+      ref.read(odyseeUrlProvider.notifier).state = widget.post.videoUrl ?? "";
+    }
+
     MemoModelPost postCopy = widget.post.copyWith(
-      videoUrl: "",
-      imageUrl: "",
-      ipfsCid: "",
-      imgurUrl: "",
-      youtubeId: "",
+      videoUrl: isRepost ? widget.post.videoUrl : "",
+      imageUrl: isRepost ? widget.post.imageUrl : "",
+      ipfsCid: isRepost ? widget.post.ipfsCid : "",
+      imgurUrl: isRepost ? widget.post.imgurUrl : "",
+      youtubeId: isRepost ? widget.post.youtubeId : "",
       text: textToSend,
+      created: DateTime.now().toUtc().toString(),
+      urls: MemoRegExp.extractUrls(textToSend),
       tagIds: MemoRegExp.extractHashtags(textToSend),
       topicId: MemoRegExp.extractTopics(textToSend).isNotEmpty ? MemoRegExp.extractTopics(textToSend).first : null,
     );

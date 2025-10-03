@@ -11,13 +11,13 @@ final postPopularityProvider = StateNotifierProvider<PostPopularityNotifier, Map
 
 class PostPopularityNotifier extends StateNotifier<Map<String, int>> {
   final Ref ref;
-  final PopularityScoreCache _popularityCache = PopularityScoreCache();
 
   PostPopularityNotifier(this.ref) : super({});
 
   Future<void> fetchPopularityScore(String postId) async {
+    var popularityCache = ref.read(popularityScoreCacheProvider);
     // Check cache first
-    final cachedScore = _popularityCache.get(postId);
+    final cachedScore = popularityCache.getFromPopularityCache(postId);
     if (cachedScore != null) {
       state = {...state, postId: cachedScore};
       return;
@@ -26,7 +26,7 @@ class PostPopularityNotifier extends StateNotifier<Map<String, int>> {
     try {
       final scrapedPost = await MemoPostScraper().fetchAndParsePost(postId, filterOn: false);
       if (scrapedPost != null) {
-        _popularityCache.put(postId, scrapedPost.popularityScore);
+        popularityCache.putInPopularityCache(postId, scrapedPost.popularityScore);
         state = {...state, postId: scrapedPost.popularityScore};
       }
     } catch (error) {
@@ -35,12 +35,8 @@ class PostPopularityNotifier extends StateNotifier<Map<String, int>> {
   }
 
   void updatePopularityScore(String postId, int newScore) {
-    _popularityCache.put(postId, newScore);
+    var popularityCache = ref.read(popularityScoreCacheProvider);
+    popularityCache.putInPopularityCache(postId, newScore);
     state = {...state, postId: newScore};
-  }
-
-  // Add method to clear expired cache periodically
-  void clearExpiredCache() {
-    _popularityCache.clearExpired();
   }
 }

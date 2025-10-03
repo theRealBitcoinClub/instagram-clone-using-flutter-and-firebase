@@ -19,6 +19,7 @@ void _logListError(String message, [dynamic error, StackTrace? stackTrace]) {
 class ProfileContentList extends ConsumerStatefulWidget {
   final List<MemoModelPost> posts;
   final bool isYouTubeList;
+  final bool isTopicList;
   final Map<String, ValueNotifier<YoutubePlayerController?>>? ytControllerNotifiers;
   final String creatorName;
   final bool showMedia;
@@ -27,6 +28,7 @@ class ProfileContentList extends ConsumerStatefulWidget {
     Key? key,
     required this.posts,
     required this.isYouTubeList,
+    required this.isTopicList,
     this.ytControllerNotifiers,
     required this.creatorName,
     required this.showMedia,
@@ -42,17 +44,19 @@ class ProfileContentList extends ConsumerStatefulWidget {
       key: key,
       posts: posts,
       isYouTubeList: true,
+      isTopicList: false,
       ytControllerNotifiers: ytControllerNotifiers,
       creatorName: creatorName,
       showMedia: true,
     );
   }
 
-  factory ProfileContentList.generic({Key? key, required List<MemoModelPost> posts, required String creatorName}) {
+  factory ProfileContentList.generic({Key? key, required List<MemoModelPost> posts, required String creatorName, required isTopicList}) {
     return ProfileContentList._(
       key: key,
       posts: posts,
       isYouTubeList: false,
+      isTopicList: isTopicList,
       ytControllerNotifiers: null,
       creatorName: creatorName,
       showMedia: false,
@@ -69,7 +73,11 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
     final ThemeData theme = Theme.of(context);
 
     if (widget.posts.isEmpty) {
-      final String message = widget.isYouTubeList ? "No video posts by this creator yet." : "No posts in this category yet.";
+      final String message = widget.isYouTubeList
+          ? "No video posts by this creator yet."
+          : widget.isTopicList
+          ? "No topic posts by this creator yet."
+          : "No tagged posts by this creator yet.";
       final IconData icon = widget.isYouTubeList ? Icons.videocam_off_outlined : Icons.list_alt_outlined;
       return EmptySliverContent(message: message, icon: icon, theme: theme);
     }
@@ -80,7 +88,7 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
         if (widget.isYouTubeList && widget.showMedia) {
           return _buildVideoListItem(context, theme, post);
         } else {
-          return _buildTextOnlyListItem(context, theme, post);
+          return _buildTextOnlyListItem(context, theme, post, index);
         }
       }, childCount: widget.posts.length),
     );
@@ -107,73 +115,58 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
           if (!isAvailable) {
             return const SizedBox.shrink();
           }
-
-          return Card(
-            color: ref.read(themeNotifierProvider).value!.isDarkMode ? Colors.black.withAlpha(33) : Colors.white.withAlpha(169),
-            clipBehavior: Clip.antiAlias,
-            margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 16),
-            elevation: 1.5,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                UnifiedVideoPlayer(videoId: videoPost.youtubeId, type: VideoPlayerType.youtube, aspectRatio: 16 / 9, autoPlay: false),
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[
-                        PostExpandableText(post: videoPost),
-                        const SizedBox(height: 8),
-                      ],
-                      Text(
-                        "${widget.creatorName}, ${videoPost.age}",
-                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          return _buildVideoCard(
+            context: context,
+            theme: theme,
+            videoPost: videoPost,
+            player: UnifiedVideoPlayer(videoId: videoPost.youtubeId, type: VideoPlayerType.youtube, aspectRatio: 16 / 9, autoPlay: false),
           );
         },
       );
     }
 
     if (hasVideoUrl) {
-      return Card(
-        color: ref.read(themeNotifierProvider).value!.isDarkMode ? Colors.black.withAlpha(33) : Colors.white.withAlpha(169),
-        clipBehavior: Clip.antiAlias,
-        margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 16),
-        elevation: 1.5,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            UnifiedVideoPlayer(type: VideoPlayerType.generic, aspectRatio: 16 / 9, autoPlay: false, videoUrl: videoPost.videoUrl!),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[PostExpandableText(post: videoPost), const SizedBox(height: 8)],
-                  Text(
-                    "${widget.creatorName}, ${videoPost.age}",
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+      return _buildVideoCard(
+        context: context,
+        theme: theme,
+        videoPost: videoPost,
+        player: UnifiedVideoPlayer(type: VideoPlayerType.generic, aspectRatio: 16 / 9, autoPlay: false, videoUrl: videoPost.videoUrl!),
       );
     }
 
     return const SizedBox.shrink();
   }
 
-  Widget _buildTextOnlyListItem(BuildContext context, ThemeData theme, MemoModelPost post) {
+  Widget _buildVideoCard({required BuildContext context, required ThemeData theme, required MemoModelPost videoPost, required Widget player}) {
+    return Card(
+      color: ref.read(themeNotifierProvider).value!.isDarkMode ? Colors.black.withAlpha(33) : Colors.white.withAlpha(169),
+      clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 16),
+      elevation: 1.5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          player,
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[PostExpandableText(post: videoPost), const SizedBox(height: 8)],
+                Text(
+                  "${widget.creatorName}, ${videoPost.age}",
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextOnlyListItem(BuildContext context, ThemeData theme, MemoModelPost post, int index) {
     final String postTimestamp = post.age;
 
     return Card(
@@ -191,7 +184,7 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
               children: [
                 Expanded(
                   child: Text(
-                    widget.creatorName,
+                    '${index + 1}. ${widget.creatorName}',
                     style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -214,73 +207,4 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
       ),
     );
   }
-
-  // ExpandableTextCustom expandableTextCustom(MemoModelPost post, ThemeData theme, BuildContext context) {
-  //   return ExpandableTextCustom(
-  //     post.text ?? " ",
-  //     expandText: ' show more',
-  //     collapseText: 'show less',
-  //     maxLines: 5,
-  //     linkColor: theme.colorScheme.onTertiaryFixedVariant,
-  //     style: theme.textTheme.bodyMedium?.copyWith(
-  //       fontFamily: "Open Sans",
-  //       fontSize: 15,
-  //       height: 1.4,
-  //       color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
-  //     ),
-  //     hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
-  //     onHashtagTap: (String hashtag) {
-  //       WebViewNavigator.navigateTo(ref, WebViewShow.tag, hashtag);
-  //       showSnackBar("Loading $hashtag charts!", context, type: SnackbarType.success);
-  //       showSnackBar("$hashtag charts are loading...", context, type: SnackbarType.info);
-  //     },
-  //     mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant, fontWeight: FontWeight.w500),
-  //     urlStyle: buildUrlStyle(theme),
-  //     onUrlTap: (String url) async {
-  //       await _onUrlTap(url, context);
-  //     },
-  //     prefixText: post.topicId.isNotEmpty ? "${post.topicId}\n\n" : null,
-  //     prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
-  //     onPrefixTap: () {
-  //       WebViewNavigator.navigateTo(ref, WebViewShow.topic, post.topicId);
-  //       showSnackBar("Loading ${post.topicId} charts!", context, type: SnackbarType.success);
-  //       showSnackBar("${post.topicId} charts are loading...", context, type: SnackbarType.info);
-  //     },
-  //   );
-  // }
-  //
-  // TextStyle? buildUrlStyle(ThemeData theme) {
-  //   return theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant);
-  // }
-  //
-  // Future<void> _onUrlTap(String url, BuildContext context) async {
-  //   _logListError('URL tapped: $url');
-  //   Uri? uri = Uri.tryParse(url);
-  //   if (uri != null) {
-  //     if (!uri.hasScheme && (url.startsWith('www.') || RegExp(r'^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(url))) {
-  //       uri = Uri.parse('http://$url');
-  //     }
-  //     try {
-  //       if (await canLaunchUrl(uri)) {
-  //         ExternalBrowserLauncher launcher = ExternalBrowserLauncher(whitelistedDomains: whitelistPatterns);
-  //         await launcher.launchUrlWithConfirmation(context, url);
-  //       } else {
-  //         _logListError('Could not launch $uri');
-  //         if (context.mounted) {
-  //           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open link: $url')));
-  //         }
-  //       }
-  //     } catch (e) {
-  //       _logListError('Error launching URL $url: $e');
-  //       if (context.mounted) {
-  //         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error opening link: $url')));
-  //       }
-  //     }
-  //   } else {
-  //     _logListError('Invalid URL: $url');
-  //     if (context.mounted) {
-  //       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid link format: $url')));
-  //     }
-  //   }
-  // }
 }

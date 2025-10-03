@@ -9,6 +9,7 @@ import 'package:isar_community/isar.dart';
 import 'package:mahakka/app_themes.dart';
 import 'package:mahakka/firebase_options.dart';
 import 'package:mahakka/provider/isar_provider.dart';
+import 'package:mahakka/provider/mute_creator_provider.dart';
 import 'package:mahakka/route%20handling/auth_page.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -89,8 +90,15 @@ void main() async {
   // runApp(const ProviderScope(child: MyApp()));
   // Initialize SharedPreferences before running the app
   final sharedPreferences = await SharedPreferences.getInstance();
+  // Initialize providers before running the app
+  // final container = ProviderContainer();
 
-  runApp(ProviderScope(overrides: [sharedPreferencesProvider.overrideWithValue(sharedPreferences)], child: const MyApp()));
+  // Create ONE container
+  final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(sharedPreferences)]);
+  await container.read(muteCreatorProvider.notifier).initialize(sharedPreferences);
+
+  runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
+  // runApp(ProviderScope(overrides: [sharedPreferencesProvider.overrideWithValue(sharedPreferences)], child: const MyApp()));
 }
 
 class MyApp extends ConsumerWidget {

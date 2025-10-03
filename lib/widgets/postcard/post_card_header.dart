@@ -4,9 +4,12 @@ import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/widgets/popularity_score_widget.dart';
 
+import '../../provider/mute_creator_provider.dart';
 import '../../provider/post_update_provider.dart';
 import '../../providers/navigation_providers.dart';
+import '../../utils/snackbar.dart';
 import '../cached_avatar.dart';
+import '../muted_creators_dialog.dart';
 
 class PostCardHeader extends ConsumerWidget {
   final MemoModelPost post;
@@ -32,6 +35,24 @@ class PostCardHeader extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12).copyWith(right: 3),
       child: Row(
         children: [
+          GestureDetector(
+            onLongPress: () {
+              ref
+                  .read(muteCreatorProvider.notifier)
+                  .muteCreator(
+                    creator.id,
+                    onMuteSuccess: () {
+                      showSnackBar("MUTED CREATOR: ${creator.name}", type: SnackbarType.success);
+                      showMutedCreatorsDialog(context);
+                    },
+                    onMutedAlready: () {
+                      showSnackBar("CREATOR ALREADY MUTED: ${creator.name}", type: SnackbarType.info);
+                      showMutedCreatorsDialog(context);
+                    },
+                  );
+            },
+            child: Icon(Icons.block_outlined, color: theme.colorScheme.error),
+          ),
           CachedAvatar(
             key: ValueKey('post_avatar_${creator.id}_${post.id}'), // Include refresh state in key
             creatorId: creator.id,

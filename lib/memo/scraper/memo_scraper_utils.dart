@@ -131,7 +131,7 @@ class MemoScraperUtil {
     List<String> extractUrlsGenerously = MemoRegExp.extractUrlsGenerously(post.text!);
     if (post.text!.isNotEmpty) post.text = MemoStringUtils.ensureSpacesAroundMatches(post.text!, extractUrlsGenerously).trim();
     MemoScraperUtil.extractYouTubeUrlAndRemoveJavaScriptFromText(post);
-    post.tagIds = List<String>.from(MemoRegExp.extractHashtags(post.text).take(3));
-    post.urls = List.from(MemoRegExp.wrapWithHttpAlways(extractUrlsGenerously));
+    post.tagIds = List<String>.from(MemoRegExp.extractHashtags(post.text).toSet().toList().take(3));
+    post.urls = List<String>.from(MemoRegExp.wrapWithHttpAlways(extractUrlsGenerously)).toSet().toList();
   }
 }

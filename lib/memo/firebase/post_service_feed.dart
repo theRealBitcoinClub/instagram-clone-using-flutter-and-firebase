@@ -15,6 +15,7 @@ class PostServiceFeed {
     : _firestore = firestore ?? FirebaseFirestore.instance,
       _collectionName = collectionName;
 
+  //TODO LIMIT THE TOTAL POSTS THAT CAN BE RETRIEVED IN FREE MODE TO 100
   // --- PAGINATION METHOD (Primary method for the feed) ---
   Future<List<MemoModelPost>> getPostsPaginated({required int limit, DocumentSnapshot? startAfterDoc}) async {
     Query query = _firestore.collection(_collectionName).orderBy(orderByField, descending: descendingOrder);

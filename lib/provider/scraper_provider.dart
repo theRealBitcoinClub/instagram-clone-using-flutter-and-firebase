@@ -10,12 +10,15 @@ import '../memo/scraper/memo_scraper_topics.dart';
 
 final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraperManager, void>(() => BackgroundScraperManager());
 
-const bool forceScrape = true;
+const bool forceScrape = false;
+const bool saveToFirebase = true;
+const bool deepScrape = false;
+const cacheId = "letsgonownew";
 
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
   final Duration _initialDelay = Duration(seconds: 30);
-  final Duration _scrapeInterval = kDebugMode && !forceScrape ? Duration(hours: 3) : Duration(seconds: 60);
+  final Duration _scrapeInterval = kDebugMode && !forceScrape ? Duration(hours: 3) : Duration(seconds: 180);
   bool _debugMode = kDebugMode;
 
   static const String _lastScrapeKey = 'last_scrape_timestamp';
@@ -103,10 +106,6 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     if (_debugMode) print("BGS: 🚀 Starting scraping process... 🎣");
 
     try {
-      bool saveToFirebase = true;
-      bool deepScrape = false;
-      var cacheId = "letsgonownew";
-
       if (_debugMode) {
         try {
           await MemoScraperTopic(ref, saveToFirebase).startScrapeTopics(cacheId + "topics", deepScrape ? 100 : 0, 0);

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
-import 'package:mahakka/provider/mute_creator_provider.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/utils/snackbar.dart';
-import 'package:mahakka/widgets/muted_creators_dialog.dart';
 import 'package:mahakka/widgets/profile/header/stat_widget.dart';
 
 import '../../../memo/model/memo_model_creator.dart';
@@ -40,24 +38,6 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
-            onLongPress: () {
-              ref
-                  .read(muteCreatorProvider.notifier)
-                  .muteCreator(
-                    creator.id,
-                    onMuteSuccess: () {
-                      showSnackBar("MUTED CREATOR: ${creator.name}", type: SnackbarType.success);
-                      showMutedCreatorsDialog(context);
-                    },
-                    onMutedAlready: () {
-                      showSnackBar("CREATOR ALREADY MUTED: ${creator.name}", type: SnackbarType.info);
-                      showMutedCreatorsDialog(context);
-                    },
-                  );
-            },
-            child: Icon(Icons.block_outlined, color: theme.colorScheme.error),
-          ),
           // Avatar
           GestureDetector(
             onTap: showImageDetail,

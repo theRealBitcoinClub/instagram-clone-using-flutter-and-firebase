@@ -135,6 +135,7 @@ class MutedCreatorsDialog extends ConsumerWidget {
                                   child: ListTile(
                                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                     leading: CachedAvatar(
+                                      showMuteBadge: false,
                                       key: ValueKey('muted_creator_avatar_${creator.id}'),
                                       creatorId: creator.id,
                                       radius: 24,

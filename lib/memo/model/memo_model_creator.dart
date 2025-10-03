@@ -244,8 +244,6 @@ class MemoModelCreator {
     } else {
       await refreshBalanceMemo(ref);
     }
-
-    repository.saveToCache(this, saveToFirebase: false);
   }
 
   //TODO why is debouncer not working as expected
@@ -255,12 +253,14 @@ class MemoModelCreator {
     Balance balances = await base.getBalances(bchAddressCashtokenAware);
     balanceBch = balances.bch;
     balanceToken = balances.token;
+    ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: false);
   }
 
   Future<void> refreshBalanceMemo(Ref ref) async {
     final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
     // DebouncedBalanceService debouncedBalanceService = DebouncedBalanceService(balanceService: base);
     balanceMemo = await base.getBalances(id).then((value) => value.bch);
+    ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: false);
   }
 
   MemoModelCreator copyWith({

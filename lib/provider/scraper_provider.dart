@@ -10,17 +10,20 @@ import '../memo/scraper/memo_scraper_topics.dart';
 
 final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraperManager, void>(() => BackgroundScraperManager());
 
+const bool forceScrape = true;
+
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
   final Duration _initialDelay = Duration(seconds: 30);
-  final Duration _scrapeInterval = kDebugMode ? Duration(hours: 3) : Duration(seconds: 60);
+  final Duration _scrapeInterval = kDebugMode && !forceScrape ? Duration(hours: 3) : Duration(seconds: 60);
+  bool _debugMode = kDebugMode;
 
   static const String _lastScrapeKey = 'last_scrape_timestamp';
   late SharedPreferences _prefs;
 
   @override
   Future<void> build() async {
-    print("BackgroundScraper: Initializing and starting timer.");
+    if (_debugMode) print("BGS: 🚀 Initializing and starting timer! 🎯");
 
     // Initialize SharedPreferences
     _prefs = await SharedPreferences.getInstance();
@@ -33,7 +36,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
       Timer(_initialDelay, () => _runScrapingProcess());
     } else {
-      print("BackgroundScraper: Skipping initial scrape - recently completed.");
+      if (_debugMode) print("BGS: ⏭️ Skipping initial scrape - recently completed! 📅");
 
       // Still set up the timer for future runs
       _scraperTimer = Timer.periodic(_scrapeInterval, (timer) {
@@ -43,7 +46,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
     ref.onDispose(() {
       _scraperTimer?.cancel();
-      print("BackgroundScraper: Timer disposed.");
+      if (_debugMode) print("BGS: 🛑 Timer disposed! 👋");
     });
   }
 
@@ -68,7 +71,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
   Future<void> _updateLastScrapeTime() async {
     final now = DateTime.now().millisecondsSinceEpoch;
     await _prefs.setInt(_lastScrapeKey, now);
-    print("BackgroundScraper: Updated last scrape time to ${DateTime.now()}");
+    if (_debugMode) print("BGS: 📝 Updated last scrape time to ${DateTime.now()} 🕒");
   }
 
   /// Gets the last scrape time as DateTime, returns null if never scraped
@@ -92,50 +95,50 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
   Future<void> _runScrapingProcess() async {
     // Check if we should run scraping before starting
     if (!_shouldRunScraping()) {
-      print("BackgroundScraper: Skipping scrape - recently completed.");
+      if (_debugMode) print("BGS: ⏭️ Skipping scrape - recently completed! 📅");
       return;
     }
 
     state = const AsyncValue.loading();
-    print("BackgroundScraper: Starting scraping process...");
+    if (_debugMode) print("BGS: 🚀 Starting scraping process... 🎣");
 
     try {
       bool saveToFirebase = true;
       bool deepScrape = false;
       var cacheId = "letsgonownew";
 
-      if (kDebugMode) {
+      if (_debugMode) {
         try {
           await MemoScraperTopic(ref, saveToFirebase).startScrapeTopics(cacheId + "topics", deepScrape ? 100 : 0, 0);
         } catch (e) {
-          print("BackgroundScraper: An error occurred during TOPIC scraping: $e");
+          if (_debugMode) print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
         }
         try {
           await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], deepScrape ? 200 : 25, 0);
           await MemoScraperTag(cacheId + "most", ref, saveToFirebase).startScrapeTags(["/most-posts"], deepScrape ? 200 : 0, 0);
         } catch (e) {
-          print("BackgroundScraper: An error occurred during TAG scraping: $e");
+          if (_debugMode) print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
         }
       } else {
         try {
           await MemoScraperTopic(ref, false).startScrapeTopics(cacheId + "topics", 0, 0);
         } catch (e) {
-          print("BackgroundScraper: An error occurred during TOPIC scraping: $e");
+          if (_debugMode) print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
         }
         try {
           await MemoScraperTag(cacheId + "recent", ref, false).startScrapeTags(["/recent"], 25, 0);
         } catch (e) {
-          print("BackgroundScraper: An error occurred during TAG scraping: $e");
+          if (_debugMode) print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
         }
       }
 
       // Update last scrape time only on successful completion
       await _updateLastScrapeTime();
       state = const AsyncValue.data(null);
-      print("BackgroundScraper: Scraping process completed.");
+      if (_debugMode) print("BGS: ✅ Scraping process completed! 🎉");
     } catch (e, s) {
       state = AsyncValue.error(e, s);
-      print("BackgroundScraper: An error occurred during scraping: $e");
+      if (_debugMode) print("BGS: ❌ An error occurred during scraping: $e 🚨");
     }
   }
 }

@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element_parameter
+
 import 'package:cloud_firestore/cloud_firestore.dart'; // For Timestamp and DocumentSnapshot
 import 'package:json_annotation/json_annotation.dart';
 import 'package:mahakka/config_ipfs.dart';
@@ -182,7 +184,7 @@ class MemoModelPost {
     try {
       final localDateTime = createdDateTime!.toLocal();
       String date = "${localDateTime.year}-${localDateTime.month.toString().padLeft(2, '0')}-${localDateTime.day.toString().padLeft(2, '0')}";
-      String time = "${localDateTime.hour.toString().padLeft(2, '0')}:${localDateTime.minute.toString().padLeft(2, '0')}";
+      // String time = "${localDateTime.hour.toString().padLeft(2, '0')}:${localDateTime.minute.toString().padLeft(2, '0')}";
       return date;
     } catch (e) {
       print("Error parsing DateTime: $createdDateTime, Error: $e");

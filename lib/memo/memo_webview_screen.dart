@@ -10,7 +10,6 @@ import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/tab_item_data.dart';
 import 'package:mahakka/utils/snackbar.dart';
 
-import '../provider/user_provider.dart';
 import '../providers/webview_providers.dart';
 import 'css_injector.dart';
 
@@ -157,14 +156,14 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
     _webViewController.loadUrl(urlRequest: URLRequest(url: WebUri.uri(Uri.parse(url))));
   }
 
-  void _loadProfile() {
-    ref.read(targetUrlProvider.notifier).state = null;
-    ref.read(tagIdProvider.notifier).state = null;
-    ref.read(topicIdProvider.notifier).state = null;
-
-    final user = ref.read(userProvider)!;
-    _loadUrl('$_baseUrl/profile/${user.id}');
-  }
+  // void _loadProfile() {
+  //   ref.read(targetUrlProvider.notifier).state = null;
+  //   ref.read(tagIdProvider.notifier).state = null;
+  //   ref.read(topicIdProvider.notifier).state = null;
+  //
+  //   final user = ref.read(userProvider)!;
+  //   _loadUrl('$_baseUrl/profile/${user.id}');
+  // }
 
   void _loadFeed() {
     ref.read(targetUrlProvider.notifier).state = null;
@@ -174,33 +173,33 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
     _loadUrl('$_baseUrl/login');
   }
 
-  void _loadTags() {
-    final tagId = ref.read(tagIdProvider);
-
-    ref.read(targetUrlProvider.notifier).state = null;
-    ref.read(tagIdProvider.notifier).state = null;
-    ref.read(topicIdProvider.notifier).state = null;
-
-    if (tagId != null && tagId.isNotEmpty) {
-      _loadUrl('$_baseUrl/t/$tagId/?p=new');
-    } else {
-      _loadUrl('$_baseUrl/tags/recent');
-    }
-  }
-
-  void _loadTopics() {
-    final topicId = ref.read(topicIdProvider);
-
-    ref.read(targetUrlProvider.notifier).state = null;
-    ref.read(tagIdProvider.notifier).state = null;
-    ref.read(topicIdProvider.notifier).state = null;
-
-    if (topicId != null && topicId.isNotEmpty) {
-      _loadUrl('$_baseUrl/topic/$topicId');
-    } else {
-      _loadUrl('$_baseUrl/topics');
-    }
-  }
+  // void _loadTags() {
+  //   final tagId = ref.read(tagIdProvider);
+  //
+  //   ref.read(targetUrlProvider.notifier).state = null;
+  //   ref.read(tagIdProvider.notifier).state = null;
+  //   ref.read(topicIdProvider.notifier).state = null;
+  //
+  //   if (tagId != null && tagId.isNotEmpty) {
+  //     _loadUrl('$_baseUrl/t/$tagId/?p=new');
+  //   } else {
+  //     _loadUrl('$_baseUrl/tags/recent');
+  //   }
+  // }
+  //
+  // void _loadTopics() {
+  //   final topicId = ref.read(topicIdProvider);
+  //
+  //   ref.read(targetUrlProvider.notifier).state = null;
+  //   ref.read(tagIdProvider.notifier).state = null;
+  //   ref.read(topicIdProvider.notifier).state = null;
+  //
+  //   if (topicId != null && topicId.isNotEmpty) {
+  //     _loadUrl('$_baseUrl/topic/$topicId');
+  //   } else {
+  //     _loadUrl('$_baseUrl/topics');
+  //   }
+  // }
 
   Future<void> _injectCSS() async {
     final result = await CssInjector.injectCSS(webViewController: _webViewController, context: context, isDarkTheme: _isDarkTheme);

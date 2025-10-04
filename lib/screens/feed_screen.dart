@@ -115,23 +115,22 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     print('FSCR:   - totalPostCount: ${feedState.totalPostCountInFirebase}');
     print('FSCR:   - isRefreshing: ${feedState.isRefreshingByUserRequest}');
     print('FSCR:   - errorMessage: ${feedState.errorMessage}');
-    print('FSCR:   - isMaxFreeLimitReached: ${feedState.isMaxFreeLimitReached}');
+    // print('FSCR:   - isMaxFreeLimitReached: ${feedState.isMaxFreeLimitReached}');
 
     return Scaffold(
       backgroundColor: Colors.black.withAlpha(21),
       appBar: AppBarBurnMahakkaTheme(),
       body: Stack(
         children: [
-          // Loading indicator
-          if (feedState.isLoadingInitialAtTop) Center(child: Image.asset("assets/icon_round_200.png", height: 120)),
-
-          // Error banner at top of stack
-          if (feedState.errorMessage != null) _buildErrorBanner(feedState.errorMessage!, theme),
-
           // Main content
           if (!feedState.isLoadingInitialAtTop || feedState.posts.isNotEmpty)
             Column(children: [Expanded(child: _buildFeedBody(feedState, theme))]),
 
+          // Error banner at top of stack
+          if (feedState.errorMessage != null) _buildErrorBanner(feedState.errorMessage!, theme),
+
+          // Loading indicator
+          if (feedState.isLoadingInitialAtTop) LinearProgressIndicator(),
           // Intro overlay - should be at the top of the Stack to overlay everything
           if (shouldShowIntro) IntroOverlay(introType: _introType, onComplete: () {}),
         ],
@@ -212,9 +211,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     print('FSCR:📜 ListView itemCount breakdown:');
     print('FSCR:   - base posts: ${feedState.posts.length}');
     print('FSCR:   - loadingMore indicator: ${feedState.isLoadingMorePostsAtBottom ? 1 : 0}');
-    print('FSCR:   - free plan limit: ${feedState.isMaxFreeLimitReached ? 1 : 0}');
+    print('FSCR:   - free plan limit: ${feedState.isMaxFreeLimit ? 1 : 0}');
     print(
-      'FSCR:   - end message: ${(!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimitReached) ? 1 : 0}',
+      'FSCR:   - end message: ${(!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimit) ? 1 : 0}',
     );
 
     return RefreshIndicator(
@@ -240,38 +239,26 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             }
           },
           child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
             controller: _scrollController,
-            itemCount:
-                feedState.posts.length +
-                (feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimitReached ? 1 : 0) +
-                (feedState.isMaxFreeLimitReached ? 1 : 0) +
-                (!feedState.hasMorePosts &&
-                        feedState.posts.isNotEmpty &&
-                        !feedState.isLoadingInitialAtTop &&
-                        !feedState.isLoadingMorePostsAtBottom &&
-                        !feedState.isMaxFreeLimitReached
-                    ? 1
-                    : 0),
+            itemCount: _getDisplayedItemCount(feedState),
             itemBuilder: (context, index) {
               print('FSCR:📜 ListView building item at index: $index');
 
-              if (index < feedState.posts.length) {
-                final post = feedState.posts[index];
+              // Apply soft limit to displayed posts
+              final displayedPosts = _getDisplayedPosts(feedState);
+
+              if (index < displayedPosts.length) {
+                final post = displayedPosts[index];
                 print('FSCR:📜 Building PostCard for post ${post.id} at index $index');
                 return _wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme);
-              } else if (feedState.isMaxFreeLimitReached && index == feedState.posts.length) {
+              } else if (feedState.isMaxFreeLimit && index >= displayedPosts.length) {
                 print('FSCR:💰 Building free plan limit widget at index $index');
                 return _buildFreePlanLimitWidget(theme);
-              } else if (feedState.isLoadingMorePostsAtBottom &&
-                  !feedState.isMaxFreeLimitReached &&
-                  index == feedState.posts.length + (feedState.isMaxFreeLimitReached ? 1 : 0)) {
+              } else if (feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimit && index >= displayedPosts.length) {
                 print('FSCR:⏳ Building loading indicator at index $index');
                 return _buildLoadingIndicator();
-              } else if (!feedState.hasMorePosts &&
-                  index ==
-                      feedState.posts.length +
-                          (feedState.isMaxFreeLimitReached ? 1 : 0) +
-                          (feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimitReached ? 1 : 0)) {
+              } else if (!feedState.hasMorePosts && index == displayedPosts.length) {
                 print('FSCR:🏁 Building end of feed message at index $index');
                 return _buildEndOfFeedWidget(theme);
               }
@@ -283,6 +270,36 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       ),
     );
   }
+
+  int _getDisplayedItemCount(FeedState feedState) {
+    final displayedPostsCount = _getDisplayedPosts(feedState).length;
+    final loadingIndicatorCount = (feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimit) ? 1 : 0;
+    final freeLimitCount = feedState.isMaxFreeLimit ? 1 : 0;
+    final endOfFeedCount =
+        (!feedState.hasMorePosts &&
+            displayedPostsCount > 0 &&
+            !feedState.isLoadingInitialAtTop &&
+            !feedState.isLoadingMorePostsAtBottom &&
+            !feedState.isMaxFreeLimit)
+        ? 1
+        : 0;
+
+    return displayedPostsCount + loadingIndicatorCount + freeLimitCount + endOfFeedCount;
+  }
+
+  List<MemoModelPost> _getDisplayedPosts(FeedState feedState) {
+    // Apply soft limit - only show up to maxLoadItems
+    if (feedState.posts.length <= FeedPostsNotifier.maxLoadItems) {
+      return feedState.posts;
+    } else {
+      // If we have more posts than the limit, only show the first maxLoadItems
+      return feedState.posts.sublist(0, FeedPostsNotifier.maxLoadItems);
+    }
+  }
+
+  // _isMaxFreeLimitReached(int index) {
+  //   return index >= FeedPostsNotifier.maxLoadItems;
+  // }
 
   Widget _buildFreePlanLimitWidget(ThemeData theme) {
     var headerColor = theme.colorScheme.secondary;
@@ -433,9 +450,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   void _handleScrollIntent(Intent intent, BuildContext context) {
-    print('FSCR:⌨️ Keyboard scroll intent: $intent');
+    // print('FSCR:⌨️ Keyboard scroll intent: $intent');
     if (!_scrollController.hasClients) {
-      print('FSCR:❌ Scroll controller has no clients');
+      // print('FSCR:❌ Scroll controller has no clients');
       return;
     }
 
@@ -444,10 +461,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     if (intent is ScrollUpIntent) {
       scrollAmount = -estimatedItemHeight;
-      print('FSCR:⬆️ Scrolling up by $scrollAmount');
+      // print('FSCR:⬆️ Scrolling up by $scrollAmount');
     } else if (intent is ScrollDownIntent) {
       scrollAmount = estimatedItemHeight;
-      print('FSCR:⬇️ Scrolling down by $scrollAmount');
+      // print('FSCR:⬇️ Scrolling down by $scrollAmount');
     }
 
     if (scrollAmount != 0) {
@@ -455,7 +472,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       final targetOffset = currentOffset + scrollAmount;
       final clampedOffset = targetOffset.clamp(_scrollController.position.minScrollExtent, _scrollController.position.maxScrollExtent);
 
-      print('FSCR:📜 Animating scroll from $currentOffset to $clampedOffset');
+      // print('FSCR:📜 Animating scroll from $currentOffset to $clampedOffset');
       _scrollController.animateTo(clampedOffset, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
     }
   }

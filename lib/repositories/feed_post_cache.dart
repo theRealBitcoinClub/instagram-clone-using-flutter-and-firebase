@@ -26,8 +26,8 @@ class FeedPostCache {
     return isar;
   }
 
-  static const int _maxDiskCacheSizeFeed = 50;
-  static const int _diskCleanupThresholdFeed = 60;
+  static const int _maxDiskCacheSizeFeed = 1000;
+  static const int _diskCleanupThresholdFeed = 1200;
 
   // Get muted creators list
   List<String> get _mutedCreators {
@@ -116,6 +116,8 @@ class FeedPostCache {
 
     // If not in memory, try disk cache
     final isar = await _feedIsar;
+    var count = await isar.memoModelPostDbs.count();
+    print('📄 FPC: total count isar: $count');
     try {
       // Calculate the offset for pagination
       final offset = (pageNumber - 1) * FeedPostsNotifier.pageSize;
@@ -131,11 +133,16 @@ class FeedPostCache {
             .not()
             .anyOf(mutedCreators, (q, String creatorId) => q.creatorIdEqualTo(creatorId))
             .sortByCreatedDateTimeDesc()
-            .offset(offset)
-            .limit(FeedPostsNotifier.pageSize)
+            // .offset(offset)
+            // .limit(FeedPostsNotifier.pageSize)
             .findAll();
       } else {
-        postsDb = await isar.memoModelPostDbs.where().sortByCreatedDateTimeDesc().offset(offset).limit(FeedPostsNotifier.pageSize).findAll();
+        postsDb = await isar.memoModelPostDbs
+            .where()
+            .sortByCreatedDateTimeDesc()
+            // .offset(offset)
+            // .limit(FeedPostsNotifier.pageSize)
+            .findAll();
       }
 
       // final posts = postsDb.map((db) => db.toAppModel()).toList();

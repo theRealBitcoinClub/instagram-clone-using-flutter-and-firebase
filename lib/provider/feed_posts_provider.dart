@@ -16,7 +16,26 @@ class FeedState {
   final int totalPostCountInFirebase;
   final bool isRefreshingByUserRequest;
   final bool hasReachedCacheEnd;
-  final bool isMaxFreeLimitReached;
+  // final bool isMaxFreeLimitReached;
+
+  // List<MemoModelPost> get uniquePosts {
+  //   final seenIds = <String>{};
+  //   return posts.where((post) {
+  //     if (seenIds.contains(post.id)) return false; // Remove duplicate
+  //     seenIds.add(post.id!);
+  //     return true;
+  //   }).toList();
+  // }
+
+  List<MemoModelPost> _removeDuplicates(List<MemoModelPost> posts) {
+    final seenIds = <String>{};
+    return posts.where((post) {
+      if (post.id == null) return true;
+      if (seenIds.contains(post.id)) return false;
+      seenIds.add(post.id!);
+      return true;
+    }).toList();
+  }
 
   FeedState({
     this.posts = const [],
@@ -26,7 +45,7 @@ class FeedState {
     this.totalPostCountInFirebase = 0,
     this.isRefreshingByUserRequest = false,
     this.hasReachedCacheEnd = false,
-    this.isMaxFreeLimitReached = false,
+    // this.isMaxFreeLimitReached = false,
   });
 
   FeedState copyWith({
@@ -38,20 +57,26 @@ class FeedState {
     int? totalPostCount,
     bool? isRefreshing,
     bool? hasReachedCacheEnd,
-    bool? isMaxFreeLimitReached,
+    // bool? isMaxFreeLimitReached,
   }) {
+    final uniquePosts = posts != null ? _removeDuplicates(posts) : null;
     print('FPPR:🔄 FeedState.copyWith called - clearErrorMessage: $clearErrorMessage');
     print('FPPR:   Current posts: ${this.posts.length}, new posts: ${posts?.length}');
     return FeedState(
-      posts: posts ?? this.posts,
+      posts: uniquePosts ?? this.posts,
       isLoadingInitialAtTop: isLoadingInitial ?? this.isLoadingInitialAtTop,
       isLoadingMorePostsAtBottom: isLoadingMore ?? this.isLoadingMorePostsAtBottom,
       errorMessage: clearErrorMessage ? null : errorMessage ?? this.errorMessage,
       isRefreshingByUserRequest: isRefreshing ?? this.isRefreshingByUserRequest,
       totalPostCountInFirebase: totalPostCount ?? this.totalPostCountInFirebase,
       hasReachedCacheEnd: hasReachedCacheEnd ?? this.hasReachedCacheEnd,
-      isMaxFreeLimitReached: isMaxFreeLimitReached ?? this.isMaxFreeLimitReached,
+      // isMaxFreeLimitReached: isMaxFreeLimitReached ?? this.isMaxFreeLimitReached,
     );
+  }
+
+  bool get isMaxFreeLimit {
+    print("is  max free limit ${posts.length} ${FeedPostsNotifier.maxLoadItems}");
+    return posts.length >= FeedPostsNotifier.maxLoadItems;
   }
 
   bool get hasMorePosts {
@@ -65,8 +90,8 @@ class FeedState {
 class FeedPostsNotifier extends StateNotifier<FeedState> {
   final PostServiceFeed _postService;
   final FeedPostCache _cacheRepository;
-  static const int maxLoadItems = 10;
-  static const int pageSize = 10;
+  static const int maxLoadItems = 30;
+  static const int pageSize = maxLoadItems * 2;
   final Ref _ref; // Add Ref here
 
   static const String _lastTotalCountKey = 'last_total_post_count';
@@ -147,7 +172,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
   }
 
   FeedState resetTemporaryStates() {
-    state = state.copyWith(clearErrorMessage: true, isRefreshing: false, isMaxFreeLimitReached: false, hasReachedCacheEnd: false);
+    state = state.copyWith(clearErrorMessage: true, isRefreshing: false);
     return state;
   }
 
@@ -155,7 +180,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
     final bool reached = state.posts.length >= maxLoadItems;
     if (reached) {
       print('FPPR:💰 Free plan limit reached: ${state.posts.length}/$maxLoadItems');
-      state = state.copyWith(isMaxFreeLimitReached: true);
+      // state = state.copyWith(isMaxFreeLimitReached: true);
     }
     return reached;
   }
@@ -170,7 +195,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
     } catch (e, s) {
       _handleError("refreshFeed", "Error during refresh", e, s, setState: true);
     } finally {
-      state = state.copyWith(isRefreshing: false);
+      state = state.copyWith(isRefreshing: false, isLoadingInitial: false);
     }
   }
 
@@ -200,7 +225,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 
     state = state.copyWith(totalPostCount: currentTotalCount);
 
-    if (currentTotalCount > previousTotalCount) {
+    if (state.hasReachedCacheEnd || currentTotalCount > previousTotalCount) {
       // New posts available - fetch and cache them
       await _fetchAndCacheNewPosts(previousTotalCount, currentTotalCount);
     } else {
@@ -238,6 +263,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
       // If we got less than a full page from cache, we've reached cache end
       if (cachedPosts.length < pageSize && state.hasMorePosts) {
         print('FPPR:🏁 Reached end of cache, next load will use network');
+        // if (state.posts.length < pageSize) fetchInitialPosts();
       }
     } else {
       // No posts in cache
@@ -284,9 +310,13 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 
     final int newPostsCount = currentCount - previousCount;
     print('FPPR:📥 Fetching $newPostsCount new posts from Firebase');
+    print('FPPR:📥 Fetching as has reached end of cache ${state.hasReachedCacheEnd}');
 
     try {
-      final newPosts = await _fetchPostsFromNetworkToFeedTheCache(limit: previousCount == 0 ? pageSize : newPostsCount, postId: null);
+      final newPosts = await _fetchPostsFromNetworkToFeedTheCache(
+        limit: (previousCount == 0 || state.hasReachedCacheEnd) ? pageSize : newPostsCount,
+        postId: null,
+      );
       print('FPPR:🌐 New posts fetched: ${newPosts?.length ?? 0}');
       await _loadFromCache();
     } catch (e, s) {

@@ -27,8 +27,6 @@ class FeedScreen extends ConsumerStatefulWidget {
 class _FeedScreenState extends ConsumerState<FeedScreen> {
   final ScrollController _scrollController = ScrollController();
   final FocusNode _listViewFocusNode = FocusNode();
-  bool _isRenderingContent = true;
-  Object? _loadingError;
   final _introType = IntroType.mainApp;
 
   @override
@@ -42,12 +40,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       print('FSCR:🎯 Requesting focus for list view');
       FocusScope.of(context).requestFocus(_listViewFocusNode);
     });
-
-    // Schedule rendering completion after the first frame
-    context.afterLayout(refreshUI: true, () {
-      print('FSCR:🎨 Initial rendering completed, setting _isRenderingContent to false');
-      _isRenderingContent = false;
-    });
   }
 
   void _scrollListener() {
@@ -56,27 +48,25 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final maxScrollExtent = scrollPosition.maxScrollExtent;
     final threshold = maxScrollExtent - 300;
 
-    print('FSCR:📜 Scroll listener - pixels: $pixels, maxScrollExtent: $maxScrollExtent, threshold: $threshold');
+    // print('FSCR:📜 Scroll listener - pixels: $pixels, maxScrollExtent: $maxScrollExtent, threshold: $threshold');
 
     if (pixels >= threshold && !ref.read(feedPostsProvider).isLoadingMorePostsAtBottom && ref.read(feedPostsProvider).hasMorePosts) {
-      print('FSCR:📥 Triggering fetchMorePosts - reached scroll threshold');
+      // print('FSCR:📥 Triggering fetchMorePosts - reached scroll threshold');
       ref.read(feedPostsProvider.notifier).fetchMorePosts();
     } else {
-      print('FSCR:⏸️ Scroll threshold not met or conditions not satisfied');
-      print('FSCR:   - isLoadingMore: ${ref.read(feedPostsProvider).isLoadingMorePostsAtBottom}');
-      print('FSCR:   - hasMorePosts: ${ref.read(feedPostsProvider).hasMorePosts}');
-      print('FSCR:   - pixels >= threshold: ${pixels >= threshold}');
+      // print('FSCR:⏸️ Scroll threshold not met or conditions not satisfied');
+      // print('FSCR:   - isLoadingMore: ${ref.read(feedPostsProvider).isLoadingMorePostsAtBottom}');
+      // print('FSCR:   - hasMorePosts: ${ref.read(feedPostsProvider).hasMorePosts}');
+      // print('FSCR:   - pixels >= threshold: ${pixels >= threshold}');
     }
   }
 
-  // Add this method to handle scrolling down for a specific post
   void _scrollDownForPost(MemoModelPost post) {
     if (!_scrollController.hasClients) {
       print('FSCR:📜 _scrollDownForPost - scroll controller has no clients');
       return;
     }
 
-    // Find the position of the post in the list
     final feedState = ref.read(feedPostsProvider);
     final postIndex = feedState.posts.indexWhere((p) => p.id == post.id);
     print('FSCR:📜 _scrollDownForPost - postId: ${post.id}, found at index: $postIndex');
@@ -85,7 +75,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       final targetPosition = _scrollController.offset + 50.0;
       print('FSCR:📜 _scrollDownForPost - current offset: ${_scrollController.offset}, target: $targetPosition');
 
-      // Ensure we don't scroll beyond the maximum scroll extent
       final maxScrollExtent = _scrollController.position.maxScrollExtent;
       final clampedPosition = targetPosition.clamp(_scrollController.position.minScrollExtent, maxScrollExtent);
       print('FSCR:📜 _scrollDownForPost - clamped position: $clampedPosition');
@@ -111,6 +100,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     print('FSCR:🏗️ FeedScreen build started');
     final feedState = ref.watch(feedPostsProvider);
     final shouldShowIntro = ref.read(introStateNotifierProvider.notifier).shouldShow(_introType);
+    final theme = Theme.of(context);
 
     print('FSCR:📊 FeedState in build:');
     print('FSCR:   - posts: ${feedState.posts.length}');
@@ -119,52 +109,55 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     print('FSCR:   - hasMorePosts: ${feedState.hasMorePosts}');
     print('FSCR:   - totalPostCount: ${feedState.totalPostCountInFirebase}');
     print('FSCR:   - isRefreshing: ${feedState.isRefreshingByUserRequest}');
+    print('FSCR:   - errorMessage: ${feedState.errorMessage}');
+    print('FSCR:   - isMaxFreeLimitReached: ${feedState.isMaxFreeLimitReached}');
 
     return Scaffold(
       backgroundColor: Colors.black.withAlpha(21),
       appBar: AppBarBurnMahakkaTheme(),
       body: Stack(
         children: [
-          if (_isRenderingContent || feedState.isLoadingInitialAtTop) Center(child: Image.asset("assets/icon_round_200.png", height: 120)),
-          if (_loadingError != null)
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text('Failed to load feed', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  Text('Error: $_loadingError', style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () async {
-                      print('FSCR:🔄 Error then Retry button pressed');
-                      setState(() {
-                        _isRenderingContent = true;
-                        _loadingError = null;
-                      });
-                      await ref.read(feedPostsProvider.notifier).fetchInitialPosts();
+          // Loading indicator
+          if (feedState.isLoadingInitialAtTop) Center(child: Image.asset("assets/icon_round_200.png", height: 120)),
 
-                      context.afterLayout(refreshUI: true, () {
-                        print('FSCR:_isRenderingContent');
-                        _isRenderingContent = false;
-                      });
-                    },
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
+          // Error banner at top of stack
+          if (feedState.errorMessage != null) _buildErrorBanner(feedState.errorMessage!, theme),
 
-          // Main content - initially transparent during rendering
-          Opacity(
-            opacity: (_isRenderingContent || feedState.isLoadingInitialAtTop) ? 0.0 : 1.0,
-            child: Column(children: [Expanded(child: _buildFeedBody(feedState))]),
-          ),
+          // Main content
+          if (!feedState.isLoadingInitialAtTop || feedState.posts.isNotEmpty)
+            Column(children: [Expanded(child: _buildFeedBody(feedState, theme))]),
+
           // Intro overlay - should be at the top of the Stack to overlay everything
           if (shouldShowIntro) IntroOverlay(introType: _introType, onComplete: () {}),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorBanner(String errorMessage, ThemeData theme) {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        color: theme.colorScheme.errorContainer,
+        child: Row(
+          children: [
+            Icon(Icons.error_outline, color: theme.colorScheme.onErrorContainer),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(errorMessage, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onErrorContainer)),
+            ),
+            IconButton(
+              icon: Icon(Icons.close, color: theme.colorScheme.onErrorContainer),
+              onPressed: () {
+                ref.read(feedPostsProvider.notifier).fetchInitialPosts();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -202,9 +195,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     return hasValidUrl;
   }
 
-  Widget _buildFeedBody(FeedState feedState) {
+  Widget _buildFeedBody(FeedState feedState, ThemeData theme) {
     print('FSCR:🏗️ _buildFeedBody called');
-    ThemeData theme = Theme.of(context);
 
     if (feedState.posts.isEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom) {
       print('FSCR:📭 No posts available, showing empty state');
@@ -215,11 +207,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     print('FSCR:📜 ListView itemCount breakdown:');
     print('FSCR:   - base posts: ${feedState.posts.length}');
     print('FSCR:   - loadingMore indicator: ${feedState.isLoadingMorePostsAtBottom ? 1 : 0}');
+    print('FSCR:   - free plan limit: ${feedState.isMaxFreeLimitReached ? 1 : 0}');
     print(
-      'FSCR:   - end message: ${(!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom) ? 1 : 0}',
-    );
-    print(
-      'FSCR:   - total itemCount: ${feedState.posts.length + (feedState.isLoadingMorePostsAtBottom ? 1 : 0) + (!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom ? 1 : 0)}',
+      'FSCR:   - end message: ${(!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimitReached) ? 1 : 0}',
     );
 
     return RefreshIndicator(
@@ -249,10 +239,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             itemCount:
                 feedState.posts.length +
                 (feedState.isLoadingMorePostsAtBottom ? 1 : 0) +
+                (feedState.isMaxFreeLimitReached ? 1 : 0) +
                 (!feedState.hasMorePosts &&
                         feedState.posts.isNotEmpty &&
                         !feedState.isLoadingInitialAtTop &&
-                        !feedState.isLoadingMorePostsAtBottom
+                        !feedState.isLoadingMorePostsAtBottom &&
+                        !feedState.isMaxFreeLimitReached
                     ? 1
                     : 0),
             itemBuilder: (context, index) {
@@ -261,29 +253,18 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               if (index < feedState.posts.length) {
                 final post = feedState.posts[index];
                 print('FSCR:📜 Building PostCard for post ${post.id} at index $index');
-                return wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme);
-              } else if (feedState.isLoadingMorePostsAtBottom && index == feedState.posts.length) {
+                return _wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme);
+              } else if (feedState.isMaxFreeLimitReached && index == feedState.posts.length) {
+                print('FSCR:💰 Building free plan limit widget at index $index');
+                return _buildFreePlanLimitWidget(theme);
+              } else if (feedState.isLoadingMorePostsAtBottom && index == feedState.posts.length + (feedState.isMaxFreeLimitReached ? 1 : 0)) {
                 print('FSCR:⏳ Building loading indicator at index $index');
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20.0),
-                  child: Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
-                );
+                return _buildLoadingIndicator();
               } else if (!feedState.hasMorePosts &&
-                  index == feedState.posts.length &&
-                  feedState.posts.isNotEmpty &&
-                  !feedState.isLoadingInitialAtTop &&
-                  !feedState.isLoadingMorePostsAtBottom) {
+                  index ==
+                      feedState.posts.length + (feedState.isMaxFreeLimitReached ? 1 : 0) + (feedState.isLoadingMorePostsAtBottom ? 1 : 0)) {
                 print('FSCR:🏁 Building end of feed message at index $index');
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
-                  child: Center(
-                    child: Text(
-                      "You've reached the end of the feed!",
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                    ),
-                  ),
-                );
+                return _buildEndOfFeedWidget(theme);
               }
               print('FSCR:❌ Unexpected index in ListView builder: $index');
               return const SizedBox.shrink();
@@ -294,7 +275,61 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
-  Widget wrapInDoubleTapDetectorImagesOnly(MemoModelPost post, BuildContext context, FeedState feedState, ThemeData theme) {
+  Widget _buildFreePlanLimitWidget(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withOpacity(0.1),
+        border: Border.all(color: theme.colorScheme.primary),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.workspace_premium, color: theme.colorScheme.primary, size: 32),
+          const SizedBox(height: 8),
+          Text(
+            'Free Plan Limit Reached',
+            style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'You\'ve loaded the maximum posts available for non token users. Deposit 100 tokens to unlock limits! These tokens stay in your wallet, depositing them simply proofs that you are ready to level up!',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: () {
+              // Navigate to upgrade screen
+              _showUpgradeDialog(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.primary, foregroundColor: theme.colorScheme.onPrimary),
+            child: Text('Upgrade to Pro'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return LinearProgressIndicator(minHeight: 3);
+  }
+
+  Widget _buildEndOfFeedWidget(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+      child: Center(
+        child: Text(
+          "You've reached the end of the feed!",
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+        ),
+      ),
+    );
+  }
+
+  Widget _wrapInDoubleTapDetectorImagesOnly(MemoModelPost post, BuildContext context, FeedState feedState, ThemeData theme) {
     print('FSCR:👆 Wrapping post ${post.id} in GestureDetector');
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
@@ -342,6 +377,26 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
+      ),
+    );
+  }
+
+  void _showUpgradeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Upgrade to Pro'),
+        content: Text('Get unlimited access to all features!'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              // Implement upgrade logic
+              Navigator.pop(context);
+            },
+            child: Text('Upgrade'),
+          ),
+        ],
       ),
     );
   }

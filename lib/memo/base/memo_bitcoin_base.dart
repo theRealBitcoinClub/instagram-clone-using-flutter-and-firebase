@@ -25,6 +25,7 @@ class Balance {
 }
 
 class MemoBitcoinBase {
+  static const String cashonizeUrl = "https://cashonize.com/";
   static const String explorerUrl = "https://explorer.salemkode.com/address/";
   //TODO MAKE SURE THIS URL IS OPENED IN OWN WEBVIEW TO APPRECIATE LOGIN STATUS
   static const String memoExplorerUrlPrefix = "https://memo.cash/explore/address/";

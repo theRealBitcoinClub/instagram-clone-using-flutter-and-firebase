@@ -11,10 +11,10 @@ import '../provider/user_provider.dart';
 enum TokenLimitEnum {
   free(
     "FREE",
-    'You\'ve loaded the maximum posts available for non token users. Deposit 222 tokens to unlock STARTER limits! '
-        'These tokens stay in your wallet, depositing them simply proofs that you are ready to level up! '
+    'You\'ve loaded the maximum posts available for non token users. Deposit 222 tokens to unlock STARTER limits. '
+        'These tokens stay in your wallet, depositing them simply proofs that you are ready to level up. '
         'You can also mute some users to appreciate the 20 free limit post spots, '
-        'navigate to any profile and hit the mute badge on their avatar! If you deposit 222 tokens '
+        'navigate to any profile and hit the mute badge on their avatar. If you deposit 222 tokens '
         'you will have a limit of 30 spots, 1800 tokens give you 42 spots and 6000 for 60 spots',
     tokenAmount: 0,
     feedLimit: 20,
@@ -23,12 +23,12 @@ enum TokenLimitEnum {
   ),
   starter(
     "STARTER",
-    'You\'ve loaded the maximum posts available for STARTER tier. Deposit 1800 tokens to unlock ADVANCED limits! '
-        'These tokens stay in your wallet, depositing them simply proofs that you are ready to level up! '
+    'You\'ve loaded the maximum posts available for STARTER tier. Deposit 1800 tokens to unlock ADVANCED limits. '
+        'These tokens stay in your wallet, depositing them simply proofs that you are ready to level up. '
         'You can also mute some users to appreciate the 30 STARTER limit post spots, '
-        'navigate to any profile and hit the mute badge on their avatar!'
-        'If you want to withdraw your tokens simply use the mnemonic with Cashonize or Cauldron swap! '
-        'You can find the mnemonic/seed phrase on your profile settings!',
+        'navigate to any profile and hit the mute badge on their avatar. '
+        'If you want to withdraw your tokens simply use the mnemonic with Cashonize or Cauldron swap. '
+        'You can find the mnemonic/seed phrase on your profile settings.',
     tokenAmount: 222,
     feedLimit: 30,
     profileLimit: 12,
@@ -36,12 +36,12 @@ enum TokenLimitEnum {
   ),
   advanced(
     "ADVANCED",
-    'You\'ve loaded the maximum posts available for ADVANCED tier. Deposit 6000 tokens to unlock PRO limits! '
-        'These tokens stay in your wallet, depositing them simply proofs that you are ready to level up! '
+    'You\'ve loaded the maximum posts available for ADVANCED tier. Deposit 6000 tokens to unlock PRO limits. '
+        'These tokens stay in your wallet, depositing them simply proofs that you are ready to level up. '
         'You can also mute some users to appreciate the 42 ADVANCED tier post spots, '
-        'navigate to any profile and hit the mute badge on their avatar!'
-        'If you want to withdraw your tokens simply use the mnemonic with Cashonize or Cauldron swap! '
-        'You can find the mnemonic/seed phrase on your profile settings!',
+        'navigate to any profile and hit the mute badge on their avatar. '
+        'If you want to withdraw your tokens simply use the mnemonic with Cashonize or Cauldron swap. '
+        'You can find the mnemonic/seed phrase on your profile settings.',
     tokenAmount: 1800,
     feedLimit: 42,
     profileLimit: 15,
@@ -49,9 +49,9 @@ enum TokenLimitEnum {
   ),
   pro(
     "PRO",
-    'You\'ve loaded the maximum posts available for PRO users. If you want higher limits talk to @mahakka_com TG support! '
-        'If you want to withdraw your tokens simply use the mnemonic with Cashonize or Cauldron swap! '
-        'You can find the mnemonic/seed phrase on your profile settings!',
+    'You\'ve loaded the maximum posts available for PRO users. If you want higher limits talk to @mahakka_com TG support. '
+        'If you want to withdraw your tokens simply use the mnemonic with Cashonize or Cauldron swap. '
+        'You can find the mnemonic/seed phrase on your profile settings.',
     tokenAmount: 6000,
     feedLimit: 60,
     profileLimit: 18,

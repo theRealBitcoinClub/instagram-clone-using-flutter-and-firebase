@@ -62,9 +62,7 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
                       child: GestureDetector(
                         onTap: () => creator.bchAddressCashtokenAware.isEmpty
                             ? showSnackBar("User has not registered on Mahakka", type: SnackbarType.info)
-                            : ref
-                                  .read(navigationStateProvider.notifier)
-                                  .navigateToUrl(MemoBitcoinBase.explorerUrl + creator.bchAddressCashtokenAware),
+                            : ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cashonizeUrl),
 
                         // WebViewNavigator.navigateTo(
                         // ref,

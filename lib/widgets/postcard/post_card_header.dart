@@ -6,18 +6,18 @@ import 'package:mahakka/widgets/popularity_score_widget.dart';
 
 import '../../provider/post_update_provider.dart';
 import '../../providers/navigation_providers.dart';
+import '../../providers/token_limits_provider.dart';
 import '../cached_avatar.dart';
 
 class PostCardHeader extends ConsumerWidget {
   final MemoModelPost post;
   final VoidCallback onLikePostTipCreator;
+  final int? index;
 
-  const PostCardHeader({super.key, required this.post, required this.onLikePostTipCreator});
+  const PostCardHeader({super.key, required this.post, required this.onLikePostTipCreator, this.index});
 
   void _navigateToProfile(BuildContext context, WidgetRef ref, String creatorId) {
     ref.read(navigationStateProvider.notifier).navigateToCreatorProfile(creatorId);
-    // ref.read(profileTargetIdProvider.notifier).state = creatorId;
-    // ref.read(tabIndexProvider.notifier).setTab(AppTab.profile.tabIndex);
   }
 
   @override
@@ -25,6 +25,7 @@ class PostCardHeader extends ConsumerWidget {
     final ThemeData theme = Theme.of(context);
     final MemoModelCreator creator = post.creator ?? MemoModelCreator(id: post.creatorId, name: post.creatorId); // Fallback
     final popularityUpdates = ref.watch(postPopularityProvider);
+    final feedLimit = ref.watch(feedLimitProvider);
     final updatedScore = popularityUpdates[post.id!];
     final displayScore = updatedScore ?? post.popularityScore;
 
@@ -59,13 +60,18 @@ class PostCardHeader extends ConsumerWidget {
                 SizedBox(height: 3),
                 Row(
                   children: [
+                    if (index != null)
+                      Text(
+                        "[${(index! + 1).toString().padLeft(2, '0')}/$feedLimit] ",
+                        style: theme.textTheme.titleSmall!.copyWith(color: theme.colorScheme.secondary.withAlpha(153)),
+                      ),
                     if (post.createdDateTime != null)
                       Text(
-                        post.dateTimeFormattedSafe(),
+                        "${post.dateTimeFormattedSafe()}: ",
                         style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(169)),
                       ),
                     if (post.age.isNotEmpty && post.createdDateTime != null)
-                      Text(" - ", style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                      Text("", style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                     if (post.age.isNotEmpty)
                       Text(post.age, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                   ],

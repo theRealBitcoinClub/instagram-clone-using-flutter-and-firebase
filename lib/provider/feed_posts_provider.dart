@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/providers/token_limits_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../memo/firebase/post_service_feed.dart';
@@ -9,6 +10,7 @@ import 'mute_creator_provider.dart';
 
 // --- State for the Feed ---
 class FeedState {
+  final Ref ref;
   final List<MemoModelPost> posts;
   final bool isLoadingInitialAtTop;
   final bool isLoadingMorePostsAtBottom;
@@ -16,6 +18,7 @@ class FeedState {
   final int totalPostCountInFirebase;
   final bool isRefreshingByUserRequest;
   final bool hasReachedCacheEnd;
+  final bool forceFetchFirebase;
   // final bool isMaxFreeLimitReached;
 
   // List<MemoModelPost> get uniquePosts {
@@ -37,7 +40,8 @@ class FeedState {
     }).toList();
   }
 
-  FeedState({
+  FeedState(
+    this.ref, {
     this.posts = const [],
     this.isLoadingInitialAtTop = true,
     this.isLoadingMorePostsAtBottom = false,
@@ -45,6 +49,7 @@ class FeedState {
     this.totalPostCountInFirebase = 0,
     this.isRefreshingByUserRequest = false,
     this.hasReachedCacheEnd = false,
+    this.forceFetchFirebase = false,
     // this.isMaxFreeLimitReached = false,
   });
 
@@ -57,12 +62,14 @@ class FeedState {
     int? totalPostCount,
     bool? isRefreshing,
     bool? hasReachedCacheEnd,
+    bool? forceFetchFirebase,
     // bool? isMaxFreeLimitReached,
   }) {
     final uniquePosts = posts != null ? _removeDuplicates(posts) : null;
     print('FPPR:🔄 FeedState.copyWith called - clearErrorMessage: $clearErrorMessage');
     print('FPPR:   Current posts: ${this.posts.length}, new posts: ${posts?.length}');
     return FeedState(
+      ref,
       posts: uniquePosts ?? this.posts,
       isLoadingInitialAtTop: isLoadingInitial ?? this.isLoadingInitialAtTop,
       isLoadingMorePostsAtBottom: isLoadingMore ?? this.isLoadingMorePostsAtBottom,
@@ -70,13 +77,14 @@ class FeedState {
       isRefreshingByUserRequest: isRefreshing ?? this.isRefreshingByUserRequest,
       totalPostCountInFirebase: totalPostCount ?? this.totalPostCountInFirebase,
       hasReachedCacheEnd: hasReachedCacheEnd ?? this.hasReachedCacheEnd,
+      forceFetchFirebase: forceFetchFirebase ?? this.forceFetchFirebase,
       // isMaxFreeLimitReached: isMaxFreeLimitReached ?? this.isMaxFreeLimitReached,
     );
   }
 
   bool get isMaxFreeLimit {
-    print("is  max free limit ${posts.length} ${FeedPostsNotifier.maxLoadItems}");
-    return posts.length >= FeedPostsNotifier.maxLoadItems;
+    print("is  max free limit ${posts.length} ${ref.read(feedLimitProvider)}");
+    return posts.length >= ref.read(feedLimitProvider);
   }
 
   bool get hasMorePosts {
@@ -90,14 +98,12 @@ class FeedState {
 class FeedPostsNotifier extends StateNotifier<FeedState> {
   final PostServiceFeed _postService;
   final FeedPostCache _cacheRepository;
-  static const int maxLoadItems = 30;
-  static const int pageSize = maxLoadItems * 2;
   final Ref _ref; // Add Ref here
 
   static const String _lastTotalCountKey = 'last_total_post_count';
   SharedPreferences? _prefs;
 
-  FeedPostsNotifier(this._ref, this._postService, this._cacheRepository) : super(FeedState()) {
+  FeedPostsNotifier(this._ref, this._postService, this._cacheRepository) : super(FeedState(_ref)) {
     print('FPPR:🚀 FeedPostsNotifier constructor called');
     Future.microtask(() async {
       print('FPPR:🚀 FeedPostsNotifier constructor called _initSharedPreferences');
@@ -124,9 +130,14 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
     super.dispose();
   }
 
-  Future<void> fetchInitialPosts() async {
+  Future<void> fetchInitialPosts({bool forceFetchFire = false}) async {
     print('FPPR:🔄 fetchInitialPosts called');
-    state = FeedState(isLoadingInitialAtTop: true, isLoadingMorePostsAtBottom: false, posts: []);
+    state = FeedState(
+      _ref,
+      isLoadingInitialAtTop: true,
+      isLoadingMorePostsAtBottom: false,
+      posts: [],
+    ).copyWith(forceFetchFirebase: forceFetchFire);
     print('FPPR:✅ State reset for initial fetch');
     try {
       _cacheRepository.resetLoadedItems();
@@ -177,9 +188,9 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
   }
 
   bool _isFreeLimitReached() {
-    final bool reached = state.posts.length >= maxLoadItems;
+    final bool reached = state.posts.length >= _ref.read(feedLimitProvider);
     if (reached) {
-      print('FPPR:💰 Free plan limit reached: ${state.posts.length}/$maxLoadItems');
+      print('FPPR:💰 Free plan limit reached: ${state.posts.length}/${_ref.read(feedLimitProvider)}');
       // state = state.copyWith(isMaxFreeLimitReached: true);
     }
     return reached;
@@ -225,7 +236,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 
     state = state.copyWith(totalPostCount: currentTotalCount);
 
-    if (state.hasReachedCacheEnd || currentTotalCount > previousTotalCount) {
+    if (state.forceFetchFirebase || state.hasReachedCacheEnd || currentTotalCount > previousTotalCount) {
       // New posts available - fetch and cache them
       await _fetchAndCacheNewPosts(previousTotalCount, currentTotalCount);
     } else {
@@ -241,10 +252,11 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
     // Determine if this is initial load or loading more based on current state
     final bool isTopLoad = state.isLoadingInitialAtTop || state.isRefreshingByUserRequest;
 
-    final pageNumber = isTopLoad ? 1 : (state.posts.length ~/ pageSize) + 1;
-    print('FPPR:📄 Loading page $pageNumber from cache (isTopLoad: $isTopLoad)');
+    // final pageNumber = isTopLoad ? 1 : (state.posts.length ~/ pageSize) + 1;
+    print('FPPR:📄 Loading page from cache (isTopLoad: $isTopLoad)');
 
-    final cachedPosts = await _cacheRepository.getFeedPage(pageNumber);
+    final cachedPosts = await _cacheRepository.getFeedPage(1);
+    // final cachedPosts = await _cacheRepository.getFeedPage(pageNumber);
     print('FPPR:💾 Cache result - posts: ${cachedPosts?.length}');
 
     if (cachedPosts != null && cachedPosts.isNotEmpty) {
@@ -254,17 +266,17 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
       state = state.copyWith(
         posts: newPosts,
         isLoadingInitial: false,
-        hasReachedCacheEnd: cachedPosts.length < pageSize,
+        // hasReachedCacheEnd: cachedPosts.length < pageSize,
         clearErrorMessage: true,
       );
 
       print('FPPR:✅ Loaded ${cachedPosts.length} posts from cache - total: ${state.posts.length}');
 
-      // If we got less than a full page from cache, we've reached cache end
-      if (cachedPosts.length < pageSize && state.hasMorePosts) {
-        print('FPPR:🏁 Reached end of cache, next load will use network');
-        // if (state.posts.length < pageSize) fetchInitialPosts();
-      }
+      // // If we got less than a full page from cache, we've reached cache end
+      // if (cachedPosts.length < pageSize && state.hasMorePosts) {
+      //   print('FPPR:🏁 Reached end of cache, next load will use network');
+      //   // if (state.posts.length < pageSize) fetchInitialPosts();
+      // }
     } else {
       // No posts in cache
       if (isTopLoad) {
@@ -281,8 +293,8 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 
   Future<List<MemoModelPost>?> _fetchPostsFromNetworkToFeedTheCache({required int limit, String? postId}) async {
     print('FPPR:🌐 _fetchPostsFromNetwork - limit: $limit, postId: ${postId != null}');
-    if (state.posts.length >= maxLoadItems) {
-      print('FPPR:🌐 _fetchPostsFromNetwork - state.totalPostCount >= maxLoadItems: ${state.posts.length} >= $maxLoadItems');
+    if (state.posts.length >= _ref.read(feedLimitProvider)) {
+      print('FPPR:🌐 _fetchPostsFromNetwork - state.totalPostCount >= maxLoadItems: ${state.posts.length} >= ${_ref.read(feedLimitProvider)}');
       return null;
     }
 
@@ -314,7 +326,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 
     try {
       final newPosts = await _fetchPostsFromNetworkToFeedTheCache(
-        limit: (previousCount == 0 || state.hasReachedCacheEnd) ? pageSize : newPostsCount,
+        limit: (previousCount == 0 || state.hasReachedCacheEnd || state.forceFetchFirebase) ? _ref.read(feedLimitProvider) * 2 : newPostsCount,
         postId: null,
       );
       print('FPPR:🌐 New posts fetched: ${newPosts?.length ?? 0}');
@@ -338,7 +350,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
         }
       }
 
-      final newPosts = await _fetchPostsFromNetworkToFeedTheCache(limit: pageSize, postId: lastPostId);
+      final newPosts = await _fetchPostsFromNetworkToFeedTheCache(limit: _ref.read(feedLimitProvider) * 2, postId: lastPostId);
 
       if (newPosts != null && newPosts.isNotEmpty) {
         await _loadFromCache();

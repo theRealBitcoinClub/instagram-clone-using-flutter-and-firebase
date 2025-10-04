@@ -10,6 +10,7 @@ import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 import 'package:mahakka/widgets/bch/mnemonic_backup_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
+import 'package:mahakka/widgets/muted_creators_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../provider/profile_data_model_provider.dart';
@@ -244,6 +245,14 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          SettingsOptionWidget(
+            theme: theme,
+            icon: Icons.block_outlined,
+            text: "MUTED CREATORS",
+            dialogContext: context,
+            onSelect: () => showMutedCreatorsDialog(context),
+          ),
+          const SizedBox(height: 8),
           SettingsOptionWidget(
             theme: theme,
             icon: Icons.copy_all_outlined,

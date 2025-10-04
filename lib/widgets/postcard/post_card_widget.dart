@@ -33,8 +33,9 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
 class PostCard extends ConsumerStatefulWidget {
   final MemoModelPost post;
   final VoidCallback? onShowSendButton; // Add callback parameter
+  final int? index;
 
-  const PostCard(this.post, {super.key, this.onShowSendButton}); // Update constructor
+  const PostCard(this.post, {super.key, this.onShowSendButton, this.index}); // Update constructor
 
   @override
   ConsumerState<PostCard> createState() => _PostCardState();
@@ -644,7 +645,7 @@ class _PostCardState extends ConsumerState<PostCard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(height: 3),
-                PostCardHeader(post: widget.post, onLikePostTipCreator: _sendTipToCreator),
+                PostCardHeader(post: widget.post, onLikePostTipCreator: _sendTipToCreator, index: widget.index),
                 _buildPostMedia(theme, colorScheme, textTheme),
                 PostCardFooter(
                   post: widget.post,

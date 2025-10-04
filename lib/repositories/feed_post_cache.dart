@@ -1,12 +1,12 @@
 // Updated feed_post_cache.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
-import 'package:mahakka/provider/feed_posts_provider.dart';
 
 import '../memo/isar/memo_model_post_db.dart';
 import '../memo/model/memo_model_post.dart';
 import '../provider/isar_provider.dart';
 import '../provider/mute_creator_provider.dart';
+import '../providers/token_limits_provider.dart';
 
 final feedPostCacheProvider = Provider((ref) => FeedPostCache(ref));
 
@@ -36,7 +36,7 @@ class FeedPostCache {
 
   // Check if we can load more items
   bool get canLoadMore {
-    return _totalLoadedItemsFromCache < FeedPostsNotifier.maxLoadItems;
+    return _totalLoadedItemsFromCache < ref.read(feedLimitProvider);
   }
 
   // Reset loaded items counter (call this when feed is rebuilt)
@@ -110,7 +110,7 @@ class FeedPostCache {
 
     // Check if we can load more items
     if (!canLoadMore) {
-      print('🚫 FPC: Maximum load limit reached, current {$_totalLoadedItemsFromCache} (max ${FeedPostsNotifier.maxLoadItems} items)');
+      print('🚫 FPC: Maximum load limit reached, current {$_totalLoadedItemsFromCache} (max ${ref.read(feedLimitProvider)} items)');
       return null;
     }
 
@@ -120,7 +120,7 @@ class FeedPostCache {
     print('📄 FPC: total count isar: $count');
     try {
       // Calculate the offset for pagination
-      final offset = (pageNumber - 1) * FeedPostsNotifier.pageSize;
+      // final offset = (pageNumber - 1) * FeedPostsNotifier.pageSize;
 
       // Get muted creators for filtering
       final mutedCreators = _mutedCreators;
@@ -155,7 +155,7 @@ class FeedPostCache {
       if (posts.isNotEmpty) {
         _totalLoadedItemsFromCache += posts.length;
         print(
-          '✅ FPC: Returning feed page from disk cache: ${posts.length} posts (total loaded: $_totalLoadedItemsFromCache/${FeedPostsNotifier.maxLoadItems})',
+          '✅ FPC: Returning feed page from disk cache: ${posts.length} posts (total loaded: $_totalLoadedItemsFromCache/${ref.read(feedLimitProvider)})',
         );
         return posts;
       }

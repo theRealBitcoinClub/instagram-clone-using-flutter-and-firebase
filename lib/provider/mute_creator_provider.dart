@@ -1,4 +1,6 @@
 // mute_creator_provider.dart
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -79,6 +81,9 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
     }
   }
 
+  // Debounce timer for unmute operations
+  Timer? _unmuteDebounceTimer;
+
   // Unmute a creator
   Future<void> unmuteCreator(String creatorId) async {
     if (!state.contains(creatorId)) {
@@ -90,9 +95,17 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList(_mutedCreatorsKey, newMutedCreators);
       state = newMutedCreators;
-      // ref.read(feedPostCacheProvider).resetLoadedItems();
-      ref.read(feedPostsProvider.notifier).fetchInitialPosts();
-      print('✅ MuteCreator: Unmuted creator: $creatorId');
+
+      // Cancel any pending debounce timer
+      _unmuteDebounceTimer?.cancel();
+
+      // Start a new debounce timer with 10 second delay
+      _unmuteDebounceTimer = Timer(const Duration(seconds: 6), () {
+        ref.read(feedPostsProvider.notifier).fetchInitialPosts(forceFetchFire: true);
+        print('🔄 MuteCreator: Debounced feed refresh triggered after unmute');
+      });
+
+      print('✅ MuteCreator: Unmuted creator: $creatorId (feed refresh scheduled in 6 seconds)');
     } catch (e) {
       print('❌ MuteCreator: Failed to unmute creator: $e');
       throw Exception('Failed to unmute creator');

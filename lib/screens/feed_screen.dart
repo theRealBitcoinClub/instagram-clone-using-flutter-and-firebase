@@ -16,6 +16,7 @@ import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 
 import '../intros/intro_overlay.dart';
 import '../memo/model/memo_model_post.dart';
+import '../providers/token_limits_provider.dart';
 import '../widgets/post_dialog.dart';
 
 class ScrollUpIntent extends Intent {}
@@ -251,7 +252,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               if (index < displayedPosts.length) {
                 final post = displayedPosts[index];
                 print('FSCR:📜 Building PostCard for post ${post.id} at index $index');
-                return _wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme);
+                return _wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme, index: index);
               } else if (feedState.isMaxFreeLimit && index >= displayedPosts.length) {
                 print('FSCR:💰 Building free plan limit widget at index $index');
                 return _buildFreePlanLimitWidget(theme);
@@ -289,11 +290,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   List<MemoModelPost> _getDisplayedPosts(FeedState feedState) {
     // Apply soft limit - only show up to maxLoadItems
-    if (feedState.posts.length <= FeedPostsNotifier.maxLoadItems) {
+    if (feedState.posts.length <= ref.read(feedLimitProvider)) {
       return feedState.posts;
     } else {
       // If we have more posts than the limit, only show the first maxLoadItems
-      return feedState.posts.sublist(0, FeedPostsNotifier.maxLoadItems);
+      return feedState.posts.sublist(0, ref.read(feedLimitProvider));
     }
   }
 
@@ -304,6 +305,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   Widget _buildFreePlanLimitWidget(ThemeData theme) {
     var headerColor = theme.colorScheme.secondary;
     var borderColor = theme.colorScheme.primary;
+    TokenLimitEnum tokenEnum = ref.read(currentTokenLimitEnumProvider);
 
     return Container(
       padding: const EdgeInsets.all(15),
@@ -317,10 +319,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         children: [
           Icon(Icons.workspace_premium, color: headerColor, size: 32),
           const SizedBox(height: 9),
-          Text('Free Plan Limit Reached', style: theme.textTheme.titleLarge?.copyWith(color: headerColor)),
+          Text('${tokenEnum.toString()} Plan Limit Reached', style: theme.textTheme.titleLarge?.copyWith(color: headerColor)),
           const SizedBox(height: 9),
           Text(
-            'You\'ve loaded the maximum posts available for non token users. Deposit 100 tokens to unlock limits! These tokens stay in your wallet, depositing them simply proofs that you are ready to level up! You can also mute some users to get a more focused perspective on what you really care about!',
+            "${tokenEnum.description}",
             textAlign: TextAlign.justify,
             style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
@@ -370,7 +372,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
-  Widget _wrapInDoubleTapDetectorImagesOnly(MemoModelPost post, BuildContext context, FeedState feedState, ThemeData theme) {
+  Widget _wrapInDoubleTapDetectorImagesOnly(MemoModelPost post, BuildContext context, FeedState feedState, ThemeData theme, {int? index}) {
     print('FSCR:👆 Wrapping post ${post.id} in GestureDetector');
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
@@ -404,6 +406,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           print('FSCR:📜 onShowSendButton callback triggered for post ${post.id}');
           _scrollDownForPost(post);
         },
+        index: index,
       ),
     );
   }

@@ -58,12 +58,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     print('FSCR:📜 Scroll listener - pixels: $pixels, maxScrollExtent: $maxScrollExtent, threshold: $threshold');
 
-    if (pixels >= threshold && !ref.read(feedPostsProvider).isLoadingMore && ref.read(feedPostsProvider).hasMorePosts) {
+    if (pixels >= threshold && !ref.read(feedPostsProvider).isLoadingMorePostsAtBottom && ref.read(feedPostsProvider).hasMorePosts) {
       print('FSCR:📥 Triggering fetchMorePosts - reached scroll threshold');
       ref.read(feedPostsProvider.notifier).fetchMorePosts();
     } else {
       print('FSCR:⏸️ Scroll threshold not met or conditions not satisfied');
-      print('FSCR:   - isLoadingMore: ${ref.read(feedPostsProvider).isLoadingMore}');
+      print('FSCR:   - isLoadingMore: ${ref.read(feedPostsProvider).isLoadingMorePostsAtBottom}');
       print('FSCR:   - hasMorePosts: ${ref.read(feedPostsProvider).hasMorePosts}');
       print('FSCR:   - pixels >= threshold: ${pixels >= threshold}');
     }
@@ -114,18 +114,18 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     print('FSCR:📊 FeedState in build:');
     print('FSCR:   - posts: ${feedState.posts.length}');
-    print('FSCR:   - isLoadingInitial: ${feedState.isLoadingInitial}');
-    print('FSCR:   - isLoadingMore: ${feedState.isLoadingMore}');
+    print('FSCR:   - isLoadingInitial: ${feedState.isLoadingInitialAtTop}');
+    print('FSCR:   - isLoadingMore: ${feedState.isLoadingMorePostsAtBottom}');
     print('FSCR:   - hasMorePosts: ${feedState.hasMorePosts}');
-    print('FSCR:   - totalPostCount: ${feedState.totalPostCount}');
-    print('FSCR:   - isRefreshing: ${feedState.isRefreshing}');
+    print('FSCR:   - totalPostCount: ${feedState.totalPostCountInFirebase}');
+    print('FSCR:   - isRefreshing: ${feedState.isRefreshingByUserRequest}');
 
     return Scaffold(
       backgroundColor: Colors.black.withAlpha(21),
       appBar: AppBarBurnMahakkaTheme(),
       body: Stack(
         children: [
-          if (_isRenderingContent || feedState.isLoadingInitial) Center(child: Image.asset("assets/icon_round_200.png", height: 120)),
+          if (_isRenderingContent || feedState.isLoadingInitialAtTop) Center(child: Image.asset("assets/icon_round_200.png", height: 120)),
           if (_loadingError != null)
             Center(
               child: Column(
@@ -159,7 +159,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
           // Main content - initially transparent during rendering
           Opacity(
-            opacity: (_isRenderingContent || feedState.isLoadingInitial) ? 0.0 : 1.0,
+            opacity: (_isRenderingContent || feedState.isLoadingInitialAtTop) ? 0.0 : 1.0,
             child: Column(children: [Expanded(child: _buildFeedBody(feedState))]),
           ),
           // Intro overlay - should be at the top of the Stack to overlay everything
@@ -206,7 +206,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     print('FSCR:🏗️ _buildFeedBody called');
     ThemeData theme = Theme.of(context);
 
-    if (feedState.posts.isEmpty && !feedState.isLoadingInitial && !feedState.isLoadingMore) {
+    if (feedState.posts.isEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom) {
       print('FSCR:📭 No posts available, showing empty state');
       return _buildRefreshableNoPostsWidget(theme, _widgetNoFeed(theme));
     }
@@ -214,12 +214,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     print('FSCR:📜 Building ListView with ${feedState.posts.length} posts');
     print('FSCR:📜 ListView itemCount breakdown:');
     print('FSCR:   - base posts: ${feedState.posts.length}');
-    print('FSCR:   - loadingMore indicator: ${feedState.isLoadingMore ? 1 : 0}');
+    print('FSCR:   - loadingMore indicator: ${feedState.isLoadingMorePostsAtBottom ? 1 : 0}');
     print(
-      'FSCR:   - end message: ${(!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitial && !feedState.isLoadingMore) ? 1 : 0}',
+      'FSCR:   - end message: ${(!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom) ? 1 : 0}',
     );
     print(
-      'FSCR:   - total itemCount: ${feedState.posts.length + (feedState.isLoadingMore ? 1 : 0) + (!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitial && !feedState.isLoadingMore ? 1 : 0)}',
+      'FSCR:   - total itemCount: ${feedState.posts.length + (feedState.isLoadingMorePostsAtBottom ? 1 : 0) + (!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom ? 1 : 0)}',
     );
 
     return RefreshIndicator(
@@ -248,8 +248,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             controller: _scrollController,
             itemCount:
                 feedState.posts.length +
-                (feedState.isLoadingMore ? 1 : 0) +
-                (!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitial && !feedState.isLoadingMore ? 1 : 0),
+                (feedState.isLoadingMorePostsAtBottom ? 1 : 0) +
+                (!feedState.hasMorePosts &&
+                        feedState.posts.isNotEmpty &&
+                        !feedState.isLoadingInitialAtTop &&
+                        !feedState.isLoadingMorePostsAtBottom
+                    ? 1
+                    : 0),
             itemBuilder: (context, index) {
               print('FSCR:📜 ListView building item at index: $index');
 
@@ -257,7 +262,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 final post = feedState.posts[index];
                 print('FSCR:📜 Building PostCard for post ${post.id} at index $index');
                 return wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme);
-              } else if (feedState.isLoadingMore && index == feedState.posts.length) {
+              } else if (feedState.isLoadingMorePostsAtBottom && index == feedState.posts.length) {
                 print('FSCR:⏳ Building loading indicator at index $index');
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: 20.0),
@@ -266,8 +271,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               } else if (!feedState.hasMorePosts &&
                   index == feedState.posts.length &&
                   feedState.posts.isNotEmpty &&
-                  !feedState.isLoadingInitial &&
-                  !feedState.isLoadingMore) {
+                  !feedState.isLoadingInitialAtTop &&
+                  !feedState.isLoadingMorePostsAtBottom) {
                 print('FSCR:🏁 Building end of feed message at index $index');
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),

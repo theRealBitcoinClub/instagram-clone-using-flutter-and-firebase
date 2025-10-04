@@ -26,9 +26,16 @@ class QrCodeDialog extends ConsumerStatefulWidget {
   final String? cashtokenAddress;
   final String memoProfileId;
   final bool memoOnly;
+  final bool tokenOnly;
 
-  const QrCodeDialog({Key? key, required this.legacyAddress, this.cashtokenAddress, required this.memoProfileId, this.memoOnly = false})
-    : super(key: key);
+  const QrCodeDialog({
+    Key? key,
+    required this.legacyAddress,
+    this.cashtokenAddress,
+    required this.memoProfileId,
+    this.memoOnly = false,
+    this.tokenOnly = false,
+  }) : super(key: key);
 
   @override
   ConsumerState<QrCodeDialog> createState() => _QrCodeDialogState();
@@ -49,16 +56,16 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 
   Future<void> _loadToggleState(BuildContext ctx) async {
     final prefs = await SharedPreferences.getInstance();
-    _isToggleEnabled = widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty;
+    _isToggleEnabled = widget.tokenOnly ? false : (widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty);
     if (widget.memoOnly) _isToggleEnabled = false;
     final bool defaultState = false; //DEFAULT STATE IS MEMO AFTER INSTALL
 
     // Only use saved state if it's valid for current dialog
     final savedState = prefs.getBool(toggleKey);
-    _isCashtokenFormat = (savedState != null && _isToggleEnabled) ? savedState : defaultState;
+    _isCashtokenFormat = widget.tokenOnly ? true : ((savedState != null && _isToggleEnabled) ? savedState : defaultState);
 
     // Reset to default if saved state is invalid for current address
-    if (_isCashtokenFormat && !_isToggleEnabled) {
+    if (!widget.tokenOnly && _isCashtokenFormat && !_isToggleEnabled) {
       _isCashtokenFormat = false;
       await _saveToggleState(false);
     }
@@ -378,7 +385,13 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 }
 
 // --- Simplified BCH QR Code Dialog Helper ---
-void showQrCodeDialog({required BuildContext ctx, MemoModelUser? user, MemoModelCreator? creator, bool memoOnly = false}) {
+void showQrCodeDialog({
+  required BuildContext ctx,
+  MemoModelUser? user,
+  MemoModelCreator? creator,
+  bool memoOnly = false,
+  bool tokenOnly = false,
+}) {
   if (creator != null) {
     showDialog(
       context: ctx,
@@ -388,6 +401,7 @@ void showQrCodeDialog({required BuildContext ctx, MemoModelUser? user, MemoModel
           legacyAddress: creator.id,
           memoProfileId: creator.id,
           memoOnly: memoOnly,
+          tokenOnly: tokenOnly,
         );
       },
     );
@@ -400,6 +414,7 @@ void showQrCodeDialog({required BuildContext ctx, MemoModelUser? user, MemoModel
           legacyAddress: user.legacyAddressMemoBch,
           memoProfileId: user.id,
           memoOnly: memoOnly,
+          tokenOnly: tokenOnly,
         );
       },
     );

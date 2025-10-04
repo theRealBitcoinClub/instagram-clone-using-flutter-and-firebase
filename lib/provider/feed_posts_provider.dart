@@ -1,33 +1,32 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../memo/firebase/post_service_feed.dart';
 import '../repositories/feed_post_cache.dart';
 import '../repositories/post_repository.dart';
+import 'mute_creator_provider.dart';
 
 // --- State for the Feed ---
 class FeedState {
   final List<MemoModelPost> posts;
-  final bool isLoadingInitial;
-  final bool isLoadingMore;
+  final bool isLoadingInitialAtTop;
+  final bool isLoadingMorePostsAtBottom;
   final String? errorMessage;
-  final bool isUsingCache;
-  final int totalPostCount;
-  final bool isRefreshing;
+  final int totalPostCountInFirebase;
+  final bool isRefreshingByUserRequest;
   final bool hasReachedCacheEnd;
+  final bool isMaxFreeLimitReached;
 
   FeedState({
     this.posts = const [],
-    this.isLoadingInitial = true,
-    this.isLoadingMore = false,
+    this.isLoadingInitialAtTop = true,
+    this.isLoadingMorePostsAtBottom = false,
     this.errorMessage,
-    this.isUsingCache = false,
-    this.totalPostCount = 0,
-    this.isRefreshing = false,
+    this.totalPostCountInFirebase = 0,
+    this.isRefreshingByUserRequest = false,
     this.hasReachedCacheEnd = false,
+    this.isMaxFreeLimitReached = false,
   });
 
   FeedState copyWith({
@@ -35,29 +34,29 @@ class FeedState {
     bool? isLoadingInitial,
     bool? isLoadingMore,
     String? errorMessage,
-    bool? isUsingCache,
     bool clearErrorMessage = false,
     int? totalPostCount,
     bool? isRefreshing,
     bool? hasReachedCacheEnd,
+    bool? isMaxFreeLimitReached,
   }) {
     print('FPPR:🔄 FeedState.copyWith called - clearErrorMessage: $clearErrorMessage');
     print('FPPR:   Current posts: ${this.posts.length}, new posts: ${posts?.length}');
     return FeedState(
       posts: posts ?? this.posts,
-      isLoadingInitial: isLoadingInitial ?? this.isLoadingInitial,
-      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      isLoadingInitialAtTop: isLoadingInitial ?? this.isLoadingInitialAtTop,
+      isLoadingMorePostsAtBottom: isLoadingMore ?? this.isLoadingMorePostsAtBottom,
       errorMessage: clearErrorMessage ? null : errorMessage ?? this.errorMessage,
-      isUsingCache: isUsingCache ?? this.isUsingCache,
-      isRefreshing: isRefreshing ?? this.isRefreshing,
-      totalPostCount: totalPostCount ?? this.totalPostCount,
+      isRefreshingByUserRequest: isRefreshing ?? this.isRefreshingByUserRequest,
+      totalPostCountInFirebase: totalPostCount ?? this.totalPostCountInFirebase,
       hasReachedCacheEnd: hasReachedCacheEnd ?? this.hasReachedCacheEnd,
+      isMaxFreeLimitReached: isMaxFreeLimitReached ?? this.isMaxFreeLimitReached,
     );
   }
 
   bool get hasMorePosts {
-    final hasMore = posts.length < totalPostCount;
-    print('FPPR:📊 FeedState.hasMorePosts: $hasMore (posts: ${posts.length}, total: $totalPostCount)');
+    final hasMore = posts.length < totalPostCountInFirebase;
+    // print('FPPR:📊 FeedState.hasMorePosts: $hasMore (posts: ${posts.length}, total: $totalPostCountInFirebase)');
     return hasMore;
   }
 }
@@ -66,22 +65,32 @@ class FeedState {
 class FeedPostsNotifier extends StateNotifier<FeedState> {
   final PostServiceFeed _postService;
   final FeedPostCache _cacheRepository;
-  static const int maxLoadItems = 30;
+  static const int maxLoadItems = 10;
   static const int pageSize = 10;
+  final Ref _ref; // Add Ref here
 
   static const String _lastTotalCountKey = 'last_total_post_count';
   SharedPreferences? _prefs;
 
-  FeedPostsNotifier(this._postService, this._cacheRepository) : super(FeedState()) {
+  FeedPostsNotifier(this._ref, this._postService, this._cacheRepository) : super(FeedState()) {
     print('FPPR:🚀 FeedPostsNotifier constructor called');
-    _initSharedPreferences().then((_) {
+    Future.microtask(() async {
+      print('FPPR:🚀 FeedPostsNotifier constructor called _initSharedPreferences');
+      await _initSharedPreferences();
+      print('FPPR:🚀 FeedPostsNotifier constructor called _initSharedPreferences FINISHED');
       fetchInitialPosts();
+      print('FPPR:🚀 FeedPostsNotifier constructor called fetchInitialPosts FINISHED');
     });
   }
 
   Future<void> _initSharedPreferences() async {
-    _prefs = await SharedPreferences.getInstance();
-    print('FPPR:💾 SharedPreferences initialized');
+    try {
+      _prefs = await SharedPreferences.getInstance();
+      print('FPPR:💾 SharedPreferences initialized');
+    } catch (e, s) {
+      print('FPPR:❌ SharedPreferences initialization ERROR: $e');
+      _logFeedError("Failed to initialize SharedPreferences", e, s);
+    }
   }
 
   @override
@@ -92,55 +101,88 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 
   Future<void> fetchInitialPosts() async {
     print('FPPR:🔄 fetchInitialPosts called');
-    state = FeedState(isLoadingInitial: true, posts: [], isUsingCache: false, hasReachedCacheEnd: false);
+    state = FeedState(isLoadingInitialAtTop: true, isLoadingMorePostsAtBottom: false, posts: []);
     print('FPPR:✅ State reset for initial fetch');
-    await _loadInitialData();
+    try {
+      _cacheRepository.resetLoadedItems();
+      await _fetchData();
+    } catch (e, s) {
+      _handleError("FPPR:❌ _loadInitialData", "Error loading initial data", e, s);
+      try {
+        await _loadFromCache();
+      } catch (ex, st) {
+        _handleError("Fallback", "Failed to load feed please restart the app or check your connection:", ex, st, setState: true);
+      }
+    } finally {
+      state = state.copyWith(isLoadingInitial: false);
+    }
   }
 
   Future<void> fetchMorePosts() async {
-    print('FPPR:📥 fetchMorePosts called - isLoadingMore: ${state.isLoadingMore}, hasMorePosts: ${state.hasMorePosts}');
+    print('FPPR:📥 fetchMorePosts called - isLoadingMore: ${state.isLoadingMorePostsAtBottom}, hasMorePosts: ${state.hasMorePosts}');
 
-    if (state.isLoadingMore || !state.hasMorePosts) {
+    if (state.isLoadingMorePostsAtBottom || !state.hasMorePosts) {
       print('FPPR:⏸️ fetchMorePosts skipped - condition not met');
       return;
     }
 
-    state = state.copyWith(isLoadingMore: true, clearErrorMessage: true);
+    state = resetTemporaryStates().copyWith(isLoadingMore: true, isLoadingInitial: false);
     print('FPPR:✅ State updated for loading more posts');
 
-    await _loadMorePosts();
+    if (_isFreeLimitReached()) {
+      return;
+    }
+
+    try {
+      if (state.hasReachedCacheEnd) {
+        await _fetchFromNetwork();
+      } else {
+        await _loadFromCache();
+      }
+    } catch (e, s) {
+      _handleError("fetchMorePosts", "Failed to load more posts:", e, s, setState: true);
+    } finally {
+      state = state.copyWith(isLoadingMore: false);
+    }
   }
 
-  Future<void> _loadInitialData() async {
-    print('FPPR:📄 _loadInitialData called');
-    _cacheRepository.resetLoadedItems();
-    try {
-      await _fetchData(isInitial: true);
-    } catch (e, s) {
-      print('FPPR:❌ _loadInitialData ERROR: $e');
-      _logFeedError("Error loading initial data", e, s);
+  FeedState resetTemporaryStates() {
+    state = state.copyWith(clearErrorMessage: true, isRefreshing: false, isMaxFreeLimitReached: false, hasReachedCacheEnd: false);
+    return state;
+  }
 
-      // Fallback: try to load from cache
-      await _loadFromCache(isInitial: true, fallback: true);
+  bool _isFreeLimitReached() {
+    final bool reached = state.posts.length >= maxLoadItems;
+    if (reached) {
+      print('FPPR:💰 Free plan limit reached: ${state.posts.length}/$maxLoadItems');
+      state = state.copyWith(isMaxFreeLimitReached: true);
     }
+    return reached;
   }
 
   Future<void> refreshFeed() async {
     print('FPPR:🔄 refreshFeed called');
 
     try {
-      state = state.copyWith(isRefreshing: true);
-      await _fetchData(isInitial: false);
+      state = resetTemporaryStates().copyWith(isRefreshing: true, isLoadingInitial: true, isLoadingMore: false);
+      await _fetchData();
       print('FPPR:✅ Refresh completed');
     } catch (e, s) {
-      print('FPPR:❌ refreshFeed ERROR: $e');
-      _logFeedError("Error during refresh", e, s);
-
-      state = state.copyWith(isRefreshing: false, errorMessage: "Refresh failed");
+      _handleError("refreshFeed", "Error during refresh", e, s, setState: true);
+    } finally {
+      state = state.copyWith(isRefreshing: false);
     }
   }
 
-  Future<void> _fetchData({required bool isInitial}) async {
+  void _handleError(String methodName, String description, dynamic error, StackTrace? stackTrace, {bool setState = true}) {
+    print('FPPR:❌ $methodName ERROR: $error');
+    _logFeedError(description, error, stackTrace);
+    if (setState) {
+      state = state.copyWith(errorMessage: "$description: $error");
+    }
+  }
+
+  Future<void> _fetchData() async {
     // Get current total count from Firebase
     final int currentTotalCount = await _postService.getTotalPostCount();
     print('FPPR:📊 Current total post count: $currentTotalCount');
@@ -163,11 +205,77 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
       await _fetchAndCacheNewPosts(previousTotalCount, currentTotalCount);
     } else {
       // No new posts - load from cache
-      await _loadFromCache(isInitial: isInitial);
+      await _loadFromCache();
+    }
+  }
+
+  Future<void> _loadFromCache() async {
+    print('FPPR:💾 _loadFromCache');
+
+    // try {
+    // Determine if this is initial load or loading more based on current state
+    final bool isTopLoad = state.isLoadingInitialAtTop || state.isRefreshingByUserRequest;
+
+    final pageNumber = isTopLoad ? 1 : (state.posts.length ~/ pageSize) + 1;
+    print('FPPR:📄 Loading page $pageNumber from cache (isTopLoad: $isTopLoad)');
+
+    final cachedPosts = await _cacheRepository.getFeedPage(pageNumber);
+    print('FPPR:💾 Cache result - posts: ${cachedPosts?.length}');
+
+    if (cachedPosts != null && cachedPosts.isNotEmpty) {
+      // Successfully loaded from cache
+      final newPosts = isTopLoad ? cachedPosts : [...state.posts, ...cachedPosts];
+
+      state = state.copyWith(
+        posts: newPosts,
+        isLoadingInitial: false,
+        hasReachedCacheEnd: cachedPosts.length < pageSize,
+        clearErrorMessage: true,
+      );
+
+      print('FPPR:✅ Loaded ${cachedPosts.length} posts from cache - total: ${state.posts.length}');
+
+      // If we got less than a full page from cache, we've reached cache end
+      if (cachedPosts.length < pageSize && state.hasMorePosts) {
+        print('FPPR:🏁 Reached end of cache, next load will use network');
+      }
+    } else {
+      // No posts in cache
+      if (isTopLoad) {
+        print('FPPR:🌐 No cache available, fetching from network');
+        state = state.copyWith(isLoadingInitial: true, clearErrorMessage: true, totalPostCount: 0);
+        await _fetchFromNetwork();
+      } else {
+        // Loading more but cache is empty
+        state = state.copyWith(hasReachedCacheEnd: true);
+        print('FPPR:🏁 No more posts in cache');
+      }
+    }
+  }
+
+  Future<List<MemoModelPost>?> _fetchPostsFromNetworkToFeedTheCache({required int limit, String? postId}) async {
+    print('FPPR:🌐 _fetchPostsFromNetwork - limit: $limit, postId: ${postId != null}');
+    if (state.posts.length >= maxLoadItems) {
+      print('FPPR:🌐 _fetchPostsFromNetwork - state.totalPostCount >= maxLoadItems: ${state.posts.length} >= $maxLoadItems');
+      return null;
     }
 
-    if (!isInitial) {
-      state = state.copyWith(isRefreshing: false);
+    try {
+      final newPosts = await _postService
+          .getPostsPaginated(limit: limit, postId: postId, mutedCreators: _ref.read(muteCreatorProvider))
+          .timeout(Duration(seconds: 15));
+
+      print('FPPR:🌐 Network fetch completed - posts: ${newPosts.length}');
+
+      if (newPosts.isNotEmpty) {
+        await _cacheRepository.saveFeedPosts(newPosts);
+        print('FPPR:💾 Cached ${newPosts.length} posts from network');
+      }
+
+      return newPosts;
+    } catch (e, s) {
+      _handleError("_fetchPostsFromNetwork", "Error fetching posts from network", e, s);
+      rethrow;
     }
   }
 
@@ -178,165 +286,38 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
     print('FPPR:📥 Fetching $newPostsCount new posts from Firebase');
 
     try {
-      // Fetch all new posts from Firebase
-      final List<MemoModelPost> newPosts = await _postService.getPostsPaginated(
-        limit: previousCount == 0 ? pageSize : newPostsCount,
-        startAfterDoc: null,
-      );
-
-      print('FPPR:🌐 New posts fetched: ${newPosts.length}');
-
-      if (newPosts.isNotEmpty) {
-        // Cache all new posts
-        print('FPPR:💾 Caching ${newPosts.length} new posts');
-        await _cacheRepository.saveFeedPosts(newPosts);
-        print('FPPR:✅ New posts cached successfully');
-      }
-
-      // Now load from cache (which includes the new posts)
-      await _loadFromCache(isInitial: true);
+      final newPosts = await _fetchPostsFromNetworkToFeedTheCache(limit: previousCount == 0 ? pageSize : newPostsCount, postId: null);
+      print('FPPR:🌐 New posts fetched: ${newPosts?.length ?? 0}');
+      await _loadFromCache();
     } catch (e, s) {
-      print('FPPR:❌ _fetchAndCacheNewPosts ERROR: $e');
-      _logFeedError("Error fetching and caching new posts", e, s);
+      _handleError("_fetchAndCacheNewPosts", "Error fetching and caching new posts", e, s, setState: false);
       throw e;
     }
   }
 
-  Future<void> _loadFromCache({bool isInitial = true, bool fallback = false}) async {
-    print('FPPR:💾 _loadFromCache - isInitial: $isInitial, fallback: $fallback');
+  Future<void> _fetchFromNetwork() async {
+    print('FPPR:🌐 _fetchFromNetwork - isLoadingInitial: ${state.isLoadingInitialAtTop}');
 
     try {
-      final pageNumber = isInitial ? 1 : (state.posts.length ~/ pageSize) + 1;
-      print('FPPR:📄 Loading page $pageNumber from cache');
-
-      final cachedPosts = await _cacheRepository.getFeedPage(pageNumber);
-      print('FPPR:💾 Cache result - posts: ${cachedPosts?.length}');
-
-      if (cachedPosts != null && cachedPosts.isNotEmpty) {
-        // Successfully loaded from cache
-        final newPosts = isInitial ? cachedPosts : [...state.posts, ...cachedPosts];
-
-        state = state.copyWith(
-          posts: newPosts,
-          isLoadingInitial: false,
-          isLoadingMore: false,
-          isUsingCache: true,
-          hasReachedCacheEnd: cachedPosts.length < pageSize,
-          clearErrorMessage: true,
-        );
-
-        print('FPPR:✅ Loaded ${cachedPosts.length} posts from cache - total: ${state.posts.length}');
-
-        // If we got less than a full page from cache, we've reached cache end
-        if (cachedPosts.length < pageSize && state.hasMorePosts) {
-          print('FPPR:🏁 Reached end of cache, next load will use network');
-        }
-      } else {
-        // No posts in cache
-        if (isInitial) {
-          if (fallback) {
-            // Even fallback failed - go to network
-            print('FPPR:🌐 Cache fallback failed, fetching from network');
-            await _fetchFromNetwork(isInitial: true);
-          } else {
-            // First load with no cache - go to network
-            print('FPPR:🌐 No cache available, fetching from network');
-            await _fetchFromNetwork(isInitial: true);
-          }
-        } else {
-          // Loading more but cache is empty
-          state = state.copyWith(isLoadingMore: false, hasReachedCacheEnd: true);
-          print('FPPR:🏁 No more posts in cache');
-        }
-      }
-    } catch (e, s) {
-      print('FPPR:❌ _loadFromCache ERROR: $e');
-      _logFeedError("Error loading from cache", e, s);
-
-      if (isInitial && !fallback) {
-        await _fetchFromNetwork(isInitial: true);
-      } else {
-        state = state.copyWith(isLoadingInitial: false, isLoadingMore: false, errorMessage: "Failed to load posts");
-      }
-    }
-  }
-
-  Future<void> _loadMorePosts() async {
-    print('FPPR:📥 _loadMorePosts called');
-
-    if (state.hasReachedCacheEnd) {
-      // Load from network using last post ID as cursor
-      await _fetchFromNetwork(isInitial: false);
-    } else {
-      // Load next page from cache
-      await _loadFromCache(isInitial: false);
-    }
-  }
-
-  Future<void> _fetchFromNetwork({bool isInitial = true}) async {
-    print('FPPR:🌐 _fetchFromNetwork - isInitial: $isInitial');
-
-    try {
-      DocumentSnapshot? startAfterDoc;
-
-      if (!isInitial && state.posts.isNotEmpty) {
-        // Use last post's ID as cursor (since postId = Firestore document ID)
+      String? lastPostId;
+      if (!state.isLoadingInitialAtTop && state.posts.isNotEmpty) {
         final lastPost = state.posts.last;
         if (lastPost.id != null) {
           print('FPPR:📄 Using last post ID as cursor: ${lastPost.id}');
-          // We need to get the document snapshot for the last post
-          // This would require a method in PostService to get document by ID
-          startAfterDoc = await _getDocumentSnapshot(lastPost.id!);
+          lastPostId = lastPost.id!;
         }
       }
 
-      final newPosts = await _postService.getPostsPaginated(limit: pageSize, startAfterDoc: startAfterDoc);
+      final newPosts = await _fetchPostsFromNetworkToFeedTheCache(limit: pageSize, postId: lastPostId);
 
-      print('FPPR:🌐 Network fetch completed - posts: ${newPosts.length}');
-
-      if (newPosts.isNotEmpty) {
-        // Cache the new posts
-        await _cacheRepository.saveFeedPosts(newPosts);
-        print('FPPR:💾 Cached ${newPosts.length} posts from network');
-
-        // Update state
-        final updatedPosts = isInitial ? newPosts : [...state.posts, ...newPosts];
-
-        state = state.copyWith(
-          posts: updatedPosts,
-          isLoadingInitial: false,
-          isLoadingMore: false,
-          isUsingCache: false,
-          hasReachedCacheEnd: newPosts.length < pageSize,
-          clearErrorMessage: true,
-        );
-
-        print('FPPR:✅ Updated state with ${newPosts.length} new posts - total: ${state.posts.length}');
+      if (newPosts != null && newPosts.isNotEmpty) {
+        await _loadFromCache();
       } else {
-        // No more posts from network
-        state = state.copyWith(isLoadingInitial: false, isLoadingMore: false, hasReachedCacheEnd: true);
+        state = state.copyWith(hasReachedCacheEnd: true);
         print('FPPR:🏁 No more posts available from network');
       }
     } catch (e, s) {
-      print('FPPR:❌ _fetchFromNetwork ERROR: $e');
-      _logFeedError("Error fetching from network", e, s);
-
-      state = state.copyWith(isLoadingInitial: false, isLoadingMore: false, errorMessage: "Failed to load posts from network");
-    }
-  }
-
-  Future<DocumentSnapshot?> _getDocumentSnapshot(String postId) async {
-    // This method would need to be implemented in PostService
-    // to get a DocumentSnapshot by post ID
-    print('FPPR:🔍 Getting document snapshot for post: $postId');
-    // Placeholder implementation - you'll need to implement this
-    try {
-      // Assuming posts are stored in a 'posts' collection
-      final doc = await FirebaseFirestore.instance.collection(FirestoreCollections.posts).doc(postId).get();
-      return doc.exists ? doc : null;
-    } catch (e) {
-      print('FPPR:❌ Error getting document snapshot: $e');
-      return null;
+      _handleError("_fetchFromNetwork", "Error fetching from network", e, s, setState: true);
     }
   }
 }
@@ -344,12 +325,14 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 // --- Provider Definition ---
 final feedPostsProvider = StateNotifierProvider<FeedPostsNotifier, FeedState>((ref) {
   print('FPPR:🏭 feedPostsProvider creating FeedPostsNotifier');
-  return FeedPostsNotifier(ref.read(postServiceFeedProvider), ref.read(feedPostCacheProvider));
+  return FeedPostsNotifier(
+    ref, // Pass ref here
+    ref.read(postServiceFeedProvider),
+    ref.read(feedPostCacheProvider),
+  );
 });
 
 // Helper for logging
 void _logFeedError(String message, [dynamic error, StackTrace? stackTrace]) {
-  print(
-    '\nFEED POSTS PROVIDER\nERROR FeedPostsNotifier: $message ${error != null ? '- $error' : ''}${stackTrace != null ? '\n$stackTrace' : ''}',
-  );
+  print('FPPR: $message ${error != null ? '- $error' : ''}${stackTrace != null ? '\n$stackTrace' : ''}');
 }

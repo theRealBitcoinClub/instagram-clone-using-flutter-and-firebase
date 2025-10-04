@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import for DocumentSnapshot
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/firebase/post_service_feed.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
@@ -23,7 +22,7 @@ class _AdminPostsListPageState extends State<AdminPostsListPage> {
   List<MemoModelPost> _posts = [];
   bool _isLoading = false;
   bool _hasMorePosts = true;
-  DocumentSnapshot? _lastDocument;
+  String? _lastPostId;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -56,14 +55,14 @@ class _AdminPostsListPageState extends State<AdminPostsListPage> {
 
     try {
       // Use the paginated method from your PostService
-      final newPosts = await _postService.getPostsPaginated(limit: _postsPerPage, startAfterDoc: _lastDocument);
+      final newPosts = await _postService.getPostsPaginated(limit: _postsPerPage, postId: _lastPostId);
 
       // Check if we reached the end of the collection
       _hasMorePosts = newPosts.length == _postsPerPage;
 
       if (newPosts.isNotEmpty) {
         // Update the last document for the next page
-        _lastDocument = newPosts.last.docSnapshot;
+        _lastPostId = newPosts.last.id;
 
         setState(() {
           _posts.addAll(newPosts);

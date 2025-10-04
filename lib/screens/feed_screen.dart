@@ -5,8 +5,13 @@ import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
+import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart';
+import 'package:mahakka/provider/user_provider.dart';
+import 'package:mahakka/providers/navigation_providers.dart';
+import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/utils/snackbar.dart';
+import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 
 import '../intros/intro_overlay.dart';
@@ -238,7 +243,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             controller: _scrollController,
             itemCount:
                 feedState.posts.length +
-                (feedState.isLoadingMorePostsAtBottom ? 1 : 0) +
+                (feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimitReached ? 1 : 0) +
                 (feedState.isMaxFreeLimitReached ? 1 : 0) +
                 (!feedState.hasMorePosts &&
                         feedState.posts.isNotEmpty &&
@@ -257,12 +262,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               } else if (feedState.isMaxFreeLimitReached && index == feedState.posts.length) {
                 print('FSCR:💰 Building free plan limit widget at index $index');
                 return _buildFreePlanLimitWidget(theme);
-              } else if (feedState.isLoadingMorePostsAtBottom && index == feedState.posts.length + (feedState.isMaxFreeLimitReached ? 1 : 0)) {
+              } else if (feedState.isLoadingMorePostsAtBottom &&
+                  !feedState.isMaxFreeLimitReached &&
+                  index == feedState.posts.length + (feedState.isMaxFreeLimitReached ? 1 : 0)) {
                 print('FSCR:⏳ Building loading indicator at index $index');
                 return _buildLoadingIndicator();
               } else if (!feedState.hasMorePosts &&
                   index ==
-                      feedState.posts.length + (feedState.isMaxFreeLimitReached ? 1 : 0) + (feedState.isLoadingMorePostsAtBottom ? 1 : 0)) {
+                      feedState.posts.length +
+                          (feedState.isMaxFreeLimitReached ? 1 : 0) +
+                          (feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimitReached ? 1 : 0)) {
                 print('FSCR:🏁 Building end of feed message at index $index');
                 return _buildEndOfFeedWidget(theme);
               }
@@ -276,36 +285,51 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _buildFreePlanLimitWidget(ThemeData theme) {
+    var headerColor = theme.colorScheme.secondary;
+    var borderColor = theme.colorScheme.primary;
+
     return Container(
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: const EdgeInsets.all(15),
+      margin: const EdgeInsets.fromLTRB(6, 3, 6, 6),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withOpacity(0.1),
-        border: Border.all(color: theme.colorScheme.primary),
+        color: theme.colorScheme.surface.withOpacity(0.1),
+        border: Border.all(color: borderColor),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         children: [
-          Icon(Icons.workspace_premium, color: theme.colorScheme.primary, size: 32),
-          const SizedBox(height: 8),
+          Icon(Icons.workspace_premium, color: headerColor, size: 32),
+          const SizedBox(height: 9),
+          Text('Free Plan Limit Reached', style: theme.textTheme.titleLarge?.copyWith(color: headerColor)),
+          const SizedBox(height: 9),
           Text(
-            'Free Plan Limit Reached',
-            style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'You\'ve loaded the maximum posts available for non token users. Deposit 100 tokens to unlock limits! These tokens stay in your wallet, depositing them simply proofs that you are ready to level up!',
-            textAlign: TextAlign.center,
+            'You\'ve loaded the maximum posts available for non token users. Deposit 100 tokens to unlock limits! These tokens stay in your wallet, depositing them simply proofs that you are ready to level up! You can also mute some users to get a more focused perspective on what you really care about!',
+            textAlign: TextAlign.justify,
             style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: () {
-              // Navigate to upgrade screen
-              _showUpgradeDialog(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.primary, foregroundColor: theme.colorScheme.onPrimary),
-            child: Text('Upgrade to Pro'),
+          const SizedBox(height: 9),
+          Center(
+            child: Row(
+              children: [
+                IconAction(
+                  text: 'Swap',
+                  onTap: () {
+                    ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cauldronSwapTokenUrl);
+                  },
+                  type: IAB.alternative,
+                  icon: Icons.swap_horizontal_circle_outlined,
+                ),
+                const SizedBox(height: 9),
+                IconAction(
+                  text: 'Deposit',
+                  onTap: () {
+                    showQrCodeDialog(ctx: context, user: ref.read(userProvider), tokenOnly: true);
+                  },
+                  type: IAB.success,
+                  icon: Icons.qr_code_outlined,
+                ),
+              ],
+            ),
           ),
         ],
       ),

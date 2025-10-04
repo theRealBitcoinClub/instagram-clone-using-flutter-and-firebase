@@ -45,7 +45,10 @@ class IconAction extends StatelessWidget {
             children: [
               Center(child: Icon(icon, size: size * 1.5)),
               SizedBox(width: size / 2),
-              Text(text.toUpperCase(), style: Theme.of(context).textTheme.labelLarge!.copyWith(fontSize: size)),
+              Text(
+                text.toUpperCase(),
+                style: Theme.of(context).textTheme.labelLarge!.copyWith(fontSize: size, color: Colors.white),
+              ),
             ],
           ),
         ),

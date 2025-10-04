@@ -17,11 +17,16 @@ class PostServiceFeed {
 
   //TODO LIMIT THE TOTAL POSTS THAT CAN BE RETRIEVED IN FREE MODE TO 100
   // --- PAGINATION METHOD (Primary method for the feed) ---
-  Future<List<MemoModelPost>> getPostsPaginated({required int limit, DocumentSnapshot? startAfterDoc}) async {
+  Future<List<MemoModelPost>> getPostsPaginated({required int limit, String? postId, List<String> mutedCreators = const []}) async {
     Query query = _firestore.collection(_collectionName).orderBy(orderByField, descending: descendingOrder);
+    var startAfterDoc = postId == null ? null : await _getDocumentSnapshot(postId);
 
     if (startAfterDoc != null) {
       query = query.startAfterDocument(startAfterDoc);
+    }
+
+    if (mutedCreators.isNotEmpty) {
+      query = query.where("creatorId", whereNotIn: mutedCreators);
     }
 
     final querySnapshot = await query.limit(limit).get();
@@ -38,6 +43,17 @@ class PostServiceFeed {
     } catch (e) {
       print('Error getting post count: $e');
       return -1;
+    }
+  }
+
+  Future<DocumentSnapshot?> _getDocumentSnapshot(String postId) async {
+    print('PostServiceFeed:🔍 Getting document snapshot for post: $postId');
+    try {
+      final doc = await FirebaseFirestore.instance.collection(FirestoreCollections.posts).doc(postId).get();
+      return doc.exists ? doc : null;
+    } catch (e) {
+      print('PostServiceFeed:❌ Error getting document snapshot: $e');
+      return null;
     }
   }
 }

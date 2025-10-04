@@ -66,7 +66,8 @@ class FeedState {
 class FeedPostsNotifier extends StateNotifier<FeedState> {
   final PostServiceFeed _postService;
   final FeedPostCache _cacheRepository;
-  final int _pageSize = 10;
+  static const int maxLoadItems = 30;
+  static const int pageSize = 10;
 
   static const String _lastTotalCountKey = 'last_total_post_count';
   SharedPreferences? _prefs;
@@ -112,37 +113,61 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 
   Future<void> _loadInitialData() async {
     print('FPPR:📄 _loadInitialData called');
+    _cacheRepository.resetLoadedItems();
     try {
-      // Get current total count from Firebase
-      final int currentTotalCount = await _postService.getTotalPostCount();
-      print('FPPR:📊 Current total post count: $currentTotalCount');
-
-      if (currentTotalCount == -1) {
-        throw Exception('Failed to get total post count');
-      }
-
-      // Get previous total count from SharedPreferences
-      final int previousTotalCount = _prefs?.getInt(_lastTotalCountKey) ?? 0;
-      print('FPPR:📊 Previous total post count: $previousTotalCount');
-
-      // Update stored total count
-      await _prefs?.setInt(_lastTotalCountKey, currentTotalCount);
-
-      state = state.copyWith(totalPostCount: currentTotalCount);
-
-      if (currentTotalCount > previousTotalCount) {
-        // New posts available - fetch and cache them
-        await _fetchAndCacheNewPosts(previousTotalCount, currentTotalCount);
-      } else {
-        // No new posts - load from cache
-        await _loadFromCache(isInitial: true);
-      }
+      await _fetchData(isInitial: true);
     } catch (e, s) {
       print('FPPR:❌ _loadInitialData ERROR: $e');
       _logFeedError("Error loading initial data", e, s);
 
       // Fallback: try to load from cache
       await _loadFromCache(isInitial: true, fallback: true);
+    }
+  }
+
+  Future<void> refreshFeed() async {
+    print('FPPR:🔄 refreshFeed called');
+
+    try {
+      state = state.copyWith(isRefreshing: true);
+      await _fetchData(isInitial: false);
+      print('FPPR:✅ Refresh completed');
+    } catch (e, s) {
+      print('FPPR:❌ refreshFeed ERROR: $e');
+      _logFeedError("Error during refresh", e, s);
+
+      state = state.copyWith(isRefreshing: false, errorMessage: "Refresh failed");
+    }
+  }
+
+  Future<void> _fetchData({required bool isInitial}) async {
+    // Get current total count from Firebase
+    final int currentTotalCount = await _postService.getTotalPostCount();
+    print('FPPR:📊 Current total post count: $currentTotalCount');
+
+    if (currentTotalCount == -1) {
+      throw Exception('Failed to get total post count');
+    }
+
+    // Get previous total count from SharedPreferences
+    final int previousTotalCount = _prefs?.getInt(_lastTotalCountKey) ?? 0;
+    print('FPPR:📊 Previous total post count: $previousTotalCount');
+
+    // Update stored total count
+    await _prefs?.setInt(_lastTotalCountKey, currentTotalCount);
+
+    state = state.copyWith(totalPostCount: currentTotalCount);
+
+    if (currentTotalCount > previousTotalCount) {
+      // New posts available - fetch and cache them
+      await _fetchAndCacheNewPosts(previousTotalCount, currentTotalCount);
+    } else {
+      // No new posts - load from cache
+      await _loadFromCache(isInitial: isInitial);
+    }
+
+    if (!isInitial) {
+      state = state.copyWith(isRefreshing: false);
     }
   }
 
@@ -155,7 +180,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
     try {
       // Fetch all new posts from Firebase
       final List<MemoModelPost> newPosts = await _postService.getPostsPaginated(
-        limit: previousCount == 0 ? _pageSize : newPostsCount,
+        limit: previousCount == 0 ? pageSize : newPostsCount,
         startAfterDoc: null,
       );
 
@@ -181,7 +206,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
     print('FPPR:💾 _loadFromCache - isInitial: $isInitial, fallback: $fallback');
 
     try {
-      final pageNumber = isInitial ? 1 : (state.posts.length ~/ _pageSize) + 1;
+      final pageNumber = isInitial ? 1 : (state.posts.length ~/ pageSize) + 1;
       print('FPPR:📄 Loading page $pageNumber from cache');
 
       final cachedPosts = await _cacheRepository.getFeedPage(pageNumber);
@@ -196,14 +221,14 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
           isLoadingInitial: false,
           isLoadingMore: false,
           isUsingCache: true,
-          hasReachedCacheEnd: cachedPosts.length < _pageSize,
+          hasReachedCacheEnd: cachedPosts.length < pageSize,
           clearErrorMessage: true,
         );
 
         print('FPPR:✅ Loaded ${cachedPosts.length} posts from cache - total: ${state.posts.length}');
 
         // If we got less than a full page from cache, we've reached cache end
-        if (cachedPosts.length < _pageSize && state.hasMorePosts) {
+        if (cachedPosts.length < pageSize && state.hasMorePosts) {
           print('FPPR:🏁 Reached end of cache, next load will use network');
         }
       } else {
@@ -265,7 +290,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
         }
       }
 
-      final newPosts = await _postService.getPostsPaginated(limit: _pageSize, startAfterDoc: startAfterDoc);
+      final newPosts = await _postService.getPostsPaginated(limit: pageSize, startAfterDoc: startAfterDoc);
 
       print('FPPR:🌐 Network fetch completed - posts: ${newPosts.length}');
 
@@ -282,7 +307,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
           isLoadingInitial: false,
           isLoadingMore: false,
           isUsingCache: false,
-          hasReachedCacheEnd: newPosts.length < _pageSize,
+          hasReachedCacheEnd: newPosts.length < pageSize,
           clearErrorMessage: true,
         );
 
@@ -312,47 +337,6 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
     } catch (e) {
       print('FPPR:❌ Error getting document snapshot: $e');
       return null;
-    }
-  }
-
-  //TODO THIS LOGIC IS VERY DUPLICATE TO loadinitialdata
-  Future<void> refreshFeed() async {
-    print('FPPR:🔄 refreshFeed called');
-
-    try {
-      state = state.copyWith(isRefreshing: true);
-
-      // Get current total count
-      final int currentTotalCount = await _postService.getTotalPostCount();
-      print('FPPR:📊 Current total count: $currentTotalCount');
-
-      if (currentTotalCount == -1) {
-        throw Exception('Failed to get total post count');
-      }
-
-      // Get previous total count
-      final int previousTotalCount = _prefs?.getInt(_lastTotalCountKey) ?? 0;
-      print('FPPR:📊 Previous total count: $previousTotalCount');
-
-      // Update stored count
-      await _prefs?.setInt(_lastTotalCountKey, currentTotalCount);
-
-      if (currentTotalCount > previousTotalCount) {
-        // Fetch and cache new posts
-        await _fetchAndCacheNewPosts(previousTotalCount, currentTotalCount);
-      } else {
-        //TODO WHY LOAD ANYTHING HERE???
-        // No new posts - just reload from cache
-        await _loadFromCache(isInitial: true);
-        state = state.copyWith(isRefreshing: false);
-      }
-
-      print('FPPR:✅ Refresh completed');
-    } catch (e, s) {
-      print('FPPR:❌ refreshFeed ERROR: $e');
-      _logFeedError("Error during refresh", e, s);
-
-      state = state.copyWith(isRefreshing: false, errorMessage: "Refresh failed");
     }
   }
 }

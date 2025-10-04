@@ -1,6 +1,7 @@
 // Updated feed_post_cache.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mahakka/provider/feed_posts_provider.dart';
 
 import '../memo/isar/memo_model_post_db.dart';
 import '../memo/model/memo_model_post.dart';
@@ -11,8 +12,7 @@ final feedPostCacheProvider = Provider((ref) => FeedPostCache(ref));
 
 class FeedPostCache {
   final Ref ref;
-  static const int _maxLoadItems = 100; // 10 pages × 10 items
-  int _totalLoadedItems = 0;
+  int _totalLoadedItemsFromCache = 0;
 
   FeedPostCache(this.ref) {
     print('🔄 FPC: FeedPostCache constructor called');
@@ -26,8 +26,8 @@ class FeedPostCache {
     return isar;
   }
 
-  static const int _maxDiskCacheSizeFeed = 5000;
-  static const int _diskCleanupThresholdFeed = 6000;
+  static const int _maxDiskCacheSizeFeed = 50;
+  static const int _diskCleanupThresholdFeed = 60;
 
   // Get muted creators list
   List<String> get _mutedCreators {
@@ -36,13 +36,13 @@ class FeedPostCache {
 
   // Check if we can load more items
   bool get canLoadMore {
-    return _totalLoadedItems < _maxLoadItems;
+    return _totalLoadedItemsFromCache < FeedPostsNotifier.maxLoadItems;
   }
 
   // Reset loaded items counter (call this when feed is rebuilt)
   void resetLoadedItems() {
     print('🔄 FPC: Resetting loaded items counter');
-    _totalLoadedItems = 0;
+    _totalLoadedItemsFromCache = 0;
   }
 
   // Update post in both feed and profile databases
@@ -110,16 +110,15 @@ class FeedPostCache {
 
     // Check if we can load more items
     if (!canLoadMore) {
-      print('🚫 FPC: Maximum load limit reached ($_maxLoadItems items)');
+      print('🚫 FPC: Maximum load limit reached, current {$_totalLoadedItemsFromCache} (max ${FeedPostsNotifier.maxLoadItems} items)');
       return null;
     }
 
     // If not in memory, try disk cache
     final isar = await _feedIsar;
     try {
-      const pageSize = 10;
       // Calculate the offset for pagination
-      final offset = (pageNumber - 1) * pageSize;
+      final offset = (pageNumber - 1) * FeedPostsNotifier.pageSize;
 
       // Get muted creators for filtering
       final mutedCreators = _mutedCreators;
@@ -133,10 +132,10 @@ class FeedPostCache {
             .anyOf(mutedCreators, (q, String creatorId) => q.creatorIdEqualTo(creatorId))
             .sortByCreatedDateTimeDesc()
             .offset(offset)
-            .limit(pageSize)
+            .limit(FeedPostsNotifier.pageSize)
             .findAll();
       } else {
-        postsDb = await isar.memoModelPostDbs.where().sortByCreatedDateTimeDesc().offset(offset).limit(pageSize).findAll();
+        postsDb = await isar.memoModelPostDbs.where().sortByCreatedDateTimeDesc().offset(offset).limit(FeedPostsNotifier.pageSize).findAll();
       }
 
       // final posts = postsDb.map((db) => db.toAppModel()).toList();
@@ -147,8 +146,10 @@ class FeedPostCache {
       }
 
       if (posts.isNotEmpty) {
-        _totalLoadedItems += posts.length;
-        print('✅ FPC: Returning feed page from disk cache: ${posts.length} posts (total loaded: $_totalLoadedItems/$_maxLoadItems)');
+        _totalLoadedItemsFromCache += posts.length;
+        print(
+          '✅ FPC: Returning feed page from disk cache: ${posts.length} posts (total loaded: $_totalLoadedItemsFromCache/${FeedPostsNotifier.maxLoadItems})',
+        );
         return posts;
       }
     } catch (e) {
@@ -157,65 +158,6 @@ class FeedPostCache {
 
     print('❌ FPC: Feed page not found in cache: $pageNumber');
     return null;
-  }
-  //
-  // Future<List<MemoModelPost>?> getFeedPage(int pageNumber) async {
-  //   print('📄 FPC: getFeedPage called - page: $pageNumber');
-  //
-  //   // Check if we can load more items
-  //   if (!canLoadMore) {
-  //     print('🚫 FPC: Maximum load limit reached ($_maxLoadItems items)');
-  //     return null;
-  //   }
-  //
-  //   // If not in memory, try disk cache
-  //   final isar = await _feedIsar;
-  //   try {
-  //     final pageSize = 10;
-  //     final offset = (pageNumber - 1) * pageSize;
-  //
-  //     // Get muted creators for filtering
-  //     final mutedCreators = _mutedCreators;
-  //     //
-  //     // Build query excluding muted creators
-  //     var query = isar.memoModelPostDbs.where();
-  //
-  //     // If there are muted creators, filter them out
-  //     if (mutedCreators.isNotEmpty) {
-  //       query = query.filter().creatorIdNotIn(mutedCreators);
-  //     }
-  //
-  //     final postsDb = await query.sortByCreatedDateTimeDesc().offset(offset).limit(pageSize).findAll();
-  //
-  //     final posts = postsDb.map((db) => db.toAppModel()).toList();
-  //
-  //     if (posts.isNotEmpty) {
-  //       _totalLoadedItems += posts.length;
-  //       print('✅ FPC: Returning feed page from disk cache: ${posts.length} posts (total loaded: $_totalLoadedItems/$_maxLoadItems)');
-  //       return posts;
-  //     }
-  //   } catch (e) {
-  //     print('❌ FPC: Error loading feed page from disk: $e');
-  //   }
-  //
-  //   print('❌ FPC: Feed page not found in cache: $pageNumber');
-  //   return null;
-  // }
-
-  // Get feed page without mute filtering (for internal use if needed)
-  Future<List<MemoModelPost>?> _getFeedPageUnfiltered(int pageNumber) async {
-    final isar = await _feedIsar;
-    try {
-      final pageSize = 10;
-      final offset = (pageNumber - 1) * pageSize;
-
-      final postsDb = await isar.memoModelPostDbs.where().sortByCreatedDateTimeDesc().offset(offset).limit(pageSize).findAll();
-
-      return postsDb.map((db) => db.toAppModel()).toList();
-    } catch (e) {
-      print('❌ FPC: Error loading unfiltered feed page: $e');
-      return null;
-    }
   }
 
   // --- Size Limit Enforcement ---
@@ -233,7 +175,7 @@ class FeedPostCache {
     final entriesToRemove = currentSize - _maxDiskCacheSizeFeed;
     print('🧹 FPC: Need to remove $entriesToRemove entries from feed cache');
 
-    final oldEntries = await isar.memoModelPostDbs.where().limit(entriesToRemove).findAll();
+    final oldEntries = await isar.memoModelPostDbs.where().sortByCachedAt().limit(entriesToRemove).findAll();
 
     print('🧹 FPC: Found ${oldEntries.length} old feed entries to remove');
     await isar.memoModelPostDbs.deleteAll(oldEntries.map((e) => e.id).toList());

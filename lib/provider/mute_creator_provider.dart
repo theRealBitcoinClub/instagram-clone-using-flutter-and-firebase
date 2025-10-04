@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../memo/model/memo_model_creator.dart';
 import '../repositories/creator_repository.dart';
-import '../repositories/feed_post_cache.dart';
 import 'feed_posts_provider.dart';
 
 final muteCreatorProvider = StateNotifierProvider<MuteCreatorNotifier, List<String>>((ref) {
@@ -70,7 +69,7 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList(_mutedCreatorsKey, newMutedCreators);
       state = newMutedCreators;
-      ref.read(feedPostCacheProvider).resetLoadedItems();
+      // ref.read(feedPostCacheProvider).resetLoadedItems();
       ref.read(feedPostsProvider.notifier).fetchInitialPosts();
       onMuteSuccess?.call();
       print('✅ MuteCreator: Muted creator: $creatorId');
@@ -91,7 +90,7 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList(_mutedCreatorsKey, newMutedCreators);
       state = newMutedCreators;
-      ref.read(feedPostCacheProvider).resetLoadedItems();
+      // ref.read(feedPostCacheProvider).resetLoadedItems();
       ref.read(feedPostsProvider.notifier).fetchInitialPosts();
       print('✅ MuteCreator: Unmuted creator: $creatorId');
     } catch (e) {

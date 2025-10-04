@@ -108,7 +108,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     // Check if we should clear on backspace
     if (text.length < _previousTextLength && _isInputValid) {
       _mnemonicController.clear();
-      _previousText = '';
       _previousTextLength = 0;
       _validateMnemonic();
       return;
@@ -134,15 +133,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
       }
     }
 
-    // Store previous values for backspace detection
-    _previousText = text;
     _previousTextLength = text.length;
 
     _validateMnemonic();
   }
 
-  // Add these variables to your class
-  String _previousText = '';
   int _previousTextLength = 0;
 
   void _validateMnemonic() {

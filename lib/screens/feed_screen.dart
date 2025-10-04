@@ -6,16 +6,12 @@ import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart';
-import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 
-import '../intros/intro_animated_icon.dart';
 import '../intros/intro_overlay.dart';
 import '../memo/model/memo_model_post.dart';
 import '../widgets/post_dialog.dart';
-
-enum PostFilterType { images, topics }
 
 class ScrollUpIntent extends Intent {}
 
@@ -143,12 +139,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () async {
-                      print('FSCR:🔄 Retry button pressed');
+                      print('FSCR:🔄 Error then Retry button pressed');
                       setState(() {
                         _isRenderingContent = true;
                         _loadingError = null;
                       });
-                      await ref.read(feedPostsProvider.notifier).refreshFeed();
+                      await ref.read(feedPostsProvider.notifier).fetchInitialPosts();
 
                       context.afterLayout(refreshUI: true, () {
                         print('FSCR:_isRenderingContent');
@@ -164,15 +160,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           // Main content - initially transparent during rendering
           Opacity(
             opacity: (_isRenderingContent || feedState.isLoadingInitial) ? 0.0 : 1.0,
-            child: Column(
-              children: [
-                // // Post counter at the top
-                // const PostCounterWidget(),
-
-                // Feed content
-                Expanded(child: _buildFeedBody(feedState)),
-              ],
-            ),
+            child: Column(children: [Expanded(child: _buildFeedBody(feedState))]),
           ),
           // Intro overlay - should be at the top of the Stack to overlay everything
           if (shouldShowIntro) IntroOverlay(introType: _introType, onComplete: () {}),
@@ -185,8 +173,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     print('FSCR:🔄 Building refreshable no posts widget');
     return RefreshIndicator(
       onRefresh: () async {
-        print('FSCR:🔄 RefreshIndicator triggered');
-        await ref.read(feedPostsProvider.notifier).refreshFeed();
+        print('FSCR:🔄 no posts widget load triggered');
+        await ref.read(feedPostsProvider.notifier).fetchInitialPosts();
       },
       color: theme.colorScheme.primary,
       backgroundColor: theme.colorScheme.surface,
@@ -350,34 +338,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           textAlign: TextAlign.center,
         ),
       ),
-    );
-  }
-
-  Center _widgetNoMatch(ThemeData theme, String filterName) {
-    print('FSCR:🔍 Building no match widget for filter: $filterName');
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Text(
-          "No posts found for the '$filterName' filter.\nTry a different filter or pull to refresh.",
-          style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuTheme(ThemeState themeState) {
-    return IntroAnimatedIcon(
-      icon: themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-      introType: IntroType.mainApp,
-      introStep: IntroStep.mainTheme,
-      size: 24,
-      padding: EdgeInsets.all(12),
-      onTap: () {
-        ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainTheme, context);
-        ref.read(themeNotifierProvider.notifier).toggleTheme();
-      },
     );
   }
 

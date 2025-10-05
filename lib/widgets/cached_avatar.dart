@@ -169,7 +169,7 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
             onMuteSuccess: () {
               showMutedCreatorsDialog(context);
             },
-            onMutedAlready: () {
+            onMuteLimitReached: () {
               showMutedCreatorsDialog(context);
             },
           );

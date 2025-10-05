@@ -2,6 +2,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/providers/token_limits_provider.dart';
+import 'package:mahakka/utils/snackbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../memo/model/memo_model_creator.dart';
@@ -60,16 +62,24 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
   }
 
   // Mute a creator
-  Future<void> muteCreator(String creatorId, {Function()? onMuteSuccess, Function()? onMutedAlready}) async {
+  Future<void> muteCreator(String creatorId, {Function()? onMuteSuccess, Function()? onMuteLimitReached}) async {
     if (state.contains(creatorId)) {
-      onMutedAlready?.call();
       return; // Already muted
     }
 
     try {
       final newMutedCreators = [...state, creatorId];
+
+      TokenLimitEnum tokenLimitEnum = ref.read(currentTokenLimitEnumProvider);
+      if (tokenLimitEnum.muteLimit < newMutedCreators.length) {
+        showSnackBar(tokenLimitEnum.muteLimitText, type: SnackbarType.error);
+        onMuteLimitReached?.call();
+        return;
+      }
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList(_mutedCreatorsKey, newMutedCreators);
+
       state = newMutedCreators;
       ref.read(feedPostsProvider.notifier).fetchInitialPosts();
       onMuteSuccess?.call();

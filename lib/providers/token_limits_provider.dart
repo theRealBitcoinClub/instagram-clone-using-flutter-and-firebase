@@ -11,51 +11,79 @@ import '../provider/user_provider.dart';
 enum TokenLimitEnum {
   free(
     "FREE",
-    'You\'ve loaded the maximum posts available for non token users. Deposit 222 tokens to unlock STARTER limits. '
+    tokenAmount: 0,
+    feedLimit: 20,
+    feedLimitText:
+        'You\'ve loaded the maximum feed post items for non token users. Deposit 222 tokens to unlock STARTER limits. '
         'These tokens stay in your wallet, depositing them simply proofs that you are ready to level up. '
         'You can also mute some users to appreciate the 20 free limit post spots, '
         'navigate to any profile and hit the mute badge on their avatar. If you deposit 222 tokens '
         'you will have a limit of 30 spots, 1800 tokens give you 42 spots and 6000 for 60 spots',
-    tokenAmount: 0,
-    feedLimit: 20,
     profileLimit: 9,
+    profileLimitText:
+        "Profile posts are limited to 9 items on the FREE tier, to unlock the STARTER tier deposit 222 tokens. "
+        "Deposits stay in your wallet and you can withdraw the funds at any time using your mnemonic seed phrase"
+        "You can find the mnemonic seed phrase in the profile settings dialog on the third tab (User)"
+        "As you deposit or withdraw the tokens the tiers are instantly unlocked or locked",
     muteLimit: 3,
+    muteLimitText: "You can mute up to 3 creators on the FREE tier. Deposit 222 tokens to unlock STARTER limits. (6 creators)",
   ),
   starter(
     "STARTER",
-    'You\'ve loaded the maximum posts available for STARTER tier. Deposit 1800 tokens to unlock ADVANCED limits. '
+    tokenAmount: 222,
+    feedLimit: 30,
+    feedLimitText:
+        'You\'ve loaded the maximum feed post items for STARTER tier. Deposit 1800 tokens to unlock ADVANCED limits. '
         'These tokens stay in your wallet, depositing them simply proofs that you are ready to level up. '
         'You can also mute some users to appreciate the 30 STARTER limit post spots, '
         'navigate to any profile and hit the mute badge on their avatar. '
         'If you want to withdraw your tokens simply use the mnemonic with Cashonize or Cauldron swap. '
         'You can find the mnemonic/seed phrase on your profile settings.',
-    tokenAmount: 222,
-    feedLimit: 30,
     profileLimit: 12,
+    profileLimitText:
+        "Profile posts are limited to 12 items on the STARTER tier, to unlock the ADVANCED tier deposit 1800 tokens. "
+        "Deposits stay in your wallet and you can withdraw the funds at any time using your mnemonic seed phrase"
+        "You can find the mnemonic seed phrase in the profile settings dialog on the third tab (User)"
+        "As you deposit or withdraw the tokens the tiers are instantly unlocked or locked",
     muteLimit: 6,
+    muteLimitText: "You can mute up to 6 creators on the STARTER tier. Deposit 1800 tokens to unlock ADVANCED limits. (9 creators)",
   ),
   advanced(
     "ADVANCED",
-    'You\'ve loaded the maximum posts available for ADVANCED tier. Deposit 6000 tokens to unlock PRO limits. '
+    tokenAmount: 1800,
+    feedLimit: 42,
+    feedLimitText:
+        'You\'ve loaded the maximum feed post items for ADVANCED tier. Deposit 6000 tokens to unlock PRO limits. '
         'These tokens stay in your wallet, depositing them simply proofs that you are ready to level up. '
         'You can also mute some users to appreciate the 42 ADVANCED tier post spots, '
         'navigate to any profile and hit the mute badge on their avatar. '
         'If you want to withdraw your tokens simply use the mnemonic with Cashonize or Cauldron swap. '
         'You can find the mnemonic/seed phrase on your profile settings.',
-    tokenAmount: 1800,
-    feedLimit: 42,
     profileLimit: 15,
+    profileLimitText:
+        "Profile posts are limited to 15 items on the ADVANCED tier, to unlock the PRO tier deposit 6000 tokens. "
+        "Deposits stay in your wallet and you can withdraw the funds at any time using your mnemonic seed phrase"
+        "You can find the mnemonic seed phrase in the profile settings dialog on the third tab (User)"
+        "As you deposit or withdraw the tokens the tiers are instantly unlocked or locked",
     muteLimit: 9,
+    muteLimitText: "You can mute up to 9 creators on the ADVANCED tier. Deposit 6000 tokens to unlock PRO limits. (12 creators)",
   ),
   pro(
     "PRO",
-    'You\'ve loaded the maximum posts available for PRO users. If you want higher limits talk to @mahakka_com TG support. '
-        'If you want to withdraw your tokens simply use the mnemonic with Cashonize or Cauldron swap. '
-        'You can find the mnemonic/seed phrase on your profile settings.',
     tokenAmount: 6000,
     feedLimit: 60,
+    feedLimitText:
+        'You\'ve loaded the maximum feed post items for PRO users. If you want higher limits talk to @mahakka_com TG support. '
+        'If you want to withdraw your tokens simply use the mnemonic with Cashonize or Cauldron swap. '
+        'You can find the mnemonic/seed phrase on your profile settings.',
     profileLimit: 18,
+    profileLimitText:
+        "Profile posts are limited to 18 items on the PRO tier, if you want unlimited posts talk to @mahakka_com TG support. "
+        "Deposits stay in your wallet and you can withdraw the funds at any time using your mnemonic seed phrase"
+        "You can find the mnemonic seed phrase in the profile settings dialog on the third tab (User)"
+        "As you deposit or withdraw the tokens the tiers are instantly unlocked or locked",
     muteLimit: 12,
+    muteLimitText: "You can mute up to 12 creators on the PRO tier. If you want higher limits contact @mahakka_com TG support. ",
   );
 
   String toString() {
@@ -63,16 +91,20 @@ enum TokenLimitEnum {
   }
 
   const TokenLimitEnum(
-    this.tokenName,
-    this.description, {
+    this.tokenName, {
     required this.tokenAmount,
     required this.feedLimit,
+    required this.feedLimitText,
     required this.profileLimit,
+    required this.profileLimitText,
     required this.muteLimit,
+    required this.muteLimitText,
   });
 
   final String tokenName;
-  final String description;
+  final String feedLimitText;
+  final String profileLimitText;
+  final String muteLimitText;
   final int tokenAmount;
   final int feedLimit;
   final int profileLimit;

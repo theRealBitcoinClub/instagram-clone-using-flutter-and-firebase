@@ -322,7 +322,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           Text('${tokenEnum.toString()} Plan Limit Reached', style: theme.textTheme.titleLarge?.copyWith(color: headerColor)),
           const SizedBox(height: 9),
           Text(
-            "${tokenEnum.description}",
+            "${tokenEnum.feedLimitText}",
             textAlign: TextAlign.justify,
             style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),

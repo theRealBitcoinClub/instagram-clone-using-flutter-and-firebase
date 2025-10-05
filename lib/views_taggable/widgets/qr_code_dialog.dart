@@ -6,13 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/provider/profile_balance_provider.dart';
+import 'package:mahakka/repositories/creator_repository.dart';
+import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../memo/model/memo_model_creator.dart';
 import '../../memo/model/memo_model_user.dart';
-import '../../provider/profile_data_model_provider.dart';
 import '../../utils/snackbar.dart';
 
 void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -22,16 +23,16 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
 }
 
 class QrCodeDialog extends ConsumerStatefulWidget {
-  final String legacyAddress;
-  final String? cashtokenAddress;
+  // final String legacyAddress;
+  // final String? cashtokenAddress;
   final String memoProfileId;
   final bool memoOnly;
   final bool tokenOnly;
 
   const QrCodeDialog({
     Key? key,
-    required this.legacyAddress,
-    this.cashtokenAddress,
+    // required this.legacyAddress,
+    // this.cashtokenAddress,
     required this.memoProfileId,
     this.memoOnly = false,
     this.tokenOnly = false,
@@ -56,7 +57,8 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 
   Future<void> _loadToggleState(BuildContext ctx) async {
     final prefs = await SharedPreferences.getInstance();
-    _isToggleEnabled = widget.tokenOnly ? false : (widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty);
+    _isToggleEnabled = widget.tokenOnly || widget.memoOnly ? false : true;
+    // _isToggleEnabled = widget.tokenOnly ? false : (widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty);
     if (widget.memoOnly) _isToggleEnabled = false;
     final bool defaultState = false; //DEFAULT STATE IS MEMO AFTER INSTALL
 
@@ -71,7 +73,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     }
 
     // Start QR dialog refresh with the selected mode
-    _startQrDialogRefresh(ctx);
+    _startQrDialogRefresh(ctx, widget.memoProfileId);
 
     if (mounted) {
       setState(() {});
@@ -83,12 +85,14 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     await prefs.setBool(toggleKey, value);
   }
 
-  void _startQrDialogRefresh(BuildContext ctx) {
+  void _startQrDialogRefresh(BuildContext ctx, String profileId) {
     // final profileNotifier = ref.read(profileDataProvider.notifier);
-    ref.read(profileBalanceProvider).startQrDialogRefresh(_isCashtokenFormat, ctx);
+    ref.read(profileBalanceProvider).startQrDialogRefresh(_isCashtokenFormat, ctx, profileId);
   }
 
-  String convertToBchFormat(String legacyAddress) {
+  String convertToBchFormat(String? legacyAddress) {
+    if (legacyAddress == null) return "";
+
     const cashAddressHrp = 'bitcoincash';
 
     try {
@@ -127,7 +131,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     }
   }
 
-  void _toggleFormat(bool isCashtoken, BuildContext ctx) async {
+  void _toggleFormat(bool isCashtoken, BuildContext ctx, String profileId) async {
     if (!mounted) return;
 
     setState(() {
@@ -136,7 +140,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 
     // Update QR dialog refresh mode in provider
     // final profileNotifier = ref.read(profileDataProvider.notifier);
-    ref.read(profileBalanceProvider).setQrDialogMode(isCashtoken, ctx);
+    ref.read(profileBalanceProvider).setQrDialogMode(isCashtoken, ctx, profileId);
 
     await _saveToggleState(isCashtoken);
   }
@@ -163,8 +167,25 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     final TextTheme textTheme = theme.textTheme;
 
     // Watch for creator updates using the new provider
-    final profileData = ref.watch(profileDataNotifier);
-    final creator = profileData.value?.creator;
+    // final profileData = ref.watch(profileDataNotifier);
+    // final creator = profileData.value?.creator;
+    // Watch for creator updates using the new provider
+    // final creatorStream = ref.watch(creatorRepositoryProvider).watchCreator(widget.memoProfileId);
+    // MemoModelCreator? creator;
+    // creatorStream.listen((c) {
+    //   Future.microtask(() {
+    //     setState(() {
+    //       creator = c;
+    //     });
+    //   });
+    // });
+    var creatorAsync = ref.watch(getCreatorProvider(widget.memoProfileId));
+
+    MemoModelCreator? creator = ref.watch(getCreatorProvider(widget.memoProfileId)).value;
+    // final creator = profileData.creator;
+    String cashtokenAddress = creator?.bchAddressCashtokenAware ?? "";
+    // cashtokenAddress = cashtokenAddress ?? "";
+    String? legacyAddress = creator?.id;
 
     return FutureBuilder(
       future: _initFuture,
@@ -185,8 +206,8 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
           );
         }
 
-        final String addressShorter = _isCashtokenFormat ? widget.cashtokenAddress! : convertToBchFormat(widget.legacyAddress).substring(12);
-        final String addressToShow = _isCashtokenFormat ? widget.cashtokenAddress! : convertToBchFormat(widget.legacyAddress);
+        final String addressShorter = _isCashtokenFormat ? cashtokenAddress : convertToBchFormat(legacyAddress).substring(12);
+        final String addressToShow = _isCashtokenFormat ? cashtokenAddress : convertToBchFormat(legacyAddress);
         final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo";
         final String balanceText = _getBalanceText(_isCashtokenFormat, creator);
 
@@ -275,36 +296,47 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                 const SizedBox(height: 20),
 
                 // Action buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _copyToClipboard(dialogCtx, addressToShow, "Address copied!"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        icon: Icon(Icons.copy, size: 18, color: Colors.white),
-                        label: Text('COPY', style: textTheme.labelLarge?.copyWith(color: Colors.white)),
+                Container(
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+                  clipBehavior: Clip.antiAlias,
+                  child: Row(
+                    children: [
+                      IconAction(
+                        text: "COPY",
+                        onTap: () => _copyToClipboard(dialogCtx, addressToShow, "Address copied!"),
+                        type: IAB.success,
+                        icon: Icons.copy_outlined,
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _shareAddress(addressToShow),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.yellow[900],
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        icon: Icon(Icons.share, size: 18, color: Colors.white),
-                        label: Text('SHARE', style: textTheme.labelLarge?.copyWith(color: Colors.white)),
-                      ),
-                    ),
-                  ],
+                      IconAction(text: "SHARE", onTap: () => _shareAddress(addressToShow), type: IAB.alternative, icon: Icons.share_outlined),
+                      // Expanded(
+                      //   child: ElevatedButton.icon(
+                      //     onPressed: () => _copyToClipboard(dialogCtx, addressToShow, "Address copied!"),
+                      //     style: ElevatedButton.styleFrom(
+                      //       backgroundColor: colorScheme.primary,
+                      //       foregroundColor: Colors.white,
+                      //       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      //     ),
+                      //     icon: Icon(Icons.copy, size: 18, color: Colors.white),
+                      //     label: Text('COPY', style: textTheme.labelLarge?.copyWith(color: Colors.white)),
+                      //   ),
+                      // ),
+                      // const SizedBox(width: 12),
+                      // Expanded(
+                      //   child: ElevatedButton.icon(
+                      //     onPressed: () => _shareAddress(addressToShow),
+                      //     style: ElevatedButton.styleFrom(
+                      //       backgroundColor: Colors.yellow[900],
+                      //       foregroundColor: Colors.white,
+                      //       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      //     ),
+                      //     icon: Icon(Icons.share, size: 18, color: Colors.white),
+                      //     label: Text('SHARE', style: textTheme.labelLarge?.copyWith(color: Colors.white)),
+                      //   ),
+                      // ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -325,7 +357,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
             child: GestureDetector(
               onTap: () {
                 if (_isCashtokenFormat) {
-                  _toggleFormat(false, dialogCtx);
+                  _toggleFormat(false, dialogCtx, widget.memoProfileId);
                 }
               },
               child: Container(
@@ -352,7 +384,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
             child: GestureDetector(
               onTap: () {
                 if (!_isCashtokenFormat) {
-                  _toggleFormat(true, dialogCtx);
+                  _toggleFormat(true, dialogCtx, widget.memoProfileId);
                 }
               },
               child: Container(
@@ -397,10 +429,10 @@ void showQrCodeDialog({
       context: ctx,
       builder: (ctx) {
         return QrCodeDialog(
-          cashtokenAddress: creator.hasRegisteredAsUserFixed ? creator.bchAddressCashtokenAware : null,
-          legacyAddress: creator.id,
+          // cashtokenAddress: creator.hasRegisteredAsUserFixed ? creator.bchAddressCashtokenAware : null,
+          // legacyAddress: creator.id,
           memoProfileId: creator.id,
-          memoOnly: memoOnly,
+          memoOnly: !creator.hasRegisteredAsUserFixed ? true : memoOnly,
           tokenOnly: tokenOnly,
         );
       },
@@ -410,8 +442,8 @@ void showQrCodeDialog({
       context: ctx,
       builder: (ctx) {
         return QrCodeDialog(
-          cashtokenAddress: user.bchAddressCashtokenAware,
-          legacyAddress: user.legacyAddressMemoBch,
+          // cashtokenAddress: user.bchAddressCashtokenAware,
+          // legacyAddress: user.legacyAddressMemoBch,
           memoProfileId: user.id,
           memoOnly: memoOnly,
           tokenOnly: tokenOnly,

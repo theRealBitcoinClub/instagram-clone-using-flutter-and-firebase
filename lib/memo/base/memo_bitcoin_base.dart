@@ -1,6 +1,5 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
-import 'package:mahakka/memo/base/memo_publisher.dart';
 
 import 'socket/electrum_websocket_service.dart';
 
@@ -304,16 +303,26 @@ class MemoBitcoinBase {
       }
 
       // Estimate transaction size for better fee calculation
-      final estimatedSize = ForkedTransactionBuilder.estimateTransactionSize(
-        utxos: utxosWithAddress,
-        outputs: bitcoinOutputs,
-        network: network!,
-      );
+      // final estimatedSize = ForkedTransactionBuilder.estimateTransactionSize(
+      //   utxos: utxosWithAddress,
+      //   outputs: bitcoinOutputs,
+      //   network: network!,
+      // );
+      // final feePerByte = BtcUtils.toSatoshi("0.000001");
+      // final fee = BigInt.from(estimatedSize) * feePerByte ~/ BigInt.from(1000);
 
       // Calculate fee based on estimated size (0.00001 BCH per 1000 bytes)
       // final feePerByte = BtcUtils.toSatoshi("0.000001");
       // final fee = BigInt.from(estimatedSize) * feePerByte ~/ BigInt.from(1000);
-      final fee = MemoPublisher.minerFeeDefault;
+      BigInt eachInput = BtcUtils.toSatoshi("0.00000148");
+      BigInt eachOutput = BtcUtils.toSatoshi("0.00000034");
+      BigInt overhead = BtcUtils.toSatoshi("0.00000020");
+      BigInt fee = eachOutput * BigInt.from(bitcoinOutputs.length); //OWN FUNDS
+      fee += BtcUtils.toSatoshi("0.00000250"); //OP_RETURN w max text
+      // fee += eachOutput * BigInt.from(tips.length); //TIP & BURN
+      fee += eachInput * BigInt.from(utxosWithAddress.length); //CONSOLIDATE ALL UTXOS
+      fee += overhead;
+      // final fee = MemoPublisher.feeMaxEstimation;
       // final fee = BigInt.from(estimatedSize) * feePerByte ~/ BigInt.from(1000);
 
       // Check if we have enough balance

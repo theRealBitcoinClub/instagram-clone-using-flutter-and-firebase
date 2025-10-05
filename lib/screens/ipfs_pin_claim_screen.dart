@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/external_browser_launcher.dart';
-import 'package:mahakka/memo/base/memo_publisher.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
@@ -409,7 +408,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                                             crossAxisAlignment: CrossAxisAlignment.center,
                                             children: [
                                               Text(
-                                                'Upload price: ${((_pinClaimPrice! * 100000000) + MemoPublisher.minerFeeDefault.toInt()).toStringAsFixed(0)} sats',
+                                                'Upload price: ~${((_pinClaimPrice! * 100000000)).toStringAsFixed(0)} sats',
                                                 style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface, letterSpacing: 1.5),
                                               ),
                                               SizedBox(width: 9),

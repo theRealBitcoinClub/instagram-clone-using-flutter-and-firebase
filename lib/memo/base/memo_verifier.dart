@@ -151,7 +151,7 @@ class MemoVerifier {
 
   MemoVerificationResponse verifyPostLength({String mediaUrl = ''}) {
     if (mediaUrl.length > maxPostLength) return MemoVerificationResponse.tooLongMediaUrl;
-    final checkText = mediaUrl.isNotEmpty ? text.replaceAll(mediaUrl, "") : mediaUrl;
+    final checkText = mediaUrl.isNotEmpty ? text.replaceAll(mediaUrl, "") : text;
 
     final trimmedText = checkText.trim();
     if (trimmedText.length > (maxPostLength - mediaUrl.length)) {

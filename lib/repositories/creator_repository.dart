@@ -43,7 +43,9 @@ class CreatorRepository {
   }
 
   /// Notify listeners that a creator has been updated
-  void _notifyCreatorUpdated(String creatorId, MemoModelCreator? creator) {
+  void notifyCreatorUpdated(String creatorId, MemoModelCreator? creator) {
+    if (creator == null) return;
+
     final controller = _creatorStreamControllers[creatorId];
     if (controller != null && !controller.isClosed) {
       // Check if there are active listeners before sending
@@ -103,7 +105,7 @@ class CreatorRepository {
     print("INFO: Saved creator ${creator.id} to in-memory cache.");
 
     // Notify stream listeners about the update
-    _notifyCreatorUpdated(creator.id, creator);
+    notifyCreatorUpdated(creator.id, creator);
   }
 
   // --- PUBLIC API ---
@@ -307,5 +309,10 @@ class CreatorRepository {
     creator.refreshUserHasRegistered(ref, this);
   }
 }
+
+final getCreatorProvider = FutureProvider.family<MemoModelCreator?, String>((ref, creatorId) async {
+  final repository = ref.watch(creatorRepositoryProvider);
+  return await repository.getCreator(creatorId);
+});
 
 final creatorRepositoryProvider = Provider((ref) => CreatorRepository(ref));

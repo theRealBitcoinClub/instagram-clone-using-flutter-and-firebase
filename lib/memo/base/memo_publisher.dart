@@ -16,7 +16,7 @@ const network = BitcoinCashNetwork.mainnet;
 class MemoPublisher {
   // Add a final Ref field to store the Riverpod ref.
   final Ref _ref;
-  static BigInt minerFeeDefault = BtcUtils.toSatoshi("0.000009");
+  static BigInt feeMaxEstimation = BtcUtils.toSatoshi("0.00002");
   late String _memoMessage;
   late MemoCode _memoAction;
   ECPrivate? _pk;
@@ -91,7 +91,16 @@ class MemoPublisher {
   }
 
   MemoTransactionBuilder createTxBuilder(BigInt balance, List<UtxoWithAddress> utxos, String topic, List<MemoTip> tips) {
-    BigInt outputHome = balance - minerFeeDefault;
+    BigInt eachInput = BtcUtils.toSatoshi("0.00000148");
+    BigInt eachOutput = BtcUtils.toSatoshi("0.00000034");
+    BigInt overhead = BtcUtils.toSatoshi("0.00000020");
+    BigInt fee = eachOutput * BigInt.from(1); //OWN FUNDS
+    fee += BtcUtils.toSatoshi("0.00000250"); //OP_RETURN w max text
+    fee += eachOutput * BigInt.from(tips.length); //TIP & BURN
+    fee += eachInput * BigInt.from(utxos.length); //CONSOLIDATE ALL UTXOS
+    fee += overhead;
+
+    BigInt outputHome = balance - fee;
     BigInt totalTips = BigInt.zero;
 
     for (MemoTip tip in tips) {
@@ -103,21 +112,23 @@ class MemoPublisher {
       outputHome = outputHome - totalTips;
     }
 
+    var outPuts = [BitcoinOutput(address: _p2pkhAddress.baseAddress, value: outputHome)];
+
+    if (hasValidTip) {
+      for (MemoTip tip in tips) {
+        outPuts.add(BitcoinOutput(address: tip.receiverAsBchAddress.baseAddress, value: tip.amountAsBigInt));
+      }
+    }
+
     final txBuilder = MemoTransactionBuilder(
-      outPuts: [BitcoinOutput(address: _p2pkhAddress.baseAddress, value: outputHome)],
-      fee: minerFeeDefault,
+      outPuts: outPuts,
+      fee: fee,
       network: network,
       utxos: utxos,
       memo: _memoMessage,
       memoCode: _memoAction,
       memoTopic: topic,
     );
-
-    if (hasValidTip) {
-      for (MemoTip tip in tips) {
-        txBuilder.outPuts.add(BitcoinOutput(address: tip.receiverAsBchAddress.baseAddress, value: tip.amountAsBigInt));
-      }
-    }
 
     return txBuilder;
   }

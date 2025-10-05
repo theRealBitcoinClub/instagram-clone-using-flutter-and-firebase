@@ -180,16 +180,15 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     }
   }
 
-  //
-  // void notifyStateUpdate(BuildContext ctx) async {
-  //   String pId = ref.read(currentProfileIdProvider)!;
-  //   if (_debugMode) print("🔄 PDN: Manual state update notification");
-  //   if (_debugMode) print("🔄 PDN: Manual state update notification watchedId $_currentWatchedCreatorId");
-  //   if (_debugMode) print("🔄 PDN: Manual state update notification targetId $pId");
-  //
-  //   MemoModelCreator? creator = await ref.read(creatorRepositoryProvider).getCreator(pId);
-  //   if (state.value != null && creator != null && ctx.mounted) {
-  //     state = AsyncValue.data(state.value!.copyWith(creator: creator));
-  //   }
-  // }
+  void notifyStateUpdateCreator(BuildContext ctx) async {
+    String pId = ref.read(currentProfileIdProvider)!;
+    if (_debugMode) print("🔄 PDN: Manual state update notification");
+    if (_debugMode) print("🔄 PDN: Manual state update notification watchedId $_currentWatchedCreatorId");
+    if (_debugMode) print("🔄 PDN: Manual state update notification targetId $pId");
+
+    MemoModelCreator? creator = await ref.read(creatorRepositoryProvider).getCreator(pId);
+    if (state.value != null && creator != null && ctx.mounted) {
+      state = AsyncValue.data(state.value!.copyWith(creator: creator));
+    }
+  }
 }

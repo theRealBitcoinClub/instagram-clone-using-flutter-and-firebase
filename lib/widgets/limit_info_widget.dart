@@ -1,6 +1,7 @@
 // lib/widgets/limit_info_widget.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/external_browser_launcher.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
@@ -92,6 +93,14 @@ class LimitInfoWidget extends ConsumerWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            IconAction(
+              text: 'Support',
+              onTap: () {
+                ExternalBrowserLauncher().launchUrlWithConfirmation(context, "https://t.me/mahakka_com");
+              },
+              type: IAB.cancel,
+              icon: Icons.support_agent_outlined,
+            ),
             IconAction(
               text: 'Swap',
               onTap: () {

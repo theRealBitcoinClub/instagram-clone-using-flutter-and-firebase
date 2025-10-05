@@ -259,7 +259,7 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
         .watchCreator(userId)
         .listen(
           (updatedCreator) {
-            _handleCreatorUpdate(updatedCreator);
+            handleCreatorUpdate(updatedCreator);
           },
           onError: (error) {
             print('❌ TokenLimits: Error in creator stream: $error');
@@ -267,33 +267,34 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
         );
   }
 
-  void _handleCreatorUpdate(MemoModelCreator? updatedCreator) {
-    if (updatedCreator != null) {
-      int tokenBalance = updatedCreator.balanceToken;
+  void handleCreatorUpdate(MemoModelCreator? c) {
+    MemoModelCreator? creator = c ?? ref.read(getCreatorProvider(ref.read(userProvider)!.id)).value;
+    if (creator != null) {
+      int tokenBalance = creator.balanceToken;
       TokenLimitEnum currentLimit = TokenLimitEnum.fromTokenBalance(tokenBalance);
       // Update state with new data
-      state = AsyncData(TokenLimitsState(currentLimit: currentLimit, tokenBalance: tokenBalance, creator: updatedCreator));
+      state = AsyncData(TokenLimitsState(currentLimit: currentLimit, tokenBalance: tokenBalance, creator: creator));
       print('❌ TokenLimits: _handleCreatorUpdate: $currentLimit, $tokenBalance');
     }
   }
 
-  // Method to manually refresh the balance
-  Future<void> refreshBalance() async {
-    final userId = ref.read(userProvider)?.id;
-    if (userId == null) return;
-
-    try {
-      final creatorRepo = ref.read(creatorRepositoryProvider);
-      final creator = await creatorRepo.getCreator(userId);
-
-      if (creator != null) {
-        await creator.refreshBalanceMahakka(ref);
-      }
-    } catch (e) {
-      print('❌ TokenLimits: Failed to refresh balance: $e');
-      state = AsyncError(e, StackTrace.current);
-    }
-  }
+  // // Method to manually refresh the balance
+  // Future<void> refreshBalance() async {
+  //   final userId = ref.read(userProvider)?.id;
+  //   if (userId == null) return;
+  //
+  //   try {
+  //     final creatorRepo = ref.read(creatorRepositoryProvider);
+  //     final creator = await creatorRepo.getCreator(userId);
+  //
+  //     if (creator != null) {
+  //       await creator.refreshBalanceMahakka(ref);
+  //     }
+  //   } catch (e) {
+  //     print('❌ TokenLimits: Failed to refresh balance: $e');
+  //     state = AsyncError(e, StackTrace.current);
+  //   }
+  // }
 
   // Helper methods to access limits conveniently
   int get feedLimit => state.value?.currentLimit.feedLimit ?? TokenLimitEnum.free.feedLimit;
@@ -305,6 +306,20 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
   bool get hasSufficientTokensForPro => tokenBalance >= TokenLimitEnum.pro.tokenAmount;
   bool get hasSufficientTokensForAdvanced => tokenBalance >= TokenLimitEnum.advanced.tokenAmount;
   bool get hasSufficientTokensForStarter => tokenBalance >= TokenLimitEnum.starter.tokenAmount;
+
+  // void notifyStateUpdateCreator(ctx, creator) async {
+  //   // MemoModelCreator? creator = ref.read(getCreatorProvider(ref.read(userProvider)!.id)).value;
+  //
+  //   String pId = ref.read(currentProfileIdProvider)!;
+  //   if (_debugMode) print("🔄 PDN: Manual state update notification");
+  //   if (_debugMode) print("🔄 PDN: Manual state update notification watchedId $_currentWatchedCreatorId");
+  //   if (_debugMode) print("🔄 PDN: Manual state update notification targetId $pId");
+  //
+  //   MemoModelCreator? creator = await ref.read(creatorRepositoryProvider).getCreator(pId);
+  //   if (state.value != null && creator != null && ctx.mounted) {
+  //     state = AsyncValue.data(state.value!.copyWith(creator: creator));
+  //   }
+  // }
 }
 
 // Convenience providers for individual limits

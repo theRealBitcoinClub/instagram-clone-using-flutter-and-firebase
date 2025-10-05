@@ -204,9 +204,9 @@ class MemoAccountant {
 
       // Convert BCH cost to satoshis
       final requiredSatoshis = (bchCost * 100000000).round();
-      final requiredWithTolerance = (requiredSatoshis + MemoPublisher.minerFeeDefault.toInt()).round();
+      final requiredWithTolerance = (requiredSatoshis + MemoPublisher.feeMaxEstimation.toInt()).round();
 
-      print('MemoAccountant: Current balance: ${balance.bch} sats, Required: $requiredWithTolerance sats');
+      print('MemoAccountant: Current balance: ${balance.bch} sats, Required: ~$requiredWithTolerance sats (dependant on utxo set)');
 
       return balance.bch > requiredWithTolerance;
     } catch (e) {

@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/provider/profile_data_model_provider.dart';
 import 'package:mahakka/repositories/creator_repository.dart';
+
+import '../providers/token_limits_provider.dart';
 
 final profileBalanceProvider = Provider<ProfileBalanceProvider>((ref) {
   final provider = ProfileBalanceProvider(ref);
@@ -16,8 +19,8 @@ class ProfileBalanceProvider {
   // Balance-related timers only
   Timer? _balanceRefreshTimer;
   Timer? _qrDialogRefreshTimer;
-  final Duration _refreshBalanceInterval = Duration(seconds: kDebugMode ? 5 : 5);
-  final Duration _qrRefreshInterval = Duration(seconds: kDebugMode ? 3 : 3);
+  final Duration _refreshBalanceInterval = Duration(seconds: kDebugMode ? 9 : 9);
+  final Duration _qrRefreshInterval = Duration(seconds: kDebugMode ? 6 : 6);
   bool _isQrDialogOpen = false;
   bool _isQrCashtokenMode = false;
   Ref ref;
@@ -43,27 +46,29 @@ class ProfileBalanceProvider {
     }
   }
 
-  Future<void> refreshMahakkaBalance(BuildContext ctx) async {
-    final profileId = ref.read(currentProfileIdProvider);
-    if (profileId != null && profileId.isNotEmpty) {
-      final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
-      if (creator != null && creator.hasRegisteredAsUserFixed) {
-        await creator.refreshBalanceMahakka(ref);
-      }
+  Future<MemoModelCreator?> refreshMahakkaBalance(BuildContext ctx, String profileId) async {
+    // if (profileId != null && profileId.isNotEmpty) {
+    final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
+    if (creator != null && creator.hasRegisteredAsUserFixed) {
+      await creator.refreshBalanceMahakka(ref);
+      return creator;
     }
+    return null;
+    // }
   }
 
-  Future<void> refreshMemoBalance(BuildContext ctx) async {
-    final profileId = ref.read(currentProfileIdProvider);
-    if (profileId != null && profileId.isNotEmpty) {
-      final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
-      if (creator != null) {
-        await creator.refreshBalanceMemo(ref);
-      }
+  Future<MemoModelCreator?> refreshMemoBalance(BuildContext ctx, String profileId) async {
+    // if (profileId != null && profileId.isNotEmpty) {
+    final creator = await ref.read(creatorRepositoryProvider).getCreator(profileId, saveToFirebase: false);
+    if (creator != null) {
+      await creator.refreshBalanceMemo(ref);
+      return creator;
     }
+    return null;
+    // }
   }
 
-  void startQrDialogRefresh(bool isCashtokenMode, BuildContext ctx) {
+  void startQrDialogRefresh(bool isCashtokenMode, BuildContext ctx, String profileId) {
     _isQrDialogOpen = true;
     _isQrCashtokenMode = isCashtokenMode;
 
@@ -71,11 +76,11 @@ class ProfileBalanceProvider {
 
     _qrDialogRefreshTimer = Timer.periodic(_qrRefreshInterval, (_) {
       if (_isQrDialogOpen && ctx.mounted) {
-        _refreshQrDialogBalance(ctx);
+        _refreshQrDialogBalance(ctx, profileId);
       }
     });
 
-    _refreshQrDialogBalance(ctx);
+    _refreshQrDialogBalance(ctx, profileId);
   }
 
   void stopQrDialogRefresh() {
@@ -83,19 +88,24 @@ class ProfileBalanceProvider {
     _stopQrDialogTimer();
   }
 
-  void setQrDialogMode(bool isCashtokenMode, BuildContext ctx) {
+  void setQrDialogMode(bool isCashtokenMode, BuildContext ctx, String profileId) {
     _isQrCashtokenMode = isCashtokenMode;
-    _refreshQrDialogBalance(ctx);
+    _refreshQrDialogBalance(ctx, profileId);
   }
 
-  void _refreshQrDialogBalance(BuildContext ctx) {
+  void _refreshQrDialogBalance(BuildContext ctx, String profileId) async {
     if (!_isQrDialogOpen || !ctx.mounted) return;
 
+    MemoModelCreator? creator;
     if (_isQrCashtokenMode) {
-      refreshMahakkaBalance(ctx);
+      creator = await refreshMahakkaBalance(ctx, profileId);
     } else {
-      refreshMemoBalance(ctx);
+      creator = await refreshMemoBalance(ctx, profileId);
     }
+    ref.invalidate(creatorRepositoryProvider);
+    ref.read(profileDataNotifier.notifier).notifyStateUpdateCreator(ctx);
+    ref.read(creatorRepositoryProvider).notifyCreatorUpdated(profileId, creator);
+    ref.read(tokenLimitsProvider.notifier).handleCreatorUpdate(creator);
   }
 
   void _stopQrDialogTimer() {

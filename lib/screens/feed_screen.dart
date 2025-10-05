@@ -41,6 +41,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     context.afterLayout(refreshUI: false, () {
       print('FSCR:🎯 Requesting focus for list view');
       FocusScope.of(context).requestFocus(_listViewFocusNode);
+      // Future.delayed(Duration(seconds: 3), () {
+      //   ref.read(tokenLimitsProvider.notifier).handleCreatorUpdate(null);
+      // });
     });
   }
 
@@ -99,11 +102,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     print('FSCR:🏗️ FeedScreen build started');
     final feedState = ref.watch(feedPostsProvider);
-    final shouldShowIntro = ref.read(introStateNotifierProvider.notifier).shouldShow(_introType);
-    final theme = Theme.of(context);
-
     print('FSCR:📊 FeedState in build:');
     print('FSCR:   - posts: ${feedState.posts.length}');
     print('FSCR:   - isLoadingInitial: ${feedState.isLoadingInitialAtTop}');
@@ -112,8 +113,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     print('FSCR:   - totalPostCount: ${feedState.totalPostCountInFirebase}');
     print('FSCR:   - isRefreshing: ${feedState.isRefreshingByUserRequest}');
     print('FSCR:   - errorMessage: ${feedState.errorMessage}');
-    // print('FSCR:   - isMaxFreeLimitReached: ${feedState.isMaxFreeLimitReached}');
+    final shouldShowIntro = ref.read(introStateNotifierProvider.notifier).shouldShow(_introType);
+    final tokenLimits = ref.watch(tokenLimitsProvider);
 
+    // return tokenLimits.when(
+    //   data: (value) {
     return Scaffold(
       backgroundColor: Colors.black.withAlpha(21),
       appBar: AppBarBurnMahakkaTheme(),
@@ -133,6 +137,36 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         ],
       ),
     );
+    // },
+    // error: (e, s) {
+    //   return CircularProgressIndicator();
+    // },
+    // loading: () {
+    //   return ProfileLoadingScaffold(theme: theme);
+    // },
+    // );
+    //
+    // tokenLimits.whenData((value) {
+    //   return Scaffold(
+    //     backgroundColor: Colors.black.withAlpha(21),
+    //     appBar: AppBarBurnMahakkaTheme(),
+    //     body: Stack(
+    //       children: [
+    //         // Main content
+    //         if (!feedState.isLoadingInitialAtTop || feedState.posts.isNotEmpty)
+    //           Column(children: [Expanded(child: _buildFeedBody(feedState, theme))]),
+    //
+    //         // Error banner at top of stack
+    //         if (feedState.errorMessage != null) _buildErrorBanner(feedState.errorMessage!, theme),
+    //
+    //         // Loading indicator
+    //         if (feedState.isLoadingInitialAtTop) LinearProgressIndicator(),
+    //         // Intro overlay - should be at the top of the Stack to overlay everything
+    //         if (shouldShowIntro) IntroOverlay(introType: _introType, onComplete: () {}),
+    //       ],
+    //     ),
+    //   );
+    // });
   }
 
   Widget _buildErrorBanner(String errorMessage, ThemeData theme) {
@@ -215,6 +249,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     return RefreshIndicator(
       onRefresh: () {
+        setState(() {});
         print('FSCR:🔄 ListView RefreshIndicator triggered');
         return ref.read(feedPostsProvider.notifier).refreshFeed();
       },
@@ -286,11 +321,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   List<MemoModelPost> _getDisplayedPosts(FeedState feedState) {
     // Apply soft limit - only show up to maxLoadItems
-    if (feedState.posts.length <= ref.read(feedLimitProvider)) {
+    if (feedState.posts.length <= ref.watch(feedLimitProvider)) {
       return feedState.posts;
     } else {
       // If we have more posts than the limit, only show the first maxLoadItems
-      return feedState.posts.sublist(0, ref.read(feedLimitProvider));
+      return feedState.posts.sublist(0, ref.watch(feedLimitProvider));
     }
   }
 
@@ -319,7 +354,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _wrapInDoubleTapDetectorImagesOnly(MemoModelPost post, BuildContext context, FeedState feedState, ThemeData theme, {int? index}) {
-    print('FSCR:👆 Wrapping post ${post.id} in GestureDetector');
+    // print('FSCR:👆 Wrapping post ${post.id} in GestureDetector');
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () async {

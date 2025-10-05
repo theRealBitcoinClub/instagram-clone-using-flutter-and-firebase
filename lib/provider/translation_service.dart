@@ -15,6 +15,27 @@ final translationServiceProvider = Provider<TranslationService>((ref) {
   return TranslationService(ref);
 });
 
+final customTranslatedTextProvider = FutureProvider.family<String, String>((ref, originalText) async {
+  final translationService = ref.read(translationServiceProvider);
+  final systemLangCode = ref.watch(languageCodeProvider);
+
+  // If no language code or it's English, return original text
+  if (systemLangCode.isEmpty || systemLangCode == 'en') {
+    return originalText;
+  }
+
+  try {
+    // Use the translation service
+    final translationResult = await translationService.translateAuto(text: originalText, to: systemLangCode);
+
+    return translationResult.text;
+  } catch (error) {
+    // If translation fails, return original text
+    print('Translation error: $error');
+    return originalText;
+  }
+});
+
 // State Providers
 final textAnimationProvider = StateProvider<double>((ref) => 1.0);
 final showOriginalTextProvider = StateProvider<bool>((ref) => true);

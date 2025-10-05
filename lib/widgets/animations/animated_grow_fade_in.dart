@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class AnimGrowFade extends StatefulWidget {
+class AnimGrowFade extends StatelessWidget {
   final Widget child;
   final bool show;
   final Duration growDuration;
@@ -23,86 +23,44 @@ class AnimGrowFade extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<AnimGrowFade> createState() => _AnimGrowFadeState();
-}
-
-class _AnimGrowFadeState extends State<AnimGrowFade> with SingleTickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
-  bool _shouldShowContent = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _fadeController = AnimationController(vsync: this, duration: widget.fadeDuration);
-    _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: widget.fadeCurve);
-
-    if (widget.show) {
-      _startAnimation();
-    }
-  }
-
-  void _startAnimation() {
-    void startFade() {
-      setState(() {
-        _shouldShowContent = true;
-      });
-
-      Future.delayed(widget.fadeDuration, () {
-        if (mounted) {
-          _fadeController.forward();
-        }
-      });
-    }
-
-    if (widget.delay == Duration.zero) {
-      startFade();
-    } else {
-      Future.delayed(widget.delay, () {
-        if (mounted && widget.show) {
-          startFade();
-        }
-      });
-    }
-  }
-
-  void _hideAnimation() {
-    _fadeController.reverse().then((_) {
-      if (mounted) {
-        setState(() {
-          _shouldShowContent = false;
-        });
-      }
-    });
-  }
-
-  @override
-  void didUpdateWidget(AnimGrowFade oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (widget.show != oldWidget.show) {
-      if (widget.show) {
-        _startAnimation();
-      } else {
-        _hideAnimation();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _fadeController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedSize(
-      duration: widget.growDuration,
-      curve: widget.growCurve,
-      alignment: widget.alignment,
-      child: _shouldShowContent ? FadeTransition(opacity: _fadeAnimation, child: widget.child) : const SizedBox.shrink(),
+    return AnimatedSwitcher(
+      duration: growDuration + fadeDuration,
+      switchInCurve: Curves.linear,
+      switchOutCurve: Curves.linear,
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        final totalDuration = growDuration + fadeDuration;
+        final growEndPoint = growDuration.inMilliseconds / totalDuration.inMilliseconds;
+        final fadeStartPoint = growEndPoint * 0.3;
+
+        final growAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Interval(0.0, growEndPoint, curve: growCurve),
+        );
+
+        final fadeAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Interval(fadeStartPoint, 1.0, curve: fadeCurve),
+        );
+
+        return FadeTransition(
+          opacity: fadeAnimation,
+          child: SizeTransition(sizeFactor: growAnimation, axisAlignment: _getAxisAlignment(alignment), child: child),
+        );
+      },
+      child: show ? child : const SizedBox.shrink(),
     );
+  }
+
+  double _getAxisAlignment(AlignmentGeometry alignment) {
+    final resolvedAlignment = alignment.resolve(TextDirection.ltr);
+    switch (resolvedAlignment.x) {
+      case -1.0:
+        return -1.0;
+      case 1.0:
+        return 1.0;
+      default:
+        return 0.0;
+    }
   }
 }

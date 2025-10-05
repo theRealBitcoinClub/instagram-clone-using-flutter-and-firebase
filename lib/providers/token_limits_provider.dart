@@ -35,17 +35,18 @@ class TokenLimitConstants {
 
 class TokenLimitTexts {
   // Common phrases
-  static const String tokenDepositInfo = 'Tokens stay in your wallet and can be withdrawn anytime using your mnemonic phrase.';
-  static const String findMnemonic = 'Find your mnemonic in Profile Settings → User tab.';
-  static const String muteSuggestion = 'You can also mute users to better use your available spots.';
+  static const String tokenDepositInfo = 'Tokens stay in your possession and can be moved with your secret key at any time.';
+  static const String findMnemonic = 'You find your secret key in the profile settings.';
+  static const String muteSuggestion =
+      'You can also mute users to fill the list with different content. You can mute a user on their profile page by tapping the badge on their avatar.';
   static const String contactSupport = 'For higher limits, contact @mahakka_com on Telegram.';
-  static const String withdrawalInfo = 'Withdraw tokens anytime using Cashonize or Cauldron swap with your mnemonic.';
+  static const String withdrawalInfo = 'Move your tokens with "Cashonize" or "Cauldron" using your secret key.';
 
   // Reusable templates
-  static const String feedLimitReached = 'Maximum feed posts reached for';
+  static const String feedLimitReached = 'Maximum visible publications reached for';
   static const String profileLimitReached = 'Profile posts limited to';
   static const String muteLimitReached = 'Maximum mutes reached for';
-  static const String depositToUnlock = 'Deposit';
+  static const String depositToUnlock = 'You can deposit';
   static const String tokensFor = 'tokens for:';
   static const String feedSpots = 'feed spots,';
   static const String profilePosts = 'profile posts, mute';
@@ -278,24 +279,6 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
     }
   }
 
-  // // Method to manually refresh the balance
-  // Future<void> refreshBalance() async {
-  //   final userId = ref.read(userProvider)?.id;
-  //   if (userId == null) return;
-  //
-  //   try {
-  //     final creatorRepo = ref.read(creatorRepositoryProvider);
-  //     final creator = await creatorRepo.getCreator(userId);
-  //
-  //     if (creator != null) {
-  //       await creator.refreshBalanceMahakka(ref);
-  //     }
-  //   } catch (e) {
-  //     print('❌ TokenLimits: Failed to refresh balance: $e');
-  //     state = AsyncError(e, StackTrace.current);
-  //   }
-  // }
-
   // Helper methods to access limits conveniently
   int get feedLimit => state.value?.currentLimit.feedLimit ?? TokenLimitEnum.free.feedLimit;
   int get profileLimit => state.value?.currentLimit.profileLimit ?? TokenLimitEnum.free.profileLimit;
@@ -306,20 +289,6 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
   bool get hasSufficientTokensForPro => tokenBalance >= TokenLimitEnum.pro.tokenAmount;
   bool get hasSufficientTokensForAdvanced => tokenBalance >= TokenLimitEnum.advanced.tokenAmount;
   bool get hasSufficientTokensForStarter => tokenBalance >= TokenLimitEnum.starter.tokenAmount;
-
-  // void notifyStateUpdateCreator(ctx, creator) async {
-  //   // MemoModelCreator? creator = ref.read(getCreatorProvider(ref.read(userProvider)!.id)).value;
-  //
-  //   String pId = ref.read(currentProfileIdProvider)!;
-  //   if (_debugMode) print("🔄 PDN: Manual state update notification");
-  //   if (_debugMode) print("🔄 PDN: Manual state update notification watchedId $_currentWatchedCreatorId");
-  //   if (_debugMode) print("🔄 PDN: Manual state update notification targetId $pId");
-  //
-  //   MemoModelCreator? creator = await ref.read(creatorRepositoryProvider).getCreator(pId);
-  //   if (state.value != null && creator != null && ctx.mounted) {
-  //     state = AsyncValue.data(state.value!.copyWith(creator: creator));
-  //   }
-  // }
 }
 
 // Convenience providers for individual limits

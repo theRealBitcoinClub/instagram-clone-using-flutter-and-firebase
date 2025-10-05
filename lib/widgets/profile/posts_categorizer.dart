@@ -56,6 +56,10 @@ class PostsCategorizer {
         !_listEquals(topicPosts, other.topicPosts);
   }
 
+  int totalPosts() {
+    return imagePosts.length + videoPosts.length + taggedPosts.length + topicPosts.length;
+  }
+
   bool _listEquals(List<MemoModelPost> list1, List<MemoModelPost> list2) {
     if (list1.length != list2.length) return false;
     for (int i = 0; i < list1.length; i++) {

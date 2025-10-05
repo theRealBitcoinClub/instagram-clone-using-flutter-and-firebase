@@ -5,18 +5,14 @@ import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
-import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart';
-import 'package:mahakka/provider/user_provider.dart';
-import 'package:mahakka/providers/navigation_providers.dart';
-import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/utils/snackbar.dart';
-import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 
 import '../intros/intro_overlay.dart';
 import '../memo/model/memo_model_post.dart';
 import '../providers/token_limits_provider.dart';
+import '../widgets/limit_info_widget.dart';
 import '../widgets/post_dialog.dart';
 
 class ScrollUpIntent extends Intent {}
@@ -302,57 +298,60 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   //   return index >= FeedPostsNotifier.maxLoadItems;
   // }
 
+  // Widget _buildFreePlanLimitWidget(ThemeData theme) {
+  //   var headerColor = theme.colorScheme.secondary;
+  //   var borderColor = theme.colorScheme.primary;
+  //   TokenLimitEnum tokenEnum = ref.read(currentTokenLimitEnumProvider);
+  //
+  //   return Container(
+  //     padding: const EdgeInsets.all(15),
+  //     margin: const EdgeInsets.fromLTRB(6, 3, 6, 6),
+  //     decoration: BoxDecoration(
+  //       color: theme.colorScheme.surface.withOpacity(0.1),
+  //       border: Border.all(color: borderColor),
+  //       borderRadius: BorderRadius.circular(8),
+  //     ),
+  //     child: Column(
+  //       children: [
+  //         Icon(Icons.workspace_premium, color: headerColor, size: 32),
+  //         const SizedBox(height: 9),
+  //         Text('${tokenEnum.toString()} Plan Limit Reached', style: theme.textTheme.titleLarge?.copyWith(color: headerColor)),
+  //         const SizedBox(height: 9),
+  //         Text(
+  //           "${tokenEnum.feedLimitText}",
+  //           textAlign: TextAlign.justify,
+  //           style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+  //         ),
+  //         const SizedBox(height: 9),
+  //         Center(
+  //           child: Row(
+  //             children: [
+  //               IconAction(
+  //                 text: 'Swap',
+  //                 onTap: () {
+  //                   ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cauldronSwapTokenUrl);
+  //                 },
+  //                 type: IAB.alternative,
+  //                 icon: Icons.swap_horizontal_circle_outlined,
+  //               ),
+  //               const SizedBox(height: 9),
+  //               IconAction(
+  //                 text: 'Deposit',
+  //                 onTap: () {
+  //                   showQrCodeDialog(ctx: context, user: ref.read(userProvider), tokenOnly: true);
+  //                 },
+  //                 type: IAB.success,
+  //                 icon: Icons.qr_code_outlined,
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
   Widget _buildFreePlanLimitWidget(ThemeData theme) {
-    var headerColor = theme.colorScheme.secondary;
-    var borderColor = theme.colorScheme.primary;
-    TokenLimitEnum tokenEnum = ref.read(currentTokenLimitEnumProvider);
-
-    return Container(
-      padding: const EdgeInsets.all(15),
-      margin: const EdgeInsets.fromLTRB(6, 3, 6, 6),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withOpacity(0.1),
-        border: Border.all(color: borderColor),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.workspace_premium, color: headerColor, size: 32),
-          const SizedBox(height: 9),
-          Text('${tokenEnum.toString()} Plan Limit Reached', style: theme.textTheme.titleLarge?.copyWith(color: headerColor)),
-          const SizedBox(height: 9),
-          Text(
-            "${tokenEnum.feedLimitText}",
-            textAlign: TextAlign.justify,
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 9),
-          Center(
-            child: Row(
-              children: [
-                IconAction(
-                  text: 'Swap',
-                  onTap: () {
-                    ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cauldronSwapTokenUrl);
-                  },
-                  type: IAB.alternative,
-                  icon: Icons.swap_horizontal_circle_outlined,
-                ),
-                const SizedBox(height: 9),
-                IconAction(
-                  text: 'Deposit',
-                  onTap: () {
-                    showQrCodeDialog(ctx: context, user: ref.read(userProvider), tokenOnly: true);
-                  },
-                  type: IAB.success,
-                  icon: Icons.qr_code_outlined,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    return LimitInfoWidget(limitType: LimitType.feed, compact: false);
   }
 
   Widget _buildLoadingIndicator() {

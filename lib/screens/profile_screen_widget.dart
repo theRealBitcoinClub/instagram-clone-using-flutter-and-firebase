@@ -252,17 +252,32 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   Widget _buildSliverCategorizedView(ThemeData theme, MemoModelCreator creator, PostsCategorizer categorizer, int viewMode) {
     switch (viewMode) {
       case 0: // Images
-        return ProfileContentGrid(posts: categorizer.imagePosts, onPostImageTap: (index) => _showPostDialog(categorizer.imagePosts, index));
+        return ProfileContentGrid(
+          posts: categorizer.imagePosts,
+          onPostImageTap: (index) => _showPostDialog(categorizer.imagePosts, index),
+          totalCount: categorizer.totalPosts(),
+        );
       case 1: // Videos
         return ProfileContentList.youTube(
           posts: categorizer.videoPosts,
           ytControllerNotifiers: _ytManager.controllers,
           creatorName: creator.name,
+          totalCount: categorizer.totalPosts(),
         );
       case 2: // Tagged (text only)
-        return ProfileContentList.generic(posts: categorizer.taggedPosts, creatorName: creator.name, isTopicList: false);
+        return ProfileContentList.generic(
+          posts: categorizer.taggedPosts,
+          creatorName: creator.name,
+          isTopicList: false,
+          totalCount: categorizer.totalPosts(),
+        );
       case 4: // Topics (text only)
-        return ProfileContentList.generic(posts: categorizer.topicPosts, creatorName: creator.name, isTopicList: true);
+        return ProfileContentList.generic(
+          posts: categorizer.topicPosts,
+          creatorName: creator.name,
+          isTopicList: true,
+          totalCount: categorizer.totalPosts(),
+        );
       default:
         return EmptySliverContent(message: "Select a view to see posts.", theme: theme);
     }

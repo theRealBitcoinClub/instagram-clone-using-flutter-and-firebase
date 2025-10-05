@@ -23,6 +23,7 @@ class ProfileContentList extends ConsumerStatefulWidget {
   final Map<String, ValueNotifier<YoutubePlayerController?>>? ytControllerNotifiers;
   final String creatorName;
   final bool showMedia;
+  final int totalCount;
 
   const ProfileContentList._({
     Key? key,
@@ -32,6 +33,7 @@ class ProfileContentList extends ConsumerStatefulWidget {
     this.ytControllerNotifiers,
     required this.creatorName,
     required this.showMedia,
+    required this.totalCount,
   }) : super(key: key);
 
   factory ProfileContentList.youTube({
@@ -39,6 +41,7 @@ class ProfileContentList extends ConsumerStatefulWidget {
     required List<MemoModelPost> posts,
     required Map<String, ValueNotifier<YoutubePlayerController?>> ytControllerNotifiers,
     required String creatorName,
+    required int totalCount,
   }) {
     return ProfileContentList._(
       key: key,
@@ -48,10 +51,17 @@ class ProfileContentList extends ConsumerStatefulWidget {
       ytControllerNotifiers: ytControllerNotifiers,
       creatorName: creatorName,
       showMedia: true,
+      totalCount: totalCount,
     );
   }
 
-  factory ProfileContentList.generic({Key? key, required List<MemoModelPost> posts, required String creatorName, required isTopicList}) {
+  factory ProfileContentList.generic({
+    Key? key,
+    required List<MemoModelPost> posts,
+    required String creatorName,
+    required isTopicList,
+    required int totalCount,
+  }) {
     return ProfileContentList._(
       key: key,
       posts: posts,
@@ -60,6 +70,7 @@ class ProfileContentList extends ConsumerStatefulWidget {
       ytControllerNotifiers: null,
       creatorName: creatorName,
       showMedia: false,
+      totalCount: totalCount,
     );
   }
 

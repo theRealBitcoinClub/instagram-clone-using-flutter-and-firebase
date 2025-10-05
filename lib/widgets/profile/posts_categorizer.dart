@@ -57,7 +57,14 @@ class PostsCategorizer {
   }
 
   int totalPosts() {
-    return imagePosts.length + videoPosts.length + taggedPosts.length + topicPosts.length;
+    final allPosts = [...imagePosts, ...videoPosts, ...taggedPosts, ...topicPosts];
+
+    final uniquePostIds = <String>{};
+    for (final post in allPosts) {
+      if (post.id != null) uniquePostIds.add(post.id!);
+    }
+
+    return uniquePostIds.length;
   }
 
   bool _listEquals(List<MemoModelPost> list1, List<MemoModelPost> list2) {

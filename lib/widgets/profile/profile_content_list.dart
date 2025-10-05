@@ -3,8 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/providers/token_limits_provider.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/views_taggable/widgets/post_expandable_text_widget.dart';
+import 'package:mahakka/widgets/limit_info_widget.dart';
 import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 import 'package:mahakka/widgets/unified_video_player.dart';
 import 'package:mahakka/youtube_video_checker.dart';
@@ -24,6 +26,7 @@ class ProfileContentList extends ConsumerStatefulWidget {
   final String creatorName;
   final bool showMedia;
   final int totalCount;
+  final LimitType limitType;
 
   const ProfileContentList._({
     Key? key,
@@ -34,6 +37,7 @@ class ProfileContentList extends ConsumerStatefulWidget {
     required this.creatorName,
     required this.showMedia,
     required this.totalCount,
+    required this.limitType,
   }) : super(key: key);
 
   factory ProfileContentList.youTube({
@@ -52,6 +56,7 @@ class ProfileContentList extends ConsumerStatefulWidget {
       creatorName: creatorName,
       showMedia: true,
       totalCount: totalCount,
+      limitType: LimitType.profile,
     );
   }
 
@@ -59,7 +64,7 @@ class ProfileContentList extends ConsumerStatefulWidget {
     Key? key,
     required List<MemoModelPost> posts,
     required String creatorName,
-    required isTopicList,
+    required bool isTopicList,
     required int totalCount,
   }) {
     return ProfileContentList._(
@@ -71,6 +76,7 @@ class ProfileContentList extends ConsumerStatefulWidget {
       creatorName: creatorName,
       showMedia: false,
       totalCount: totalCount,
+      limitType: LimitType.profile,
     );
   }
 
@@ -82,8 +88,13 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final profileLimit = ref.watch(profileLimitProvider);
 
-    if (widget.posts.isEmpty) {
+    // Check if we should show the limit card
+    final bool shouldShowLimitCard = widget.totalCount >= profileLimit;
+    final int itemCount = widget.posts.length + (shouldShowLimitCard ? 1 : 0);
+
+    if (widget.posts.isEmpty && !shouldShowLimitCard) {
       final String message = widget.isYouTubeList
           ? "No video posts by this creator yet."
           : widget.isTopicList
@@ -95,13 +106,26 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
 
     return SliverList(
       delegate: SliverChildBuilderDelegate((context, index) {
+        // Check if this is the limit card (last item)
+        if (shouldShowLimitCard && index >= widget.posts.length) {
+          return _buildLimitCard(theme);
+        }
+
         final post = widget.posts[index];
         if (widget.isYouTubeList && widget.showMedia) {
           return _buildVideoListItem(context, theme, post);
         } else {
           return _buildTextOnlyListItem(context, theme, post, index);
         }
-      }, childCount: widget.posts.length),
+      }, childCount: itemCount),
+    );
+  }
+
+  Widget _buildLimitCard(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      margin: const EdgeInsets.fromLTRB(6, 3, 6, 6),
+      child: LimitInfoWidget(limitType: widget.limitType, compact: false),
     );
   }
 

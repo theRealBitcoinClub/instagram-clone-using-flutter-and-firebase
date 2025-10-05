@@ -31,11 +31,11 @@ class LimitInfoWidget extends ConsumerWidget {
     if (compact) {
       return Container(
         padding: const EdgeInsets.all(12),
-        margin: const EdgeInsets.all(2),
+        // margin: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface.withOpacity(0.1),
-          border: Border.all(color: borderColor),
-          borderRadius: BorderRadius.circular(8),
+          // border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -45,13 +45,13 @@ class LimitInfoWidget extends ConsumerWidget {
             Text(
               'Limit Reached',
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(color: headerColor, fontWeight: FontWeight.bold),
+              style: theme.textTheme.bodyMedium?.copyWith(color: headerColor, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
               'Tap for details',
               textAlign: TextAlign.center,
-              style: theme.textTheme.labelSmall?.copyWith(color: textColor.withOpacity(0.7)),
+              style: theme.textTheme.titleSmall!.copyWith(color: textColor.withAlpha(222)),
             ),
           ],
         ),
@@ -59,7 +59,7 @@ class LimitInfoWidget extends ConsumerWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.fromLTRB(6, 3, 6, 6),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withOpacity(0.1),
@@ -86,27 +86,30 @@ class LimitInfoWidget extends ConsumerWidget {
 
   Widget _buildActionButtons(BuildContext context, WidgetRef ref) {
     return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          IconAction(
-            text: 'Swap',
-            onTap: () {
-              ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cauldronSwapTokenUrl);
-            },
-            type: IAB.alternative,
-            icon: Icons.swap_horizontal_circle_outlined,
-          ),
-          const SizedBox(width: 12),
-          IconAction(
-            text: 'Deposit',
-            onTap: () {
-              showQrCodeDialog(ctx: context, user: ref.read(userProvider), tokenOnly: true);
-            },
-            type: IAB.success,
-            icon: Icons.qr_code_outlined,
-          ),
-        ],
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(6)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconAction(
+              text: 'Swap',
+              onTap: () {
+                ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cauldronSwapTokenUrl);
+              },
+              type: IAB.alternative,
+              icon: Icons.swap_horizontal_circle_outlined,
+            ),
+            IconAction(
+              text: 'Deposit',
+              onTap: () {
+                showQrCodeDialog(ctx: context, user: ref.read(userProvider), tokenOnly: true);
+              },
+              type: IAB.success,
+              icon: Icons.qr_code_outlined,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -123,8 +123,8 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
 
   Widget _buildLimitCard(ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.all(15),
-      margin: const EdgeInsets.fromLTRB(6, 3, 6, 6),
+      padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 6),
+      // margin: const EdgeInsets.fromLTRB(6, 3, 6, 6),
       child: LimitInfoWidget(limitType: widget.limitType, compact: false),
     );
   }

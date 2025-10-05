@@ -7,91 +7,171 @@ import 'package:mahakka/repositories/creator_repository.dart';
 
 import '../provider/user_provider.dart';
 
-// Token Limit Enums
+class TokenLimitConstants {
+  // Token amounts for each tier
+  static const int freeTokens = 0;
+  static const int starterTokens = 222;
+  static const int advancedTokens = 1800;
+  static const int proTokens = 6000;
+
+  // Feed limits
+  static const int freeFeedLimit = 20;
+  static const int starterFeedLimit = 30;
+  static const int advancedFeedLimit = 42;
+  static const int proFeedLimit = 60;
+
+  // Profile limits
+  static const int freeProfileLimit = 9;
+  static const int starterProfileLimit = 12;
+  static const int advancedProfileLimit = 15;
+  static const int proProfileLimit = 18;
+
+  // Mute limits
+  static const int freeMuteLimit = 3;
+  static const int starterMuteLimit = 6;
+  static const int advancedMuteLimit = 9;
+  static const int proMuteLimit = 12;
+}
+
+class TokenLimitTexts {
+  // Common phrases
+  static const String tokenDepositInfo = 'Tokens stay in your wallet and can be withdrawn anytime using your mnemonic phrase.';
+  static const String findMnemonic = 'Find your mnemonic in Profile Settings → User tab.';
+  static const String muteSuggestion = 'You can also mute users to better use your available spots.';
+  static const String contactSupport = 'For higher limits, contact @mahakka_com on Telegram.';
+  static const String withdrawalInfo = 'Withdraw tokens anytime using Cashonize or Cauldron swap with your mnemonic.';
+
+  // Reusable templates
+  static const String feedLimitReached = 'Maximum feed posts reached for';
+  static const String profileLimitReached = 'Profile posts limited to';
+  static const String muteLimitReached = 'Maximum mutes reached for';
+  static const String depositToUnlock = 'Deposit';
+  static const String tokensFor = 'tokens for:';
+  static const String feedSpots = 'feed spots,';
+  static const String profilePosts = 'profile posts, mute';
+  static const String creators = 'creators';
+  static const String depositForTier = 'tokens to unlock';
+  static const String tier = 'tier.';
+  static const String free = 'FREE';
+  static const String starter = 'STARTER';
+  static const String premium = 'PREMIUM';
+  static const String pro = 'PRO';
+  static const String creators2 = 'creators';
+
+  // Benefits descriptions using constants
+  static const String starterBenefits =
+      '(${TokenLimitConstants.starterFeedLimit} $feedSpots ${TokenLimitConstants.starterProfileLimit} $profilePosts ${TokenLimitConstants.starterMuteLimit} $creators)';
+  static const String advancedBenefits =
+      '(${TokenLimitConstants.advancedFeedLimit} $feedSpots ${TokenLimitConstants.advancedProfileLimit} $profilePosts ${TokenLimitConstants.advancedMuteLimit} $creators)';
+  static const String proBenefits =
+      '(${TokenLimitConstants.proFeedLimit} $feedSpots ${TokenLimitConstants.proProfileLimit} $profilePosts ${TokenLimitConstants.proMuteLimit} $creators)';
+
+  // Deposit messages using constants
+  static const String depositStarter = '$depositToUnlock ${TokenLimitConstants.starterTokens} $depositForTier ${TokenLimitTexts.starter} $tier';
+  static const String depositAdvanced =
+      '$depositToUnlock ${TokenLimitConstants.advancedTokens} $depositForTier ${TokenLimitTexts.premium} $tier';
+  static const String depositPro = '$depositToUnlock ${TokenLimitConstants.proTokens} $depositForTier ${TokenLimitTexts.pro} $tier';
+
+  // Mute upgrade hints using constants
+  static const String muteUpgradeStarter =
+      '$depositToUnlock ${TokenLimitConstants.starterTokens} $depositForTier ${TokenLimitTexts.starter} $tier (${TokenLimitConstants.starterMuteLimit} $creators2)';
+  static const String muteUpgradeAdvanced =
+      '$depositToUnlock ${TokenLimitConstants.advancedTokens} $depositForTier ${TokenLimitTexts.premium} $tier (${TokenLimitConstants.advancedMuteLimit} $creators2)';
+  static const String muteUpgradePro =
+      '$depositToUnlock ${TokenLimitConstants.proTokens} $depositForTier ${TokenLimitTexts.pro} $tier (${TokenLimitConstants.proMuteLimit} $creators2)';
+}
+
 enum TokenLimitEnum {
   free(
-    "FREE",
-    tokenAmount: 0,
-    feedLimit: 20,
+    "${TokenLimitTexts.free}",
+    tokenAmount: TokenLimitConstants.freeTokens,
+    feedLimit: TokenLimitConstants.freeFeedLimit,
     feedLimitText:
-        'You\'ve loaded the maximum feed post items for non token users. Deposit 222 tokens to unlock STARTER limits. '
-        'These tokens stay in your wallet, depositing them simply proofs that you are ready to level up. '
-        'You can also mute some users to appreciate the 20 free limit post spots, '
-        'navigate to any profile and hit the mute badge on their avatar. If you deposit 222 tokens '
-        'you will have a limit of 30 spots, 1800 tokens give you 42 spots and 6000 for 60 spots',
-    profileLimit: 9,
+        '${TokenLimitTexts.feedLimitReached} ${TokenLimitTexts.free} ${TokenLimitTexts.tier} '
+        '${TokenLimitTexts.depositStarter} '
+        '${TokenLimitTexts.starterBenefits} '
+        '${TokenLimitTexts.muteSuggestion} ${TokenLimitTexts.tokenDepositInfo}',
+    profileLimit: TokenLimitConstants.freeProfileLimit,
     profileLimitText:
-        "Profile posts are limited to 9 items on the FREE tier, to unlock the STARTER tier deposit 222 tokens. "
-        "Deposits stay in your wallet and you can withdraw the funds at any time using your mnemonic seed phrase"
-        "You can find the mnemonic seed phrase in the profile settings dialog on the third tab (User)"
-        "As you deposit or withdraw the tokens the tiers are instantly unlocked or locked",
-    muteLimit: 3,
-    muteLimitText: "You can mute up to 3 creators on the FREE tier. Deposit 222 tokens to unlock STARTER limits. (6 creators)",
+        '${TokenLimitTexts.profileLimitReached} ${TokenLimitTexts.free} ${TokenLimitTexts.tier} '
+        '${TokenLimitTexts.depositStarter} '
+        '${TokenLimitTexts.tokenDepositInfo} ${TokenLimitTexts.findMnemonic}',
+    muteLimit: TokenLimitConstants.freeMuteLimit,
+    muteLimitText:
+        '${TokenLimitTexts.muteLimitReached} ${TokenLimitTexts.free} ${TokenLimitTexts.tier} '
+        '${TokenLimitTexts.muteUpgradeStarter}',
   ),
+
   starter(
-    "STARTER",
-    tokenAmount: 222,
-    feedLimit: 30,
+    "${TokenLimitTexts.starter}",
+    tokenAmount: TokenLimitConstants.starterTokens,
+    feedLimit: TokenLimitConstants.starterFeedLimit,
     feedLimitText:
-        'You\'ve loaded the maximum feed post items for STARTER tier. Deposit 1800 tokens to unlock ADVANCED limits. '
-        'These tokens stay in your wallet, depositing them simply proofs that you are ready to level up. '
-        'You can also mute some users to appreciate the 30 STARTER limit post spots, '
-        'navigate to any profile and hit the mute badge on their avatar. '
-        'If you want to withdraw your tokens simply use the mnemonic with Cashonize or Cauldron swap. '
-        'You can find the mnemonic/seed phrase on your profile settings.',
-    profileLimit: 12,
+        '${TokenLimitTexts.feedLimitReached} ${TokenLimitTexts.starter} ${TokenLimitTexts.tier} '
+        '${TokenLimitTexts.depositAdvanced} '
+        '${TokenLimitTexts.advancedBenefits} '
+        '${TokenLimitTexts.muteSuggestion} ${TokenLimitTexts.withdrawalInfo}',
+    profileLimit: TokenLimitConstants.starterProfileLimit,
     profileLimitText:
-        "Profile posts are limited to 12 items on the STARTER tier, to unlock the ADVANCED tier deposit 1800 tokens. "
-        "Deposits stay in your wallet and you can withdraw the funds at any time using your mnemonic seed phrase"
-        "You can find the mnemonic seed phrase in the profile settings dialog on the third tab (User)"
-        "As you deposit or withdraw the tokens the tiers are instantly unlocked or locked",
-    muteLimit: 6,
-    muteLimitText: "You can mute up to 6 creators on the STARTER tier. Deposit 1800 tokens to unlock ADVANCED limits. (9 creators)",
+        '${TokenLimitTexts.profileLimitReached} ${TokenLimitTexts.starter} ${TokenLimitTexts.tier} '
+        '${TokenLimitTexts.depositAdvanced} '
+        '${TokenLimitTexts.tokenDepositInfo} ${TokenLimitTexts.findMnemonic}',
+    muteLimit: TokenLimitConstants.starterMuteLimit,
+    muteLimitText:
+        '${TokenLimitTexts.muteLimitReached} ${TokenLimitTexts.starter} ${TokenLimitTexts.tier} '
+        '${TokenLimitTexts.muteUpgradeAdvanced}',
   ),
+
   advanced(
-    "ADVANCED",
-    tokenAmount: 1800,
-    feedLimit: 42,
+    "${TokenLimitTexts.premium}",
+    tokenAmount: TokenLimitConstants.advancedTokens,
+    feedLimit: TokenLimitConstants.advancedFeedLimit,
     feedLimitText:
-        'You\'ve loaded the maximum feed post items for ADVANCED tier. Deposit 6000 tokens to unlock PRO limits. '
-        'These tokens stay in your wallet, depositing them simply proofs that you are ready to level up. '
-        'You can also mute some users to appreciate the 42 ADVANCED tier post spots, '
-        'navigate to any profile and hit the mute badge on their avatar. '
-        'If you want to withdraw your tokens simply use the mnemonic with Cashonize or Cauldron swap. '
-        'You can find the mnemonic/seed phrase on your profile settings.',
-    profileLimit: 15,
+        '${TokenLimitTexts.feedLimitReached} ${TokenLimitTexts.premium} ${TokenLimitTexts.tier} '
+        '${TokenLimitTexts.depositPro} '
+        '${TokenLimitTexts.proBenefits} '
+        '${TokenLimitTexts.muteSuggestion} ${TokenLimitTexts.withdrawalInfo}',
+    profileLimit: TokenLimitConstants.advancedProfileLimit,
     profileLimitText:
-        "Profile posts are limited to 15 items on the ADVANCED tier, to unlock the PRO tier deposit 6000 tokens. "
-        "Deposits stay in your wallet and you can withdraw the funds at any time using your mnemonic seed phrase"
-        "You can find the mnemonic seed phrase in the profile settings dialog on the third tab (User)"
-        "As you deposit or withdraw the tokens the tiers are instantly unlocked or locked",
-    muteLimit: 9,
-    muteLimitText: "You can mute up to 9 creators on the ADVANCED tier. Deposit 6000 tokens to unlock PRO limits. (12 creators)",
+        '${TokenLimitTexts.profileLimitReached} ${TokenLimitTexts.premium} ${TokenLimitTexts.tier} '
+        '${TokenLimitTexts.depositPro} '
+        '${TokenLimitTexts.tokenDepositInfo} ${TokenLimitTexts.findMnemonic}',
+    muteLimit: TokenLimitConstants.advancedMuteLimit,
+    muteLimitText:
+        '${TokenLimitTexts.muteLimitReached} ${TokenLimitTexts.premium} ${TokenLimitTexts.tier} '
+        '${TokenLimitTexts.muteUpgradePro}',
   ),
+
   pro(
-    "PRO",
-    tokenAmount: 6000,
-    feedLimit: 60,
+    "${TokenLimitTexts.pro}",
+    tokenAmount: TokenLimitConstants.proTokens,
+    feedLimit: TokenLimitConstants.proFeedLimit,
     feedLimitText:
-        'You\'ve loaded the maximum feed post items for PRO users. If you want higher limits talk to @mahakka_com TG support. '
-        'If you want to withdraw your tokens simply use the mnemonic with Cashonize or Cauldron swap. '
-        'You can find the mnemonic/seed phrase on your profile settings.',
-    profileLimit: 18,
+        '${TokenLimitTexts.feedLimitReached} ${TokenLimitTexts.pro} ${TokenLimitTexts.tier} '
+        '${TokenLimitTexts.contactSupport} '
+        '${TokenLimitTexts.withdrawalInfo}',
+    profileLimit: TokenLimitConstants.proProfileLimit,
     profileLimitText:
-        "Profile posts are limited to 18 items on the PRO tier, if you want unlimited posts talk to @mahakka_com TG support. "
-        "Deposits stay in your wallet and you can withdraw the funds at any time using your mnemonic seed phrase"
-        "You can find the mnemonic seed phrase in the profile settings dialog on the third tab (User)"
-        "As you deposit or withdraw the tokens the tiers are instantly unlocked or locked",
-    muteLimit: 12,
-    muteLimitText: "You can mute up to 12 creators on the PRO tier. If you want higher limits contact @mahakka_com TG support. ",
+        '${TokenLimitTexts.profileLimitReached} ${TokenLimitTexts.pro} ${TokenLimitTexts.tier} '
+        '${TokenLimitTexts.contactSupport} '
+        '${TokenLimitTexts.tokenDepositInfo} ${TokenLimitTexts.findMnemonic}',
+    muteLimit: TokenLimitConstants.proMuteLimit,
+    muteLimitText:
+        '${TokenLimitTexts.muteLimitReached} ${TokenLimitTexts.pro} ${TokenLimitTexts.tier} '
+        '${TokenLimitTexts.contactSupport}',
   );
 
-  String toString() {
-    return tokenName;
-  }
+  final String name;
+  final int tokenAmount;
+  final int feedLimit;
+  final String feedLimitText;
+  final int profileLimit;
+  final String profileLimitText;
+  final int muteLimit;
+  final String muteLimitText;
 
   const TokenLimitEnum(
-    this.tokenName, {
+    this.name, {
     required this.tokenAmount,
     required this.feedLimit,
     required this.feedLimitText,
@@ -100,15 +180,6 @@ enum TokenLimitEnum {
     required this.muteLimit,
     required this.muteLimitText,
   });
-
-  final String tokenName;
-  final String feedLimitText;
-  final String profileLimitText;
-  final String muteLimitText;
-  final int tokenAmount;
-  final int feedLimit;
-  final int profileLimit;
-  final int muteLimit;
 
   // Helper method to get the appropriate enum based on token balance
   static TokenLimitEnum fromTokenBalance(int tokenBalance) {
@@ -121,6 +192,10 @@ enum TokenLimitEnum {
     } else {
       return TokenLimitEnum.free;
     }
+  }
+
+  String toString() {
+    return name;
   }
 }
 

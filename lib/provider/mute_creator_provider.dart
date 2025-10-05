@@ -71,7 +71,6 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList(_mutedCreatorsKey, newMutedCreators);
       state = newMutedCreators;
-      // ref.read(feedPostCacheProvider).resetLoadedItems();
       ref.read(feedPostsProvider.notifier).fetchInitialPosts();
       onMuteSuccess?.call();
       print('✅ MuteCreator: Muted creator: $creatorId');
@@ -96,10 +95,7 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
       await prefs.setStringList(_mutedCreatorsKey, newMutedCreators);
       state = newMutedCreators;
 
-      // Cancel any pending debounce timer
       _unmuteDebounceTimer?.cancel();
-
-      // Start a new debounce timer with 10 second delay
       _unmuteDebounceTimer = Timer(const Duration(seconds: 6), () {
         ref.read(feedPostsProvider.notifier).fetchInitialPosts(forceFetchFire: true);
         print('🔄 MuteCreator: Debounced feed refresh triggered after unmute');

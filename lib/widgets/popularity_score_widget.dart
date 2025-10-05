@@ -83,7 +83,7 @@ class _PopularityScoreWidgetState extends ConsumerState<PopularityScoreWidget> {
     final ThemeData theme = Theme.of(context);
     TextStyle effectiveStyle;
     if (widget.textStyleBalance) {
-      effectiveStyle = widget.textStyle ?? theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w400) ?? const TextStyle();
+      effectiveStyle = widget.textStyle ?? theme.textTheme.titleMedium ?? const TextStyle();
     } else {
       effectiveStyle = widget.textStyle ?? theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400) ?? const TextStyle();
     }

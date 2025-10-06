@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
+import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/repositories/creator_repository.dart';
 
 import '../provider/user_provider.dart';
@@ -280,15 +281,15 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
   }
 
   // Helper methods to access limits conveniently
-  int get feedLimit => state.value?.currentLimit.feedLimit ?? TokenLimitEnum.free.feedLimit;
-  int get profileLimit => state.value?.currentLimit.profileLimit ?? TokenLimitEnum.free.profileLimit;
-  int get muteLimit => state.value?.currentLimit.muteLimit ?? TokenLimitEnum.free.muteLimit;
-  TokenLimitEnum get currentLimit => state.value?.currentLimit ?? TokenLimitEnum.free;
+  // int get feedLimit => state.value?.currentLimit.feedLimit ?? TokenLimitEnum.free.feedLimit;
+  // int get profileLimit => state.value?.currentLimit.profileLimit ?? TokenLimitEnum.free.profileLimit;
+  // int get muteLimit => state.value?.currentLimit.muteLimit ?? TokenLimitEnum.free.muteLimit;
+  // TokenLimitEnum get currentLimit => state.value?.currentLimit ?? TokenLimitEnum.free;
   int get tokenBalance => state.value?.tokenBalance ?? 0;
 
-  bool get hasSufficientTokensForPro => tokenBalance >= TokenLimitEnum.pro.tokenAmount;
-  bool get hasSufficientTokensForAdvanced => tokenBalance >= TokenLimitEnum.advanced.tokenAmount;
-  bool get hasSufficientTokensForStarter => tokenBalance >= TokenLimitEnum.starter.tokenAmount;
+  // bool get hasSufficientTokensForPro => tokenBalance >= TokenLimitEnum.pro.tokenAmount;
+  // bool get hasSufficientTokensForAdvanced => tokenBalance >= TokenLimitEnum.advanced.tokenAmount;
+  // bool get hasSufficientTokensForStarter => tokenBalance >= TokenLimitEnum.starter.tokenAmount;
 }
 
 // Convenience providers for individual limits
@@ -299,26 +300,30 @@ final feedLimitProvider = Provider<int>((ref) {
 
 final profileLimitProvider = Provider<int>((ref) {
   final state = ref.watch(tokenLimitsProvider);
+  if (ref.read(profileTargetIdProvider) == ref.read(userProvider)!.id) {
+    return 99;
+  }
+
   return state.value?.currentLimit.profileLimit ?? TokenLimitEnum.free.profileLimit;
 });
 
-final muteLimitProvider = Provider<int>((ref) {
-  final state = ref.watch(tokenLimitsProvider);
-  return state.value?.currentLimit.muteLimit ?? TokenLimitEnum.free.muteLimit;
-});
+// final muteLimitProvider = Provider<int>((ref) {
+//   final state = ref.watch(tokenLimitsProvider);
+//   return state.value?.currentLimit.muteLimit ?? TokenLimitEnum.free.muteLimit;
+// });
 
 final currentTokenLimitEnumProvider = Provider<TokenLimitEnum>((ref) {
   final state = ref.watch(tokenLimitsProvider);
   return state.value?.currentLimit ?? TokenLimitEnum.free;
 });
 
-final tokenBalanceProvider = Provider<int>((ref) {
-  final state = ref.watch(tokenLimitsProvider);
-  return state.value?.tokenBalance ?? 0;
-});
-
-// Provider to check if user has any tokens at all
-final hasAnyTokensProvider = Provider<bool>((ref) {
-  final tokenBalance = ref.watch(tokenBalanceProvider);
-  return tokenBalance > 0;
-});
+// final tokenBalanceProvider = Provider<int>((ref) {
+//   final state = ref.watch(tokenLimitsProvider);
+//   return state.value?.tokenBalance ?? 0;
+// });
+//
+// // Provider to check if user has any tokens at all
+// final hasAnyTokensProvider = Provider<bool>((ref) {
+//   final tokenBalance = ref.watch(tokenBalanceProvider);
+//   return tokenBalance > 0;
+// });

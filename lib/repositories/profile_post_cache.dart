@@ -1,14 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
+import 'package:mahakka/providers/token_limits_provider.dart';
 
 import '../memo/isar/memo_model_post_db.dart';
 import '../memo/model/memo_model_post.dart';
 import '../provider/isar_provider.dart';
 
 final profilePostCacheProvider = Provider((ref) => ProfilePostCache(ref));
-
-const int profileCacheAndFirebaseLimit = 18;
 
 class ProfilePostCache {
   final Ref ref;
@@ -79,7 +78,7 @@ class ProfilePostCache {
           .filter()
           .creatorIdEqualTo(creatorId)
           .sortByCreatedDateTimeDesc()
-          .limit(profileCacheAndFirebaseLimit)
+          .limit(ref.read(profileLimitProvider))
           .findAll();
 
       final posts = postsDb.map((db) => db.toAppModel()).toList();

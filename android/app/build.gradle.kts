@@ -29,8 +29,8 @@ val flutterCompileSdkVersion = 36
 val flutterMinSdkVersion = 27
 val flutterTargetSdkVersion = 36
 val flutterNdkVersion = "27.0.12077973"
-val flutterVersionCode = 2025100602
-val flutterVersionName = "4.2.9-BCH"
+val flutterVersionCode = 2025100603
+val flutterVersionName = "4.2.10-BCH"
 
 android {
     namespace = "com.mahakka"

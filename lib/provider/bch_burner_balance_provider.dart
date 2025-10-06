@@ -16,7 +16,7 @@ final bchBurnerBalanceProvider = StreamProvider<Balance>((ref) {
     streamController.add(balance);
   });
 
-  timer = Timer.periodic(const Duration(seconds: kDebugMode ? 100 : 10), (_) async {
+  timer = Timer.periodic(const Duration(seconds: kDebugMode ? 10 : 10), (_) async {
     try {
       final balance = await _fetchBalance(ref);
       print('Update burner balance: $balance');
@@ -27,7 +27,6 @@ final bchBurnerBalanceProvider = StreamProvider<Balance>((ref) {
     }
   });
 
-  // Clean up when the provider is disposed
   ref.onDispose(() {
     timer?.cancel();
     streamController.close();
@@ -38,6 +37,5 @@ final bchBurnerBalanceProvider = StreamProvider<Balance>((ref) {
 
 Future<Balance> _fetchBalance(Ref ref) async {
   final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-  // DebouncedBalanceService debouncedBalanceService = DebouncedBalanceService(balanceService: base);
   return await base.getBalances(MemoBitcoinBase.bchBurnerAddress);
 }

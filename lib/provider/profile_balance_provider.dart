@@ -35,7 +35,7 @@ class ProfileBalanceProvider {
     _qrDialogRefreshTimer = null;
   }
 
-  Future<void> refreshBalances() async {
+  Future<void> refreshBalances(ctx) async {
     final profileId = ref.read(currentProfileIdProvider);
     if (profileId != null && profileId.isNotEmpty) {
       var creatorRepository = ref.read(creatorRepositoryProvider);
@@ -44,6 +44,11 @@ class ProfileBalanceProvider {
         await creator.refreshBalances(ref, creatorRepository);
       }
     }
+
+    ref.invalidate(creatorRepositoryProvider);
+    ref.read(profileDataNotifier.notifier).notifyStateUpdateCreator(ctx);
+    // ref.read(creatorRepositoryProvider).notifyCreatorUpdated(profileId, creator);
+    // ref.read(tokenLimitsProvider.notifier).handleCreatorUpdate(creator);
   }
 
   Future<MemoModelCreator?> refreshMahakkaBalance(BuildContext ctx, String profileId) async {
@@ -117,15 +122,15 @@ class ProfileBalanceProvider {
     _stopProfileRefreshTimer();
   }
 
-  void startAutoRefreshBalanceProfile() {
+  void startAutoRefreshBalanceProfile(ctx) {
     _stopProfileRefreshTimer();
-    _startBalanceRefreshTimerProfile();
+    _startBalanceRefreshTimerProfile(ctx);
   }
 
-  void _startBalanceRefreshTimerProfile() {
+  void _startBalanceRefreshTimerProfile(ctx) {
     _balanceRefreshTimer?.cancel();
     _balanceRefreshTimer = Timer.periodic(_refreshBalanceInterval, (_) async {
-      await _refreshBalancesPeriodicallyOnProfile();
+      await _refreshBalancesPeriodicallyOnProfile(ctx);
     });
   }
 
@@ -134,7 +139,7 @@ class ProfileBalanceProvider {
     _balanceRefreshTimer = null;
   }
 
-  Future<void> _refreshBalancesPeriodicallyOnProfile() async {
+  Future<void> _refreshBalancesPeriodicallyOnProfile(ctx) async {
     final profileId = ref.read(currentProfileIdProvider);
     if (profileId == null || profileId.isEmpty || ref.read(profileDataNotifier).isLoading) {
       return;
@@ -144,7 +149,7 @@ class ProfileBalanceProvider {
       final currentData = ref.read(profileDataNotifier.notifier).state.value;
       if (currentData != null && currentData.creator != null) {
         Future.microtask(() async {
-          await refreshBalances();
+          await refreshBalances(ctx);
         });
       }
     } catch (e) {

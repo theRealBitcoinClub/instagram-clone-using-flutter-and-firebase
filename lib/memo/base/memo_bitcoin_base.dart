@@ -53,7 +53,8 @@ class MemoBitcoinBase {
   static const derivationPathCashtoken = "m/44'/145'/0'/0/0";
   //TODO create an address that is managed in a multi_sig wallet to buy and burn tokens every week
   //TODO show the balance of that managed wallet on the top app_bar and make it increase on every action inside mahakka
-  static const bchBurnerAddress = "bitcoincash:qzsyjtd4fxrxzvmqwudzsasfg6lfrse49q6ngu4ddf";
+  static const bchBurnerAddress = "bitcoincash:zzsyjtd4fxrxzvmqwudzsasfg6lfrse49qaemzmtj6";
+  // static const bchBurnerAddress = "bitcoincash:qzsyjtd4fxrxzvmqwudzsasfg6lfrse49q6ngu4ddf";
   static const tokenBurnerDotCashAddress = "bitcoincash:r0lxr93av56s6ja253zmg6tjgwclfryeardw6v427e74uv6nfkrlc2s5qtune";
 
   ElectrumWebSocketService? service;
@@ -104,6 +105,10 @@ class MemoBitcoinBase {
     final isLegacy = !address.startsWith('bitcoincash:');
     final hasToken = address.startsWith('bitcoincash:z');
 
+    if (address == MemoBitcoinBase.bchBurnerAddress) {
+      print("object");
+    }
+
     try {
       BitcoinCashAddress typedAddress;
       if (isLegacy) {
@@ -137,47 +142,36 @@ class MemoBitcoinBase {
       print('An error occurred while checking balances: $e');
       return Balance(bch: BigInt.zero, token: BigInt.zero);
     }
-    //DISCONNECT IS HANDLED IN THE ELECTRUM PROVIDER
-    // finally {
-    //   service?.discounnect();
-    // }
   }
 
   ForkedTransactionBuilder buildTxToTransferTokens(
     int tokenAmountToSend,
     BitcoinCashAddress senderBCHp2pkhwt,
-    BigInt totalAmountInSatoshisAvailable,
+    BigInt availableSats,
     List<UtxoWithAddress> utxos,
     BitcoinBaseAddress receiverP2PKHWT,
     CashToken token,
-    BigInt totalAmountOfTokenAvailable,
+    BigInt totalTokensAvailable,
   ) {
     var amount = BigInt.from(tokenAmountToSend);
-    //TOD AUTO CONSOLIDATE TO SAVE ON FEES
-    BigInt fee = BtcUtils.toSatoshi("0.000007");
-    BigInt tokenFee = BtcUtils.toSatoshi("0.000007");
-    return ForkedTransactionBuilder(
-      outPuts: [
-        /// change address for bch values (sum of bch amout - (outputs amount + fee))
-        BitcoinOutput(address: senderBCHp2pkhwt.baseAddress, value: totalAmountInSatoshisAvailable - (tokenFee + tokenFee + fee)),
-        BitcoinTokenOutput(
-          utxoHash: utxos.first.utxo.txHash,
-          address: receiverP2PKHWT,
-          value: tokenFee,
-          token: token.copyWith(amount: amount),
-        ),
-        BitcoinTokenOutput(
-          utxoHash: utxos.first.utxo.txHash,
-          address: senderBCHp2pkhwt.baseAddress,
-          value: tokenFee,
-          token: token.copyWith(amount: totalAmountOfTokenAvailable - amount),
-        ),
-      ],
-      fee: fee,
-      network: network!,
-      memo: null,
-      utxos: utxos,
-    );
+    BigInt fee = calculateFee(3, utxos.length, withOpReturn: false, overheads: "0.000001");
+    BigInt tokenFee = BtcUtils.toSatoshi("0.00000666");
+    var outPuts = [
+      BitcoinOutput(address: senderBCHp2pkhwt.baseAddress, value: availableSats - (tokenFee + tokenFee + fee)),
+      BitcoinTokenOutput(
+        utxoHash: utxos.first.utxo.txHash,
+        address: receiverP2PKHWT,
+        value: tokenFee,
+        token: token.copyWith(amount: amount),
+      ),
+      BitcoinTokenOutput(
+        utxoHash: utxos.first.utxo.txHash,
+        address: senderBCHp2pkhwt.baseAddress,
+        value: tokenFee,
+        token: token.copyWith(amount: totalTokensAvailable - amount),
+      ),
+    ];
+    return ForkedTransactionBuilder(outPuts: outPuts, fee: fee, network: network!, memo: null, utxos: utxos);
   }
 
   CashToken findTokenById(List<ElectrumUtxo> electrumUTXOs, String tokenId) {
@@ -190,7 +184,7 @@ class MemoBitcoinBase {
         .fold(BigInt.zero, (previousValue, element) => previousValue + element.utxo.token!.amount);
   }
 
-  List<UtxoWithAddress> transformUtxosFilterForTokenId(
+  List<UtxoWithAddress> getSpecificTokenAndGeneralUtxos(
     List<ElectrumUtxo> electrumUTXOs,
     BitcoinCashAddress senderBCHp2pkhwt,
     ECPrivate bip44Sender,
@@ -268,99 +262,67 @@ class MemoBitcoinBase {
 
   Future<String> sendIpfs(List<Map<String, dynamic>> outputs, String mnemonic) async {
     try {
-      // Validate outputs
       if (outputs.isEmpty) {
         throw Exception('No outputs provided for transaction');
       }
-
-      // Get the private key for the default derivation path
-      // final mnemonic = await _getMnemonic();
       final privateKey = createBip44PrivateKey(mnemonic, derivationPathMemoBch);
-
-      // Create sender address
       final senderAddress = createAddressP2PKHWT(privateKey);
       final cashAddress = BitcoinCashAddress.fromBaseAddress(senderAddress);
-
-      // Get UTXOs for the sender address
       final electrumUtxos = await requestElectrumUtxos(cashAddress);
       final utxosWithAddress = transformUtxosAddAddressDetails(electrumUtxos, cashAddress, privateKey);
-
-      // Calculate total available balance
       final totalBalance = utxosWithAddress.fold(BigInt.zero, (previousValue, element) => previousValue + element.utxo.value);
-
-      // Convert outputs to BitcoinOutput objects and calculate total amount
       final bitcoinOutputs = <BitcoinOutput>[];
       BigInt totalOutputAmount = BigInt.zero;
 
       for (final output in outputs) {
         final address = output['address'];
         final amountSat = output['amountSat'];
-        // final amountSat = BigInt.from(output['amountSat']);
 
         bitcoinOutputs.add(BitcoinOutput(address: BitcoinCashAddress(address).baseAddress, value: amountSat));
 
         totalOutputAmount += amountSat;
       }
 
-      // Estimate transaction size for better fee calculation
-      // final estimatedSize = ForkedTransactionBuilder.estimateTransactionSize(
-      //   utxos: utxosWithAddress,
-      //   outputs: bitcoinOutputs,
-      //   network: network!,
-      // );
-      // final feePerByte = BtcUtils.toSatoshi("0.000001");
-      // final fee = BigInt.from(estimatedSize) * feePerByte ~/ BigInt.from(1000);
+      BigInt fee = calculateFee(bitcoinOutputs.length, utxosWithAddress.length);
 
-      // Calculate fee based on estimated size (0.00001 BCH per 1000 bytes)
-      // final feePerByte = BtcUtils.toSatoshi("0.000001");
-      // final fee = BigInt.from(estimatedSize) * feePerByte ~/ BigInt.from(1000);
-      BigInt eachInput = BtcUtils.toSatoshi("0.00000148");
-      BigInt eachOutput = BtcUtils.toSatoshi("0.00000034");
-      BigInt overhead = BtcUtils.toSatoshi("0.00000020");
-      BigInt fee = eachOutput * BigInt.from(bitcoinOutputs.length); //OWN FUNDS
-      fee += BtcUtils.toSatoshi("0.00000250"); //OP_RETURN w max text
-      // fee += eachOutput * BigInt.from(tips.length); //TIP & BURN
-      fee += eachInput * BigInt.from(utxosWithAddress.length); //CONSOLIDATE ALL UTXOS
-      fee += overhead;
-      // final fee = MemoPublisher.feeMaxEstimation;
-      // final fee = BigInt.from(estimatedSize) * feePerByte ~/ BigInt.from(1000);
-
-      // Check if we have enough balance
       if (totalBalance < totalOutputAmount + fee) {
         throw Exception('Insufficient balance. Available: $totalBalance, Required: ${totalOutputAmount + fee}');
       }
 
-      // Add change output if needed
       final changeAmount = totalBalance - totalOutputAmount - fee;
       if (changeAmount > BigInt.zero) {
         bitcoinOutputs.add(BitcoinOutput(address: senderAddress, value: changeAmount));
       }
 
-      // Build the transaction
       final builder = ForkedTransactionBuilder(outPuts: bitcoinOutputs, fee: fee, network: network!, utxos: utxosWithAddress);
 
-      // Build and sign the transaction
       final transaction = await builder.buildTransactionAsync((digest, utxo, publicKey, sighash) async {
-        // Use the proper ECDSA signing method from ECPrivate
         return privateKey.signECDSA(digest, sighash: BitcoinOpCodeConst.sighashAll | BitcoinOpCodeConst.sighashForked);
       });
 
-      // Broadcast the transaction
       String result = await broadcastTransaction(transaction);
 
       if (result == "success") {
         //TODO SUCCESS CALLBACK CONFETTI
       }
-      // Return the transaction ID in the expected format
       return transaction.txId();
-      // return reOrderTxHash(transaction.txId());
     } catch (error) {
       print('Error in send method: $error');
       rethrow;
     }
   }
 
-  // Helper method to convert BCH amount to satoshis
+  BigInt calculateFee(int outputUtxoCount, int inputUtxoCount, {bool withOpReturn = true, String overheads = "0.00000020"}) {
+    BigInt eachInput = BtcUtils.toSatoshi("0.00000148");
+    BigInt eachOutput = BtcUtils.toSatoshi("0.00000034");
+    BigInt overhead = BtcUtils.toSatoshi(overheads);
+    BigInt fee = eachOutput * BigInt.from(outputUtxoCount); //OWN FUNDS
+    if (withOpReturn) fee += BtcUtils.toSatoshi("0.00000250"); //OP_RETURN w max text
+    fee += eachInput * BigInt.from(inputUtxoCount); //CONSOLIDATE ALL UTXOS
+    fee += overhead;
+    return fee;
+  }
+
   BigInt toSatoshi(double bchAmount) {
     return BigInt.from((bchAmount * 100000000).round());
   }

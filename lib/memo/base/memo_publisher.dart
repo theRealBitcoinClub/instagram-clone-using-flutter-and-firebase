@@ -5,6 +5,7 @@ import 'package:mahakka/memo/base/memo_accountant.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_tip.dart';
+import 'package:mahakka/provider/user_provider.dart';
 
 import '../../provider/electrum_provider.dart';
 import 'memo_code.dart';
@@ -35,21 +36,27 @@ class MemoPublisher {
   // The create method must now accept a Ref and pass it to the private constructor.
   static Future<MemoPublisher> create(Ref ref, String msg, MemoCode code, {ECPrivate? pk, String? wif}) async {
     MemoPublisher publisher = MemoPublisher._create(ref, msg, code, pk: pk, wif: wif);
-    // Remove the redundant _initAsync call. The provider is ready to use.
     return publisher;
   }
 
-  Future<MemoAccountantResponse> doPublish({String topic = "", tips}) async {
+  Future<MemoAccountantResponse> doPublish({String topic = "", List<MemoTip> tips = const []}) async {
+    bool hasBurned = await triggerBurnTokens();
+    if (hasBurned) {
+      tips.removeWhere(
+        (element) => element.receiverAddress == MemoBitcoinBase.bchBurnerAddress,
+      ); //remove the burner tip if user has contributed via token
+    }
+
     if (_memoAction == MemoCode.profileMessage || _memoAction == MemoCode.topicMessage) topic = _addSuperTagAndSuperTopic(topic);
     final MemoBitcoinBase base = await _ref.read(electrumServiceProvider.future);
 
-    final List<ElectrumUtxo> elctrumUtxos = await base.requestElectrumUtxos(_p2pkhAddress);
+    final List<ElectrumUtxo> eutxos = await base.requestElectrumUtxos(_p2pkhAddress);
 
-    if (elctrumUtxos.isEmpty) {
+    if (eutxos.isEmpty) {
       return MemoAccountantResponse.noUtxo;
     }
 
-    List<UtxoWithAddress> utxos = addUtxoAddressDetails(elctrumUtxos);
+    List<UtxoWithAddress> utxos = addUtxoAddressDetails(eutxos);
     //TODO the remove dust utxo might be helpful in any case but shouldnt be required for non memo that dont have SLP
     //TODO this removeSlp shouldnt be required in this app as the addresses dont use dev path 245
     // utxos = removeSlpUtxos(utxos);
@@ -91,14 +98,7 @@ class MemoPublisher {
   }
 
   MemoTransactionBuilder createTxBuilder(BigInt balance, List<UtxoWithAddress> utxos, String topic, List<MemoTip> tips) {
-    BigInt eachInput = BtcUtils.toSatoshi("0.00000148");
-    BigInt eachOutput = BtcUtils.toSatoshi("0.00000034");
-    BigInt overhead = BtcUtils.toSatoshi("0.00000020");
-    BigInt fee = eachOutput * BigInt.from(1); //OWN FUNDS
-    fee += BtcUtils.toSatoshi("0.00000250"); //OP_RETURN w max text
-    fee += eachOutput * BigInt.from(tips.length); //TIP & BURN
-    fee += eachInput * BigInt.from(utxos.length); //CONSOLIDATE ALL UTXOS
-    fee += overhead;
+    BigInt fee = calculateFee(tips, utxos);
 
     BigInt outputHome = balance - fee;
     BigInt totalTips = BigInt.zero;
@@ -133,6 +133,18 @@ class MemoPublisher {
     return txBuilder;
   }
 
+  BigInt calculateFee(List<MemoTip> tips, List<UtxoWithAddress> utxos) {
+    BigInt eachInput = BtcUtils.toSatoshi("0.00000148");
+    BigInt eachOutput = BtcUtils.toSatoshi("0.00000034");
+    BigInt overhead = BtcUtils.toSatoshi("0.00000020");
+    BigInt fee = eachOutput * BigInt.from(1); //OWN FUNDS
+    fee += BtcUtils.toSatoshi("0.00000250"); //OP_RETURN w max text
+    fee += eachOutput * BigInt.from(tips.length); //TIP & BURN
+    fee += eachInput * BigInt.from(utxos.length); //CONSOLIDATE ALL UTXOS
+    fee += overhead;
+    return fee;
+  }
+
   List<UtxoWithAddress> addUtxoAddressDetails(List<ElectrumUtxo> elctrumUtxos) {
     List<UtxoWithAddress> utxos = elctrumUtxos
         .map(
@@ -152,5 +164,54 @@ class MemoPublisher {
       }
     }
     return utxos;
+  }
+
+  Future<bool> triggerBurnTokens() async {
+    try {
+      MemoBitcoinBase base = await _ref.read(electrumServiceProvider.future);
+      ECPrivate bip44Sender = _ref.read(userProvider)!.pkBchCashtoken;
+      P2pkhAddress senderP2PKHWT = base.createAddressP2PKHWT(bip44Sender);
+      // BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress(MemoBitcoinBase.tokenBurnerDotCashAddress).baseAddress;
+      BitcoinBaseAddress receiverP2PKHWT = BitcoinCashAddress(MemoBitcoinBase.bchBurnerAddress).baseAddress;
+      BitcoinCashAddress senderBCHp2pkhwt = BitcoinCashAddress.fromBaseAddress(senderP2PKHWT);
+      List<ElectrumUtxo> electrumUTXOs = await base.requestElectrumUtxos(senderBCHp2pkhwt, includeCashtokens: true);
+
+      if (electrumUTXOs.length == 0) {
+        print("Zero UTXOs found");
+        return false;
+      }
+
+      List<UtxoWithAddress> utxos = base.getSpecificTokenAndGeneralUtxos(electrumUTXOs, senderBCHp2pkhwt, bip44Sender, MemoBitcoinBase.tokenId);
+
+      //TODO CHECK WHAT VALUE THE TOKEN UTXOS HAVE, DO THEY INFLUENCE TOTAL BALANCE?
+      BigInt totalAmountInSatoshisAvailable = utxos.sumOfUtxosValue();
+      if (totalAmountInSatoshisAvailable == BigInt.zero) {
+        print("Zero UTXOs with that tokenId found");
+        return false;
+      }
+
+      CashToken token = base.findTokenById(electrumUTXOs, MemoBitcoinBase.tokenId);
+      BigInt totalAmountOfTokenAvailable = base.calculateTotalAmountOfThatToken(utxos, MemoBitcoinBase.tokenId);
+
+      ForkedTransactionBuilder bchTransaction = base.buildTxToTransferTokens(
+        1,
+        senderBCHp2pkhwt,
+        totalAmountInSatoshisAvailable,
+        utxos,
+        receiverP2PKHWT,
+        token,
+        totalAmountOfTokenAvailable,
+      );
+
+      BtcTransaction signedTx = bchTransaction.buildTransaction((trDigest, utxo, publicKey, sighash) {
+        return bip44Sender.signECDSA(trDigest, sighash: sighash);
+      });
+
+      base.broadcastTransaction(signedTx);
+      return true;
+    } catch (e) {
+      print("UNEXPECTED ERROR: BURN TOKEN: $e");
+      return false;
+    }
   }
 }

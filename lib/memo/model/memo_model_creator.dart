@@ -247,6 +247,7 @@ class MemoModelCreator {
   }
 
   Future<void> refreshBalanceMahakka(Ref ref) async {
+    print("refreshBalanceMahakka");
     final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
     Balance balances = await base.getBalances(bchAddressCashtokenAware);
     balanceBch = balances.bch;
@@ -255,6 +256,7 @@ class MemoModelCreator {
   }
 
   Future<void> refreshBalanceMemo(Ref ref) async {
+    print("refreshBalanceMemo");
     final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
     balanceMemo = await base.getBalances(id).then((value) => value.bch);
     ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: false);

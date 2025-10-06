@@ -86,7 +86,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     if (index != AppTab.profile.tabIndex) {
       ref.read(profileBalanceProvider).stopAutoRefreshBalanceProfile();
     } else {
-      ref.read(profileBalanceProvider).startAutoRefreshBalanceProfile();
+      ref.read(profileBalanceProvider).startAutoRefreshBalanceProfile(context);
     }
 
     if (tabData == AppTab.add) {

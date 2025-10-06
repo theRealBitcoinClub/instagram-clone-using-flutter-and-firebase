@@ -11,39 +11,40 @@ class BurnerBalanceWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch theme state
     final asyncThemeState = ref.watch(themeNotifierProvider);
     final currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
     final ThemeData theme = currentThemeState.currentTheme;
-
-    // Watch burner balance with automatic updates
     final asyncBurnerBalance = ref.watch(bchBurnerBalanceProvider);
-
     return GestureDetector(
       onTap: () =>
           ref.read(navigationStateProvider.notifier).navigateToUrl("${MemoBitcoinBase.explorerUrl}${MemoBitcoinBase.bchBurnerAddress}"),
-      // onTap: () => WebViewNavigator.navigateTo(ref, WebViewShow.url, "${MemoBitcoinBase.explorerUrl}${MemoBitcoinBase.bchBurnerAddress}"),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Fire Icon
-          Icon(Icons.local_fire_department_outlined, size: 22, color: theme.colorScheme.onPrimary),
-          const SizedBox(width: 4),
-
-          // Burner Balance with automatic updates
+          Icon(Icons.currency_bitcoin_outlined, size: 22, color: theme.colorScheme.onPrimary),
+          const SizedBox(width: 2.1),
           asyncBurnerBalance.when(
             data: (burnerBalance) {
-              return PopularityScoreWidget(
-                initialScore: burnerBalance.bch,
-                textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: theme.colorScheme.onPrimary),
+              return Row(
+                children: [
+                  PopularityScoreWidget(
+                    initialScore: burnerBalance.bch,
+                    textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: theme.colorScheme.onPrimary),
+                  ),
+                  SizedBox(width: 6),
+                  Icon(Icons.local_fire_department_outlined, size: 22, color: theme.colorScheme.onPrimary),
+                  const SizedBox(width: 2.1),
+                  PopularityScoreWidget(
+                    initialScore: burnerBalance.token,
+                    textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: theme.colorScheme.onPrimary),
+                  ),
+                ],
               );
             },
             error: (error, stackTrace) {
-              // Error state - show placeholder or error icon
               return Icon(Icons.error_outline, size: 20, color: theme.colorScheme.error);
             },
             loading: () {
-              // Loading state - show shimmer or placeholder
               return SizedBox(
                 width: 60,
                 height: 20,

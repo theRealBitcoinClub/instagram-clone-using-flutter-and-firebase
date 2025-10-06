@@ -160,7 +160,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
           _lastProfileIdOnLoad = profileId;
           ref.read(creatorRepositoryProvider).refreshCreatorCache(profileId);
           refreshUserRegisteredFlag();
-          ref.read(profileBalanceProvider).refreshBalances();
+          ref.read(profileBalanceProvider).refreshBalances(ctx);
         }
       }
     });

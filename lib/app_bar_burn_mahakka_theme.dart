@@ -33,30 +33,8 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
       centerTitle: true,
       toolbarHeight: height,
       leading: Padding(padding: EdgeInsetsGeometry.fromLTRB(9, 0, 0, 0), child: BurnerBalanceWidget()),
-      leadingWidth: 99,
-      // title: Row(
-      //   children: [
-      //     const Spacer(),
-      //     GestureDetector(
-      //       onTap: () => ExternalBrowserLauncher().launchUrlWithConfirmation(context, 'https://mahakka.com'),
-      //       child: Text(
-      //         "mahakka.com",
-      //         style: theme.textTheme.titleMedium!.copyWith(
-      //           letterSpacing: 1,
-      //           fontWeight: FontWeight.bold,
-      //           color: theme.colorScheme.onPrimary.withAlpha(222),
-      //         ),
-      //       ),
-      //     ),
-      //   ],
-      // ),
+      leadingWidth: 189,
       actions: [
-        // IconButton(
-        //   onPressed: () {
-        //     selectLanguageCode(ref, context);
-        //   },
-        //   icon: Icon(Icons.language_outlined),
-        // ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
           child: GestureDetector(
@@ -87,13 +65,6 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
       }
     }
   }
-
-  // Future<void> selectLanguageCode(WidgetRef ref, BuildContext context) async {
-  //   final selectedLangCode = await LanguageSelectorWidget.showLanguageSelector(context: context);
-  //   if (selectedLangCode != null) {
-  //     ref.read(languageCodeProvider.notifier).state = selectedLangCode;
-  //   }
-  // }
 
   static Widget buildThemeIcon(ThemeState themeState, WidgetRef ref, BuildContext context) {
     var icon = Icon(size: 24, themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined);

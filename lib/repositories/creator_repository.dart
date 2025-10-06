@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
@@ -34,7 +35,7 @@ class CreatorRepository {
           if (_creatorStreamControllers[creatorId]?.hasListener == false) {
             _creatorStreamControllers[creatorId]?.close();
             _creatorStreamControllers.remove(creatorId);
-            print("INFO: Disposed stream controller for creator $creatorId");
+            _print("INFO: Disposed stream controller for creator $creatorId");
           }
         },
       );
@@ -51,12 +52,12 @@ class CreatorRepository {
       // Check if there are active listeners before sending
       if (controller.hasListener) {
         controller.add(creator);
-        print("INFO: Notified stream listeners for creator $creatorId");
+        _print("INFO: Notified stream listeners for creator $creatorId");
       } else {
         // No listeners, clean up the controller
         controller.close();
         _creatorStreamControllers.remove(creatorId);
-        print("INFO: Cleaned up unused stream controller for creator $creatorId");
+        _print("INFO: Cleaned up unused stream controller for creator $creatorId");
       }
     }
   }
@@ -67,7 +68,7 @@ class CreatorRepository {
   Future<MemoModelCreator?> _getFromCache(String creatorId) async {
     // Layer 1: Check in-memory cache
     if (_inMemoryCache.containsKey(creatorId)) {
-      print("INFO: Fetched creator $creatorId from in-memory cache.");
+      _print("INFO: Fetched creator $creatorId from in-memory cache.");
       return _inMemoryCache[creatorId];
     }
 
@@ -76,7 +77,7 @@ class CreatorRepository {
     final cachedCreator = await isar.memoModelCreatorDbs.where().creatorIdEqualTo(creatorId).findFirst();
 
     if (cachedCreator != null) {
-      print("INFO: Fetched creator $creatorId from Isar cache.");
+      _print("INFO: Fetched creator $creatorId from Isar cache.");
       final creator = cachedCreator.toAppModel();
       _inMemoryCache[creatorId] = creator; // Populate memory cache
       return creator;
@@ -89,7 +90,7 @@ class CreatorRepository {
     // Save to Firebase if requested but if so do it first because the single source of truth is firebase
     if (saveToFirebase) {
       await ref.read(creatorServiceProvider).saveCreator(creator);
-      print("INFO: Saved creator ${creator.id} to Firebase.");
+      _print("INFO: Saved creator ${creator.id} to Firebase.");
     }
 
     final isar = await _isar;
@@ -98,11 +99,11 @@ class CreatorRepository {
     await isar.writeTxn(() async {
       await isar.memoModelCreatorDbs.put(MemoModelCreatorDb.fromAppModel(creator));
     });
-    print("INFO: Saved creator ${creator.id} to Isar cache.");
+    _print("INFO: Saved creator ${creator.id} to Isar cache.");
 
     // Save to in-memory cache
     _inMemoryCache[creator.id] = creator;
-    print("INFO: Saved creator ${creator.id} to in-memory cache.");
+    _print("INFO: Saved creator ${creator.id} to in-memory cache.");
 
     // Notify stream listeners about the update
     notifyCreatorUpdated(creator.id, creator);
@@ -128,13 +129,13 @@ class CreatorRepository {
 
     final firebaseCreator = await ref.read(creatorServiceProvider).getCreatorOnce(creatorId);
     if (firebaseCreator != null) {
-      print("INFO: Fetched creator $creatorId from Firebase. Saving to cache.");
+      _print("INFO: Fetched creator $creatorId from Firebase. Saving to cache.");
       await saveToCache(firebaseCreator, saveToFirebase: false); // Already in Firebase
       resultCreator = firebaseCreator;
     }
 
     if (firebaseCreator == null || forceScrape) {
-      print("INFO: Fetching fresh data for creator $creatorId from scraper.");
+      _print("INFO: Fetching fresh data for creator $creatorId from scraper.");
       final scrapedCreator = await _getFreshScrapedCreator(creatorId);
       if (scrapedCreator != null) {
         resultCreator = resultCreator.copyWith(profileText: scrapedCreator.profileText, name: scrapedCreator.name);
@@ -181,7 +182,7 @@ class CreatorRepository {
     // Update creator data
     final updatedCreator = cachedCreator?.copyWith(name: scrapedCreator.name, profileText: scrapedCreator.profileText) ?? scrapedCreator;
 
-    print("INFO: New data found for creator $creatorId. Updating all storage layers.");
+    _print("INFO: New data found for creator $creatorId. Updating all storage layers.");
     await saveToCache(updatedCreator, saveToFirebase: false);
   }
 
@@ -194,7 +195,7 @@ class CreatorRepository {
       final scraperService = MemoCreatorScraper();
       return await scraperService.fetchCreatorDetails(baseCreator, noCache: true);
     } catch (e) {
-      print("ERROR: Failed to scrape creator $creatorId: $e");
+      _print("ERROR: Failed to scrape creator $creatorId: $e");
       return null;
     }
   }
@@ -285,7 +286,7 @@ class CreatorRepository {
         };
       }
     } catch (e) {
-      print("Error updating profile: $e");
+      _print("Error updating profile: $e");
       return {'result': "error: $e"};
     }
   }
@@ -308,6 +309,10 @@ class CreatorRepository {
   Future<void> refreshUserHasRegistered(MemoModelCreator creator) async {
     creator.refreshUserHasRegistered(ref, this);
   }
+}
+
+void _print(String s) {
+  if (kDebugMode) print(s);
 }
 
 final getCreatorProvider = FutureProvider.family<MemoModelCreator?, String>((ref, creatorId) async {

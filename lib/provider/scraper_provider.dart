@@ -12,7 +12,7 @@ final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraper
 
 const bool forceScrape = false;
 const bool saveToFirebase = true;
-const bool deepScrape = false;
+const bool deepScrape = true;
 const cacheId = "letsgonownew";
 
 class BackgroundScraperManager extends AsyncNotifier<void> {
@@ -94,6 +94,8 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     });
   }
 
+  bool isScraping = false;
+
   /// The main scraping logic.
   Future<void> _runScrapingProcess() async {
     // Check if we should run scraping before starting
@@ -101,6 +103,11 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
       _print("BGS: ⏭️ Skipping scrape - recently completed! 📅");
       return;
     }
+    if (isScraping) {
+      _print("BGS: ⏭️ Skipping scrape - its still running!");
+      return;
+    }
+    isScraping = true;
 
     state = const AsyncValue.loading();
     _print("BGS: 🚀 Starting scraping process... 🎣");
@@ -138,6 +145,8 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     } catch (e, s) {
       state = AsyncValue.error(e, s);
       _print("BGS: ❌ An error occurred during scraping: $e 🚨");
+    } finally {
+      isScraping = false;
     }
   }
 

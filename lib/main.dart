@@ -111,7 +111,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<ThemeState> themeState = ref.watch(themeNotifierProvider);
-    final AsyncValue<Isar> isar = ref.watch(translationIsarProvider);
+    final AsyncValue<Isar> isar = ref.watch(unifiedIsarProvider);
 
     return isar.when(
       data: (isar) => themeState.when(

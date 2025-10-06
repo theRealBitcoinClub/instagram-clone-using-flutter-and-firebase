@@ -41,7 +41,7 @@ class MemoScraperTag {
         final lastCheckString = prefs.getString(key);
 
         if (lastCheckString == checkString) {
-          if (_debugMode) print("MSTAG: ⏭️ Stop scraping - no changes detected! 🚫");
+          _print("MSTAG: ⏭️ Stop scraping - no changes detected! 🚫");
           return; // Stop scraping - no changes detected
         }
 
@@ -52,7 +52,7 @@ class MemoScraperTag {
         final List<MemoModelTag> tagsWithNewPosts = await _filterTagsWithNewPosts(allTags);
 
         if (tagsWithNewPosts.isEmpty) {
-          if (_debugMode) print("MSTAG: 📭 No new posts found for $order$offset");
+          _print("MSTAG: 📭 No new posts found for $order$offset");
           continue;
         }
 
@@ -61,13 +61,13 @@ class MemoScraperTag {
 
         //ITS IMPORTANT TO SET THE CHECKSTRING ONLY AFTER SUCCESSFULLY SCRAPING
         await prefs.setString(key, checkString);
-        if (_debugMode) print("MSTAG: ✅ Scraped $order with offset $offset - Found ${tagsWithNewPosts.length} tags with new posts! 🎯");
+        _print("MSTAG: ✅ Scraped $order with offset $offset - Found ${tagsWithNewPosts.length} tags with new posts! 🎯");
       }
     }
 
     tagService.forceProcessBatch();
     postService.forceProcessBatch();
-    if (_debugMode) print("MSTAG: 🏁 FINISHED SCRAPING TAGS! 🎉");
+    _print("MSTAG: 🏁 FINISHED SCRAPING TAGS! 🎉");
   }
 
   /// Filters tags to find only those with new posts
@@ -115,12 +115,12 @@ class MemoScraperTag {
               newPosts,
               onFinish: (success, processedCount, failedPostIds) {
                 if (success) {
-                  if (_debugMode) print("MSTAG: ✅ Batch completed! Processed $processedCount posts 📦");
+                  _print("MSTAG: ✅ Batch completed! Processed $processedCount posts 📦");
                   if (failedPostIds != null) {
-                    if (_debugMode) print("MSTAG: ❌ Failed posts: ${failedPostIds.join(', ')} 🚨");
+                    _print("MSTAG: ❌ Failed posts: ${failedPostIds.join(', ')} 🚨");
                   }
                 } else {
-                  if (_debugMode) print("MSTAG: ❌ Batch failed 🚨");
+                  _print("MSTAG: ❌ Batch failed 🚨");
                 }
               },
             );
@@ -135,10 +135,10 @@ class MemoScraperTag {
           // ref.read(postCacheRepositoryProvider).savePosts(newPosts);
           // ref.read(postCacheRepositoryProvider).clearPagesForFilter(null);
 
-          if (_debugMode) print("MSTAG: 💾 Saved ${newPosts.length} new posts for tag: ${tag.name} 🏷️");
+          _print("MSTAG: 💾 Saved ${newPosts.length} new posts for tag: ${tag.name} 🏷️");
         }
       } catch (e) {
-        if (_debugMode) print("MSTAG: ❌ Error processing tag ${tag.name}: $e 🚨");
+        _print("MSTAG: ❌ Error processing tag ${tag.name}: $e 🚨");
         // Continue with other tags even if one fails
       }
       persistPostcountAfterSuccessfulScrape(tag);
@@ -147,12 +147,12 @@ class MemoScraperTag {
       tagsWithNewPosts,
       onFinish: (success, processedCount, failedIds) {
         if (success) {
-          if (_debugMode) print("MSTAG: ✅ Batch completed! Processed $processedCount TAGS 📦");
+          _print("MSTAG: ✅ Batch completed! Processed $processedCount TAGS 📦");
           if (failedIds != null) {
-            if (_debugMode) print("MSTAG: ❌ Failed TAGS: ${failedIds.join(', ')} 🚨");
+            _print("MSTAG: ❌ Failed TAGS: ${failedIds.join(', ')} 🚨");
           }
         } else {
-          if (_debugMode) print("MSTAG: ❌ Batch failed 🚨");
+          _print("MSTAG: ❌ Batch failed 🚨");
         }
       },
     );
@@ -182,15 +182,14 @@ class MemoScraperTag {
     );
 
     if (newPostsCount < skippedCounter || newPostsCount - skippedCounter < 0)
-      if (_debugMode)
-        print("MSTAG: ⚠️ POSTS FOR TAG: Skipped $skippedCounter posts for tag: ${tag.name} while newPostsCount was $newPostsCount 📊");
+      _print("MSTAG: ⚠️ POSTS FOR TAG: Skipped $skippedCounter posts for tag: ${tag.name} while newPostsCount was $newPostsCount 📊");
 
     if (newPostsCount - skippedCounter == 0) {
       if (allPosts.length != 0) {
-        if (_debugMode) print("MSTAG: 📝 SKIPPED EQUALS NEW COUNTER BUT RESULTS ARE NOT EMPTY:");
+        _print("MSTAG: 📝 SKIPPED EQUALS NEW COUNTER BUT RESULTS ARE NOT EMPTY:");
         return allPosts;
       } else {
-        if (_debugMode) print("MSTAG: 📭 SKIPPED ALL TAGS: No new VALID posts found for tag: ${tag.name}");
+        _print("MSTAG: 📭 SKIPPED ALL TAGS: No new VALID posts found for tag: ${tag.name}");
         return [];
       }
     }
@@ -214,7 +213,7 @@ class MemoScraperTag {
 
       return _parseTagsFromData(data);
     } catch (e) {
-      if (_debugMode) print("MSTAG: ❌ Error scraping tags: $e 🚨");
+      _print("MSTAG: ❌ Error scraping tags: $e 🚨");
       return [];
     }
   }
@@ -246,7 +245,7 @@ class MemoScraperTag {
         //
         result.add(tag);
       } catch (e) {
-        if (_debugMode) print("MSTAG: ❌ Error parsing tag data: $e 🚨");
+        _print("MSTAG: ❌ Error parsing tag data: $e 🚨");
       }
     }
 
@@ -261,5 +260,9 @@ class MemoScraperTag {
         Parser(id: "stats", parents: ["tags"], type: ParserType.text, selectors: ["td"], multiple: true),
       ],
     );
+  }
+
+  void _print(String s) {
+    if (kDebugMode) print(s);
   }
 }

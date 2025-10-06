@@ -22,7 +22,7 @@ class PostServiceProfile {
 
   // --- SIMPLE LIST IMPLEMENTATION FOR PROFILE POSTS ---
   Future<List<MemoModelPost>> getPostsByCreatorIdList(String creatorId, Ref ref) async {
-    if (_debugMode) print("🔄 PSP: getPostsByCreatorIdList called for creator: $creatorId");
+    _print("🔄 PSP: getPostsByCreatorIdList called for creator: $creatorId");
 
     try {
       final postCache = ref.read(profilePostCacheProvider);
@@ -31,65 +31,65 @@ class PostServiceProfile {
 
       // 1. Get current count from Firebase
       final currentCount = await _getPostCountByCreatorId(creatorId);
-      if (_debugMode) print("📊 PSP: Current post count for $creatorId: $currentCount");
+      _print("📊 PSP: Current post count for $creatorId: $currentCount");
 
       // 2. Get stored count from SharedPreferences
       final storedCount = sharedPrefs.getInt(countKey) ?? 0;
-      if (_debugMode) print("💾 PSP: Stored post count for $creatorId: $storedCount");
+      _print("💾 PSP: Stored post count for $creatorId: $storedCount");
 
       // 3. Check if we need to fetch from Firebase
       final shouldFetchFromFirebase = storedCount == 0 || currentCount != storedCount;
 
       if (shouldFetchFromFirebase) {
-        if (_debugMode) print("🔄 PSP: Count changed or first load, fetching from Firebase");
+        _print("🔄 PSP: Count changed or first load, fetching from Firebase");
 
         // Fetch from Firebase with limit
         final firebasePosts = await _fetchPostsFromFirebase(creatorId);
-        if (_debugMode) print("✅ PSP: Fetched ${firebasePosts.length} posts from Firebase");
+        _print("✅ PSP: Fetched ${firebasePosts.length} posts from Firebase");
 
         // Save to cache
         await postCache.saveProfilePosts(creatorId, firebasePosts);
 
         // Update stored count
         await sharedPrefs.setInt(countKey, currentCount);
-        if (_debugMode) print("💾 PSP: Updated stored count to: $currentCount");
+        _print("💾 PSP: Updated stored count to: $currentCount");
 
         return firebasePosts;
       } else {
-        if (_debugMode) print("💾 PSP: Count unchanged, loading from cache");
+        _print("💾 PSP: Count unchanged, loading from cache");
         // Load from cache
         final cachedPosts = await postCache.getCachedProfilePosts(creatorId);
-        if (_debugMode) print("📚 PSP: Loaded ${cachedPosts.length} posts from cache");
+        _print("📚 PSP: Loaded ${cachedPosts.length} posts from cache");
         return cachedPosts;
       }
     } catch (e) {
-      if (_debugMode) print("❌ PSP: Error in getPostsByCreatorIdList: $e");
+      _print("❌ PSP: Error in getPostsByCreatorIdList: $e");
 
       // Fallback to cache on error
       final postCache = ref.read(profilePostCacheProvider);
       final cachedPosts = await postCache.getCachedProfilePosts(creatorId);
-      if (_debugMode) print("🔄 PSP: Fallback to cache, loaded ${cachedPosts.length} posts");
+      _print("🔄 PSP: Fallback to cache, loaded ${cachedPosts.length} posts");
       return cachedPosts;
     }
   }
 
   Future<int> _getPostCountByCreatorId(String creatorId) async {
     try {
-      if (_debugMode) print("🔢 PSP: Getting post count for creator: $creatorId");
+      _print("🔢 PSP: Getting post count for creator: $creatorId");
       final query = _firestore.collection(_collectionName).where('creatorId', isEqualTo: creatorId);
 
       final countSnapshot = await query.count().get();
       final count = countSnapshot.count ?? 0;
-      if (_debugMode) print("✅ PSP: Post count retrieved: $count");
+      _print("✅ PSP: Post count retrieved: $count");
       return count;
     } catch (e) {
-      if (_debugMode) print("❌ PSP: Error getting post count: $e");
+      _print("❌ PSP: Error getting post count: $e");
       return -1; // Return -1 to indicate error
     }
   }
 
   Future<List<MemoModelPost>> _fetchPostsFromFirebase(String creatorId) async {
-    if (_debugMode) print("🔥 PSP: Fetching posts from Firebase for creator: $creatorId");
+    _print("🔥 PSP: Fetching posts from Firebase for creator: $creatorId");
 
     try {
       final querySnapshot = await _firestore
@@ -103,12 +103,16 @@ class PostServiceProfile {
         return MemoModelPost.fromSnapshot(doc);
       }).toList();
 
-      if (_debugMode) print("✅ PSP: Successfully fetched ${posts.length} posts from Firebase");
+      _print("✅ PSP: Successfully fetched ${posts.length} posts from Firebase");
       return posts;
     } catch (e) {
-      if (_debugMode) print("❌ PSP: Error fetching posts from Firebase: $e");
+      _print("❌ PSP: Error fetching posts from Firebase: $e");
       return [];
     }
+  }
+
+  void _print(String s) {
+    if (kDebugMode) print(s);
   }
 
   //

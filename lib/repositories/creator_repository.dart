@@ -21,7 +21,7 @@ class CreatorRepository {
 
   CreatorRepository(this.ref);
 
-  Future<Isar> get _isar async => await ref.read(creatorIsarProvider.future);
+  Future<Isar> get _isar async => await ref.read(unifiedIsarProvider.future);
 
   // --- STREAM SUPPORT ---
 

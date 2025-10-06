@@ -208,7 +208,7 @@ class MemoModelCreator {
   Future<MemoModelCreator> refreshUserHasRegistered(Ref ref, CreatorRepository repository) async {
     // Early return if already registered
     if (hasRegisteredAsUserFixed) {
-      print('Creator $id is already registered');
+      _print('Creator $id is already registered');
       return this;
     }
 
@@ -225,14 +225,14 @@ class MemoModelCreator {
         await repository.saveToCache(this, saveToFirebase: true);
         await refreshBalances(ref, repository);
 
-        print('Creator $id is now registered');
+        _print('Creator $id is now registered');
       } else {
-        print('Creator $id is not registered yet');
+        _print('Creator $id is not registered yet');
       }
 
       return this;
     } catch (e) {
-      print('Error checking registration status for $id: $e');
+      _print('Error checking registration status for $id: $e');
       return this;
     }
   }
@@ -306,5 +306,9 @@ class MemoModelCreator {
       .._isCheckingDetail = isCheckingDetail ?? _isCheckingDetail
       .._hasCheckedUrlAvatarCount = hasCheckedUrlAvatarCount ?? _hasCheckedUrlAvatarCount
       .._hasCheckedUrlDetailCount = hasCheckedUrlDetailCount ?? _hasCheckedUrlDetailCount;
+  }
+
+  void _print(String s) {
+    print(s);
   }
 }

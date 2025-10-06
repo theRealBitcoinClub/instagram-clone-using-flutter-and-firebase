@@ -21,51 +21,51 @@ class PostServiceFeed {
   // --- PAGINATION METHOD (Primary method for the feed) ---
   // Future<List<MemoModelPost>> getPostsPaginated({required int limit, String? postId, List<String> mutedCreators = const []}) async {
   //   if (_isDebugMode) {
-  //     print('PSF: 🔄📮 PostServiceFeed.getPostsPaginated() called');
-  //     print('PSF:    📊 Parameters:');
-  //     print('PSF:    ├── limit: $limit');
-  //     print('PSF:    ├── postId: $postId');
-  //     print('PSF:    ├── mutedCreators: ${mutedCreators.length} creators');
+  //     _print('PSF: 🔄📮 PostServiceFeed.getPostsPaginated() called');
+  //     _print('PSF:    📊 Parameters:');
+  //     _print('PSF:    ├── limit: $limit');
+  //     _print('PSF:    ├── postId: $postId');
+  //     _print('PSF:    ├── mutedCreators: ${mutedCreators.length} creators');
   //     if (mutedCreators.isNotEmpty) {
-  //       print('PSF:    └── muted IDs: ${mutedCreators.take(5).toList()}${mutedCreators.length > 5 ? '...' : ''}');
+  //       _print('PSF:    └── muted IDs: ${mutedCreators.take(5).toList()}${mutedCreators.length > 5 ? '...' : ''}');
   //     }
   //   }
   //
   //   Query query = _firestore.collection(_collectionName).orderBy(orderByField, descending: descendingOrder);
   //
   //   if (_isDebugMode) {
-  //     print('PSF:    📋 Base query: $_collectionName ordered by $orderByField (descending: $descendingOrder)');
+  //     _print('PSF:    📋 Base query: $_collectionName ordered by $orderByField (descending: $descendingOrder)');
   //   }
   //
   //   var startAfterDoc = postId == null ? null : await _getDocumentSnapshot(postId);
   //
   //   if (startAfterDoc != null) {
   //     if (_isDebugMode) {
-  //       print('PSF:    🎯 Using pagination cursor for post: $postId');
-  //       print('PSF:    📍 Cursor orderByField Value: ${startAfterDoc.data()}');
+  //       _print('PSF:    🎯 Using pagination cursor for post: $postId');
+  //       _print('PSF:    📍 Cursor orderByField Value: ${startAfterDoc.data()}');
   //     }
   //     query = query.startAfterDocument(startAfterDoc);
   //   } else {
-  //     if (_isDebugMode) print('PSF:    🏁 No cursor - starting from beginning');
+  //     if (_isDebugMode) _print('PSF:    🏁 No cursor - starting from beginning');
   //   }
   //
   //   var take = mutedCreators.take(10).toList();
   //   if (take.isNotEmpty) {
   //     if (_isDebugMode) {
-  //       print('PSF:    🔇 Applying muted creators filter: ${take.length} creators');
-  //       print('PSF:    ├── Filtered IDs: $take');
+  //       _print('PSF:    🔇 Applying muted creators filter: ${take.length} creators');
+  //       _print('PSF:    ├── Filtered IDs: $take');
   //     }
   //     query = query.where("creatorId", whereNotIn: take);
   //   } else {
-  //     if (_isDebugMode) print('PSF:    🔊 No muted creators to filter');
+  //     if (_isDebugMode) _print('PSF:    🔊 No muted creators to filter');
   //   }
   //
   //   if (_isDebugMode) {
-  //     print('PSF:    🎯 Final query parameters:');
-  //     print('PSF:    ├── limit: $limit');
-  //     print('PSF:    ├── hasCursor: ${startAfterDoc != null}');
-  //     print('PSF:    ├── mutedFilter: ${take.isNotEmpty}');
-  //     print('PSF:    └── executing Firestore query...');
+  //     _print('PSF:    🎯 Final query parameters:');
+  //     _print('PSF:    ├── limit: $limit');
+  //     _print('PSF:    ├── hasCursor: ${startAfterDoc != null}');
+  //     _print('PSF:    ├── mutedFilter: ${take.isNotEmpty}');
+  //     _print('PSF:    └── executing Firestore query...');
   //   }
   //
   //   final stopwatch = Stopwatch()..start();
@@ -73,9 +73,9 @@ class PostServiceFeed {
   //   stopwatch.stop();
   //
   //   if (_isDebugMode) {
-  //     print('PSF:    ✅ Firestore query completed in ${stopwatch.elapsedMilliseconds}ms');
-  //     print('PSF:    📦 Query result: ${querySnapshot.docs.length} documents');
-  //     print('PSF:    🏷️ Document IDs: ${querySnapshot.docs.map((doc) => doc.id).toList()}');
+  //     _print('PSF:    ✅ Firestore query completed in ${stopwatch.elapsedMilliseconds}ms');
+  //     _print('PSF:    📦 Query result: ${querySnapshot.docs.length} documents');
+  //     _print('PSF:    🏷️ Document IDs: ${querySnapshot.docs.map((doc) => doc.id).toList()}');
   //   }
   //
   //   final posts = querySnapshot.docs.map((doc) {
@@ -83,49 +83,49 @@ class PostServiceFeed {
   //   }).toList();
   //
   //   if (_isDebugMode) {
-  //     print('PSF:    🎉 Successfully parsed ${posts.length} posts');
-  //     print('PSF:    📊 Post details:');
+  //     _print('PSF:    🎉 Successfully parsed ${posts.length} posts');
+  //     _print('PSF:    📊 Post details:');
   //     for (var i = 0; i < posts.length; i++) {
   //       final post = posts[i];
-  //       print('PSF:    ├── [$i] ${post.id} by ${post.creatorId}');
-  //       print('PSF:    │   ├── imageUrl: ${post.imageUrl?.isNotEmpty ?? false}');
-  //       print('PSF:    │   ├── imgurUrl: ${post.imgurUrl?.isNotEmpty ?? false}');
-  //       print('PSF:    │   ├── ipfsCid: ${post.ipfsCid?.isNotEmpty ?? false}');
-  //       print('PSF:    │   └── created: ${post.createdDateTime}');
+  //       _print('PSF:    ├── [$i] ${post.id} by ${post.creatorId}');
+  //       _print('PSF:    │   ├── imageUrl: ${post.imageUrl?.isNotEmpty ?? false}');
+  //       _print('PSF:    │   ├── imgurUrl: ${post.imgurUrl?.isNotEmpty ?? false}');
+  //       _print('PSF:    │   ├── ipfsCid: ${post.ipfsCid?.isNotEmpty ?? false}');
+  //       _print('PSF:    │   └── created: ${post.createdDateTime}');
   //     }
-  //     print('PSF:    └── 📮 PostServiceFeed.getPostsPaginated() completed');
+  //     _print('PSF:    └── 📮 PostServiceFeed.getPostsPaginated() completed');
   //   }
   //
   //   return posts;
   // }
   Future<List<MemoModelPost>> getPostsPaginated({required int limit, String? postId, List<String> mutedCreators = const []}) async {
     if (_isDebugMode) {
-      print('PSF: 🔄📮 PostServiceFeed.getPostsPaginated() called');
-      print('PSF:    📊 Parameters:');
-      print('PSF:    ├── limit: $limit');
-      print('PSF:    ├── postId: $postId');
-      print('PSF:    ├── mutedCreators: ${mutedCreators.length} creators');
+      _print('PSF: 🔄📮 PostServiceFeed.getPostsPaginated() called');
+      _print('PSF:    📊 Parameters:');
+      _print('PSF:    ├── limit: $limit');
+      _print('PSF:    ├── postId: $postId');
+      _print('PSF:    ├── mutedCreators: ${mutedCreators.length} creators');
       if (mutedCreators.isNotEmpty) {
-        print('PSF:    └── muted IDs: ${mutedCreators.take(5).toList()}${mutedCreators.length > 5 ? '...' : ''}');
+        _print('PSF:    └── muted IDs: ${mutedCreators.take(5).toList()}${mutedCreators.length > 5 ? '...' : ''}');
       }
     }
 
     Query query = _firestore.collection(_collectionName).orderBy(orderByField, descending: descendingOrder);
 
     if (_isDebugMode) {
-      print('PSF:    📋 Base query: $_collectionName ordered by $orderByField (descending: $descendingOrder)');
+      _print('PSF:    📋 Base query: $_collectionName ordered by $orderByField (descending: $descendingOrder)');
     }
 
     // var startAfterDoc = postId == null ? null : await _getDocumentSnapshot(postId);
     //
     // if (startAfterDoc != null) {
     //   if (_isDebugMode) {
-    //     print('PSF:    🎯 Using pagination cursor for post: $postId');
-    //     print('PSF:    📍 Cursor orderByField Value: ${startAfterDoc.data()}');
+    //     _print('PSF:    🎯 Using pagination cursor for post: $postId');
+    //     _print('PSF:    📍 Cursor orderByField Value: ${startAfterDoc.data()}');
     //   }
     //   query = query.startAfterDocument(startAfterDoc);
     // } else {
-    //   if (_isDebugMode) print('PSF:    🏁 No cursor - starting from beginning');
+    //   if (_isDebugMode) _print('PSF:    🏁 No cursor - starting from beginning');
     // }
 
     // FIX: Validate whereNotIn parameters
@@ -134,8 +134,8 @@ class PostServiceFeed {
       // Additional validation for whereNotIn
       if (take.length > 10) {
         if (_isDebugMode) {
-          print('PSF:    ⚠️⚠️⚠️ WARNING: whereNotIn clause has ${take.length} items, but Firestore limit is 10');
-          print('PSF:    ⚠️ Truncating to first 10 items');
+          _print('PSF:    ⚠️⚠️⚠️ WARNING: whereNotIn clause has ${take.length} items, but Firestore limit is 10');
+          _print('PSF:    ⚠️ Truncating to first 10 items');
         }
         take = take.take(10).toList();
       }
@@ -144,32 +144,32 @@ class PostServiceFeed {
       final validMutedCreators = take.where((id) => id.isNotEmpty).toList();
       if (validMutedCreators.length != take.length) {
         if (_isDebugMode) {
-          print('PSF:    ⚠️ Filtered out ${take.length - validMutedCreators.length} empty creator IDs');
+          _print('PSF:    ⚠️ Filtered out ${take.length - validMutedCreators.length} empty creator IDs');
         }
         take = validMutedCreators;
       }
 
       if (take.isNotEmpty) {
         if (_isDebugMode) {
-          print('PSF:    🔇 Applying muted creators filter: ${take.length} creators');
-          print('PSF:    ├── Filtered IDs: $take');
-          print('PSF:    ├── All IDs are non-empty: ${take.every((id) => id.isNotEmpty)}');
+          _print('PSF:    🔇 Applying muted creators filter: ${take.length} creators');
+          _print('PSF:    ├── Filtered IDs: $take');
+          _print('PSF:    ├── All IDs are non-empty: ${take.every((id) => id.isNotEmpty)}');
         }
         query = query.where("creatorId", whereNotIn: take);
       } else {
-        if (_isDebugMode) print('PSF:    🔊 No valid muted creators to filter after validation');
+        if (_isDebugMode) _print('PSF:    🔊 No valid muted creators to filter after validation');
       }
     } else {
-      if (_isDebugMode) print('PSF:    🔊 No muted creators to filter');
+      if (_isDebugMode) _print('PSF:    🔊 No muted creators to filter');
     }
 
     if (_isDebugMode) {
-      print('PSF:    🎯 Final query parameters:');
-      print('PSF:    ├── limit: $limit');
-      // print('PSF:    ├── hasCursor: ${startAfterDoc != null}');
-      print('PSF:    ├── mutedFilter: ${take.isNotEmpty}');
-      print('PSF:    ├── mutedFilterCount: ${take.length}');
-      print('PSF:    └── executing Firestore query...');
+      _print('PSF:    🎯 Final query parameters:');
+      _print('PSF:    ├── limit: $limit');
+      // _print('PSF:    ├── hasCursor: ${startAfterDoc != null}');
+      _print('PSF:    ├── mutedFilter: ${take.isNotEmpty}');
+      _print('PSF:    ├── mutedFilterCount: ${take.length}');
+      _print('PSF:    └── executing Firestore query...');
     }
 
     try {
@@ -178,9 +178,9 @@ class PostServiceFeed {
       // stopwatch.stop();
 
       if (_isDebugMode) {
-        // print('PSF:    ✅ Firestore query completed in ${stopwatch.elapsedMilliseconds}ms');
-        print('PSF:    📦 Query result: ${querySnapshot.docs.length} documents');
-        print('PSF:    🏷️ Document IDs: ${querySnapshot.docs.map((doc) => doc.id).toList()}');
+        // _print('PSF:    ✅ Firestore query completed in ${stopwatch.elapsedMilliseconds}ms');
+        _print('PSF:    📦 Query result: ${querySnapshot.docs.length} documents');
+        _print('PSF:    🏷️ Document IDs: ${querySnapshot.docs.map((doc) => doc.id).toList()}');
       }
 
       final posts = querySnapshot.docs.map((doc) {
@@ -188,31 +188,31 @@ class PostServiceFeed {
       }).toList();
 
       if (_isDebugMode) {
-        print('PSF:    🎉 Successfully parsed ${posts.length} posts');
-        print('PSF:    📊 Post details:');
+        _print('PSF:    🎉 Successfully parsed ${posts.length} posts');
+        _print('PSF:    📊 Post details:');
         for (var i = 0; i < posts.length; i++) {
           final post = posts[i];
-          print('PSF:    ├── [$i] ${post.id} by ${post.creatorId}');
-          print('PSF:    │   ├── imageUrl: ${post.imageUrl?.isNotEmpty ?? false}');
-          print('PSF:    │   ├── imgurUrl: ${post.imgurUrl?.isNotEmpty ?? false}');
-          print('PSF:    │   ├── ipfsCid: ${post.ipfsCid?.isNotEmpty ?? false}');
-          print('PSF:    │   └── created: ${post.createdDateTime}');
+          _print('PSF:    ├── [$i] ${post.id} by ${post.creatorId}');
+          _print('PSF:    │   ├── imageUrl: ${post.imageUrl?.isNotEmpty ?? false}');
+          _print('PSF:    │   ├── imgurUrl: ${post.imgurUrl?.isNotEmpty ?? false}');
+          _print('PSF:    │   ├── ipfsCid: ${post.ipfsCid?.isNotEmpty ?? false}');
+          _print('PSF:    │   └── created: ${post.createdDateTime}');
         }
-        print('PSF:    └── 📮 PostServiceFeed.getPostsPaginated() completed');
+        _print('PSF:    └── 📮 PostServiceFeed.getPostsPaginated() completed');
       }
 
       return posts;
     } catch (e) {
       if (_isDebugMode) {
-        print('PSF:    ❌❌❌ FIRESTORE QUERY ERROR: $e');
-        print('PSF:    🔍 Query details that failed:');
-        print('PSF:    ├── collection: $_collectionName');
-        print('PSF:    ├── orderBy: $orderByField');
-        print('PSF:    ├── descending: $descendingOrder');
-        print('PSF:    ├── limit: $limit');
-        // print('PSF:    ├── hasCursor: ${startAfterDoc != null}');
-        print('PSF:    ├── mutedFilterCount: ${take.length}');
-        print('PSF:    └── mutedIDs: $take');
+        _print('PSF:    ❌❌❌ FIRESTORE QUERY ERROR: $e');
+        _print('PSF:    🔍 Query details that failed:');
+        _print('PSF:    ├── collection: $_collectionName');
+        _print('PSF:    ├── orderBy: $orderByField');
+        _print('PSF:    ├── descending: $descendingOrder');
+        _print('PSF:    ├── limit: $limit');
+        // _print('PSF:    ├── hasCursor: ${startAfterDoc != null}');
+        _print('PSF:    ├── mutedFilterCount: ${take.length}');
+        _print('PSF:    └── mutedIDs: $take');
       }
       rethrow;
     }
@@ -220,7 +220,7 @@ class PostServiceFeed {
 
   Future<int> getTotalPostCount() async {
     if (_isDebugMode) {
-      print('PSF: 🔢📊 PostServiceFeed.getTotalPostCount() called');
+      _print('PSF: 🔢📊 PostServiceFeed.getTotalPostCount() called');
     }
 
     try {
@@ -229,16 +229,16 @@ class PostServiceFeed {
       // stopwatch.stop();
 
       if (_isDebugMode) {
-        // print('PSF:    ✅ Total count query completed in ${stopwatch.elapsedMilliseconds}ms');
-        print('PSF:    📈 Total posts in collection: ${querySnapshot.count}');
-        print('PSF:    🔚 PostServiceFeed.getTotalPostCount() completed');
+        // _print('PSF:    ✅ Total count query completed in ${stopwatch.elapsedMilliseconds}ms');
+        _print('PSF:    📈 Total posts in collection: ${querySnapshot.count}');
+        _print('PSF:    🔚 PostServiceFeed.getTotalPostCount() completed');
       }
 
       return querySnapshot.count!;
     } catch (e) {
       if (_isDebugMode) {
-        print('PSF:    ❌📊 Error getting post count: $e');
-        print('PSF:    🔚 PostServiceFeed.getTotalPostCount() failed');
+        _print('PSF:    ❌📊 Error getting post count: $e');
+        _print('PSF:    🔚 PostServiceFeed.getTotalPostCount() failed');
       }
       return -1;
     }
@@ -246,7 +246,7 @@ class PostServiceFeed {
 
   Future<DocumentSnapshot?> _getDocumentSnapshot(String postId) async {
     if (_isDebugMode) {
-      print('PSF:    🔍📄 _getDocumentSnapshot() called for post: $postId');
+      _print('PSF:    🔍📄 _getDocumentSnapshot() called for post: $postId');
     }
 
     try {
@@ -255,21 +255,25 @@ class PostServiceFeed {
       stopwatch.stop();
 
       if (_isDebugMode) {
-        print('PSF:    ✅ Document fetch completed in ${stopwatch.elapsedMilliseconds}ms');
-        print('PSF:    📄 Document exists: ${doc.exists}');
+        _print('PSF:    ✅ Document fetch completed in ${stopwatch.elapsedMilliseconds}ms');
+        _print('PSF:    📄 Document exists: ${doc.exists}');
         if (doc.exists) {
-          print('PSF:    📍 Document data keys: ${doc.data()?.keys.join(', ')}');
+          _print('PSF:    📍 Document data keys: ${doc.data()?.keys.join(', ')}');
         }
-        print('PSF:    🔚 _getDocumentSnapshot() completed');
+        _print('PSF:    🔚 _getDocumentSnapshot() completed');
       }
 
       return doc.exists ? doc : null;
     } catch (e) {
       if (_isDebugMode) {
-        print('PSF:    ❌📄 Error getting document snapshot: $e');
-        print('PSF:    🔚 _getDocumentSnapshot() failed');
+        _print('PSF:    ❌📄 Error getting document snapshot: $e');
+        _print('PSF:    🔚 _getDocumentSnapshot() failed');
       }
       return null;
     }
+  }
+
+  void _print(String s) {
+    if (kDebugMode) print(s);
   }
 }

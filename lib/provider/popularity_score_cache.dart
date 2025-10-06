@@ -4,17 +4,15 @@ import 'package:isar_community/isar.dart';
 import 'package:mahakka/provider/isar_provider.dart';
 import 'package:mahakka/provider/post_update_provider.dart';
 import 'package:mahakka/provider/user_provider.dart';
-import 'package:mahakka/repositories/profile_post_cache.dart';
 
 import '../memo/isar/memo_model_post_db.dart';
 import '../memo/model/memo_model_post.dart';
 import '../memo/model/memo_model_user.dart';
-import '../repositories/feed_post_cache.dart';
 
 final popularityScoreCacheProvider = Provider((ref) => PopularityScoreCache(ref));
 
 class PopularityScoreCache {
-  Ref ref;
+  final Ref ref;
 
   PopularityScoreCache(this.ref) {
     print('🔄 PSC: PopularityScoreCache constructor called');
@@ -41,8 +39,10 @@ class PopularityScoreCache {
 
   Future<void> updatePopularityScore(String postId, {int tipAmount = 0, MemoModelPost? scrapedPost, bool saveToFirebase = false}) async {
     print('📊 PSC: updatePopularityScore called for post: $postId');
-    MemoModelPost? post = await _getPostWithPopularityScore(postId);
-    if (post == null) {
+
+    // Get ALL cached posts with this postId (both feed and profile)
+    final posts = await _getAllPostsById(postId);
+    if (posts.isEmpty) {
       print('❌ PSC: Post not found for popularity update: $postId');
       return;
     }
@@ -56,57 +56,97 @@ class PopularityScoreCache {
     final (int burnAmount, int creatorAmount) = receiver.calculateAmounts(tipAmount);
     final int creatorTipAmount = creatorAmount;
 
-    int newScore;
-    if (scrapedPost == null) {
-      print("⚠️ PSC: UPDATE POPULARITY FETCH UP TO DATE SCORE FAILED");
-      newScore = post.popularityScore + creatorTipAmount;
-    } else {
-      newScore = scrapedPost.popularityScore + creatorTipAmount;
+    // Update all found posts (both feed and profile instances)
+    for (final post in posts) {
+      int newScore;
+      if (scrapedPost == null) {
+        print("⚠️ PSC: UPDATE POPULARITY FETCH UP TO DATE SCORE FAILED");
+        newScore = post.popularityScore + creatorTipAmount;
+      } else {
+        newScore = scrapedPost.popularityScore + creatorTipAmount;
+      }
+
+      print('📊 PSC: Updating popularity score from ${post.popularityScore} to $newScore for postType: ${post.postType}');
+
+      putInPopularityCache(postId, newScore);
+
+      final updatedPost = post.copyWith(popularityScore: newScore);
+      await _updatePostInDatabase(updatedPost);
+
+      ref.read(postPopularityProvider.notifier).updatePopularityScore(postId, newScore);
     }
-
-    print('📊 PSC: Updating popularity score from ${post.popularityScore} to $newScore');
-
-    // Update popularity cache (this still needs expiration)
-    putInPopularityCache(postId, newScore);
-
-    // Update disk cache - try both feed and profile databases
-    final updatedPost = post.copyWith(popularityScore: newScore);
-    await ref.read(profilePostCacheProvider).updatePostInProfileDatabase(updatedPost);
-    await ref.read(feedPostCacheProvider).updatePostInFeedDatabase(updatedPost);
-
-    ref.read(postPopularityProvider.notifier).updatePopularityScore(postId, newScore);
     print('✅ PSC: Popularity score update completed for post: $postId');
   }
 
-  // --- Post Retrieval with Popularity Score ---
+  // --- Optimized Post Retrieval with Composite Index ---
 
-  Future<MemoModelPost?> _getPostWithPopularityScore(String postId) async {
-    print('🔍 PPC: _getPostWithPopularityScore called for: $postId');
-    MemoModelPostDb? postDb;
+  /// Get ALL posts with the given postId (both feed and profile types)
+  /// Uses composite index for efficient lookup
+  Future<List<MemoModelPost>> _getAllPostsById(String postId) async {
+    print('🔍 PSC: _getAllPostsById called for: $postId');
 
-    final feedIsar = await ref.read(feedPostsIsarProvider.future);
-    postDb = await feedIsar.memoModelPostDbs.where().postIdEqualTo(postId).findFirst();
+    final isar = await ref.read(unifiedIsarProvider.future);
 
-    if (postDb == null) {
-      final profileIsar = await ref.read(profilePostsIsarProvider.future);
-      postDb = await profileIsar.memoModelPostDbs.where().postIdEqualTo(postId).findFirst();
+    // This query uses the composite index for postId lookup
+    // Returns both feed and profile posts with the same postId
+    final postsDb = await isar.memoModelPostDbs
+        .where()
+        .postIdEqualToAnyPostType(postId) // Uses composite index, returns both types
+        .findAll();
+
+    if (postsDb.isNotEmpty) {
+      print('💾 PSC: Found ${postsDb.length} posts in disk cache: $postId');
+      return postsDb.map((db) => _enhancePostWithLatestPopularity(db.toAppModel())).toList();
     }
 
-    if (postDb != null) {
-      print('💾 PPC: Found post in disk cache: $postId');
-      final post = postDb.toAppModel();
-      // _addToMemoryCache(post);
-      return _enhancePostWithLatestPopularity(post);
-    }
-
-    print('❌ PPC: Post not found in any cache: $postId');
-    return null;
+    print('❌ PSC: Post not found in cache: $postId');
+    return [];
   }
 
+  /// Update a specific post in the database using composite key
+  Future<void> _updatePostInDatabase(MemoModelPost post) async {
+    if (post.id == null) {
+      print('❌ PSC: Cannot update post with null ID');
+      return;
+    }
+
+    if (post.postType == null) {
+      print('🚨 PSC: CRITICAL - postType is null for post ${post.id}. This should never happen!');
+      throw StateError('Post type must be set for database operations. Post: ${post.id}');
+    }
+
+    final isar = await ref.read(unifiedIsarProvider.future);
+
+    try {
+      await isar.writeTxn(() async {
+        // Find the exact post using composite lookup (postId + postType)
+        final existingPost = await isar.memoModelPostDbs.where().postIdPostTypeEqualTo(post.id!, post.postType!).findFirst();
+
+        if (existingPost != null) {
+          final updatedDb = MemoModelPostDb.fromAppModel(
+            post,
+            postType: PostTypes.fromId(post.postType!), // Guaranteed to be non-null
+          )..id = existingPost.id; // CRITICAL: Preserve the database ID;
+
+          await isar.memoModelPostDbs.put(updatedDb);
+          print('💾 PSC: Updated post in database: ${post.id} (type: ${post.postType})');
+        } else {
+          print('⚠️ PSC: Post not found for update: ${post.id} (type: ${post.postType})');
+        }
+      });
+    } catch (e) {
+      print('❌ PSC: Failed to update post in database: $e');
+      rethrow; // Let the error propagate for proper error handling
+    }
+  }
+
+  /// Enhance post with latest popularity score from memory cache
   MemoModelPost _enhancePostWithLatestPopularity(MemoModelPost post) {
+    if (post.id == null) return post;
+
     final latestScore = getFromPopularityCache(post.id!);
     if (latestScore != null && latestScore != post.popularityScore) {
-      print('📊 PPC: Enhancing post ${post.id} with latest popularity: $latestScore');
+      print('📊 PSC: Enhancing post ${post.id} with latest popularity: $latestScore');
       return post.copyWith(popularityScore: latestScore);
     }
     return post;

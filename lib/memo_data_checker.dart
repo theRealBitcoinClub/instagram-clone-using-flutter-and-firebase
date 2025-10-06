@@ -1,6 +1,7 @@
 import 'dart:async'; // For TimeoutException
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:mahakka/memo/memo_reg_exp.dart';
@@ -16,25 +17,25 @@ class MemoDataChecker {
       // Or: final response = await http.get(uri).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 404) {
-        print('URL $urlString returned 404 Not Found (http package).');
+        _print('URL $urlString returned 404 Not Found (http package).');
         return true; // Indicates 404 was received
       } else {
-        print('URL $urlString returned status code: ${response.statusCode} (http package).');
+        _print('URL $urlString returned status code: ${response.statusCode} (http package).');
         return false; // Not a 404
       }
     } on http.ClientException catch (e) {
       // More specific exception from the http package
       // This can cover various network issues like SocketException, HandshakeException etc.
-      print('Client error checking URL $urlString (http package): $e');
+      _print('Client error checking URL $urlString (http package): $e');
       return false;
     } on TimeoutException catch (e) {
-      print('Timeout error checking URL $urlString (http package): $e');
+      _print('Timeout error checking URL $urlString (http package): $e');
       return false;
     } on FormatException catch (e) {
-      print('Invalid URL format for $urlString (http package): $e');
+      _print('Invalid URL format for $urlString (http package): $e');
       return false;
     } catch (e) {
-      print('Unexpected error checking URL $urlString (http package): $e');
+      _print('Unexpected error checking URL $urlString (http package): $e');
       return false;
     }
   }
@@ -77,6 +78,10 @@ class MemoDataChecker {
 
     stream.addListener(listener);
     return completer.future;
+  }
+
+  void _print(String s) {
+    if (kDebugMode) print(s);
   }
 }
 

@@ -26,7 +26,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
   @override
   Future<void> build() async {
-    if (_debugMode) print("BGS: 🚀 Initializing and starting timer! 🎯");
+    _print("BGS: 🚀 Initializing and starting timer! 🎯");
 
     // Initialize SharedPreferences
     _prefs = await SharedPreferences.getInstance();
@@ -39,7 +39,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
       Timer(_initialDelay, () => _runScrapingProcess());
     } else {
-      if (_debugMode) print("BGS: ⏭️ Skipping initial scrape - recently completed! 📅");
+      _print("BGS: ⏭️ Skipping initial scrape - recently completed! 📅");
 
       // Still set up the timer for future runs
       _scraperTimer = Timer.periodic(_scrapeInterval, (timer) {
@@ -49,7 +49,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
     ref.onDispose(() {
       _scraperTimer?.cancel();
-      if (_debugMode) print("BGS: 🛑 Timer disposed! 👋");
+      _print("BGS: 🛑 Timer disposed! 👋");
     });
   }
 
@@ -74,7 +74,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
   Future<void> _updateLastScrapeTime() async {
     final now = DateTime.now().millisecondsSinceEpoch;
     await _prefs.setInt(_lastScrapeKey, now);
-    if (_debugMode) print("BGS: 📝 Updated last scrape time to ${DateTime.now()} 🕒");
+    _print("BGS: 📝 Updated last scrape time to ${DateTime.now()} 🕒");
   }
 
   /// Gets the last scrape time as DateTime, returns null if never scraped
@@ -98,46 +98,50 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
   Future<void> _runScrapingProcess() async {
     // Check if we should run scraping before starting
     if (!_shouldRunScraping()) {
-      if (_debugMode) print("BGS: ⏭️ Skipping scrape - recently completed! 📅");
+      _print("BGS: ⏭️ Skipping scrape - recently completed! 📅");
       return;
     }
 
     state = const AsyncValue.loading();
-    if (_debugMode) print("BGS: 🚀 Starting scraping process... 🎣");
+    _print("BGS: 🚀 Starting scraping process... 🎣");
 
     try {
       if (_debugMode) {
         try {
           await MemoScraperTopic(ref, saveToFirebase).startScrapeTopics(cacheId + "topics", deepScrape ? 100 : 0, 0);
         } catch (e) {
-          if (_debugMode) print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
+          _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
         }
         try {
           await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], deepScrape ? 200 : 25, 0);
           await MemoScraperTag(cacheId + "most", ref, saveToFirebase).startScrapeTags(["/most-posts"], deepScrape ? 200 : 0, 0);
         } catch (e) {
-          if (_debugMode) print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
+          _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
         }
       } else {
         try {
           await MemoScraperTopic(ref, false).startScrapeTopics(cacheId + "topics", 0, 0);
         } catch (e) {
-          if (_debugMode) print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
+          _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
         }
         try {
           await MemoScraperTag(cacheId + "recent", ref, false).startScrapeTags(["/recent"], 25, 0);
         } catch (e) {
-          if (_debugMode) print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
+          _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
         }
       }
 
       // Update last scrape time only on successful completion
       await _updateLastScrapeTime();
       state = const AsyncValue.data(null);
-      if (_debugMode) print("BGS: ✅ Scraping process completed! 🎉");
+      _print("BGS: ✅ Scraping process completed! 🎉");
     } catch (e, s) {
       state = AsyncValue.error(e, s);
-      if (_debugMode) print("BGS: ❌ An error occurred during scraping: $e 🚨");
+      _print("BGS: ❌ An error occurred during scraping: $e 🚨");
     }
+  }
+
+  void _print(String s) {
+    if (kDebugMode) print(s);
   }
 }

@@ -1,4 +1,5 @@
 // view_models/search_view_model.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/firebase/tag_service.dart';
 import 'package:mahakka/memo/firebase/topic_service.dart';
@@ -73,30 +74,25 @@ class SearchViewModel extends StateNotifier<SearchState> {
       state = state.copyWith(isLoading: false);
     } catch (error, stackTrace) {
       state = state.copyWith(isLoading: false, error: 'Failed to refresh cache: $error');
-      print('Cache refresh error: $error\n$stackTrace');
+      _print('Cache refresh error: $error\n$stackTrace');
     }
   }
 
   Future<bool> _ensureCacheLoaded() async {
     if (_isTopicsCacheValid && _isTagsCacheValid) return true;
 
-    // state = state.copyWith(isLoading: true, error: null);
-
     try {
       if (!_isTopicsCacheValid) {
         _cachedTopics = await _topicService.getAllTopics();
       }
-      // if (!mounted) return false;
       if (!_isTagsCacheValid) {
         _cachedTags = await _tagService.getAllTags();
       }
 
-      // if (!mounted) return false;
-      // state = state.copyWith(isLoading: false);
       return true;
     } catch (error, stackTrace) {
       state = state.copyWith(isLoading: false, error: 'Failed to load cache: $error');
-      print('Cache loading error: $error\n$stackTrace');
+      _print('Cache loading error: $error\n$stackTrace');
       return false;
     }
   }
@@ -130,9 +126,7 @@ class SearchViewModel extends StateNotifier<SearchState> {
 
     state = state.copyWith(activeView: SearchResultView.hashtag, isLoading: true, error: null);
 
-    // if (!mounted) return;
     final cacheLoaded = await _ensureCacheLoaded();
-    // if (!mounted) return;
     if (!cacheLoaded) return;
 
     await Future.delayed(const Duration(milliseconds: 250));
@@ -151,5 +145,9 @@ class SearchViewModel extends StateNotifier<SearchState> {
   void dispose() {
     clearSearch();
     super.dispose();
+  }
+
+  void _print(String s) {
+    if (kDebugMode) print(s);
   }
 }

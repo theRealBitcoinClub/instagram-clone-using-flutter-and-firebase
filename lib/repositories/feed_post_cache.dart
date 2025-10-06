@@ -1,4 +1,5 @@
 // Updated feed_post_cache.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
 
@@ -15,14 +16,14 @@ class FeedPostCache {
   int _totalLoadedItemsFromCache = 0;
 
   FeedPostCache(this.ref) {
-    print('🔄 FPC: FeedPostCache constructor called');
+    _print('🔄 FPC: FeedPostCache constructor called');
   }
 
   // Separate database getters
   Future<Isar> get _feedIsar async {
-    print('💾 FPC: Getting Feed Isar instance');
-    final isar = await ref.read(feedPostsIsarProvider.future);
-    print('💾 FPC: Feed Isar instance obtained');
+    _print('💾 FPC: Getting Feed Isar instance');
+    final isar = await ref.read(unifiedIsarProvider.future);
+    _print('💾 FPC: Feed Isar instance obtained');
     return isar;
   }
 
@@ -41,83 +42,63 @@ class FeedPostCache {
 
   // Reset loaded items counter (call this when feed is rebuilt)
   void resetLoadedItems() {
-    print('🔄 FPC: Resetting loaded items counter');
+    _print('🔄 FPC: Resetting loaded items counter');
     _totalLoadedItemsFromCache = 0;
-  }
-
-  // Update post in both feed and profile databases
-  Future<void> updatePostInFeedDatabase(MemoModelPost post) async {
-    try {
-      final postDb = MemoModelPostDb.fromAppModel(post);
-
-      // Update in feed database
-      final feedIsar = await _feedIsar;
-      await feedIsar.writeTxn(() async {
-        await feedIsar.memoModelPostDbs.put(postDb);
-      });
-
-      print('💾 FPC: Updated post in feed database: ${post.id}');
-    } catch (e) {
-      print('⚠️ FPC: Failed to update post in feed database: $e');
-    }
   }
 
   // --- Feed Posts Operations ---
 
   Future<void> saveFeedPosts(List<MemoModelPost> posts) async {
-    print('💾 FPC: saveFeedPosts called with ${posts.length} posts');
-
-    // Filter out posts from muted creators before saving
-    // final mutedCreators = _mutedCreators;
+    _print('💾 FPC: saveFeedPosts called with ${posts.length} posts');
     final validPosts = posts.where((post) => post.id != null && post.id!.isNotEmpty).toList();
 
     if (validPosts.isEmpty) {
-      print('❌ FPC: No valid posts to save (all muted or invalid)');
+      _print('❌ FPC: No valid posts to save (all muted or invalid)');
       return;
     }
-    print('💾 FPC: Saving ${validPosts.length} valid posts to feed cache (filtered from ${posts.length})');
+    _print('💾 FPC: Saving ${validPosts.length} valid posts to feed cache (filtered from ${posts.length})');
 
     final isar = await _feedIsar;
-    final postsDb = validPosts.map((post) => MemoModelPostDb.fromAppModel(post)).toList();
+    final postsDb = validPosts.map((post) => MemoModelPostDb.fromAppModel(post, postType: PostTypes.feed)).toList();
 
     try {
-      print('💾 FPC: Starting Isar transaction for saveFeedPosts');
+      _print('💾 FPC: Starting Isar transaction for saveFeedPosts');
       await isar.writeTxn(() async {
         // Delete existing posts then insert new ones
         final postIds = postsDb.map((p) => p.postId).toList();
 
-        print('💾 FPC: Removing any existing feed posts with same IDs');
+        _print('💾 FPC: Removing any existing feed posts with same IDs');
         for (final postId in postIds) {
-          await isar.memoModelPostDbs.where().postIdEqualTo(postId).deleteAll();
+          await isar.memoModelPostDbs.where().postIdPostTypeEqualTo(postId, PostTypes.feed.id).deleteAll();
         }
 
-        print('💾 FPC: Inserting ${postsDb.length} posts to feed cache');
+        _print('💾 FPC: Inserting ${postsDb.length} posts to feed cache');
         await isar.memoModelPostDbs.putAll(postsDb);
 
-        print('✅ FPC: Successfully saved ${postsDb.length} posts to feed cache');
+        _print('✅ FPC: Successfully saved ${postsDb.length} posts to feed cache');
 
         await _enforceFeedDiskSizeLimit(isar);
       });
-      print('✅ FPC: saveFeedPosts transaction completed successfully');
+      _print('✅ FPC: saveFeedPosts transaction completed successfully');
     } catch (e, stack) {
-      print('❌ FPC: ERROR in saveFeedPosts transaction: $e');
-      print('❌ FPC: Stack trace: $stack');
+      _print('❌ FPC: ERROR in saveFeedPosts transaction: $e');
+      _print('❌ FPC: Stack trace: $stack');
     }
   }
 
   Future<List<MemoModelPost>?> getFeedPage(int pageNumber) async {
-    print('📄 FPC: getFeedPage called - page: $pageNumber');
+    _print('📄 FPC: getFeedPage called - page: $pageNumber');
 
     // Check if we can load more items
     if (!canLoadMore) {
-      print('🚫 FPC: Maximum load limit reached, current {$_totalLoadedItemsFromCache} (max ${ref.read(feedLimitProvider)} items)');
+      _print('🚫 FPC: Maximum load limit reached, current {$_totalLoadedItemsFromCache} (max ${ref.read(feedLimitProvider)} items)');
       return null;
     }
 
     // If not in memory, try disk cache
     final isar = await _feedIsar;
     var count = await isar.memoModelPostDbs.count();
-    print('📄 FPC: total count isar: $count');
+    _print('📄 FPC: total count isar: $count');
     try {
       // Calculate the offset for pagination
       // final offset = (pageNumber - 1) * FeedPostsNotifier.pageSize;
@@ -154,39 +135,43 @@ class FeedPostCache {
 
       if (posts.isNotEmpty) {
         _totalLoadedItemsFromCache += posts.length;
-        print(
+        _print(
           '✅ FPC: Returning feed page from disk cache: ${posts.length} posts (total loaded: $_totalLoadedItemsFromCache/${ref.read(feedLimitProvider)})',
         );
         return posts;
       }
     } catch (e) {
-      print('❌ FPC: Error loading feed page from disk: $e');
+      _print('❌ FPC: Error loading feed page from disk: $e');
     }
 
-    print('❌ FPC: Feed page not found in cache: $pageNumber');
+    _print('❌ FPC: Feed page not found in cache: $pageNumber');
     return null;
   }
 
   // --- Size Limit Enforcement ---
 
   Future<void> _enforceFeedDiskSizeLimit(Isar isar) async {
-    print('🧹 FPC: Checking feed disk size limit');
+    _print('🧹 FPC: Checking feed disk size limit');
     final currentSize = await isar.memoModelPostDbs.count();
-    print('🧹 FPC: Current feed disk cache size: $currentSize, threshold: $_diskCleanupThresholdFeed');
+    _print('🧹 FPC: Current feed disk cache size: $currentSize, threshold: $_diskCleanupThresholdFeed');
 
     if (currentSize <= _diskCleanupThresholdFeed) {
-      print('ℹ️ FPC: Feed disk size within limits, no cleanup needed');
+      _print('ℹ️ FPC: Feed disk size within limits, no cleanup needed');
       return;
     }
 
     final entriesToRemove = currentSize - _maxDiskCacheSizeFeed;
-    print('🧹 FPC: Need to remove $entriesToRemove entries from feed cache');
+    _print('🧹 FPC: Need to remove $entriesToRemove entries from feed cache');
 
     final oldEntries = await isar.memoModelPostDbs.where().sortByCachedAt().limit(entriesToRemove).findAll();
 
-    print('🧹 FPC: Found ${oldEntries.length} old feed entries to remove');
+    _print('🧹 FPC: Found ${oldEntries.length} old feed entries to remove');
     await isar.memoModelPostDbs.deleteAll(oldEntries.map((e) => e.id).toList());
 
-    print('🧹 FPC: Removed $entriesToRemove entries from feed cache (was $currentSize)');
+    _print('🧹 FPC: Removed $entriesToRemove entries from feed cache (was $currentSize)');
+  }
+
+  void _print(String s) {
+    if (kDebugMode) print(s);
   }
 }

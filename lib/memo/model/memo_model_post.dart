@@ -17,7 +17,6 @@ Timestamp? _dateTimeToJson(DateTime? dateTime) => dateTime == null ? null : Time
 class MemoModelPost {
   // Use a nullable late variable. It will be initialized by the factory, not from JSON.
   String? id;
-
   String? text;
   //this is historically used because memo.cash treats imgur differently all imgur images are visible on memo too
   String? imgurUrl;
@@ -43,6 +42,9 @@ class MemoModelPost {
   String creatorId;
   String topicId;
   List<String> tagIds;
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  int? postType;
 
   // --- Transient (Client-Side) Fields ---
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -85,6 +87,7 @@ class MemoModelPost {
   // --- Public Constructor for manual creation ---
   MemoModelPost({
     required this.id,
+    this.postType,
     this.text,
     this.imgurUrl,
     this.youtubeId,
@@ -194,6 +197,7 @@ class MemoModelPost {
 
   MemoModelPost copyWith({
     String? id,
+    int? postType,
     String? text,
     String? imgurUrl,
     String? youtubeId,
@@ -216,6 +220,7 @@ class MemoModelPost {
   }) {
     return MemoModelPost(
       id: id ?? this.id,
+      postType: postType ?? this.postType,
       text: text ?? this.text,
       imgurUrl: imgurUrl ?? this.imgurUrl,
       youtubeId: youtubeId ?? this.youtubeId,

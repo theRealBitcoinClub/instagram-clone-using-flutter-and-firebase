@@ -22,7 +22,7 @@ class TranslationCache {
   }
 
   Future<String?> get(String postId, String languageCode) async {
-    final isar = await ref.read(translationIsarProvider.future);
+    final isar = await ref.read(unifiedIsarProvider.future);
     final cacheKey = _generateKey(postId, languageCode);
 
     final cached = await isar.cachedTranslationDbs.where().cacheKeyEqualTo(cacheKey).findFirst();
@@ -31,7 +31,7 @@ class TranslationCache {
   }
 
   Future<void> put(String postId, String languageCode, String translatedText) async {
-    final isar = await ref.read(translationIsarProvider.future);
+    final isar = await ref.read(unifiedIsarProvider.future);
 
     await isar.writeTxn(() async {
       final cacheKey = _generateKey(postId, languageCode);
@@ -55,14 +55,14 @@ class TranslationCache {
   }
 
   Future<void> clear() async {
-    final isar = await ref.read(translationIsarProvider.future);
+    final isar = await ref.read(unifiedIsarProvider.future);
     await isar.writeTxn(() async {
       await isar.cachedTranslationDbs.clear();
     });
   }
 
   Future<int> get size async {
-    final isar = await ref.read(translationIsarProvider.future);
+    final isar = await ref.read(unifiedIsarProvider.future);
     return await isar.cachedTranslationDbs.count();
   }
 

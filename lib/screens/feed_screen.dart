@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,7 @@ import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
+import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 
 import '../intros/intro_overlay.dart';
@@ -34,12 +36,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   void initState() {
     super.initState();
-    print('FSCR:🚀 FeedScreen initState called');
+    _print('FSCR:🚀 FeedScreen initState called');
     _scrollController.addListener(_scrollListener);
-    print('FSCR:📜 Scroll listener added');
+    _print('FSCR:📜 Scroll listener added');
 
     context.afterLayout(refreshUI: false, () {
-      print('FSCR:🎯 Requesting focus for list view');
+      _print('FSCR:🎯 Requesting focus for list view');
       FocusScope.of(context).requestFocus(_listViewFocusNode);
       // Future.delayed(Duration(seconds: 3), () {
       //   ref.read(tokenLimitsProvider.notifier).handleCreatorUpdate(null);
@@ -53,47 +55,47 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final maxScrollExtent = scrollPosition.maxScrollExtent;
     final threshold = maxScrollExtent - 300;
 
-    // print('FSCR:📜 Scroll listener - pixels: $pixels, maxScrollExtent: $maxScrollExtent, threshold: $threshold');
+    // _print('FSCR:📜 Scroll listener - pixels: $pixels, maxScrollExtent: $maxScrollExtent, threshold: $threshold');
 
     if (pixels >= threshold && !ref.read(feedPostsProvider).isLoadingMorePostsAtBottom && ref.read(feedPostsProvider).hasMorePosts) {
-      // print('FSCR:📥 Triggering fetchMorePosts - reached scroll threshold');
+      // _print('FSCR:📥 Triggering fetchMorePosts - reached scroll threshold');
       ref.read(feedPostsProvider.notifier).fetchMorePosts();
     } else {
-      // print('FSCR:⏸️ Scroll threshold not met or conditions not satisfied');
-      // print('FSCR:   - isLoadingMore: ${ref.read(feedPostsProvider).isLoadingMorePostsAtBottom}');
-      // print('FSCR:   - hasMorePosts: ${ref.read(feedPostsProvider).hasMorePosts}');
-      // print('FSCR:   - pixels >= threshold: ${pixels >= threshold}');
+      // _print('FSCR:⏸️ Scroll threshold not met or conditions not satisfied');
+      // _print('FSCR:   - isLoadingMore: ${ref.read(feedPostsProvider).isLoadingMorePostsAtBottom}');
+      // _print('FSCR:   - hasMorePosts: ${ref.read(feedPostsProvider).hasMorePosts}');
+      // _print('FSCR:   - pixels >= threshold: ${pixels >= threshold}');
     }
   }
 
   void _scrollDownForPost(MemoModelPost post) {
     if (!_scrollController.hasClients) {
-      print('FSCR:📜 _scrollDownForPost - scroll controller has no clients');
+      _print('FSCR:📜 _scrollDownForPost - scroll controller has no clients');
       return;
     }
 
     final feedState = ref.read(feedPostsProvider);
     final postIndex = feedState.posts.indexWhere((p) => p.id == post.id);
-    print('FSCR:📜 _scrollDownForPost - postId: ${post.id}, found at index: $postIndex');
+    _print('FSCR:📜 _scrollDownForPost - postId: ${post.id}, found at index: $postIndex');
 
     if (postIndex != -1) {
       final targetPosition = _scrollController.offset + 50.0;
-      print('FSCR:📜 _scrollDownForPost - current offset: ${_scrollController.offset}, target: $targetPosition');
+      _print('FSCR:📜 _scrollDownForPost - current offset: ${_scrollController.offset}, target: $targetPosition');
 
       final maxScrollExtent = _scrollController.position.maxScrollExtent;
       final clampedPosition = targetPosition.clamp(_scrollController.position.minScrollExtent, maxScrollExtent);
-      print('FSCR:📜 _scrollDownForPost - clamped position: $clampedPosition');
+      _print('FSCR:📜 _scrollDownForPost - clamped position: $clampedPosition');
 
       _scrollController.animateTo(clampedPosition, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-      print('FSCR:📜 _scrollDownForPost - scroll animation started');
+      _print('FSCR:📜 _scrollDownForPost - scroll animation started');
     } else {
-      print('FSCR:❌ _scrollDownForPost - post not found in current posts list');
+      _print('FSCR:❌ _scrollDownForPost - post not found in current posts list');
     }
   }
 
   @override
   void dispose() {
-    print('FSCR:♻️ FeedScreen dispose called');
+    _print('FSCR:♻️ FeedScreen dispose called');
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     _listViewFocusNode.dispose();
@@ -103,16 +105,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    print('FSCR:🏗️ FeedScreen build started');
+    _print('FSCR:🏗️ FeedScreen build started');
     final feedState = ref.watch(feedPostsProvider);
-    print('FSCR:📊 FeedState in build:');
-    print('FSCR:   - posts: ${feedState.posts.length}');
-    print('FSCR:   - isLoadingInitial: ${feedState.isLoadingInitialAtTop}');
-    print('FSCR:   - isLoadingMore: ${feedState.isLoadingMorePostsAtBottom}');
-    print('FSCR:   - hasMorePosts: ${feedState.hasMorePosts}');
-    print('FSCR:   - totalPostCount: ${feedState.totalPostCountInFirebase}');
-    print('FSCR:   - isRefreshing: ${feedState.isRefreshingByUserRequest}');
-    print('FSCR:   - errorMessage: ${feedState.errorMessage}');
+    _print('FSCR:📊 FeedState in build:');
+    _print('FSCR:   - posts: ${feedState.posts.length}');
+    _print('FSCR:   - isLoadingInitial: ${feedState.isLoadingInitialAtTop}');
+    _print('FSCR:   - isLoadingMore: ${feedState.isLoadingMorePostsAtBottom}');
+    _print('FSCR:   - hasMorePosts: ${feedState.hasMorePosts}');
+    _print('FSCR:   - totalPostCount: ${feedState.totalPostCountInFirebase}');
+    _print('FSCR:   - isRefreshing: ${feedState.isRefreshingByUserRequest}');
+    _print('FSCR:   - errorMessage: ${feedState.errorMessage}');
     final shouldShowIntro = ref.read(introStateNotifierProvider.notifier).shouldShow(_introType);
     final tokenLimits = ref.watch(tokenLimitsProvider);
 
@@ -198,10 +200,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _buildRefreshableNoPostsWidget(ThemeData theme, Widget child) {
-    print('FSCR:🔄 Building refreshable no posts widget');
+    _print('FSCR:🔄 Building refreshable no posts widget');
     return RefreshIndicator(
       onRefresh: () async {
-        print('FSCR:🔄 no posts widget load triggered');
+        _print('FSCR:🔄 no posts widget load triggered');
         await ref.read(feedPostsProvider.notifier).fetchInitialPosts();
       },
       color: theme.colorScheme.primary,
@@ -226,23 +228,23 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final hasValidUrl =
         (imgurUrl != null && imgurUrl.isNotEmpty) || (imageUrl != null && imageUrl.isNotEmpty) || (ipfsUrl != null && ipfsUrl.isNotEmpty);
 
-    print('FSCR:🖼️ _hasValidImageUrl for post ${post.id}: $hasValidUrl');
+    _print('FSCR:🖼️ _hasValidImageUrl for post ${post.id}: $hasValidUrl');
     return hasValidUrl;
   }
 
   Widget _buildFeedBody(FeedState feedState, ThemeData theme) {
-    print('FSCR:🏗️ _buildFeedBody called');
+    _print('FSCR:🏗️ _buildFeedBody called');
 
     if (feedState.posts.isEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom) {
-      print('FSCR:📭 No posts available, showing empty state');
+      _print('FSCR:📭 No posts available, showing empty state');
       return _buildRefreshableNoPostsWidget(theme, _widgetNoFeed(theme));
     }
 
-    print('FSCR:📜 Building ListView with ${feedState.posts.length} posts');
-    print('FSCR:📜 ListView itemCount breakdown:');
-    print('FSCR:   - base posts: ${feedState.posts.length}');
-    print('FSCR:   - loadingMore indicator: ${feedState.isLoadingMorePostsAtBottom ? 1 : 0}');
-    print('FSCR:   - free plan limit: ${feedState.isMaxFreeLimit ? 1 : 0}');
+    _print('FSCR:📜 Building ListView with ${feedState.posts.length} posts');
+    _print('FSCR:📜 ListView itemCount breakdown:');
+    _print('FSCR:   - base posts: ${feedState.posts.length}');
+    _print('FSCR:   - loadingMore indicator: ${feedState.isLoadingMorePostsAtBottom ? 1 : 0}');
+    _print('FSCR:   - free plan limit: ${feedState.isMaxFreeLimit ? 1 : 0}');
     print(
       'FSCR:   - end message: ${(!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimit) ? 1 : 0}',
     );
@@ -250,7 +252,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     return RefreshIndicator(
       onRefresh: () {
         setState(() {});
-        print('FSCR:🔄 ListView RefreshIndicator triggered');
+        _print('FSCR:🔄 ListView RefreshIndicator triggered');
         return ref.read(feedPostsProvider.notifier).refreshFeed();
       },
       color: theme.colorScheme.onPrimary,
@@ -266,7 +268,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         child: GestureDetector(
           onTap: () {
             if (!_listViewFocusNode.hasFocus) {
-              print('FSCR:🎯 Requesting focus via GestureDetector tap');
+              _print('FSCR:🎯 Requesting focus via GestureDetector tap');
               FocusScope.of(context).requestFocus(_listViewFocusNode);
             }
           },
@@ -275,26 +277,26 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             controller: _scrollController,
             itemCount: _getDisplayedItemCount(feedState),
             itemBuilder: (context, index) {
-              print('FSCR:📜 ListView building item at index: $index');
+              _print('FSCR:📜 ListView building item at index: $index');
 
               // Apply soft limit to displayed posts
               final displayedPosts = _getDisplayedPosts(feedState);
 
               if (index < displayedPosts.length) {
                 final post = displayedPosts[index];
-                print('FSCR:📜 Building PostCard for post ${post.id} at index $index');
+                _print('FSCR:📜 Building PostCard for post ${post.id} at index $index');
                 return _wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme, index: index);
               } else if (feedState.isMaxFreeLimit && index >= displayedPosts.length) {
-                print('FSCR:💰 Building free plan limit widget at index $index');
+                _print('FSCR:💰 Building free plan limit widget at index $index');
                 return _buildFreePlanLimitWidget(theme);
               } else if (feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimit && index >= displayedPosts.length) {
-                print('FSCR:⏳ Building loading indicator at index $index');
+                _print('FSCR:⏳ Building loading indicator at index $index');
                 return _buildLoadingIndicator();
               } else if (!feedState.hasMorePosts && index == displayedPosts.length) {
-                print('FSCR:🏁 Building end of feed message at index $index');
+                _print('FSCR:🏁 Building end of feed message at index $index');
                 return _buildEndOfFeedWidget(theme);
               }
-              print('FSCR:❌ Unexpected index in ListView builder: $index');
+              _print('FSCR:❌ Unexpected index in ListView builder: $index');
               return const SizedBox.shrink();
             },
           ),
@@ -330,9 +332,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _buildFreePlanLimitWidget(ThemeData theme) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 6),
-      child: LimitInfoWidget(limitType: LimitType.feed, compact: false),
+    return AnimGrowFade(
+      delay: Duration(seconds: 3),
+      show: true,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 6),
+        child: LimitInfoWidget(limitType: LimitType.feed, compact: false),
+      ),
     );
   }
 
@@ -354,37 +360,37 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _wrapInDoubleTapDetectorImagesOnly(MemoModelPost post, BuildContext context, FeedState feedState, ThemeData theme, {int? index}) {
-    // print('FSCR:👆 Wrapping post ${post.id} in GestureDetector');
+    // _print('FSCR:👆 Wrapping post ${post.id} in GestureDetector');
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () async {
-        print('FSCR:👆 Post ${post.id} tapped');
+        _print('FSCR:👆 Post ${post.id} tapped');
         final imageUrl = post.imgurUrl ?? post.imageUrl ?? "";
         final ipfsId = post.ipfsCid ?? "";
         if (imageUrl.isEmpty && ipfsId.isEmpty) {
-          print('FSCR:❌ No valid image available for post ${post.id}');
+          _print('FSCR:❌ No valid image available for post ${post.id}');
           showSnackBar("No valid image available for this post", type: SnackbarType.info);
           return;
         }
 
         final validImagePosts = feedState.posts.where(_hasValidImageUrl).toList();
         final validIndex = validImagePosts.indexWhere((p) => p.id == post.id);
-        print('FSCR:🖼️ Valid image posts count: ${validImagePosts.length}, current post index: $validIndex');
+        _print('FSCR:🖼️ Valid image posts count: ${validImagePosts.length}, current post index: $validIndex');
 
         if (validIndex == -1) {
-          print('FSCR:❌ Could not find post in valid image posts list');
+          _print('FSCR:❌ Could not find post in valid image posts list');
           showSnackBar("Could not open image viewer", type: SnackbarType.error);
           return;
         }
 
-        print('FSCR:🖼️ Opening image viewer for post ${post.id} at index $validIndex');
+        _print('FSCR:🖼️ Opening image viewer for post ${post.id} at index $validIndex');
         showPostImageFullscreenWidget(context: context, theme: theme, posts: validImagePosts, initialIndex: validIndex);
       },
       child: PostCard(
         post,
         key: ValueKey(post.id),
         onShowSendButton: () {
-          print('FSCR:📜 onShowSendButton callback triggered for post ${post.id}');
+          _print('FSCR:📜 onShowSendButton callback triggered for post ${post.id}');
           _scrollDownForPost(post);
         },
         index: index,
@@ -393,7 +399,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Center _widgetNoFeed(ThemeData theme) {
-    print('FSCR:📭 Building no feed widget');
+    _print('FSCR:📭 Building no feed widget');
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -434,9 +440,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   void _handleScrollIntent(Intent intent, BuildContext context) {
-    // print('FSCR:⌨️ Keyboard scroll intent: $intent');
+    // _print('FSCR:⌨️ Keyboard scroll intent: $intent');
     if (!_scrollController.hasClients) {
-      // print('FSCR:❌ Scroll controller has no clients');
+      // _print('FSCR:❌ Scroll controller has no clients');
       return;
     }
 
@@ -445,10 +451,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     if (intent is ScrollUpIntent) {
       scrollAmount = -estimatedItemHeight;
-      // print('FSCR:⬆️ Scrolling up by $scrollAmount');
+      // _print('FSCR:⬆️ Scrolling up by $scrollAmount');
     } else if (intent is ScrollDownIntent) {
       scrollAmount = estimatedItemHeight;
-      // print('FSCR:⬇️ Scrolling down by $scrollAmount');
+      // _print('FSCR:⬇️ Scrolling down by $scrollAmount');
     }
 
     if (scrollAmount != 0) {
@@ -456,8 +462,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       final targetOffset = currentOffset + scrollAmount;
       final clampedOffset = targetOffset.clamp(_scrollController.position.minScrollExtent, _scrollController.position.maxScrollExtent);
 
-      // print('FSCR:📜 Animating scroll from $currentOffset to $clampedOffset');
+      // _print('FSCR:📜 Animating scroll from $currentOffset to $clampedOffset');
       _scrollController.animateTo(clampedOffset, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
     }
+  }
+
+  void _print(String s) {
+    if (kDebugMode) print(s);
   }
 }

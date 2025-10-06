@@ -60,31 +60,32 @@ const MemoModelPostDbSchema = CollectionSchema(
       type: IsarType.long,
     ),
     r'postId': PropertySchema(id: 10, name: r'postId', type: IsarType.string),
+    r'postType': PropertySchema(id: 11, name: r'postType', type: IsarType.long),
     r'replyCounter': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'replyCounter',
       type: IsarType.long,
     ),
     r'showOnFeed': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'showOnFeed',
       type: IsarType.bool,
     ),
     r'tagIds': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'tagIds',
       type: IsarType.stringList,
     ),
-    r'text': PropertySchema(id: 14, name: r'text', type: IsarType.string),
-    r'topicId': PropertySchema(id: 15, name: r'topicId', type: IsarType.string),
-    r'urls': PropertySchema(id: 16, name: r'urls', type: IsarType.stringList),
+    r'text': PropertySchema(id: 15, name: r'text', type: IsarType.string),
+    r'topicId': PropertySchema(id: 16, name: r'topicId', type: IsarType.string),
+    r'urls': PropertySchema(id: 17, name: r'urls', type: IsarType.stringList),
     r'videoUrl': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'videoUrl',
       type: IsarType.string,
     ),
     r'youtubeId': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'youtubeId',
       type: IsarType.string,
     ),
@@ -96,9 +97,9 @@ const MemoModelPostDbSchema = CollectionSchema(
   deserializeProp: _memoModelPostDbDeserializeProp,
   idName: r'id',
   indexes: {
-    r'postId': IndexSchema(
-      id: -544810920068516617,
-      name: r'postId',
+    r'postId_postType': IndexSchema(
+      id: -8326740468909595309,
+      name: r'postId_postType',
       unique: true,
       replace: false,
       properties: [
@@ -106,6 +107,24 @@ const MemoModelPostDbSchema = CollectionSchema(
           name: r'postId',
           type: IndexType.hash,
           caseSensitive: true,
+        ),
+        IndexPropertySchema(
+          name: r'postType',
+          type: IndexType.value,
+          caseSensitive: false,
+        ),
+      ],
+    ),
+    r'postType': IndexSchema(
+      id: -8758045082063951263,
+      name: r'postType',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'postType',
+          type: IndexType.value,
+          caseSensitive: false,
         ),
       ],
     ),
@@ -266,14 +285,15 @@ void _memoModelPostDbSerialize(
   writer.writeLong(offsets[8], object.likeCounter);
   writer.writeLong(offsets[9], object.popularityScore);
   writer.writeString(offsets[10], object.postId);
-  writer.writeLong(offsets[11], object.replyCounter);
-  writer.writeBool(offsets[12], object.showOnFeed);
-  writer.writeStringList(offsets[13], object.tagIds);
-  writer.writeString(offsets[14], object.text);
-  writer.writeString(offsets[15], object.topicId);
-  writer.writeStringList(offsets[16], object.urls);
-  writer.writeString(offsets[17], object.videoUrl);
-  writer.writeString(offsets[18], object.youtubeId);
+  writer.writeLong(offsets[11], object.postType);
+  writer.writeLong(offsets[12], object.replyCounter);
+  writer.writeBool(offsets[13], object.showOnFeed);
+  writer.writeStringList(offsets[14], object.tagIds);
+  writer.writeString(offsets[15], object.text);
+  writer.writeString(offsets[16], object.topicId);
+  writer.writeStringList(offsets[17], object.urls);
+  writer.writeString(offsets[18], object.videoUrl);
+  writer.writeString(offsets[19], object.youtubeId);
 }
 
 MemoModelPostDb _memoModelPostDbDeserialize(
@@ -295,14 +315,15 @@ MemoModelPostDb _memoModelPostDbDeserialize(
   object.likeCounter = reader.readLongOrNull(offsets[8]);
   object.popularityScore = reader.readLong(offsets[9]);
   object.postId = reader.readString(offsets[10]);
-  object.replyCounter = reader.readLongOrNull(offsets[11]);
-  object.showOnFeed = reader.readBoolOrNull(offsets[12]);
-  object.tagIds = reader.readStringList(offsets[13]) ?? [];
-  object.text = reader.readStringOrNull(offsets[14]);
-  object.topicId = reader.readString(offsets[15]);
-  object.urls = reader.readStringList(offsets[16]) ?? [];
-  object.videoUrl = reader.readStringOrNull(offsets[17]);
-  object.youtubeId = reader.readStringOrNull(offsets[18]);
+  object.postType = reader.readLong(offsets[11]);
+  object.replyCounter = reader.readLongOrNull(offsets[12]);
+  object.showOnFeed = reader.readBoolOrNull(offsets[13]);
+  object.tagIds = reader.readStringList(offsets[14]) ?? [];
+  object.text = reader.readStringOrNull(offsets[15]);
+  object.topicId = reader.readString(offsets[16]);
+  object.urls = reader.readStringList(offsets[17]) ?? [];
+  object.videoUrl = reader.readStringOrNull(offsets[18]);
+  object.youtubeId = reader.readStringOrNull(offsets[19]);
   return object;
 }
 
@@ -336,20 +357,22 @@ P _memoModelPostDbDeserializeProp<P>(
     case 10:
       return (reader.readString(offset)) as P;
     case 11:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 12:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 13:
-      return (reader.readStringList(offset) ?? []) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 14:
-      return (reader.readStringOrNull(offset)) as P;
-    case 15:
-      return (reader.readString(offset)) as P;
-    case 16:
       return (reader.readStringList(offset) ?? []) as P;
-    case 17:
+    case 15:
       return (reader.readStringOrNull(offset)) as P;
+    case 16:
+      return (reader.readString(offset)) as P;
+    case 17:
+      return (reader.readStringList(offset) ?? []) as P;
     case 18:
+      return (reader.readStringOrNull(offset)) as P;
+    case 19:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -373,59 +396,107 @@ void _memoModelPostDbAttach(
 }
 
 extension MemoModelPostDbByIndex on IsarCollection<MemoModelPostDb> {
-  Future<MemoModelPostDb?> getByPostId(String postId) {
-    return getByIndex(r'postId', [postId]);
+  Future<MemoModelPostDb?> getByPostIdPostType(String postId, int postType) {
+    return getByIndex(r'postId_postType', [postId, postType]);
   }
 
-  MemoModelPostDb? getByPostIdSync(String postId) {
-    return getByIndexSync(r'postId', [postId]);
+  MemoModelPostDb? getByPostIdPostTypeSync(String postId, int postType) {
+    return getByIndexSync(r'postId_postType', [postId, postType]);
   }
 
-  Future<bool> deleteByPostId(String postId) {
-    return deleteByIndex(r'postId', [postId]);
+  Future<bool> deleteByPostIdPostType(String postId, int postType) {
+    return deleteByIndex(r'postId_postType', [postId, postType]);
   }
 
-  bool deleteByPostIdSync(String postId) {
-    return deleteByIndexSync(r'postId', [postId]);
+  bool deleteByPostIdPostTypeSync(String postId, int postType) {
+    return deleteByIndexSync(r'postId_postType', [postId, postType]);
   }
 
-  Future<List<MemoModelPostDb?>> getAllByPostId(List<String> postIdValues) {
-    final values = postIdValues.map((e) => [e]).toList();
-    return getAllByIndex(r'postId', values);
+  Future<List<MemoModelPostDb?>> getAllByPostIdPostType(
+    List<String> postIdValues,
+    List<int> postTypeValues,
+  ) {
+    final len = postIdValues.length;
+    assert(
+      postTypeValues.length == len,
+      'All index values must have the same length',
+    );
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([postIdValues[i], postTypeValues[i]]);
+    }
+
+    return getAllByIndex(r'postId_postType', values);
   }
 
-  List<MemoModelPostDb?> getAllByPostIdSync(List<String> postIdValues) {
-    final values = postIdValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'postId', values);
+  List<MemoModelPostDb?> getAllByPostIdPostTypeSync(
+    List<String> postIdValues,
+    List<int> postTypeValues,
+  ) {
+    final len = postIdValues.length;
+    assert(
+      postTypeValues.length == len,
+      'All index values must have the same length',
+    );
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([postIdValues[i], postTypeValues[i]]);
+    }
+
+    return getAllByIndexSync(r'postId_postType', values);
   }
 
-  Future<int> deleteAllByPostId(List<String> postIdValues) {
-    final values = postIdValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'postId', values);
+  Future<int> deleteAllByPostIdPostType(
+    List<String> postIdValues,
+    List<int> postTypeValues,
+  ) {
+    final len = postIdValues.length;
+    assert(
+      postTypeValues.length == len,
+      'All index values must have the same length',
+    );
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([postIdValues[i], postTypeValues[i]]);
+    }
+
+    return deleteAllByIndex(r'postId_postType', values);
   }
 
-  int deleteAllByPostIdSync(List<String> postIdValues) {
-    final values = postIdValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'postId', values);
+  int deleteAllByPostIdPostTypeSync(
+    List<String> postIdValues,
+    List<int> postTypeValues,
+  ) {
+    final len = postIdValues.length;
+    assert(
+      postTypeValues.length == len,
+      'All index values must have the same length',
+    );
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([postIdValues[i], postTypeValues[i]]);
+    }
+
+    return deleteAllByIndexSync(r'postId_postType', values);
   }
 
-  Future<Id> putByPostId(MemoModelPostDb object) {
-    return putByIndex(r'postId', object);
+  Future<Id> putByPostIdPostType(MemoModelPostDb object) {
+    return putByIndex(r'postId_postType', object);
   }
 
-  Id putByPostIdSync(MemoModelPostDb object, {bool saveLinks = true}) {
-    return putByIndexSync(r'postId', object, saveLinks: saveLinks);
+  Id putByPostIdPostTypeSync(MemoModelPostDb object, {bool saveLinks = true}) {
+    return putByIndexSync(r'postId_postType', object, saveLinks: saveLinks);
   }
 
-  Future<List<Id>> putAllByPostId(List<MemoModelPostDb> objects) {
-    return putAllByIndex(r'postId', objects);
+  Future<List<Id>> putAllByPostIdPostType(List<MemoModelPostDb> objects) {
+    return putAllByIndex(r'postId_postType', objects);
   }
 
-  List<Id> putAllByPostIdSync(
+  List<Id> putAllByPostIdPostTypeSync(
     List<MemoModelPostDb> objects, {
     bool saveLinks = true,
   }) {
-    return putAllByIndexSync(r'postId', objects, saveLinks: saveLinks);
+    return putAllByIndexSync(r'postId_postType', objects, saveLinks: saveLinks);
   }
 }
 
@@ -434,6 +505,14 @@ extension MemoModelPostDbQueryWhereSort
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhere> anyPostType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'postType'),
+      );
     });
   }
 
@@ -519,22 +598,25 @@ extension MemoModelPostDbQueryWhere
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  postIdEqualTo(String postId) {
+  postIdEqualToAnyPostType(String postId) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'postId', value: [postId]),
+        IndexWhereClause.equalTo(
+          indexName: r'postId_postType',
+          value: [postId],
+        ),
       );
     });
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
-  postIdNotEqualTo(String postId) {
+  postIdNotEqualToAnyPostType(String postId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(
               IndexWhereClause.between(
-                indexName: r'postId',
+                indexName: r'postId_postType',
                 lower: [],
                 upper: [postId],
                 includeUpper: false,
@@ -542,7 +624,7 @@ extension MemoModelPostDbQueryWhere
             )
             .addWhereClause(
               IndexWhereClause.between(
-                indexName: r'postId',
+                indexName: r'postId_postType',
                 lower: [postId],
                 includeLower: false,
                 upper: [],
@@ -552,7 +634,7 @@ extension MemoModelPostDbQueryWhere
         return query
             .addWhereClause(
               IndexWhereClause.between(
-                indexName: r'postId',
+                indexName: r'postId_postType',
                 lower: [postId],
                 includeLower: false,
                 upper: [],
@@ -560,13 +642,225 @@ extension MemoModelPostDbQueryWhere
             )
             .addWhereClause(
               IndexWhereClause.between(
-                indexName: r'postId',
+                indexName: r'postId_postType',
                 lower: [],
                 upper: [postId],
                 includeUpper: false,
               ),
             );
       }
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
+  postIdPostTypeEqualTo(String postId, int postType) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(
+          indexName: r'postId_postType',
+          value: [postId, postType],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
+  postIdEqualToPostTypeNotEqualTo(String postId, int postType) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'postId_postType',
+                lower: [postId],
+                upper: [postId, postType],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'postId_postType',
+                lower: [postId, postType],
+                includeLower: false,
+                upper: [postId],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'postId_postType',
+                lower: [postId, postType],
+                includeLower: false,
+                upper: [postId],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'postId_postType',
+                lower: [postId],
+                upper: [postId, postType],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
+  postIdEqualToPostTypeGreaterThan(
+    String postId,
+    int postType, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'postId_postType',
+          lower: [postId, postType],
+          includeLower: include,
+          upper: [postId],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
+  postIdEqualToPostTypeLessThan(
+    String postId,
+    int postType, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'postId_postType',
+          lower: [postId],
+          upper: [postId, postType],
+          includeUpper: include,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
+  postIdEqualToPostTypeBetween(
+    String postId,
+    int lowerPostType,
+    int upperPostType, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'postId_postType',
+          lower: [postId, lowerPostType],
+          includeLower: includeLower,
+          upper: [postId, upperPostType],
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
+  postTypeEqualTo(int postType) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'postType', value: [postType]),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
+  postTypeNotEqualTo(int postType) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'postType',
+                lower: [],
+                upper: [postType],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'postType',
+                lower: [postType],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'postType',
+                lower: [postType],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'postType',
+                lower: [],
+                upper: [postType],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
+  postTypeGreaterThan(int postType, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'postType',
+          lower: [postType],
+          includeLower: include,
+          upper: [],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
+  postTypeLessThan(int postType, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'postType',
+          lower: [],
+          upper: [postType],
+          includeUpper: include,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterWhereClause>
+  postTypeBetween(
+    int lowerPostType,
+    int upperPostType, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'postType',
+          lower: [lowerPostType],
+          includeLower: includeLower,
+          upper: [upperPostType],
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
@@ -2403,6 +2697,61 @@ extension MemoModelPostDbQueryFilter
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postTypeEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'postType', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postTypeGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'postType',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postTypeLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'postType',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
+  postTypeBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'postType',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterFilterCondition>
   replyCounterIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -3669,6 +4018,20 @@ extension MemoModelPostDbQuerySortBy
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  sortByPostType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'postType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  sortByPostTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'postType', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
   sortByReplyCounter() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'replyCounter', Sort.asc);
@@ -3917,6 +4280,20 @@ extension MemoModelPostDbQuerySortThenBy
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  thenByPostType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'postType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
+  thenByPostTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'postType', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QAfterSortBy>
   thenByReplyCounter() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'replyCounter', Sort.asc);
@@ -4084,6 +4461,13 @@ extension MemoModelPostDbQueryWhereDistinct
   }
 
   QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
+  distinctByPostType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'postType');
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, MemoModelPostDb, QDistinct>
   distinctByReplyCounter() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'replyCounter');
@@ -4214,6 +4598,12 @@ extension MemoModelPostDbQueryProperty
   QueryBuilder<MemoModelPostDb, String, QQueryOperations> postIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'postId');
+    });
+  }
+
+  QueryBuilder<MemoModelPostDb, int, QQueryOperations> postTypeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'postType');
     });
   }
 

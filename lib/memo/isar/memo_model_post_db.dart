@@ -5,12 +5,34 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 
 part 'memo_model_post_db.g.dart';
 
+enum PostTypes {
+  feed(0),
+  profile(1);
+
+  final int id;
+
+  const PostTypes(this.id);
+
+  // Convert int to enum
+  static PostTypes fromId(int id) {
+    return id == feed.id ? feed : profile;
+  }
+}
+
 @Collection()
 class MemoModelPostDb {
   Id id = Isar.autoIncrement; // Fast FIFO with primary key sort
 
-  @Index(unique: true) // Fast lookups by postId
-  late String postId; // The original Firestore document ID
+  // @Index(unique: true) // Fast lookups by postId
+  // late String postId; // The original Firestore document ID
+  //
+  // @Index()
+  // late int postType;
+  @Index(unique: true, composite: [CompositeIndex('postType')])
+  late String postId;
+
+  @Index()
+  late int postType;
 
   late String? text;
   late String? imgurUrl;
@@ -50,13 +72,14 @@ class MemoModelPostDb {
   MemoModelPostDb();
 
   // Convert from app model to DB model
-  factory MemoModelPostDb.fromAppModel(MemoModelPost post) {
+  factory MemoModelPostDb.fromAppModel(MemoModelPost post, {required PostTypes postType}) {
     if (post.id == null || post.id!.isEmpty) {
       throw ArgumentError('Post must have a valid ID for caching');
     }
 
     return MemoModelPostDb()
       ..postId = post.id!
+      ..postType = postType.id
       ..text = post.text
       ..imgurUrl = post.imgurUrl
       ..youtubeId = post.youtubeId
@@ -81,6 +104,7 @@ class MemoModelPostDb {
   MemoModelPost toAppModel() {
     return MemoModelPost(
       id: postId, // Use the stored postId
+      postType: postType,
       text: text,
       imgurUrl: imgurUrl,
       youtubeId: youtubeId,

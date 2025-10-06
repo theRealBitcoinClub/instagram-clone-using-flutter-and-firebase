@@ -100,14 +100,8 @@ class MemoBitcoinBase {
 
   Future<Balance> getBalances(String address) async {
     const tokenId = MemoBitcoinBase.tokenId;
-    // final memoBitcoinBase = await MemoBitcoinBase.create();
-    // Determine the address type and create the appropriate object
     final isLegacy = !address.startsWith('bitcoincash:');
     final hasToken = address.startsWith('bitcoincash:z');
-
-    if (address == MemoBitcoinBase.bchBurnerAddress) {
-      print("object");
-    }
 
     try {
       BitcoinCashAddress typedAddress;
@@ -126,7 +120,6 @@ class MemoBitcoinBase {
       BigInt bchBalance = BigInt.zero;
       BigInt tokenBalance = BigInt.zero;
 
-      // Separate BCH and token balances in a single loop
       for (final utxo in electrumUtxos) {
         if (utxo.token != null && utxo.token!.category == tokenId) {
           // This UTXO holds our specific token

@@ -28,7 +28,7 @@ class PostServiceProfile {
     try {
       final postCache = ref.read(profilePostCacheProvider);
       final sharedPrefs = await SharedPreferences.getInstance();
-      final countKey = 'post_count_$creatorId';
+      final countKey = 'p232post_count_$creatorId';
 
       // 1. Get current count from Firebase
       final currentCount = await _getPostCountByCreatorId(creatorId);

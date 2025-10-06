@@ -33,7 +33,7 @@ class NavigationState {
   }
 
   // Helper getters
-  bool get hasProfileTarget => profileTargetId.isNotEmpty;
+  // bool get hasProfileTarget => profileTargetId.isNotEmpty;
   bool get isProfileTabActive => currentTabIndex == AppTab.profile.tabIndex;
 }
 
@@ -214,14 +214,14 @@ final profileTargetIdProvider = Provider<String>((ref) {
   return ref.watch(navigationStateProvider).profileTargetId;
 });
 
-final hasProfileTargetProvider = Provider<bool>((ref) {
-  return ref.watch(navigationStateProvider).hasProfileTarget;
-});
+// final hasProfileTargetProvider = Provider<bool>((ref) {
+//   return ref.watch(navigationStateProvider).hasProfileTarget;
+// });
 
 final isViewingOwnProfileProvider = Provider<bool>((ref) {
   return ref.watch(navigationStateProvider).isViewingOwnProfile;
 });
-
-final isProfileTabActiveProvider = Provider<bool>((ref) {
-  return ref.watch(navigationStateProvider).isProfileTabActive;
-});
+//
+// final isProfileTabActiveProvider = Provider<bool>((ref) {
+//   return ref.watch(navigationStateProvider).isProfileTabActive;
+// });

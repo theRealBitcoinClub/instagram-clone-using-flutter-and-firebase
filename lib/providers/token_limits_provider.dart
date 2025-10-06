@@ -85,6 +85,7 @@ class TokenLimitTexts {
 
 enum TokenLimitEnum {
   free(
+    profileLimitOwnProfile: 18,
     "${TokenLimitTexts.free}",
     tokenAmount: TokenLimitConstants.freeTokens,
     feedLimit: TokenLimitConstants.freeFeedLimit,
@@ -105,6 +106,7 @@ enum TokenLimitEnum {
   ),
 
   starter(
+    profileLimitOwnProfile: 27,
     "${TokenLimitTexts.starter}",
     tokenAmount: TokenLimitConstants.starterTokens,
     feedLimit: TokenLimitConstants.starterFeedLimit,
@@ -125,6 +127,7 @@ enum TokenLimitEnum {
   ),
 
   advanced(
+    profileLimitOwnProfile: 42,
     "${TokenLimitTexts.premium}",
     tokenAmount: TokenLimitConstants.advancedTokens,
     feedLimit: TokenLimitConstants.advancedFeedLimit,
@@ -145,6 +148,7 @@ enum TokenLimitEnum {
   ),
 
   pro(
+    profileLimitOwnProfile: 69,
     "${TokenLimitTexts.pro}",
     tokenAmount: TokenLimitConstants.proTokens,
     feedLimit: TokenLimitConstants.proFeedLimit,
@@ -168,6 +172,7 @@ enum TokenLimitEnum {
   final int feedLimit;
   final String feedLimitText;
   final int profileLimit;
+  final int profileLimitOwnProfile;
   final String profileLimitText;
   final int muteLimit;
   final String muteLimitText;
@@ -178,6 +183,7 @@ enum TokenLimitEnum {
     required this.feedLimit,
     required this.feedLimitText,
     required this.profileLimit,
+    required this.profileLimitOwnProfile,
     required this.profileLimitText,
     required this.muteLimit,
     required this.muteLimitText,
@@ -300,8 +306,8 @@ final feedLimitProvider = Provider<int>((ref) {
 
 final profileLimitProvider = Provider<int>((ref) {
   final state = ref.watch(tokenLimitsProvider);
-  if (ref.read(profileTargetIdProvider) == ref.read(userProvider)!.id) {
-    return 99;
+  if (ref.read(isViewingOwnProfileProvider)) {
+    return state.value?.currentLimit.profileLimitOwnProfile ?? TokenLimitEnum.free.profileLimitOwnProfile;
   }
 
   return state.value?.currentLimit.profileLimit ?? TokenLimitEnum.free.profileLimit;

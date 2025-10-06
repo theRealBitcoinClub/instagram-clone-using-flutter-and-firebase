@@ -11,7 +11,6 @@ final profilePostCacheProvider = Provider((ref) => ProfilePostCache(ref));
 
 class ProfilePostCache {
   final Ref ref;
-  final bool _debugMode = kDebugMode;
 
   ProfilePostCache(this.ref) {
     _print('🔄 PPC: ProfilePostCache constructor called');
@@ -61,12 +60,12 @@ class ProfilePostCache {
       _print('❌ PPC: Stack trace: $stack');
     }
   }
-
-  Future<void> cacheProfilePosts(String creatorId, List<MemoModelPost> posts) async {
-    _print('👤 PPC: cacheProfilePosts called for creator: $creatorId, posts: ${posts.length}');
-    await saveProfilePosts(creatorId, posts);
-    _print('✅ PPC: cacheProfilePosts completed for creator: $creatorId');
-  }
+  //
+  // Future<void> cacheProfilePosts(String creatorId, List<MemoModelPost> posts) async {
+  //   _print('👤 PPC: cacheProfilePosts called for creator: $creatorId, posts: ${posts.length}');
+  //   await saveProfilePosts(creatorId, posts);
+  //   _print('✅ PPC: cacheProfilePosts completed for creator: $creatorId');
+  // }
 
   Future<List<MemoModelPost>> getCachedProfilePosts(String creatorId) async {
     _print('👤 PPC: getCachedProfilePosts called for creator: $creatorId');

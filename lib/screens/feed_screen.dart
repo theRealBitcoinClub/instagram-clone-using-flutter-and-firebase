@@ -8,7 +8,6 @@ import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
-import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 
 import '../intros/intro_overlay.dart';
@@ -332,13 +331,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _buildFreePlanLimitWidget(ThemeData theme) {
-    return AnimGrowFade(
-      delay: Duration(seconds: 3),
-      show: true,
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 6),
-        child: LimitInfoWidget(limitType: LimitType.feed, compact: false),
-      ),
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 6),
+      child: LimitInfoWidget(limitType: LimitType.feed, compact: false),
     );
   }
 

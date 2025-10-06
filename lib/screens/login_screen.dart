@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bip39_mnemonic/bip39_mnemonic.dart';
+import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -91,6 +92,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
           if (mounted) {
             setState(() {
               _mnemonicController.text = mnemonic.sentence;
+              FlutterClipboard.clear();
             });
           }
         }
@@ -104,11 +106,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
 
   void _handleInput() {
     final text = _mnemonicController.text;
+    final selection = _mnemonicController.selection;
 
-    // Check if we should clear on backspace
-    if (text.length < _previousTextLength && _isInputValid) {
-      _mnemonicController.clear();
-      _previousTextLength = 0;
+    // Store previous length before any processing
+    final previousLength = _previousTextLength;
+    _previousTextLength = text.length;
+
+    // Check if backspace was pressed
+    final isBackspace = text.length < previousLength;
+
+    // Don't process autocomplete if we're in the middle of text (not at end)
+    if (selection.baseOffset != text.length) {
       _validateMnemonic();
       return;
     }
@@ -116,10 +124,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     final words = text.split(' ').where((word) => word.isNotEmpty).toList();
     final lastWord = words.isNotEmpty ? words.last : '';
 
-    if (lastWord.isNotEmpty) {
+    // If we're pressing backspace and there's a partial word, skip autocomplete
+    if (isBackspace && lastWord.isNotEmpty) {
+      _validateMnemonic();
+      return;
+    }
+
+    // Only autocomplete when not deleting and when we have a partial word
+    if (lastWord.isNotEmpty && !isBackspace) {
       final matchingWords = _wordList.where((word) => word.startsWith(lastWord)).toList();
       if (matchingWords.length == 1 && matchingWords.first != lastWord) {
-        // Calculate if this would complete a 12-word mnemonic
+        // Only autocomplete if we're not trying to delete
         final wouldCompleteMnemonic = words.length == 12;
 
         // Build the new text without adding space if it completes the mnemonic
@@ -132,8 +147,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
         );
       }
     }
-
-    _previousTextLength = text.length;
 
     _validateMnemonic();
   }

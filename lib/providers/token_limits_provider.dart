@@ -283,7 +283,7 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
         .watchCreator(userId)
         .listen(
           (updatedCreator) {
-            handleCreatorUpdate();
+            handleCreatorUpdateOnlyIfOwnCreator(updatedCreator);
           },
           onError: (error) {
             print('❌ TokenLimits: Error in creator stream: $error');
@@ -291,8 +291,10 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
         );
   }
 
-  void handleCreatorUpdate() {
-    MemoModelCreator? creator = ref.read(getCreatorProvider(ref.read(userProvider)!.id)).value;
+  void handleCreatorUpdateOnlyIfOwnCreator(MemoModelCreator? creatorUpdated) {
+    if (creatorUpdated != null && creatorUpdated.id != ref.read(userProvider)!.id) return;
+
+    MemoModelCreator? creator = creatorUpdated ?? ref.read(getCreatorProvider(ref.read(userProvider)!.id)).value;
     if (creator != null) {
       int newTokenBalance = creator.balanceToken;
       int effectiveBalance = newTokenBalance;
@@ -336,13 +338,6 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
 
       print('📊 TokenLimits: Effective: $currentLimit, $effectiveBalance | Actual: $newTokenBalance');
     }
-  }
-
-  // Optional: Method to force clear cache (useful for testing or manual refresh)
-  Future<void> clearBalanceCache() async {
-    await _clearCachedBalance();
-    // Re-trigger update with current actual values
-    handleCreatorUpdate();
   }
 
   // Optional: Method to get cache status

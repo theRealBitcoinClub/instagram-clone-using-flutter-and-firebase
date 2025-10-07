@@ -217,7 +217,7 @@ class ProfileBalanceProvider {
     ref.read(creatorRepositoryProvider).notifyCreatorUpdated(profileId, creator);
 
     _print('📢 PBP: 🔄 Handling token limits update');
-    ref.read(tokenLimitsProvider.notifier).handleCreatorUpdate();
+    ref.read(tokenLimitsProvider.notifier).handleCreatorUpdateOnlyIfOwnCreator(creator);
 
     _print('✅ PBP: 📱 _refreshQrDialogBalance() completed');
   }

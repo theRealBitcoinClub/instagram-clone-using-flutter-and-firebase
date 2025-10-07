@@ -1,6 +1,7 @@
 // home.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
 import 'package:mahakka/provider/profile_balance_provider.dart';
@@ -11,7 +12,9 @@ import 'package:mahakka/screens/profile_screen_widget.dart';
 import 'package:mahakka/tab_item_data.dart';
 
 import '../intros/intro_animated_icon.dart';
+import '../ipfs/ipfs_pin_claim_service.dart';
 import '../memo/memo_webview_screen.dart';
+import '../provider/electrum_provider.dart';
 import '../provider/scraper_provider.dart';
 
 class HomeSceen extends ConsumerStatefulWidget {
@@ -45,6 +48,12 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     _animationController.forward(from: 0.0);
     // _tabController.addListener(_tabControllerListener);
     ref.read(backgroundScraperManagerProvider);
+
+    context.afterBuildAsync(refreshUI: false, () async {
+      final bitcoinBase = await ref.read(electrumServiceProvider.future);
+      final ipfsService = IpfsPinClaimService(bitcoinBase: bitcoinBase, serverUrl: 'https://file-stage.fullstack.cash');
+      ipfsService.executeFakeApiRequestForWakeUp();
+    });
   }
 
   // void _tabControllerListener() {

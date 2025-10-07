@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/repositories/creator_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../provider/user_provider.dart';
 
@@ -207,38 +208,13 @@ enum TokenLimitEnum {
   }
 }
 
-// State class to hold the current limits and balance info
-class TokenLimitsState {
-  final TokenLimitEnum currentLimit;
-  final int tokenBalance;
-  final MemoModelCreator? creator;
-
-  const TokenLimitsState({required this.currentLimit, required this.tokenBalance, this.creator});
-
-  TokenLimitsState copyWith({TokenLimitEnum? currentLimit, int? tokenBalance, MemoModelCreator? creator}) {
-    return TokenLimitsState(
-      currentLimit: currentLimit ?? this.currentLimit,
-      tokenBalance: tokenBalance ?? this.tokenBalance,
-      creator: creator ?? this.creator,
-    );
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is TokenLimitsState && other.currentLimit == currentLimit && other.tokenBalance == tokenBalance && other.creator == creator;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(currentLimit, tokenBalance, creator);
-  }
-}
-
 final tokenLimitsProvider = AsyncNotifierProvider<TokenLimitsNotifier, TokenLimitsState>(() => TokenLimitsNotifier());
 
 class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
   StreamSubscription<MemoModelCreator?>? _creatorSubscription;
+  static const _memoryDuration = Duration(minutes: 1);
+  DateTime? _lastDowngradeDetection;
+  int? _cachedBalanceForDowngrade;
 
   TokenLimitsNotifier();
 
@@ -247,15 +223,55 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
     ref.onDispose(() {
       _creatorSubscription?.cancel();
     });
+
+    // Load cached balance from shared preferences
+    await _loadCachedBalance();
+
     final initialState = const TokenLimitsState(currentLimit: TokenLimitEnum.free, tokenBalance: 0);
-
     _setupCreatorSubscription();
-
     return initialState;
   }
 
+  Future<void> _loadCachedBalance() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedBalance = prefs.getInt('cached_balance_token');
+    final cachedTimestamp = prefs.getInt('cached_balance_timestamp');
+
+    if (cachedBalance != null && cachedTimestamp != null) {
+      final cacheTime = DateTime.fromMillisecondsSinceEpoch(cachedTimestamp);
+      final now = DateTime.now();
+
+      // Only use cache if it's within the memory duration
+      if (now.difference(cacheTime) <= _memoryDuration) {
+        _cachedBalanceForDowngrade = cachedBalance;
+        _lastDowngradeDetection = cacheTime;
+        print('🔄 TokenLimits: Loaded cached balance: $cachedBalance from ${cacheTime.toString()}');
+      } else {
+        // Clear expired cache
+        await _clearCachedBalance();
+      }
+    }
+  }
+
+  Future<void> _saveCachedBalance(int balance) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('cached_balance_token', balance);
+    await prefs.setInt('cached_balance_timestamp', DateTime.now().millisecondsSinceEpoch);
+    _cachedBalanceForDowngrade = balance;
+    _lastDowngradeDetection = DateTime.now();
+    print('💾 TokenLimits: Saved cached balance: $balance');
+  }
+
+  Future<void> _clearCachedBalance() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('cached_balance_token');
+    await prefs.remove('cached_balance_timestamp');
+    _cachedBalanceForDowngrade = null;
+    _lastDowngradeDetection = null;
+    print('🧹 TokenLimits: Cleared cached balance');
+  }
+
   void _setupCreatorSubscription() {
-    // Cancel existing subscription
     _creatorSubscription?.cancel();
 
     final userId = ref.read(userProvider)?.id;
@@ -267,7 +283,7 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
         .watchCreator(userId)
         .listen(
           (updatedCreator) {
-            handleCreatorUpdate(updatedCreator);
+            handleCreatorUpdate();
           },
           onError: (error) {
             print('❌ TokenLimits: Error in creator stream: $error');
@@ -275,27 +291,98 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
         );
   }
 
-  void handleCreatorUpdate(MemoModelCreator? c) {
-    MemoModelCreator? creator = c ?? ref.read(getCreatorProvider(ref.read(userProvider)!.id)).value;
+  void handleCreatorUpdate() {
+    MemoModelCreator? creator = ref.read(getCreatorProvider(ref.read(userProvider)!.id)).value;
     if (creator != null) {
-      int tokenBalance = creator.balanceToken;
-      TokenLimitEnum currentLimit = TokenLimitEnum.fromTokenBalance(tokenBalance);
-      // Update state with new data
-      state = AsyncData(TokenLimitsState(currentLimit: currentLimit, tokenBalance: tokenBalance, creator: creator));
-      print('❌ TokenLimits: _handleCreatorUpdate: $currentLimit, $tokenBalance');
+      int newTokenBalance = creator.balanceToken;
+      int effectiveBalance = newTokenBalance;
+
+      // Check if we have a cached balance and it's still within the memory window
+      final now = DateTime.now();
+      final bool hasValidCache =
+          _cachedBalanceForDowngrade != null && _lastDowngradeDetection != null && now.difference(_lastDowngradeDetection!) <= _memoryDuration;
+
+      if (hasValidCache) {
+        final int cachedBalance = _cachedBalanceForDowngrade!;
+
+        if (newTokenBalance < cachedBalance) {
+          // Potential downgrade - use cached value for one minute
+          effectiveBalance = cachedBalance;
+          print('🔄 TokenLimits: Using cached balance ($cachedBalance) instead of new balance ($newTokenBalance) for downgrade protection');
+        } else if (newTokenBalance > cachedBalance) {
+          // Upgrade detected - use new value immediately and update cache
+          effectiveBalance = newTokenBalance;
+          _saveCachedBalance(newTokenBalance);
+          print('⬆️ TokenLimits: Upgrade detected, using new balance: $newTokenBalance');
+        }
+        // If equal, no change needed
+      } else {
+        // No valid cache or cache expired - save current balance as new baseline
+        _saveCachedBalance(newTokenBalance);
+      }
+
+      TokenLimitEnum currentLimit = TokenLimitEnum.fromTokenBalance(effectiveBalance);
+
+      // Update state with effective data
+      state = AsyncData(
+        TokenLimitsState(
+          currentLimit: currentLimit,
+          tokenBalance: effectiveBalance,
+          creator: creator,
+          actualTokenBalance: newTokenBalance, // Store actual value for reference
+          usingCachedValue: hasValidCache && newTokenBalance < _cachedBalanceForDowngrade!,
+        ),
+      );
+
+      print('📊 TokenLimits: Effective: $currentLimit, $effectiveBalance | Actual: $newTokenBalance');
     }
   }
 
-  // Helper methods to access limits conveniently
-  // int get feedLimit => state.value?.currentLimit.feedLimit ?? TokenLimitEnum.free.feedLimit;
-  // int get profileLimit => state.value?.currentLimit.profileLimit ?? TokenLimitEnum.free.profileLimit;
-  // int get muteLimit => state.value?.currentLimit.muteLimit ?? TokenLimitEnum.free.muteLimit;
-  // TokenLimitEnum get currentLimit => state.value?.currentLimit ?? TokenLimitEnum.free;
-  int get tokenBalance => state.value?.tokenBalance ?? 0;
+  // Optional: Method to force clear cache (useful for testing or manual refresh)
+  Future<void> clearBalanceCache() async {
+    await _clearCachedBalance();
+    // Re-trigger update with current actual values
+    handleCreatorUpdate();
+  }
 
-  // bool get hasSufficientTokensForPro => tokenBalance >= TokenLimitEnum.pro.tokenAmount;
-  // bool get hasSufficientTokensForAdvanced => tokenBalance >= TokenLimitEnum.advanced.tokenAmount;
-  // bool get hasSufficientTokensForStarter => tokenBalance >= TokenLimitEnum.starter.tokenAmount;
+  // Optional: Method to get cache status
+  bool get isUsingCachedValue => state.value?.usingCachedValue ?? false;
+  DateTime? get cacheExpiryTime => _lastDowngradeDetection?.add(_memoryDuration);
+
+  int get tokenBalance => state.value?.tokenBalance ?? 0;
+}
+
+// Update your state class to include additional information
+class TokenLimitsState {
+  final TokenLimitEnum currentLimit;
+  final int tokenBalance; // Effective balance (may be cached)
+  final MemoModelCreator? creator;
+  final int actualTokenBalance; // The actual current balance from server
+  final bool usingCachedValue; // Whether we're currently using a cached value
+
+  const TokenLimitsState({
+    required this.currentLimit,
+    required this.tokenBalance,
+    this.creator,
+    this.actualTokenBalance = 0,
+    this.usingCachedValue = false,
+  });
+
+  TokenLimitsState copyWith({
+    TokenLimitEnum? currentLimit,
+    int? tokenBalance,
+    MemoModelCreator? creator,
+    int? actualTokenBalance,
+    bool? usingCachedValue,
+  }) {
+    return TokenLimitsState(
+      currentLimit: currentLimit ?? this.currentLimit,
+      tokenBalance: tokenBalance ?? this.tokenBalance,
+      creator: creator ?? this.creator,
+      actualTokenBalance: actualTokenBalance ?? this.actualTokenBalance,
+      usingCachedValue: usingCachedValue ?? this.usingCachedValue,
+    );
+  }
 }
 
 // Convenience providers for individual limits
@@ -313,23 +400,7 @@ final profileLimitProvider = Provider<int>((ref) {
   return state.value?.currentLimit.profileLimit ?? TokenLimitEnum.free.profileLimit;
 });
 
-// final muteLimitProvider = Provider<int>((ref) {
-//   final state = ref.watch(tokenLimitsProvider);
-//   return state.value?.currentLimit.muteLimit ?? TokenLimitEnum.free.muteLimit;
-// });
-
 final currentTokenLimitEnumProvider = Provider<TokenLimitEnum>((ref) {
   final state = ref.watch(tokenLimitsProvider);
   return state.value?.currentLimit ?? TokenLimitEnum.free;
 });
-
-// final tokenBalanceProvider = Provider<int>((ref) {
-//   final state = ref.watch(tokenLimitsProvider);
-//   return state.value?.tokenBalance ?? 0;
-// });
-//
-// // Provider to check if user has any tokens at all
-// final hasAnyTokensProvider = Provider<bool>((ref) {
-//   final tokenBalance = ref.watch(tokenBalanceProvider);
-//   return tokenBalance > 0;
-// });

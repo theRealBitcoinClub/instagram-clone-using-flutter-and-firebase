@@ -10,7 +10,7 @@ import '../memo/scraper/memo_scraper_topics.dart';
 
 final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraperManager, void>(() => BackgroundScraperManager());
 
-const bool forceScrape = false;
+const bool forceScrape = true;
 const bool saveToFirebase = true;
 const bool deepScrape = true;
 const cacheId = "letsgonownew";
@@ -18,7 +18,7 @@ const cacheId = "letsgonownew";
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
   final Duration _initialDelay = Duration(seconds: 30);
-  final Duration _scrapeInterval = kDebugMode && !forceScrape ? Duration(hours: 3) : Duration(seconds: 180);
+  final Duration _scrapeInterval = kDebugMode && !forceScrape ? Duration(hours: 3) : Duration(seconds: 60);
   bool _debugMode = kDebugMode;
 
   static const String _lastScrapeKey = 'last_scrape_timestamp';

@@ -30,11 +30,7 @@ class IpfsPinClaimService {
       final sizePowPadding = sizeInMbPow * 1.05;
       print("sizePowPadding $sizePowPadding");
 
-      final response = await http.post(
-        Uri.parse('$serverUrl/ipfs/getBchCost'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'sizeInMb': sizePowPadding}),
-      );
+      http.Response response = await executeApiRequest(sizePowPadding);
 
       if (response.statusCode != 200) {
         throw Exception('Failed to fetch BCH cost: ${response.statusCode}');
@@ -47,6 +43,19 @@ class IpfsPinClaimService {
       print('IpfsPinClaimService: Error fetching BCH cost: $error');
       rethrow;
     }
+  }
+
+  Future<void> executeFakeApiRequestForWakeUp() async {
+    http.post(Uri.parse('$serverUrl/ipfs/getBchCost'), headers: {'Content-Type': 'application/json'}, body: json.encode({'sizeInMb': "1"}));
+  }
+
+  Future<http.Response> executeApiRequest(double sizePowPadding) async {
+    final response = await http.post(
+      Uri.parse('$serverUrl/ipfs/getBchCost'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'sizeInMb': sizePowPadding}),
+    );
+    return response;
   }
 
   Future<Map<String, String>> pinClaimBCH(File file, String cid, String mnemonic) async {

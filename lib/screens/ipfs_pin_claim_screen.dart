@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
+import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/external_browser_launcher.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/theme_provider.dart';
@@ -54,6 +55,9 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
   @override
   void initState() {
     super.initState();
+    context.afterBuildAsync(refreshUI: false, () async {
+      (await ipfsPinClaimServiceFactory()).executeFakeApiRequestForWakeUp();
+    });
     print('IpfsPinClaimScreen: Initialized');
   }
 
@@ -151,8 +155,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
     });
 
     try {
-      final bitcoinBase = await ref.read(electrumServiceProvider.future);
-      final ipfsService = IpfsPinClaimService(bitcoinBase: bitcoinBase, serverUrl: _serverUrl);
+      final ipfsService = await ipfsPinClaimServiceFactory();
 
       final price = await ipfsService.fetchBCHWritePrice(_selectedFile!);
       setState(() {
@@ -169,6 +172,9 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
       });
     }
   }
+
+  Future<IpfsPinClaimService> ipfsPinClaimServiceFactory() async =>
+      IpfsPinClaimService(bitcoinBase: await ref.read(electrumServiceProvider.future), serverUrl: _serverUrl);
 
   Future<void> _uploadFile() async {
     if (_selectedFile == null) return;

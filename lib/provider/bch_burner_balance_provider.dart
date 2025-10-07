@@ -16,7 +16,7 @@ final bchBurnerBalanceProvider = StreamProvider<Balance>((ref) {
     streamController.add(balance);
   });
 
-  timer = Timer.periodic(const Duration(seconds: kDebugMode ? 10 : 10), (_) async {
+  timer = Timer.periodic(const Duration(seconds: kDebugMode ? 300 : 10), (_) async {
     try {
       final balance = await _fetchBalance(ref);
       print('Update burner balance: $balance');

@@ -33,6 +33,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
 
   void initState() {
     super.initState();
+    ref.read(profileBalanceProvider).startAutoRefreshBalanceProfile(context);
     final initialIndex = ref.read(currentTabIndexProvider);
     _currentTabIndex = initialIndex;
     _previousTabIndex = initialIndex;
@@ -83,11 +84,11 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   void _moveToTab(int index) {
     final tabData = AppTab.values[index];
 
-    if (index != AppTab.profile.tabIndex) {
-      ref.read(profileBalanceProvider).stopAutoRefreshBalanceProfile();
-    } else {
-      ref.read(profileBalanceProvider).startAutoRefreshBalanceProfile(context);
-    }
+    // if (index != AppTab.profile.tabIndex) {
+    //   ref.read(profileBalanceProvider).stopAutoRefreshBalanceProfile();
+    // } else {
+    //   ref.read(profileBalanceProvider).startAutoRefreshBalanceProfile(context);
+    // }
 
     if (tabData == AppTab.add) {
       ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainCreate, context);

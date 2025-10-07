@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:bitcoin_base/bitcoin_base.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../memo/base/memo_bitcoin_base.dart';
@@ -17,7 +18,7 @@ class ElectrumServiceNotifier extends AsyncNotifier<MemoBitcoinBase> {
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 10;
   static const Duration _reconnectDelay = Duration(seconds: 3);
-  static const Duration _healthCheckInterval = Duration(seconds: 30);
+  static const Duration _healthCheckInterval = Duration(seconds: kDebugMode ? 100 : 10);
 
   @override
   Future<MemoBitcoinBase> build() async {

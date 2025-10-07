@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/providers/token_limits_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../config.dart';
@@ -22,7 +21,7 @@ class PostServiceProfile {
       _collectionName = collectionName;
 
   // --- SIMPLE LIST IMPLEMENTATION FOR PROFILE POSTS ---
-  Future<List<MemoModelPost>> getPostsByCreatorIdList(String creatorId, Ref ref) async {
+  Future<List<MemoModelPost>> getPostsByCreatorIdList(String creatorId, Ref ref, limit) async {
     _print("🔄 PSP: getPostsByCreatorIdList called for creator: $creatorId");
 
     try {
@@ -44,8 +43,8 @@ class PostServiceProfile {
       if (shouldFetchFromFirebase) {
         _print("🔄 PSP: Count changed or first load, fetching from Firebase");
 
-        // Fetch from Firebase with limit
-        var limit = ref.read(profileLimitProvider);
+        // // Fetch from Firebase with limit
+        // var limit = ref.read(profileLimitProvider);
         final firebasePosts = await _fetchPostsFromFirebase(creatorId, limit);
         _print("✅ PSP: Fetched ${firebasePosts.length} posts from Firebase");
 
@@ -60,7 +59,7 @@ class PostServiceProfile {
       } else {
         _print("💾 PSP: Count unchanged, loading from cache");
         // Load from cache
-        final cachedPosts = await postCache.getCachedProfilePosts(creatorId);
+        final cachedPosts = await postCache.getCachedProfilePosts(creatorId, limit);
         _print("📚 PSP: Loaded ${cachedPosts.length} posts from cache");
         return cachedPosts;
       }
@@ -69,7 +68,7 @@ class PostServiceProfile {
 
       // Fallback to cache on error
       final postCache = ref.read(profilePostCacheProvider);
-      final cachedPosts = await postCache.getCachedProfilePosts(creatorId);
+      final cachedPosts = await postCache.getCachedProfilePosts(creatorId, limit);
       _print("🔄 PSP: Fallback to cache, loaded ${cachedPosts.length} posts");
       return cachedPosts;
     }

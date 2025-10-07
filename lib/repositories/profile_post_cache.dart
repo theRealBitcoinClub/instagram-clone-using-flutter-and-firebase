@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
-import 'package:mahakka/providers/token_limits_provider.dart';
 
 import '../memo/isar/memo_model_post_db.dart';
 import '../memo/model/memo_model_post.dart';
@@ -67,8 +66,9 @@ class ProfilePostCache {
   //   _print('✅ PPC: cacheProfilePosts completed for creator: $creatorId');
   // }
 
-  Future<List<MemoModelPost>> getCachedProfilePosts(String creatorId) async {
+  Future<List<MemoModelPost>> getCachedProfilePosts(String creatorId, limit) async {
     _print('👤 PPC: getCachedProfilePosts called for creator: $creatorId');
+    // print("getCachedProfilePosts ref.read(isOwnProfileProvider) ${ref.read(profileLimitProvider)}");
 
     final isar = await _profileIsar;
     try {
@@ -78,7 +78,8 @@ class ProfilePostCache {
           .creatorIdEqualTo(creatorId)
           .postTypeEqualTo(PostTypes.profile.id)
           .sortByCreatedDateTimeDesc()
-          .limit(ref.read(profileLimitProvider))
+          .limit(limit)
+          // .limit(ref.read(profileLimitProvider))
           .findAll();
 
       final posts = postsDb.map((db) => db.toAppModel()).toList();

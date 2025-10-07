@@ -14,10 +14,12 @@ import 'package:mahakka/repositories/profile_post_cache.dart';
 import 'package:mahakka/widgets/profile/posts_categorizer.dart';
 
 import '../providers/navigation_providers.dart';
+import '../providers/token_limits_provider.dart';
 
 class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   String? _lastProfileId;
   String? _lastProfileIdOnLoad;
+  int? _lastProfileLimit;
   StreamSubscription<MemoModelCreator?>? _creatorSubscription;
   String? _currentWatchedCreatorId;
   final bool _debugMode = kDebugMode;
@@ -25,6 +27,10 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
   @override
   Future<ProfileData> build() async {
     _print("🔄 PDN: ProfileDataNotifier build() called");
+
+    // Watch the profileLimitProvider to ensure it's active and reactive
+    final profileLimit = ref.watch(profileLimitProvider);
+    _print("📊 PDN: Current profile limit: $profileLimit");
 
     ref.onDispose(() {
       _print("🔴 PDN: ProfileDataNotifier disposed");
@@ -45,15 +51,16 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
       return ProfileData.empty();
     }
 
-    // Only refresh POSTS if profileId changed
-    if (_lastProfileId != profileId) {
-      _print("🔄 PDN: ProfileId changed from $_lastProfileId to $profileId, loading fresh data");
+    // Only refresh POSTS if profileId OR profileLimit changed
+    if (_lastProfileId != profileId || _lastProfileLimit != profileLimit) {
+      _print("🔄 PDN: ProfileId or limit changed from $_lastProfileId/$_lastProfileLimit to $profileId/$profileLimit, loading fresh data");
       _lastProfileId = profileId;
+      _lastProfileLimit = profileLimit;
       _setupCreatorSubscription(profileId);
-      return await _loadProfileData(profileId);
+      return await _loadProfileData(profileId, profileLimit);
     }
 
-    // Same profile - maintain creator subscription but keep existing posts
+    // Same profile and limit - maintain creator subscription but keep existing posts
     if (_currentWatchedCreatorId != profileId) {
       _print("🔄 PDN: Same profile, setting up creator subscription");
       _setupCreatorSubscription(profileId);
@@ -104,7 +111,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     _print("🔴 PDN: Creator subscription cancelled");
   }
 
-  Future<ProfileData> _loadProfileData(String profileId) async {
+  Future<ProfileData> _loadProfileData(String profileId, int limit) async {
     _print("📥 PDN: Loading profile data for: $profileId");
 
     final postCache = ref.read(profilePostCacheProvider);
@@ -115,7 +122,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     _print("👤 PDN: Creator data loaded: ${creator != null}");
 
     // 2. Load posts using the new list implementation
-    final posts = await _fetchPosts(profileId);
+    final posts = await _fetchPosts(profileId, limit);
     _print("📝 PDN: Posts loaded: ${posts.length}");
 
     final categorizer = PostsCategorizer.fromPosts(posts);
@@ -131,12 +138,12 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     return profileData;
   }
 
-  Future<List<MemoModelPost>> _fetchPosts(String profileId) async {
+  Future<List<MemoModelPost>> _fetchPosts(String profileId, limit) async {
     _print("📝 PDN: Fetching posts for profile: $profileId");
 
     try {
       // Use the new list-based implementation
-      final posts = await ref.read(postServiceProfileProvider).getPostsByCreatorIdList(profileId, ref);
+      final posts = await ref.read(postServiceProfileProvider).getPostsByCreatorIdList(profileId, ref, limit);
       _print("✅ PDN: Successfully fetched ${posts.length} posts");
       return posts;
     } catch (e) {
@@ -144,7 +151,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
 
       // Fallback to cache only
       final postCache = ref.read(profilePostCacheProvider);
-      final cachedPosts = await postCache.getCachedProfilePosts(profileId);
+      final cachedPosts = await postCache.getCachedProfilePosts(profileId, limit);
       if (_debugMode) print(cachedPosts.isNotEmpty ? "📚 PDN: Using cached posts as fallback" : "❌ PDN: No posts available");
       return cachedPosts;
     }

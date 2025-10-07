@@ -388,7 +388,9 @@ final feedLimitProvider = Provider<int>((ref) {
 
 final profileLimitProvider = Provider<int>((ref) {
   final state = ref.watch(tokenLimitsProvider);
-  if (ref.read(isViewingOwnProfileProvider)) {
+  bool isOwnProfile = ref.watch(isOwnProfileProvider);
+  print("profileLimitProvider ref.read(isOwnProfileProvider) $isOwnProfile");
+  if (isOwnProfile) {
     return state.value?.currentLimit.profileLimitOwnProfile ?? TokenLimitEnum.free.profileLimitOwnProfile;
   }
 

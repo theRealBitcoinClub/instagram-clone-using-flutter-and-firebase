@@ -211,7 +211,7 @@ final profileTargetIdProvider = Provider<String>((ref) {
 //   return ref.watch(navigationStateProvider).hasProfileTarget;
 // });
 
-final isViewingOwnProfileProvider = Provider<bool>((ref) {
+final isOwnProfileProvider = Provider<bool>((ref) {
   return ref.watch(navigationStateProvider).isViewingOwnProfile;
 });
 //

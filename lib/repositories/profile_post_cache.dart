@@ -23,8 +23,8 @@ class ProfilePostCache {
     return isar;
   }
 
-  static const int _maxDiskCacheSizeProfile = 1000;
-  static const int _diskCleanupThresholdProfile = 1200;
+  static const int _maxDiskCacheSizeProfile = 10000;
+  static const int _diskCleanupThresholdProfile = 12000;
 
   Future<void> saveProfilePosts(String creatorId, List<MemoModelPost> posts) async {
     _print('👤 PPC: saveProfilePosts called for creator: $creatorId, posts: ${posts.length}');
@@ -45,7 +45,7 @@ class ProfilePostCache {
       await isar.writeTxn(() async {
         // Delete existing posts for this creator
         _print('💾 PPC: Removing existing profile posts for creator: $creatorId');
-        await isar.memoModelPostDbs.where().filter().creatorIdEqualTo(creatorId).deleteAll();
+        await isar.memoModelPostDbs.where().filter().creatorIdEqualTo(creatorId).postTypeEqualTo(PostTypes.profile.id).deleteAll();
 
         _print('💾 PPC: Inserting ${postsDb.length} posts to profile cache');
         await isar.memoModelPostDbs.putAll(postsDb);
@@ -76,6 +76,7 @@ class ProfilePostCache {
           .where()
           .filter()
           .creatorIdEqualTo(creatorId)
+          .postTypeEqualTo(PostTypes.profile.id)
           .sortByCreatedDateTimeDesc()
           .limit(ref.read(profileLimitProvider))
           .findAll();
@@ -94,7 +95,7 @@ class ProfilePostCache {
   // --- Size Limit Enforcement ---
   Future<void> _enforceProfileDiskSizeLimit(Isar isar) async {
     _print('🧹 PPC: Checking profile disk size limit');
-    final currentSize = await isar.memoModelPostDbs.count();
+    final currentSize = await isar.memoModelPostDbs.where().postTypeEqualTo(PostTypes.profile.id).count();
     _print('🧹 PPC: Current profile disk cache size: $currentSize, threshold: $_diskCleanupThresholdProfile');
 
     if (currentSize <= _diskCleanupThresholdProfile) {
@@ -106,7 +107,12 @@ class ProfilePostCache {
     _print('🧹 PPC: Need to remove $entriesToRemove entries from profile cache');
 
     // Remove oldest entries based on createdDateTime
-    final oldEntries = await isar.memoModelPostDbs.where().sortByCreatedDateTime().limit(entriesToRemove).findAll();
+    final oldEntries = await isar.memoModelPostDbs
+        .where()
+        .postTypeEqualTo(PostTypes.profile.id)
+        .sortByCachedAt()
+        .limit(entriesToRemove)
+        .findAll();
 
     _print('🧹 PPC: Found ${oldEntries.length} old profile entries to remove');
     await isar.writeTxn(() async {

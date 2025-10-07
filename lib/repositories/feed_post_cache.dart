@@ -27,8 +27,8 @@ class FeedPostCache {
     return isar;
   }
 
-  static const int _maxDiskCacheSizeFeed = 1000;
-  static const int _diskCleanupThresholdFeed = 1200;
+  static const int _maxDiskCacheSizeFeed = 10000;
+  static const int _diskCleanupThresholdFeed = 12000;
 
   // Get muted creators list
   List<String> get _mutedCreators {
@@ -152,7 +152,7 @@ class FeedPostCache {
 
   Future<void> _enforceFeedDiskSizeLimit(Isar isar) async {
     _print('🧹 FPC: Checking feed disk size limit');
-    final currentSize = await isar.memoModelPostDbs.count();
+    final currentSize = await isar.memoModelPostDbs.where().postTypeEqualTo(PostTypes.feed.id).count();
     _print('🧹 FPC: Current feed disk cache size: $currentSize, threshold: $_diskCleanupThresholdFeed');
 
     if (currentSize <= _diskCleanupThresholdFeed) {
@@ -163,7 +163,7 @@ class FeedPostCache {
     final entriesToRemove = currentSize - _maxDiskCacheSizeFeed;
     _print('🧹 FPC: Need to remove $entriesToRemove entries from feed cache');
 
-    final oldEntries = await isar.memoModelPostDbs.where().sortByCachedAt().limit(entriesToRemove).findAll();
+    final oldEntries = await isar.memoModelPostDbs.where().postTypeEqualTo(PostTypes.feed.id).sortByCachedAt().limit(entriesToRemove).findAll();
 
     _print('🧹 FPC: Found ${oldEntries.length} old feed entries to remove');
     await isar.memoModelPostDbs.deleteAll(oldEntries.map((e) => e.id).toList());

@@ -13,7 +13,7 @@ final unifiedIsarProvider = FutureProvider<Isar>((ref) async {
     [MemoModelCreatorDbSchema, MemoModelPostDbSchema, CachedTranslationDbSchema],
     directory: dir.path,
     name: 'mahakka_mka',
-    maxSizeMiB: 72, // 256MB per database
+    maxSizeMiB: 144, // 256MB per database
     // compactOnLaunch: const CompactCondition(
     //   minFileSize: 50 * 1024 * 1024, // 50MB minimum file size
     //   minBytes: 10 * 1024 * 1024, // Free at least 10MB

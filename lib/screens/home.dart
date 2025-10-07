@@ -38,7 +38,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
 
   void initState() {
     super.initState();
-    ref.read(profileBalanceProvider).startAutoRefreshBalanceProfile(context);
     final initialIndex = ref.read(currentTabIndexProvider);
     _currentTabIndex = initialIndex;
     _previousTabIndex = initialIndex;
@@ -58,15 +57,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     });
   }
 
-  // void _tabControllerListener() {
-  //   if (_tabController.indexIsChanging || _tabController.index != ref.read(currentTabIndexProvider)) {
-  //     if (_tabController.index != ref.read(currentTabIndexProvider)) {
-  //       // ref.read(navigationStateProvider.notifier).setTab(_tabController.index);
-  //       // ref.read(currentTabIndexProvider.notifier).setTab(_tabController.index);
-  //     }
-  //   }
-  // }
-
   void _animateIndicatorToTab(int targetIndex) {
     final int startIndex = _currentTabIndex;
     final int endIndex = targetIndex;
@@ -85,7 +75,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
 
   @override
   void dispose() {
-    // _tabController.removeListener(_tabControllerListener);
     _tabController.dispose();
     _animationController.dispose();
     _indicatorAnimCtrl.dispose();
@@ -94,13 +83,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
 
   void _moveToTab(int index) {
     final tabData = AppTab.values[index];
-
-    // if (index != AppTab.profile.tabIndex) {
-    //   ref.read(profileBalanceProvider).stopAutoRefreshBalanceProfile();
-    // } else {
-    //   ref.read(profileBalanceProvider).startAutoRefreshBalanceProfile(context);
-    // }
-
     if (tabData == AppTab.add) {
       ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainCreate, context);
       ref.read(navigationStateProvider.notifier).navigateToAddPost();
@@ -111,32 +93,15 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       ref.read(navigationStateProvider.notifier).navigateToFeed();
     }
 
-    // ref.read(navigationStateProvider.notifier).setTab(index);
     _animateIndicatorToTab(index);
   }
-
-  // void _moveToTab(int index) {
-  //   final tabData = AppTab.values[index];
-  //
-  //   if (tabData == AppTab.add) {
-  //     ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainCreate, context);
-  //   } else if (tabData == AppTab.profile) {
-  //     ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainProfile, context);
-  //   }
-  //
-  //   if (index != AppTab.profile.tabIndex) {
-  //     ref.read(profileDataProvider.notifier).stopAutoRefreshBalanceProfile();
-  //     ref.read(profileTargetIdProvider.notifier).state = null;
-  //   }
-  //
-  //   ref.read(tabIndexProvider.notifier).setTab(index);
-  //   _animateIndicatorToTab(index);
-  // }
 
   @override
   Widget build(BuildContext context) {
     final currentTabIndex = ref.watch(currentTabIndexProvider); // Watch the Riverpod state
     final ThemeData theme = Theme.of(context);
+    ref.watch(profileBalanceProvider);
+    ref.read(profileBalanceProvider).startAutoRefreshBalanceProfile(context);
 
     ref.listen<AsyncValue<TokenLimitsState>>(tokenLimitsProvider, (previous, current) {
       // Perform side effects when token limits change
@@ -179,7 +144,6 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       final currentTabIndex = ref.read(currentTabIndexProvider);
 
       if (currentTabIndex != 0) {
-        // ref.read(navigationStateProvider.notifier).navigateBackToFeed();
         _moveToTab(0);
         return false;
       }

@@ -35,9 +35,9 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     ref.onDispose(() {
       _print("🔴 PDN: ProfileDataNotifier disposed");
       _cancelCreatorSubscription();
-      Future.microtask(() {
-        ref.read(profileBalanceProvider).stopBalanceTimers();
-      });
+      // Future.microtask(() {
+      //   ref.read(profileBalanceProvider).stopBalanceTimers();
+      // });
     });
 
     state = AsyncData(ProfileData.empty());

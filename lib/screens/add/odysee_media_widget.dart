@@ -13,11 +13,6 @@ class OdyseeMediaWidget extends ConsumerWidget {
 
   const OdyseeMediaWidget({super.key, required this.theme, required this.colorScheme, required this.textTheme, this.videoUrl});
 
-  String _shortenUrl(String url) {
-    if (url.length <= 30) return url;
-    return '${url.substring(0, 15)}...${url.substring(url.length - 15)}';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final odyseeUrl = videoUrl ?? ref.watch(odyseeUrlProvider);

@@ -390,50 +390,53 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                             )
                           : AnimGrowFade(
                               show: _selectedFile != null,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    _selectedFile!.path.split('/').last,
-                                    style: textTheme.bodySmall!.copyWith(letterSpacing: 0.5, color: colorScheme.secondary),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 24),
-                                  if (_pinClaimPrice != null)
-                                    AnimGrowFade(
-                                      show: _pinClaimPrice != null,
-                                      child: GestureDetector(
-                                        onTap: () => ExternalBrowserLauncher().launchUrlWithConfirmation(
-                                          context,
-                                          "https://psffpp.com/docs/overview/#payment",
-                                        ),
-                                        child: Container(
-                                          width: double.infinity,
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center, // Center the content
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                'Upload price: ~${((_pinClaimPrice! * 100000000)).toStringAsFixed(0)} sats',
-                                                style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface, letterSpacing: 1.5),
-                                              ),
-                                              SizedBox(width: 9),
-                                              Icon(Icons.info_outline_rounded, size: 22, color: colorScheme.onSurface),
-                                            ],
+                              child: Container(
+                                width: double.infinity,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      _selectedFile!.path.split('/').last,
+                                      style: textTheme.bodySmall!.copyWith(letterSpacing: 0.5, color: colorScheme.secondary),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    if (_pinClaimPrice != null)
+                                      AnimGrowFade(
+                                        show: _pinClaimPrice != null,
+                                        child: GestureDetector(
+                                          onTap: () => ExternalBrowserLauncher().launchUrlWithConfirmation(
+                                            context,
+                                            "https://psffpp.com/docs/overview/#payment",
+                                          ),
+                                          child: Container(
+                                            width: double.infinity,
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center, // Center the content
+                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  'Upload price: ~${((_pinClaimPrice! * 100000000)).toStringAsFixed(0)} sats',
+                                                  style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface, letterSpacing: 1.5),
+                                                ),
+                                                SizedBox(width: 9),
+                                                Icon(Icons.info_outline_rounded, size: 22, color: colorScheme.onSurface),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
+                                    const SizedBox(height: 16),
+                                    OutlinedButton(
+                                      onPressed: _removeFile,
+                                      style: ButtonStyle(
+                                        foregroundColor: MaterialStateProperty.all(colorScheme.error.withAlpha(198)),
+                                        side: MaterialStateProperty.all(BorderSide(color: colorScheme.error.withAlpha(198))),
+                                      ),
+                                      child: const Text('CHANGE IMAGE'),
                                     ),
-                                  const SizedBox(height: 16),
-                                  OutlinedButton(
-                                    onPressed: _removeFile,
-                                    style: ButtonStyle(
-                                      foregroundColor: MaterialStateProperty.all(colorScheme.error.withAlpha(198)),
-                                      side: MaterialStateProperty.all(BorderSide(color: colorScheme.error.withAlpha(198))),
-                                    ),
-                                    child: const Text('CHANGE IMAGE'),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                     ),

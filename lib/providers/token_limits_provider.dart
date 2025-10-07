@@ -212,7 +212,7 @@ final tokenLimitsProvider = AsyncNotifierProvider<TokenLimitsNotifier, TokenLimi
 
 class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
   StreamSubscription<MemoModelCreator?>? _creatorSubscription;
-  static const _memoryDuration = Duration(minutes: 1);
+  static const _memoryDuration = Duration(minutes: 5);
   DateTime? _lastDowngradeDetection;
   int? _cachedBalanceForDowngrade;
 

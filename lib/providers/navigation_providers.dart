@@ -34,7 +34,7 @@ class NavigationState {
 
   // Helper getters
   // bool get hasProfileTarget => profileTargetId.isNotEmpty;
-  bool get isProfileTabActive => currentTabIndex == AppTab.profile.tabIndex;
+  // bool get isProfileTabActive => currentTabIndex == AppTab.profile.tabIndex;
 }
 
 // Navigation state notifier with convenience methods
@@ -47,12 +47,13 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
   void _doNavigate({
     required int tabIndex,
     String? profileTargetId, // null means "no change", empty string means "reset"
-    bool isOwnProfile = true,
+    // bool isOwnProfile = true,
     WebViewShow? webViewTarget,
     String? webViewValue,
     String? snackbarMessage,
     BuildContext? context,
   }) {
+    bool isOwnProfile = profileTargetId == null || profileTargetId.isEmpty ? true : _ref.read(userProvider)!.id == profileTargetId;
     // Validate tab index
     if (tabIndex < 0 || tabIndex >= AppTab.totalTabs) return;
 
@@ -99,20 +100,12 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
 
   // Navigate to profile tab (own profile)
   void navigateToOwnProfile() {
-    final user = _ref.read(userProvider);
-    if (user != null) {
-      _doNavigate(tabIndex: AppTab.profile.tabIndex, profileTargetId: user.profileIdMemoBch, isOwnProfile: true);
-    }
+    _doNavigate(tabIndex: AppTab.profile.tabIndex, profileTargetId: _ref.read(userProvider)!.id);
   }
 
   // Navigate to specific creator profile
   void navigateToCreatorProfile(String creatorId) {
-    _doNavigate(tabIndex: AppTab.profile.tabIndex, profileTargetId: creatorId, isOwnProfile: false);
-  }
-
-  // Navigate from avatar to profile
-  void navigateFromAvatarToProfile(String creatorId, {bool isOwnProfile = false}) {
-    _doNavigate(tabIndex: AppTab.profile.tabIndex, profileTargetId: creatorId, isOwnProfile: isOwnProfile);
+    _doNavigate(tabIndex: AppTab.profile.tabIndex, profileTargetId: creatorId);
   }
 
   // Navigate to webview with tag (resets profile target)

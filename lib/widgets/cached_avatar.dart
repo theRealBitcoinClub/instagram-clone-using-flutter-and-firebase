@@ -150,7 +150,7 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
     if (!widget.enableNavigation && creator != null) {
       showCreatorImageDetail(context: context, creator: creator);
     }
-    ref.read(navigationStateProvider.notifier).navigateFromAvatarToProfile(widget.creatorId);
+    ref.read(navigationStateProvider.notifier).navigateToCreatorProfile(widget.creatorId);
   }
 
   // New method to handle mute action

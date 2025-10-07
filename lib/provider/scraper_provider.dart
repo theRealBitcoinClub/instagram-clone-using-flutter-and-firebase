@@ -19,7 +19,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
   final Duration _initialDelay = Duration(seconds: 30);
   final Duration _scrapeInterval = kDebugMode && !forceScrape ? Duration(hours: 3) : Duration(seconds: 60);
-  bool _debugMode = kDebugMode;
+  final bool _debugMode = kDebugMode;
 
   static const String _lastScrapeKey = 'last_scrape_timestamp';
   late SharedPreferences _prefs;
@@ -127,12 +127,12 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
         }
       } else {
         try {
-          await MemoScraperTopic(ref, false).startScrapeTopics(cacheId + "topics", 0, 0);
+          await MemoScraperTopic(ref, saveToFirebase).startScrapeTopics(cacheId + "topics", 0, 0);
         } catch (e) {
           _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
         }
         try {
-          await MemoScraperTag(cacheId + "recent", ref, false).startScrapeTags(["/recent"], 25, 0);
+          await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], 25, 0);
         } catch (e) {
           _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
         }

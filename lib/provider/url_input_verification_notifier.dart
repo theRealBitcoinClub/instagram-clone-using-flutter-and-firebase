@@ -25,7 +25,10 @@ class UrlInputVerificationNotifier extends StateNotifier<UrlInputVerificationSta
 
   UrlInputVerificationNotifier(this.ref) : super(UrlInputVerificationState());
 
+  String convertUrl(String url) => url.contains(RegExp(r'%[0-9A-Fa-f]{2}')) ? Uri.decodeComponent(url) : url;
+
   Future<void> verifyAndProcessInput(WidgetRef ref, String input) async {
+    input = convertUrl(input);
     // if (input.trim().isEmpty || input == state.lastProcessedContent) {
     //   state = state.copyWith(hasValidInput: false);
     //   return;

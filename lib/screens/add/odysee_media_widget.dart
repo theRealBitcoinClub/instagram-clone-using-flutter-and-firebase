@@ -51,7 +51,7 @@ class OdyseeMediaWidget extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Odysee URL: ${odyseeUrl}",
+                    "${odyseeUrl}",
                     style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                     textAlign: TextAlign.center,
                     maxLines: 1,

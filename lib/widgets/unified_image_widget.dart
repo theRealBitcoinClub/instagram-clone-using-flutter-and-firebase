@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_avif/flutter_avif.dart';
@@ -125,7 +127,8 @@ class UnifiedImageWidgetState extends ConsumerState<UnifiedImageWidget> {
 
     // Apply constraints and container styling
     return Container(
-      width: widget.width,
+      alignment: Alignment.center,
+      width: double.infinity,
       height: widget.height,
       constraints: (widget.width != null || widget.height != null)
           ? null
@@ -227,18 +230,65 @@ class UnifiedImageWidgetState extends ConsumerState<UnifiedImageWidget> {
       fadeInDuration: const Duration(milliseconds: 300),
       fadeOutDuration: const Duration(milliseconds: 300),
       imageBuilder: (context, imageProvider) {
-        return AnimGrowFade(
-          show: true,
-          child: Image(
-            image: imageProvider,
-            fit: getBoxFit(currentFitMode),
-            width: double.infinity, // Fill available width
-            // Don't set height - let it determine height naturally
-            alignment: Alignment.center,
-          ),
+        return FutureBuilder(
+          future: _getImageSize(imageProvider),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final imageSize = snapshot.data as Size;
+              final screenWidth = MediaQuery.of(context).size.width;
+
+              // If image is smaller than screen width, use natural size with original fit
+              if (imageSize.width < screenWidth) {
+                return AnimGrowFade(
+                  show: true,
+                  child: Center(
+                    child: Image(
+                      image: imageProvider,
+                      width: imageSize.width, // Use natural width
+                      height: imageSize.height, // Use natural height
+                      fit: getBoxFit(currentFitMode), // Keep your original fit mode
+                      alignment: Alignment.center,
+                    ),
+                  ),
+                );
+              }
+
+              // Otherwise, use full width with your original fit mode
+              return AnimGrowFade(
+                show: true,
+                child: Center(
+                  child: Image(
+                    image: imageProvider,
+                    width: double.infinity,
+                    fit: getBoxFit(currentFitMode), // Keep your original fit mode
+                    alignment: Alignment.center,
+                  ),
+                ),
+              );
+            }
+
+            // Loading state - use your original logic while image loads
+            return AnimGrowFade(
+              show: true,
+              child: Center(
+                child: Image(image: imageProvider, fit: getBoxFit(currentFitMode), width: double.infinity, alignment: Alignment.center),
+              ),
+            );
+          },
         );
       },
     );
+  }
+
+  // Helper function to get image dimensions
+  Future<Size> _getImageSize(ImageProvider provider) async {
+    final config = await provider.resolve(ImageConfiguration.empty);
+    final completer = Completer<Size>();
+    final listener = ImageStreamListener((ImageInfo info, bool _) {
+      completer.complete(Size(info.image.width.toDouble(), info.image.height.toDouble()));
+    });
+    config.addListener(listener);
+    return completer.future;
   }
 
   Widget _buildDefaultPlaceholder(ColorScheme colorScheme) {

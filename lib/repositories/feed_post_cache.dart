@@ -7,7 +7,6 @@ import '../memo/isar/memo_model_post_db.dart';
 import '../memo/model/memo_model_post.dart';
 import '../provider/isar_provider.dart';
 import '../provider/mute_creator_provider.dart';
-import '../providers/token_limits_provider.dart';
 
 final feedPostCacheProvider = Provider((ref) => FeedPostCache(ref));
 
@@ -36,9 +35,9 @@ class FeedPostCache {
   }
 
   // Check if we can load more items
-  bool get canLoadMore {
-    return _totalLoadedItemsFromCache < ref.read(feedLimitProvider);
-  }
+  // bool get canLoadMore {
+  //   return _totalLoadedItemsFromCache < _currentFeedLimit;
+  // }
 
   // Reset loaded items counter (call this when feed is rebuilt)
   void resetLoadedItems() {
@@ -86,12 +85,12 @@ class FeedPostCache {
     }
   }
 
-  Future<List<MemoModelPost>?> getFeedPage(int pageNumber) async {
+  Future<List<MemoModelPost>?> getFeedPage(int pageNumber, int limit) async {
     _print('📄 FPC: getFeedPage called - page: $pageNumber');
 
     // Check if we can load more items
-    if (!canLoadMore) {
-      _print('🚫 FPC: Maximum load limit reached, current {$_totalLoadedItemsFromCache} (max ${ref.read(feedLimitProvider)} items)');
+    if (_totalLoadedItemsFromCache >= limit) {
+      _print('🚫 FPC: Maximum load limit reached, current {$_totalLoadedItemsFromCache} (max $limit items)');
       return null;
     }
 
@@ -135,9 +134,7 @@ class FeedPostCache {
 
       if (posts.isNotEmpty) {
         _totalLoadedItemsFromCache += posts.length;
-        _print(
-          '✅ FPC: Returning feed page from disk cache: ${posts.length} posts (total loaded: $_totalLoadedItemsFromCache/${ref.read(feedLimitProvider)})',
-        );
+        _print('✅ FPC: Returning feed page from disk cache: ${posts.length} posts (total loaded: $_totalLoadedItemsFromCache/$limit)');
         return posts;
       }
     } catch (e) {

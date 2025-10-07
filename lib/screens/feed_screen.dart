@@ -243,7 +243,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     _print('FSCR:📜 ListView itemCount breakdown:');
     _print('FSCR:   - base posts: ${feedState.posts.length}');
     _print('FSCR:   - loadingMore indicator: ${feedState.isLoadingMorePostsAtBottom ? 1 : 0}');
-    _print('FSCR:   - free plan limit: ${feedState.isMaxFreeLimit ? 1 : 0}');
+    // _print('FSCR:   - free plan limit: ${feedState.isMaxFreeLimit ? 1 : 0}');
     print(
       'FSCR:   - end message: ${(!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimit) ? 1 : 0}',
     );

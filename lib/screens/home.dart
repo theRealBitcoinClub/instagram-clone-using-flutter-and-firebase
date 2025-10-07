@@ -10,12 +10,14 @@ import 'package:mahakka/screens/add_screen.dart';
 import 'package:mahakka/screens/feed_screen.dart';
 import 'package:mahakka/screens/profile_screen_widget.dart';
 import 'package:mahakka/tab_item_data.dart';
+import 'package:mahakka/utils/snackbar.dart';
 
 import '../intros/intro_animated_icon.dart';
 import '../ipfs/ipfs_pin_claim_service.dart';
 import '../memo/memo_webview_screen.dart';
 import '../provider/electrum_provider.dart';
 import '../provider/scraper_provider.dart';
+import '../providers/token_limits_provider.dart';
 
 class HomeSceen extends ConsumerStatefulWidget {
   const HomeSceen({Key? key}) : super(key: key);
@@ -135,6 +137,13 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   Widget build(BuildContext context) {
     final currentTabIndex = ref.watch(currentTabIndexProvider); // Watch the Riverpod state
     final ThemeData theme = Theme.of(context);
+
+    ref.listen<AsyncValue<TokenLimitsState>>(tokenLimitsProvider, (previous, current) {
+      // Perform side effects when token limits change
+      if (current.hasValue && previous?.value?.currentLimit != current.value?.currentLimit) {
+        showSnackBar('Tier changed to: ${current.value?.currentLimit.name}', type: SnackbarType.success);
+      }
+    });
 
     // Sync local state with Riverpod state when it changes externally
     if (currentTabIndex != _currentTabIndex && !_indicatorAnimCtrl.isAnimating) {

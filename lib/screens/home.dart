@@ -100,8 +100,9 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   Widget build(BuildContext context) {
     final currentTabIndex = ref.watch(currentTabIndexProvider); // Watch the Riverpod state
     final ThemeData theme = Theme.of(context);
+    ref.watch(tokenLimitsProvider);
     ref.watch(profileBalanceProvider);
-    ref.read(profileBalanceProvider).startAutoRefreshBalanceProfile(context);
+    // ref.read(profileBalanceProvider).startAutoRefreshBalanceProfile();
 
     ref.listen<AsyncValue<TokenLimitsState>>(tokenLimitsProvider, (previous, current) {
       // Perform side effects when token limits change

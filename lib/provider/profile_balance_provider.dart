@@ -16,6 +16,7 @@ final profileBalanceProvider = Provider<ProfileBalanceProvider>((ref) {
     print('🗑️ PBP: ♻️ ProfileBalanceProvider disposed - stopping timers');
     provider.stopBalanceTimers();
   });
+  provider.startAutoRefreshBalanceProfile();
   return provider;
 });
 
@@ -50,15 +51,13 @@ class ProfileBalanceProvider {
       '📊 PBP: 📈 Timer states before stop - Balance: ${_balanceRefreshTimer != null ? "RUNNING" : "STOPPED"}, QR: ${_qrDialogRefreshTimer != null ? "RUNNING" : "STOPPED"}',
     );
 
-    _balanceRefreshTimer?.cancel();
-    _balanceRefreshTimer = null;
-    _qrDialogRefreshTimer?.cancel();
-    _qrDialogRefreshTimer = null;
+    _stopProfileRefreshTimer();
+    _stopQrDialogTimer();
 
     _print('✅ PBP: ⏰ All timers stopped successfully');
   }
 
-  Future<void> refreshBalances(BuildContext ctx) async {
+  Future<void> refreshBalances() async {
     _print('🔄 PBP: 💰 refreshBalances() called');
     _print('🌳 PBP: 📍 Execution path: refreshBalances() → getCreator() → refreshBalances() → notifyStateUpdateCreator()');
 
@@ -82,7 +81,7 @@ class ProfileBalanceProvider {
       }
 
       _print('📢 PBP: 🔄 Notifying state update for creator');
-      ref.read(profileDataNotifier.notifier).notifyStateUpdateCreator(ctx, c: creator);
+      ref.read(profileDataNotifier.notifier).notifyStateUpdateCreator(c: creator);
       _print('📢 PBP: 🔄 Notifying creator repository of update');
       ref.read(creatorRepositoryProvider).notifyCreatorUpdated(profileId, creator);
       _print('✅ PBP: 📢 All notifications sent');
@@ -211,7 +210,7 @@ class ProfileBalanceProvider {
     ref.invalidate(creatorRepositoryProvider);
 
     _print('📢 PBP: 🔄 Notifying profile data state update');
-    ref.read(profileDataNotifier.notifier).notifyStateUpdateCreator(ctx);
+    ref.read(profileDataNotifier.notifier).notifyStateUpdateCreator();
 
     _print('📢 PBP: 🔄 Notifying creator repository of update');
     ref.read(creatorRepositoryProvider).notifyCreatorUpdated(profileId, creator);
@@ -231,32 +230,32 @@ class ProfileBalanceProvider {
 
     _print('✅ PBP: ⏰ QR Dialog timer stopped');
   }
+  //
+  // void stopAutoRefreshBalanceProfile() {
+  //   _print('🔄 PBP: ⏹️ stopAutoRefreshBalanceProfile() called');
+  //   _print('🌳 PBP: 📍 Execution path: stopAutoRefreshBalanceProfile() → _stopProfileRefreshTimer()');
+  //
+  //   _stopProfileRefreshTimer();
+  //   _print('✅ PBP: ⏹️ stopAutoRefreshBalanceProfile() completed');
+  // }
 
-  void stopAutoRefreshBalanceProfile() {
-    _print('🔄 PBP: ⏹️ stopAutoRefreshBalanceProfile() called');
-    _print('🌳 PBP: 📍 Execution path: stopAutoRefreshBalanceProfile() → _stopProfileRefreshTimer()');
-
-    _stopProfileRefreshTimer();
-    _print('✅ PBP: ⏹️ stopAutoRefreshBalanceProfile() completed');
-  }
-
-  void startAutoRefreshBalanceProfile(BuildContext ctx) {
+  void startAutoRefreshBalanceProfile() {
     _print('🔄 PBP: ▶️ startAutoRefreshBalanceProfile() called');
     _print('🌳 PBP: 📍 Execution path: startAutoRefreshBalanceProfile() → _stopProfileRefreshTimer() → _startBalanceRefreshTimerProfile()');
 
     _stopProfileRefreshTimer();
-    _startBalanceRefreshTimerProfile(ctx);
+    _startBalanceRefreshTimerProfile();
     _print('✅ PBP: ▶️ startAutoRefreshBalanceProfile() completed');
   }
 
-  void _startBalanceRefreshTimerProfile(BuildContext ctx) {
+  void _startBalanceRefreshTimerProfile() {
     _print('🔄 PBP: ⏰ _startBalanceRefreshTimerProfile() called');
     _print('📊 PBP: 📈 Balance Timer state before start: ${_balanceRefreshTimer != null ? "RUNNING" : "STOPPED"}');
 
     _balanceRefreshTimer?.cancel();
     _balanceRefreshTimer = Timer.periodic(_refreshBalanceInterval, (_) async {
       _print('🔄 PBP: 🔄 Profile balance timer tick');
-      await _refreshBalancesPeriodicallyOnProfile(ctx);
+      await _refreshBalancesPeriodicallyOnProfile();
     });
 
     _print('✅ PBP: ⏰ Profile balance refresh timer started with interval: ${_refreshBalanceInterval.inSeconds}s');
@@ -272,7 +271,7 @@ class ProfileBalanceProvider {
     _print('✅ PBP: ⏰ Profile refresh timer stopped');
   }
 
-  Future<void> _refreshBalancesPeriodicallyOnProfile(BuildContext ctx) async {
+  Future<void> _refreshBalancesPeriodicallyOnProfile() async {
     _print('🔄 PBP: 🔄 _refreshBalancesPeriodicallyOnProfile() called');
     _print('🌳 PBP: 📍 Execution path: _refreshBalancesPeriodicallyOnProfile() → refreshBalances()');
 
@@ -302,7 +301,7 @@ class ProfileBalanceProvider {
         _print('✅ PBP: 👤 Valid creator found, scheduling balance refresh');
         Future.microtask(() async {
           _print('🔄 PBP: 🔄 Microtask executing balance refresh');
-          await refreshBalances(ctx);
+          await refreshBalances();
           _print('✅ PBP: 🔄 Microtask balance refresh completed');
         });
       } else {

@@ -167,7 +167,7 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
           _lastProfileIdOnLoad = profileId;
           ref.read(creatorRepositoryProvider).refreshCreatorCache(profileId);
           refreshUserRegisteredFlag();
-          ref.read(profileBalanceProvider).refreshBalances(ctx);
+          ref.read(profileBalanceProvider).refreshBalances();
         }
       }
     });
@@ -187,14 +187,14 @@ class ProfileDataNotifier extends AsyncNotifier<ProfileData> {
     }
   }
 
-  void notifyStateUpdateCreator(BuildContext ctx, {MemoModelCreator? c}) async {
+  void notifyStateUpdateCreator({MemoModelCreator? c}) async {
     String pId = ref.read(currentProfileIdProvider)!;
     _print("🔄 PDN: Manual state update notification");
     _print("🔄 PDN: Manual state update notification watchedId $_currentWatchedCreatorId");
     _print("🔄 PDN: Manual state update notification targetId $pId");
 
     MemoModelCreator? creator = c ?? await ref.read(creatorRepositoryProvider).getCreator(pId);
-    if (state.value != null && creator != null && ctx.mounted) {
+    if (state.value != null && creator != null) {
       state = AsyncValue.data(state.value!.copyWith(creator: creator));
     }
   }

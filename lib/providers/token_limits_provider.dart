@@ -310,16 +310,21 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
         final int cachedBalance = _cachedBalanceForDowngrade!;
 
         if (newTokenBalance < cachedBalance) {
-          // Potential downgrade - use cached value for one minute
+          // Potential downgrade - use cached value for protection period
           effectiveBalance = cachedBalance;
           print('🔄 TokenLimits: Using cached balance ($cachedBalance) instead of new balance ($newTokenBalance) for downgrade protection');
+
+          // DON'T reset timer here - we want the protection to eventually expire
         } else if (newTokenBalance > cachedBalance) {
           // Upgrade detected - use new value immediately and update cache
           effectiveBalance = newTokenBalance;
           _saveCachedBalance(newTokenBalance);
           print('⬆️ TokenLimits: Upgrade detected, using new balance: $newTokenBalance');
+        } else {
+          // ✅ BALANCE UNCHANGED - RESET THE TIMER on successful check
+          _saveCachedBalance(newTokenBalance); // This resets the timer
+          print('🔄 TokenLimits: Balance unchanged, resetting protection timer');
         }
-        // If equal, no change needed
       } else {
         // No valid cache or cache expired - save current balance as new baseline
         _saveCachedBalance(newTokenBalance);
@@ -333,7 +338,7 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
           currentLimit: currentLimit,
           tokenBalance: effectiveBalance,
           creator: creator,
-          actualTokenBalance: newTokenBalance, // Store actual value for reference
+          actualTokenBalance: newTokenBalance,
           usingCachedValue: hasValidCache && newTokenBalance < _cachedBalanceForDowngrade!,
         ),
       );

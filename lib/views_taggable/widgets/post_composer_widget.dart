@@ -89,7 +89,7 @@ class PostComposerWidget extends StatelessWidget {
 
   void onActionText(String action, BuildContext ctx) {
     ctx.afterLayout(() {
-      final text = controller.text;
+      final text = controller.text.trim().isEmpty ? controller.text.trim() : controller.text;
       final selection = controller.selection;
       final cursorPosition = selection.baseOffset;
 

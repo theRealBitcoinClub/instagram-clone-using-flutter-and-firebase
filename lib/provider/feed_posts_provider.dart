@@ -104,7 +104,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
   final Ref _ref; // Add Ref here
   int _currentFeedLimit = 0;
 
-  static const String _lastTotalCountKey = 'last_total_post_count';
+  // static const String _lastTotalCountKey = 'last_total_post_count';
   SharedPreferences? _prefs;
 
   FeedPostsNotifier(this._ref, this._postService, this._cacheRepository)
@@ -246,12 +246,13 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
       throw Exception('Failed to get total post count');
     }
 
+    String lastTotalCountKey = 'last_total_post_count$_currentFeedLimit';
     // Get previous total count from SharedPreferences
-    final int previousTotalCount = _prefs?.getInt(_lastTotalCountKey) ?? 0;
+    final int previousTotalCount = _prefs?.getInt(lastTotalCountKey) ?? 0;
     print('FPPR:📊 Previous total post count: $previousTotalCount');
 
     // Update stored total count
-    await _prefs?.setInt(_lastTotalCountKey, currentTotalCount);
+    await _prefs?.setInt(lastTotalCountKey, currentTotalCount);
 
     state = state.copyWith(totalPostCount: currentTotalCount);
 

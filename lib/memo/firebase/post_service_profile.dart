@@ -21,44 +21,26 @@ class PostServiceProfile {
       _collectionName = collectionName;
 
   // --- SIMPLE LIST IMPLEMENTATION FOR PROFILE POSTS ---
-  Future<List<MemoModelPost>> getPostsByCreatorIdList(String creatorId, Ref ref, limit) async {
+  Future<List<MemoModelPost>> getPostsByCreatorIdList(String creatorId, Ref ref, int limit) async {
     _print("🔄 PSP: getPostsByCreatorIdList called for creator: $creatorId");
 
     try {
       final postCache = ref.read(profilePostCacheProvider);
       final sharedPrefs = await SharedPreferences.getInstance();
-      final countKey = 'p232post_count_$creatorId';
+      final countKey = '${limit}_post_count_$creatorId';
 
-      // 1. Get current count from Firebase
       final currentCount = await _getPostCountByCreatorId(creatorId);
       _print("📊 PSP: Current post count for $creatorId: $currentCount");
 
-      // 2. Get stored count from SharedPreferences
       final storedCount = sharedPrefs.getInt(countKey) ?? 0;
       _print("💾 PSP: Stored post count for $creatorId: $storedCount");
 
-      // 3. Check if we need to fetch from Firebase
       final shouldFetchFromFirebase = storedCount == 0 || currentCount != storedCount;
 
       if (shouldFetchFromFirebase) {
-        _print("🔄 PSP: Count changed or first load, fetching from Firebase");
-
-        // // Fetch from Firebase with limit
-        // var limit = ref.read(profileLimitProvider);
-        final firebasePosts = await _fetchPostsFromFirebase(creatorId, limit);
-        _print("✅ PSP: Fetched ${firebasePosts.length} posts from Firebase");
-
-        // Save to cache
-        await postCache.saveProfilePosts(creatorId, firebasePosts);
-
-        // Update stored count
-        await sharedPrefs.setInt(countKey, currentCount);
-        _print("💾 PSP: Updated stored count to: $currentCount");
-
-        return firebasePosts;
+        return await fetchFromFirebaseThenSaveToCache(creatorId, limit, postCache, sharedPrefs, countKey, currentCount);
       } else {
         _print("💾 PSP: Count unchanged, loading from cache");
-        // Load from cache
         final cachedPosts = await postCache.getCachedProfilePosts(creatorId, limit);
         _print("📚 PSP: Loaded ${cachedPosts.length} posts from cache");
         return cachedPosts;
@@ -72,6 +54,28 @@ class PostServiceProfile {
       _print("🔄 PSP: Fallback to cache, loaded ${cachedPosts.length} posts");
       return cachedPosts;
     }
+  }
+
+  Future<List<MemoModelPost>> fetchFromFirebaseThenSaveToCache(
+    String creatorId,
+    int limit,
+    ProfilePostCache postCache,
+    SharedPreferences sharedPrefs,
+    String countKey,
+    int currentCount,
+  ) async {
+    _print("🔄 PSP: Count changed or first load, fetching from Firebase");
+
+    // var limit = ref.read(profileLimitProvider);
+    final firebasePosts = await _fetchPostsFromFirebase(creatorId, limit);
+    _print("✅ PSP: Fetched ${firebasePosts.length} posts from Firebase");
+
+    await postCache.saveProfilePosts(creatorId, firebasePosts);
+
+    await sharedPrefs.setInt(countKey, currentCount);
+    _print("💾 PSP: Updated stored count to: $currentCount");
+
+    return firebasePosts;
   }
 
   Future<int> _getPostCountByCreatorId(String creatorId) async {

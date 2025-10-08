@@ -115,7 +115,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     _print('FSCR:   - isRefreshing: ${feedState.isRefreshingByUserRequest}');
     _print('FSCR:   - errorMessage: ${feedState.errorMessage}');
     final shouldShowIntro = ref.read(introStateNotifierProvider.notifier).shouldShow(_introType);
-    final tokenLimits = ref.watch(tokenLimitsProvider);
+    // ref.watch(profileBalanceProvider);
+    ref.watch(feedLimitProvider);
 
     // return tokenLimits.when(
     //   data: (value) {
@@ -385,7 +386,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       },
       child: PostCard(
         post,
-        key: ValueKey(post.id),
+        key: ValueKey(post.id.toString() + feedState.feedLimitForThisTier.toString()),
         onShowSendButton: () async {
           if (post.hasMedia) {
             var hint = "You can RePost this media touching the blue button";

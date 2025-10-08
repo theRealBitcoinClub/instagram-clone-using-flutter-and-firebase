@@ -8,6 +8,7 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
+import 'package:mahakka/providers/token_limits_provider.dart';
 import 'package:mahakka/sliver_app_bar_delegate.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
@@ -83,6 +84,8 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     final loggedInUser = ref.watch(userProvider);
     final currentTabIndex = ref.watch(currentTabIndexProvider);
     String? targetProfileId = ref.watch(profileTargetIdProvider);
+    int limit = ref.watch(profileLimitProvider);
+    // ref.watch(profileBalanceProvider);
     _showIntro = ref.read(introStateNotifierProvider.notifier).shouldShow(_introType);
 
     context.afterLayout(refreshUI: true, () {
@@ -109,7 +112,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
               return ProfileLoadingScaffold(theme: theme, message: dataReady ? "Finishing up..." : "Loading Posts...");
             }
 
-            return _buildProfileScreen(profileData, loggedInUser, currentTabIndex, theme);
+            return _buildProfileScreen(profileData, loggedInUser, currentTabIndex, theme, limit);
           },
           loading: () => ProfileLoadingScaffold(theme: theme, message: "Loading Profile..."),
           error: (error, stack) => ProfileErrorScaffold(
@@ -163,7 +166,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     }
   }
 
-  Widget _buildProfileScreen(ProfileData profileData, MemoModelUser? loggedInUser, int currentTabIndex, ThemeData theme) {
+  Widget _buildProfileScreen(ProfileData profileData, MemoModelUser? loggedInUser, int currentTabIndex, ThemeData theme, limit) {
     final creator = profileData.creator;
     if (creator == null) {
       return ProfileErrorScaffold(
@@ -177,7 +180,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     ref.read(profileDataNotifier.notifier).refreshCreatorDataOnProfileLoad(currentTabIndex, creator.id, isOwnProfile, context);
 
     return Scaffold(
-      key: ValueKey("profile_scaffold_${creator.id}"),
+      key: ValueKey("profile_scaffold_${creator.id}_$limit"),
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: ProfileAppBar(
         creator: creator,
@@ -197,7 +200,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
               slivers: [
                 SliverToBoxAdapter(child: _buildProfileHeader(creator, isOwnProfile, theme)),
                 _buildTabSelector(),
-                _buildContent(theme, profileData),
+                _buildContent(theme, profileData, limit),
               ],
             ),
           ),
@@ -232,12 +235,12 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     );
   }
 
-  Widget _buildContent(ThemeData theme, ProfileData profileData) {
+  Widget _buildContent(ThemeData theme, ProfileData profileData, limit) {
     if (profileData.categorizer.isEmpty) {
       return _buildLoadingContent(theme);
     }
     return KeyedSubtree(
-      key: ValueKey('${profileData.creator!.id}_$_viewMode'),
+      key: ValueKey('${profileData.creator!.id}_$_viewMode$limit'),
       child: _buildSliverCategorizedView(theme, profileData.creator!, profileData.categorizer, _viewMode),
     );
   }

@@ -2,10 +2,12 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/providers/token_limits_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../main.dart';
 import '../memo/model/memo_model_creator.dart';
 import '../repositories/creator_repository.dart';
 import 'feed_posts_provider.dart';
@@ -13,7 +15,15 @@ import 'feed_posts_provider.dart';
 final muteCreatorProvider = StateNotifierProvider<MuteCreatorNotifier, List<String>>((ref) {
   return MuteCreatorNotifier(ref);
 });
+// Add this provider
+final muteCreatorInitializerProvider = FutureProvider<void>((ref) async {
+  final user = ref.watch(userProvider);
+  final prefs = ref.read(sharedPreferencesProvider);
 
+  if (user != null) {
+    await ref.read(muteCreatorProvider.notifier).initialize(prefs, user.id);
+  }
+});
 // New async provider that loads creator objects
 final mutedCreatorsWithDetailsProvider = FutureProvider<List<MemoModelCreator>>((ref) async {
   final mutedCreatorIds = ref.watch(muteCreatorProvider);
@@ -43,14 +53,14 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
   Ref ref;
 
   // Call this during app initialization - must be called before using the provider
-  Future<void> initialize(SharedPreferences prefs) async {
+  Future<void> initialize(SharedPreferences prefs, String userId) async {
     if (_isInitialized) {
       print('ℹ️ MuteCreator: Already initialized');
       return;
     }
 
     try {
-      final mutedCreators = prefs.getStringList(_mutedCreatorsKey) ?? [];
+      final mutedCreators = prefs.getStringList(_mutedCreatorsKey + userId) ?? [];
       state = mutedCreators;
       _isInitialized = true;
       print('✅ MuteCreator: Initialized with ${mutedCreators.length} muted creators');
@@ -66,6 +76,7 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
     if (state.contains(creatorId)) {
       return; // Already muted
     }
+    String userId = ref.read(userProvider)!.id;
 
     try {
       final newMutedCreators = [...state, creatorId];
@@ -78,7 +89,7 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
       }
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(_mutedCreatorsKey, newMutedCreators);
+      await prefs.setStringList(_mutedCreatorsKey + userId, newMutedCreators);
 
       state = newMutedCreators;
       ref.read(feedPostsProvider.notifier).fetchInitialPosts();
@@ -98,11 +109,12 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
     if (!state.contains(creatorId)) {
       return; // Not muted
     }
+    String userId = ref.read(userProvider)!.id;
 
     try {
       final newMutedCreators = state.where((id) => id != creatorId).toList();
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(_mutedCreatorsKey, newMutedCreators);
+      await prefs.setStringList(_mutedCreatorsKey + userId, newMutedCreators);
       state = newMutedCreators;
 
       _unmuteDebounceTimer?.cancel();

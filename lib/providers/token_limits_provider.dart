@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
+import 'package:mahakka/provider/profile_balance_provider.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/repositories/creator_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -223,6 +224,7 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
     ref.onDispose(() {
       _creatorSubscription?.cancel();
     });
+    ref.watch(profileBalanceProvider);
 
     // Load cached balance from shared preferences
     await _loadCachedBalance();
@@ -379,6 +381,12 @@ class TokenLimitsState {
     );
   }
 }
+
+// Convenience providers for individual limits
+final muteLimitProvider = Provider<int>((ref) {
+  final state = ref.watch(tokenLimitsProvider);
+  return state.value?.currentLimit.muteLimit ?? TokenLimitEnum.free.muteLimit;
+});
 
 // Convenience providers for individual limits
 final feedLimitProvider = Provider<int>((ref) {

@@ -1,6 +1,7 @@
 // muted_creators_dialog.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/providers/token_limits_provider.dart';
 import 'package:mahakka/widgets/cached_avatar.dart';
 
 import '../provider/mute_creator_provider.dart';
@@ -16,6 +17,8 @@ class MutedCreatorsDialog extends ConsumerWidget {
 
     final mutedCreatorsAsync = ref.watch(mutedCreatorsWithDetailsProvider);
     final mutedCreatorIds = ref.watch(muteCreatorProvider);
+    // ref.watch(profileBalanceProvider);
+    int currentMuteLimit = ref.watch(muteLimitProvider);
 
     return Dialog(
       backgroundColor: colorScheme.surface,
@@ -138,7 +141,7 @@ class MutedCreatorsDialog extends ConsumerWidget {
                                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                     leading: CachedAvatar(
                                       showMuteBadge: false,
-                                      key: ValueKey('muted_creator_avatar_${creator.id}'),
+                                      key: ValueKey('muted_creator_avatar_${creator.id}_$currentMuteLimit'),
                                       creatorId: creator.id,
                                       radius: 21,
                                     ),

@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 // Import your Riverpod user providers
 import 'package:mahakka/provider/user_provider.dart'; // Ensure userProvider and userIsLoadingProvider are defined here
+import 'package:mahakka/providers/token_limits_provider.dart';
 import 'package:mahakka/screens/home.dart';
 import 'package:mahakka/screens/login_screen.dart';
+
+import '../provider/mute_creator_provider.dart';
 
 class AuthPage extends ConsumerWidget {
   const AuthPage({super.key});
@@ -18,6 +21,10 @@ class AuthPage extends ConsumerWidget {
     final bool isLoading = ref.watch(userIsLoadingProvider);
     // 3. (Optional) Watch for errors if you have a derived error provider
     // final String? error = ref.watch(userErrorProvider);
+
+    // Watch the initializer - it will automatically run when user is available
+    final muteCreatorInit = ref.watch(muteCreatorInitializerProvider);
+    int limit = ref.watch(muteLimitProvider) ?? 0;
 
     if (isLoading) {
       // While user state is loading, show a loading screen.
@@ -36,7 +43,7 @@ class AuthPage extends ConsumerWidget {
 
     if (user != null && user.mnemonic.isNotEmpty) {
       // return
-      return const HomeSceen();
+      return HomeSceen(key: ValueKey("home${user.id}_$limit"));
     } else {
       return const LoginScreen();
     }

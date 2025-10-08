@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
-import 'package:mahakka/provider/profile_balance_provider.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/screens/add_screen.dart';
 import 'package:mahakka/screens/feed_screen.dart';
@@ -100,8 +99,8 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   Widget build(BuildContext context) {
     final currentTabIndex = ref.watch(currentTabIndexProvider); // Watch the Riverpod state
     final ThemeData theme = Theme.of(context);
-    ref.watch(tokenLimitsProvider);
-    ref.watch(profileBalanceProvider);
+    var tokenLimit = ref.watch(currentTokenLimitEnumProvider);
+    // ref.watch(profileBalanceProvider);
     // ref.read(profileBalanceProvider).startAutoRefreshBalanceProfile();
 
     ref.listen<AsyncValue<TokenLimitsState>>(tokenLimitsProvider, (previous, current) {
@@ -127,9 +126,9 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     }
 
     final List<Widget> homeScreenItems = [
-      FeedScreen(key: PageStorageKey('FeedScreen')),
+      FeedScreen(key: PageStorageKey('FeedScreen${tokenLimit.name}')),
       AddPost(key: PageStorageKey('AddPost')),
-      ProfileScreenWidget(key: PageStorageKey('ProfileScreen')),
+      ProfileScreenWidget(key: PageStorageKey('ProfileScreen${tokenLimit.name}')),
       MemoWebviewScreen(key: PageStorageKey('MemoWebviewScreen')),
     ];
 

@@ -23,8 +23,8 @@ class ProfileBalanceProvider {
   // Balance-related timers only
   Timer? _balanceRefreshTimer;
   Timer? _qrDialogRefreshTimer;
-  final Duration _refreshBalanceInterval = Duration(seconds: kDebugMode ? 60 : 6);
-  final Duration _qrRefreshInterval = Duration(seconds: kDebugMode ? 30 : 3);
+  final Duration _refreshBalanceInterval = Duration(seconds: kDebugMode ? 6 : 6);
+  final Duration _qrRefreshInterval = Duration(seconds: kDebugMode ? 3 : 3);
   bool _isQrDialogOpen = false;
   bool _isQrCashtokenMode = false;
   final Ref ref;
@@ -83,6 +83,17 @@ class ProfileBalanceProvider {
       ref.read(profileDataNotifier.notifier).notifyStateUpdateCreator(c: creator);
       _print('📢 PBP: 🔄 Notifying creator repository of update');
       ref.read(creatorRepositoryProvider).notifyCreatorUpdated(profileId, creator);
+      _print('📢 PBP: 🔄 Invalidating creator repository');
+      ref.invalidate(creatorRepositoryProvider);
+      //
+      // _print('📢 PBP: 🔄 Notifying profile data state update');
+      // ref.read(profileDataNotifier.notifier).notifyStateUpdateCreator();
+
+      // _print('📢 PBP: 🔄 Notifying creator repository of update');
+      // ref.read(creatorRepositoryProvider).notifyCreatorUpdated(profileId, creator);
+
+      _print('📢 PBP: 🔄 Handling token limits update');
+      ref.read(tokenLimitsProvider.notifier).handleCreatorUpdateOnlyIfOwnCreator(creator);
       _print('✅ PBP: 📢 All notifications sent');
     } else {
       _print('❌ PBP: 👤 No valid profile ID, skipping balance refresh');
@@ -282,30 +293,30 @@ class ProfileBalanceProvider {
       return;
     }
 
-    final isLoading = ref.read(profileDataNotifier).isLoading;
-    _print('📊 PBP: 📈 Profile data loading state: $isLoading');
-
-    if (ref.read(profileDataNotifier).isLoading) {
-      _print('❌ PBP: ⏳ Profile data is currently loading, skipping periodic refresh');
-      return;
-    }
+    // final isLoading = ref.read(profileDataNotifier).isLoading;
+    // _print('📊 PBP: 📈 Profile data loading state: $isLoading');
+    //
+    // if (ref.read(profileDataNotifier).isLoading) {
+    //   _print('❌ PBP: ⏳ Profile data is currently loading, skipping periodic refresh');
+    //   return;
+    // }
 
     try {
-      _print('🔍 PBP: 🔄 Checking current profile data state');
-      final currentData = ref.read(profileDataNotifier.notifier).state.value;
-      final hasCreator = currentData != null && currentData.creator != null;
-      _print('👤 PBP: 🔍 Current data state - Has data: ${currentData != null}, Has creator: ${hasCreator}');
-
-      if (hasCreator) {
-        _print('✅ PBP: 👤 Valid creator found, scheduling balance refresh');
-        Future.microtask(() async {
-          _print('🔄 PBP: 🔄 Microtask executing balance refresh');
-          await refreshBalances();
-          _print('✅ PBP: 🔄 Microtask balance refresh completed');
-        });
-      } else {
-        _print('❌ PBP: 👤 No creator available for periodic refresh');
-      }
+      // _print('🔍 PBP: 🔄 Checking current profile data state');
+      // final currentData = ref.read(profileDataNotifier.notifier).state.value;
+      // final hasCreator = currentData != null && currentData.creator != null;
+      // _print('👤 PBP: 🔍 Current data state - Has data: ${currentData != null}, Has creator: ${hasCreator}');
+      //
+      // if (hasCreator) {
+      _print('✅ PBP: 👤 Valid creator found, scheduling balance refresh');
+      Future.microtask(() async {
+        _print('🔄 PBP: 🔄 Microtask executing balance refresh');
+        await refreshBalances();
+        _print('✅ PBP: 🔄 Microtask balance refresh completed');
+      });
+      // } else {
+      //   _print('❌ PBP: 👤 No creator available for periodic refresh');
+      // }
     } catch (e) {
       _print('❌ PBP: 🚨 Periodic balance refresh failed: $e');
     }

@@ -42,7 +42,9 @@ class _HashtagDisplayWidgetState extends State<HashtagDisplayWidget> {
     super.initState();
     // Scroll to left after the first frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.jumpTo(0.0);
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (_scrollController.hasClients) _scrollController.jumpTo(0.0);
+      });
     });
   }
 

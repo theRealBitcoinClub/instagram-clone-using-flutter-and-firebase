@@ -9,7 +9,7 @@ class IconAction extends StatelessWidget {
   final IAB type;
   final IconData icon;
 
-  const IconAction({Key? key, required this.text, this.size = 16, required this.onTap, required this.type, required this.icon})
+  const IconAction({Key? key, required this.text, this.size = 15, required this.onTap, required this.type, required this.icon})
     : super(key: key);
 
   @override
@@ -19,11 +19,11 @@ class IconAction extends StatelessWidget {
     Color getBackgroundColor() {
       switch (type) {
         case IAB.cancel:
-          return Colors.red[900]!;
+          return Colors.red[800]!;
         case IAB.success:
-          return Colors.green[900]!;
+          return Colors.green[800]!;
         case IAB.alternative:
-          return Colors.blue[900]!;
+          return Colors.blue[800]!;
       }
     }
 
@@ -32,7 +32,7 @@ class IconAction extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: getBackgroundColor(),
           foregroundColor: colorScheme.onPrimary,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         ),
         onPressed: onTap,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class HashtagDisplayWidget extends StatelessWidget {
+class HashtagDisplayWidget extends StatefulWidget {
   final List<String> hashtags;
   final ThemeData theme;
   final List<bool>? selectedHashtags;
@@ -22,51 +22,72 @@ class HashtagDisplayWidget extends StatelessWidget {
 
   static BoxDecoration borderDecoration({required bool isSelected, required ThemeData theme}) {
     return BoxDecoration(
-      borderRadius: BorderRadius.circular(borderRadius),
+      borderRadius: BorderRadius.circular(HashtagDisplayWidget.borderRadius),
       border: Border.all(
         color: isSelected ? theme.colorScheme.primary.withAlpha(111) : theme.colorScheme.outline.withAlpha(222),
-        width: isSelected ? borderWidth + 0.3 : borderWidth,
+        width: isSelected ? HashtagDisplayWidget.borderWidth + 0.3 : HashtagDisplayWidget.borderWidth,
       ),
     );
   }
 
   @override
+  State<HashtagDisplayWidget> createState() => _HashtagDisplayWidgetState();
+}
+
+class _HashtagDisplayWidgetState extends State<HashtagDisplayWidget> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Scroll to left after the first frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.jumpTo(0.0);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final int displayCount = hashtags.length > maxTagsCounter ? maxTagsCounter : hashtags.length;
+    final int displayCount = widget.hashtags.length > widget.maxTagsCounter ? widget.maxTagsCounter : widget.hashtags.length;
 
     if (displayCount == 0) return const SizedBox.shrink();
 
-    final bool isSelectable = selectedHashtags != null && onSelectHashtag != null;
+    final bool isSelectable = widget.selectedHashtags != null && widget.onSelectHashtag != null;
 
-    return Wrap(
-      spacing: 8.0,
-      runSpacing: 4.0,
-      children: List<Widget>.generate(displayCount, (index) {
-        final bool isSelected = isSelectable && selectedHashtags!.length > index && selectedHashtags![index];
+    return SingleChildScrollView(
+      controller: _scrollController, // Attach the controller
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: List<Widget>.generate(displayCount, (index) {
+          final bool isSelected = isSelectable && widget.selectedHashtags!.length > index && widget.selectedHashtags![index];
 
-        final widget = Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: noBorder ? null : borderDecoration(isSelected: isSelected, theme: theme),
-          child: Text(
-            hashtags[index],
-            style: theme.textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w400,
-              // fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+          // Changed variable name from 'widget' to 'container' to avoid conflict
+          final container = Container(
+            margin: const EdgeInsets.only(right: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: widget.noBorder ? null : HashtagDisplayWidget.borderDecoration(isSelected: isSelected, theme: widget.theme),
+            child: Text(
+              widget.hashtags[index],
+              style: widget.theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w400,
+                color: isSelected ? widget.theme.colorScheme.primary : widget.theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
-        );
-
-        if (isSelectable) {
-          return GestureDetector(
-            onTap: () => onSelectHashtag!(index),
-            behavior: HitTestBehavior.opaque, // This makes the entire area tappable
-            child: widget,
           );
-        } else {
-          return widget;
-        }
-      }),
+
+          if (isSelectable) {
+            return GestureDetector(onTap: () => widget.onSelectHashtag!(index), behavior: HitTestBehavior.opaque, child: container);
+          } else {
+            return container;
+          }
+        }),
+      ),
     );
   }
 }

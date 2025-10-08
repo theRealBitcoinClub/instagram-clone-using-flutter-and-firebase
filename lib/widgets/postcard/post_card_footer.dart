@@ -1,6 +1,7 @@
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/post_expandable_text_widget.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
@@ -50,7 +51,7 @@ class PostCardFooter extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 16, 12),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -99,15 +100,23 @@ class PostCardFooter extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      _buildCancelButtonWidget(theme),
-                      post.hasMedia ? const SizedBox(width: 9) : SizedBox.shrink(),
-                      post.hasMedia ? _buildRepostButtonWidget(theme) : SizedBox.shrink(),
-                      const SizedBox(width: 9),
-                      _buildSendButtonWidget(theme),
-                    ],
+                  Container(
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(9)),
+                    clipBehavior: Clip.antiAlias,
+                    // padding: EdgeInsets.symmetric(vertical: 0, horizontal: 3),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconAction(text: "RESET", onTap: onCancel, type: IAB.cancel, icon: Icons.cancel_outlined),
+                        IconAction(text: "REPOST", onTap: () => onSend(isRepost: true), type: IAB.alternative, icon: Icons.repeat_outlined),
+                        IconAction(text: "CREATE", onTap: onSend, type: IAB.success, icon: Icons.send_outlined),
+                        // _buildCancelButtonWidget(theme),
+                        // post.hasMedia ? const SizedBox(width: 9) : SizedBox.shrink(),
+                        // post.hasMedia ? _buildRepostButtonWidget(theme) : SizedBox.shrink(),
+                        // const SizedBox(width: 9),
+                        // _buildSendButtonWidget(theme),
+                      ],
+                    ),
                   ),
                 ],
               ),

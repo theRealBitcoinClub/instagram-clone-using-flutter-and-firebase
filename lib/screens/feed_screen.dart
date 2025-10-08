@@ -1,12 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart';
+import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/postcard/post_card_widget.dart';
 
@@ -256,51 +256,53 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       },
       color: theme.colorScheme.onPrimary,
       backgroundColor: theme.colorScheme.primary,
-      child: FocusableActionDetector(
-        autofocus: true,
-        focusNode: _listViewFocusNode,
-        shortcuts: _getKeyboardShortcuts(),
-        actions: <Type, Action<Intent>>{
-          ScrollUpIntent: CallbackAction<ScrollUpIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
-          ScrollDownIntent: CallbackAction<ScrollDownIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
-        },
-        child: GestureDetector(
-          onTap: () {
-            if (!_listViewFocusNode.hasFocus) {
-              _print('FSCR:🎯 Requesting focus via GestureDetector tap');
-              FocusScope.of(context).requestFocus(_listViewFocusNode);
-            }
-          },
-          child: ListView.builder(
-            physics: const AlwaysScrollableScrollPhysics(),
-            controller: _scrollController,
-            itemCount: _getDisplayedItemCount(feedState),
-            itemBuilder: (context, index) {
-              _print('FSCR:📜 ListView building item at index: $index');
-
-              // Apply soft limit to displayed posts
-              final displayedPosts = _getDisplayedPosts(feedState);
-
-              if (index < displayedPosts.length) {
-                final post = displayedPosts[index];
-                _print('FSCR:📜 Building PostCard for post ${post.id} at index $index');
-                return _wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme, index: index);
-              } else if (feedState.isMaxFreeLimit && index >= displayedPosts.length) {
-                _print('FSCR:💰 Building free plan limit widget at index $index');
-                return _buildFreePlanLimitWidget(theme);
-              } else if (feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimit && index >= displayedPosts.length) {
-                _print('FSCR:⏳ Building loading indicator at index $index');
-                return _buildLoadingIndicator();
-              } else if (!feedState.hasMorePosts && index == displayedPosts.length) {
-                _print('FSCR:🏁 Building end of feed message at index $index');
-                return _buildEndOfFeedWidget(theme);
+      child:
+          // FocusableActionDetector(
+          //   autofocus: true,
+          //   focusNode: _listViewFocusNode,
+          //   shortcuts: _getKeyboardShortcuts(),
+          //   actions: <Type, Action<Intent>>{
+          //     ScrollUpIntent: CallbackAction<ScrollUpIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
+          //     ScrollDownIntent: CallbackAction<ScrollDownIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
+          //   },
+          //   child:
+          GestureDetector(
+            onTap: () {
+              if (!_listViewFocusNode.hasFocus) {
+                _print('FSCR:🎯 Requesting focus via GestureDetector tap');
+                FocusScope.of(context).requestFocus(_listViewFocusNode);
               }
-              _print('FSCR:❌ Unexpected index in ListView builder: $index');
-              return const SizedBox.shrink();
             },
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              controller: _scrollController,
+              itemCount: _getDisplayedItemCount(feedState),
+              itemBuilder: (context, index) {
+                _print('FSCR:📜 ListView building item at index: $index');
+
+                // Apply soft limit to displayed posts
+                final displayedPosts = _getDisplayedPosts(feedState);
+
+                if (index < displayedPosts.length) {
+                  final post = displayedPosts[index];
+                  _print('FSCR:📜 Building PostCard for post ${post.id} at index $index');
+                  return _wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme, index: index);
+                } else if (feedState.isMaxFreeLimit && index >= displayedPosts.length) {
+                  _print('FSCR:💰 Building free plan limit widget at index $index');
+                  return _buildFreePlanLimitWidget(theme);
+                } else if (feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimit && index >= displayedPosts.length) {
+                  _print('FSCR:⏳ Building loading indicator at index $index');
+                  return _buildLoadingIndicator();
+                } else if (!feedState.hasMorePosts && index == displayedPosts.length) {
+                  _print('FSCR:🏁 Building end of feed message at index $index');
+                  return _buildEndOfFeedWidget(theme);
+                }
+                _print('FSCR:❌ Unexpected index in ListView builder: $index');
+                return const SizedBox.shrink();
+              },
+            ),
           ),
-        ),
-      ),
+      // ),
     );
   }
 
@@ -384,7 +386,17 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       child: PostCard(
         post,
         key: ValueKey(post.id),
-        onShowSendButton: () {
+        onShowSendButton: () async {
+          if (post.hasMedia) {
+            var hint = "You can RePost this media touching the blue button";
+            hint = await ref.read(customTranslatedTextProvider(hint).future);
+            showSnackBar(hint, type: SnackbarType.info);
+          }
+
+          var hint = "The replies are not attached to the original post, they are tied to #tags or @topics";
+          hint = await ref.read(customTranslatedTextProvider(hint).future);
+          showSnackBar(hint, type: SnackbarType.success, wait: true);
+
           _print('FSCR:📜 onShowSendButton callback triggered for post ${post.id}');
           _scrollDownForPost(post);
         },
@@ -407,60 +419,40 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
-  void _showUpgradeDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Upgrade to Pro'),
-        content: Text('Get unlimited access to all features!'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              // Implement upgrade logic
-              Navigator.pop(context);
-            },
-            child: Text('Upgrade'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Map<ShortcutActivator, Intent> _getKeyboardShortcuts() {
-    return <ShortcutActivator, Intent>{
-      const SingleActivator(LogicalKeyboardKey.arrowUp): ScrollUpIntent(),
-      const SingleActivator(LogicalKeyboardKey.arrowDown): ScrollDownIntent(),
-    };
-  }
-
-  void _handleScrollIntent(Intent intent, BuildContext context) {
-    // _print('FSCR:⌨️ Keyboard scroll intent: $intent');
-    if (!_scrollController.hasClients) {
-      // _print('FSCR:❌ Scroll controller has no clients');
-      return;
-    }
-
-    double scrollAmount = 0;
-    const double estimatedItemHeight = 300.0;
-
-    if (intent is ScrollUpIntent) {
-      scrollAmount = -estimatedItemHeight;
-      // _print('FSCR:⬆️ Scrolling up by $scrollAmount');
-    } else if (intent is ScrollDownIntent) {
-      scrollAmount = estimatedItemHeight;
-      // _print('FSCR:⬇️ Scrolling down by $scrollAmount');
-    }
-
-    if (scrollAmount != 0) {
-      final currentOffset = _scrollController.offset;
-      final targetOffset = currentOffset + scrollAmount;
-      final clampedOffset = targetOffset.clamp(_scrollController.position.minScrollExtent, _scrollController.position.maxScrollExtent);
-
-      // _print('FSCR:📜 Animating scroll from $currentOffset to $clampedOffset');
-      _scrollController.animateTo(clampedOffset, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
-    }
-  }
+  // Map<ShortcutActivator, Intent> _getKeyboardShortcuts() {
+  //   return <ShortcutActivator, Intent>{
+  //     const SingleActivator(LogicalKeyboardKey.arrowUp): ScrollUpIntent(),
+  //     const SingleActivator(LogicalKeyboardKey.arrowDown): ScrollDownIntent(),
+  //   };
+  // }
+  //
+  // void _handleScrollIntent(Intent intent, BuildContext context) {
+  //   // _print('FSCR:⌨️ Keyboard scroll intent: $intent');
+  //   if (!_scrollController.hasClients) {
+  //     // _print('FSCR:❌ Scroll controller has no clients');
+  //     return;
+  //   }
+  //
+  //   double scrollAmount = 0;
+  //   const double estimatedItemHeight = 300.0;
+  //
+  //   if (intent is ScrollUpIntent) {
+  //     scrollAmount = -estimatedItemHeight;
+  //     // _print('FSCR:⬆️ Scrolling up by $scrollAmount');
+  //   } else if (intent is ScrollDownIntent) {
+  //     scrollAmount = estimatedItemHeight;
+  //     // _print('FSCR:⬇️ Scrolling down by $scrollAmount');
+  //   }
+  //
+  //   if (scrollAmount != 0) {
+  //     final currentOffset = _scrollController.offset;
+  //     final targetOffset = currentOffset + scrollAmount;
+  //     final clampedOffset = targetOffset.clamp(_scrollController.position.minScrollExtent, _scrollController.position.maxScrollExtent);
+  //
+  //     // _print('FSCR:📜 Animating scroll from $currentOffset to $clampedOffset');
+  //     _scrollController.animateTo(clampedOffset, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+  //   }
+  // }
 
   void _print(String s) {
     if (kDebugMode) print(s);

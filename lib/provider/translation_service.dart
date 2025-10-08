@@ -1,4 +1,7 @@
 // translation_service.dart
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/main.dart';
@@ -15,6 +18,14 @@ final translationServiceProvider = Provider<TranslationService>((ref) {
   return TranslationService(ref);
 });
 
+// Helper function to generate a hash key for cache
+String _generateCacheKey(String text, String targetLang) {
+  final key = '$text|$targetLang';
+  final bytes = utf8.encode(key);
+  final digest = sha256.convert(bytes);
+  return digest.toString();
+}
+
 final customTranslatedTextProvider = FutureProvider.family<String, String>((ref, originalText) async {
   final translationService = ref.read(translationServiceProvider);
   final systemLangCode = ref.watch(languageCodeProvider);
@@ -25,8 +36,25 @@ final customTranslatedTextProvider = FutureProvider.family<String, String>((ref,
   }
 
   try {
+    // Generate cache key
+    final cacheKey = _generateCacheKey(originalText, systemLangCode);
+
+    // Check cache first
+    final cache = ref.read(translationCacheProvider);
+    final cachedTranslation = await cache.get(cacheKey, systemLangCode);
+
+    if (cachedTranslation != null) {
+      print('Cache hit for: ${originalText.substring(0, originalText.length > 30 ? 30 : originalText.length)}...');
+      return cachedTranslation;
+    }
+
+    print('Cache miss, translating: ${originalText.substring(0, originalText.length > 30 ? 30 : originalText.length)}...');
+
     // Use the translation service
     final translationResult = await translationService.translateAuto(text: originalText, to: systemLangCode);
+
+    // Store in cache
+    await cache.put(cacheKey, systemLangCode, translationResult.text);
 
     return translationResult.text;
   } catch (error) {

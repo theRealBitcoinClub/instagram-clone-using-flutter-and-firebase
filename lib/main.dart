@@ -25,7 +25,7 @@ final sharedPreferencesInitializerProvider = FutureProvider<SharedPreferences>((
 final languageCodeProvider = StateProvider<String>((ref) {
   try {
     final prefs = ref.read(sharedPreferencesProvider);
-    return prefs.getString('user_language') ?? SystemLanguage.getLanguageCode();
+    return prefs.getString('user_language22') ?? SystemLanguage.getLanguageCode();
   } catch (e) {
     // Fallback to system language if SharedPreferences fails
     return SystemLanguage.getLanguageCode();
@@ -35,7 +35,7 @@ final languageCodeProvider = StateProvider<String>((ref) {
 Future<bool> setUserLanguage(WidgetRef ref, String languageCode) async {
   try {
     final prefs = ref.read(sharedPreferencesProvider);
-    final success = await prefs.setString('user_language', languageCode);
+    final success = await prefs.setString('user_language22', languageCode);
     if (success) {
       ref.read(languageCodeProvider.notifier).state = languageCode;
     }

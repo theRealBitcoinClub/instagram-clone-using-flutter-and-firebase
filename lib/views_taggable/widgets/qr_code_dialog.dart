@@ -23,20 +23,11 @@ void _logError(String message, [dynamic error, StackTrace? stackTrace]) {
 }
 
 class QrCodeDialog extends ConsumerStatefulWidget {
-  // final String legacyAddress;
-  // final String? cashtokenAddress;
   final String memoProfileId;
   final bool memoOnly;
   final bool tokenOnly;
 
-  const QrCodeDialog({
-    Key? key,
-    // required this.legacyAddress,
-    // this.cashtokenAddress,
-    required this.memoProfileId,
-    this.memoOnly = false,
-    this.tokenOnly = false,
-  }) : super(key: key);
+  const QrCodeDialog({Key? key, required this.memoProfileId, this.memoOnly = false, this.tokenOnly = false}) : super(key: key);
 
   @override
   ConsumerState<QrCodeDialog> createState() => _QrCodeDialogState();
@@ -47,10 +38,12 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   late Future<void> _initFuture;
   bool _isToggleEnabled = true;
   var toggleKey;
+  late final ProfileBalanceProvider _balanceProvider; // Store provider reference
 
   @override
   void initState() {
     super.initState();
+    _balanceProvider = ref.read(profileBalanceProvider);
     toggleKey = 'qr_code_toggle_state${widget.memoProfileId}';
     _initFuture = _loadToggleState(context);
   }
@@ -87,7 +80,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 
   void _startQrDialogRefresh(BuildContext ctx, String profileId) {
     // final profileNotifier = ref.read(profileDataProvider.notifier);
-    ref.read(profileBalanceProvider).startQrDialogRefresh(_isCashtokenFormat, ctx, profileId);
+    _balanceProvider.startQrDialogRefresh(_isCashtokenFormat, profileId);
   }
 
   String convertToBchFormat(String? legacyAddress) {
@@ -140,7 +133,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 
     // Update QR dialog refresh mode in provider
     // final profileNotifier = ref.read(profileDataProvider.notifier);
-    ref.read(profileBalanceProvider).setQrDialogMode(isCashtoken, ctx, profileId);
+    _balanceProvider.setQrDialogMode(isCashtoken, profileId);
 
     await _saveToggleState(isCashtoken);
   }
@@ -165,26 +158,8 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     final ThemeData theme = Theme.of(dialogCtx);
     final ColorScheme colorScheme = theme.colorScheme;
     final TextTheme textTheme = theme.textTheme;
-
-    // Watch for creator updates using the new provider
-    // final profileData = ref.watch(profileDataNotifier);
-    // final creator = profileData.value?.creator;
-    // Watch for creator updates using the new provider
-    // final creatorStream = ref.watch(creatorRepositoryProvider).watchCreator(widget.memoProfileId);
-    // MemoModelCreator? creator;
-    // creatorStream.listen((c) {
-    //   Future.microtask(() {
-    //     setState(() {
-    //       creator = c;
-    //     });
-    //   });
-    // });
-    var creatorAsync = ref.watch(getCreatorProvider(widget.memoProfileId));
-
     MemoModelCreator? creator = ref.watch(getCreatorProvider(widget.memoProfileId)).value;
-    // final creator = profileData.creator;
     String cashtokenAddress = creator?.bchAddressCashtokenAware ?? "";
-    // cashtokenAddress = cashtokenAddress ?? "";
     String? legacyAddress = creator?.id;
 
     return FutureBuilder(
@@ -308,33 +283,6 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                         icon: Icons.copy_outlined,
                       ),
                       IconAction(text: "SHARE", onTap: () => _shareAddress(addressToShow), type: IAB.alternative, icon: Icons.share_outlined),
-                      // Expanded(
-                      //   child: ElevatedButton.icon(
-                      //     onPressed: () => _copyToClipboard(dialogCtx, addressToShow, "Address copied!"),
-                      //     style: ElevatedButton.styleFrom(
-                      //       backgroundColor: colorScheme.primary,
-                      //       foregroundColor: Colors.white,
-                      //       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                      //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      //     ),
-                      //     icon: Icon(Icons.copy, size: 18, color: Colors.white),
-                      //     label: Text('COPY', style: textTheme.labelLarge?.copyWith(color: Colors.white)),
-                      //   ),
-                      // ),
-                      // const SizedBox(width: 12),
-                      // Expanded(
-                      //   child: ElevatedButton.icon(
-                      //     onPressed: () => _shareAddress(addressToShow),
-                      //     style: ElevatedButton.styleFrom(
-                      //       backgroundColor: Colors.yellow[900],
-                      //       foregroundColor: Colors.white,
-                      //       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                      //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      //     ),
-                      //     icon: Icon(Icons.share, size: 18, color: Colors.white),
-                      //     label: Text('SHARE', style: textTheme.labelLarge?.copyWith(color: Colors.white)),
-                      //   ),
-                      // ),
                     ],
                   ),
                 ),
@@ -410,8 +358,14 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     );
   }
 
+  @override
+  void dispose() {
+    _balanceProvider.stopQrDialogRefresh();
+    super.dispose();
+  }
+
   void closeDialog(BuildContext ctx) {
-    ref.read(profileBalanceProvider).stopQrDialogRefresh();
+    _balanceProvider.stopQrDialogRefresh();
     Navigator.of(ctx).pop();
   }
 }

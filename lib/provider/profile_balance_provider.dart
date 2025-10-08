@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
@@ -92,7 +91,7 @@ class ProfileBalanceProvider {
     _print('✅ PBP: 💰 refreshBalances() completed');
   }
 
-  Future<MemoModelCreator?> refreshMahakkaBalance(BuildContext ctx, String profileId) async {
+  Future<MemoModelCreator?> refreshMahakkaBalance(String profileId) async {
     _print('🔄 PBP: 🪙 refreshMahakkaBalance() called for profile: $profileId');
     _print('🌳 PBP: 📍 Execution path: refreshMahakkaBalance() → getCreator() → refreshBalanceMahakka()');
 
@@ -116,7 +115,7 @@ class ProfileBalanceProvider {
     }
   }
 
-  Future<MemoModelCreator?> refreshMemoBalance(BuildContext ctx, String profileId) async {
+  Future<MemoModelCreator?> refreshMemoBalance(String profileId) async {
     _print('🔄 PBP: 📝 refreshMemoBalance() called for profile: $profileId');
     _print('🌳 PBP: 📍 Execution path: refreshMemoBalance() → getCreator() → refreshBalanceMemo()');
 
@@ -134,7 +133,7 @@ class ProfileBalanceProvider {
     }
   }
 
-  void startQrDialogRefresh(bool isCashtokenMode, BuildContext ctx, String profileId) {
+  void startQrDialogRefresh(bool isCashtokenMode, String profileId) {
     _print('🔄 PBP: 📱 startQrDialogRefresh() called');
     _print('⚙️ PBP: 🔧 Parameters - isCashtokenMode: $isCashtokenMode, profileId: $profileId');
     _print('🌳 PBP: 📍 Execution path: startQrDialogRefresh() → _stopQrDialogTimer() → Timer.periodic() → _refreshQrDialogBalance()');
@@ -147,17 +146,17 @@ class ProfileBalanceProvider {
     _print('⏹️ PBP: ⏰ Previous QR timer stopped');
 
     _qrDialogRefreshTimer = Timer.periodic(_qrRefreshInterval, (_) {
-      _print('🔄 PBP: 🔄 QR Dialog timer tick - Open: $_isQrDialogOpen, Context mounted: ${ctx.mounted}');
-      if (_isQrDialogOpen && ctx.mounted) {
+      _print('🔄 PBP: 🔄 QR Dialog timer tick - Open: $_isQrDialogOpen');
+      if (_isQrDialogOpen) {
         _print('✅ PBP: 🎯 Conditions met, refreshing QR dialog balance');
-        _refreshQrDialogBalance(ctx, profileId);
+        _refreshQrDialogBalance(profileId);
       } else {
         _print('❌ PBP: 🚫 Conditions not met - QR dialog closed or context unmounted');
       }
     });
 
     _print('✅ PBP: ⏰ QR Dialog refresh timer started with interval: ${_qrRefreshInterval.inSeconds}s');
-    _refreshQrDialogBalance(ctx, profileId);
+    _refreshQrDialogBalance(profileId);
     _print('✅ PBP: 📱 startQrDialogRefresh() completed');
   }
 
@@ -172,7 +171,7 @@ class ProfileBalanceProvider {
     _print('✅ PBP: 📱 stopQrDialogRefresh() completed');
   }
 
-  void setQrDialogMode(bool isCashtokenMode, BuildContext ctx, String profileId) {
+  void setQrDialogMode(bool isCashtokenMode, String profileId) {
     _print('🔄 PBP: ⚙️ setQrDialogMode() called');
     _print('⚙️ PBP: 🔧 New mode - isCashtokenMode: $isCashtokenMode, profileId: $profileId');
     _print('🌳 PBP: 📍 Execution path: setQrDialogMode() → _refreshQrDialogBalance()');
@@ -180,15 +179,15 @@ class ProfileBalanceProvider {
     _isQrCashtokenMode = isCashtokenMode;
     _print('📱 PBP: 🎯 QR Dialog mode updated to CashtokenMode: $_isQrCashtokenMode');
 
-    _refreshQrDialogBalance(ctx, profileId);
+    _refreshQrDialogBalance(profileId);
     _print('✅ PBP: ⚙️ setQrDialogMode() completed');
   }
 
-  void _refreshQrDialogBalance(BuildContext ctx, String profileId) async {
+  void _refreshQrDialogBalance(String profileId) async {
     _print('🔄 PBP: 📱 _refreshQrDialogBalance() called');
-    _print('📱 PBP: 🎯 Current state - QR Dialog Open: $_isQrDialogOpen, Context mounted: ${ctx.mounted}');
+    _print('📱 PBP: 🎯 Current state - QR Dialog Open: $_isQrDialogOpen');
 
-    if (!_isQrDialogOpen || !ctx.mounted) {
+    if (!_isQrDialogOpen) {
       _print('❌ PBP: 🚫 Conditions not met for QR dialog refresh');
       return;
     }
@@ -198,10 +197,10 @@ class ProfileBalanceProvider {
 
     if (_isQrCashtokenMode) {
       _print('🔄 PBP: 🪙 Refreshing Mahakka balance for QR dialog');
-      creator = await refreshMahakkaBalance(ctx, profileId);
+      creator = await refreshMahakkaBalance(profileId);
     } else {
       _print('🔄 PBP: 📝 Refreshing Memo balance for QR dialog');
-      creator = await refreshMemoBalance(ctx, profileId);
+      creator = await refreshMemoBalance(profileId);
     }
 
     _print('👤 PBP: 🔍 QR Dialog balance refresh result - Creator: ${creator != null ? "SUCCESS" : "NULL"}');

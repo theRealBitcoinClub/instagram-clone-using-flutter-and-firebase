@@ -10,8 +10,8 @@ import '../memo/isar/cached_translation_db.dart';
 import 'isar_provider.dart';
 
 class TranslationCache {
-  static const int _maxSize = 3333;
-  static const int _cleanupThreshold = 4000; // ~20% tolerance
+  static const int _maxSize = 20000;
+  static const int _cleanupThreshold = 24000; // ~20% tolerance
 
   TranslationCache(this.ref);
   final Ref ref;

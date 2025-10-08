@@ -75,6 +75,10 @@ class TranslationService {
       String result = post.parseUrlsTagsTopicClearText(modifyTextProperty: false, parseGenerously: true);
       result = MemoStringUtils.removeEmoticons(result);
 
+      if (result.trim().isEmpty) {
+        return text;
+      }
+
       Translation translation = await translateAuto(text: result, to: systemLangCode);
 
       String? translatedWithMeta = post.appendUrlsTagsTopicToText(textParam: translation.text);
@@ -338,8 +342,10 @@ class MahakkaLanguage {
       }
     }
 
-    // Return null if no match found
-    return null;
+    //TODO add snackbar to call users to ask for their language to be supported
+    //TODO report this error with crashlytics
+    // Return english if system language is not supported yet
+    return MahakkaLanguage.getLanguageByCode("en");
   }
 }
 

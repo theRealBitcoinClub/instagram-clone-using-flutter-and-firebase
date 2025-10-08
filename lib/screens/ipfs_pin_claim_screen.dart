@@ -332,254 +332,251 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
           foregroundColor: colorScheme.onPrimary,
           actions: [AppBarBurnMahakkaTheme.buildThemeIcon(ref.read(themeStateProvider), ref, context)],
         ),
-        body: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Use this page to upload an image to the IPFS network. '
-                    'Your wallet must have sufficient Memo balance to pay for the upload. Select an image to check the cost!',
-                    style: textTheme.bodyMedium?.copyWith(height: 1.5, letterSpacing: 1),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // File selection area
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-                      borderRadius: BorderRadius.circular(8),
-                      color: colorScheme.surface,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Use this page to upload an image to the IPFS network. '
+                      'Your wallet must have sufficient Memo balance to pay for the upload. Select an image to check the cost!',
+                      style: textTheme.bodyMedium?.copyWith(height: 1.5, letterSpacing: 1),
                     ),
-                    padding: const EdgeInsets.all(20),
-                    height: 200,
-                    child: Center(
-                      child: _selectedFile == null
-                          ? AnimGrowFade(
-                              show: _selectedFile == null,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  ElevatedButton(
-                                    onPressed: _pickFile,
-                                    style: ElevatedButton.styleFrom(
-                                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-                                      backgroundColor: colorScheme.primary,
-                                      foregroundColor: colorScheme.onPrimary,
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 2, horizontal: 12),
-                                      child: Text(
-                                        'SELECT IMAGE',
-                                        style: textTheme.titleLarge?.copyWith(height: 1.5, letterSpacing: 1.2, color: colorScheme.onPrimary),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Icon(Icons.cloud_upload_outlined, size: 48, color: colorScheme.onSurfaceVariant),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Select an image from your phone to be uploaded to the Inter Planetary File System - IPFS',
-                                    textAlign: TextAlign.center,
-                                    style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 0.5),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : AnimGrowFade(
-                              show: _selectedFile != null,
-                              child: Container(
-                                width: double.infinity,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      _selectedFile!.path.split('/').last,
-                                      style: textTheme.bodySmall!.copyWith(letterSpacing: 0.5, color: colorScheme.secondary),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 24),
-                                    if (_pinClaimPrice != null)
-                                      AnimGrowFade(
-                                        show: _pinClaimPrice != null,
-                                        child: GestureDetector(
-                                          onTap: () => ExternalBrowserLauncher().launchUrlWithConfirmation(
-                                            context,
-                                            "https://psffpp.com/docs/overview/#payment",
-                                          ),
-                                          child: Container(
-                                            width: double.infinity,
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center, // Center the content
-                                              crossAxisAlignment: CrossAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  'Upload price: ~${((_pinClaimPrice! * 100000000)).toStringAsFixed(0)} sats',
-                                                  style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface, letterSpacing: 1.5),
-                                                ),
-                                                SizedBox(width: 9),
-                                                Icon(Icons.info_outline_rounded, size: 22, color: colorScheme.onSurface),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    const SizedBox(height: 16),
-                                    OutlinedButton(
-                                      onPressed: _removeFile,
-                                      style: ButtonStyle(
-                                        foregroundColor: MaterialStateProperty.all(colorScheme.error.withAlpha(198)),
-                                        side: MaterialStateProperty.all(BorderSide(color: colorScheme.error.withAlpha(198))),
-                                      ),
-                                      child: const Text('CHANGE IMAGE'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Loading indicator for price calculation
-                  if (_isLoading || _isUploading || _isPinning || _isCheckingBalance)
+                    const SizedBox(height: 16),
+                    buildFileSelectionContainer(colorScheme, textTheme, context),
+                    const SizedBox(height: 8),
+                    if (_isLoading || _isUploading || _isPinning || _isCheckingBalance) buildLoadingProgressBar(colorScheme),
+                    if (_error != null) buildErrorCard(colorScheme, textTheme),
+                    const SizedBox(height: 4),
+                    if (_cid != null)
+                      AnimGrowFade(show: _cid != null, child: _buildSuccessCard('', 'CID: $_cid', theme, colorScheme, textTheme)),
+                    if (_claimTxid != null)
+                      AnimGrowFade(
+                        show: _claimTxid != null,
+                        child: _buildSuccessCard('Pin Claim Success', 'Claim Txid: $_claimTxid', theme, colorScheme, textTheme),
+                      ),
+                    const SizedBox(height: 4),
                     Center(
-                      child: AnimGrowFade(
-                        show: _isLoading || _isUploading || _isPinning || _isCheckingBalance,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 12, bottom: 12),
-                          child: LinearProgressIndicator(color: colorScheme.primary),
-                        ),
+                      child: Column(
+                        children: [
+                          if (_selectedFile != null && _cid == null && _claimTxid == null && !_isLoading && !_isUploading) buildButtonUpload(),
+                          if (_cid != null && _claimTxid == null && !_isLoading && !hasSufficientBalance) buildButtonPin(),
+                        ],
                       ),
                     ),
-
-                  // Error message
-                  if (_error != null)
-                    AnimGrowFade(
-                      show: _error != null,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 6, bottom: 6),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: colorScheme.errorContainer,
-                            border: Border.all(color: colorScheme.error),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(_error!, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onErrorContainer, letterSpacing: 0.5)),
-                        ),
+                    if (_selectedFile != null)
+                      AnimGrowFade(
+                        show: _selectedFile != null,
+                        child: Column(children: [SizedBox(height: 16), Image.file(_selectedFile!, width: 500)]),
                       ),
-                    ),
-
-                  const SizedBox(height: 4),
-
-                  // Success messages
-                  if (_cid != null) AnimGrowFade(show: _cid != null, child: _buildSuccessCard('', 'CID: $_cid', theme, colorScheme, textTheme)),
-                  if (_claimTxid != null)
-                    AnimGrowFade(
-                      show: _claimTxid != null,
-                      child: _buildSuccessCard('Pin Claim Success', 'Claim Txid: $_claimTxid', theme, colorScheme, textTheme),
-                    ),
-
-                  const SizedBox(height: 4),
-
-                  // Action buttons
-                  Center(
-                    child: Column(
-                      children: [
-                        if (_selectedFile != null && _cid == null && _claimTxid == null && !_isLoading && !_isUploading)
-                          AnimGrowFade(
-                            show: _selectedFile != null && _cid == null && _claimTxid == null && !_isLoading && !_isUploading,
-                            child: Row(
-                              children: [
-                                IconAction(
-                                  type: IAB.success,
-                                  text: "UPLOAD IMAGE",
-                                  icon: Icons.upload,
-                                  size: 20,
-                                  onTap: () {
-                                    if (!_isUploading) _uploadFile();
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        if (_cid != null && _claimTxid == null && !_isLoading && !hasSufficientBalance)
-                          AnimGrowFade(
-                            show: _cid != null && _claimTxid == null && !_isLoading && !hasSufficientBalance,
-                            child: Row(
-                              children: [
-                                IconAction(
-                                  type: IAB.success,
-                                  text: "PIN IMAGE ON IPFS",
-                                  icon: Icons.upload,
-                                  size: 20,
-                                  onTap: () {
-                                    if (!_isPinning && !_isCheckingBalance) _checkBalanceAndPin();
-                                  },
-                                ),
-                              ],
-                            ),
-                            //
-                            // IconAction(text: "PIN IMAGE", onTap: onTap, type: type, icon: icon)
-                            //
-                            //                         ElevatedButton(
-                            //                           onPressed: (_isPinning || _isCheckingBalance) ? null : _checkBalanceAndPin,
-                            //                           style: ElevatedButton.styleFrom(
-                            //                             fixedSize: const Size.fromHeight(52),
-                            //                             backgroundColor: colorScheme.primary,
-                            //                             foregroundColor: colorScheme.onPrimary,
-                            //                           ),
-                            //                           child: (_isPinning || _isCheckingBalance) ? const LinearProgressIndicator() : const Text('PIN IMAGE'),
-                            //                         ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  if (_selectedFile != null)
-                    AnimGrowFade(
-                      show: _selectedFile != null,
-                      child: Column(children: [SizedBox(height: 16), Image.file(_selectedFile!, width: 500)]),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
+              if (_showOverlay) buildOverlayLoading(colorScheme, textTheme),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-            // Fullscreen overlay
-            if (_showOverlay)
-              WillPopScope(
-                onWillPop: () async => false, // Disable back button
-                child: Container(
-                  color: Colors.black.withOpacity(0.5), // 50% alpha black
-                  width: double.infinity,
-                  height: double.infinity,
-                  child: Center(
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary, // Theme color for circle
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          _countdownSeconds.toString(),
-                          style: textTheme.headlineLarge?.copyWith(
-                            fontSize: 50,
-                            color: colorScheme.onPrimary, // onPrimary theme color
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: 1,
-                          ),
+  Container buildFileSelectionContainer(ColorScheme colorScheme, TextTheme textTheme, BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
+        borderRadius: BorderRadius.circular(8),
+        color: colorScheme.surface,
+      ),
+      padding: const EdgeInsets.all(20),
+      height: 200,
+      child: Center(
+        child: _selectedFile == null
+            ? buildFileSelectionInit(colorScheme, textTheme)
+            : buildFileSelectionPriceCalculationCard(textTheme, colorScheme, context),
+      ),
+    );
+  }
+
+  AnimGrowFade buildFileSelectionInit(ColorScheme colorScheme, TextTheme textTheme) {
+    return AnimGrowFade(
+      show: _selectedFile == null,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ElevatedButton(
+            onPressed: _pickFile,
+            style: ElevatedButton.styleFrom(
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 2, horizontal: 12),
+              child: Text('SELECT IMAGE', style: textTheme.titleLarge?.copyWith(height: 1.5, letterSpacing: 1.2, color: colorScheme.onPrimary)),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Icon(Icons.cloud_upload_outlined, size: 48, color: colorScheme.onSurfaceVariant),
+          const SizedBox(height: 2),
+          Text(
+            'Select an image from your phone to be uploaded to the Inter Planetary File System - IPFS',
+            textAlign: TextAlign.center,
+            style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 0.5),
+          ),
+        ],
+      ),
+    );
+  }
+
+  AnimGrowFade buildFileSelectionPriceCalculationCard(TextTheme textTheme, ColorScheme colorScheme, BuildContext context) {
+    return AnimGrowFade(
+      show: _selectedFile != null,
+      child: Container(
+        width: double.infinity,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _selectedFile!.path.split('/').last,
+              style: textTheme.bodySmall!.copyWith(letterSpacing: 0.5, color: colorScheme.secondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            if (_pinClaimPrice != null)
+              AnimGrowFade(
+                show: _pinClaimPrice != null,
+                child: GestureDetector(
+                  onTap: () => ExternalBrowserLauncher().launchUrlWithConfirmation(context, "https://psffpp.com/docs/overview/#payment"),
+                  child: Container(
+                    width: double.infinity,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center, // Center the content
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Upload price: ~${((_pinClaimPrice! * 100000000)).toStringAsFixed(0)} sats',
+                          style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface, letterSpacing: 1.5),
                         ),
-                      ),
+                        SizedBox(width: 9),
+                        Icon(Icons.info_outline_rounded, size: 22, color: colorScheme.onSurface),
+                      ],
                     ),
                   ),
                 ),
               ),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: _removeFile,
+              style: ButtonStyle(
+                foregroundColor: MaterialStateProperty.all(colorScheme.error.withAlpha(198)),
+                side: MaterialStateProperty.all(BorderSide(color: colorScheme.error.withAlpha(198))),
+              ),
+              child: const Text('CHANGE IMAGE'),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Center buildLoadingProgressBar(ColorScheme colorScheme) {
+    return Center(
+      child: AnimGrowFade(
+        show: _isLoading || _isUploading || _isPinning || _isCheckingBalance,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 12),
+          child: LinearProgressIndicator(color: colorScheme.primary),
+        ),
+      ),
+    );
+  }
+
+  AnimGrowFade buildErrorCard(ColorScheme colorScheme, TextTheme textTheme) {
+    return AnimGrowFade(
+      show: _error != null,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 6, bottom: 6),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: colorScheme.errorContainer,
+            border: Border.all(color: colorScheme.error),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(_error!, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onErrorContainer, letterSpacing: 0.5)),
+        ),
+      ),
+    );
+  }
+
+  AnimGrowFade buildButtonPin() {
+    return AnimGrowFade(
+      show: _cid != null && _claimTxid == null && !_isLoading && !hasSufficientBalance,
+      child: Row(
+        children: [
+          IconAction(
+            type: IAB.success,
+            text: "PIN IMAGE ON IPFS",
+            icon: Icons.upload,
+            size: 20,
+            onTap: () {
+              if (!_isPinning && !_isCheckingBalance) _checkBalanceAndPin();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  AnimGrowFade buildButtonUpload() {
+    return AnimGrowFade(
+      show: _selectedFile != null && _cid == null && _claimTxid == null && !_isLoading && !_isUploading,
+      child: Row(
+        children: [
+          IconAction(
+            type: IAB.success,
+            text: "UPLOAD IMAGE",
+            icon: Icons.upload,
+            size: 20,
+            onTap: () {
+              if (!_isUploading) _uploadFile();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  WillPopScope buildOverlayLoading(ColorScheme colorScheme, TextTheme textTheme) {
+    return WillPopScope(
+      onWillPop: () async => false, // Disable back button
+      child: Container(
+        color: Colors.black.withOpacity(0.5), // 50% alpha black
+        width: double.infinity,
+        height: double.infinity,
+        child: Center(
+          child: Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: colorScheme.primary, // Theme color for circle
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                _countdownSeconds.toString(),
+                style: textTheme.headlineLarge?.copyWith(
+                  fontSize: 50,
+                  color: colorScheme.onPrimary, // onPrimary theme color
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );

@@ -161,79 +161,89 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       onWillPop: _onWillPop,
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
-        body: Stack(
-          children: List.generate(homeScreenItems.length, (index) {
-            return Offstage(
-              offstage: index != _currentTabIndex, // Use local state for display
-              child: TickerMode(
-                enabled: index == _currentTabIndex,
-                child: FadeTransition(opacity: _animationController, child: homeScreenItems[index]),
-              ),
-            );
-          }),
-        ),
-        bottomNavigationBar: Container(
-          height: 60,
-          decoration: BoxDecoration(
-            color:
-                theme.bottomNavigationBarTheme.backgroundColor ??
-                (theme.brightness == Brightness.light ? theme.colorScheme.surface : Colors.grey[900]),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8.0, offset: Offset(0, -2))],
-          ),
+        body: SafeArea(
           child: Stack(
-            children: [
-              // Animated indicator
-              AnimatedBuilder(
-                animation: _indicatorAnimCtrl,
-                builder: (context, child) {
-                  if (_currentTabIndex == AppTab.memo.tabIndex) {
-                    return SizedBox.shrink();
-                  }
-                  final screenWidth = MediaQuery.of(context).size.width;
-                  final tabWidth = screenWidth / tabCount;
-
-                  double visiblePosition;
-                  if (_previousTabIndex == AppTab.memo.tabIndex) {
-                    visiblePosition = _currentTabIndex.toDouble();
-                  } else {
-                    visiblePosition = _previousTabIndex + (_currentTabIndex - _previousTabIndex) * _indicatorAnimCtrl.value;
-                  }
-
-                  return Positioned(
-                    top: 0,
-                    left: visiblePosition * tabWidth,
-                    child: Container(
-                      width: tabWidth,
-                      height: 3,
-                      decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(2)),
-                    ),
-                  );
-                },
-              ),
-
-              Row(
-                children: visibleTabs.asMap().entries.map((entry) {
-                  final tabData = entry.value;
-                  final actualIndex = tabData.tabIndex;
-                  final isSelected = actualIndex == _currentTabIndex; // Use local state
-
-                  return Expanded(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _moveToTab(actualIndex),
-                        splashColor: theme.primaryColor.withOpacity(0.2),
-                        highlightColor: theme.primaryColor.withOpacity(0.1),
-                        child: Container(height: 60, child: Center(child: _buildTabIcon(tabData, isSelected, actualIndex))),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
+            children: List.generate(homeScreenItems.length, (index) {
+              return Offstage(
+                offstage: index != _currentTabIndex, // Use local state for display
+                child: TickerMode(
+                  enabled: index == _currentTabIndex,
+                  child: FadeTransition(opacity: _animationController, child: homeScreenItems[index]),
+                ),
+              );
+            }),
           ),
         ),
+        bottomNavigationBar: buildBottomNavBar(theme, tabCount, visibleTabs),
       ),
+    );
+  }
+
+  Container buildBottomNavBar(ThemeData theme, int tabCount, List<AppTab> visibleTabs) {
+    return Container(
+      height: 60,
+      decoration: BoxDecoration(
+        color:
+            theme.bottomNavigationBarTheme.backgroundColor ??
+            (theme.brightness == Brightness.light ? theme.colorScheme.surface : Colors.grey[900]),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8.0, offset: Offset(0, -2))],
+      ),
+      child: Stack(
+        children: [
+          // Animated indicator
+          buildAnimatedTabIndicator(tabCount, theme),
+
+          Row(
+            children: visibleTabs.asMap().entries.map((entry) {
+              final tabData = entry.value;
+              final actualIndex = tabData.tabIndex;
+              final isSelected = actualIndex == _currentTabIndex; // Use local state
+
+              return Expanded(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _moveToTab(actualIndex),
+                    splashColor: theme.primaryColor.withOpacity(0.2),
+                    highlightColor: theme.primaryColor.withOpacity(0.1),
+                    child: Container(height: 60, child: Center(child: _buildTabIcon(tabData, isSelected, actualIndex))),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  AnimatedBuilder buildAnimatedTabIndicator(int tabCount, ThemeData theme) {
+    return AnimatedBuilder(
+      animation: _indicatorAnimCtrl,
+      builder: (context, child) {
+        if (_currentTabIndex == AppTab.memo.tabIndex) {
+          return SizedBox.shrink();
+        }
+        final screenWidth = MediaQuery.of(context).size.width;
+        final tabWidth = screenWidth / tabCount;
+
+        double visiblePosition;
+        if (_previousTabIndex == AppTab.memo.tabIndex) {
+          visiblePosition = _currentTabIndex.toDouble();
+        } else {
+          visiblePosition = _previousTabIndex + (_currentTabIndex - _previousTabIndex) * _indicatorAnimCtrl.value;
+        }
+
+        return Positioned(
+          top: 0,
+          left: visiblePosition * tabWidth,
+          child: Container(
+            width: tabWidth,
+            height: 3,
+            decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(2)),
+          ),
+        );
+      },
     );
   }
 

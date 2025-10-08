@@ -20,19 +20,15 @@ void showSnackBar(String content, {required SnackbarType type, wait = false}) {
   if (scaffoldMessenger == null) return;
 
   if (!wait) scaffoldMessenger.clearSnackBars();
-  // Get the root context from navigator
-  // final navigator = Navigator.of(MyApp.scaffoldMessengerKey.currentContext!);
-  // final context = navigator.context;
-
-  // if (!wait) ScaffoldMessenger.of(context).clearSnackBars();
   content = content.toUpperCase();
 
   final backgroundColor = type.backgroundColor;
   final textStyle = TextStyle(color: Colors.white, fontWeight: FontWeight.w400, letterSpacing: 1.1, fontSize: 14);
+
+  // Get the bottom margin to avoid navigation bar overlap
+  final bottomMargin = _getSnackBarBottomMargin();
+
   scaffoldMessenger.showSnackBar(
-    // scaffoldMessenger: scaffoldMessenger,
-    // ScaffoldMessenger.of(context).showSnackBar(
-    // snackBarAnimationStyle: AnimationStyle(duration: Duration(milliseconds: 500), curve: ElasticInOutCurve()),
     SnackBar(
       duration: type.duration,
       content: Row(
@@ -46,14 +42,50 @@ void showSnackBar(String content, {required SnackbarType type, wait = false}) {
         ],
       ),
       backgroundColor: backgroundColor,
-      behavior: SnackBarBehavior.floating, // Changed to floating
+      behavior: SnackBarBehavior.floating,
       elevation: 6.0,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)), // All corners rounded for floating
+        borderRadius: BorderRadius.circular(16), // All corners rounded for floating
       ),
-      margin: EdgeInsets.zero, // This works with floating behavior
-      // width: MediaQuery.of(context).size.width, // Set width to screen width
+      margin: EdgeInsets.only(bottom: bottomMargin, left: 6, right: 6),
     ),
   );
 }
+
+double _getSnackBarBottomMargin() {
+  final context = MyApp.scaffoldMessengerKey.currentContext;
+  if (context == null) return 100; // Fallback margin
+
+  final mediaQuery = MediaQuery.of(context);
+  final bottomPadding = mediaQuery.padding.bottom;
+  final bottomViewInsets = mediaQuery.viewInsets.bottom;
+
+  // Calculate safe bottom margin
+  const double navBarHeight = 0; // Your bottom navigation bar height
+  const double extraSpacing = 40; // Extra space between snackbar and nav bar
+
+  // For devices with soft navigation bars, we need more margin
+  final bool hasSoftNavigationBar = bottomPadding < 20 && bottomViewInsets > 0;
+
+  if (hasSoftNavigationBar) {
+    return bottomPadding + navBarHeight + extraSpacing;
+  } else {
+    return navBarHeight + extraSpacing;
+  }
+}
+
+// Alternative simplified version - always use consistent margin:
+/*
+double _getSnackBarBottomMargin() {
+  final context = MyApp.scaffoldMessengerKey.currentContext;
+  if (context == null) return 80;
+
+  final bottomPadding = MediaQuery.of(context).padding.bottom;
+  const navBarHeight = 60;
+  const extraSpacing = 10;
+
+  // Always position above navigation bar with consistent spacing
+  return bottomPadding + navBarHeight + extraSpacing;
+}
+*/

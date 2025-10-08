@@ -211,175 +211,175 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
 
     return Scaffold(
       backgroundColor: Colors.black, // Fixed black background
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Stack(
-          children: [
-            // Gesture detector for swipe actions, double tap, and long press
-            GestureDetector(
-              onHorizontalDragEnd: _handleSwipe,
-              onVerticalDragEnd: _handleSwipe,
-              onDoubleTap: _handleDoubleTap,
-              onLongPress: _handleLongPress,
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: _onPageChanged,
-                itemCount: widget.posts.length,
-                itemBuilder: (context, index) {
-                  final post = widget.posts[index];
-                  return Container(
-                    color: Colors.black, // Fixed black background for image container
-                    width: double.infinity, // Ensure full width
-                    height: double.infinity,
-                    child: Center(
-                      child: UnifiedImageWidget(
-                        backgroundColor: Colors.black,
-                        imageUrl: post.imgurUrl ?? post.imageUrl ?? IpfsConfig.preferredNode + post.ipfsCid!,
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Stack(
+            children: [
+              // Gesture detector for swipe actions, double tap, and long press
+              GestureDetector(
+                onHorizontalDragEnd: _handleSwipe,
+                onVerticalDragEnd: _handleSwipe,
+                onDoubleTap: _handleDoubleTap,
+                onLongPress: _handleLongPress,
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: _onPageChanged,
+                  itemCount: widget.posts.length,
+                  itemBuilder: (context, index) {
+                    final post = widget.posts[index];
+                    return Container(
+                      color: Colors.black, // Fixed black background for image container
+                      width: double.infinity, // Ensure full width
+                      height: double.infinity,
+                      child: Center(
+                        child: UnifiedImageWidget(
+                          backgroundColor: Colors.black,
+                          border: Border.all(color: Colors.black),
+                          imageUrl: post.imgurUrl ?? post.imageUrl ?? IpfsConfig.preferredNode + post.ipfsCid!,
+                        ),
                       ),
-
-                      //   CachedUnifiedImageWidget(
-                      //     width: double.infinity, // Ensure full width
-                      //     height: double.infinity,
-                      //     border: Border.all(color: Colors.black),
-                      //     backgroundColor: Colors.black,
-                      //     imageUrl: post.imgurUrl ?? post.imageUrl ?? IpfsConfig.preferredNode + post.ipfsCid!,
-                      //     fitMode: ImageFitMode.contain, // Use fitWidth to fill width while maintaining aspect ratio
-                      //   ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
+              // App Bar with theme awareness - only visible in portrait or when not in fullscreen
+              if (_isPortrait || !_isFullscreen) buildAppBar(appBarBackgroundColor, appBarIconColor, currentPost, textColor),
+              if (currentPost.text != null && currentPost.text!.isNotEmpty && (_isPortrait || !_isFullscreen))
+                buildPostTextDescription(overlayColor, currentPost, textColor),
+              if (_isPortrait || !_isFullscreen) buildBottomNavBar(appBarBackgroundColor, textColor),
+              if (_showFullscreenHint && _isFullscreen) buildHintLongPressExit(hintOverlayColor, textColor),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Positioned buildAppBar(Color appBarBackgroundColor, Color appBarIconColor, MemoModelPost currentPost, Color textColor) {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        color: appBarBackgroundColor,
+        child: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          toolbarHeight: 50,
+          leading: IconButton(
+            icon: Icon(size: 30, Icons.close, color: appBarIconColor),
+            onPressed: _closeActivity,
+          ),
+          title: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            child: _buildTitleRow(currentPost, textColor, key: ValueKey(_currentIndex)),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(size: 30, _isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen, color: appBarIconColor),
+              onPressed: _toggleFullscreen,
             ),
+          ],
+          iconTheme: IconThemeData(color: appBarIconColor),
+          titleTextStyle: widget.theme.textTheme.titleSmall?.copyWith(color: textColor),
+        ),
+      ),
+    );
+  }
 
-            // App Bar with theme awareness - only visible in portrait or when not in fullscreen
-            if (_isPortrait || !_isFullscreen)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  color: appBarBackgroundColor,
-                  child: AppBar(
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    toolbarHeight: 50,
-                    leading: IconButton(
-                      icon: Icon(size: 30, Icons.close, color: appBarIconColor),
-                      onPressed: _closeActivity,
+  Positioned buildPostTextDescription(Color overlayColor, MemoModelPost currentPost, Color textColor) {
+    return Positioned(
+      bottom: _isPortrait ? 60 : 0, // Adjust position based on orientation
+      left: 0,
+      right: 0,
+      child: _isOverlayVisible
+          ? Container(
+              key: ValueKey(_currentIndex),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              decoration: BoxDecoration(
+                color: overlayColor,
+                borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+              ),
+              constraints: const BoxConstraints(
+                minHeight: 80, // Fixed height for exactly 5 lines
+                maxHeight: 80, // Fixed height for exactly 5 lines
+              ),
+              width: double.infinity, // Stretch full width
+              child: FadeTransition(
+                opacity: _overlayOpacityAnimation,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return FadeTransition(opacity: animation, child: child);
+                  },
+                  child: Text(
+                    currentPost.text!,
+                    style: widget.theme.textTheme.bodyMedium?.copyWith(
+                      color: textColor,
+                      height: 1.2, // Line height for better spacing
                     ),
-                    title: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      transitionBuilder: (Widget child, Animation<double> animation) {
-                        return FadeTransition(opacity: animation, child: child);
-                      },
-                      child: _buildTitleRow(currentPost, textColor, key: ValueKey(_currentIndex)),
-                    ),
-                    actions: [
-                      IconButton(
-                        icon: Icon(size: 30, _isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen, color: appBarIconColor),
-                        onPressed: _toggleFullscreen,
-                      ),
-                    ],
-                    iconTheme: IconThemeData(color: appBarIconColor),
-                    titleTextStyle: widget.theme.textTheme.titleSmall?.copyWith(color: textColor),
+                    textAlign: TextAlign.center,
+                    maxLines: 5, // Exactly 5 lines
+                    overflow: TextOverflow.ellipsis, // Ellipsis for overflow
                   ),
                 ),
               ),
+            )
+          : const SizedBox.shrink(key: ValueKey('empty')),
+    );
+  }
 
-            // Text overlay at bottom with animation - only visible in portrait or when not in fullscreen
-            if (currentPost.text != null && currentPost.text!.isNotEmpty && (_isPortrait || !_isFullscreen))
-              Positioned(
-                bottom: _isPortrait ? 60 : 0, // Adjust position based on orientation
-                left: 0,
-                right: 0,
-                child: _isOverlayVisible
-                    ? Container(
-                        key: ValueKey(_currentIndex),
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                        decoration: BoxDecoration(
-                          color: overlayColor,
-                          borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-                        ),
-                        constraints: const BoxConstraints(
-                          minHeight: 80, // Fixed height for exactly 5 lines
-                          maxHeight: 80, // Fixed height for exactly 5 lines
-                        ),
-                        width: double.infinity, // Stretch full width
-                        child: FadeTransition(
-                          opacity: _overlayOpacityAnimation,
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            transitionBuilder: (Widget child, Animation<double> animation) {
-                              return FadeTransition(opacity: animation, child: child);
-                            },
-                            child: Text(
-                              currentPost.text!,
-                              style: widget.theme.textTheme.bodyMedium?.copyWith(
-                                color: textColor,
-                                height: 1.2, // Line height for better spacing
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 5, // Exactly 5 lines
-                              overflow: TextOverflow.ellipsis, // Ellipsis for overflow
-                            ),
-                          ),
-                        ),
-                      )
-                    : const SizedBox.shrink(key: ValueKey('empty')),
-              ),
+  Positioned buildBottomNavBar(Color appBarBackgroundColor, Color textColor) {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        color: appBarBackgroundColor,
+        height: 60,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+              icon: Icon(Icons.arrow_circle_left_outlined, color: textColor, size: 34), // Increased icon size
+              onPressed: _navigateToPrevious,
+              disabledColor: textColor.withOpacity(0.3),
+            ),
+            IconButton(
+              icon: Icon(Icons.share_outlined, color: textColor, size: 34), // Increased icon size
+              onPressed: _handleShareAction,
+            ),
+            IconButton(
+              icon: Icon(Icons.arrow_circle_right_outlined, color: textColor, size: 34), // Increased icon size
+              onPressed: _navigateToNext,
+              disabledColor: textColor.withOpacity(0.3),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-            // Bottom Navigation Bar with theme awareness - only visible in portrait or when not in fullscreen
-            if (_isPortrait || !_isFullscreen)
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  color: appBarBackgroundColor,
-                  height: 60,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_circle_left_outlined, color: textColor, size: 34), // Increased icon size
-                        onPressed: _navigateToPrevious,
-                        disabledColor: textColor.withOpacity(0.3),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.share_outlined, color: textColor, size: 34), // Increased icon size
-                        onPressed: _handleShareAction,
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.arrow_circle_right_outlined, color: textColor, size: 34), // Increased icon size
-                        onPressed: _navigateToNext,
-                        disabledColor: textColor.withOpacity(0.3),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            // Fullscreen hint overlay - positioned at top left corner
-            if (_showFullscreenHint && _isFullscreen)
-              Positioned(
-                top: 16,
-                left: 16,
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: hintOverlayColor, borderRadius: BorderRadius.circular(8)),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.touch_app, size: 20, color: textColor),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Long press to exit',
-                        style: widget.theme.textTheme.bodyLarge?.copyWith(color: textColor, fontWeight: FontWeight.w400),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+  Positioned buildHintLongPressExit(Color hintOverlayColor, Color textColor) {
+    return Positioned(
+      top: 16,
+      left: 16,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: hintOverlayColor, borderRadius: BorderRadius.circular(8)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.touch_app, size: 20, color: textColor),
+            const SizedBox(width: 8),
+            Text(
+              'Long press to exit',
+              style: widget.theme.textTheme.bodyLarge?.copyWith(color: textColor, fontWeight: FontWeight.w400),
+            ),
           ],
         ),
       ),

@@ -55,35 +55,37 @@ class IPFSGalleryScreen extends ConsumerWidget {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          // IPFS Images ListView
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(0.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: backgroundColor,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [BoxShadow(color: colorScheme.shadow.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
+      body: SafeArea(
+        child: Column(
+          children: [
+            // IPFS Images ListView
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(0.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: backgroundColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [BoxShadow(color: colorScheme.shadow.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))],
+                  ),
+                  child: validCids.isEmpty
+                      ? _buildEmptyState(context)
+                      : ListView.builder(
+                          itemCount: validCids.length,
+                          itemBuilder: (context, index) {
+                            final cid = validCids[index];
+                            final isSelected = selectedCid == cid;
+                            return IPFSImageCard(cid: cid, isSelected: isSelected);
+                          },
+                        ),
                 ),
-                child: validCids.isEmpty
-                    ? _buildEmptyState(context)
-                    : ListView.builder(
-                        itemCount: validCids.length,
-                        itemBuilder: (context, index) {
-                          final cid = validCids[index];
-                          final isSelected = selectedCid == cid;
-                          return IPFSImageCard(cid: cid, isSelected: isSelected);
-                        },
-                      ),
               ),
             ),
-          ),
 
-          // Button Row
-          GalleryActionButtonRow(),
-        ],
+            // Button Row
+            GalleryActionButtonRow(),
+          ],
+        ),
       ),
     );
   }

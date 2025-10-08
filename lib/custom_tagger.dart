@@ -61,7 +61,7 @@ class _CustomFlutterTaggerState extends State<CustomFlutterTagger> {
   late bool _hideOverlay = false;
 
   String _formatTagText(String id, String tag, String triggerCharacter) {
-    return widget.tagTextFormatter?.call(id, tag, triggerCharacter) ?? "@$id#$tag#";
+    return widget.tagTextFormatter?.call(id, tag, triggerCharacter) ?? "$triggerCharacter$id#$tag#";
   }
 
   void _onFormattedTextChanged() {

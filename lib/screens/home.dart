@@ -161,20 +161,18 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       onWillPop: _onWillPop,
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
-        body: SafeArea(
-          child: Stack(
-            children: List.generate(homeScreenItems.length, (index) {
-              return Offstage(
-                offstage: index != _currentTabIndex, // Use local state for display
-                child: TickerMode(
-                  enabled: index == _currentTabIndex,
-                  child: FadeTransition(opacity: _animationController, child: homeScreenItems[index]),
-                ),
-              );
-            }),
-          ),
+        body: Stack(
+          children: List.generate(homeScreenItems.length, (index) {
+            return Offstage(
+              offstage: index != _currentTabIndex, // Use local state for display
+              child: TickerMode(
+                enabled: index == _currentTabIndex,
+                child: FadeTransition(opacity: _animationController, child: homeScreenItems[index]),
+              ),
+            );
+          }),
         ),
-        bottomNavigationBar: buildBottomNavBar(theme, tabCount, visibleTabs),
+        bottomNavigationBar: SafeArea(child: buildBottomNavBar(theme, tabCount, visibleTabs)),
       ),
     );
   }

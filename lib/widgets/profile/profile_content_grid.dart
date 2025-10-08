@@ -39,13 +39,13 @@ class ProfileContentGrid extends ConsumerWidget {
     }
 
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(0, 2, 0, 0),
+      padding: const EdgeInsets.fromLTRB(0, 1, 0, 0),
       sliver: SliverGrid.builder(
         itemCount: itemCount,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          crossAxisSpacing: 0.1,
-          mainAxisSpacing: 0.1,
+          crossAxisSpacing: 1,
+          mainAxisSpacing: 1,
           childAspectRatio: 1.0,
         ),
         itemBuilder: (context, index) {
@@ -85,6 +85,7 @@ class ProfileContentGrid extends ConsumerWidget {
       fitMode: ImageFitMode.cover,
       aspectRatio: 1.0,
       borderRadius: BorderRadius.zero,
+      border: Border(),
       showLoadingProgress: true,
       placeholder: imagePlaceholder,
     );

@@ -370,7 +370,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                     if (_selectedFile != null)
                       AnimGrowFade(
                         show: _selectedFile != null,
-                        child: Column(children: [SizedBox(height: 16), Image.file(_selectedFile!, width: 500)]),
+                        child: Column(children: [SizedBox(height: 9), Image.file(_selectedFile!, width: 500)]),
                       ),
                   ],
                 ),

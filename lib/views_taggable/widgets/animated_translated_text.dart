@@ -1,8 +1,8 @@
 // animated_translated_text.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:mahakka/utils/snackbar.dart';
 
 import '../../expandable_text_custom.dart';
 import '../../main.dart';
@@ -61,43 +61,42 @@ class _AnimatedTranslatedTextState extends ConsumerState<AnimatedTranslatedText>
   void initState() {
     super.initState();
     _currentText = widget.originalText;
-    context.afterBuild(() {
-      _startTranslation();
-    }, refreshUI: true);
+    _showTranslated = false;
+    _isTranslating = true;
+    _currentParams = PostTranslationParams(
+      post: widget.post,
+      doTranslate: widget.doTranslate,
+      // text: widget.originalText,
+      // context: context,
+      languageCode: "fake",
+    );
+    // context.afterBuild(() {
+    //   _startTranslation();
+    // }, refreshUI: true);
   }
 
-  @override
-  void didUpdateWidget(AnimatedTranslatedText oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    // If translation setting changed or text changed, restart
-    if (widget.doTranslate != oldWidget.doTranslate || widget.originalText != oldWidget.originalText || widget.post.id != oldWidget.post.id) {
-      _startTranslation();
-    }
-  }
-
-  void _startTranslation() {
-    // If translation is disabled, we're done
-    if (!widget.doTranslate || widget.originalText.trim().isEmpty) {
-      return;
-    }
-
-    final currentLanguage = ref.read(languageCodeProvider); // Get current language
-
-    // Always show original text first
-    setState(() {
-      _currentText = widget.originalText;
-      _showTranslated = false;
-      _isTranslating = true;
-      _currentParams = PostTranslationParams(
-        post: widget.post,
-        doTranslate: widget.doTranslate,
-        text: widget.originalText,
-        context: context,
-        languageCode: currentLanguage,
-      );
-    });
-  }
+  // void _startTranslation() {
+  //   // If translation is disabled, we're done
+  //   if (!widget.doTranslate || widget.originalText.trim().isEmpty) {
+  //     return;
+  //   }
+  //
+  //   final currentLanguage = ref.read(languageCodeProvider); // Get current language
+  //
+  //   // Always show original text first
+  //   setState(() {
+  //     _currentText = widget.originalText;
+  //     _showTranslated = false;
+  //     _isTranslating = true;
+  //     _currentParams = PostTranslationParams(
+  //       post: widget.post,
+  //       doTranslate: widget.doTranslate,
+  //       text: widget.originalText,
+  //       context: context,
+  //       languageCode: currentLanguage,
+  //     );
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -105,62 +104,63 @@ class _AnimatedTranslatedTextState extends ConsumerState<AnimatedTranslatedText>
     final currentLanguage = ref.watch(languageCodeProvider);
 
     // Watch the translation provider in the build method - this is crucial for Riverpod reactivity
-    if (_currentParams != null && widget.doTranslate && widget.originalText.trim().isNotEmpty) {
-      if (_currentParams!.languageCode != currentLanguage) {
-        _currentParams = PostTranslationParams(
-          post: widget.post,
-          doTranslate: widget.doTranslate,
-          text: widget.originalText,
-          context: context,
-          languageCode: currentLanguage,
-        );
-        _isTranslating = true;
-      }
-
-      final translationAsync = ref.watch(postTranslationViewerProvider(_currentParams!));
-
-      translationAsync.when(
-        data: (translatedText) {
-          // Use post-frame callback to avoid setState during build
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              if (translatedText != widget.originalText) {
-                // Only animate if the text actually changed
-                setState(() {
-                  _currentText = translatedText;
-                  _showTranslated = true;
-                  _isTranslating = false;
-                });
-                // showSnackBar("SUCCESS TRANSLATING POST: ${widget.postId}", type: SnackbarType.success);
-              } else if (_isTranslating) {
-                setState(() {
-                  _isTranslating = false;
-                });
-              }
-            }
-          });
-        },
-        loading: () {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && !_isTranslating) {
-              setState(() {
-                _isTranslating = true;
-              });
-            }
-          });
-        },
-        error: (error, stack) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              setState(() {
-                _isTranslating = false;
-              });
-              // showSnackBar("ERROR TRANSLATING POST: ${widget.postId}", type: SnackbarType.error);
-            }
-          });
-        },
+    // if (_currentParams != null && widget.doTranslate && widget.originalText.trim().isNotEmpty) {
+    if (_currentParams!.languageCode != currentLanguage) {
+      _currentParams = PostTranslationParams(
+        post: widget.post,
+        doTranslate: widget.doTranslate,
+        // text: widget.originalText,
+        // context: context,
+        languageCode: currentLanguage,
       );
+      _isTranslating = true;
     }
+
+    final translationAsync = ref.watch(postTranslationViewerProvider(_currentParams!));
+
+    translationAsync.when(
+      data: (translatedText) {
+        // Use post-frame callback to avoid setState during build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            // if (translatedText != widget.originalText) {
+            // Only animate if the text actually changed
+            setState(() {
+              _currentText = translatedText;
+              _showTranslated = true;
+              _isTranslating = false;
+            });
+            // showSnackBar("SUCCESS TRANSLATING POST: ${widget.postId}", type: SnackbarType.success);
+            // } else if (_isTranslating) {
+            //   setState(() {
+            //     _isTranslating = false;
+            //   });
+            // }
+          }
+        });
+      },
+      loading: () {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_isTranslating) {
+            setState(() {
+              _isTranslating = true;
+            });
+          }
+        });
+      },
+      error: (error, stack) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            showSnackBar("Translation error: $error", type: SnackbarType.error);
+            setState(() {
+              _isTranslating = false;
+            });
+            // showSnackBar("ERROR TRANSLATING POST: ${widget.postId}", type: SnackbarType.error);
+          }
+        });
+      },
+    );
+    // }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

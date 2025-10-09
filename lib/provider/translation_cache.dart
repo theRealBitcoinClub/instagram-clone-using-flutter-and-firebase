@@ -1,5 +1,4 @@
 // translation_cache.dart
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
@@ -100,15 +99,15 @@ final translationCacheProvider = Provider<TranslationCache>((ref) {
 class PostTranslationParams {
   final MemoModelPost post;
   final bool doTranslate;
-  final String text;
-  final BuildContext context;
+  // final String text;
+  // final BuildContext context;
   final String languageCode;
 
   const PostTranslationParams({
     required this.post,
     required this.doTranslate,
-    required this.text,
-    required this.context,
+    // required this.text,
+    // required this.context,
     required this.languageCode,
   });
 
@@ -119,11 +118,11 @@ class PostTranslationParams {
           runtimeType == other.runtimeType &&
           post.id == other.post.id &&
           doTranslate == other.doTranslate &&
-          text == other.text &&
+          // text == other.text &&
           languageCode == other.languageCode;
 
   @override
-  int get hashCode => Object.hash(post.id, doTranslate, text, languageCode);
+  int get hashCode => Object.hash(post.id, doTranslate, languageCode);
 }
 
 final postTranslationViewerProvider = FutureProvider.family<String, PostTranslationParams>((ref, params) async {
@@ -140,7 +139,7 @@ final postTranslationViewerProvider = FutureProvider.family<String, PostTranslat
 
   print("📚 TranslationCache: Cache MISS for post: ${params.post.id}, lang: ${params.languageCode}");
 
-  final requestId = '${params.post.id}|${params.doTranslate}|${params.text.hashCode}|${params.languageCode}';
+  final requestId = '${params.post.id}|${params.languageCode}';
 
   return sequencer.enqueue(requestId, () async {
     // print("🎯 SEQUENCER: Processing translation for post: ${params.post.id}");
@@ -148,8 +147,8 @@ final postTranslationViewerProvider = FutureProvider.family<String, PostTranslat
     final result = await translationService.translatePostForViewer(
       params.post,
       params.doTranslate,
-      params.text,
-      params.context,
+      // params.text,
+      // params.context,
       params.languageCode,
     );
 

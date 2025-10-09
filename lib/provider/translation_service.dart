@@ -79,44 +79,44 @@ class TranslationService {
 
   TranslationService(this._ref);
 
-  Future<String> translatePostForViewer(MemoModelPost post, bool doTranslate, String text, BuildContext context, String langCode) async {
-    if (post.text == null || post.text!.isEmpty) return "";
+  Future<String> translatePostForViewer(MemoModelPost post, bool doTranslate, String langCode) async {
+    if (post.text == null || post.text!.trim().isEmpty) return "";
 
-    final cache = _ref.read(translationCacheProvider);
-    if (!doTranslate || text.trim().isEmpty) {
+    String text = post.text!;
+
+    // final cache = _ref.read(translationCacheProvider);
+    if (!doTranslate) {
       return text;
     }
 
     String systemLangCode = _ref.read(languageCodeProvider);
-    // final String systemLangCode = SystemLanguage.getLanguageCode(context);
-    // var systemLangCode = "de";
     if (systemLangCode.isEmpty) {
-      return text;
+      systemLangCode = 'en';
     }
 
-    String? cachedTranslation = await cache.get(post.id!, systemLangCode);
-    if (cachedTranslation != null) {
-      return cachedTranslation;
-    }
+    // String? cachedTranslation = await cache.get(post.id!, systemLangCode);
+    // if (cachedTranslation != null) {
+    //   return cachedTranslation;
+    // }
 
     try {
-      String result = post.parseUrlsTagsTopicClearText(modifyTextProperty: false, parseGenerously: true);
-      result = MemoStringUtils.removeEmoticons(result);
+      String parseResult = post.parseUrlsTagsTopicClearText(modifyTextProperty: false, parseGenerously: true);
+      parseResult = MemoStringUtils.removeEmoticons(parseResult);
 
-      if (result.trim().isEmpty) {
+      if (parseResult.trim().isEmpty) {
         return text;
       }
 
-      Translation translation = await translateAuto(text: result, to: systemLangCode);
-
+      Translation translation = await translateAuto(text: parseResult, to: systemLangCode);
       String? translatedWithMeta = post.appendUrlsTagsTopicToText(textParam: translation.text);
 
-      if (translation.sourceLanguage.code != systemLangCode && translatedWithMeta != null) {
-        cache.put(post.id!, systemLangCode, translatedWithMeta);
+      if (translatedWithMeta != null) {
+        // cache.put(post.id!, systemLangCode, translatedWithMeta);
         return translatedWithMeta;
       }
-      return post.text!;
+      return text;
     } catch (e) {
+      print("error translation $e"); // showSnackBar("Translation failed: ${e.toString()}", type: SnackbarType.error);
       return text;
     }
   }

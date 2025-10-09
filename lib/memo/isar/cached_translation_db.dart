@@ -27,7 +27,7 @@ class CachedTranslationDb {
 
   // Public static method to generate cache key
   static String generateCacheKey(String postId, String languageCode) {
-    return '$postId|$languageCode';
+    return 'asdf$postId|$languageCode';
   }
 
   @override

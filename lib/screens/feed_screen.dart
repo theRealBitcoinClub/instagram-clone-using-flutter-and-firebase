@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
-import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart';
@@ -29,43 +28,43 @@ class FeedScreen extends ConsumerStatefulWidget {
 
 class _FeedScreenState extends ConsumerState<FeedScreen> {
   final ScrollController _scrollController = ScrollController();
-  final FocusNode _listViewFocusNode = FocusNode();
+  // final FocusNode _listViewFocusNode = FocusNode();
   final _introType = IntroType.mainApp;
 
   @override
   void initState() {
     super.initState();
     _print('FSCR:🚀 FeedScreen initState called');
-    _scrollController.addListener(_scrollListener);
+    // _scrollController.addListener(_scrollListener);
     _print('FSCR:📜 Scroll listener added');
-
-    context.afterLayout(refreshUI: false, () {
-      _print('FSCR:🎯 Requesting focus for list view');
-      FocusScope.of(context).requestFocus(_listViewFocusNode);
-      // Future.delayed(Duration(seconds: 3), () {
-      //   ref.read(tokenLimitsProvider.notifier).handleCreatorUpdate(null);
-      // });
-    });
+    //
+    // context.afterLayout(refreshUI: false, () {
+    //   _print('FSCR:🎯 Requesting focus for list view');
+    //   FocusScope.of(context).requestFocus(_listViewFocusNode);
+    //   // Future.delayed(Duration(seconds: 3), () {
+    //   //   ref.read(tokenLimitsProvider.notifier).handleCreatorUpdate(null);
+    //   // });
+    // });
   }
 
-  void _scrollListener() {
-    final scrollPosition = _scrollController.position;
-    final pixels = scrollPosition.pixels;
-    final maxScrollExtent = scrollPosition.maxScrollExtent;
-    final threshold = maxScrollExtent - 300;
-
-    // _print('FSCR:📜 Scroll listener - pixels: $pixels, maxScrollExtent: $maxScrollExtent, threshold: $threshold');
-
-    if (pixels >= threshold && !ref.read(feedPostsProvider).isLoadingMorePostsAtBottom && ref.read(feedPostsProvider).hasMorePosts) {
-      // _print('FSCR:📥 Triggering fetchMorePosts - reached scroll threshold');
-      ref.read(feedPostsProvider.notifier).fetchMorePosts();
-    } else {
-      // _print('FSCR:⏸️ Scroll threshold not met or conditions not satisfied');
-      // _print('FSCR:   - isLoadingMore: ${ref.read(feedPostsProvider).isLoadingMorePostsAtBottom}');
-      // _print('FSCR:   - hasMorePosts: ${ref.read(feedPostsProvider).hasMorePosts}');
-      // _print('FSCR:   - pixels >= threshold: ${pixels >= threshold}');
-    }
-  }
+  // void _scrollListener() {
+  //   final scrollPosition = _scrollController.position;
+  //   final pixels = scrollPosition.pixels;
+  //   final maxScrollExtent = scrollPosition.maxScrollExtent;
+  //   final threshold = maxScrollExtent - 300;
+  //
+  //   // _print('FSCR:📜 Scroll listener - pixels: $pixels, maxScrollExtent: $maxScrollExtent, threshold: $threshold');
+  //
+  //   if (pixels >= threshold && !ref.read(feedPostsProvider).isLoadingMorePostsAtBottom && ref.read(feedPostsProvider).hasMorePosts) {
+  //     // _print('FSCR:📥 Triggering fetchMorePosts - reached scroll threshold');
+  //     ref.read(feedPostsProvider.notifier).fetchMorePosts();
+  //   } else {
+  //     // _print('FSCR:⏸️ Scroll threshold not met or conditions not satisfied');
+  //     // _print('FSCR:   - isLoadingMore: ${ref.read(feedPostsProvider).isLoadingMorePostsAtBottom}');
+  //     // _print('FSCR:   - hasMorePosts: ${ref.read(feedPostsProvider).hasMorePosts}');
+  //     // _print('FSCR:   - pixels >= threshold: ${pixels >= threshold}');
+  //   }
+  // }
 
   void _scrollDownForPost(MemoModelPost post) {
     if (!_scrollController.hasClients) {
@@ -95,9 +94,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   void dispose() {
     _print('FSCR:♻️ FeedScreen dispose called');
-    _scrollController.removeListener(_scrollListener);
+    // _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
-    _listViewFocusNode.dispose();
+    // _listViewFocusNode.dispose();
     super.dispose();
   }
 
@@ -268,12 +267,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           //   },
           //   child:
           GestureDetector(
-            onTap: () {
-              if (!_listViewFocusNode.hasFocus) {
-                _print('FSCR:🎯 Requesting focus via GestureDetector tap');
-                FocusScope.of(context).requestFocus(_listViewFocusNode);
-              }
-            },
+            // onTap: () {
+            //   if (!_listViewFocusNode.hasFocus) {
+            //     _print('FSCR:🎯 Requesting focus via GestureDetector tap');
+            //     FocusScope.of(context).requestFocus(_listViewFocusNode);
+            //   }
+            // },
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
               controller: _scrollController,

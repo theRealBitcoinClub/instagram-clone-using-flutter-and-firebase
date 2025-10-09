@@ -21,7 +21,9 @@ final muteCreatorInitializerProvider = FutureProvider<void>((ref) async {
   final prefs = ref.read(sharedPreferencesProvider);
 
   if (user != null) {
-    await ref.read(muteCreatorProvider.notifier).initialize(prefs, user.id);
+    Future.microtask(() {
+      ref.read(muteCreatorProvider.notifier).initialize(prefs, user.id);
+    });
   }
 });
 // New async provider that loads creator objects

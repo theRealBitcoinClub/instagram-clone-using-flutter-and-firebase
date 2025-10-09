@@ -189,15 +189,15 @@ class PostServiceFeed {
 
       if (_isDebugMode) {
         _print('PSF:    🎉 Successfully parsed ${posts.length} posts');
-        _print('PSF:    📊 Post details:');
-        for (var i = 0; i < posts.length; i++) {
-          final post = posts[i];
-          _print('PSF:    ├── [$i] ${post.id} by ${post.creatorId}');
-          _print('PSF:    │   ├── imageUrl: ${post.imageUrl?.isNotEmpty ?? false}');
-          _print('PSF:    │   ├── imgurUrl: ${post.imgurUrl?.isNotEmpty ?? false}');
-          _print('PSF:    │   ├── ipfsCid: ${post.ipfsCid?.isNotEmpty ?? false}');
-          _print('PSF:    │   └── created: ${post.createdDateTime}');
-        }
+        // _print('PSF:    📊 Post details:');
+        // for (var i = 0; i < posts.length; i++) {
+        //   final post = posts[i];
+        //   _print('PSF:    ├── [$i] ${post.id} by ${post.creatorId}');
+        //   _print('PSF:    │   ├── imageUrl: ${post.imageUrl?.isNotEmpty ?? false}');
+        //   _print('PSF:    │   ├── imgurUrl: ${post.imgurUrl?.isNotEmpty ?? false}');
+        //   _print('PSF:    │   ├── ipfsCid: ${post.ipfsCid?.isNotEmpty ?? false}');
+        //   _print('PSF:    │   └── created: ${post.createdDateTime}');
+        // }
         _print('PSF:    └── 📮 PostServiceFeed.getPostsPaginated() completed');
       }
 

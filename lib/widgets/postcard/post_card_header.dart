@@ -55,7 +55,7 @@ class PostCardHeader extends ConsumerWidget {
                       children: [
                         Text("${creator.profileIdShort} ", style: theme.textTheme.titleSmall),
                         SizedBox(
-                          width: 189,
+                          width: 180,
                           child: Text(creator.nameMaxLengthAware, style: theme.textTheme.titleMedium, overflow: TextOverflow.ellipsis),
                         ),
                       ],
@@ -81,14 +81,12 @@ class PostCardHeader extends ConsumerWidget {
         borderRadius: BorderRadius.all(Radius.circular(9)),
         onTap: onLikePostTipCreator,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(9, 0, 0, 0),
+          padding: EdgeInsets.fromLTRB(6, 0, 0, 0),
           child: Row(
             children: [
               PopularityScoreWidget(initialScore: displayScore, postId: post.id),
-              // Text("${post.popularityScore}", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400)),
-              SizedBox(width: 3),
               IconButton(
-                padding: EdgeInsets.all(9),
+                padding: EdgeInsets.all(15),
                 icon: const Icon(Icons.thumb_up_alt_outlined),
                 onPressed: onLikePostTipCreator, // This is for the "Tip Creator" action
                 iconSize: 23,

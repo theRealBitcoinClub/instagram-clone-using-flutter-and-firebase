@@ -99,8 +99,8 @@ class AddPostController extends StateNotifier<void> {
         ref.read(telegramBotPublisherProvider).publishPost(postText: copyPost.text!, mediaUrl: null);
         clearMediaAfterPublish();
       } else {
-        showQrCodeDialog(ctx: _context, user: user, memoOnly: true);
         _showSnackBar('Publish failed: ${response.message}', isError: true);
+        showQrCodeDialog(ctx: _context, user: user, memoOnly: true, withDelay: true);
       }
     } catch (e, s) {
       print("Error during publish: $e\n$s");

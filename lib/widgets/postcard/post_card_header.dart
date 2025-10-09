@@ -40,64 +40,77 @@ class PostCardHeader extends ConsumerWidget {
             radius: 27,
           ),
           const SizedBox(width: 9),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: () => _navigateToProfile(context, ref, creator.id), // Pass ref
-                  child: Row(
-                    children: [
-                      Text("${creator.profileIdShort} ", style: theme.textTheme.titleSmall),
-                      SizedBox(
-                        width: 171,
-                        child: Text(creator.nameMaxLengthAware, style: theme.textTheme.titleMedium, overflow: TextOverflow.ellipsis),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 3),
-                Row(
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.all(Radius.circular(6)),
+              onTap: () => _navigateToProfile(context, ref, creator.id), // Pass ref
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 3, horizontal: 3),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (index != null)
-                      Text(
-                        "[${(index! + 1).toString().padLeft(2, '0')}/$feedLimit] ",
-                        style: theme.textTheme.titleSmall!.copyWith(color: theme.colorScheme.secondary.withAlpha(153)),
+                    SizedBox(
+                      width: 171,
+                      child: Row(
+                        children: [
+                          Text("${creator.profileIdShort} ", style: theme.textTheme.titleSmall),
+                          Text(creator.nameMaxLengthAware, style: theme.textTheme.titleMedium, overflow: TextOverflow.ellipsis),
+                        ],
                       ),
-                    if (post.createdDateTime != null)
-                      Text(
-                        "${post.dateTimeFormattedSafe()}: ",
-                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(169)),
-                      ),
-                    if (post.age.isNotEmpty && post.createdDateTime != null)
-                      Text("", style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-                    if (post.age.isNotEmpty)
-                      Text(post.age, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    ),
+                    SizedBox(height: 3),
+                    buildCounterDateAgeRow(feedLimit, theme),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
-          GestureDetector(
-            onTap: onLikePostTipCreator,
-            child: Row(
-              children: [
-                PopularityScoreWidget(initialScore: displayScore, postId: post.id),
-                // Text("${post.popularityScore}", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400)),
-                SizedBox(width: 3),
-                IconButton(
-                  padding: EdgeInsets.all(9),
-                  icon: const Icon(Icons.thumb_up_alt_outlined),
-                  onPressed: onLikePostTipCreator, // This is for the "Tip Creator" action
-                  iconSize: 21,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ),
+          Spacer(),
+          buildPopularityCounterTipPost(displayScore),
+        ],
+      ),
+    );
+  }
+
+  GestureDetector buildPopularityCounterTipPost(int displayScore) {
+    return GestureDetector(
+      onTap: onLikePostTipCreator,
+      child: Row(
+        children: [
+          PopularityScoreWidget(initialScore: displayScore, postId: post.id),
+          // Text("${post.popularityScore}", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400)),
+          SizedBox(width: 3),
+          IconButton(
+            padding: EdgeInsets.all(9),
+            icon: const Icon(Icons.thumb_up_alt_outlined),
+            onPressed: onLikePostTipCreator, // This is for the "Tip Creator" action
+            iconSize: 21,
+            visualDensity: VisualDensity.compact,
           ),
         ],
       ),
+    );
+  }
+
+  Row buildCounterDateAgeRow(int feedLimit, ThemeData theme) {
+    return Row(
+      children: [
+        if (index != null)
+          Text(
+            "[${(index! + 1).toString().padLeft(2, '0')}/$feedLimit] ",
+            style: theme.textTheme.titleSmall!.copyWith(color: theme.colorScheme.secondary.withAlpha(153)),
+          ),
+        if (post.createdDateTime != null)
+          Text(
+            "${post.dateTimeFormattedSafe()}: ",
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(169)),
+          ),
+        if (post.age.isNotEmpty && post.createdDateTime != null)
+          Text("", style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        if (post.age.isNotEmpty) Text(post.age, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+      ],
     );
   }
 }

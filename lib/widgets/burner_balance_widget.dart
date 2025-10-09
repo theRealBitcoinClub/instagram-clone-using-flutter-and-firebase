@@ -15,50 +15,57 @@ class BurnerBalanceWidget extends ConsumerWidget {
     final currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
     final ThemeData theme = currentThemeState.currentTheme;
     final asyncBurnerBalance = ref.watch(bchBurnerBalanceProvider);
-    return GestureDetector(
-      onTap: () =>
-          ref.read(navigationStateProvider.notifier).navigateToUrl("${MemoBitcoinBase.explorerUrl}${MemoBitcoinBase.bchBurnerAddress}"),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.currency_bitcoin_outlined, size: 22, color: theme.colorScheme.onPrimary),
-          const SizedBox(width: 2.1),
-          asyncBurnerBalance.when(
-            data: (burnerBalance) {
-              return Row(
-                children: [
-                  PopularityScoreWidget(
-                    initialScore: burnerBalance.bch,
-                    textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: theme.colorScheme.onPrimary),
-                  ),
-                  SizedBox(width: 6),
-                  Icon(Icons.local_fire_department_outlined, size: 22, color: theme.colorScheme.onPrimary),
-                  const SizedBox(width: 2.1),
-                  PopularityScoreWidget(
-                    initialScore: burnerBalance.token,
-                    textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: theme.colorScheme.onPrimary),
-                  ),
-                ],
-              );
-            },
-            error: (error, stackTrace) {
-              return Icon(Icons.error_outline, size: 20, color: theme.colorScheme.error);
-            },
-            loading: () {
-              return SizedBox(
-                width: 60,
-                height: 20,
-                child: LinearProgressIndicator(
-                  backgroundColor: theme.colorScheme.onPrimary.withOpacity(0.2),
-                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
-                  minHeight: 2,
-                ),
-              );
-            },
-            skipLoadingOnReload: true,
-            skipLoadingOnRefresh: true,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () =>
+            ref.read(navigationStateProvider.notifier).navigateToUrl("${MemoBitcoinBase.explorerUrl}${MemoBitcoinBase.bchBurnerAddress}"),
+        borderRadius: BorderRadius.circular(18.0),
+        child: Padding(
+          padding: EdgeInsetsGeometry.fromLTRB(9, 0, 0, 0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.currency_bitcoin_outlined, size: 22, color: theme.colorScheme.onPrimary),
+              const SizedBox(width: 2.1),
+              asyncBurnerBalance.when(
+                data: (burnerBalance) {
+                  return Row(
+                    children: [
+                      PopularityScoreWidget(
+                        initialScore: burnerBalance.bch,
+                        textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: theme.colorScheme.onPrimary),
+                      ),
+                      SizedBox(width: 6),
+                      Icon(Icons.local_fire_department_outlined, size: 22, color: theme.colorScheme.onPrimary),
+                      const SizedBox(width: 2.1),
+                      PopularityScoreWidget(
+                        initialScore: burnerBalance.token,
+                        textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: theme.colorScheme.onPrimary),
+                      ),
+                    ],
+                  );
+                },
+                error: (error, stackTrace) {
+                  return Icon(Icons.error_outline, size: 20, color: theme.colorScheme.error);
+                },
+                loading: () {
+                  return SizedBox(
+                    width: 60,
+                    height: 20,
+                    child: LinearProgressIndicator(
+                      backgroundColor: theme.colorScheme.onPrimary.withOpacity(0.2),
+                      valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
+                      minHeight: 2,
+                    ),
+                  );
+                },
+                skipLoadingOnReload: true,
+                skipLoadingOnRefresh: true,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -191,10 +191,17 @@ class _CachedAvatarState extends ConsumerState<CachedAvatar> {
         final hasRegistered = creator?.hasRegisteredAsUserFixed ?? false;
         final isLoading = snapshot.connectionState == ConnectionState.waiting;
 
-        return GestureDetector(
-          onTap: () => _navigateToProfile(creator),
-          onLongPress: _refreshAvatar,
-          child: _buildAvatarWithBadges(context, avatarUrl, hasRegistered, isLoading, isRefreshing, isMuted),
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.all(Radius.circular(99)),
+            onTap: () => _navigateToProfile(creator),
+            onLongPress: _refreshAvatar,
+            child: Padding(
+              padding: EdgeInsets.all(widget.radius / 10),
+              child: _buildAvatarWithBadges(context, avatarUrl, hasRegistered, isLoading, isRefreshing, isMuted),
+            ),
+          ),
         );
       },
     );

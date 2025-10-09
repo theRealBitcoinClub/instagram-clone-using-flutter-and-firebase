@@ -12,8 +12,6 @@ import 'intros/intro_enums.dart';
 import 'intros/wrapped_animated_intro_target.dart';
 import 'main.dart';
 
-// final languageCodeProvider = StateProvider<String?>((ref) => SystemLanguage.getLanguageCode());
-
 class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidget {
   const AppBarBurnMahakkaTheme({super.key});
   static const double height = 40;
@@ -32,18 +30,22 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
     return AppBar(
       centerTitle: true,
       toolbarHeight: height,
-      leading: Padding(padding: EdgeInsetsGeometry.fromLTRB(9, 0, 0, 0), child: BurnerBalanceWidget()),
-      leadingWidth: 189,
+      leading: BurnerBalanceWidget(),
+      leadingWidth: 153,
       actions: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-          child: GestureDetector(
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
             onTap: () {
               selectLanguageCode(ref, context);
             },
-            child: Text(
-              "${lang.flag}  ${lang.name}",
-              style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.w400),
+            borderRadius: BorderRadius.circular(18.0),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 9.0, vertical: 9.0),
+              child: Text(
+                "${lang.flag}  ${lang.name}",
+                style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.w400),
+              ),
             ),
           ),
         ),

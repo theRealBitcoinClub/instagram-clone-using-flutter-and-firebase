@@ -7,7 +7,7 @@ class HashtagDisplayWidget extends StatefulWidget {
   final Function(int)? onSelectHashtag;
   final int maxTagsCounter;
   final bool noBorder;
-  static const borderRadius = 12.0;
+  static const borderRadius = 9.0;
   static const borderWidth = 1.2;
 
   const HashtagDisplayWidget({
@@ -24,7 +24,7 @@ class HashtagDisplayWidget extends StatefulWidget {
     return BoxDecoration(
       borderRadius: BorderRadius.circular(HashtagDisplayWidget.borderRadius),
       border: Border.all(
-        color: isSelected ? theme.colorScheme.primary.withAlpha(111) : theme.colorScheme.outline.withAlpha(222),
+        color: isSelected ? theme.colorScheme.secondary.withAlpha(111) : theme.colorScheme.outline.withAlpha(222),
         width: isSelected ? HashtagDisplayWidget.borderWidth + 0.3 : HashtagDisplayWidget.borderWidth,
       ),
     );
@@ -35,25 +35,6 @@ class HashtagDisplayWidget extends StatefulWidget {
 }
 
 class _HashtagDisplayWidgetState extends State<HashtagDisplayWidget> {
-  final ScrollController _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    // Scroll to left after the first frame is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (_scrollController.hasClients) _scrollController.jumpTo(0.0);
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final int displayCount = widget.hashtags.length > widget.maxTagsCounter ? widget.maxTagsCounter : widget.hashtags.length;
@@ -63,7 +44,6 @@ class _HashtagDisplayWidgetState extends State<HashtagDisplayWidget> {
     final bool isSelectable = widget.selectedHashtags != null && widget.onSelectHashtag != null;
 
     return SingleChildScrollView(
-      controller: _scrollController, // Attach the controller
       scrollDirection: Axis.horizontal,
       child: Row(
         children: List<Widget>.generate(displayCount, (index) {
@@ -71,20 +51,30 @@ class _HashtagDisplayWidgetState extends State<HashtagDisplayWidget> {
 
           // Changed variable name from 'widget' to 'container' to avoid conflict
           final container = Container(
-            margin: const EdgeInsets.only(right: 8.0),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            margin: const EdgeInsets.only(right: 0.0),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
             decoration: widget.noBorder ? null : HashtagDisplayWidget.borderDecoration(isSelected: isSelected, theme: widget.theme),
             child: Text(
               widget.hashtags[index],
               style: widget.theme.textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.w400,
-                color: isSelected ? widget.theme.colorScheme.primary : widget.theme.colorScheme.onSurfaceVariant,
+                color: isSelected ? widget.theme.colorScheme.secondary : widget.theme.colorScheme.onSurfaceVariant,
               ),
             ),
           );
 
           if (isSelectable) {
-            return GestureDetector(onTap: () => widget.onSelectHashtag!(index), behavior: HitTestBehavior.opaque, child: container);
+            return Padding(
+              padding: EdgeInsets.only(right: 9),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => widget.onSelectHashtag!(index),
+                  borderRadius: BorderRadius.circular(HashtagDisplayWidget.borderRadius),
+                  child: container,
+                ),
+              ),
+            );
           } else {
             return container;
           }

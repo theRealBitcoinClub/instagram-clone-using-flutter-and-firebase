@@ -54,6 +54,8 @@ void showSnackBar(String content, {required SnackbarType type, wait = false}) {
 }
 
 double _getSnackBarBottomMargin() {
+  return 3;
+
   final context = MyApp.scaffoldMessengerKey.currentContext;
   if (context == null) return 100; // Fallback margin
 

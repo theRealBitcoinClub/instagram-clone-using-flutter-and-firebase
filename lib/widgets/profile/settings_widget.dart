@@ -511,9 +511,9 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             String msg = MemoVerificationResponse.memoVerificationMessageFromName(profileResult['result']);
             showSnackBar(type: SnackbarType.error, "Profile: $msg");
           } catch (e) {
-            showQrCodeDialog(ctx: context, memoOnly: true, user: user);
-            showSnackBar("Add funds to your balance!", type: SnackbarType.error);
-            showSnackBar(wait: true, "Name, text and image are stored on-chain, that costs tx fee!", type: SnackbarType.info);
+            // showSnackBar("Add funds to your balance!", type: SnackbarType.error);
+            showSnackBar(wait: true, "Name, text and image are stored on-chain, that costs memo fee!", type: SnackbarType.error);
+            showQrCodeDialog(ctx: context, memoOnly: true, user: user, withDelay: true);
           }
           // try {
           //   String msgAccountant = MemoAccountantResponse.messageFromName(profileResult['failedChanges']);

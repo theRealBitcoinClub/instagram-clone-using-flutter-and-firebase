@@ -34,8 +34,7 @@ class QrCodeDialog extends ConsumerStatefulWidget {
 }
 
 class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
-  late bool _isCashtokenFormat;
-  late Future<void> _initFuture;
+  bool _isCashtokenFormat = true;
   bool _isToggleEnabled = true;
   var toggleKey;
   late final ProfileBalanceProvider _balanceProvider; // Store provider reference
@@ -45,7 +44,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     super.initState();
     _balanceProvider = ref.read(profileBalanceProvider);
     toggleKey = 'qr_code_toggle_state${widget.memoProfileId}';
-    _initFuture = _loadToggleState(context);
+    _loadToggleState(context);
   }
 
   Future<void> _loadToggleState(BuildContext ctx) async {
@@ -162,135 +161,113 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     String cashtokenAddress = creator?.bchAddressCashtokenAware ?? "";
     String? legacyAddress = creator?.id;
 
-    return FutureBuilder(
-      future: _initFuture,
-      builder: (builderCtx, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Dialog(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(color: colorScheme.primary),
-                  const SizedBox(height: 16),
-                  Text('Loading...', style: textTheme.bodyMedium),
-                ],
+    final String addressShorter = _isCashtokenFormat ? cashtokenAddress.substring(12) : convertToBchFormat(legacyAddress).substring(12);
+    final String addressToShow = _isCashtokenFormat ? cashtokenAddress : convertToBchFormat(legacyAddress);
+    final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo";
+    final String balanceText = _getBalanceText(_isCashtokenFormat, creator);
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(21, 18, 21, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            buildHeaderRow(balanceText, textTheme, colorScheme, dialogCtx),
+            if (_isToggleEnabled) const SizedBox(height: 6),
+            if (_isToggleEnabled) _buildTabSelector(theme, colorScheme, dialogCtx),
+            const SizedBox(height: 12),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 1200),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              child: GestureDetector(
+                key: ValueKey(addressToShow),
+                onTap: () {
+                  _copyToClipboard(dialogCtx, addressToShow, "Address copied!");
+                },
+                onLongPress: () {
+                  closeDialog(dialogCtx);
+                },
+                child: Container(
+                  key: ValueKey(addressToShow),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: theme.dividerColor, width: 1),
+                  ),
+                  child: PrettyQrView.data(
+                    data: addressToShow,
+                    decoration: PrettyQrDecoration(image: PrettyQrDecorationImage(image: AssetImage("assets/images/$qrImageAsset.png"))),
+                  ),
+                ),
               ),
             ),
-          );
-        }
+            const SizedBox(height: 12),
+            buildAddressText(addressToShow, addressShorter, textTheme, colorScheme),
+            const SizedBox(height: 12),
+            buildActionButtons(dialogCtx, addressToShow),
+          ],
+        ),
+      ),
+    );
+  }
 
-        final String addressShorter = _isCashtokenFormat ? cashtokenAddress : convertToBchFormat(legacyAddress).substring(12);
-        final String addressToShow = _isCashtokenFormat ? cashtokenAddress : convertToBchFormat(legacyAddress);
-        final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo";
-        final String balanceText = _getBalanceText(_isCashtokenFormat, creator);
-
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(25, 20, 25, 30),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header with balance and close button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        balanceText,
-                        style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: colorScheme.onSurface),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, color: colorScheme.onSurface),
-                      onPressed: () => closeDialog(dialogCtx),
-                      tooltip: 'Close',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-
-                if (_isToggleEnabled) const SizedBox(height: 6),
-
-                // Tab-like selector
-                if (_isToggleEnabled) _buildTabSelector(theme, colorScheme, dialogCtx),
-
-                const SizedBox(height: 16),
-
-                // QR Code
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
-                    return FadeTransition(opacity: animation, child: child);
-                  },
-                  child: GestureDetector(
-                    onTap: () {
-                      _copyToClipboard(dialogCtx, addressToShow, "Address copied!");
-                    },
-                    onLongPress: () {
-                      closeDialog(dialogCtx);
-                      // Navigator.of(dialogCtx).pop();
-                    },
-                    child: Container(
-                      key: ValueKey(addressToShow),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: theme.dividerColor, width: 1),
-                      ),
-                      child: PrettyQrView.data(
-                        data: addressToShow,
-                        decoration: PrettyQrDecoration(image: PrettyQrDecorationImage(image: AssetImage("assets/images/$qrImageAsset.png"))),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Address text
-                SizedBox(
-                  width: double.infinity,
-                  child: Center(
-                    child: Tooltip(
-                      message: addressToShow,
-                      child: Text(
-                        addressShorter,
-                        style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Action buttons
-                Container(
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-                  clipBehavior: Clip.antiAlias,
-                  child: Row(
-                    children: [
-                      IconAction(
-                        text: "COPY",
-                        onTap: () => _copyToClipboard(dialogCtx, addressToShow, "Address copied!"),
-                        type: IAB.success,
-                        icon: Icons.copy_outlined,
-                      ),
-                      IconAction(text: "SHARE", onTap: () => _shareAddress(addressToShow), type: IAB.alternative, icon: Icons.share_outlined),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+  Container buildActionButtons(BuildContext dialogCtx, String addressToShow) {
+    return Container(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        children: [
+          IconAction(
+            text: "COPY",
+            onTap: () => _copyToClipboard(dialogCtx, addressToShow, "Address copied!"),
+            type: IAB.success,
+            icon: Icons.copy_outlined,
           ),
-        );
-      },
+          IconAction(text: "SHARE", onTap: () => _shareAddress(addressToShow), type: IAB.alternative, icon: Icons.share_outlined),
+        ],
+      ),
+    );
+  }
+
+  SizedBox buildAddressText(String addressToShow, String addressShorter, TextTheme textTheme, ColorScheme colorScheme) {
+    return SizedBox(
+      width: double.infinity,
+      child: Center(
+        child: Tooltip(
+          message: addressToShow,
+          child: Text(
+            addressShorter,
+            style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Row buildHeaderRow(String balanceText, TextTheme textTheme, ColorScheme colorScheme, BuildContext dialogCtx) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            balanceText,
+            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: colorScheme.onSurface),
+          ),
+        ),
+        IconButton(
+          icon: Icon(Icons.close, color: colorScheme.onSurface, size: 33),
+          onPressed: () => closeDialog(dialogCtx),
+          tooltip: 'Close',
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+      ],
     );
   }
 
@@ -377,33 +354,35 @@ void showQrCodeDialog({
   MemoModelCreator? creator,
   bool memoOnly = false,
   bool tokenOnly = false,
+  bool withDelay = false,
 }) {
+  if (withDelay) {
+    Future.delayed(Duration(milliseconds: 3333), () {
+      show(creator, ctx, memoOnly, tokenOnly, user);
+    });
+  } else {
+    show(creator, ctx, memoOnly, tokenOnly, user);
+  }
+}
+
+void show(MemoModelCreator? creator, BuildContext ctx, bool memoOnly, bool tokenOnly, MemoModelUser? user) {
   if (creator != null) {
     showDialog(
+      fullscreenDialog: true,
       context: ctx,
       builder: (ctx) {
-        return QrCodeDialog(
-          // cashtokenAddress: creator.hasRegisteredAsUserFixed ? creator.bchAddressCashtokenAware : null,
-          // legacyAddress: creator.id,
-          memoProfileId: creator.id,
-          memoOnly: !creator.hasRegisteredAsUserFixed ? true : memoOnly,
-          tokenOnly: tokenOnly,
-        );
+        return QrCodeDialog(memoProfileId: creator.id, memoOnly: !creator.hasRegisteredAsUserFixed ? true : memoOnly, tokenOnly: tokenOnly);
       },
     );
   } else if (user != null) {
     showDialog(
+      fullscreenDialog: true,
       context: ctx,
       builder: (ctx) {
-        return QrCodeDialog(
-          // cashtokenAddress: user.bchAddressCashtokenAware,
-          // legacyAddress: user.legacyAddressMemoBch,
-          memoProfileId: user.id,
-          memoOnly: memoOnly,
-          tokenOnly: tokenOnly,
-        );
+        return QrCodeDialog(memoProfileId: user.id, memoOnly: memoOnly, tokenOnly: tokenOnly);
       },
     );
-  } else
-    throw Exception("This shall not happen");
+  } else {
+    throw Exception("You must pass a user or a creator to showQrCodeDialog");
+  }
 }

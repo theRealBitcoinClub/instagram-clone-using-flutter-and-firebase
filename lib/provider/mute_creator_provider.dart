@@ -95,6 +95,7 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
 
       state = newMutedCreators;
       ref.read(feedPostsProvider.notifier).fetchInitialPosts();
+      showSnackBar("Feed updated, mute filter applied", type: SnackbarType.success);
       onMuteSuccess?.call();
       print('✅ MuteCreator: Muted creator: $creatorId');
     } catch (e) {
@@ -122,6 +123,7 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
       _unmuteDebounceTimer?.cancel();
       _unmuteDebounceTimer = Timer(const Duration(seconds: 6), () {
         ref.read(feedPostsProvider.notifier).fetchInitialPosts(forceFetchFire: true);
+        showSnackBar("Updating feed, applieng mute filter", type: SnackbarType.success);
         print('🔄 MuteCreator: Debounced feed refresh triggered after unmute');
       });
 

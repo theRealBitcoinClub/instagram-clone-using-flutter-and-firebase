@@ -122,6 +122,17 @@ class _WrappedAnimatedIntroTargetState extends ConsumerState<WrappedAnimatedIntr
           },
         );
 
+        return Material(
+          color: Colors.transparent,
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: _handleTap,
+            borderRadius: _getChildBorderRadius(),
+            splashColor: theme.splashColor,
+            highlightColor: theme.highlightColor,
+            child: animatedContent,
+          ),
+        );
         // Always wrap with GestureDetector to handle the intro action
         return GestureDetector(onTap: _handleTap, behavior: HitTestBehavior.opaque, child: animatedContent);
       },

@@ -28,7 +28,7 @@ class FeedScreen extends ConsumerStatefulWidget {
 
 class _FeedScreenState extends ConsumerState<FeedScreen> {
   final ScrollController _scrollController = ScrollController();
-  // final FocusNode _listViewFocusNode = FocusNode();
+  final FocusNode _listViewFocusNode = FocusNode();
   final _introType = IntroType.mainApp;
 
   @override
@@ -96,7 +96,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     _print('FSCR:♻️ FeedScreen dispose called');
     // _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
-    // _listViewFocusNode.dispose();
+    _listViewFocusNode.dispose();
     super.dispose();
   }
 
@@ -267,12 +267,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           //   },
           //   child:
           GestureDetector(
-            // onTap: () {
-            //   if (!_listViewFocusNode.hasFocus) {
-            //     _print('FSCR:🎯 Requesting focus via GestureDetector tap');
-            //     FocusScope.of(context).requestFocus(_listViewFocusNode);
-            //   }
-            // },
+            onTap: () {
+              if (!_listViewFocusNode.hasFocus) {
+                _print('FSCR:🎯 Requesting focus via GestureDetector tap');
+                FocusScope.of(context).requestFocus(_listViewFocusNode);
+              }
+            },
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
               controller: _scrollController,

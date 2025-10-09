@@ -100,22 +100,26 @@ class PostCardFooter extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(9)),
-                    clipBehavior: Clip.antiAlias,
-                    // padding: EdgeInsets.symmetric(vertical: 0, horizontal: 3),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        IconAction(text: "RESET", onTap: onCancel, type: IAB.cancel, icon: Icons.cancel_outlined),
-                        IconAction(text: "REPOST", onTap: () => onSend(isRepost: true), type: IAB.alternative, icon: Icons.repeat_outlined),
-                        IconAction(text: "CREATE", onTap: onSend, type: IAB.success, icon: Icons.send_outlined),
-                        // _buildCancelButtonWidget(theme),
-                        // post.hasMedia ? const SizedBox(width: 9) : SizedBox.shrink(),
-                        // post.hasMedia ? _buildRepostButtonWidget(theme) : SizedBox.shrink(),
-                        // const SizedBox(width: 9),
-                        // _buildSendButtonWidget(theme),
-                      ],
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 0, horizontal: 3),
+                    child: Container(
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+                      clipBehavior: Clip.antiAlias,
+                      padding: EdgeInsets.zero,
+                      // padding: EdgeInsets.symmetric(vertical: 0, horizontal: 3),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          // IconAction(text: "RESET", onTap: onCancel, type: IAB.cancel, icon: Icons.cancel_outlined),
+                          IconAction(text: "REPOST", onTap: () => onSend(isRepost: true), type: IAB.alternative, icon: Icons.repeat_outlined),
+                          IconAction(text: "CREATE", onTap: onSend, type: IAB.success, icon: Icons.send_outlined),
+                          // _buildCancelButtonWidget(theme),
+                          // post.hasMedia ? const SizedBox(width: 9) : SizedBox.shrink(),
+                          // post.hasMedia ? _buildRepostButtonWidget(theme) : SizedBox.shrink(),
+                          // const SizedBox(width: 9),
+                          // _buildSendButtonWidget(theme),
+                        ],
+                      ),
                     ),
                   ),
                 ],

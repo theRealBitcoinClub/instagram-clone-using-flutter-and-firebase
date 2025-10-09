@@ -41,7 +41,7 @@ class IntroStep {
     IntroContent(
       initText: "Profile & Settings",
       snackbarText: "This is your profile page, posts are categorized!",
-      triggeredText: "Backup your mnemonic, set profile data, or change tip settings!",
+      triggeredText: "Backup secret key, set profile data, change tip settings!",
       target: IntroTarget.bottomRight,
     ),
   );

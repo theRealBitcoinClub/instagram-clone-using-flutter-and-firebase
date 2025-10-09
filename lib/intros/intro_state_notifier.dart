@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'intro_enums.dart';
 
 final introStateNotifierProvider = StateNotifierProvider<IntroStateNotifier, Map<IntroType, IntroState>>((ref) {
-  return IntroStateNotifier();
+  return IntroStateNotifier(ref);
 });
 
 class IntroState {
@@ -60,11 +60,13 @@ class IntroState {
 }
 
 class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
-  IntroStateNotifier() : super({}) {
+  Ref ref;
+
+  IntroStateNotifier(this.ref) : super({}) {
     _loadAllIntroStates();
   }
 
-  static const String key = "iiiiiiintroo_";
+  static const String key = "iiiintroo2";
 
   Future<void> _loadAllIntroStates() async {
     final prefs = await SharedPreferences.getInstance();
@@ -121,11 +123,22 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
 
       _showStepCompletionSnackbar(context, step.content);
 
-      // Auto-advance to next step after 10 seconds
-      Future.delayed(const Duration(seconds: 10), () {
+      Future.delayed(const Duration(seconds: 9), () {
         if (context.mounted) _advanceToNextStep(introType, context);
       });
     }
+  }
+
+  void skipIntro(IntroType introType) {
+    final currentState = state[introType];
+    if (currentState == null || currentState.isCompleted) return;
+
+    // Mark the intro as completed
+    final completedState = currentState.copyWith(isCompleted: true);
+    state = {...state, introType: completedState};
+    _saveIntroState(introType);
+
+    print('Intro ${introType.name} skipped by user');
   }
 
   void _advanceToNextStep(IntroType introType, BuildContext context) {
@@ -156,12 +169,13 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
 
   void _showStepCompletionSnackbar(BuildContext context, IntroContent content) {
     // Show initial snackbar
-    showSnackBar(content.snackbarText, type: SnackbarType.success);
+    ref.read(snackbarServiceProvider).showTranslatedSnackBar(content.snackbarText, type: SnackbarType.success);
 
     // Show triggered text after 4 seconds
-    Future.delayed(const Duration(seconds: 5), () {
+    Future.delayed(const Duration(seconds: 6), () {
       // if (context.mounted) {
-      showSnackBar(content.triggeredText, type: SnackbarType.info);
+      ref.read(snackbarServiceProvider).showTranslatedSnackBar(content.triggeredText, type: SnackbarType.info, wait: true);
+      // showSnackBar(content.triggeredText, type: SnackbarType.info);
       // }
     });
   }

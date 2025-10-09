@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../provider/media_selection_notifier.dart';
 import '../screens/add/clipboard_provider.dart';
-import 'animations/animated_grow_fade_in.dart';
 
 // media_type.dart
 enum MediaType {
@@ -72,11 +71,11 @@ class MediaTypeSelector extends ConsumerWidget {
       height: 66,
       child: Column(
         children: [
-          if (isCheckingClipboard)
-            AnimGrowFade(
-              show: isCheckingClipboard,
-              child: LinearProgressIndicator(minHeight: 2, valueColor: AlwaysStoppedAnimation(colorScheme.primary)),
-            ),
+          // if (isCheckingClipboard)
+          //   AnimGrowFade(
+          //     show: isCheckingClipboard,
+          //     child: LinearProgressIndicator(minHeight: 2, valueColor: AlwaysStoppedAnimation(colorScheme.primary)),
+          //   ),
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,

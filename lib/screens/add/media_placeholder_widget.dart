@@ -25,28 +25,33 @@ class MediaPlaceholderWidget extends StatelessWidget {
     final TextTheme textTheme = theme.textTheme;
 
     return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: AspectRatio(
-          aspectRatio: 1,
-          child: Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(borderRadius),
-              border: Border.all(color: colorScheme.onSurface, width: borderWidth),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(iconData, size: iconSize, color: colorScheme.onSurface),
-                const SizedBox(height: 8),
-                Text(
-                  label,
-                  style: textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+      child: Material(
+        color: Colors.transparent,
+        child: Ink(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(color: colorScheme.onSurface, width: borderWidth),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(borderRadius),
+            splashColor: colorScheme.primary.withOpacity(0.3),
+            highlightColor: colorScheme.primary.withOpacity(0.1),
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(iconData, size: iconSize, color: colorScheme.onSurface),
+                  const SizedBox(height: 8),
+                  Text(
+                    label,
+                    style: textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -204,7 +204,12 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
                     onTap: () => _moveToTab(actualIndex),
                     splashColor: theme.primaryColor.withOpacity(0.2),
                     highlightColor: theme.primaryColor.withOpacity(0.1),
-                    child: Container(height: 60, child: Center(child: _buildTabIcon(tabData, isSelected, actualIndex))),
+                    child: Container(
+                      height: 60,
+                      child: Center(
+                        child: Padding(padding: EdgeInsets.only(bottom: 3), child: _buildTabIcon(tabData, isSelected, actualIndex)),
+                      ),
+                    ),
                   ),
                 ),
               );
@@ -233,7 +238,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         }
 
         return Positioned(
-          top: 0,
+          top: 57,
           left: visiblePosition * tabWidth,
           child: Container(
             width: tabWidth,

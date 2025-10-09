@@ -161,7 +161,8 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     String cashtokenAddress = creator?.bchAddressCashtokenAware ?? "";
     String? legacyAddress = creator?.id;
 
-    final String addressShorter = _isCashtokenFormat ? cashtokenAddress.substring(12) : convertToBchFormat(legacyAddress).substring(12);
+    cashtokenAddress = cashtokenAddress.isNotEmpty ? cashtokenAddress.substring(12) : "";
+    final String addressShorter = _isCashtokenFormat ? cashtokenAddress : convertToBchFormat(legacyAddress).substring(12);
     final String addressToShow = _isCashtokenFormat ? cashtokenAddress : convertToBchFormat(legacyAddress);
     final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo";
     final String balanceText = _getBalanceText(_isCashtokenFormat, creator);

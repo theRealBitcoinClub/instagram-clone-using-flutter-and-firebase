@@ -78,8 +78,8 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final TextTheme textTheme = theme.textTheme;
     final MediaQueryData mediaQuery = MediaQuery.of(context);
     final bool isKeyboardVisible = mediaQuery.viewInsets.bottom > 0;
-    final asyncThemeState = ref.watch(themeNotifierProvider);
-    final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
+    // final asyncThemeState = ref.watch(themeNotifierProvider);
+    // final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
     bool isPublishing = ref.watch(isPublishingProvider);
 
     return GestureDetector(
@@ -92,21 +92,19 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
           Scaffold(
             backgroundColor: theme.scaffoldBackgroundColor,
             appBar: AppBarBurnMahakkaTheme(),
-            body: SafeArea(
-              child: Column(
-                children: [
-                  _buildMediaInputSection(theme, colorScheme, textTheme),
-                  AnimGrowFade(
-                    show: !_hasAddedMediaToPublish(),
-                    child: ClipboardMonitoringWidget(title: _title, hint: _hint, onCreate: _onCreateCallback, onGallery: _onGalleryCallback),
+            body: Column(
+              children: [
+                _buildMediaInputSection(theme, colorScheme, textTheme),
+                AnimGrowFade(
+                  show: !_hasAddedMediaToPublish(),
+                  child: ClipboardMonitoringWidget(title: _title, hint: _hint, onCreate: _onCreateCallback, onGallery: _onGalleryCallback),
+                ),
+                if (_hasAddedMediaToPublish())
+                  Padding(
+                    padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 2, left: 4, right: 4, top: 8),
+                    child: TaggableInputWidget(),
                   ),
-                  if (_hasAddedMediaToPublish())
-                    Padding(
-                      padding: EdgeInsets.only(bottom: isKeyboardVisible ? 0 : mediaQuery.padding.bottom + 2, left: 4, right: 4, top: 8),
-                      child: TaggableInputWidget(),
-                    ),
-                ],
-              ),
+              ],
             ),
           ),
           if (isPublishing) CircularLoadingOverlay(),
@@ -126,7 +124,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final youtubeId = ref.watch(youtubeVideoIdProvider);
     final ipfsCid = ref.watch(ipfsCidProvider);
     final odyseeUrl = ref.watch(odyseeUrlProvider);
-    final selectionState = ref.watch(mediaSelectionProvider);
+    ref.watch(mediaSelectionProvider);
 
     // Check for media content and return appropriate widget
     final mediaWidget = _getMediaWidget(imgurUrl, youtubeId, ipfsCid, odyseeUrl, theme, colorScheme, textTheme);

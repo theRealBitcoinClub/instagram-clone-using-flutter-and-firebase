@@ -40,7 +40,7 @@ class IPFSGalleryScreen extends ConsumerWidget {
         ),
         leading: IconButton(icon: const Icon(Icons.cancel_outlined), onPressed: () => Navigator.pop(context)),
         actions: [
-          AppBarBurnMahakkaTheme.buildThemeIcon(ref.read(themeStateProvider), ref, context),
+          AppBarBurnMahakkaTheme.buildThemeIcon(ref, context),
           if (!hasSelection)
             IconButton(
               icon: Icon(Icons.upload_outlined, color: colorScheme.onPrimary),

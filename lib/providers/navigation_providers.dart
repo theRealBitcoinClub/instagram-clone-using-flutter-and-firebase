@@ -1,5 +1,6 @@
 // lib/provider/navigation_providers.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/utils/snackbar.dart';
 
@@ -43,6 +44,15 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
 
   NavigationStateNotifier(this._ref) : super(const NavigationState(currentTabIndex: 0));
 
+  // Add this helper method to dismiss keyboard
+  void _dismissKeyboard() {
+    // Method 1: System channels approach (most reliable)
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+
+    // Method 2: Focus scope approach (alternative)
+    // FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   // Main navigation method that handles all scenarios
   void _doNavigate({
     required int tabIndex,
@@ -53,6 +63,9 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
     String? snackbarMessage,
     BuildContext? context,
   }) {
+    try {
+      _dismissKeyboard();
+    } catch (e) {}
     bool isOwnProfile = profileTargetId == null || profileTargetId.isEmpty ? true : _ref.read(userProvider)!.id == profileTargetId;
     // Validate tab index
     if (tabIndex < 0 || tabIndex >= AppTab.totalTabs) return;

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/provider/bch_burner_balance_provider.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
-import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/widgets/popularity_score_widget.dart';
 
 class BurnerBalanceWidget extends ConsumerWidget {
@@ -11,9 +10,10 @@ class BurnerBalanceWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncThemeState = ref.watch(themeNotifierProvider);
-    final currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
-    final ThemeData theme = currentThemeState.currentTheme;
+    // final asyncThemeState = ref.watch(themeNotifierProvider);
+    // final currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
+    // final ThemeData theme = currentThemeState.currentTheme;
+    ThemeData theme = Theme.of(context);
     final asyncBurnerBalance = ref.watch(bchBurnerBalanceProvider);
     return Material(
       color: Colors.transparent,

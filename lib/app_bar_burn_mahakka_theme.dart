@@ -21,9 +21,10 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncThemeState = ref.watch(themeNotifierProvider);
-    final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
-    final ThemeData theme = currentThemeState.currentTheme;
+    // final asyncThemeState = ref.watch(themeNotifierProvider);
+    // final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
+    // final ThemeData theme = currentThemeState.currentTheme;
+    ThemeData theme = Theme.of(context);
     String currentLang = ref.watch(languageCodeProvider);
     MahakkaLanguage lang = MahakkaLanguage.getLanguageByCode(currentLang)!;
 
@@ -50,7 +51,7 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
           ),
         ),
         const SizedBox(width: 6),
-        buildThemeIcon(currentThemeState, ref, context),
+        buildThemeIcon(ref, context),
       ],
     );
   }
@@ -68,8 +69,8 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
     }
   }
 
-  static Widget buildThemeIcon(ThemeState themeState, WidgetRef ref, BuildContext context) {
-    var icon = Icon(size: 24, themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined);
+  static Widget buildThemeIcon(WidgetRef ref, BuildContext context) {
+    var icon = Icon(size: 24, ref.watch(isDarkModeProvider) ? Icons.light_mode_outlined : Icons.dark_mode_outlined);
     if (ref.read(currentTabIndexProvider) == AppTab.profile.tabIndex)
       return WrappedAnimatedIntroTarget(
         doNotAnimate: false,

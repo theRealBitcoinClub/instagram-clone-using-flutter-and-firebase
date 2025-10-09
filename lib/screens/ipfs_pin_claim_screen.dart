@@ -10,7 +10,6 @@ import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/external_browser_launcher.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
-import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
@@ -330,7 +329,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
           title: Text('Upload and Pin images to the IPFS', style: textTheme.bodyMedium!.copyWith(color: colorScheme.onPrimary.withAlpha(222))),
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
-          actions: [AppBarBurnMahakkaTheme.buildThemeIcon(ref.read(themeStateProvider), ref, context)],
+          actions: [AppBarBurnMahakkaTheme.buildThemeIcon(ref, context)],
         ),
         body: SafeArea(
           child: Stack(
@@ -370,7 +369,12 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                     if (_selectedFile != null)
                       AnimGrowFade(
                         show: _selectedFile != null,
-                        child: Column(children: [SizedBox(height: 9), Image.file(_selectedFile!, width: 500)]),
+                        child: Column(
+                          children: [
+                            SizedBox(height: 9),
+                            Image.file(_selectedFile!, width: 500, fit: BoxFit.contain),
+                          ],
+                        ),
                       ),
                   ],
                 ),
@@ -502,8 +506,8 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: colorScheme.errorContainer,
-            border: Border.all(color: colorScheme.error),
+            color: Colors.red,
+            // border: Border.all(color: colorScheme.error),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(_error!, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onErrorContainer, letterSpacing: 0.5)),
@@ -586,8 +590,8 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer,
-        border: Border.all(color: colorScheme.primary, width: 2),
+        color: Colors.blue[900],
+        // border: Border.all(color: colorScheme.primary, width: 2),
         borderRadius: BorderRadius.circular(8),
       ),
       margin: const EdgeInsets.only(bottom: 6),

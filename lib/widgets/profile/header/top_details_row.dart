@@ -94,7 +94,8 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
                 // Action button
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: SettingsButton(
+                  child: SettingsButtonUniversal(
+                    buttonType: ButtonType.outlined,
                     text: !isOwnProfile ? "Send Tip" : 'Profile & Settings',
                     onPressed: isOwnProfile ? onProfileButtonPressed : () => _showTipDialog(context, theme, creator),
                   ),

@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 
-class SettingsButton extends StatelessWidget {
+enum ButtonType { elevated, text, outlined }
+
+class SettingsButtonUniversal extends StatelessWidget {
   final Function()? onPressed;
   final String text;
-  final bool isPrimaryAction; // To differentiate styling slightly if needed
+  final bool isPrimaryAction;
+  final ButtonType buttonType;
 
-  const SettingsButton({
+  const SettingsButtonUniversal({
     Key? key,
     required this.text,
     this.onPressed,
-    this.isPrimaryAction = false, // Default to a less prominent style
+    this.isPrimaryAction = false,
+    this.buttonType = ButtonType.elevated,
   }) : super(key: key);
 
   @override
@@ -17,55 +21,50 @@ class SettingsButton extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
 
-    // Determine colors based on theme and if it's a primary action
-    final Color buttonBackgroundColor = isPrimaryAction
-        ? colorScheme
-              .primary // Use primary color for primary actions
-        : colorScheme.surfaceVariant; // Use a subtle background otherwise
+    // final Color buttonBackgroundColor = isPrimaryAction ? colorScheme.primary : colorScheme.surfaceVariant;
+    //
+    final Color buttonTextColor = isPrimaryAction ? colorScheme.onPrimary : colorScheme.onSurfaceVariant;
+    //
+    // final Color borderColor = isPrimaryAction ? colorScheme.primary : colorScheme.outline;
 
-    final Color buttonBorderColor = isPrimaryAction
-        ? colorScheme
-              .primary // Border matches background for a solid look
-        : colorScheme.outline; // Standard outline color
+    // final commonStyle = ButtonStyle(
+    //   backgroundColor: MaterialStateProperty.all(buttonBackgroundColor),
+    //   foregroundColor: MaterialStateProperty.all(buttonTextColor),
+    //   padding: MaterialStateProperty.all(EdgeInsets.zero),
+    //   overlayColor: MaterialStateProperty.resolveWith<Color?>((Set<MaterialState> states) {
+    //     if (states.contains(MaterialState.pressed)) {
+    //       return isPrimaryAction ? colorScheme.onPrimary.withOpacity(0.2) : colorScheme.onSurfaceVariant.withOpacity(0.15);
+    //     }
+    //     return null;
+    //   }),
+    //   shape: MaterialStateProperty.all(
+    //     RoundedRectangleBorder(
+    //       borderRadius: BorderRadius.circular(5),
+    //       side: BorderSide(color: borderColor, width: 1.0),
+    //     ),
+    //   ),
+    // );
 
-    final Color buttonTextColor = isPrimaryAction
-        ? colorScheme
-              .onPrimary // Text color for onPrimary
-        : colorScheme.onSurfaceVariant; // Text color for onSurfaceVariant
+    final Widget button;
+    switch (buttonType) {
+      case ButtonType.elevated:
+        button = ElevatedButton(onPressed: onPressed, child: _buildText(theme, buttonTextColor));
+        break;
+      case ButtonType.text:
+        button = TextButton(onPressed: onPressed, child: _buildText(theme, buttonTextColor));
+        break;
+      case ButtonType.outlined:
+        button = OutlinedButton(onPressed: onPressed, child: _buildText(theme, buttonTextColor));
+        break;
+    }
 
-    return Container(
-      // margin: const EdgeInsets.symmetric(vertical: 4.0), // Optional margin
-      width: 250, // Specific width requirement
-      height: 35, // Specific height requirement (adjust if needed for tap target)
-      child: TextButton(
-        onPressed: onPressed,
-        style:
-            TextButton.styleFrom(
-              padding: EdgeInsets.zero, // Remove TextButton's default padding
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5), // Match your decoration's border radius
-              ),
-            ).copyWith(
-              // Overlay color for tap feedback, can be themed
-              overlayColor: MaterialStateProperty.all(colorScheme.onSurface.withOpacity(0.1)),
-            ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: buttonBackgroundColor,
-            border: Border.all(color: buttonBorderColor, width: 1.0), // Standard border width
-            borderRadius: BorderRadius.circular(5),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            text,
-            style: theme.textTheme.titleMedium!.copyWith(
-              // Use a standard text style from theme
-              color: buttonTextColor,
-              // fontWeight: FontWeight.bold, // Keep bold if that's the desired style
-            ),
-          ),
-        ),
-      ),
+    return SizedBox(width: 250, height: 35, child: button);
+  }
+
+  Widget _buildText(ThemeData theme, Color textColor) {
+    return Text(
+      text,
+      style: theme.textTheme.titleMedium?.copyWith(color: textColor, fontWeight: FontWeight.w500),
     );
   }
 }

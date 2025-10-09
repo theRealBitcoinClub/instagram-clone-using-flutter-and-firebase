@@ -30,68 +30,23 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // final colorScheme = theme.colorScheme;
-    // final creatorProfileImg = creator.profileImgurUrl ?? creator.profileImageAvatar();
-
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 16, 12),
+      padding: const EdgeInsets.fromLTRB(24, 15, 15, 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar
           GestureDetector(
             onTap: showImageDetail,
-            child: CachedAvatar(
-              key: ValueKey('profile_avatar_${creator.id}'),
-              creatorId: creator.id,
-              radius: 45,
-              enableNavigation: false, // No navigation in profile header
-            ),
+            child: CachedAvatar(key: ValueKey('profile_avatar_${creator.id}'), creatorId: creator.id, radius: 45, enableNavigation: false),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 15),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Stats row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Expanded(
-                      child: StatWidget(
-                        title: 'BCH',
-                        count: creator.balanceBch,
-                        theme: theme,
-                        onTap: () => creator.bchAddressCashtokenAware.isEmpty
-                            ? showSnackBar("User has not registered on Mahakka", type: SnackbarType.info)
-                            : ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cashonizeUrl),
-                      ),
-                    ),
-                    Expanded(
-                      child: StatWidget(
-                        title: MemoBitcoinBase.tokenTicker,
-                        count: creator.balanceToken,
-                        theme: theme,
-                        onTap: () => creator.bchAddressCashtokenAware.isEmpty
-                            ? showSnackBar("User has not registered on Mahakka", type: SnackbarType.info)
-                            : ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cauldronSwapTokenUrl),
-                      ),
-                    ),
-                    Expanded(
-                      child: StatWidget(
-                        title: 'MEMO',
-                        count: creator.balanceMemo,
-                        theme: theme,
-                        onTap: () => ref
-                            .read(navigationStateProvider.notifier)
-                            .navigateToUrl(MemoBitcoinBase.memoExplorerUrlPrefix + creator.id + MemoBitcoinBase.memoExplorerUrlSuffix),
-                      ),
-                    ),
-                  ],
-                ),
+                buildStatsRow(ref),
                 const SizedBox(height: 12),
-                // Action button
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: SettingsButtonUniversal(
@@ -105,6 +60,44 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Row buildStatsRow(WidgetRef ref) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Expanded(
+          child: StatWidget(
+            title: 'BCH',
+            count: creator.balanceBch,
+            theme: theme,
+            onTap: () => creator.bchAddressCashtokenAware.isEmpty
+                ? showSnackBar("User has not registered on Mahakka", type: SnackbarType.info)
+                : ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cashonizeUrl),
+          ),
+        ),
+        Expanded(
+          child: StatWidget(
+            title: MemoBitcoinBase.tokenTicker,
+            count: creator.balanceToken,
+            theme: theme,
+            onTap: () => creator.bchAddressCashtokenAware.isEmpty
+                ? showSnackBar("User has not registered on Mahakka", type: SnackbarType.info)
+                : ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cauldronSwapTokenUrl),
+          ),
+        ),
+        Expanded(
+          child: StatWidget(
+            title: 'MEMO',
+            count: creator.balanceMemo,
+            theme: theme,
+            onTap: () => ref
+                .read(navigationStateProvider.notifier)
+                .navigateToUrl(MemoBitcoinBase.memoExplorerUrlPrefix + creator.id + MemoBitcoinBase.memoExplorerUrlSuffix),
+          ),
+        ),
+      ],
     );
   }
 

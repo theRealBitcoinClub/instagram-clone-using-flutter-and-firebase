@@ -64,7 +64,7 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
     _loadAllIntroStates();
   }
 
-  static const String key = "iiiiiintroo_";
+  static const String key = "iiiiiiintroo_";
 
   Future<void> _loadAllIntroStates() async {
     final prefs = await SharedPreferences.getInstance();

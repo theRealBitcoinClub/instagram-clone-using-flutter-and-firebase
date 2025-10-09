@@ -390,12 +390,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         onShowSendButton: () async {
           if (post.hasMedia) {
             var hint = "You can RePost this media touching the blue button";
-            hint = await ref.read(customTranslatedTextProvider(hint).future);
+            hint = await ref.read(autoTranslationTextProvider(hint).future);
             showSnackBar(hint, type: SnackbarType.info);
           }
 
           var hint = "The replies are not attached to the original post, they are tied to #tags or @topics";
-          hint = await ref.read(customTranslatedTextProvider(hint).future);
+          hint = await ref.read(autoTranslationTextProvider(hint).future);
           showSnackBar(hint, type: SnackbarType.success, wait: true);
 
           _print('FSCR:📜 onShowSendButton callback triggered for post ${post.id}');

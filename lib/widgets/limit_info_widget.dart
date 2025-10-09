@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/external_browser_launcher.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
-import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/providers/token_limits_provider.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
+
+import '../provider/translation_service.dart';
 
 class LimitInfoWidget extends ConsumerWidget {
   final LimitType limitType;
@@ -29,7 +30,7 @@ class LimitInfoWidget extends ConsumerWidget {
     String limitText = limitType == LimitType.feed ? tokenEnum.feedLimitText : tokenEnum.profileLimitText;
 
     // Use the async translated text provider with the original text
-    final translatedTextAsync = ref.watch(customTranslatedTextProvider(limitText));
+    final translatedTextAsync = ref.watch(autoTranslationTextProvider(limitText));
 
     final String title = '${tokenEnum.name} Plan Limit Reached';
 

@@ -26,7 +26,7 @@ String _generateCacheKey(String text, String targetLang) {
   return digest.toString();
 }
 
-final customTranslatedTextProvider = FutureProvider.family<String, String>((ref, originalText) async {
+final autoTranslationTextProvider = FutureProvider.family<String, String>((ref, originalText) async {
   final translationService = ref.read(translationServiceProvider);
   final systemLangCode = ref.watch(languageCodeProvider);
 
@@ -65,10 +65,10 @@ final customTranslatedTextProvider = FutureProvider.family<String, String>((ref,
 });
 
 // State Providers
-final textAnimationProvider = StateProvider<double>((ref) => 1.0);
-final showOriginalTextProvider = StateProvider<bool>((ref) => true);
+// final textAnimationProvider = StateProvider<double>((ref) => 1.0);
+// final showOriginalTextProvider = StateProvider<bool>((ref) => true);
 final isTranslatingProvider = StateProvider<bool>((ref) => false);
-final translatedTextProvider = StateProvider<String?>((ref) => null);
+final translatedTextPostCreationProvider = StateProvider<String?>((ref) => null);
 final detectedLanguageProvider = StateProvider<MahakkaLanguage?>((ref) => null);
 final languageDetectionFailedProvider = StateProvider<bool>((ref) => false);
 final isAutoDetectingProvider = StateProvider<bool>((ref) => false);
@@ -180,8 +180,8 @@ class TranslationService {
       // Set initial target language to detected language
       if (detectedLanguage.code != 'auto') {
         _ref.read(targetLanguageProvider.notifier).state = detectedLanguage;
-        _ref.read(postTranslationProvider.notifier).state = _ref
-            .read(postTranslationProvider)
+        _ref.read(postCreationTranslationProvider.notifier).state = _ref
+            .read(postCreationTranslationProvider)
             .copyWith(originalLanguage: detectedLanguage, targetLanguage: detectedLanguage);
       } else {
         showSnackBar("Unsupported language detected", type: SnackbarType.info);
@@ -216,9 +216,9 @@ class TranslationService {
       translated = MemoModelPost.restoreMediaUrlsCase(post, translated);
 
       // Update providers
-      _ref.read(translatedTextProvider.notifier).state = translated;
-      _ref.read(postTranslationProvider.notifier).state = _ref
-          .read(postTranslationProvider)
+      _ref.read(translatedTextPostCreationProvider.notifier).state = translated;
+      _ref.read(postCreationTranslationProvider.notifier).state = _ref
+          .read(postCreationTranslationProvider)
           .copyWith(translatedText: translated, targetLanguage: targetLang);
 
       onTextChanged(translated);
@@ -231,8 +231,8 @@ class TranslationService {
 
   // Reset translation state
   void resetTranslationToShowOriginalText({required String originalText, required Function(String) onTextChanged}) {
-    _ref.read(translatedTextProvider.notifier).state = null;
-    _ref.read(postTranslationProvider.notifier).reset();
+    _ref.read(translatedTextPostCreationProvider.notifier).state = null;
+    _ref.read(postCreationTranslationProvider.notifier).reset();
     onTextChanged(originalText);
   }
 
@@ -240,8 +240,8 @@ class TranslationService {
   void resetTranslationStateAfterPublish() {
     // Reset all translation-related providers
     Future.microtask(() {
-      _ref.read(translatedTextProvider.notifier).state = null;
-      _ref.read(postTranslationProvider.notifier).reset();
+      _ref.read(translatedTextPostCreationProvider.notifier).state = null;
+      _ref.read(postCreationTranslationProvider.notifier).reset();
       _ref.read(targetLanguageProvider.notifier).reset();
       _ref.read(detectedLanguageProvider.notifier).state = null;
       _ref.read(languageDetectionFailedProvider.notifier).state = false;
@@ -295,21 +295,26 @@ class TranslationState {
 }
 
 // Post Translation Model and Provider
-class PostTranslation {
+class PostCreationTranslation {
   final bool publishInBothLanguages;
   final String translatedText;
   final MahakkaLanguage? originalLanguage;
   final MahakkaLanguage? targetLanguage;
 
-  const PostTranslation({required this.publishInBothLanguages, required this.translatedText, this.originalLanguage, this.targetLanguage});
+  const PostCreationTranslation({
+    required this.publishInBothLanguages,
+    required this.translatedText,
+    this.originalLanguage,
+    this.targetLanguage,
+  });
 
-  PostTranslation copyWith({
+  PostCreationTranslation copyWith({
     bool? publishInBothLanguages,
     String? translatedText,
     MahakkaLanguage? originalLanguage,
     MahakkaLanguage? targetLanguage,
   }) {
-    return PostTranslation(
+    return PostCreationTranslation(
       publishInBothLanguages: publishInBothLanguages ?? this.publishInBothLanguages,
       translatedText: translatedText ?? this.translatedText,
       originalLanguage: originalLanguage ?? this.originalLanguage,
@@ -332,13 +337,13 @@ class PostTranslation {
   }
 }
 
-final postTranslationProvider = StateProvider<PostTranslation>((ref) {
-  return const PostTranslation(publishInBothLanguages: false, translatedText: "");
+final postCreationTranslationProvider = StateProvider<PostCreationTranslation>((ref) {
+  return const PostCreationTranslation(publishInBothLanguages: false, translatedText: "");
 });
 
-extension PostTranslationReset on StateController<PostTranslation> {
+extension PostTranslationReset on StateController<PostCreationTranslation> {
   void reset() {
-    state = const PostTranslation(publishInBothLanguages: false, translatedText: "", originalLanguage: null, targetLanguage: null);
+    state = const PostCreationTranslation(publishInBothLanguages: false, translatedText: "", originalLanguage: null, targetLanguage: null);
   }
 }
 

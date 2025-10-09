@@ -76,7 +76,7 @@ class AddPostController extends StateNotifier<void> {
       }
 
       final user = ref.read(userProvider)!;
-      MemoModelPost copyPost = ref.read(postTranslationProvider).applyTranslationAndAppendMediaUrl(post: post, ref: ref);
+      MemoModelPost copyPost = ref.read(postCreationTranslationProvider).applyTranslationAndAppendMediaUrl(post: post, ref: ref);
 
       copyPost.appendTagsTopicToText();
 

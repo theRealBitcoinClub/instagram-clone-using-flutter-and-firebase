@@ -566,7 +566,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     if (!mounted || shouldPublish != true) return;
 
-    postCopy = ref.read(postTranslationProvider).applyTranslationAndAppendMediaUrl(post: postCopy, ref: ref);
+    postCopy = ref.read(postCreationTranslationProvider).applyTranslationAndAppendMediaUrl(post: postCopy, ref: ref);
     postCopy.appendUrlsTagsTopicToText();
 
     var result = await ref.read(postRepositoryProvider).publishReplyTopic(postCopy);
@@ -579,7 +579,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
     if (!mounted || shouldPublish != true) return;
 
-    postCopy = ref.read(postTranslationProvider).applyTranslationAndAppendMediaUrl(post: postCopy, ref: ref);
+    postCopy = ref.read(postCreationTranslationProvider).applyTranslationAndAppendMediaUrl(post: postCopy, ref: ref);
     postCopy.appendUrlsTagsTopicToText();
 
     var result = await ref.read(postRepositoryProvider).publishReplyHashtags(postCopy);

@@ -245,7 +245,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
     final temporaryTipAmount = user.temporaryTipAmount ?? user.tipAmountEnum;
 
     var colorBottomBarIcon = colorScheme.onSurfaceVariant;
-    String translatedText = ref.watch(translatedTextProvider) != null ? ref.read(translatedTextProvider)! : _originalText;
+    String translatedText = ref.watch(translatedTextPostCreationProvider) != null
+        ? ref.read(translatedTextPostCreationProvider)!
+        : _originalText;
 
     return Scaffold(
       appBar: AppBar(

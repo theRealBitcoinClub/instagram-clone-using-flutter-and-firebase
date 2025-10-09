@@ -59,27 +59,33 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Expanded(
-                      child: GestureDetector(
+                      child: StatWidget(
+                        title: 'BCH',
+                        count: creator.balanceBch,
+                        theme: theme,
                         onTap: () => creator.bchAddressCashtokenAware.isEmpty
                             ? showSnackBar("User has not registered on Mahakka", type: SnackbarType.info)
                             : ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cashonizeUrl),
-                        child: StatWidget(title: 'BCH', count: creator.balanceBch, theme: theme),
                       ),
                     ),
                     Expanded(
-                      child: GestureDetector(
+                      child: StatWidget(
+                        title: MemoBitcoinBase.tokenTicker,
+                        count: creator.balanceToken,
+                        theme: theme,
                         onTap: () => creator.bchAddressCashtokenAware.isEmpty
                             ? showSnackBar("User has not registered on Mahakka", type: SnackbarType.info)
                             : ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cauldronSwapTokenUrl),
-                        child: StatWidget(title: MemoBitcoinBase.tokenTicker, count: creator.balanceToken, theme: theme),
                       ),
                     ),
                     Expanded(
-                      child: GestureDetector(
+                      child: StatWidget(
+                        title: 'MEMO',
+                        count: creator.balanceMemo,
+                        theme: theme,
                         onTap: () => ref
                             .read(navigationStateProvider.notifier)
                             .navigateToUrl(MemoBitcoinBase.memoExplorerUrlPrefix + creator.id + MemoBitcoinBase.memoExplorerUrlSuffix),
-                        child: StatWidget(title: 'MEMO', count: creator.balanceMemo, theme: theme),
                       ),
                     ),
                   ],

@@ -7,6 +7,7 @@ import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/repositories/post_repository.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
+import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:mahakka/widgets/postcard/post_card_footer.dart';
 import 'package:mahakka/widgets/preview_url_widget.dart';
@@ -302,7 +303,7 @@ class _PostCardState extends ConsumerState<PostCard> {
             isSending: _isSendingLikeTx,
             mediaHeight: _getMediaHeight(),
             onEnd: () {
-              if (mounted) setState(() => _isSendingLikeTx = false);
+              // if (mounted) setState(() => _isSendingLikeTx = false);
             },
             theme: theme,
           ),
@@ -349,14 +350,19 @@ class _PostCardState extends ConsumerState<PostCard> {
 
       setState(() {
         _isSendingLikeTx = false;
-        if (response == MemoAccountantResponse.yes) {
-          _isAnimatingLike = true;
-        } else {
-          showSnackBar(type: SnackbarType.info, response.message);
-          showQrQuickDeposit(context);
-          _logError("Accountant error during tip: ${response.name}", response);
-        }
       });
+
+      if (response == MemoAccountantResponse.yes) {
+        Future.delayed(Duration(milliseconds: 100), () {
+          setState(() {
+            _isAnimatingLike = true;
+          });
+        });
+      } else {
+        showSnackBar(type: SnackbarType.info, response.message);
+        showQrQuickDeposit(context);
+        _logError("Accountant error during tip: ${response.name}", response);
+      }
     } catch (e, s) {
       _logError("Error sending tip", e, s);
       if (mounted) {
@@ -645,6 +651,7 @@ class _PostCardState extends ConsumerState<PostCard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(height: 3),
+                if (_isSendingLikeTx) AnimGrowFade(show: _isSendingLikeTx, child: LinearProgressIndicator(minHeight: 1)),
                 PostCardHeader(post: widget.post, onLikePostTipCreator: _sendTipToCreator, index: widget.index),
                 _buildPostMedia(theme, colorScheme, textTheme),
                 PostCardFooter(

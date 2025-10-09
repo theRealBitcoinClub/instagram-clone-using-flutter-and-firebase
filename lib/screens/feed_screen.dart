@@ -28,7 +28,7 @@ class FeedScreen extends ConsumerStatefulWidget {
 
 class _FeedScreenState extends ConsumerState<FeedScreen> {
   final ScrollController _scrollController = ScrollController();
-  final FocusNode _listViewFocusNode = FocusNode();
+  // final FocusNode _listViewFocusNode = FocusNode();
   final _introType = IntroType.mainApp;
 
   @override
@@ -96,7 +96,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     _print('FSCR:♻️ FeedScreen dispose called');
     // _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
-    _listViewFocusNode.dispose();
+    // _listViewFocusNode.dispose();
     super.dispose();
   }
 
@@ -266,42 +266,43 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           //     ScrollDownIntent: CallbackAction<ScrollDownIntent>(onInvoke: (intent) => _handleScrollIntent(intent, context)),
           //   },
           //   child:
-          GestureDetector(
-            onTap: () {
-              if (!_listViewFocusNode.hasFocus) {
-                _print('FSCR:🎯 Requesting focus via GestureDetector tap');
-                FocusScope.of(context).requestFocus(_listViewFocusNode);
+          // GestureDetector(
+          // onTap: () {
+          //   if (!_listViewFocusNode.hasFocus) {
+          //     _print('FSCR:🎯 Requesting focus via GestureDetector tap');
+          //     FocusScope.of(context).requestFocus(_listViewFocusNode);
+          //   }
+          // },
+          // child:
+          ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            controller: _scrollController,
+            itemCount: _getDisplayedItemCount(feedState),
+            itemBuilder: (context, index) {
+              _print('FSCR:📜 ListView building item at index: $index');
+
+              // Apply soft limit to displayed posts
+              final displayedPosts = _getDisplayedPosts(feedState);
+
+              if (index < displayedPosts.length) {
+                final post = displayedPosts[index];
+                _print('FSCR:📜 Building PostCard for post ${post.id} at index $index');
+                return _wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme, index: index);
+              } else if (feedState.isMaxFreeLimit && index >= displayedPosts.length) {
+                _print('FSCR:💰 Building free plan limit widget at index $index');
+                return _buildFreePlanLimitWidget(theme);
+              } else if (feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimit && index >= displayedPosts.length) {
+                _print('FSCR:⏳ Building loading indicator at index $index');
+                return _buildLoadingIndicator();
+              } else if (!feedState.hasMorePosts && index == displayedPosts.length) {
+                _print('FSCR:🏁 Building end of feed message at index $index');
+                return _buildEndOfFeedWidget(theme);
               }
+              _print('FSCR:❌ Unexpected index in ListView builder: $index');
+              return const SizedBox.shrink();
             },
-            child: ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              controller: _scrollController,
-              itemCount: _getDisplayedItemCount(feedState),
-              itemBuilder: (context, index) {
-                _print('FSCR:📜 ListView building item at index: $index');
-
-                // Apply soft limit to displayed posts
-                final displayedPosts = _getDisplayedPosts(feedState);
-
-                if (index < displayedPosts.length) {
-                  final post = displayedPosts[index];
-                  _print('FSCR:📜 Building PostCard for post ${post.id} at index $index');
-                  return _wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme, index: index);
-                } else if (feedState.isMaxFreeLimit && index >= displayedPosts.length) {
-                  _print('FSCR:💰 Building free plan limit widget at index $index');
-                  return _buildFreePlanLimitWidget(theme);
-                } else if (feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimit && index >= displayedPosts.length) {
-                  _print('FSCR:⏳ Building loading indicator at index $index');
-                  return _buildLoadingIndicator();
-                } else if (!feedState.hasMorePosts && index == displayedPosts.length) {
-                  _print('FSCR:🏁 Building end of feed message at index $index');
-                  return _buildEndOfFeedWidget(theme);
-                }
-                _print('FSCR:❌ Unexpected index in ListView builder: $index');
-                return const SizedBox.shrink();
-              },
-            ),
           ),
+      // ),
       // ),
     );
   }

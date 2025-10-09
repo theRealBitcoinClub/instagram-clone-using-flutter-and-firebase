@@ -51,14 +51,14 @@ class PostCardHeader extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(
-                      width: 171,
-                      child: Row(
-                        children: [
-                          Text("${creator.profileIdShort} ", style: theme.textTheme.titleSmall),
-                          Text(creator.nameMaxLengthAware, style: theme.textTheme.titleMedium, overflow: TextOverflow.ellipsis),
-                        ],
-                      ),
+                    Row(
+                      children: [
+                        Text("${creator.profileIdShort} ", style: theme.textTheme.titleSmall),
+                        SizedBox(
+                          width: 189,
+                          child: Text(creator.nameMaxLengthAware, style: theme.textTheme.titleMedium, overflow: TextOverflow.ellipsis),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 3),
                     buildCounterDateAgeRow(feedLimit, theme),
@@ -74,22 +74,29 @@ class PostCardHeader extends ConsumerWidget {
     );
   }
 
-  GestureDetector buildPopularityCounterTipPost(int displayScore) {
-    return GestureDetector(
-      onTap: onLikePostTipCreator,
-      child: Row(
-        children: [
-          PopularityScoreWidget(initialScore: displayScore, postId: post.id),
-          // Text("${post.popularityScore}", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400)),
-          SizedBox(width: 3),
-          IconButton(
-            padding: EdgeInsets.all(9),
-            icon: const Icon(Icons.thumb_up_alt_outlined),
-            onPressed: onLikePostTipCreator, // This is for the "Tip Creator" action
-            iconSize: 21,
-            visualDensity: VisualDensity.compact,
+  Widget buildPopularityCounterTipPost(int displayScore) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.all(Radius.circular(9)),
+        onTap: onLikePostTipCreator,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(9, 0, 0, 0),
+          child: Row(
+            children: [
+              PopularityScoreWidget(initialScore: displayScore, postId: post.id),
+              // Text("${post.popularityScore}", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400)),
+              SizedBox(width: 3),
+              IconButton(
+                padding: EdgeInsets.all(9),
+                icon: const Icon(Icons.thumb_up_alt_outlined),
+                onPressed: onLikePostTipCreator, // This is for the "Tip Creator" action
+                iconSize: 23,
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

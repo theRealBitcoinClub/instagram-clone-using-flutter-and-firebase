@@ -232,7 +232,7 @@ class MemoBitcoinBase {
     //TODO handle dust xceptions
     print(
       "ANALYZE DUST: " +
-          await provider!.request(ElectrumRequestBroadCastTransaction(transactionRaw: tx.toHex()), timeout: const Duration(seconds: 15)),
+          await provider!.request(ElectrumRequestBroadCastTransaction(transactionRaw: tx.toHex()), timeout: const Duration(seconds: 20)),
     );
     return "success";
   }

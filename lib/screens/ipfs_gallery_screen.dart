@@ -21,6 +21,11 @@ class IPFSGalleryScreen extends ConsumerWidget {
 
   const IPFSGalleryScreen({Key? key, required this.ipfsCids}) : super(key: key);
 
+  void closeAndReset(WidgetRef ref, ctx) {
+    ref.read(selectedCidProvider.notifier).state = null;
+    Navigator.pop(ctx);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedCid = ref.watch(selectedCidProvider);
@@ -39,13 +44,13 @@ class IPFSGalleryScreen extends ConsumerWidget {
         toolbarHeight: AppBarBurnMahakkaTheme.height,
         leadingWidth: 40,
         title: Text(hasSelection ? '${selectedCid}' : title, style: textTheme.bodySmall!.copyWith(color: colorScheme.onPrimary)),
-        leading: IconButton(icon: const Icon(Icons.cancel_outlined), onPressed: () => Navigator.pop(context)),
+        leading: IconButton(icon: const Icon(Icons.cancel_outlined), onPressed: () => closeAndReset(ref, context)),
         actions: [
           AppBarBurnMahakkaTheme.buildThemeIcon(ref, context),
           if (!hasSelection)
             IconButton(
               icon: Icon(Icons.upload_outlined, color: colorScheme.onPrimary),
-              onPressed: () => _createNewIpfsPin(context),
+              onPressed: () => _createNewIpfsPin(context, ref),
               tooltip: 'Create new IPFS pin',
             )
           else
@@ -113,8 +118,9 @@ class IPFSGalleryScreen extends ConsumerWidget {
     );
   }
 
-  void _createNewIpfsPin(BuildContext context) {
-    Navigator.pop(context);
+  void _createNewIpfsPin(BuildContext context, WidgetRef ref) {
+    // Navigator.pop(context);
+    closeAndReset(ref, context);
     IpfsPinClaimScreen.show(context);
   }
 }

@@ -118,13 +118,10 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     );
   }
 
-  Widget _buildErrorText(BuildContext context) {
+  Widget _buildErrorText(BuildContext context, errorTranslated) {
     return Column(
       children: [
-        Text(
-          'Unsupported language, publish text as is or cancel to retry',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.error),
-        ),
+        Text(errorTranslated, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.error)),
         const SizedBox(height: 6),
       ],
     );
@@ -136,25 +133,13 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
     bool isAutoDetecting = ref.watch(isAutoDetectingProvider);
     bool isTranslating = ref.watch(isTranslatingProvider);
     MahakkaLanguage targetLanguage = ref.watch(targetLanguageProvider);
-    print("\n\n\nLANGUAGE WIDGET STATE:");
-    print("\n\n\nLANGUAGE WIDGET STATE languageDetectionFailed: $languageDetectionFailed");
-    print("\n\n\nLANGUAGE WIDGET STATE isAutoDetecting: $isAutoDetecting");
-    print("\n\n\nLANGUAGE WIDGET STATE isTranslating: $isTranslating");
     var showSelector = !languageDetectionFailed && !isAutoDetecting;
-    print("\n\n\nLANGUAGE WIDGET STATE showSelector: $showSelector");
+    var errorText = 'Unsupported language, publish text as is or cancel to retry';
+    String errorTranslated = ref.watch(autoTranslationTextProvider(errorText)).value ?? errorText;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // // Test 1: Simple visibility
-        // if (showSelector) ...[
-        //   Column(
-        //     children: [
-        //       Text("DEBUG: Selector should be visible"),
-        //       Row(children: [_buildTargetLanguageSelector(context, ref, isTranslating, targetLanguage)]),
-        //       const SizedBox(height: 0),
-        //     ],
-        //   ),
-        // ],
         AnimGrowFade(
           show: showSelector,
           child: Column(
@@ -164,7 +149,7 @@ class _TranslationWidgetState extends ConsumerState<TranslationWidget> {
             ],
           ),
         ),
-        AnimGrowFade(show: languageDetectionFailed && !isAutoDetecting, child: _buildErrorText(context)),
+        AnimGrowFade(show: languageDetectionFailed && !isAutoDetecting, child: _buildErrorText(context, errorTranslated)),
         AnimGrowFade(show: isTranslating || isAutoDetecting, child: _buildProgressIndicator(context)),
       ],
     );

@@ -172,12 +172,12 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
     ref.read(snackbarServiceProvider).showTranslatedSnackBar(content.snackbarText, type: SnackbarType.success);
 
     // Show triggered text after 4 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      // if (context.mounted) {
-      ref.read(snackbarServiceProvider).showTranslatedSnackBar(content.triggeredText, type: SnackbarType.info, wait: true);
-      // showSnackBar(content.triggeredText, type: SnackbarType.info);
-      // }
-    });
+    // Future.delayed(const Duration(seconds: 3), () {
+    //   // if (context.mounted) {
+    //   ref.read(snackbarServiceProvider).showTranslatedSnackBar(content.triggeredText, type: SnackbarType.info, wait: true);
+    //   // showSnackBar(content.triggeredText, type: SnackbarType.info);
+    //   // }
+    // });
   }
 
   // void _showCompletionConfetti(BuildContext context) {

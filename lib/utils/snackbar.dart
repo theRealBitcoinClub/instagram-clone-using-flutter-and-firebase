@@ -6,9 +6,9 @@ import '../main.dart';
 import '../provider/translation_service.dart';
 
 enum SnackbarType {
-  success(duration: Duration(seconds: 5), backgroundColor: Color(0xFF1B5E20), icon: Icons.check_circle_outline_rounded),
-  error(duration: Duration(seconds: 7), backgroundColor: Color(0xFFB71C1C), icon: Icons.error_outline_rounded),
-  info(duration: Duration(seconds: 6), backgroundColor: Color(0xFF0D47A1), icon: Icons.info_outline_rounded);
+  success(duration: Duration(seconds: 9), backgroundColor: Color(0xFF2E7D32), icon: Icons.check_circle_outline_rounded),
+  error(duration: Duration(seconds: 9), backgroundColor: Color(0xFFC62828), icon: Icons.error_outline_rounded),
+  info(duration: Duration(seconds: 9), backgroundColor: Color(0xFF1565C0), icon: Icons.info_outline_rounded);
 
   final Duration duration;
   final Color backgroundColor;

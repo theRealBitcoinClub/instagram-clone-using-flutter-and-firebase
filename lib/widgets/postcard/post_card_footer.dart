@@ -22,7 +22,7 @@ class PostCardFooter extends StatelessWidget {
   final VoidCallback onSelectTopic;
   final onSend;
   final VoidCallback onCancel;
-  final int maxTagsCounter;
+  // final int maxTagsCounter;
 
   const PostCardFooter({
     super.key,
@@ -37,7 +37,7 @@ class PostCardFooter extends StatelessWidget {
     required this.onSelectTopic,
     required this.onSend,
     required this.onCancel,
-    required this.maxTagsCounter,
+    // required this.maxTagsCounter,
   });
 
   @override

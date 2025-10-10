@@ -30,7 +30,7 @@ class PostCardHeader extends ConsumerWidget {
     final displayScore = updatedScore ?? post.popularityScore;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12).copyWith(right: 3),
+      padding: const EdgeInsets.fromLTRB(12, 6, 3, 3),
       child: Row(
         children: [
           CachedAvatar(
@@ -40,34 +40,35 @@ class PostCardHeader extends ConsumerWidget {
             radius: 27,
           ),
           const SizedBox(width: 9),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.all(Radius.circular(6)),
-              onTap: () => _navigateToProfile(context, ref, creator.id), // Pass ref
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 3, horizontal: 3),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Text("${creator.profileIdShort} ", style: theme.textTheme.titleSmall),
-                        SizedBox(
-                          width: 180,
-                          child: Text(creator.nameMaxLengthAware, style: theme.textTheme.titleMedium, overflow: TextOverflow.ellipsis),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 3),
-                    buildCounterDateAgeRow(feedLimit, theme),
-                  ],
+          Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.all(Radius.circular(6)),
+                onTap: () => _navigateToProfile(context, ref, creator.id), // Pass ref
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 3, horizontal: 3),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Text("${creator.profileIdShort} ", style: theme.textTheme.titleSmall),
+                          Expanded(
+                            child: Text(creator.nameMaxLengthAware, style: theme.textTheme.titleMedium, overflow: TextOverflow.ellipsis),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 3),
+                      buildCounterDateAgeRow(feedLimit, theme),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-          Spacer(),
+          // Spacer(),
           buildPopularityCounterTipPost(displayScore),
         ],
       ),
@@ -84,12 +85,12 @@ class PostCardHeader extends ConsumerWidget {
           padding: EdgeInsets.fromLTRB(6, 0, 0, 0),
           child: Row(
             children: [
-              PopularityScoreWidget(initialScore: displayScore, postId: post.id),
+              PopularityScoreWidget(initialScore: displayScore, postId: post.id, textStyleBalance: true),
               IconButton(
-                padding: EdgeInsets.all(15),
+                padding: EdgeInsets.all(18),
                 icon: const Icon(Icons.thumb_up_alt_outlined),
                 onPressed: onLikePostTipCreator, // This is for the "Tip Creator" action
-                iconSize: 23,
+                iconSize: 25.2,
                 visualDensity: VisualDensity.compact,
               ),
             ],

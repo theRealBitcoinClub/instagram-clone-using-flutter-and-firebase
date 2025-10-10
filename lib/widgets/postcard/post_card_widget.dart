@@ -44,9 +44,9 @@ class PostCard extends ConsumerStatefulWidget {
 
 class _PostCardState extends ConsumerState<PostCard> {
   static const double _altImageHeight = 50.0;
-  static const int _maxTagsCounter = 3;
-  static const int _minTextLength = 20;
-  bool _isAnimatingLike = false;
+  // static const int _maxTagsCounter = 3;
+  // static const int _minTextLength = 20;
+  bool _isAnimatingLikeConfirmation = false;
   bool _isSendingLikeTx = false;
   bool _isSendingReplyTx = false;
   bool _showInput = false;
@@ -75,7 +75,7 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   void _initializeSelectedHashtags() {
-    final int count = widget.post.tagIds.length > _maxTagsCounter ? _maxTagsCounter : widget.post.tagIds.length;
+    final int count = widget.post.tagIds.length > MemoVerifier.maxHashtags ? MemoVerifier.maxHashtags : widget.post.tagIds.length;
     _selectedHashtags = List<bool>.filled(count, false);
   }
 
@@ -311,10 +311,10 @@ class _PostCardState extends ConsumerState<PostCard> {
 
         IgnorePointer(
           child: LikeSucceededAnimation(
-            isAnimating: _isAnimatingLike,
+            isAnimating: _isAnimatingLikeConfirmation,
             mediaHeight: _getMediaHeight(),
             onEnd: () {
-              if (mounted) setState(() => _isAnimatingLike = false);
+              if (mounted) setState(() => _isAnimatingLikeConfirmation = false);
             },
             theme: theme,
           ),
@@ -355,11 +355,11 @@ class _PostCardState extends ConsumerState<PostCard> {
       if (response == MemoAccountantResponse.yes) {
         Future.delayed(Duration(milliseconds: 100), () {
           setState(() {
-            _isAnimatingLike = true;
+            _isAnimatingLikeConfirmation = true;
           });
         });
       } else {
-        showSnackBar(type: SnackbarType.info, response.message);
+        showSnackBar(type: SnackbarType.error, response.message);
         showQrQuickDeposit(context);
         _logError("Accountant error during tip: ${response.name}", response);
       }
@@ -464,7 +464,8 @@ class _PostCardState extends ConsumerState<PostCard> {
       hasAnySelectedOrOtherHashtagsInText = MemoRegExp.extractHashtags(currentText).isNotEmpty;
     }
 
-    final bool meetsLengthRequirement = textWithoutKnownHashtags.length >= _minTextLength && currentText.length <= MemoVerifier.maxPostLength;
+    final bool meetsLengthRequirement =
+        textWithoutKnownHashtags.length >= MemoVerifier.minPostLength && currentText.length <= MemoVerifier.maxPostLength;
 
     final bool newShowSendState = _hasSelectedTopic ? meetsLengthRequirement : hasAnySelectedOrOtherHashtagsInText && meetsLengthRequirement;
 
@@ -651,7 +652,7 @@ class _PostCardState extends ConsumerState<PostCard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(height: 3),
-                if (_isSendingLikeTx) AnimGrowFade(show: _isSendingLikeTx, child: LinearProgressIndicator(minHeight: 1)),
+                if (_isSendingLikeTx) AnimGrowFade(show: _isSendingLikeTx, child: LinearProgressIndicator(minHeight: 1.5)),
                 PostCardHeader(post: widget.post, onLikePostTipCreator: _sendTipToCreator, index: widget.index),
                 _buildPostMedia(theme, colorScheme, textTheme),
                 PostCardFooter(
@@ -666,7 +667,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                   onSelectTopic: _onSelectTopic,
                   onSend: _onSend,
                   onCancel: _onCancel,
-                  maxTagsCounter: _maxTagsCounter,
+                  // maxTagsCounter: MemoVerifier.maxHashtags,
                 ),
               ],
             ),

@@ -77,7 +77,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     _print('FSCR:📜 _scrollDownForPost - postId: ${post.id}, found at index: $postIndex');
 
     if (postIndex != -1) {
-      final targetPosition = _scrollController.offset + 50.0;
+      final targetPosition = _scrollController.offset + 120.0;
       _print('FSCR:📜 _scrollDownForPost - current offset: ${_scrollController.offset}, target: $targetPosition');
 
       final maxScrollExtent = _scrollController.position.maxScrollExtent;

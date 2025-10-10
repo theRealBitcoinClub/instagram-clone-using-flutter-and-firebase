@@ -6,7 +6,6 @@ import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 import 'package:mahakka/widgets/circular_loading_overlay.dart';
 
 import '../provider/media_selection_notifier.dart';
-import '../theme_provider.dart';
 import '../views_taggable/taggable_providers.dart';
 import '../widgets/media_type_selector.dart';
 import 'add/add_post_providers.dart';
@@ -33,42 +32,18 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
   String _hint = "paste any media url or ipfs content id";
   var _onCreateCallback;
   var _onGalleryCallback;
-  // late AnimationController _animationController; // Local controller
-
   @override
   void initState() {
     super.initState();
     _log("initState started");
-    // _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
 
     context.afterBuild(refreshUI: false, () {
-      // ref.read(animationControllerNotifierProvider.notifier).initialize(this);
       ref.read(clipboardNotifierProvider.notifier).checkClipboard(ref);
       final controller = ref.read(addPostControllerProvider.notifier);
       controller.setContext(context);
     });
 
-    // context.afterLayout(() {
-    // }, refreshUI: false);
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    // });
     _log("initState completed");
-  }
-
-  @override
-  void dispose() {
-    // _animationController.dispose(); // Dispose local controller
-    super.dispose();
-  }
-
-  Widget _buildMenuTheme(ThemeState themeState, ThemeData theme) {
-    return IconButton(
-      icon: Icon(themeState.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
-      tooltip: "Toggle Theme",
-      onPressed: () {
-        ref.read(themeNotifierProvider.notifier).toggleTheme();
-      },
-    );
   }
 
   @override
@@ -78,8 +53,6 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     final TextTheme textTheme = theme.textTheme;
     final MediaQueryData mediaQuery = MediaQuery.of(context);
     final bool isKeyboardVisible = mediaQuery.viewInsets.bottom > 0;
-    // final asyncThemeState = ref.watch(themeNotifierProvider);
-    // final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
     bool isPublishing = ref.watch(isPublishingProvider);
 
     return GestureDetector(

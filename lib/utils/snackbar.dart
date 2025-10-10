@@ -26,6 +26,19 @@ class SnackbarService {
 
   SnackbarService(this.ref);
 
+  // Handle URL-containing snackbar with partial translation
+  void showPartiallyTranslatedSnackBar({
+    String fixedBefore = "",
+    required String translateable,
+    String fixedAfter = "",
+    required SnackbarType type,
+  }) async {
+    final translation = await ref.read(autoTranslationTextProvider(translateable).future);
+    final fullMessage = '$fixedBefore $translation $fixedAfter'.trim();
+    // Use legacy showSnackBar to avoid double translation
+    showSnackBar(fullMessage, type: type);
+  }
+
   /// Shows a snackbar with automatic translation
   Future<void> showTranslatedSnackBar(String content, {required SnackbarType type, bool wait = false}) async {
     final translatedContent = await _getTranslatedText(content);

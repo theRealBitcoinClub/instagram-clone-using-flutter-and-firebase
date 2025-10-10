@@ -18,6 +18,7 @@ import 'package:path/path.dart' show basename;
 import '../ipfs/ipfs_pin_claim_service.dart';
 import '../memo/base/memo_accountant.dart';
 import '../provider/electrum_provider.dart';
+import '../provider/translation_service.dart';
 import '../provider/user_provider.dart';
 
 class IpfsPinClaimScreen extends ConsumerStatefulWidget {
@@ -51,6 +52,19 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
 
   final String _serverUrl = 'https://file-stage.fullstack.cash';
 
+  // DRY text constants
+  static const String _insufficientBalanceText = 'Insufficient balance for IPFS operation. Please add more BCH to your wallet.';
+  static const String _uploadSuccessText = 'Upload successful, now its pinning to the IPFS!';
+  static const String _selectImageText = 'SELECT IMAGE';
+  static const String _changeImageText = 'CHANGE IMAGE';
+  static const String _uploadPriceText = 'Upload price:';
+  static const String _screenTitle = 'Upload and Pin images to the IPFS';
+  static const String _screenDescription =
+      'Use this page to upload an image to the IPFS network. '
+      'Your wallet must have sufficient Memo balance to pay for the upload. Select an image to check the cost!';
+  static const String _fileSelectionDescription = 'Select an image from your phone to be uploaded to the Inter Planetary File System - IPFS';
+  static const String _pinClaimSuccessText = 'Pin Claim Success';
+
   @override
   void initState() {
     super.initState();
@@ -62,9 +76,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
 
   @override
   void dispose() {
-    // Cancel and dispose the timer when the widget is disposed
     _countdownTimer?.cancel();
-    // if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
     super.dispose();
   }
 
@@ -82,35 +94,63 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
 
       setState(() {
         if (_countdownSeconds > 0) {
-          if (_countdownSeconds == 60) showSnackBar("http://psfoundation.info made this feature possible!", type: SnackbarType.info);
-          if (_countdownSeconds == 49) showSnackBar("BCH fork block is number #478558", type: SnackbarType.info);
-          if (_countdownSeconds == 38) showSnackBar("BCH independence day is August 1st 2017", type: SnackbarType.info);
-          if (_countdownSeconds == 27) showSnackBar("Satoshi Nakamoto is the real Bitcoin Jesus", type: SnackbarType.info);
-          if (_countdownSeconds == 16) showSnackBar("BCH birthday is 3rd January 2009", type: SnackbarType.info);
+          if (_countdownSeconds == 60) {
+            ref
+                .read(snackbarServiceProvider)
+                .showPartiallyTranslatedSnackBar(
+                  translateable: 'made this feature possible!',
+                  fixedBefore: 'http://psfoundation.info ',
+                  type: SnackbarType.info,
+                );
+          }
+          if (_countdownSeconds == 49) {
+            ref.read(snackbarServiceProvider).showTranslatedSnackBar("BCH fork block is number #478558", type: SnackbarType.info);
+          }
+          if (_countdownSeconds == 38) {
+            ref.read(snackbarServiceProvider).showTranslatedSnackBar("BCH independence day is August 1st 2017", type: SnackbarType.info);
+          }
+          if (_countdownSeconds == 27) {
+            ref.read(snackbarServiceProvider).showTranslatedSnackBar("Satoshi Nakamoto is the real Bitcoin Jesus", type: SnackbarType.info);
+          }
+          if (_countdownSeconds == 16) {
+            ref.read(snackbarServiceProvider).showTranslatedSnackBar("BCH birthday is 3rd January 2009", type: SnackbarType.info);
+          }
           _countdownSeconds--;
         } else {
-          // Time's up - hide the counter show some last resort snackbars to entertain the user;
           _stopCountdown();
           if (mounted) {
-            showSnackBar("ARE YOU UPLOADING A LARGE FILE OR NOT HAZ VERY FAST CONNECTION?!", type: SnackbarType.info);
-            showSnackBar("WAGMI! WE ALL GONNA MAKE IT!", type: SnackbarType.success, wait: true);
-            showSnackBar(
-              "SOME MORE PATIENCE REQUIRED! YOU MADE IT THIS FAR, STAND STRONG, TAKE A DEEP BREATH!",
-              type: SnackbarType.error,
-              wait: true,
-            );
-            showSnackBar("PLEASE HOLD THE LINE!", type: SnackbarType.info, wait: true);
-            showSnackBar("YOU STILL HERE! THATS A VERY GOOD SIGN! SATOSHI NAKAMOTO LOVES YOU!", type: SnackbarType.success, wait: true);
-            showSnackBar("PLEASE REACH OUT TO MAHAKKA SUPPORT IN TELEGRAM @MAHAKKA_COM", type: SnackbarType.error, wait: true);
-            showSnackBar("PLEASE TAKE A SCREENSHOT SO YOU CAN PROVIDE IT @MAHAKKA_COM", type: SnackbarType.info, wait: true);
-            showSnackBar("SUPPORT WILL ASK FOR THAT SCREENSHOT TO MAKE A REFUND @MAHAKKA_COM", type: SnackbarType.success, wait: true);
-            showSnackBar("PLEASE REACH OUT TO MAHAKKA SUPPORT IN TELEGRAM @MAHAKKA_COM", type: SnackbarType.error, wait: true);
-            showSnackBar("PLEASE TAKE A SCREENSHOT SO YOU CAN PROVIDE IT @MAHAKKA_COM", type: SnackbarType.info, wait: true);
-            showSnackBar("SUPPORT WILL ASK FOR THAT SCREENSHOT TO MAKE A REFUND @MAHAKKA_COM", type: SnackbarType.success, wait: true);
+            _showTimeoutSnackbars();
           }
         }
       });
     });
+  }
+
+  // DRY method for timeout snackbars
+  void _showTimeoutSnackbars() {
+    final snackbars = [
+      {"text": "ARE YOU UPLOADING A LARGE FILE OR NOT HAZ VERY FAST CONNECTION?!", "type": SnackbarType.info, "wait": false},
+      {"text": "WAGMI! WE ALL GONNA MAKE IT!", "type": SnackbarType.success, "wait": true},
+      {
+        "text": "SOME MORE PATIENCE REQUIRED! YOU MADE IT THIS FAR, STAND STRONG, TAKE A DEEP BREATH!",
+        "type": SnackbarType.error,
+        "wait": true,
+      },
+      {"text": "PLEASE HOLD THE LINE!", "type": SnackbarType.info, "wait": true},
+      {"text": "YOU STILL HERE! THATS A VERY GOOD SIGN! SATOSHI NAKAMOTO LOVES YOU!", "type": SnackbarType.success, "wait": true},
+      {"text": "PLEASE REACH OUT TO MAHAKKA SUPPORT IN TELEGRAM @MAHAKKA_COM", "type": SnackbarType.error, "wait": true},
+      {"text": "PLEASE TAKE A SCREENSHOT SO YOU CAN PROVIDE IT @MAHAKKA_COM", "type": SnackbarType.info, "wait": true},
+      {"text": "SUPPORT WILL ASK FOR THAT SCREENSHOT TO MAKE A REFUND @MAHAKKA_COM", "type": SnackbarType.success, "wait": true},
+      {"text": "PLEASE REACH OUT TO MAHAKKA SUPPORT IN TELEGRAM @MAHAKKA_COM", "type": SnackbarType.error, "wait": true},
+      {"text": "PLEASE TAKE A SCREENSHOT SO YOU CAN PROVIDE IT @MAHAKKA_COM", "type": SnackbarType.info, "wait": true},
+      {"text": "SUPPORT WILL ASK FOR THAT SCREENSHOT TO MAKE A REFUND @MAHAKKA_COM", "type": SnackbarType.success, "wait": true},
+    ];
+
+    for (final snackbar in snackbars) {
+      ref
+          .read(snackbarServiceProvider)
+          .showTranslatedSnackBar(snackbar["text"] as String, type: snackbar["type"] as SnackbarType, wait: snackbar["wait"] as bool);
+    }
   }
 
   void _stopCountdown() {
@@ -140,7 +180,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
       setState(() {
         _selectedFile = null;
         _pinClaimPrice = null;
-        _error = 'Error picking file: ${e.toString()}';
+        _error = _createPartialErrorMessage('Error picking file', e);
       });
     }
   }
@@ -155,7 +195,6 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
 
     try {
       final ipfsService = await ipfsPinClaimServiceFactory();
-
       final price = await ipfsService.fetchBCHWritePrice(_selectedFile!);
       setState(() {
         _pinClaimPrice = price;
@@ -166,7 +205,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
       setState(() {
         _selectedFile = null;
         _pinClaimPrice = null;
-        _error = 'Error calculating price: ${e.toString()}';
+        _error = _createPartialErrorMessage('Error calculating price', e);
         _isLoading = false;
       });
     }
@@ -185,7 +224,6 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
 
     try {
       final request = http.MultipartRequest('POST', Uri.parse('$_serverUrl/ipfs/upload'));
-
       request.files.add(await http.MultipartFile.fromPath('file', _selectedFile!.path, filename: basename(_selectedFile!.path)));
 
       final response = await request.send();
@@ -198,17 +236,16 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
           _isUploading = false;
         });
         if (!_isPinning || !_isCheckingBalance) {
-          showSnackBar("Upload successfull, now its pinning to the IPFS!", type: SnackbarType.success);
+          ref.read(snackbarServiceProvider).showTranslatedSnackBar(_uploadSuccessText, type: SnackbarType.success);
           _checkBalanceAndPin();
         }
-        ;
       } else {
         throw Exception('Upload failed: ${jsonResponse['error']}');
       }
     } catch (e) {
       resetLoadingStates();
       setState(() {
-        _error = 'Error uploading file: ${e.toString()}';
+        _error = _createPartialErrorMessage('Error uploading file', e);
       });
     }
   }
@@ -227,11 +264,11 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
 
       if (!hasSufficientBalance) {
         setState(() {
-          _error = 'Insufficient balance for IPFS operation. Please add more BCH to your wallet.';
+          _error = _insufficientBalanceText;
           _isCheckingBalance = false;
-          showSnackBar(_error!, type: SnackbarType.error);
-          showQrCodeDialog(ctx: context, user: ref.read(userProvider), memoOnly: true, withDelay: true);
         });
+        ref.read(snackbarServiceProvider).showTranslatedSnackBar(_insufficientBalanceText, type: SnackbarType.error);
+        showQrCodeDialog(ctx: context, user: ref.read(userProvider), memoOnly: true, withDelay: true);
         return;
       }
 
@@ -239,7 +276,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
     } catch (e) {
       resetLoadingStates();
       setState(() {
-        _error = 'Error checking balance: ${e.toString()}';
+        _error = _createPartialErrorMessage('Error checking balance', e);
       });
     }
   }
@@ -252,7 +289,6 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
       _error = null;
     });
 
-    // Start the countdown overlay
     _startCountdown();
 
     try {
@@ -260,23 +296,28 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
       final result = await accountant.pinIpfsFile(_selectedFile!, _cid!);
 
       if (result == MemoAccountantResponse.yes) {
-        // Stop the countdown and pop the screen immediately
         _stopCountdown();
         if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
         if (mounted) Navigator.pop(context);
       } else {
         _stopCountdown();
         setState(() {
-          _error = 'Error pinning file!!!!';
+          _error = _createPartialErrorMessage('Error pinning file', Exception(result.message));
           resetLoadingStates();
         });
-        throw Exception(result.message);
       }
     } catch (e) {
       _stopCountdown();
-      _error = 'Error pinning file: ${e.toString()}';
-      resetLoadingStates();
+      setState(() {
+        _error = _createPartialErrorMessage('Error pinning file', e);
+        resetLoadingStates();
+      });
     }
+  }
+
+  // DRY method for partial error message translation
+  String _createPartialErrorMessage(String userFriendlyPrefix, dynamic exception) {
+    return '$userFriendlyPrefix: ${exception.toString()}';
   }
 
   void resetLoadingStates() {
@@ -306,13 +347,8 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
     });
   }
 
-  // Override the back button behavior when overlay is shown
   Future<bool> _onWillPop() async {
-    if (_showOverlay) {
-      // Prevent back navigation when overlay is shown
-      return false;
-    }
-    return true;
+    return !_showOverlay;
   }
 
   @override
@@ -326,7 +362,15 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: AppBarBurnMahakkaTheme.height,
-          title: Text('Upload and Pin images to the IPFS', style: textTheme.bodyMedium!.copyWith(color: colorScheme.onPrimary.withAlpha(222))),
+          title: Consumer(
+            builder: (context, ref, child) {
+              final translatedTitle = ref.watch(autoTranslationTextProvider(_screenTitle));
+              return Text(
+                translatedTitle.value ?? _screenTitle,
+                style: textTheme.bodyMedium!.copyWith(color: colorScheme.onPrimary.withAlpha(222)),
+              );
+            },
+          ),
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
           actions: [AppBarBurnMahakkaTheme.buildThemeIcon(ref, context)],
@@ -339,10 +383,14 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Use this page to upload an image to the IPFS network. '
-                      'Your wallet must have sufficient Memo balance to pay for the upload. Select an image to check the cost!',
-                      style: textTheme.bodyMedium?.copyWith(height: 1.5, letterSpacing: 1),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final translatedDescription = ref.watch(autoTranslationTextProvider(_screenDescription));
+                        return Text(
+                          translatedDescription.value ?? _screenDescription,
+                          style: textTheme.bodyMedium?.copyWith(height: 1.5, letterSpacing: 1),
+                        );
+                      },
                     ),
                     const SizedBox(height: 16),
                     buildFileSelectionContainer(colorScheme, textTheme, context),
@@ -355,7 +403,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                     if (_claimTxid != null)
                       AnimGrowFade(
                         show: _claimTxid != null,
-                        child: _buildSuccessCard('Pin Claim Success', 'Claim Txid: $_claimTxid', theme, colorScheme, textTheme),
+                        child: _buildSuccessCard(_pinClaimSuccessText, 'Claim Txid: $_claimTxid', theme, colorScheme, textTheme),
                       ),
                     const SizedBox(height: 4),
                     Center(
@@ -417,18 +465,31 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
             ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 2, horizontal: 12),
-              child: Text('SELECT IMAGE', style: textTheme.titleLarge?.copyWith(height: 1.5, letterSpacing: 1.2, color: colorScheme.onPrimary)),
+            child: Consumer(
+              builder: (context, ref, child) {
+                final translatedButton = ref.watch(autoTranslationTextProvider(_selectImageText));
+                return Padding(
+                  padding: EdgeInsets.symmetric(vertical: 2, horizontal: 12),
+                  child: Text(
+                    translatedButton.value ?? _selectImageText,
+                    style: textTheme.titleLarge?.copyWith(height: 1.5, letterSpacing: 1.2, color: colorScheme.onPrimary),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 6),
           Icon(Icons.cloud_upload_outlined, size: 48, color: colorScheme.onSurfaceVariant),
           const SizedBox(height: 2),
-          Text(
-            'Select an image from your phone to be uploaded to the Inter Planetary File System - IPFS',
-            textAlign: TextAlign.center,
-            style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 0.5),
+          Consumer(
+            builder: (context, ref, child) {
+              final translatedDescription = ref.watch(autoTranslationTextProvider(_fileSelectionDescription));
+              return Text(
+                translatedDescription.value ?? _fileSelectionDescription,
+                textAlign: TextAlign.center,
+                style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 0.5),
+              );
+            },
           ),
         ],
       ),
@@ -457,12 +518,17 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                   child: Container(
                     width: double.infinity,
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center, // Center the content
+                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          'Upload price: ~${((_pinClaimPrice! * 100000000)).toStringAsFixed(0)} sats',
-                          style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface, letterSpacing: 1.5),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final translatedPrice = ref.watch(autoTranslationTextProvider(_uploadPriceText));
+                            return Text(
+                              '${translatedPrice.value ?? _uploadPriceText} ~${((_pinClaimPrice! * 100000000)).toStringAsFixed(0)} sats',
+                              style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface, letterSpacing: 1.5),
+                            );
+                          },
                         ),
                         SizedBox(width: 9),
                         Icon(Icons.info_outline_rounded, size: 22, color: colorScheme.onSurface),
@@ -478,7 +544,12 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                 foregroundColor: MaterialStateProperty.all(colorScheme.error.withAlpha(198)),
                 side: MaterialStateProperty.all(BorderSide(color: colorScheme.error.withAlpha(198))),
               ),
-              child: const Text('CHANGE IMAGE'),
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final translatedChange = ref.watch(autoTranslationTextProvider(_changeImageText));
+                  return Text(translatedChange.value ?? _changeImageText);
+                },
+              ),
             ),
           ],
         ),
@@ -505,12 +576,30 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
         padding: const EdgeInsets.only(top: 6, bottom: 6),
         child: Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.red,
-            // border: Border.all(color: colorScheme.error),
-            borderRadius: BorderRadius.circular(8),
+          decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(8)),
+          child: Consumer(
+            builder: (context, ref, child) {
+              if (_error == null) return SizedBox.shrink();
+
+              // Split error message for partial translation
+              final parts = _error!.split(': ');
+              if (parts.length > 1) {
+                // Translate only the user-friendly part, keep exception as-is
+                final translatedPrefix = ref.watch(autoTranslationTextProvider(parts[0]));
+                return Text(
+                  '${translatedPrefix.value ?? parts[0]}: ${parts.sublist(1).join(': ')}',
+                  style: textTheme.bodyMedium?.copyWith(color: colorScheme.onErrorContainer, letterSpacing: 0.5),
+                );
+              } else {
+                // Full translation for non-exception errors
+                final translatedError = ref.watch(autoTranslationTextProvider(_error!));
+                return Text(
+                  translatedError.value ?? _error!,
+                  style: textTheme.bodyMedium?.copyWith(color: colorScheme.onErrorContainer, letterSpacing: 0.5),
+                );
+              }
+            },
           ),
-          child: Text(_error!, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onErrorContainer, letterSpacing: 0.5)),
         ),
       ),
     );
@@ -556,25 +645,22 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
 
   WillPopScope buildOverlayLoading(ColorScheme colorScheme, TextTheme textTheme) {
     return WillPopScope(
-      onWillPop: () async => false, // Disable back button
+      onWillPop: () async => false,
       child: Container(
-        color: Colors.black.withOpacity(0.5), // 50% alpha black
+        color: Colors.black.withOpacity(0.5),
         width: double.infinity,
         height: double.infinity,
         child: Center(
           child: Container(
             width: 120,
             height: 120,
-            decoration: BoxDecoration(
-              color: colorScheme.primary, // Theme color for circle
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: colorScheme.primary, shape: BoxShape.circle),
             child: Center(
               child: Text(
                 _countdownSeconds.toString(),
                 style: textTheme.headlineLarge?.copyWith(
                   fontSize: 50,
-                  color: colorScheme.onPrimary, // onPrimary theme color
+                  color: colorScheme.onPrimary,
                   fontWeight: FontWeight.w400,
                   letterSpacing: 1,
                 ),
@@ -589,19 +675,20 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
   Widget _buildSuccessCard(String title, String content, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
-      decoration: BoxDecoration(
-        color: Colors.blue[900],
-        // border: Border.all(color: colorScheme.primary, width: 2),
-        borderRadius: BorderRadius.circular(8),
-      ),
+      decoration: BoxDecoration(color: Colors.blue[900], borderRadius: BorderRadius.circular(8)),
       margin: const EdgeInsets.only(bottom: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           title.isNotEmpty
-              ? Text(
-                  title,
-                  style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimaryContainer),
+              ? Consumer(
+                  builder: (context, ref, child) {
+                    final translatedTitle = ref.watch(autoTranslationTextProvider(title));
+                    return Text(
+                      translatedTitle.value ?? title,
+                      style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onPrimaryContainer),
+                    );
+                  },
                 )
               : SizedBox.shrink(),
           const SizedBox(height: 4),

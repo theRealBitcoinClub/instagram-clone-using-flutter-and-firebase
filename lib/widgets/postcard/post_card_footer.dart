@@ -111,8 +111,16 @@ class PostCardFooter extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           // IconAction(text: "RESET", onTap: onCancel, type: IAB.cancel, icon: Icons.cancel_outlined),
-                          IconAction(text: "REPOST", onTap: () => onSend(isRepost: true), type: IAB.alternative, icon: Icons.repeat_outlined),
-                          IconAction(text: "CREATE", onTap: onSend, type: IAB.success, icon: Icons.send_outlined),
+                          IconAction(text: "COMMENT TO THAT POST", onTap: onSend, type: IAB.alternative, icon: Icons.comment),
+                          IconAction(
+                            disabled: !post.hasMedia,
+                            disabledMessage: "There is not image nor video attached to this publication.",
+                            text: "REPUBLISH THAT IMAGE OR VIDEO",
+                            onTap: () => onSend(isRepost: true),
+                            type: IAB.success,
+                            icon: Icons.repeat_outlined,
+                          ),
+
                           // _buildCancelButtonWidget(theme),
                           // post.hasMedia ? const SizedBox(width: 9) : SizedBox.shrink(),
                           // post.hasMedia ? _buildRepostButtonWidget(theme) : SizedBox.shrink(),
@@ -132,6 +140,8 @@ class PostCardFooter extends StatelessWidget {
   }
 
   Widget _buildTopicCheckBoxWidget(ThemeData theme) {
+    var color = theme.colorScheme.secondary;
+    var color2 = theme.colorScheme.onSurface;
     return Align(
       alignment: Alignment.centerLeft,
       child: InkWell(
@@ -145,9 +155,9 @@ class PostCardFooter extends StatelessWidget {
               Checkbox(
                 value: hasSelectedTopic,
                 onChanged: (value) => onSelectTopic(),
-                activeColor: theme.colorScheme.primary,
-                checkColor: theme.colorScheme.onPrimary,
-                visualDensity: VisualDensity.compact,
+                activeColor: color,
+                checkColor: color2,
+                visualDensity: VisualDensity.comfortable,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               if (post.topicId.isNotEmpty) ...[
@@ -155,10 +165,7 @@ class PostCardFooter extends StatelessWidget {
                 Flexible(
                   child: Text(
                     post.topicId,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: hasSelectedTopic ? theme.colorScheme.primary : theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.normal,
-                    ),
+                    style: theme.textTheme.bodyLarge?.copyWith(color: hasSelectedTopic ? color : color2, fontWeight: FontWeight.normal),
                   ),
                 ),
               ],

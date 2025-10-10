@@ -16,6 +16,7 @@ import 'package:mahakka/widgets/muted_creators_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../provider/profile_data_model_provider.dart';
+import '../../provider/translation_service.dart';
 import '../../provider/user_provider.dart';
 import '../../providers/navigation_providers.dart';
 import '../../repositories/creator_repository.dart';
@@ -46,6 +47,26 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
   late TabController _tabController;
   int _currentTabIndex = 0;
+
+  // DRY text constants
+  static const String _closeDialogText = "CLOSE DIALOG";
+  static const String _saveChangesText = "SAVE CHANGES";
+  static const String _mutedCreatorsText = "MUTED CREATORS";
+  static const String _replayIntroText = "REPLAY INTRO";
+  static const String _backupText = "BACKUP";
+  static const String _logoutText = "LOGOUT";
+  static const String _nameHintText = "Name";
+  static const String _bioHintText = "Bio/Text";
+  static const String _imgurHintText = "e.g. https://imgur.com/X32JJS";
+  static const String _tipReceiverLabel = "Tip Receiver";
+  static const String _tipAmountLabel = "Tip Amount";
+  static const String _noChangesText = "No changes to save. 🤔";
+  static const String _profileTipsSuccessText = "Profile & Tips updated successfully! ✨";
+  static const String _profileSuccessText = "Profile updated successfully! ✨";
+  static const String _tipsSuccessText = "Tips updated successfully! ✨";
+  static const String _profileFailedText = "Profile/Tips failed:";
+  static const String _onChainCostText = "Name, text and image are stored on-chain, that costs memo fee!";
+  static const String _addFundsText = "Add funds to your balance!";
 
   List<Widget> tabs() {
     return const [
@@ -154,9 +175,33 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
           children: [
             Icon(Icons.error_outline, color: theme.colorScheme.error, size: 48),
             const SizedBox(height: 12),
-            Text(error, style: theme.textTheme.bodyMedium, textAlign: TextAlign.center),
+            Consumer(
+              builder: (context, ref, child) {
+                // Partial translation - only translate the prefix, keep error details as-is
+                final parts = error.split(': ');
+                if (parts.length > 1) {
+                  final translatedPrefix = ref.watch(autoTranslationTextProvider(parts[0]));
+                  return Text(
+                    '${translatedPrefix.value ?? parts[0]}: ${parts.sublist(1).join(': ')}',
+                    style: theme.textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  );
+                } else {
+                  final translatedError = ref.watch(autoTranslationTextProvider(error));
+                  return Text(translatedError.value ?? error, style: theme.textTheme.bodyMedium, textAlign: TextAlign.center);
+                }
+              },
+            ),
             const SizedBox(height: 12),
-            ElevatedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final translatedClose = ref.watch(autoTranslationTextProvider('Close'));
+                  return Text(translatedClose.value ?? 'Close');
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -193,9 +238,6 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
   Widget _buildDialogHeader(ThemeData theme) {
     return Container(
-      // decoration: BoxDecoration(
-      //   border: Border(bottom: BorderSide(color: theme.dividerColor.withOpacity(0.3))),
-      // ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Row(
@@ -206,15 +248,11 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
                 dividerHeight: 1,
                 dividerColor: theme.dividerColor.withAlpha(122),
                 indicatorSize: TabBarIndicatorSize.tab,
-                labelColor: theme.colorScheme.primary, // White text on colored background
+                labelColor: theme.colorScheme.primary,
                 unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
                 unselectedLabelStyle: theme.textTheme.labelMedium,
                 labelStyle: theme.textTheme.labelMedium!.copyWith(fontWeight: FontWeight.bold),
-                indicator: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withAlpha(12), // Selected tab background color
-                  // borderRadius: BorderRadius.circular(8),
-                  // border: Border(bottom: BorderSide(color: theme.colorScheme.primary, width: 1.5)),
-                ),
+                indicator: BoxDecoration(color: theme.colorScheme.onSurface.withAlpha(12)),
                 indicatorPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 2),
                 tabs: tabs(),
               ),
@@ -233,8 +271,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
         child: Row(
           children: [
-            IconAction(text: "CLOSE DIALOG", onTap: _onClose, type: IAB.cancel, icon: Icons.cancel_outlined),
-            IconAction(text: "SAVE CHANGES", onTap: _onSavePressed, type: IAB.success, icon: Icons.save),
+            IconAction(text: _closeDialogText, onTap: _onClose, type: IAB.cancel, icon: Icons.cancel_outlined),
+            IconAction(text: _saveChangesText, onTap: _onSavePressed, type: IAB.success, icon: Icons.save),
           ],
         ),
       ),
@@ -250,14 +288,14 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
           SettingsOptionWidget(
             theme: theme,
             icon: Icons.block_outlined,
-            text: "MUTED CREATORS",
+            text: _mutedCreatorsText,
             dialogContext: context,
             onSelect: () => showMutedCreatorsDialog(context),
           ),
           SettingsOptionWidget(
             theme: theme,
             icon: Icons.info_outline,
-            text: "REPLAY INTRO",
+            text: _replayIntroText,
             dialogContext: context,
             onSelect: () => _replayIntros(),
           ),
@@ -265,14 +303,14 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
           SettingsOptionWidget(
             theme: theme,
             icon: Icons.copy_all_outlined,
-            text: "BACKUP",
+            text: _backupText,
             dialogContext: context,
             onSelect: _showMnemonicBackupDialog,
           ),
           SettingsOptionWidget(
             theme: theme,
             icon: Icons.logout_rounded,
-            text: "LOGOUT",
+            text: _logoutText,
             dialogContext: context,
             onSelect: _logout,
             isDestructive: true,
@@ -294,7 +332,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             maxLength: MemoVerifier.maxProfileNameLength,
             theme: theme,
             icon: Icons.badge_outlined,
-            hintText: "Name",
+            hintText: _nameHintText,
             type: TextInputType.text,
             controller: _profileNameCtrl,
           ),
@@ -303,17 +341,16 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             maxLength: MemoVerifier.maxProfileTextLength,
             theme: theme,
             icon: Icons.notes_outlined,
-            hintText: "Bio/Text",
+            hintText: _bioHintText,
             type: TextInputType.multiline,
             controller: _profileTextCtrl,
             maxLines: 3,
           ),
           const SizedBox(height: 0),
           SettingsInputWidget(
-            // maxLength: MemoVerifier.maxProfileImgurUrlLength,
             theme: theme,
             icon: Icons.image_outlined,
-            hintText: "e.g. https://imgur.com/X32JJS",
+            hintText: _imgurHintText,
             type: TextInputType.url,
             controller: _imgurCtrl,
           ),
@@ -336,7 +373,12 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Tip Receiver", style: theme.textTheme.labelSmall),
+        Consumer(
+          builder: (context, ref, child) {
+            final translatedLabel = ref.watch(autoTranslationTextProvider(_tipReceiverLabel));
+            return Text(translatedLabel.value ?? _tipReceiverLabel, style: theme.textTheme.labelSmall);
+          },
+        ),
         const SizedBox(height: 8),
         DropdownButtonFormField<TipReceiver>(
           value: _selectedTipReceiver,
@@ -346,7 +388,15 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             });
           },
           items: TipReceiver.values.map((TipReceiver receiver) {
-            return DropdownMenuItem<TipReceiver>(value: receiver, child: Text(receiver.displayName));
+            return DropdownMenuItem<TipReceiver>(
+              value: receiver,
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final translatedDisplayName = ref.watch(autoTranslationTextProvider(receiver.displayName));
+                  return Text(translatedDisplayName.value ?? receiver.displayName);
+                },
+              ),
+            );
           }).toList(),
           decoration: InputDecoration(
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -361,7 +411,12 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Tip Amount", style: theme.textTheme.labelSmall),
+        Consumer(
+          builder: (context, ref, child) {
+            final translatedLabel = ref.watch(autoTranslationTextProvider(_tipAmountLabel));
+            return Text(translatedLabel.value ?? _tipAmountLabel, style: theme.textTheme.labelSmall);
+          },
+        ),
         const SizedBox(height: 8),
         DropdownButtonFormField<TipAmount>(
           value: _selectedTipAmount,
@@ -371,7 +426,16 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             });
           },
           items: TipAmount.values.map((TipAmount amount) {
-            return DropdownMenuItem<TipAmount>(value: amount, child: Text(_getTipAmountDisplayName(amount)));
+            return DropdownMenuItem<TipAmount>(
+              value: amount,
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final displayName = _getTipAmountDisplayName(amount);
+                  final translatedDisplayName = ref.watch(autoTranslationTextProvider(displayName));
+                  return Text(translatedDisplayName.value ?? displayName);
+                },
+              ),
+            );
           }).toList(),
           decoration: InputDecoration(
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -411,12 +475,9 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       final user = ref.read(userProvider)!;
       final creatorRepo = ref.read(creatorRepositoryProvider);
       final userNotifier = ref.read(userNotifierProvider.notifier);
-      // final creatorAsync = ref.read(creatorRepositoryProvider
-      //     .select((repo) => repo.getCreator(user.id, scrapeIfNotFound: true, useCache: true)));
-      // final creatorAsync = ref.read(settingsCreatorProvider(user.id));
       final creatorAsync = ref.read(profileDataNotifier);
 
-      MemoModelCreator creator = creatorAsync.value!.creator!; // ?? user.creator;
+      MemoModelCreator creator = creatorAsync.value!.creator!;
 
       final newName = _profileNameCtrl.text.trim();
       final newText = _profileTextCtrl.text.trim();
@@ -430,7 +491,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
           (_selectedTipAmount != null && _selectedTipAmount != user.tipAmountEnum);
 
       if (!hasTextInputChanges && !hasTipChanges) {
-        showSnackBar(type: SnackbarType.info, "No changes to save. 🤔");
+        ref.read(snackbarServiceProvider).showTranslatedSnackBar(_noChangesText, type: SnackbarType.info);
         return;
       }
 
@@ -462,68 +523,50 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
         }
 
         if (profileResult['result'].toString().startsWith("partial_success")) {
-          showSnackBar(type: SnackbarType.info, "Partially updated: ${profileResult['result']}");
+          ref
+              .read(snackbarServiceProvider)
+              .showTranslatedSnackBar("Partially updated: ${profileResult['result'].toString()}", type: SnackbarType.info);
         } else if (profileUpdateSuccess && tipsUpdateSuccess) {
-          showSnackBar(type: SnackbarType.success, "Profile & Tips updated successfully! ✨");
+          ref.read(snackbarServiceProvider).showTranslatedSnackBar(_profileTipsSuccessText, type: SnackbarType.success);
           MemoConfetti().launch(context);
         } else if (profileUpdateSuccess) {
-          showSnackBar(type: SnackbarType.success, "Profile updated successfully! ✨");
+          ref.read(snackbarServiceProvider).showTranslatedSnackBar(_profileSuccessText, type: SnackbarType.success);
           MemoConfetti().launch(context);
         } else if (tipsUpdateSuccess) {
-          showSnackBar(type: SnackbarType.success, "Tips updated successfully! ✨");
+          ref.read(snackbarServiceProvider).showTranslatedSnackBar(_tipsSuccessText, type: SnackbarType.success);
           MemoConfetti().launch(context);
         }
 
         user.temporaryTipReceiver = null;
         user.temporaryTipAmount = null;
 
-        // ✅ ONLY KEEP THIS LINE - refresh user data
         ref.invalidate(userProvider);
-        // ref.invalidate(userProvider);
-        // ref.read(profileDataProvider.notifier).refreshCreatorCache(ref.read(userProvider)!.id);
-        // ref.read(profileDataProvider.notifier).forceRefreshAfterProfileSavedOnSettings();
-        // ref.invalidate(profileDataProvider);
-        // ref.refresh(profileDataProvider);
 
         setState(() {
           _inputControllersInitialized = false;
         });
         onSuccess();
       } else {
-        // final failMessage = [
-        //   if (hasTextInputChanges) "profile: ${profileResult['result']}",
-        //   if (hasTipChanges) "tip settings: $tipResult",
-        // ].join(', ');
         if (hasTextInputChanges) {
           try {
             String msg = MemoVerificationResponse.memoVerificationMessageFromName(profileResult['result']);
-            showSnackBar(type: SnackbarType.error, "Profile: $msg");
+            ref.read(snackbarServiceProvider).showTranslatedSnackBar(msg, type: SnackbarType.error);
           } catch (e) {
-            // showSnackBar("Add funds to your balance!", type: SnackbarType.error);
-            showSnackBar(wait: true, "Name, text and image are stored on-chain, that costs memo fee!", type: SnackbarType.error);
+            ref.read(snackbarServiceProvider).showTranslatedSnackBar(_onChainCostText, type: SnackbarType.error, wait: true);
             showQrCodeDialog(ctx: context, memoOnly: true, user: user, withDelay: true);
           }
-          // try {
-          //   String msgAccountant = MemoAccountantResponse.messageFromName(profileResult['failedChanges']);
-          //   showSnackBar(type: SnackbarType.error, "Profile: $msgAccountant");
-          // } catch (e) {}
         }
-        // if (hasTipChanges) {
-        //   try {
-        //     String msgVerifier = MemoVerificationResponse.memoVerificationMessageFromName(tipResult.toString());
-        //     showSnackBar(type: SnackbarType.error, "Tips: $msgVerifier");
-        //   } catch (e) {}
-        // }
         onFail();
       }
     } catch (e) {
-      showSnackBar(type: SnackbarType.error, "Profile/Tips failed: $e");
+      ref
+          .read(snackbarServiceProvider)
+          .showPartiallyTranslatedSnackBar(translateable: _profileFailedText, fixedAfter: e.toString(), type: SnackbarType.error);
       onFail();
     } finally {
       setState(() {
         isSavingProfile = false;
       });
-      // setState(() => );
     }
   }
 
@@ -549,9 +592,6 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
   void _logout() {
     ref.read(navigationStateProvider.notifier).logoutAndNavigateToFeed();
-    // ref.read(authCheckerProvider).logOut();
-    // ref.read(profileTargetIdProvider.notifier).state = null;
-    // ref.read(tabIndexProvider.notifier).setTab(AppTab.feed.tabIndex);
   }
 
   void _replayIntros() {

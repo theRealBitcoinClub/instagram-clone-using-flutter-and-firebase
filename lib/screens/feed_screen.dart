@@ -389,14 +389,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         key: ValueKey(post.id.toString() + feedState.feedLimitForThisTier.toString()),
         onShowSendButton: () async {
           if (post.hasMedia) {
-            var hint = "You can RePost this media touching the blue button";
+            var hint = "To RePublish this image or video touch the green button.";
             hint = await ref.read(autoTranslationTextProvider(hint).future);
-            showSnackBar(hint, type: SnackbarType.info);
+            showSnackBar(hint, type: SnackbarType.success);
           }
 
-          var hint = "The replies are not attached to the original post, they are tied to #tags or @topics";
+          var hint = "Comments are tied to #tags or @topics, not the original post.";
           hint = await ref.read(autoTranslationTextProvider(hint).future);
-          showSnackBar(hint, type: SnackbarType.success, wait: true);
+          showSnackBar(hint, type: SnackbarType.info, wait: true);
 
           _print('FSCR:📜 onShowSendButton callback triggered for post ${post.id}');
           _scrollDownForPost(post);

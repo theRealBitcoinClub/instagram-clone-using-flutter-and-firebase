@@ -454,10 +454,12 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   void _evaluateShowSendButton(String currentText) {
-    String textWithoutKnownHashtags = currentText;
+    String textWithoutTopicNorTags = currentText;
     for (String tag in widget.post.tagIds) {
-      textWithoutKnownHashtags = textWithoutKnownHashtags.replaceAll(tag, "").trim();
+      textWithoutTopicNorTags = textWithoutTopicNorTags.replaceAll(tag, "").trim();
     }
+
+    textWithoutTopicNorTags = textWithoutTopicNorTags.replaceAll(widget.post.topicId, "").trim();
 
     bool hasAnySelectedOrOtherHashtagsInText = _selectedHashtags.any((s) => s);
     if (!hasAnySelectedOrOtherHashtagsInText) {
@@ -465,7 +467,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     }
 
     final bool meetsLengthRequirement =
-        textWithoutKnownHashtags.length >= MemoVerifier.minPostLength && currentText.length <= MemoVerifier.maxPostLength;
+        textWithoutTopicNorTags.length >= MemoVerifier.minPostLength && currentText.length <= MemoVerifier.maxPostLength;
 
     final bool newShowSendState = _hasSelectedTopic ? meetsLengthRequirement : hasAnySelectedOrOtherHashtagsInText && meetsLengthRequirement;
 
@@ -483,6 +485,8 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   void _onSend({bool isRepost = false}) async {
+    if (isRepost && !widget.post.hasMedia) return;
+
     if (!mounted) return;
     final String textToSend = _textEditController.text.trim();
     final verifier = MemoVerifierDecorator(textToSend)

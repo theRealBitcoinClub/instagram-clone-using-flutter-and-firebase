@@ -2,9 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/intros/intro_state_notifier.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
+import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
@@ -224,24 +226,24 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   }
 
   Widget _buildBottomButtons(ThemeData theme) {
-    return Container(
+    return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      // decoration: BoxDecoration(
-      //   border: Border(top: BorderSide(color: theme.dividerColor.withOpacity(0.3))),
-      // ),
-      child: Row(
-        children: [
-          Expanded(child: _buildCloseButton(theme)),
-          const SizedBox(width: 12),
-          Expanded(child: _buildSaveButton(theme)),
-        ],
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+        child: Row(
+          children: [
+            IconAction(text: "CLOSE DIALOG", onTap: _onClose, type: IAB.cancel, icon: Icons.cancel_outlined),
+            IconAction(text: "SAVE CHANGES", onTap: _onSavePressed, type: IAB.success, icon: Icons.save),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildUserTab(ThemeData theme, MemoModelUser user) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -252,15 +254,21 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             dialogContext: context,
             onSelect: () => showMutedCreatorsDialog(context),
           ),
-          const SizedBox(height: 8),
+          SettingsOptionWidget(
+            theme: theme,
+            icon: Icons.info_outline,
+            text: "REPLAY INTRO",
+            dialogContext: context,
+            onSelect: () => _replayIntros(),
+          ),
+          const Divider(),
           SettingsOptionWidget(
             theme: theme,
             icon: Icons.copy_all_outlined,
-            text: "BACKUP MNEMONIC",
+            text: "BACKUP",
             dialogContext: context,
             onSelect: _showMnemonicBackupDialog,
           ),
-          const SizedBox(height: 8),
           SettingsOptionWidget(
             theme: theme,
             icon: Icons.logout_rounded,
@@ -374,35 +382,13 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     );
   }
 
-  Widget _buildCloseButton(ThemeData theme) {
-    return OutlinedButton(
-      onPressed: () {
-        FocusScope.of(context).unfocus();
-        Future.delayed(Duration(milliseconds: 100), () {
-          if (mounted) {
-            Navigator.of(context).pop();
-          }
-        });
-      },
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(double.infinity, 44),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        side: BorderSide(color: theme.colorScheme.outline),
-        foregroundColor: theme.colorScheme.onSurface,
-      ),
-      child: Text("CANCEL", style: TextStyle(color: theme.colorScheme.onSurface)),
-    );
-  }
-
-  Widget _buildSaveButton(ThemeData theme) {
-    return ElevatedButton(
-      onPressed: isSavingProfile ? null : _onSavePressed,
-      style: ElevatedButton.styleFrom(
-        minimumSize: const Size(double.infinity, 44),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      ),
-      child: const Text("SAVE"),
-    );
+  void _onClose() {
+    FocusScope.of(context).unfocus();
+    Future.delayed(Duration(milliseconds: 100), () {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
   }
 
   String _getTipAmountDisplayName(TipAmount amount) {
@@ -412,6 +398,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   }
 
   void _onSavePressed() {
+    if (isSavingProfile) return;
+
     FocusScope.of(context).unfocus();
     _saveProfile(() => Navigator.of(context).pop(), () {});
   }
@@ -564,5 +552,10 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     // ref.read(authCheckerProvider).logOut();
     // ref.read(profileTargetIdProvider.notifier).state = null;
     // ref.read(tabIndexProvider.notifier).setTab(AppTab.feed.tabIndex);
+  }
+
+  void _replayIntros() {
+    ref.read(introStateNotifierProvider.notifier).resetAllIntros();
+    ref.read(navigationStateProvider.notifier).navigateToFeed();
   }
 }

@@ -1,19 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../provider/translation_service.dart';
 
 enum IAB { cancel, success, alternative }
 
-class IconAction extends StatelessWidget {
+class IconAction extends ConsumerWidget {
   final String text;
   final double size;
   final VoidCallback onTap;
   final IAB type;
   final IconData icon;
+  final bool skipTranslation;
 
-  const IconAction({Key? key, required this.text, this.size = 15, required this.onTap, required this.type, required this.icon})
-    : super(key: key);
+  const IconAction({
+    Key? key,
+    required this.text,
+    this.size = 15,
+    required this.onTap,
+    required this.type,
+    required this.icon,
+    this.skipTranslation = false,
+  }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
 
     Color getBackgroundColor() {
@@ -26,6 +37,10 @@ class IconAction extends StatelessWidget {
           return Colors.blue[800]!;
       }
     }
+
+    // Get translated text or fallback to original
+    var displayText = skipTranslation ? text : ref.watch(autoTranslationTextProvider(text)).value ?? text;
+    displayText = displayText.split(" ")[0];
 
     return Expanded(
       child: ElevatedButton(
@@ -46,7 +61,7 @@ class IconAction extends StatelessWidget {
               Center(child: Icon(icon, size: size * 1.5)),
               SizedBox(width: size / 2),
               Text(
-                text.toUpperCase(),
+                displayText.toUpperCase(),
                 style: Theme.of(context).textTheme.labelLarge!.copyWith(fontSize: size, color: Colors.white),
               ),
             ],

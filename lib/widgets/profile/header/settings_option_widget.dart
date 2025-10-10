@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/utils/snackbar.dart';
 
-class SettingsOptionWidget extends StatelessWidget {
+import '../../../provider/translation_service.dart';
+
+class SettingsOptionWidget extends ConsumerWidget {
   final ThemeData theme;
   final IconData icon;
   final String text;
@@ -11,7 +14,7 @@ class SettingsOptionWidget extends StatelessWidget {
   final bool isEnabled;
 
   const SettingsOptionWidget({
-    Key? key,
+    super.key,
     required this.theme,
     required this.icon,
     required this.text,
@@ -19,29 +22,38 @@ class SettingsOptionWidget extends StatelessWidget {
     required this.onSelect,
     this.isDestructive = false,
     this.isEnabled = true,
-  }) : super(key: key);
+  });
 
   @override
-  Widget build(BuildContext context) {
-    final baseColor = isDestructive ? theme.colorScheme.error : (theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final translatedText = ref.watch(autoTranslationTextProvider(text));
 
-    final color = isEnabled ? baseColor : baseColor.withOpacity(0.4);
+    return translatedText.when(
+      data: (translated) => _buildContent(context, translated, ref),
+      loading: () => _buildContent(context, text, ref), // Show original while loading
+      error: (error, stack) => _buildContent(context, text, ref), // Fallback to original
+    );
+  }
+
+  Widget _buildContent(BuildContext context, String displayText, ref) {
+    final baseColor = isDestructive ? theme.colorScheme.error : (theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface);
+    final color = isEnabled ? baseColor.withAlpha(222) : baseColor.withAlpha(153);
 
     final onPressedCallback = isEnabled
         ? () {
             Navigator.of(dialogContext).pop();
             onSelect();
           }
-        : () => showSnackBar(type: SnackbarType.error, "You have to backup your mnemonic first.");
+        : () => ref.read(snackbarServiceProvider).showTranslatedSnackBar(type: SnackbarType.error, "You have to backup your secret key first.");
 
     return SimpleDialogOption(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       onPressed: onPressedCallback,
       child: Row(
         children: [
-          Icon(icon, color: color.withOpacity(0.8), size: 20),
+          Icon(icon, color: color, size: 24),
           const SizedBox(width: 16),
-          Text(text, style: theme.textTheme.bodyLarge?.copyWith(color: color, letterSpacing: 1)),
+          Text(displayText, style: theme.textTheme.bodyLarge?.copyWith(color: color, letterSpacing: 1)),
         ],
       ),
     );

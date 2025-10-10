@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/utils/snackbar.dart';
 
 import '../../../provider/translation_service.dart';
 
@@ -44,7 +43,7 @@ class SettingsOptionWidget extends ConsumerWidget {
             Navigator.of(dialogContext).pop();
             onSelect();
           }
-        : () => ref.read(snackbarServiceProvider).showTranslatedSnackBar(type: SnackbarType.error, "You have to backup your secret key first.");
+        : onSelect;
 
     return SimpleDialogOption(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),

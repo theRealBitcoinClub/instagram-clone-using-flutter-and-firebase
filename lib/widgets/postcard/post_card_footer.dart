@@ -55,7 +55,7 @@ class PostCardFooter extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (post.topicId.isNotEmpty) ...[_buildTopicCheckBoxWidget(theme)],
+          if (post.topicId.isNotEmpty) _buildTopicCheckBoxWidget(theme),
           if (post.tagIds.isNotEmpty) ...[const SizedBox(height: 4), _buildHashtagCheckboxesWidget(theme), const SizedBox(height: 8)],
           if (post.text != null && post.text!.isNotEmpty) ...[
             // Force left alignment for text
@@ -148,7 +148,7 @@ class PostCardFooter extends StatelessWidget {
         onTap: onSelectTopic,
         borderRadius: BorderRadius.circular(4),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(0, 2, 9, 0),
+          padding: const EdgeInsets.fromLTRB(0, 0, 9, 0),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -160,15 +160,11 @@ class PostCardFooter extends StatelessWidget {
                 visualDensity: VisualDensity.comfortable,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              if (post.topicId.isNotEmpty) ...[
-                const SizedBox(width: 2),
-                Flexible(
-                  child: Text(
-                    post.topicId,
-                    style: theme.textTheme.bodyLarge?.copyWith(color: hasSelectedTopic ? color : color2, fontWeight: FontWeight.normal),
-                  ),
-                ),
-              ],
+              const SizedBox(width: 2),
+              Text(
+                post.topicId,
+                style: theme.textTheme.bodyLarge?.copyWith(color: hasSelectedTopic ? color : color2, fontWeight: FontWeight.normal),
+              ),
             ],
           ),
         ),

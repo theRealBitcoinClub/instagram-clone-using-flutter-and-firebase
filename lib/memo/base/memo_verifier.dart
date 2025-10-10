@@ -265,7 +265,7 @@ class MemoVerifier {
 
   String verifyMnemonic() {
     if (text.isEmpty) {
-      return "Enter mnemonic of 12 words or generate a new one"; // Simplified message
+      return "Enter secret key of 12 words or generate a new one"; // Simplified message
     }
     if (!Bip39MnemonicValidator().isValid(text)) {
       return "Check failed, 12-words needed, verify every letter!";

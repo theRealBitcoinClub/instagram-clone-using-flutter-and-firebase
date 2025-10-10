@@ -53,7 +53,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   static const String _saveChangesText = "SAVE CHANGES";
   static const String _mutedCreatorsText = "MUTED CREATORS";
   static const String _replayIntroText = "REPLAY INTRO";
-  static const String _backupText = "BACKUP";
+  static const String _backupText = "BACKUP KEY";
   static const String _logoutText = "LOGOUT";
   static const String _nameHintText = "Name";
   static const String _bioHintText = "Bio/Text";
@@ -302,7 +302,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
           const Divider(),
           SettingsOptionWidget(
             theme: theme,
-            icon: Icons.copy_all_outlined,
+            icon: Icons.security_outlined,
             text: _backupText,
             dialogContext: context,
             onSelect: _showMnemonicBackupDialog,
@@ -590,8 +590,15 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     );
   }
 
-  void _logout() {
-    ref.read(navigationStateProvider.notifier).logoutAndNavigateToFeed();
+  void _logout() async {
+    if (allowLogout) {
+      ref.read(navigationStateProvider.notifier).logoutAndNavigateToFeed();
+    } else {
+      ref.read(snackbarServiceProvider).showTranslatedSnackBar(type: SnackbarType.error, "You have to backup your secret key first.");
+      Future.delayed(Duration(seconds: 3), () {
+        _showMnemonicBackupDialog();
+      });
+    }
   }
 
   void _replayIntros() {

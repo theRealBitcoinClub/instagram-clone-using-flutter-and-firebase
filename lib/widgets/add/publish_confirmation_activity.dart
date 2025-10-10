@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/app_utils.dart';
+import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/add/tip_information_card.dart';
 import 'package:mahakka/widgets/add/translation_widget.dart';
@@ -107,9 +108,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       });
       ref
           .read(snackbarServiceProvider)
-          .showTranslatedSnackBar("Increased Tip: ${user.temporaryTipAmount!.value} sats", type: SnackbarType.success);
+          .showTranslatedSnackBar("Increased Donation: ${user.temporaryTipAmount!.value} sats", type: SnackbarType.success);
     } else {
-      ref.read(snackbarServiceProvider).showTranslatedSnackBar("Tip is already at the maximum!", type: SnackbarType.info);
+      ref.read(snackbarServiceProvider).showTranslatedSnackBar("Donation is already at the maximum!", type: SnackbarType.info);
     }
   }
 
@@ -124,9 +125,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       });
       ref
           .read(snackbarServiceProvider)
-          .showTranslatedSnackBar("Decreased Tip: ${user.temporaryTipAmount!.value} sats", type: SnackbarType.success);
+          .showTranslatedSnackBar("Decreased Donation: ${user.temporaryTipAmount!.value} sats", type: SnackbarType.success);
     } else {
-      ref.read(snackbarServiceProvider).showTranslatedSnackBar("Tip is already at the minimum!", type: SnackbarType.info);
+      ref.read(snackbarServiceProvider).showTranslatedSnackBar("Donation is already at the minimum!", type: SnackbarType.info);
     }
   }
 
@@ -141,10 +142,10 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       });
       ref
           .read(snackbarServiceProvider)
-          .showTranslatedSnackBar("Tip Receiver: ${user.temporaryTipReceiver!.displayName}", type: SnackbarType.success);
+          .showTranslatedSnackBar("Donation Receiver: ${user.temporaryTipReceiver!.displayName}", type: SnackbarType.success);
     } else {
       // hasReachedMaxBurn = true;
-      ref.read(snackbarServiceProvider).showTranslatedSnackBar("All the tips will be burned!", type: SnackbarType.info);
+      ref.read(snackbarServiceProvider).showTranslatedSnackBar("All the donations will be burned!", type: SnackbarType.info);
     }
   }
 
@@ -159,9 +160,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       });
       ref
           .read(snackbarServiceProvider)
-          .showTranslatedSnackBar("Tip Receiver: ${user.temporaryTipReceiver!.displayName}", type: SnackbarType.success);
+          .showTranslatedSnackBar("Donation Receiver: ${user.temporaryTipReceiver!.displayName}", type: SnackbarType.success);
     } else {
-      ref.read(snackbarServiceProvider).showTranslatedSnackBar("All the tips go to creator!", type: SnackbarType.info);
+      ref.read(snackbarServiceProvider).showTranslatedSnackBar("All the donations go to creator!", type: SnackbarType.info);
     }
   }
 
@@ -315,46 +316,15 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
               const SizedBox(height: 0),
               TipInformationCard(post: widget.post, isPostCreationNotReply: widget.isPostCreationNotReply),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _showDeleteConfirmation();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.error,
-                        foregroundColor: colorScheme.onError,
-                        elevation: 2,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      child: Text(
-                        'CANCEL',
-                        style: textTheme.labelLarge?.copyWith(color: colorScheme.onError, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _onSendPost();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        elevation: 2,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      child: Text(
-                        'SEND',
-                        style: textTheme.labelLarge?.copyWith(color: colorScheme.onPrimary, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ],
+              Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+                child: Row(
+                  children: [
+                    IconAction(text: "CANCEL", onTap: _showDeleteConfirmation, type: IAB.cancel, icon: Icons.cancel_outlined),
+                    IconAction(text: "PUBLISH", onTap: _onSendPost, type: IAB.success, icon: Icons.send_outlined),
+                  ],
+                ),
               ),
             ],
           ),
@@ -379,7 +349,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                 onTap: _isNewPost
                     ? () => ref
                           .read(snackbarServiceProvider)
-                          .showTranslatedSnackBar("Tip receiver is 100% burn on new publications!", type: SnackbarType.error)
+                          .showTranslatedSnackBar("New publications burn the full donation amount!", type: SnackbarType.error)
                     : _previousTipReceiver,
                 tooltip: 'Previous Receiver',
               ),
@@ -404,7 +374,7 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                 onTap: _isNewPost
                     ? () => ref
                           .read(snackbarServiceProvider)
-                          .showTranslatedSnackBar("Tip receiver is 100% burn on new publications!", type: SnackbarType.error)
+                          .showTranslatedSnackBar("New publications burn the full donation amount!", type: SnackbarType.error)
                     : _nextTipReceiver,
                 tooltip: 'Next Receiver',
               ),

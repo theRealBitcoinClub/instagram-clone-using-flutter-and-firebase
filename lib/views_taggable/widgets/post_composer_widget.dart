@@ -30,12 +30,12 @@ class PostComposerWidget extends StatelessWidget {
     final ThemeData theme = Theme.of(ctx);
     final ColorScheme colorScheme = theme.colorScheme;
     final MainAxisAlignment columnMainAxisAlignment = insets == EdgeInsets.zero ? MainAxisAlignment.end : MainAxisAlignment.start;
-    const double baseMaxHeight = 150.0;
+    const double baseMaxHeight = 153.0;
 
     return Container(
       key: containerKey,
       constraints: BoxConstraints(maxHeight: insets == EdgeInsets.zero ? baseMaxHeight : baseMaxHeight + insets.bottom),
-      padding: const EdgeInsets.fromLTRB(10, 2, 2, 0),
+      padding: const EdgeInsets.fromLTRB(6, 0, 3, 0),
       child: Column(
         mainAxisAlignment: columnMainAxisAlignment,
         mainAxisSize: MainAxisSize.min,
@@ -54,25 +54,25 @@ class PostComposerWidget extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Column(
                 children: [
                   IconButton(
-                    iconSize: 26,
+                    iconSize: 27,
                     padding: const EdgeInsets.all(0.0),
                     visualDensity: VisualDensity.compact,
                     icon: Icon(Icons.alternate_email_outlined, color: onSend != null ? colorScheme.primary : theme.disabledColor),
                     onPressed: () => onActionText("@", ctx),
                   ),
                   IconButton(
-                    iconSize: 50,
+                    iconSize: 48,
                     padding: const EdgeInsets.all(0.0),
                     visualDensity: VisualDensity.compact,
                     icon: Icon(Icons.send, color: onSend != null ? colorScheme.primary : theme.disabledColor),
                     onPressed: onSend,
                   ),
                   IconButton(
-                    iconSize: 26,
+                    iconSize: 27,
                     padding: EdgeInsets.all(0.0),
                     visualDensity: VisualDensity.compact,
                     icon: Icon(Icons.tag_outlined, color: onSend != null ? colorScheme.primary : theme.disabledColor),

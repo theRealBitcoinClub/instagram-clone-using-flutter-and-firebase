@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/views_taggable/taggable_providers.dart';
 import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
 import 'package:mahakka/views_taggable/widgets/hashtag_list_view.dart';
@@ -22,12 +23,12 @@ class SearchResultBox extends ConsumerWidget {
           // GestureDetector(
           //   onTap: () {}, // Prevent tap from bubbling up to parent
           //   child:
-          _buildContent(searchState, theme, tagController),
+          _buildContent(searchState, theme, tagController, ref),
       // ),
     );
   }
 
-  Widget _buildContent(SearchState state, ThemeData theme, tagController) {
+  Widget _buildContent(SearchState state, ThemeData theme, tagController, WidgetRef ref) {
     if (state.isLoading) {
       return LinearProgressIndicator();
     }
@@ -46,13 +47,16 @@ class SearchResultBox extends ConsumerWidget {
       case SearchResultView.hashtag:
         return TaggerHashtagListView(tagController: tagController, hashtags: state.hashtags, searchState: state);
       case SearchResultView.hintText:
+        var s =
+            "Write @ to attach a post to any @topic or # to add #hashtags to your post. You can post to one topic and/or add up to three hashtags";
+        String displayText = ref.read(autoTranslationTextProvider(s)).value ?? s;
         return Container(
           alignment: Alignment.center,
           padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
           child: Center(
             child: Text(
-              "Write @ to attach a post to any @topic or # to add #hashtags to your post. You can post to one topic and/or add up to three hashtags",
-              style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.onSurfaceVariant, letterSpacing: 1.2),
+              displayText,
+              style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.onSurfaceVariant, letterSpacing: 0.5),
             ),
           ),
         );

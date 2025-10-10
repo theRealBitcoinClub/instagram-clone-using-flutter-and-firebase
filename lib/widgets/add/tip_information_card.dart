@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/provider/translation_service.dart';
 
 import '../../memo/base/memo_accountant.dart';
 import '../../memo/base/memo_bitcoin_base.dart';
@@ -40,6 +41,12 @@ class TipInformationCard extends ConsumerWidget {
         (user.temporaryTipAmount != null && user.temporaryTipAmount != user.tipAmountEnumPersistent) ||
         (user.temporaryTipReceiver != null && user.temporaryTipReceiver != user.tipReceiverPersistent);
 
+    var s = 'Custom donation ' + (isPostCreationNotReply ? '' : '& receiver ') + 'for this post only';
+    var customTipTranslated = ref.watch(autoTranslationTextProvider(s)).value ?? s;
+
+    var t = 'Donation Total';
+    var label = ref.watch(autoTranslationTextProvider(t)).value ?? t;
+
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -47,27 +54,17 @@ class TipInformationCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Custom tip warning with grow/fade animation
             AnimGrowFade(
               show: showCustomTipWarning,
-              // duration: const Duration(milliseconds: 300),
               child: Column(
                 children: [
-                  Text(
-                    'Custom tip ' + (isPostCreationNotReply ? '' : '& receiver ') + 'for this post only',
-                    style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(222)),
-                  ),
+                  Text(customTipTranslated, style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withAlpha(222))),
                   const SizedBox(height: 8),
                 ],
               ),
             ),
-
-            // Total amount with animation
-            _buildAnimatedInfoRow('Tip Total', '${_formatSatoshi(tipTotalAmount)} satoshis', theme, tipTotalAmount),
-
+            _buildAnimatedInfoRow(label, '${_formatSatoshi(tipTotalAmount)} satoshis', theme, tipTotalAmount),
             const SizedBox(height: 16),
-
-            // Visual percentage bar with animation
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: KeyedSubtree(
@@ -75,12 +72,10 @@ class TipInformationCard extends ConsumerWidget {
                 child: _buildPercentageBar(burnPercentage, creatorPercentage, burnColor, creatorColor, theme),
               ),
             ),
-
-            // Breakdown with animations
             if (tips.isNotEmpty) ...[
               const SizedBox(height: 8),
               ...tips
-                  .map((tip) => _buildAnimatedTipBreakdownRow(tip, burnColor, creatorColor, theme, creatorPercentage, burnPercentage))
+                  .map((tip) => _buildAnimatedTipBreakdownRow(tip, burnColor, creatorColor, theme, creatorPercentage, burnPercentage, ref))
                   .toList(),
             ],
           ],
@@ -116,8 +111,13 @@ class TipInformationCard extends ConsumerWidget {
     ThemeData theme,
     int creatorPercentage,
     int burnPercentage,
+    WidgetRef ref,
   ) {
     final isBurn = tip.receiverAddress == MemoBitcoinBase.bchBurnerAddress;
+    var b = 'Burn';
+    var labelBurned = ref.watch(autoTranslationTextProvider(b)).value ?? b;
+    var c = 'Creator';
+    var labelCreator = ref.watch(autoTranslationTextProvider(c)).value ?? c;
 
     var colorText = theme.colorScheme.onSurface.withOpacity(0.8);
     return AnimatedSwitcher(
@@ -134,7 +134,7 @@ class TipInformationCard extends ConsumerWidget {
                   Icon(isBurn ? Icons.local_fire_department : Icons.person, size: 22, color: isBurn ? burnColor : creatorColor),
                   const SizedBox(width: 4),
                   Text(
-                    isBurn ? '${burnPercentage}% Burned' : '${creatorPercentage}% Creator',
+                    isBurn ? '${burnPercentage}% $labelBurned' : '${creatorPercentage}% $labelCreator',
                     style: theme.textTheme.bodySmall?.copyWith(color: colorText),
                   ),
                 ],

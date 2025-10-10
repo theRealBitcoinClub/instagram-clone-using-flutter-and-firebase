@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
+import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
 import 'package:mahakka/views_taggable/widgets/loading_indicator.dart';
 import 'package:mahakka/widgets/hashtag_display_widget.dart';
@@ -13,6 +14,7 @@ class TaggerHashtagListView extends BaseScrollableListView {
   final CustomFlutterTaggerController tagController;
   final List<MemoModelTag> hashtags;
   final SearchState searchState;
+  // final WidgetRef ref;
 
   const TaggerHashtagListView({Key? key, required this.tagController, required this.hashtags, required this.searchState}) : super(key: key);
 
@@ -46,12 +48,14 @@ class _TaggerHashtagListViewState extends BaseScrollableListViewState<TaggerHash
 
   @override
   Widget buildEmptyState(BuildContext context, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    var s = "Add or remove letters to match any existing #hashtag to maximize your outreach, unmatched tags automatically create new tags!";
+    String translated = ref.read(autoTranslationTextProvider(s)).value ?? s;
     return Center(
       heightFactor: 6,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
         child: Text(
-          "Add or remove letters to match any existing #hashtag to maximize your outreach, unmatched tags automatically create new tags!",
+          translated,
           style: textTheme.bodyMedium!.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 1.2),
           textAlign: TextAlign.center,
         ),

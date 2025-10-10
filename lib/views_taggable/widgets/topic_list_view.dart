@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
+import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
 
 import '../../base_scrollable_list_view.dart';
@@ -42,12 +43,14 @@ class _TaggerTopicListViewState extends BaseScrollableListViewState<TaggerTopicL
 
   @override
   Widget buildEmptyState(BuildContext context, ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    var s = "Write or remove letters to match any existing topic to maximize your outreach, unmatched topics automatically create new topics!";
+    String translated = ref.read(autoTranslationTextProvider(s)).value ?? s;
     return Center(
       heightFactor: 6,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
         child: Text(
-          "Write or remove letters to match any existing topic to maximize your outreach, unmatched topics automatically create new topics!",
+          translated,
           style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 1.2),
           textAlign: TextAlign.center,
         ),

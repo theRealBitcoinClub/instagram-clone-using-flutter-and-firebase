@@ -20,11 +20,11 @@ enum MemoAccountType { tokens, bch, memo }
 
 enum MemoAccountantResponse {
   yes("Successfully published!"),
-  noUtxo("Transaction error (no UTXO)"),
-  lowBalance("Insufficient balance!"),
-  dust("Transaction error (dust)"),
-  connectionError("Network connection error"),
-  insufficientBalanceForIpfs("Insufficient balance for IPFS operation");
+  noUtxo("Zero balance in wallet!"),
+  lowBalance("Insufficient balance in wallet!"),
+  dust("Transaction error, please report to @mahakka_com TG support."),
+  connectionError("Network connection error!"),
+  insufficientBalanceForIpfs("Insufficient balance in wallet for IPFS operation!");
 
   const MemoAccountantResponse(this.message);
   final String message;

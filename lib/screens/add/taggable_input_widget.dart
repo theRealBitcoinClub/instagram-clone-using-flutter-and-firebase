@@ -1,6 +1,7 @@
 // widgets/taggable_input_widget.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/screens/add_post_controller.dart';
 import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
 import 'package:mahakka/views_taggable/widgets/search_result_overlay.dart';
@@ -20,13 +21,15 @@ class TaggableInputWidget extends ConsumerWidget {
     final textInputController = ref.watch(taggableControllerProvider);
     final focusNode = ref.watch(focusNodeProvider);
     final viewInsets = MediaQuery.of(context).viewInsets;
+    var s = "Tap here to write the description for the media";
+    var hintTextTranslated = ref.read(autoTranslationTextProvider(s)).value ?? s;
 
     return Material(
-      elevation: 4.0,
+      elevation: 3.0,
       color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(9),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+        padding: const EdgeInsets.fromLTRB(6, 6, 6, 6),
         child: CustomFlutterTagger(
           triggerStrategy: TriggerStrategy.eager,
           controller: textInputController, // ADD: widget. prefix
@@ -55,7 +58,7 @@ class TaggableInputWidget extends ConsumerWidget {
               containerKey: containerKey,
               insets: viewInsets, // ADD: widget. prefix
               controller: textInputController, // ADD: widget. prefix
-              hintText: "Tap here to write the description for the media",
+              hintText: hintTextTranslated,
               onSend: postController.publishPost, // ADD: widget. prefix
             );
           },

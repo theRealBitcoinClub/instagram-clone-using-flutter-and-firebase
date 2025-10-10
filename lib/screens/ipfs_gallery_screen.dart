@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/config_ipfs.dart';
+import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/provider/url_input_verification_notifier.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/screens/ipfs_pin_claim_screen.dart';
@@ -30,14 +31,14 @@ class IPFSGalleryScreen extends ConsumerWidget {
     final validCids = ipfsCids.reversed.where((cid) => cid.isNotEmpty).toList();
     var colorScheme = themeData.colorScheme;
 
+    var s = 'Tap image to select or create new one';
+    String title = ref.watch(autoTranslationTextProvider(s)).value ?? s;
+
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: AppBarBurnMahakkaTheme.height,
-        leadingWidth: 50,
-        title: Text(
-          hasSelection ? '${selectedCid}' : 'Tap image to select or create new one',
-          style: textTheme.bodySmall!.copyWith(color: colorScheme.onPrimary),
-        ),
+        leadingWidth: 40,
+        title: Text(hasSelection ? '${selectedCid}' : title, style: textTheme.bodySmall!.copyWith(color: colorScheme.onPrimary)),
         leading: IconButton(icon: const Icon(Icons.cancel_outlined), onPressed: () => Navigator.pop(context)),
         actions: [
           AppBarBurnMahakkaTheme.buildThemeIcon(ref, context),
@@ -245,9 +246,15 @@ class GalleryActionButtonRow extends ConsumerWidget {
               // duration: const Duration(milliseconds: 300),
               child: Row(
                 children: [
-                  IconAction(text: "RESET", onTap: () => resetSelection(ref), type: IAB.cancel, icon: Icons.refresh),
-                  IconAction(text: "LINK", onTap: () => _shareImage(cid), type: IAB.alternative, icon: Icons.link),
-                  IconAction(text: "POST", onTap: () => _reuseImage(context, ref, cid), type: IAB.success, icon: Icons.check_circle_outline),
+                  IconAction(flex: 4, text: "RESET", onTap: () => resetSelection(ref), type: IAB.cancel, icon: Icons.refresh),
+                  IconAction(flex: 3, text: "LINK", onTap: () => _shareImage(cid), type: IAB.alternative, icon: Icons.link),
+                  IconAction(
+                    flex: 4,
+                    text: "PUBLISH",
+                    onTap: () => _reuseImage(context, ref, cid),
+                    type: IAB.success,
+                    icon: Icons.check_circle_outline,
+                  ),
                 ],
               ),
             )

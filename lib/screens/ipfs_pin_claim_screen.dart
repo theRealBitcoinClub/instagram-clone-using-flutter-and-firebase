@@ -17,9 +17,11 @@ import 'package:path/path.dart' show basename;
 
 import '../ipfs/ipfs_pin_claim_service.dart';
 import '../memo/base/memo_accountant.dart';
+import '../memo/model/memo_model_creator.dart';
 import '../provider/electrum_provider.dart';
 import '../provider/translation_service.dart';
 import '../provider/user_provider.dart';
+import '../repositories/creator_repository.dart';
 
 class IpfsPinClaimScreen extends ConsumerStatefulWidget {
   const IpfsPinClaimScreen({Key? key}) : super(key: key);
@@ -57,7 +59,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
   static const String _uploadSuccessText = 'Upload successful, now its pinning to the IPFS!';
   static const String _selectImageText = 'SELECT IMAGE';
   static const String _changeImageText = 'CHANGE IMAGE';
-  static const String _uploadPriceText = 'Upload price:';
+  static const String _uploadPriceText = 'Price';
   static const String _screenTitle = 'Upload and Pin images to the IPFS';
   static const String _screenDescription =
       'Use this page to upload an image to the IPFS network. '
@@ -351,11 +353,20 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
     return !_showOverlay;
   }
 
+  int lastBalance = -2;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
+    MemoModelCreator? creator = ref.watch(getCreatorProvider(ref.read(userProvider)!.id)).value;
+    var currentBalance = creator != null ? creator.balanceMemo : -1;
+    if (currentBalance > lastBalance && currentBalance > 0)
+      setState(() {
+        _error = null;
+      });
+    lastBalance = currentBalance;
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -379,7 +390,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
           child: Stack(
             children: [
               SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 15),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -392,12 +403,12 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                         );
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 9),
                     buildFileSelectionContainer(colorScheme, textTheme, context),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     if (_isLoading || _isUploading || _isPinning || _isCheckingBalance) buildLoadingProgressBar(colorScheme),
                     if (_error != null) buildErrorCard(colorScheme, textTheme),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     if (_cid != null)
                       AnimGrowFade(show: _cid != null, child: _buildSuccessCard('', 'CID: $_cid', theme, colorScheme, textTheme)),
                     if (_claimTxid != null)
@@ -405,7 +416,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                         show: _claimTxid != null,
                         child: _buildSuccessCard(_pinClaimSuccessText, 'Claim Txid: $_claimTxid', theme, colorScheme, textTheme),
                       ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Center(
                       child: Column(
                         children: [
@@ -419,7 +430,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                         show: _selectedFile != null,
                         child: Column(
                           children: [
-                            SizedBox(height: 9),
+                            SizedBox(height: 12),
                             Image.file(_selectedFile!, width: 500, fit: BoxFit.contain),
                           ],
                         ),
@@ -439,11 +450,11 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: colorScheme.outline.withOpacity(0.3), width: 1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(9),
         color: colorScheme.surface,
       ),
-      padding: const EdgeInsets.all(20),
-      height: 200,
+      padding: const EdgeInsets.all(15),
+      height: 180,
       child: Center(
         child: _selectedFile == null
             ? buildFileSelectionInit(colorScheme, textTheme)
@@ -469,25 +480,26 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
               builder: (context, ref, child) {
                 final translatedButton = ref.watch(autoTranslationTextProvider(_selectImageText));
                 return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 2, horizontal: 12),
+                  padding: EdgeInsets.symmetric(vertical: 2, horizontal: 6),
                   child: Text(
+                    // textAlign: TextAlign.justify,
                     translatedButton.value ?? _selectImageText,
-                    style: textTheme.titleLarge?.copyWith(height: 1.5, letterSpacing: 1.2, color: colorScheme.onPrimary),
+                    style: textTheme.titleLarge?.copyWith(height: 1.2, letterSpacing: 1.2, color: colorScheme.onPrimary),
                   ),
                 );
               },
             ),
           ),
           const SizedBox(height: 6),
-          Icon(Icons.cloud_upload_outlined, size: 48, color: colorScheme.onSurfaceVariant),
-          const SizedBox(height: 2),
+          Icon(Icons.cloud_upload_outlined, size: 42, color: colorScheme.onSurfaceVariant),
+          const SizedBox(height: 3),
           Consumer(
             builder: (context, ref, child) {
               final translatedDescription = ref.watch(autoTranslationTextProvider(_fileSelectionDescription));
               return Text(
                 translatedDescription.value ?? _fileSelectionDescription,
                 textAlign: TextAlign.center,
-                style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 0.5),
+                style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 0.5),
               );
             },
           ),
@@ -523,9 +535,9 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
                       children: [
                         Consumer(
                           builder: (context, ref, child) {
-                            final translatedPrice = ref.watch(autoTranslationTextProvider(_uploadPriceText));
+                            final translatedPrice = ref.watch(autoTranslationTextProvider(_uploadPriceText)).value ?? _uploadPriceText;
                             return Text(
-                              '${translatedPrice.value ?? _uploadPriceText} ~${((_pinClaimPrice! * 100000000)).toStringAsFixed(0)} sats',
+                              '${translatedPrice.trim()} ~${((_pinClaimPrice! * 100000000)).toStringAsFixed(0)} sats',
                               style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface, letterSpacing: 1.5),
                             );
                           },

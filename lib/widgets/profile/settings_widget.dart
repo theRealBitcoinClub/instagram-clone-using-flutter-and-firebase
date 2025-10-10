@@ -596,6 +596,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     } else {
       ref.read(snackbarServiceProvider).showTranslatedSnackBar(type: SnackbarType.error, "You have to backup your secret key first.");
       Future.delayed(Duration(seconds: 3), () {
+        if (context.mounted) Navigator.pop(context);
         _showMnemonicBackupDialog();
       });
     }

@@ -9,6 +9,7 @@ import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/resources/auth_method.dart';
 
+import '../provider/translation_service.dart';
 import '../utils/snackbar.dart';
 import '../widgets/animations/animated_grow_fade_in.dart';
 
@@ -28,6 +29,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   String _processedMnemonic = "";
   Timer? _clipboardTimer;
   final FocusNode _mnemonicFocusNode = FocusNode();
+
+  // DRY text constants
+  String _hintText = "Write, paste or generate 12-word BCH secret key";
+  static const String _generateButtonText = "GENERATE KEY";
+  static const String _loginButtonText = "LOGIN NOW";
+  static const String _unexpectedErrorText = "Unexpected error:";
+  // static const String _loginFailedText = "Login failed:";
 
   @override
   void initState() {
@@ -153,7 +161,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
 
   int _previousTextLength = 0;
 
-  void _validateMnemonic() {
+  void _validateMnemonic() async {
     var inputTrimmed = _mnemonicController.text.trim();
     if (inputTrimmed.isEmpty) {
       setState(() {
@@ -165,7 +173,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
 
     _processedMnemonic = toLowCaseAndRemoveTooManySpaces(inputTrimmed);
     String verifiedMnemonic = MemoVerifier(_processedMnemonic).verifyMnemonic();
+
     if (verifiedMnemonic != "success") {
+      verifiedMnemonic = await ref.read(autoTranslationTextProvider(verifiedMnemonic).future);
       setState(() {
         _isInputValid = false;
         _errorMessage = verifiedMnemonic;
@@ -173,7 +183,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
       return;
     }
 
-    // _mnemonicController.text = _mnemonicController.text.trim();
     setState(() {
       _isInputValid = true;
       _errorMessage = null;
@@ -192,7 +201,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     context.afterBuild(refreshUI: false, () {
       doHeavyWork();
     });
-    // WidgetsBinding.instance.addPostFrameCallback((_) {});
   }
 
   Future<void> doHeavyWork() async {
@@ -200,10 +208,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
       final authChecker = ref.read(authCheckerProvider);
       String res = await authChecker.loginInWithMnemonic(_processedMnemonic);
       if (res != "success") {
-        if (mounted) showSnackBar(type: SnackbarType.error, "Unexpected error: $res");
+        if (mounted) {
+          ref.read(snackbarServiceProvider).showPartiallyTranslatedSnackBar(translateable: res, type: SnackbarType.error);
+        }
       }
     } catch (e) {
-      if (mounted) showSnackBar(type: SnackbarType.error, "Login failed: $e");
+      if (mounted) {
+        ref
+            .read(snackbarServiceProvider)
+            .showPartiallyTranslatedSnackBar(translateable: _unexpectedErrorText, fixedAfter: e.toString(), type: SnackbarType.error);
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -215,16 +229,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
 
   void _generateMnemonic() {
     _mnemonicController.text = Mnemonic.generate(Language.english, length: MnemonicLength.words12).sentence;
-
-    // // Focus on the textfield and open keyboard
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   _mnemonicFocusNode.requestFocus();
-    //
-    //   // Optional: Move cursor to the end
-    //   _mnemonicController.selection = TextSelection.fromPosition(TextPosition(offset: _mnemonicController.text.length));
-    // });
-
     _validateMnemonic();
+  }
+
+  void translateHint() async {
+    _hintText = await ref.read(autoTranslationTextProvider(_hintText).future);
+    setState(() {});
   }
 
   @override
@@ -232,6 +242,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
     final TextTheme textTheme = theme.textTheme;
+    translateHint();
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -257,8 +268,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                   controller: _mnemonicController,
                   keyboardType: TextInputType.text,
                   decoration: InputDecoration(
-                    hintText: 'Write, paste or generate 12-word mnemonic',
-                    errorText: _errorMessage,
+                    hintText: _hintText, // Technical term - keep in English
+                    errorMaxLines: 2,
+                    errorText: _errorMessage, // Technical validation messages remain in English
                     border: OutlineInputBorder(borderSide: Divider.createBorderSide(context)),
                     focusedBorder: OutlineInputBorder(
                       borderSide: Divider.createBorderSide(context, color: _isInputValid ? Colors.green : theme.colorScheme.primary),
@@ -270,25 +282,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                 ),
                 const SizedBox(height: 9),
 
-                // REPLACED: TextButton with Animated ElevatedButton
+                // Generate Mnemonic Button
                 AnimGrowFade(
                   show: !_isInputValid, // Show only when no valid mnemonic
-                  // duration: const Duration(milliseconds: 300),
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _generateMnemonic,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red, // Red background
-                        foregroundColor: Colors.white, // White text
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-                        textStyle: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          inherit: false, // Consistent with theme
-                        ),
+                        textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, inherit: false),
                       ),
-                      child: const Text("GENERATE MNEMONIC"),
+                      child: Consumer(
+                        builder: (context, ref, child) {
+                          final translatedButton = ref.watch(autoTranslationTextProvider(_generateButtonText));
+                          return Text(translatedButton.value ?? _generateButtonText);
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -333,7 +345,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
                         return baseStyle ?? TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colorScheme.onPrimary, inherit: false);
                       }),
                     ),
-                    child: const Text("LOGIN"),
+                    child: Consumer(
+                      builder: (context, ref, child) {
+                        final translatedLogin = ref.watch(autoTranslationTextProvider(_loginButtonText));
+                        return Text(translatedLogin.value ?? _loginButtonText);
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 40),

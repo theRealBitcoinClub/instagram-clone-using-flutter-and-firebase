@@ -105,9 +105,11 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipAmount = values[currentIndex + 1];
       });
-      showSnackBar("Increased Tip: ${user.temporaryTipAmount!.value} sats", type: SnackbarType.success);
+      ref
+          .read(snackbarServiceProvider)
+          .showTranslatedSnackBar("Increased Tip: ${user.temporaryTipAmount!.value} sats", type: SnackbarType.success);
     } else {
-      showSnackBar("Tip is already at the maximum!", type: SnackbarType.info);
+      ref.read(snackbarServiceProvider).showTranslatedSnackBar("Tip is already at the maximum!", type: SnackbarType.info);
     }
   }
 
@@ -120,9 +122,11 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipAmount = values[currentIndex - 1];
       });
-      showSnackBar("Decreased Tip: ${user.temporaryTipAmount!.value} sats", type: SnackbarType.success);
+      ref
+          .read(snackbarServiceProvider)
+          .showTranslatedSnackBar("Decreased Tip: ${user.temporaryTipAmount!.value} sats", type: SnackbarType.success);
     } else {
-      showSnackBar("Tip is already at the minimum!", type: SnackbarType.info);
+      ref.read(snackbarServiceProvider).showTranslatedSnackBar("Tip is already at the minimum!", type: SnackbarType.info);
     }
   }
 
@@ -135,10 +139,12 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipReceiver = values[currentIndex + 1];
       });
-      showSnackBar("Tip Receiver: ${user.temporaryTipReceiver!.displayName}", type: SnackbarType.success);
+      ref
+          .read(snackbarServiceProvider)
+          .showTranslatedSnackBar("Tip Receiver: ${user.temporaryTipReceiver!.displayName}", type: SnackbarType.success);
     } else {
       // hasReachedMaxBurn = true;
-      showSnackBar("All the tips will be burned!", type: SnackbarType.info);
+      ref.read(snackbarServiceProvider).showTranslatedSnackBar("All the tips will be burned!", type: SnackbarType.info);
     }
   }
 
@@ -151,9 +157,11 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
       setState(() {
         user.temporaryTipReceiver = values[currentIndex - 1];
       });
-      showSnackBar("Tip Receiver: ${user.temporaryTipReceiver!.displayName}", type: SnackbarType.success);
+      ref
+          .read(snackbarServiceProvider)
+          .showTranslatedSnackBar("Tip Receiver: ${user.temporaryTipReceiver!.displayName}", type: SnackbarType.success);
     } else {
-      showSnackBar("All the tips go to creator!", type: SnackbarType.info);
+      ref.read(snackbarServiceProvider).showTranslatedSnackBar("All the tips go to creator!", type: SnackbarType.info);
     }
   }
 
@@ -369,7 +377,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                 size: 32,
                 color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon,
                 onTap: _isNewPost
-                    ? () => showSnackBar("Tip receiver is 100% burn on new publications!", type: SnackbarType.error)
+                    ? () => ref
+                          .read(snackbarServiceProvider)
+                          .showTranslatedSnackBar("Tip receiver is 100% burn on new publications!", type: SnackbarType.error)
                     : _previousTipReceiver,
                 tooltip: 'Previous Receiver',
               ),
@@ -392,7 +402,9 @@ class _PublishConfirmationActivityState extends ConsumerState<PublishConfirmatio
                 size: 32,
                 color: _isNewPost ? colorBottomBarIcon.withAlpha(111) : colorBottomBarIcon,
                 onTap: _isNewPost
-                    ? () => showSnackBar("Tip receiver is 100% burn on new publications!", type: SnackbarType.error)
+                    ? () => ref
+                          .read(snackbarServiceProvider)
+                          .showTranslatedSnackBar("Tip receiver is 100% burn on new publications!", type: SnackbarType.error)
                     : _nextTipReceiver,
                 tooltip: 'Next Receiver',
               ),

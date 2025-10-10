@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/provider/translation_service.dart';
 
-class RedActionButton extends StatelessWidget {
+class RedActionButton extends ConsumerWidget {
   final VoidCallback onPressed;
   final String text;
   final IconData icon;
@@ -9,10 +11,12 @@ class RedActionButton extends StatelessWidget {
   const RedActionButton({super.key, required this.onPressed, required this.text, this.icon = Icons.edit_outlined, this.width});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    String displayText = ref.watch(autoTranslationTextProvider(text)).value ?? text;
+
     return ElevatedButton.icon(
       icon: Icon(icon, size: 18),
-      label: Text(text),
+      label: Text(displayText),
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.red,

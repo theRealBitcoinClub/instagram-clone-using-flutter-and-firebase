@@ -62,9 +62,9 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
       final success = await setUserLanguage(ref, selectedLangCode);
       MahakkaLanguage selectedLang = MahakkaLanguage.getLanguageByCode(selectedLangCode)!;
       if (success) {
-        showSnackBar("Language changed to ${selectedLang.name}", type: SnackbarType.success);
+        ref.read(snackbarServiceProvider).showTranslatedSnackBar("Language changed to ${selectedLang.name}", type: SnackbarType.success);
       } else {
-        showSnackBar("Failed to save language :(", type: SnackbarType.error);
+        ref.read(snackbarServiceProvider).showTranslatedSnackBar("Failed to save language :(", type: SnackbarType.error);
       }
     }
   }

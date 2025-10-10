@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../provider/translation_service.dart';
 
@@ -10,17 +11,40 @@ class LanguageSelectorWidget {
         return const LanguageSelectorDialog();
       },
     );
+    //     .then((value) {
+    //   // Double-check keyboard is dismissed after dialog
+    //   WidgetsBinding.instance.addPostFrameCallback((_) {
+    //     LanguageSelectorDialog._forceDismissKeyboard(context);
+    //   });
+    //   return value;
+    // });
   }
 }
 
 class LanguageSelectorDialog extends StatelessWidget {
   const LanguageSelectorDialog({Key? key}) : super(key: key);
 
+  static void _forceDismissKeyboard(BuildContext context) {
+    // Try multiple methods to ensure keyboard is dismissed
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (context.mounted) FocusScope.of(context).unfocus();
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+
+    // Additional safety measure
+    Future.delayed(const Duration(milliseconds: 50), () {
+      SystemChannels.textInput.invokeMethod('TextInput.hide');
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      LanguageSelectorDialog._forceDismissKeyboard(context);
+    });
 
     // Filter out the 'auto' language and create a new list
     final languages = availableLanguages.skip(1).toList();
@@ -45,8 +69,16 @@ class LanguageSelectorDialog extends StatelessWidget {
                   return Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () {
+                      onTap: () async {
+                        // LanguageSelectorDialog._forceDismissKeyboard(context);
+                        // await Future.delayed(Duration(milliseconds: 100), () {
+                        //   if (context.mounted) {
                         Navigator.of(context).pop(language.code);
+                        // }
+                        // });
+                        // LanguageSelectorDialog._forceDismissKeyboard(context);
+                        // if (context.mounted) FocusScope.of(context).unfocus();
+                        // SystemChannels.textInput.invokeMethod('TextInput.hide');
                       },
                       splashColor: colorScheme.primary.withOpacity(0.2),
                       highlightColor: colorScheme.primary.withOpacity(0.1),

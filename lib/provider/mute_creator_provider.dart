@@ -85,7 +85,7 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
 
       TokenLimitEnum tokenLimitEnum = ref.read(currentTokenLimitEnumProvider);
       if (tokenLimitEnum.muteLimit < newMutedCreators.length) {
-        showSnackBar(tokenLimitEnum.muteLimitText, type: SnackbarType.error);
+        ref.read(snackbarServiceProvider).showTranslatedSnackBar(tokenLimitEnum.muteLimitText, type: SnackbarType.error);
         onMuteLimitReached?.call();
         return;
       }
@@ -95,7 +95,7 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
 
       state = newMutedCreators;
       ref.read(feedPostsProvider.notifier).fetchInitialPosts();
-      showSnackBar("Feed updated, mute filter applied", type: SnackbarType.success);
+      ref.read(snackbarServiceProvider).showTranslatedSnackBar("Feed updated, mute filter applied", type: SnackbarType.success);
       onMuteSuccess?.call();
       print('✅ MuteCreator: Muted creator: $creatorId');
     } catch (e) {
@@ -123,7 +123,7 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
       _unmuteDebounceTimer?.cancel();
       _unmuteDebounceTimer = Timer(const Duration(seconds: 6), () {
         ref.read(feedPostsProvider.notifier).fetchInitialPosts(forceFetchFire: true);
-        showSnackBar("Updating feed, applieng mute filter", type: SnackbarType.success);
+        ref.read(snackbarServiceProvider).showTranslatedSnackBar("Updating feed, applieng mute filter", type: SnackbarType.success);
         print('🔄 MuteCreator: Debounced feed refresh triggered after unmute');
       });
 

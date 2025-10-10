@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/screens/add/media_placeholder_widget.dart';
 import 'package:mahakka/screens/add/text_input_add.dart';
 import 'package:mahakka/utils/snackbar.dart';
@@ -59,7 +60,7 @@ class _ClipboardMonitoringWidgetState extends ConsumerState<ClipboardMonitoringW
             _hasAutoClosed = true;
           });
           // Show success feedback instead of closing
-          showSnackBar("Media detected successfully!", type: SnackbarType.success);
+          ref.read(snackbarServiceProvider).showTranslatedSnackBar("Media detected successfully!", type: SnackbarType.success);
         }
       });
     }
@@ -76,6 +77,9 @@ class _ClipboardMonitoringWidgetState extends ConsumerState<ClipboardMonitoringW
   @override
   Widget build(BuildContext context) {
     final hasValidInput = ref.watch(urlInputVerificationProvider.select((state) => state.hasValidInput));
+    String error = hasValidInput ? "" : 'Paste a valid' + (widget.title.toLowerCase().contains("ipfs") ? " Ipfs Content Id" : " Url link");
+    String displayError = ref.watch(autoTranslationTextProvider(error)).value ?? error;
+    String displayTitle = ref.watch(autoTranslationTextProvider(widget.title)).value ?? widget.title;
 
     // Listen to media provider changes for auto-success feedback
     ref.listen(youtubeVideoIdProvider, _handleProviderChange);
@@ -91,32 +95,24 @@ class _ClipboardMonitoringWidgetState extends ConsumerState<ClipboardMonitoringW
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title
           Padding(
             padding: const EdgeInsets.only(bottom: 12.0),
-            child: Text(widget.title, style: theme.textTheme.titleMedium),
+            child: Text(displayTitle, style: theme.textTheme.titleMedium),
           ),
-
-          // Input field and actions in a Row
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Input field
               Expanded(
                 child: TextInputFieldAddDialog(
                   textEditingController: _controller,
                   hintText: widget.hint,
                   textInputType: TextInputType.url,
-                  // borderColor: hasValidInput ? null : theme.colorScheme.error,
-                  errorText: hasValidInput
-                      ? null
-                      : 'Paste a valid' + (widget.title.toLowerCase().contains("ipfs") ? " Ipfs Content Id" : " Url link"),
+                  errorText: displayError,
                 ),
               ),
             ],
           ),
 
-          // Options row (CREATE/GALLERY buttons)
           if (hasOptions) ...[_buildOptionsRow(theme), const SizedBox(height: 12)],
         ],
       ),

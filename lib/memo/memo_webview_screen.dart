@@ -146,7 +146,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
 
     setState(() {
       _displayInAppBar = "$url requested ...";
-      showSnackBar(_displayInAppBar, type: SnackbarType.success);
+      ref.read(snackbarServiceProvider).showTranslatedSnackBar(_displayInAppBar, type: SnackbarType.success);
       _isLoading = true;
       _cssInjected = false;
       _shouldInjectCss = shouldInject;
@@ -373,7 +373,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
                             _cssInjected = false; // Reset CSS injection state
                             _displayInAppBar = url.toString() + " is loading ...";
                             if (ref.read(currentTabIndexProvider) == AppTab.memo.tabIndex)
-                              showSnackBar(_displayInAppBar, type: SnackbarType.info);
+                              ref.read(snackbarServiceProvider).showTranslatedSnackBar(_displayInAppBar, type: SnackbarType.info);
                             _updateCurrentPath(url.toString());
                           });
                         }
@@ -391,7 +391,7 @@ class _MemoWebviewScreenState extends ConsumerState<MemoWebviewScreen> {
 
                         setState(() {
                           // if (ref.read(tabIndexProvider) == AppTab.memo.tabIndex)
-                          // showSnackBar("Enjoy the content!", context, type: SnackbarType.success);
+                          // ref.read(snackbarServiceProvider).showTranslatedSnackBar("Enjoy the content!", context, type: SnackbarType.success);
                           _updateCurrentPath(url.toString());
                           // Only hide loading if CSS injection is complete
                           _isLoading = !_cssInjected;

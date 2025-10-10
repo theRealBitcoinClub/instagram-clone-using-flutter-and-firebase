@@ -73,7 +73,7 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
             count: creator.balanceBch,
             theme: theme,
             onTap: () => creator.bchAddressCashtokenAware.isEmpty
-                ? showSnackBar("User has not registered on Mahakka", type: SnackbarType.info)
+                ? ref.read(snackbarServiceProvider).showTranslatedSnackBar("User has not registered on Mahakka", type: SnackbarType.info)
                 : ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cashonizeUrl),
           ),
         ),
@@ -83,7 +83,7 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
             count: creator.balanceToken,
             theme: theme,
             onTap: () => creator.bchAddressCashtokenAware.isEmpty
-                ? showSnackBar("User has not registered on Mahakka", type: SnackbarType.info)
+                ? ref.read(snackbarServiceProvider).showTranslatedSnackBar("User has not registered on Mahakka", type: SnackbarType.info)
                 : ref.read(navigationStateProvider.notifier).navigateToUrl(MemoBitcoinBase.cauldronSwapTokenUrl),
           ),
         ),

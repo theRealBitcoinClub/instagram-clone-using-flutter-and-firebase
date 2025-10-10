@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/widgets/red_action_button.dart';
 
 import 'add_post_providers.dart';
@@ -42,7 +43,13 @@ class ImgurMediaWidget extends ConsumerWidget {
                       children: [
                         Icon(Icons.broken_image_outlined, color: colorScheme.error, size: 36),
                         const SizedBox(height: 8),
-                        Text("Error loading image", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            var s = "Error loading image";
+                            String text = ref.watch(autoTranslationTextProvider(s)).value ?? s;
+                            return Text(text, style: textTheme.bodyMedium?.copyWith(color: colorScheme.error));
+                          },
+                        ),
                       ],
                     ),
                   );

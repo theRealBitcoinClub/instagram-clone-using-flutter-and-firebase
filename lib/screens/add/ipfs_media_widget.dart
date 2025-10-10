@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/widgets/red_action_button.dart';
 
+import '../../provider/translation_service.dart';
 import '../../widgets/unified_image_widget.dart';
 import 'add_post_providers.dart';
 
@@ -43,7 +44,13 @@ class IpfsMediaWidget extends ConsumerWidget {
                   children: [
                     Icon(Icons.cloud_off_outlined, color: colorScheme.error.withAlpha(153), size: 36),
                     const SizedBox(height: 8),
-                    Text("Error loading IPFS content", style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        var s = "Error loading IPFS content";
+                        String text = ref.watch(autoTranslationTextProvider(s)).value ?? s;
+                        return Text(text, style: textTheme.bodyMedium?.copyWith(color: colorScheme.error));
+                      },
+                    ),
                     const SizedBox(height: 8),
                     Text("$cid", style: textTheme.bodySmall!.copyWith(color: theme.colorScheme.onSurface)),
                   ],

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class MediaPlaceholderWidget extends StatelessWidget {
+import '../../provider/translation_service.dart';
+
+class MediaPlaceholderWidget extends ConsumerWidget {
   final String label;
   final IconData iconData;
   final VoidCallback onTap;
@@ -9,20 +12,21 @@ class MediaPlaceholderWidget extends StatelessWidget {
   final double borderWidth;
 
   const MediaPlaceholderWidget({
-    Key? key,
+    super.key,
     required this.label,
     required this.iconData,
     required this.onTap,
     this.iconSize = 50,
     this.borderRadius = 12,
     this.borderWidth = 1,
-  }) : super(key: key);
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
     final TextTheme textTheme = theme.textTheme;
+    String displayLabel = ref.watch(autoTranslationTextProvider(label)).value ?? label;
 
     return Expanded(
       child: Material(
@@ -46,7 +50,7 @@ class MediaPlaceholderWidget extends StatelessWidget {
                   Icon(iconData, size: iconSize, color: colorScheme.onSurface),
                   const SizedBox(height: 8),
                   Text(
-                    label,
+                    displayLabel,
                     style: textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant),
                     textAlign: TextAlign.center,
                   ),

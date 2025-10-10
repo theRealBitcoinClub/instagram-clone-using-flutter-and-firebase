@@ -18,32 +18,9 @@ class YouTubeMediaWidget extends ConsumerStatefulWidget {
 }
 
 class _YouTubeMediaWidgetState extends ConsumerState<YouTubeMediaWidget> {
-  // YoutubePlayerController? _controller;
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   // _initializeController();
-  // }
-  //
-  // void _initializeController() {
-  //   final videoId = widget.youtubeId ?? ref.read(youtubeVideoIdProvider)!;
-  //   if (videoId.isNotEmpty) {
-  //     _controller = YoutubePlayerController(initialVideoId: videoId, flags: const YoutubePlayerFlags(autoPlay: false, mute: false));
-  //   }
-  // }
-  //
-  // @override
-  // void dispose() {
-  //   // final controller = ref.read(youtubeControllerProvider);
-  //   _controller?.dispose();
-  //   super.dispose();
-  // }
-
   @override
   Widget build(BuildContext context) {
     final videoId = ref.watch(youtubeVideoIdProvider);
-    // final controller = ref.watch(youtubeControllerProvider);
 
     if (videoId.isEmpty) {
       return const SizedBox();
@@ -62,31 +39,7 @@ class _YouTubeMediaWidgetState extends ConsumerState<YouTubeMediaWidget> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(11.5),
-              child:
-                  // _controller != null
-                  //     ?
-                  UnifiedVideoPlayer(type: VideoPlayerType.youtube, videoId: videoId),
-              // ? YoutubePlayer(
-              //     controller: _controller!,
-              //     showVideoProgressIndicator: true,
-              //     progressIndicatorColor: widget.colorScheme.primary,
-              //     progressColors: ProgressBarColors(
-              //       playedColor: widget.colorScheme.primary,
-              //       handleColor: widget.colorScheme.secondary,
-              //       bufferedColor: widget.colorScheme.primary.withOpacity(0.4),
-              //       backgroundColor: widget.colorScheme.onSurface.withOpacity(0.1),
-              //     ),
-              //   )
-              // : Center(
-              //     child: Column(
-              //       mainAxisAlignment: MainAxisAlignment.center,
-              //       children: [
-              //         Icon(Icons.videocam_off_outlined, color: widget.colorScheme.error, size: 36),
-              //         const SizedBox(height: 8),
-              //         Text("Video player error", style: widget.textTheme.bodyMedium?.copyWith(color: widget.colorScheme.error)),
-              //       ],
-              //     ),
-              //   ),
+              child: UnifiedVideoPlayer(type: VideoPlayerType.youtube, videoId: videoId),
             ),
           ),
         ),
@@ -101,7 +54,7 @@ class _YouTubeMediaWidgetState extends ConsumerState<YouTubeMediaWidget> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Video Id: $videoId",
+                    "Video: $videoId",
                     style: widget.textTheme.bodySmall?.copyWith(color: widget.colorScheme.onSurfaceVariant),
                     textAlign: TextAlign.center,
                   ),

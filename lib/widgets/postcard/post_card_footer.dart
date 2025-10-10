@@ -1,5 +1,6 @@
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/utils/snackbar.dart';
@@ -10,7 +11,7 @@ import '../../memo/base/memo_verifier.dart';
 import '../character_limited_textfield.dart';
 import '../hashtag_display_widget.dart';
 
-class PostCardFooter extends StatelessWidget {
+class PostCardFooter extends ConsumerWidget {
   final MemoModelPost post;
   final TextEditingController textEditController;
   final bool showInput;
@@ -41,7 +42,7 @@ class PostCardFooter extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ThemeData theme = Theme.of(context);
     final MediaQueryData mediaQuery = MediaQuery.of(context);
     final bool isKeyboardVisible = mediaQuery.viewInsets.bottom > 0;
@@ -67,7 +68,7 @@ class PostCardFooter extends StatelessWidget {
                   onTap: () {
                     FlutterClipboard.clear();
                     FlutterClipboard.copy("${post.creator!.name} wrote on ${post.dateTimeFormattedSafe()}: ${post.text}" ?? "");
-                    showSnackBar("Text copied to clipboard", type: SnackbarType.success);
+                    ref.read(snackbarServiceProvider).showTranslatedSnackBar("Text copied to clipboard", type: SnackbarType.success);
                   },
                   child: PostExpandableText(post: post, hidePrefix: true, doTranslate: true),
                 ),

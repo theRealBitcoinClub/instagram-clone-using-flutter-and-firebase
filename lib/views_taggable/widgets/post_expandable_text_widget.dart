@@ -28,7 +28,7 @@ class PostExpandableText extends ConsumerWidget {
       hashtagStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant),
       onHashtagTap: (String hashtag) {
         ref.read(navigationStateProvider.notifier).navigateToTag(hashtag, context: context);
-        showSnackBar("$hashtag charts are loading...", type: SnackbarType.info, wait: true);
+        ref.read(snackbarServiceProvider).showTranslatedSnackBar("$hashtag charts are loading...", type: SnackbarType.info, wait: true);
       },
       mentionStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryFixedVariant),
       urlStyle: _buildUrlStyle(theme),
@@ -39,7 +39,7 @@ class PostExpandableText extends ConsumerWidget {
       prefixStyle: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w400),
       onPrefixTap: () {
         ref.read(navigationStateProvider.notifier).navigateToTopic(post.topicId, context: context);
-        showSnackBar("${post.topicId} charts are loading...", type: SnackbarType.info, wait: true);
+        ref.read(snackbarServiceProvider).showTranslatedSnackBar("${post.topicId} charts are loading...", type: SnackbarType.info, wait: true);
       },
     );
   }
@@ -52,7 +52,7 @@ class PostExpandableText extends ConsumerWidget {
     try {
       ref.read(navigationStateProvider.notifier).navigateToUrl(url, context: context);
     } catch (e) {
-      showSnackBar("Error opening URL", type: SnackbarType.error);
+      ref.read(snackbarServiceProvider).showTranslatedSnackBar("Error opening URL", type: SnackbarType.error);
     }
   }
 }

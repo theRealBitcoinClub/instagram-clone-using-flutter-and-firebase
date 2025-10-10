@@ -367,7 +367,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         final ipfsId = post.ipfsCid ?? "";
         if (imageUrl.isEmpty && ipfsId.isEmpty) {
           _print('FSCR:❌ No valid image available for post ${post.id}');
-          showSnackBar("No valid image available for this post", type: SnackbarType.info);
+          ref.read(snackbarServiceProvider).showTranslatedSnackBar("No valid image available for this post", type: SnackbarType.info);
           return;
         }
 
@@ -377,7 +377,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
         if (validIndex == -1) {
           _print('FSCR:❌ Could not find post in valid image posts list');
-          showSnackBar("Could not open image viewer", type: SnackbarType.error);
+          ref.read(snackbarServiceProvider).showTranslatedSnackBar("Could not open image viewer", type: SnackbarType.error);
           return;
         }
 
@@ -391,12 +391,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           if (post.hasMedia) {
             var hint = "To RePublish this image or video touch the green button.";
             hint = await ref.read(autoTranslationTextProvider(hint).future);
-            showSnackBar(hint, type: SnackbarType.success);
+            ref.read(snackbarServiceProvider).showTranslatedSnackBar(hint, type: SnackbarType.success);
           }
 
           var hint = "Comments are tied to #tags or @topics, not the original post.";
           hint = await ref.read(autoTranslationTextProvider(hint).future);
-          showSnackBar(hint, type: SnackbarType.info, wait: true);
+          ref.read(snackbarServiceProvider).showTranslatedSnackBar(hint, type: SnackbarType.info, wait: true);
 
           _print('FSCR:📜 onShowSendButton callback triggered for post ${post.id}');
           _scrollDownForPost(post);

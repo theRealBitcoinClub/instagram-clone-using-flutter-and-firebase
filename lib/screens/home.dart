@@ -106,7 +106,9 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     ref.listen<AsyncValue<TokenLimitsState>>(tokenLimitsProvider, (previous, current) {
       // Perform side effects when token limits change
       if (current.hasValue && previous?.value?.currentLimit != current.value?.currentLimit) {
-        showSnackBar('Tier changed to: ${current.value?.currentLimit.name}', type: SnackbarType.success);
+        ref
+            .read(snackbarServiceProvider)
+            .showTranslatedSnackBar('Tier changed to: ${current.value?.currentLimit.name}', type: SnackbarType.success);
       }
     });
 

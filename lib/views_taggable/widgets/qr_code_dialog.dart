@@ -99,17 +99,17 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
 
   Future<void> _copyToClipboard(BuildContext context, String text, String successMessage) async {
     if (text.isEmpty) {
-      if (mounted) showSnackBar(type: SnackbarType.info, "Nothing to copy.");
+      if (mounted) ref.read(snackbarServiceProvider).showTranslatedSnackBar(type: SnackbarType.info, "Nothing to copy.");
       return;
     }
     await FlutterClipboard.copyWithCallback(
       text: text,
       onSuccess: () {
-        if (mounted) showSnackBar(type: SnackbarType.success, successMessage);
+        if (mounted) ref.read(snackbarServiceProvider).showTranslatedSnackBar(type: SnackbarType.success, successMessage);
       },
       onError: (error) {
         _logError("Copy to clipboard failed", error);
-        if (mounted) showSnackBar(type: SnackbarType.error, 'Copy failed. See logs for details.');
+        if (mounted) ref.read(snackbarServiceProvider).showTranslatedSnackBar(type: SnackbarType.error, 'Copy failed. See logs for details.');
       },
     );
   }
@@ -119,7 +119,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
       await Share.share(address, subject: 'My Bitcoin Cash Address');
     } catch (e) {
       _logError("Share failed", e);
-      if (mounted) showSnackBar(type: SnackbarType.error, 'Share failed. See logs for details.');
+      if (mounted) ref.read(snackbarServiceProvider).showTranslatedSnackBar(type: SnackbarType.error, 'Share failed. See logs for details.');
     }
   }
 

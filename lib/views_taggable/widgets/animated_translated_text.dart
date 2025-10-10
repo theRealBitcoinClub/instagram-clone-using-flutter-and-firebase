@@ -130,7 +130,7 @@ class _AnimatedTranslatedTextState extends ConsumerState<AnimatedTranslatedText>
               _showTranslated = true;
               _isTranslating = false;
             });
-            // showSnackBar("SUCCESS TRANSLATING POST: ${widget.postId}", type: SnackbarType.success);
+            // ref.read(snackbarServiceProvider).showTranslatedSnackBar("SUCCESS TRANSLATING POST: ${widget.postId}", type: SnackbarType.success);
             // } else if (_isTranslating) {
             //   setState(() {
             //     _isTranslating = false;

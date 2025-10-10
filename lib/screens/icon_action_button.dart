@@ -61,7 +61,7 @@ class IconAction extends ConsumerWidget {
 
     // Get translated text or fallback to original
     var displayText = skipTranslation ? text : ref.watch(autoTranslationTextProvider(text)).value ?? text;
-    displayText = displayText.split(" ")[0];
+    // displayText = displayText.split(" ")[0];
 
     return Expanded(
       child: ElevatedButton(
@@ -70,13 +70,13 @@ class IconAction extends ConsumerWidget {
           foregroundColor: disabled ? colorScheme.onSurface : colorScheme.onPrimary,
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape:
-          // disabled
+              // disabled
               // ? RoundedRectangleBorder(
               //     borderRadius: BorderRadius.zero,
               //     side: BorderSide(color: colorScheme.onSurface, width: 1.0),
               //   )
               // :
-            const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+              const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           elevation: disabled ? 0 : null,
           // Remove shadow when disabled
         ),

@@ -28,7 +28,7 @@ class SettingsOptionWidget extends ConsumerWidget {
     final translatedText = ref.watch(autoTranslationTextProvider(text));
 
     return translatedText.when(
-      data: (translated) => _buildContent(context, translated, ref),
+      data: (translated) => _buildContent(context, translated.toUpperCase(), ref),
       loading: () => _buildContent(context, text, ref), // Show original while loading
       error: (error, stack) => _buildContent(context, text, ref), // Fallback to original
     );

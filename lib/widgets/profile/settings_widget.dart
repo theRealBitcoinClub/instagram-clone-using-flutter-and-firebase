@@ -49,15 +49,15 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   int _currentTabIndex = 0;
 
   // DRY text constants
-  static const String _closeDialogText = "CLOSE DIALOG";
-  static const String _saveChangesText = "SAVE CHANGES";
-  static const String _mutedCreatorsText = "MUTED CREATORS";
-  static const String _replayIntroText = "REPLAY INTRO";
-  static const String _backupText = "BACKUP KEY";
+  static const String _closeDialogText = "CLOSE";
+  static const String _saveChangesText = "save";
+  static const String _mutedCreatorsText = "MUTED";
+  static const String _replayIntroText = "INTRO";
+  static const String _backupText = "BACKUP";
   static const String _logoutText = "LOGOUT";
   static const String _nameHintText = "Name";
   static const String _bioHintText = "Bio/Text";
-  static const String _imgurHintText = "e.g. https://imgur.com/X32JJS";
+  static const String _imgurHintText = "e.g. https://i.imgur.com/X32JJS.jpg";
   static const String _tipReceiverLabel = "Tip Receiver";
   static const String _tipAmountLabel = "Tip Amount";
   static const String _noChangesText = "No changes to save. 🤔";
@@ -70,9 +70,12 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
   List<Widget> tabs() {
     return const [
-      Tab(icon: Icon(Icons.account_circle_outlined), text: 'Creator'),
-      Tab(icon: Icon(Icons.currency_bitcoin_rounded), text: 'Tips'),
-      Tab(icon: Icon(Icons.settings), text: 'User'),
+      // Tab(icon: Icon(Icons.account_circle_outlined), text: 'Creator'),
+      // Tab(icon: Icon(Icons.currency_bitcoin_rounded), text: 'Tips'),
+      // Tab(icon: Icon(Icons.settings), text: 'User'),
+      Tab(height: 64, icon: Icon(Icons.account_circle_outlined, size: 36)),
+      Tab(height: 64, icon: Icon(Icons.currency_bitcoin_rounded, size: 36)),
+      Tab(height: 64, icon: Icon(Icons.settings, size: 36)),
     ];
   }
 

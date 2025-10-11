@@ -19,11 +19,11 @@ final bchBurnerBalanceProvider = StreamProvider<Balance>((ref) {
   timer = Timer.periodic(const Duration(seconds: kDebugMode ? 300 : 10), (_) async {
     try {
       final balance = await _fetchBalance(ref);
-      print('Update burner balance: $balance');
+      // print('Update burner balance: $balance');
       streamController.add(balance);
     } catch (error) {
       // Handle error, optionally add error state to stream
-      print('Error fetching burner balance: $error');
+      // print('Error fetching burner balance: $error');
     }
   });
 

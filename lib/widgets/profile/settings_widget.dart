@@ -395,8 +395,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
               value: receiver,
               child: Consumer(
                 builder: (context, ref, child) {
-                  final translatedDisplayName = ref.watch(autoTranslationTextProvider(receiver.displayName));
-                  return Text(translatedDisplayName.value ?? receiver.displayName);
+                  final translatedDisplayName = ref.watch(autoTranslationTextProvider("Creator")).value ?? "Creator";
+                  return Text(receiver.displayName.replaceAll("Creator", translatedDisplayName));
                 },
               ),
             );

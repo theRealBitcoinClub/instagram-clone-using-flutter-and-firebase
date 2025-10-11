@@ -9,13 +9,13 @@ part 'memo_model_user.g.dart';
 enum TipReceiver {
   creator('100% Creator', 0.0, 1.0),
   // burn20Creator80('20% Burn, 80% Creator', 0.2, 0.8),
-  burn25Creator75('25% Burn, 75% Creator', 0.25, 0.75),
+  burn25Creator75('25% MKA, 75% Creator', 0.25, 0.75),
   // burn40Creator60('40% Burn, 60% Creator', 0.4, 0.6),
-  both('50% Burn, 50% Creator', 0.5, 0.5),
+  both('50% MKA, 50% Creator', 0.5, 0.5),
   // burn60Creator40('60% Burn, 40% Creator', 0.6, 0.4),
-  burn75Creator25('75% Burn, 25% Creator', 0.75, 0.25),
+  burn75Creator25('75% MKA, 25% Creator', 0.75, 0.25),
   // burn80Creator20('80% Burn, 20% Creator', 0.8, 0.2),
-  app('100% Burn', 1.0, 0.0);
+  app('100% MKA', 1.0, 0.0);
 
   final String displayName;
   final double burnPercentage;

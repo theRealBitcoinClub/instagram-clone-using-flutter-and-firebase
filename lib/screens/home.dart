@@ -16,6 +16,7 @@ import '../ipfs/ipfs_pin_claim_service.dart';
 import '../memo/memo_webview_screen.dart';
 import '../provider/electrum_provider.dart';
 import '../provider/scraper_provider.dart';
+import '../providers/scroll_controller_provider.dart';
 import '../providers/token_limits_provider.dart';
 
 class HomeSceen extends ConsumerStatefulWidget {
@@ -80,7 +81,16 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     super.dispose();
   }
 
+  int _lastIndex = -1;
+
   void _moveToTab(int index) {
+    if (_lastIndex != index) {
+      context.afterLayout(refreshUI: true, () {
+        ref.read(feedScrollControllerProvider.notifier).resetScroll();
+      });
+      _lastIndex = index;
+    } else
+      print("SAME TAB");
     final tabData = AppTab.values[index];
     if (tabData == AppTab.add) {
       ref.read(introStateNotifierProvider.notifier).triggerIntroAction(IntroType.mainApp, IntroStep.mainCreate, context);

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
+import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
 import 'package:mahakka/provider/feed_posts_provider.dart';
@@ -35,7 +36,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   void initState() {
     super.initState();
     _print('FSCR:🚀 FeedScreen initState called');
-    ref.read(feedScrollControllerProvider.notifier).setController(_scrollController);
+    context.afterBuild(refreshUI: false, () {
+      ref.read(feedScrollControllerProvider.notifier).setController(_scrollController);
+    });
     _print('FSCR:📜 Scroll listener added');
   }
 

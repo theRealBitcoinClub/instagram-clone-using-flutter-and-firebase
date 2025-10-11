@@ -24,10 +24,10 @@ class LanguageSelectorWidget {
 class LanguageSelectorDialog extends StatelessWidget {
   const LanguageSelectorDialog({Key? key}) : super(key: key);
 
-  static void _forceDismissKeyboard(BuildContext context) {
+  static void forceDismissKeyboard({BuildContext? context}) {
     // Try multiple methods to ensure keyboard is dismissed
     FocusManager.instance.primaryFocus?.unfocus();
-    if (context.mounted) FocusScope.of(context).unfocus();
+    if (context != null && context.mounted) FocusScope.of(context).unfocus();
     SystemChannels.textInput.invokeMethod('TextInput.hide');
 
     // Additional safety measure
@@ -43,7 +43,7 @@ class LanguageSelectorDialog extends StatelessWidget {
     final textTheme = theme.textTheme;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      LanguageSelectorDialog._forceDismissKeyboard(context);
+      LanguageSelectorDialog.forceDismissKeyboard(context: context);
     });
 
     // Filter out the 'auto' language and create a new list

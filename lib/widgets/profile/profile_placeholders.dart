@@ -19,7 +19,7 @@ class ProfileLoadingScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBarBurnMahakkaTheme(),
+      appBar: AppBarBurnMahakkaTheme(false),
       body: Center(child: AvifImage(image: AssetAvifImage("assets/images/icon_round_loading_256.avif"), height: 200, width: 200)),
     );
   }

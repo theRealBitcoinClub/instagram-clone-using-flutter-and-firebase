@@ -64,7 +64,7 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         children: [
           Scaffold(
             backgroundColor: theme.scaffoldBackgroundColor,
-            appBar: AppBarBurnMahakkaTheme(),
+            appBar: AppBarBurnMahakkaTheme(false),
             body: Column(
               children: [
                 _buildMediaInputSection(theme, colorScheme, textTheme),

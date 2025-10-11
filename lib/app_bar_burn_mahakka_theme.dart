@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
+import 'package:mahakka/providers/scroll_controller_provider.dart';
 import 'package:mahakka/tab_item_data.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
@@ -13,17 +14,15 @@ import 'intros/wrapped_animated_intro_target.dart';
 import 'main.dart';
 
 class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidget {
-  const AppBarBurnMahakkaTheme({super.key});
+  const AppBarBurnMahakkaTheme(this.showTitle, {super.key});
   static const double height = 40;
+  final showTitle;
 
   @override
   Size get preferredSize => const Size.fromHeight(height);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // final asyncThemeState = ref.watch(themeNotifierProvider);
-    // final ThemeState currentThemeState = asyncThemeState.maybeWhen(data: (data) => data, orElse: () => defaultThemeState);
-    // final ThemeData theme = currentThemeState.currentTheme;
     ThemeData theme = Theme.of(context);
     String currentLang = ref.watch(languageCodeProvider);
     MahakkaLanguage lang = MahakkaLanguage.getLanguageByCode(currentLang)!;
@@ -33,6 +32,12 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
       toolbarHeight: height,
       leading: BurnerBalanceWidget(),
       leadingWidth: 153,
+      title: showTitle
+          ? IconButton(
+              onPressed: ref.read(feedScrollControllerProvider.notifier).resetScroll,
+              icon: Icon(Icons.arrow_circle_up_outlined, color: theme.colorScheme.onPrimary.withAlpha(111)),
+            )
+          : null,
       actions: [
         Material(
           color: Colors.transparent,

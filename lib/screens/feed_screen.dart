@@ -60,7 +60,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     return Scaffold(
       backgroundColor: Colors.black.withAlpha(21),
-      appBar: AppBarBurnMahakkaTheme(),
+      appBar: AppBarBurnMahakkaTheme(true),
       body: Stack(
         children: [
           if (!feedState.isLoadingInitialAtTop || feedState.posts.isNotEmpty)

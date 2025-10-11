@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/widgets/add/language_selector_widget.dart';
 
 class FeedScrollController extends StateNotifier<ScrollController?> {
   FeedScrollController() : super(null);
@@ -10,7 +11,8 @@ class FeedScrollController extends StateNotifier<ScrollController?> {
 
   void resetScroll() {
     if (state != null && state!.hasClients) {
-      state!.jumpTo(0);
+      state!.animateTo(0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+      LanguageSelectorDialog.forceDismissKeyboard();
     }
   }
 

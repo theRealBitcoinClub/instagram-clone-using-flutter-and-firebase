@@ -112,11 +112,11 @@ class PostCardFooter extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           // IconAction(text: "RESET", onTap: onCancel, type: IAB.cancel, icon: Icons.cancel_outlined),
-                          IconAction(text: "COMMENT TO THAT POST", onTap: onSend, type: IAB.alternative, icon: Icons.comment),
+                          IconAction(text: "COMMENT", onTap: onSend, type: IAB.alternative, icon: Icons.comment),
                           IconAction(
                             disabled: !post.hasMedia,
                             disabledMessage: "There is not image nor video attached to this publication.",
-                            text: "REPUBLISH THAT IMAGE OR VIDEO",
+                            text: "REPOST",
                             onTap: () => onSend(isRepost: true),
                             type: IAB.success,
                             icon: Icons.repeat_outlined,

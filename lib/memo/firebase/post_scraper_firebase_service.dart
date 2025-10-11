@@ -15,7 +15,7 @@ class PostScraperFirebaseService {
 
   // FIFO cache for tracking persisted post IDs (max 10,000 entries)
   static final _persistedPostIds = Queue<String>();
-  static const int _maxCacheSize = 10000;
+  static const int _maxCacheSize = 100000;
 
   // Batch processing variables
   static final _batchQueue = Queue<MemoModelPost>();

@@ -23,8 +23,8 @@ class ProfileBalanceProvider {
   // Balance-related timers only
   Timer? _balanceRefreshTimer;
   Timer? _qrDialogRefreshTimer;
-  final Duration _refreshBalanceInterval = Duration(seconds: kDebugMode ? 6 : 6);
-  final Duration _qrRefreshInterval = Duration(seconds: kDebugMode ? 3 : 3);
+  final Duration _refreshBalanceInterval = Duration(seconds: kDebugMode ? 60 : 6);
+  final Duration _qrRefreshInterval = Duration(seconds: kDebugMode ? 30 : 3);
   bool _isQrDialogOpen = false;
   bool _isQrCashtokenMode = false;
   final Ref ref;

@@ -118,7 +118,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       if (current.hasValue && previous?.value?.currentLimit != current.value?.currentLimit) {
         ref
             .read(snackbarServiceProvider)
-            .showTranslatedSnackBar('Tier changed to: ${current.value?.currentLimit.name}', type: SnackbarType.success);
+            .showTranslatedSnackBar('Level changed to: ${current.value?.currentLimit.name}', type: SnackbarType.success);
       }
     });
 

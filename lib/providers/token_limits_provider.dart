@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/provider/profile_balance_provider.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
+import 'package:mahakka/providers/scroll_controller_provider.dart';
 import 'package:mahakka/repositories/creator_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -55,7 +56,7 @@ class TokenLimitTexts {
   static const String profilePosts = 'profile posts, mute';
   static const String creators = 'creators';
   static const String depositForTier = 'tokens to unlock';
-  static const String tier = 'tier.';
+  static const String tier = 'level.';
   static const String free = 'FREE';
   static const String starter = 'STARTER';
   static const String premium = 'PREMIUM';
@@ -271,6 +272,9 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
     _cachedBalanceForDowngrade = null;
     _lastDowngradeDetection = null;
     print('🧹 TokenLimits: Cleared cached balance');
+    Future.microtask(() {
+      ref.read(feedScrollControllerProvider.notifier).resetScroll();
+    });
   }
 
   void _setupCreatorSubscription() {

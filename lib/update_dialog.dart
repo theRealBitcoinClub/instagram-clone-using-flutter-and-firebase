@@ -1,0 +1,354 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/theme_provider.dart';
+import 'package:mahakka/update_service.dart';
+import 'package:path_provider/path_provider.dart';
+
+import '../provider/translation_service.dart';
+
+class UpdateDialog extends ConsumerStatefulWidget {
+  final WidgetRef ref;
+
+  const UpdateDialog({Key? key, required this.ref}) : super(key: key);
+
+  @override
+  _UpdateDialogState createState() => _UpdateDialogState();
+}
+
+class _UpdateDialogState extends ConsumerState<UpdateDialog> {
+  bool _isDownloading = false;
+  bool _isVerifying = false;
+  bool _showManualCheck = false;
+  double _downloadProgress = 0.0;
+  final TextEditingController _sha256Controller = TextEditingController();
+  String _verificationResult = '';
+
+  // Private properties for all strings initialized with original text
+  String _updateTitle = 'Update Available';
+  String _updateMessage = 'A new version is available. Would you like to update now?';
+  String _laterText = 'Later';
+  String _updateNowText = 'Update Now';
+  String _downloadingText = 'Downloading...';
+  String _verifyingText = 'Verifying Security...';
+  String _securityVerifiedText = 'Security verified with SHA256';
+  String _securityCheckFailedText = 'Security check failed';
+  String _manualCheckText = 'Manual SHA256 Check';
+  String _enterSha256Text = 'Enter SHA256 from trusted source';
+  String _verifyText = 'Verify';
+  String _automatedCheckText = 'Automated security check passed';
+  String _manualCheckVerifiedText = 'Manual verification successful';
+  String _manualCheckFailedText = 'Manual verification failed';
+  String _currentVersionText = 'Current version';
+  String _latestVersionText = 'Latest version';
+  String _noChecksumText = 'No automated checksum available';
+  String _noApkFoundText = 'No downloaded APK found';
+  String _installNowText = 'Install Now';
+  String _tryManualCheckText = 'Try Manual Check';
+
+  @override
+  void dispose() {
+    _sha256Controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = ref.watch(isDarkModeProvider);
+    final theme = Theme.of(context);
+    final updateInfo = ref.watch(updateInfoProvider);
+
+    // Initialize translations in build method since it's reactive
+    _initializeTranslations();
+
+    return AlertDialog(
+      backgroundColor: theme.dialogBackgroundColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          Icon(Icons.system_update_rounded, color: theme.colorScheme.primary),
+          SizedBox(width: 12),
+          Text(_updateTitle, style: theme.textTheme.titleLarge),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!_isDownloading && !_isVerifying && !_showManualCheck)
+            Text(
+              '$_updateMessage\n\n$_currentVersionText: ${updateInfo.currentVersion}\n$_latestVersionText: ${updateInfo.latestVersion}',
+              style: theme.textTheme.bodyMedium,
+            ),
+
+          if (_isDownloading)
+            Column(
+              children: [
+                Text(_downloadingText, style: theme.textTheme.bodyMedium),
+                SizedBox(height: 16),
+                LinearProgressIndicator(
+                  value: _downloadProgress,
+                  backgroundColor: theme.colorScheme.surfaceVariant,
+                  color: theme.colorScheme.primary,
+                ),
+                SizedBox(height: 8),
+                Text('${(_downloadProgress * 100).toStringAsFixed(1)}%', style: theme.textTheme.bodySmall, textAlign: TextAlign.center),
+              ],
+            ),
+
+          if (_isVerifying)
+            Column(
+              children: [
+                Text(_verifyingText, style: theme.textTheme.bodyMedium),
+                SizedBox(height: 16),
+                CircularProgressIndicator(color: theme.colorScheme.primary),
+              ],
+            ),
+
+          if (_verificationResult.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(12),
+              margin: EdgeInsets.only(top: 12),
+              decoration: BoxDecoration(
+                color: _verificationResult.contains('failed') ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _verificationResult.contains('failed') ? Colors.red : Colors.green),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _verificationResult.contains('failed') ? Icons.error_outline : Icons.check_circle,
+                    color: _verificationResult.contains('failed') ? Colors.red : Colors.green,
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(_verificationResult, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface)),
+                  ),
+                ],
+              ),
+            ),
+
+          if (_showManualCheck)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_enterSha256Text, style: theme.textTheme.bodyMedium),
+                SizedBox(height: 12),
+                TextField(
+                  controller: _sha256Controller,
+                  decoration: InputDecoration(
+                    hintText: 'a1b2c3d4e5f6...',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  style: TextStyle(fontFamily: 'Monospace'),
+                  maxLines: 2,
+                ),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _performManualVerification,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                        ),
+                        child: Text(_verifyText),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+        ],
+      ),
+      actions: [
+        if (!_isDownloading && !_isVerifying && !_showManualCheck) ...[
+          TextButton(
+            onPressed: () {
+              ref.read(updateServiceProvider).saveReminderTime();
+              Navigator.pop(context);
+            },
+            child: Text(_laterText, style: TextStyle(color: theme.colorScheme.onSurface)),
+          ),
+          ElevatedButton(
+            onPressed: _startUpdate,
+            style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.primary, foregroundColor: theme.colorScheme.onPrimary),
+            child: Text(_updateNowText),
+          ),
+        ],
+
+        if (_isDownloading || _isVerifying)
+          TextButton(
+            onPressed: null,
+            child: Text(
+              _isDownloading ? _downloadingText : _verifyingText,
+              style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.5)),
+            ),
+          ),
+
+        if (_verificationResult.isNotEmpty && !_verificationResult.contains('failed') && !_showManualCheck)
+          Row(
+            children: [
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _showManualCheck = true;
+                    _verificationResult = '';
+                  });
+                },
+                child: Text(_manualCheckText),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _proceedWithInstallation,
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                  child: Text(_installNowText),
+                ),
+              ),
+            ],
+          ),
+
+        if (_verificationResult.contains('failed'))
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _showManualCheck = true;
+                _verificationResult = '';
+              });
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+            child: Text(_tryManualCheckText),
+          ),
+      ],
+    );
+  }
+
+  void _initializeTranslations() {
+    _updateTitle = _getTranslation(_updateTitle);
+    _updateMessage = _getTranslation(_updateMessage);
+    _laterText = _getTranslation(_laterText);
+    _updateNowText = _getTranslation(_updateNowText);
+    _downloadingText = _getTranslation(_downloadingText);
+    _verifyingText = _getTranslation(_verifyingText);
+    _securityVerifiedText = _getTranslation(_securityVerifiedText);
+    _securityCheckFailedText = _getTranslation(_securityCheckFailedText);
+    _manualCheckText = _getTranslation(_manualCheckText);
+    _enterSha256Text = _getTranslation(_enterSha256Text);
+    _verifyText = _getTranslation(_verifyingText);
+    _automatedCheckText = _getTranslation(_automatedCheckText);
+    _manualCheckVerifiedText = _getTranslation(_manualCheckVerifiedText);
+    _manualCheckFailedText = _getTranslation(_manualCheckFailedText);
+    _currentVersionText = _getTranslation(_currentVersionText);
+    _latestVersionText = _getTranslation(_latestVersionText);
+    _noChecksumText = _getTranslation(_noChecksumText);
+    _noApkFoundText = _getTranslation(_noApkFoundText);
+    _installNowText = _getTranslation(_installNowText);
+    _tryManualCheckText = _getTranslation(_tryManualCheckText);
+  }
+
+  String _getTranslation(String text) {
+    final t = ref.watch(autoTranslationTextProvider(text)).value ?? text;
+    return t;
+  }
+
+  void _startUpdate() async {
+    setState(() {
+      _isDownloading = true;
+      _downloadProgress = 0.0;
+      _verificationResult = '';
+    });
+
+    final updateService = ref.read(updateServiceProvider);
+    final updateInfo = ref.read(updateInfoProvider);
+
+    await updateService.downloadAndInstallApk(
+      onProgress: (bytes, total) {
+        setState(() {
+          _downloadProgress = bytes / total;
+        });
+      },
+      onComplete: () {
+        setState(() {
+          _isDownloading = false;
+          _isVerifying = true;
+        });
+
+        // Simulate verification delay
+        Future.delayed(Duration(seconds: 2), () {
+          setState(() {
+            _isVerifying = false;
+            if (updateInfo.expectedSha256 != null) {
+              _verificationResult = _automatedCheckText;
+            } else {
+              _verificationResult = _noChecksumText;
+              _showManualCheck = true;
+            }
+          });
+        });
+      },
+      onError: (error) {
+        setState(() {
+          _isDownloading = false;
+          _isVerifying = false;
+          _verificationResult = error;
+        });
+      },
+      expectedSha256: updateInfo.expectedSha256,
+    );
+  }
+
+  void _performManualVerification() async {
+    if (_sha256Controller.text.isEmpty) return;
+
+    setState(() {
+      _isVerifying = true;
+      _verificationResult = '';
+    });
+
+    final updateService = ref.read(updateServiceProvider);
+    final tempDir = await getTemporaryDirectory();
+    final apkFiles = Directory(tempDir.path).listSync().where((file) {
+      return file.path.contains('app_update_') && file.path.endsWith('.apk');
+    }).toList();
+
+    if (apkFiles.isNotEmpty) {
+      final latestApk = File(apkFiles.last.path);
+      final isValid = updateService.verifyManualSha256(latestApk, _sha256Controller.text);
+
+      setState(() {
+        _isVerifying = false;
+        _verificationResult = isValid ? _manualCheckVerifiedText : _manualCheckFailedText;
+      });
+    } else {
+      setState(() {
+        _isVerifying = false;
+        _verificationResult = _noApkFoundText;
+      });
+    }
+  }
+
+  void _proceedWithInstallation() async {
+    final updateService = ref.read(updateServiceProvider);
+    final tempDir = await getTemporaryDirectory();
+    final apkFiles = Directory(tempDir.path).listSync().where((file) {
+      return file.path.contains('app_update_') && file.path.endsWith('.apk');
+    }).toList();
+
+    if (apkFiles.isNotEmpty) {
+      final latestApk = File(apkFiles.last.path);
+      try {
+        await updateService.installApk(latestApk);
+        Navigator.pop(context);
+      } catch (e) {
+        setState(() {
+          _verificationResult = 'Installation failed: $e';
+        });
+      }
+    }
+  }
+}

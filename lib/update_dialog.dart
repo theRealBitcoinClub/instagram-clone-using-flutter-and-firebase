@@ -9,9 +9,9 @@ import 'package:path_provider/path_provider.dart';
 import '../provider/translation_service.dart';
 
 class UpdateDialog extends ConsumerStatefulWidget {
-  final WidgetRef ref;
+  final bool startFromInstallation;
 
-  const UpdateDialog({Key? key, required this.ref}) : super(key: key);
+  const UpdateDialog({Key? key, this.startFromInstallation = false}) : super(key: key);
 
   @override
   _UpdateDialogState createState() => _UpdateDialogState();
@@ -35,7 +35,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
   String _verifyingText = 'Verifying Security...';
   String _securityVerifiedText = 'Security verified with SHA256';
   String _securityCheckFailedText = 'Security check failed';
-  String _manualCheckText = 'Manual SHA256 Check';
+  String _manualCheckText = 'SHA256 Check';
   String _enterSha256Text = 'Enter SHA256 from trusted source';
   String _verifyText = 'Verify';
   String _automatedCheckText = 'Automated security check passed';
@@ -47,6 +47,42 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
   String _noApkFoundText = 'No downloaded APK found';
   String _installNowText = 'Install Now';
   String _tryManualCheckText = 'Try Manual Check';
+
+  @override
+  void initState() {
+    super.initState();
+    // If we're starting from installation, check for existing APK and proceed
+    if (widget.startFromInstallation) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkForExistingApkAndInstall();
+      });
+    }
+  }
+
+  Future<void> _checkForExistingApkAndInstall() async {
+    final tempDir = await getTemporaryDirectory();
+    final updateInfo = ref.read(updateInfoProvider);
+
+    final apkFiles = Directory(tempDir.path).listSync().where((file) {
+      return file.path.contains('mahakka_update_') && file.path.endsWith('.apk') && file.path.contains(updateInfo.latestVersion);
+    }).toList();
+
+    if (apkFiles.isNotEmpty) {
+      final latestApk = File(apkFiles.last.path);
+      setState(() {
+        _verificationResult = 'Found downloaded APK. Ready to install.';
+      });
+
+      // Auto-proceed to installation after a brief delay
+      await Future.delayed(Duration(milliseconds: 500));
+      _proceedWithInstallation();
+    } else {
+      setState(() {
+        _verificationResult = 'No downloaded APK found. Please download again.';
+        _hasError = true;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -61,7 +97,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
     final updateInfo = ref.watch(updateInfoProvider);
 
     // Initialize translations in build method since it's reactive
-    _initializeTranslations();
+    _initializeTranslations(ref);
 
     var isErrorState = _verificationResult.contains('failed') || _hasError;
     return AlertDialog(
@@ -79,6 +115,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!_isDownloading && !_isVerifying && !_showManualCheck)
+            // if (!_isDownloading && !_isVerifying)
             Text(
               '$_updateMessage\n\n$_currentVersionText: ${updateInfo.currentVersion}\n$_latestVersionText: ${updateInfo.latestVersion}',
               style: theme.textTheme.bodyMedium,
@@ -130,9 +167,11 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
             ),
 
           if (_showManualCheck)
+            // if (false)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SizedBox(height: 12),
                 Text(_enterSha256Text, style: theme.textTheme.bodyMedium),
                 SizedBox(height: 12),
                 TextField(
@@ -165,7 +204,8 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
         ],
       ),
       actions: [
-        if (!_isDownloading && !_isVerifying && !_showManualCheck) ...[
+        if (_verificationResult.isEmpty && !_isDownloading && !_isVerifying && !_showManualCheck) ...[
+          // if (_verificationResult.isEmpty && !_isDownloading && !_isVerifying) ...[
           TextButton(
             onPressed: () {
               ref.read(updateServiceProvider).saveReminderTime();
@@ -190,18 +230,19 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
           ),
 
         if (_verificationResult.isNotEmpty && !_verificationResult.contains('failed') && !_showManualCheck)
+          // if (_verificationResult.isNotEmpty && !_verificationResult.contains('failed'))
           Row(
             children: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _showManualCheck = true;
-                    _verificationResult = '';
-                  });
-                },
-                child: Text(_manualCheckText),
-              ),
-              SizedBox(width: 8),
+              // TextButton(
+              //   onPressed: () {
+              //     setState(() {
+              //       _showManualCheck = true;
+              //       _verificationResult = '';
+              //     });
+              //   },
+              //   child: Text(_manualCheckText),
+              // ),
+              // SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton(
                   onPressed: _proceedWithInstallation,
@@ -212,7 +253,8 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
             ],
           ),
 
-        if (_verificationResult.contains('failed'))
+        if (_verificationResult.contains('failed') && !_showManualCheck)
+          // if (true)
           ElevatedButton(
             onPressed: () {
               setState(() {
@@ -227,32 +269,27 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
     );
   }
 
-  void _initializeTranslations() {
-    _updateTitle = _getTranslation(_updateTitle);
-    _updateMessage = _getTranslation(_updateMessage);
-    _laterText = _getTranslation(_laterText);
-    _updateNowText = _getTranslation(_updateNowText);
-    _downloadingText = _getTranslation(_downloadingText);
-    _verifyingText = _getTranslation(_verifyingText);
-    _securityVerifiedText = _getTranslation(_securityVerifiedText);
-    _securityCheckFailedText = _getTranslation(_securityCheckFailedText);
-    _manualCheckText = _getTranslation(_manualCheckText);
-    _enterSha256Text = _getTranslation(_enterSha256Text);
-    _verifyText = _getTranslation(_verifyingText);
-    _automatedCheckText = _getTranslation(_automatedCheckText);
-    _manualCheckVerifiedText = _getTranslation(_manualCheckVerifiedText);
-    _manualCheckFailedText = _getTranslation(_manualCheckFailedText);
-    _currentVersionText = _getTranslation(_currentVersionText);
-    _latestVersionText = _getTranslation(_latestVersionText);
-    _noChecksumText = _getTranslation(_noChecksumText);
-    _noApkFoundText = _getTranslation(_noApkFoundText);
-    _installNowText = _getTranslation(_installNowText);
-    _tryManualCheckText = _getTranslation(_tryManualCheckText);
-  }
-
-  String _getTranslation(String text) {
-    final t = ref.watch(autoTranslationTextProvider(text)).value ?? text;
-    return t;
+  void _initializeTranslations(WidgetRef ref) {
+    _updateTitle = ref.watch(autoTranslationTextProvider(_updateTitle)).value ?? _updateTitle;
+    _updateMessage = ref.watch(autoTranslationTextProvider(_updateMessage)).value ?? _updateMessage;
+    _laterText = ref.watch(autoTranslationTextProvider(_laterText)).value ?? _laterText;
+    _updateNowText = ref.watch(autoTranslationTextProvider(_updateNowText)).value ?? _updateNowText;
+    _downloadingText = ref.watch(autoTranslationTextProvider(_downloadingText)).value ?? _downloadingText;
+    _verifyingText = ref.watch(autoTranslationTextProvider(_verifyingText)).value ?? _verifyingText;
+    _securityVerifiedText = ref.watch(autoTranslationTextProvider(_securityVerifiedText)).value ?? _securityVerifiedText;
+    _securityCheckFailedText = ref.watch(autoTranslationTextProvider(_securityCheckFailedText)).value ?? _securityCheckFailedText;
+    _manualCheckText = ref.watch(autoTranslationTextProvider(_manualCheckText)).value ?? _manualCheckText;
+    _enterSha256Text = ref.watch(autoTranslationTextProvider(_enterSha256Text)).value ?? _enterSha256Text;
+    _verifyText = ref.watch(autoTranslationTextProvider(_verifyText)).value ?? _verifyText;
+    _automatedCheckText = ref.watch(autoTranslationTextProvider(_automatedCheckText)).value ?? _automatedCheckText;
+    _manualCheckVerifiedText = ref.watch(autoTranslationTextProvider(_manualCheckVerifiedText)).value ?? _manualCheckVerifiedText;
+    _manualCheckFailedText = ref.watch(autoTranslationTextProvider(_manualCheckFailedText)).value ?? _manualCheckFailedText;
+    _currentVersionText = ref.watch(autoTranslationTextProvider(_currentVersionText)).value ?? _currentVersionText;
+    _latestVersionText = ref.watch(autoTranslationTextProvider(_latestVersionText)).value ?? _latestVersionText;
+    _noChecksumText = ref.watch(autoTranslationTextProvider(_noChecksumText)).value ?? _noChecksumText;
+    _noApkFoundText = ref.watch(autoTranslationTextProvider(_noApkFoundText)).value ?? _noApkFoundText;
+    _installNowText = ref.watch(autoTranslationTextProvider(_installNowText)).value ?? _installNowText;
+    _tryManualCheckText = ref.watch(autoTranslationTextProvider(_tryManualCheckText)).value ?? _tryManualCheckText;
   }
 
   void _startUpdate() async {
@@ -310,12 +347,13 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
     setState(() {
       _isVerifying = true;
       _verificationResult = '';
+      _showManualCheck = false;
     });
 
     final updateService = ref.read(updateServiceProvider);
     final tempDir = await getTemporaryDirectory();
     final apkFiles = Directory(tempDir.path).listSync().where((file) {
-      return file.path.contains('app_update_') && file.path.endsWith('.apk');
+      return file.path.contains('mahakka_update_') && file.path.endsWith('.apk');
     }).toList();
 
     if (apkFiles.isNotEmpty) {
@@ -338,13 +376,13 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
     final updateService = ref.read(updateServiceProvider);
     final tempDir = await getTemporaryDirectory();
     final apkFiles = Directory(tempDir.path).listSync().where((file) {
-      return file.path.contains('app_update_') && file.path.endsWith('.apk');
+      return file.path.contains('mahakka_update_') && file.path.endsWith('.apk');
     }).toList();
 
     if (apkFiles.isNotEmpty) {
       final latestApk = File(apkFiles.last.path);
       try {
-        await updateService.installApk(latestApk);
+        await updateService.installApk(latestApk, context);
         Navigator.pop(context);
       } catch (e) {
         setState(() {

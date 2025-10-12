@@ -1,10 +1,11 @@
-// lib/services/update_service.dart
 import 'dart:async';
 import 'dart:io';
 
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_file/open_file.dart';
@@ -64,7 +65,8 @@ class UpdateService {
   static const String baseUrl = "https://mahakka-apk.vercel.app/";
   static const String lastUpdateReminderKey = 'last_update_reminder';
   static const Duration reminderCooldown = Duration(hours: 12);
-  static const Duration checkInterval = Duration(seconds: 60);
+  static const Duration checkInterval = Duration(seconds: 300);
+  static const int requiredFreeSpaceMB = 111; // 222MB buffer for APK + app operation
 
   // Build-time ABI - 100% reliable
   String get currentAbi {
@@ -74,7 +76,7 @@ class UpdateService {
     return 'arm64-v8a';
   }
 
-  String get currentVersion => "4.3.14-BCH";
+  String get currentVersion => "4.3.17-BCH";
 
   // URL construction using version folders and ABI-specific files
   String getVersionCheckUrl() => '$baseUrl/version.txt';
@@ -194,7 +196,107 @@ class UpdateService {
     return 'https://drive.usercontent.google.com/u/0/uc?id=YOUR_FILE_ID&export=download';
   }
 
-  // Enhanced download with ABI-specific URLs
+  // // Check available space in temp directory
+  // Future<bool> _hasEnoughSpace() async {
+  //   try {
+  //     final tempDir = await getTemporaryDirectory();
+  //     final stat = await tempDir.stat();
+  //
+  //     // Calculate available space (in bytes)
+  //     final availableSpace = stat.freeSpace;
+  //     final requiredSpace = requiredFreeSpaceMB * 1024 * 1024; // Convert MB to bytes
+  //
+  //     _print(
+  //       'Storage check - Available: ${(availableSpace / (1024 * 1024)).toStringAsFixed(2)}MB, '
+  //       'Required: ${requiredFreeSpaceMB}MB',
+  //     );
+  //
+  //     return availableSpace >= requiredSpace;
+  //   } catch (e) {
+  //     _print('Storage check error: $e');
+  //     return false; // Assume not enough space if we can't check
+  //   }
+  // }
+
+  // Check available space in temp directory - Ultra safe version with 1MB chunks
+  Future<bool> _hasEnoughSpace() async {
+    if (!Platform.isAndroid) return true;
+
+    final List<File> testFiles = [];
+
+    try {
+      final tempDir = await getTemporaryDirectory();
+
+      _print('Starting 222MB storage space verification...');
+
+      const totalRequiredMB = 222;
+      const filesCount = 10;
+      const fileSizeMB = 22.2;
+      var fileSizeBytes = (fileSizeMB * 1024 * 1024).round();
+      const chunkSize = 1 * 1024 * 1024; // Ultra safe 1MB chunks
+
+      // Create a reusable 1MB chunk of zeros
+      final chunkData = List.filled(chunkSize, 0);
+
+      for (int fileIndex = 0; fileIndex < filesCount; fileIndex++) {
+        final testFile = File('${tempDir.path}/space_check_${DateTime.now().millisecondsSinceEpoch}_$fileIndex.tmp');
+        testFiles.add(testFile);
+
+        _print('Creating file ${fileIndex + 1}/$filesCount (${fileSizeMB}MB)...');
+
+        final sink = testFile.openWrite();
+        int writtenBytes = 0;
+
+        while (writtenBytes < fileSizeBytes) {
+          final remainingBytes = fileSizeBytes - writtenBytes;
+          final currentChunkSize = remainingBytes < chunkSize ? remainingBytes : chunkSize;
+
+          sink.add(chunkData.sublist(0, currentChunkSize));
+          writtenBytes += currentChunkSize;
+
+          // Flush every 10MB written
+          if (writtenBytes % (10 * 1024 * 1024) == 0) {
+            await sink.flush();
+          }
+        }
+
+        await sink.flush();
+        await sink.close();
+
+        // Verify file size
+        final actualFileSize = await testFile.length();
+        final success = actualFileSize >= fileSizeBytes;
+
+        if (!success) {
+          _print('❌ File ${fileIndex + 1} failed: ${(actualFileSize / (1024 * 1024)).toStringAsFixed(1)}MB < ${fileSizeMB}MB');
+          return false;
+        }
+
+        _print('✅ File ${fileIndex + 1}: ${(actualFileSize / (1024 * 1024)).toStringAsFixed(1)}MB');
+      }
+
+      _print('🎉 SUCCESS: 222MB storage verified with ${filesCount} files');
+      return true;
+    } catch (e) {
+      _print('❌ Storage verification failed: $e');
+      return false;
+    } finally {
+      // Cleanup all files
+      _print('Cleaning up test files...');
+      for (final testFile in testFiles) {
+        try {
+          if (await testFile.exists()) {
+            await testFile.delete();
+          }
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+      }
+      _print('Cleanup completed');
+    }
+  }
+
+  // Enhanced download with space checking and temp directory usage - File streaming version
   Future<void> downloadAndInstallApk({
     required String latestVersion,
     required Function(int bytes, int total) onProgress,
@@ -202,23 +304,40 @@ class UpdateService {
     required Function(String error) onError,
     required String? expectedSha256,
   }) async {
+    final client = http.Client();
+    File? file;
+
     try {
-      if (!await _requestStoragePermission()) {
-        onError('Storage permission required to download update');
+      // Check available space first
+      if (!await _hasEnoughSpace()) {
+        onError('Insufficient storage space. Please free up at least ${requiredFreeSpaceMB}MB and try again.');
         return;
       }
 
       final tempDir = await getTemporaryDirectory();
-      final file = File('${tempDir.path}/app_update_${DateTime.now().millisecondsSinceEpoch}.apk');
+      file = File('${tempDir.path}/mahakka_update_$latestVersion.apk');
 
       // Get the appropriate APK URL
       final apkUrl = await getApkDownloadUrl(latestVersion);
       _print('📥 Downloading from: $apkUrl');
 
-      final request = await http.get(Uri.parse(apkUrl));
-      final bytes = request.bodyBytes;
+      // Use streaming download for progress tracking and memory efficiency
+      final request = http.Request('GET', Uri.parse(apkUrl));
+      final streamedResponse = await client.send(request);
 
-      await file.writeAsBytes(bytes);
+      final totalBytes = streamedResponse.contentLength ?? 0;
+      int receivedBytes = 0;
+
+      final sink = file.openWrite();
+
+      await for (var chunk in streamedResponse.stream) {
+        sink.add(chunk);
+        receivedBytes += chunk.length;
+        onProgress(receivedBytes, totalBytes);
+      }
+
+      await sink.close();
+      _print('Download completed: ${file.lengthSync()} bytes');
 
       // Verify SHA256 if provided
       if (expectedSha256 != null && expectedSha256.isNotEmpty) {
@@ -231,19 +350,20 @@ class UpdateService {
       }
 
       onComplete();
-      await installApk(file);
     } catch (e) {
+      // Clean up partial file on error
+      if (file != null && await file.exists()) {
+        await file.delete();
+      }
       onError('Download failed: $e');
+    } finally {
+      client.close();
     }
   }
 
   void _print(String s) {
     if (kDebugMode) print("UPDATESERVICE: " + s);
   }
-
-  // ... REST OF YOUR EXISTING METHODS REMAIN THE SAME ...
-  // calculateSha256, verifySha256, verifyManualSha256, saveReminderTime,
-  // shouldShowReminder, _isNewVersionAvailable, _requestStoragePermission, installApk
 
   // Calculate SHA256 of downloaded file
   String calculateSha256(File file) {
@@ -282,74 +402,238 @@ class UpdateService {
     return installedVersion != remoteVersion;
   }
 
-  Future<bool> _requestStoragePermission() async {
-    final status = await Permission.storage.request();
-    return status.isGranted;
-  }
-
-  Future<void> installApk(File apkFile) async {
+  Future<void> installApk(File apkFile, ctx) async {
     try {
       if (Platform.isAndroid) {
+        _print('Attempting to install APK: ${apkFile.path}');
+
+        // Ensure we have the install permission first
+        if (!await _requestStoragePermission()) {
+          throw Exception('Install permission not granted. Please enable "Install unknown apps" for Mahakka in system settings.');
+        }
+
+        // Try with OpenFile
         final result = await OpenFile.open(apkFile.path);
-        if (result.type != ResultType.done) {
-          throw Exception('Failed to open APK file: ${result.message}');
+        _print('OpenFile result: ${result.type} - ${result.message}');
+
+        if (result.type == ResultType.done) {
+          _print('APK installation launched successfully');
+          return;
+        } else if (result.type == ResultType.noAppToOpen) {
+          throw Exception('No app found to handle APK installation. This device may not support APK installation.');
+        } else if (result.type == ResultType.permissionDenied) {
+          throw Exception('Permission denied. Please enable "Install unknown apps" for Mahakka in system settings.');
+        } else {
+          throw Exception('Installation failed: ${result.message}');
         }
       }
     } catch (e) {
-      // Fallback to manual installation intent if needed
-      _print('OpenFile failed, trying manual installation: $e');
-      await _installApkManually(apkFile);
+      _print('APK installation failed: $e');
+      await _showInstallationInstructions(ctx);
+      rethrow; // Re-throw to let the caller handle it
     }
   }
 
-  Future<void> _installApkManually(File apkFile) async {
-    // You can implement manual installation intent here if needed
-    _print('Manual installation required for: ${apkFile.path}');
+  Future<bool> _requestStoragePermission() async {
+    try {
+      if (!Platform.isAndroid) return true;
+
+      // For Android 8.0+, we need REQUEST_INSTALL_PACKAGES permission
+      final installStatus = await Permission.requestInstallPackages.status;
+      _print('Current install permission status: $installStatus');
+
+      if (installStatus.isDenied || installStatus.isPermanentlyDenied) {
+        _print('Requesting REQUEST_INSTALL_PACKAGES permission...');
+        final result = await Permission.requestInstallPackages.request();
+        _print('REQUEST_INSTALL_PACKAGES permission result: $result');
+        return result.isGranted;
+      }
+
+      return installStatus.isGranted;
+    } catch (e) {
+      _print('Permission request error: $e');
+      return false;
+    }
+  }
+
+  Future<void> _showInstallationInstructions(BuildContext context) async {
+    final tempDir = await getTemporaryDirectory();
+    final apkFiles = Directory(tempDir.path).listSync().where((file) {
+      return file.path.contains('mahakka_update_') && file.path.endsWith('.apk');
+    }).toList();
+
+    final latestApk = apkFiles.isNotEmpty ? File(apkFiles.last.path) : null;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).dialogBackgroundColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.settings, color: Colors.orange),
+            SizedBox(width: 12),
+            Text('Installation Permission Required', style: Theme.of(context).textTheme.titleLarge),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'To install the update, you need to enable "Install unknown apps" permission for Mahakka.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            SizedBox(height: 16),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '📱 Steps to enable:',
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                  ),
+                  SizedBox(height: 8),
+                  Text('1. Tap "Open Settings" below'),
+                  Text('2. Find "Mahakka" in the list'),
+                  Text('3. Enable "Allow from this source"'),
+                  Text('4. Return here and try again'),
+                ],
+              ),
+            ),
+            if (latestApk != null) ...[
+              SizedBox(height: 16),
+              Divider(),
+              SizedBox(height: 8),
+              Text('Alternative Manual Installation:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              GestureDetector(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: latestApk.path));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('APK path copied to clipboard')));
+                },
+                child: Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(4)),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          latestApk.path,
+                          style: TextStyle(fontSize: 10, fontFamily: 'Monospace'),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(Icons.copy, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Tap to copy path, then use a file manager to find and install this file',
+                style: TextStyle(fontSize: 10, color: Colors.grey),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _openAppSettings();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+            child: Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openAppSettings() async {
+    try {
+      _print('Opening app settings...');
+      await openAppSettings();
+    } catch (e) {
+      _print('Failed to open app settings: $e');
+      // Fallback: open general settings
+      try {
+        await AndroidIntent(action: 'android.settings.APPLICATION_DETAILS_SETTINGS', data: 'package:com.mahakka').launch();
+      } catch (e2) {
+        _print('Failed to open specific app settings: $e2');
+      }
+    }
   }
 }
 
-// Updated providers
+// Updated providers using NotifierProvider
 final updateServiceProvider = Provider<UpdateService>((ref) {
   return UpdateService();
 });
 
-final updateInfoProvider = StateProvider<UpdateInfo>((ref) {
-  return UpdateInfo(
-    updateAvailable: false,
-    currentVersion: '1.0.0',
-    latestVersion: '1.0.0',
-    lastReminderTime: DateTime.now(),
-    detectedAbi: 'arm64-v8a',
-  );
-});
+final updateInfoProvider = NotifierProvider<UpdateInfoNotifier, UpdateInfo>(UpdateInfoNotifier.new);
 
-final updateCheckProvider = StateProvider<void>((ref) {
-  final updateService = ref.read(updateServiceProvider);
+class UpdateInfoNotifier extends Notifier<UpdateInfo> {
+  Timer? _timer;
 
-  // Set up periodic checking
-  final timer = Timer.periodic(UpdateService.checkInterval, (_) {
-    _performUpdateCheck(updateService, ref);
-  });
+  @override
+  UpdateInfo build() {
+    ref.onDispose(() {
+      _timer?.cancel();
+    });
+    final updateService = ref.read(updateServiceProvider);
 
-  ref.onDispose(() => timer.cancel());
+    // Initial state
+    final initialInfo = UpdateInfo(
+      updateAvailable: false,
+      currentVersion: updateService.currentVersion,
+      latestVersion: updateService.currentVersion,
+      lastReminderTime: DateTime.now(),
+      detectedAbi: updateService.currentAbi,
+    );
 
-  // Initial check
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    _performUpdateCheck(updateService, ref);
-  });
+    // Set up periodic checking
+    _startPeriodicChecks(updateService);
 
-  return null;
-});
+    return initialInfo;
+  }
 
-// Helper function to perform the update check
-Future<void> _performUpdateCheck(UpdateService updateService, Ref ref) async {
-  try {
-    if (kDebugMode) print('Updatecheck');
-    final updateInfo = await updateService.checkForUpdates();
+  void _startPeriodicChecks(UpdateService updateService) {
+    // Cancel existing timer
+    _timer?.cancel();
 
-    if (kDebugMode) print('Updatecheck $updateInfo');
-    ref.read(updateInfoProvider.notifier).state = updateInfo;
-  } catch (e) {
-    if (kDebugMode) print('Updatecheck check error in stream: $e');
+    // Initial check
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _performUpdateCheck(updateService);
+    });
+
+    // Periodic checks
+    _timer = Timer.periodic(UpdateService.checkInterval, (_) {
+      _performUpdateCheck(updateService);
+    });
+  }
+
+  Future<void> _performUpdateCheck(UpdateService updateService) async {
+    try {
+      if (kDebugMode) print('Update check');
+      final updateInfo = await updateService.checkForUpdates();
+
+      if (kDebugMode) print('Update result: $updateInfo');
+      state = updateInfo;
+    } catch (e) {
+      if (kDebugMode) print('Update check error: $e');
+    }
   }
 }

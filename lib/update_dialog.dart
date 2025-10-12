@@ -219,15 +219,14 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
           ),
         ],
 
-        if (_isDownloading || _isVerifying)
-          TextButton(
-            onPressed: null,
-            child: Text(
-              _isDownloading ? _downloadingText : _verifyingText,
-              style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.5)),
-            ),
-          ),
-
+        // if (_isDownloading || _isVerifying)
+        //   TextButton(
+        //     onPressed: null,
+        //     child: Text(
+        //       _isDownloading ? _downloadingText : _verifyingText,
+        //       style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.5)),
+        //     ),
+        //   ),
         if (_verificationResult.isNotEmpty && !_verificationResult.contains('failed') && !_showManualCheck)
           // if (_verificationResult.isNotEmpty && !_verificationResult.contains('failed'))
           Row(

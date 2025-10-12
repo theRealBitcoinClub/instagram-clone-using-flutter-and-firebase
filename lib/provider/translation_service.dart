@@ -44,11 +44,11 @@ final autoTranslationTextProvider = FutureProvider.family<String, String>((ref, 
     final cachedTranslation = await cache.get(cacheKey, systemLangCode);
 
     if (cachedTranslation != null) {
-      print('Cache hit for: ${originalText.substring(0, originalText.length > 30 ? 30 : originalText.length)}...');
+      // print('Cache hit for: ${originalText.substring(0, originalText.length > 30 ? 30 : originalText.length)}...');
       return cachedTranslation;
     }
 
-    print('Cache miss, translating: ${originalText.substring(0, originalText.length > 30 ? 30 : originalText.length)}...');
+    // print('Cache miss, translating: ${originalText.substring(0, originalText.length > 30 ? 30 : originalText.length)}...');
 
     // Use the translation service
     final translationResult = await translationService.translateAuto(text: originalText, to: systemLangCode);

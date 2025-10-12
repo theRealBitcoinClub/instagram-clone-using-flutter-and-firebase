@@ -54,7 +54,7 @@ class UpdateService {
     return 'arm64-v8a';
   }
 
-  String get currentVersion => "4.3.26-BCH";
+  String get currentVersion => "4.3.29-BCH";
 
   // URL construction using version folders and ABI-specific files
   String getVersionCheckUrl() => '$baseUrl/version.txt';
@@ -83,6 +83,17 @@ class UpdateService {
       _print('Failed to fetch checksum: $e');
     }
     return null;
+  }
+
+  void debugSha256Verification(File file, String expectedSha256) {
+    final calculated = calculateSha256Sync(file);
+    print('=== SHA256 DEBUG ===');
+    print('Expected: "$expectedSha256" (length: ${expectedSha256?.length})');
+    print('Calculated: "$calculated" (length: ${calculated.length})');
+    print('Expected (lower): "${expectedSha256?.toLowerCase()}"');
+    print('Calculated (lower): "${calculated.toLowerCase()}"');
+    print('Match: ${calculated.toLowerCase() == expectedSha256?.toLowerCase()}');
+    print('===================');
   }
 
   // Check for updates including SHA256 and ABI info
@@ -145,28 +156,6 @@ class UpdateService {
     // Ultimate fallback - direct URL (you can set this in apk-url.txt)
     return 'https://drive.usercontent.google.com/u/0/uc?id=YOUR_FILE_ID&export=download';
   }
-
-  // // Check available space in temp directory
-  // Future<bool> _hasEnoughSpace() async {
-  //   try {
-  //     final tempDir = await getTemporaryDirectory();
-  //     final stat = await tempDir.stat();
-  //
-  //     // Calculate available space (in bytes)
-  //     final availableSpace = stat.freeSpace;
-  //     final requiredSpace = requiredFreeSpaceMB * 1024 * 1024; // Convert MB to bytes
-  //
-  //     _print(
-  //       'Storage check - Available: ${(availableSpace / (1024 * 1024)).toStringAsFixed(2)}MB, '
-  //       'Required: ${requiredFreeSpaceMB}MB',
-  //     );
-  //
-  //     return availableSpace >= requiredSpace;
-  //   } catch (e) {
-  //     _print('Storage check error: $e');
-  //     return false; // Assume not enough space if we can't check
-  //   }
-  // }
 
   // Check available space in temp directory - Ultra safe version with 1MB chunks
   Future<bool> _hasEnoughSpace() async {
@@ -246,7 +235,7 @@ class UpdateService {
     }
   }
 
-  // Enhanced download with space checking and temp directory usage - File streaming version
+  // Enhanced download with robust file management
   Future<void> downloadAndInstallApk({
     required String latestVersion,
     required Function(int bytes, int total) onProgress,
@@ -255,7 +244,8 @@ class UpdateService {
     required String? expectedSha256,
   }) async {
     final client = http.Client();
-    File? file;
+    File? tempFile;
+    File? finalFile;
 
     try {
       // Check available space first
@@ -265,7 +255,16 @@ class UpdateService {
       }
 
       final tempDir = await getTemporaryDirectory();
-      file = File('${tempDir.path}/mahakka_update_$latestVersion.apk');
+
+      // Define file paths - using .tmp during download
+      final tempFilePath = '${tempDir.path}/mahakka_update_$latestVersion.tmp';
+      final finalFilePath = '${tempDir.path}/mahakka_update_$latestVersion.apk';
+
+      tempFile = File(tempFilePath);
+      finalFile = File(finalFilePath);
+
+      // Clean up any existing temp files from previous attempts
+      await _cleanupPreviousDownloads(tempDir, latestVersion);
 
       // Get the appropriate APK URL
       final apkUrl = await getApkDownloadUrl(latestVersion);
@@ -278,7 +277,8 @@ class UpdateService {
       final totalBytes = streamedResponse.contentLength ?? 0;
       int receivedBytes = 0;
 
-      final sink = file.openWrite();
+      // Download to .tmp file
+      final sink = tempFile.openWrite();
 
       await for (var chunk in streamedResponse.stream) {
         sink.add(chunk);
@@ -287,51 +287,241 @@ class UpdateService {
       }
 
       await sink.close();
-      _print('Download completed: ${file.lengthSync()} bytes');
+      _print('Download completed: ${tempFile.lengthSync()} bytes');
+
+      // Verify the temp file exists and has content
+      if (!await tempFile.exists() || await tempFile.length() == 0) {
+        throw Exception('Downloaded file is empty or missing');
+      }
 
       // Verify SHA256 if provided
       if (expectedSha256 != null && expectedSha256.isNotEmpty) {
-        final isValid = verifySha256(file, expectedSha256);
+        final isValid = await verifySha256(tempFile, expectedSha256);
         if (!isValid) {
-          await file.delete();
-          onError('Security check failed: SHA256 mismatch');
+          await _safeDelete(tempFile);
+          onError('Security check failed: SHA256 mismatch. The downloaded file may be corrupted.');
           return;
         }
+        _print('✅ SHA256 verification passed');
+      }
+
+      // Rename from .tmp to .apk after successful verification
+      try {
+        await tempFile.rename(finalFilePath);
+        _print('✅ File renamed from .tmp to .apk');
+
+        // Verify the final file exists
+        if (!await finalFile.exists()) {
+          throw Exception('Failed to create final APK file');
+        }
+      } catch (e) {
+        // If rename fails (cross-device), copy and delete original
+        _print('Rename failed, copying file: $e');
+        await tempFile.copy(finalFilePath);
+        await _safeDelete(tempFile);
       }
 
       onComplete();
     } catch (e) {
-      // Clean up partial file on error
-      if (file != null && await file.exists()) {
-        await file.delete();
-      }
+      // Clean up any partial files on error
+      await _safeDelete(tempFile);
+      await _safeDelete(finalFile);
       onError('Download failed: $e');
     } finally {
       client.close();
     }
   }
 
+  // Safe file deletion that ignores errors
+  Future<void> _safeDelete(File? file) async {
+    if (file == null) return;
+
+    try {
+      if (await file.exists()) {
+        await file.delete();
+        _print('🗑️ Deleted file: ${file.path}');
+      }
+    } catch (e) {
+      _print('⚠️ Could not delete file ${file.path}: $e');
+      // Don't throw - we don't want cleanup failures to break the flow
+    }
+  }
+
+  // Clean up previous download attempts
+  Future<void> _cleanupPreviousDownloads(Directory tempDir, String version) async {
+    try {
+      final files = await tempDir.list().toList();
+
+      for (var file in files) {
+        if (file is File) {
+          final fileName = file.path.split('/').last;
+          // Delete any .tmp files or previous APK files for this version
+          if (fileName.contains('mahakka_update_$version') && (fileName.endsWith('.tmp') || fileName.endsWith('.apk'))) {
+            await _safeDelete(file);
+          }
+        }
+      }
+      _print('🧹 Cleaned up previous download attempts for version $version');
+    } catch (e) {
+      _print('⚠️ Cleanup of previous downloads failed: $e');
+      // Continue anyway - this shouldn't block the download
+    }
+  }
+
+  // Enhanced installation with guaranteed cleanup
+  Future<void> installApkWithCleanup({
+    required String latestVersion,
+    required BuildContext context,
+    required Function(String error) onError,
+    required Function onSuccess,
+  }) async {
+    File? apkFile;
+
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final apkFilePath = '${tempDir.path}/mahakka_update_$latestVersion.apk';
+      apkFile = File(apkFilePath);
+
+      // Verify file exists before installation
+      if (!await apkFile.exists()) {
+        throw Exception('APK file not found. Please download the update again.');
+      }
+
+      // Verify file is not empty
+      final fileSize = await apkFile.length();
+      if (fileSize == 0) {
+        throw Exception('APK file is empty. Please download the update again.');
+      }
+
+      _print('🔧 Installing APK: ${apkFile.path} (${(fileSize / (1024 * 1024)).toStringAsFixed(2)} MB)');
+
+      // Ensure we have the install permission first
+      if (!await _requestStoragePermission()) {
+        throw Exception('Install permission not granted. Please enable "Install unknown apps" for Mahakka in system settings.');
+      }
+
+      // Try with OpenFile
+      final result = await OpenFile.open(apkFile.path);
+      _print('OpenFile result: ${result.type} - ${result.message}');
+
+      if (result.type == ResultType.done) {
+        _print('✅ APK installation launched successfully');
+        onSuccess();
+
+        // Schedule cleanup after a delay to ensure installation has started
+        Future.delayed(Duration(seconds: 5), () async {
+          await _safeDelete(apkFile);
+          _print('🧹 Cleaned up APK file after successful installation launch');
+        });
+      } else if (result.type == ResultType.noAppToOpen) {
+        throw Exception('No app found to handle APK installation. This device may not support APK installation.');
+      } else if (result.type == ResultType.permissionDenied) {
+        throw Exception('Permission denied. Please enable "Install unknown apps" for Mahakka in system settings.');
+      } else {
+        throw Exception('Installation failed: ${result.message}');
+      }
+    } catch (e) {
+      // Clean up on installation failure
+      await _safeDelete(apkFile);
+      _print('❌ Installation failed: $e');
+      onError('Installation failed: $e');
+
+      // Show installation instructions for permission issues
+      if (e.toString().contains('permission') || e.toString().contains('Permission')) {
+        await _showInstallationInstructions(context, latestVersion);
+      }
+    }
+  }
+
+  // NEW METHOD: Combined download and install with cleanup
+  Future<void> downloadAndInstallWithCleanup({
+    required String latestVersion,
+    required Function(int bytes, int total) onProgress,
+    required Function onInstallStarted,
+    required Function(String error) onError,
+    required BuildContext context,
+    required String? expectedSha256,
+  }) async {
+    await downloadAndInstallApk(
+      latestVersion: latestVersion,
+      onProgress: onProgress,
+      onComplete: () async {
+        // Download completed successfully, now install with cleanup
+        await installApkWithCleanup(latestVersion: latestVersion, context: context, onError: onError, onSuccess: onInstallStarted);
+      },
+      onError: onError,
+      expectedSha256: expectedSha256,
+    );
+  }
+
+  // NEW METHOD: Force cleanup of all update files
+  Future<void> forceCleanupDownloads() async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final files = await tempDir.list().toList();
+
+      int deletedCount = 0;
+      for (var file in files) {
+        if (file is File) {
+          final fileName = file.path.split('/').last;
+          if (fileName.contains('mahakka_update_') && (fileName.endsWith('.tmp') || fileName.endsWith('.apk'))) {
+            await _safeDelete(file);
+            deletedCount++;
+          }
+        }
+      }
+      _print('🧹 Force cleanup completed: $deletedCount files removed');
+    } catch (e) {
+      _print('⚠️ Force cleanup failed: $e');
+    }
+  }
+
+  // NEW METHOD: Initialize clean state on app start
+  Future<void> initializeCleanState() async {
+    await forceCleanupDownloads();
+  }
+
+  // Enhanced SHA256 verification with async file reading
+  Future<bool> verifySha256(File file, String expectedSha256) async {
+    debugSha256Verification(file, expectedSha256);
+    try {
+      final calculatedSha256 = await calculateSha256(file);
+      _print('SHA256 Verification: Calculated=$calculatedSha256, Expected=$expectedSha256');
+      return calculatedSha256 == expectedSha256.toLowerCase();
+    } catch (e) {
+      _print('SHA256 verification error: $e');
+      return false;
+    }
+  }
+
+  // Async SHA256 calculation for large files
+  Future<String> calculateSha256(File file) async {
+    final stream = file.openRead();
+    final digest = await sha256.bind(stream).first;
+    return digest.toString().toLowerCase();
+  }
+
   void _print(String s) {
     if (kDebugMode) print("UPDATESERVICE: " + s);
   }
 
-  // Calculate SHA256 of downloaded file
-  String calculateSha256(File file) {
+  // Calculate SHA256 of downloaded file (keeping original sync version for compatibility)
+  String calculateSha256Sync(File file) {
     final bytes = file.readAsBytesSync();
     final digest = sha256.convert(bytes);
     return digest.toString().toLowerCase();
   }
 
-  // Verify SHA256 against expected value
-  bool verifySha256(File file, String expectedSha256) {
-    final calculatedSha256 = calculateSha256(file);
+  // Verify SHA256 against expected value (keeping original sync version for compatibility)
+  bool verifySha256Sync(File file, String expectedSha256) {
+    final calculatedSha256 = calculateSha256Sync(file);
     _print('SHA256 Verification: Calculated=$calculatedSha256, Expected=$expectedSha256');
     return calculatedSha256 == expectedSha256.toLowerCase();
   }
 
-  // Manual SHA256 verification with user input
+  // Manual SHA256 verification with user input (unchanged)
   bool verifyManualSha256(File file, String userSha256) {
-    final calculatedSha256 = calculateSha256(file);
+    final calculatedSha256 = calculateSha256Sync(file);
     _print('Manual SHA256: Calculated=$calculatedSha256, User=$userSha256');
     return calculatedSha256 == userSha256.toLowerCase().trim();
   }
@@ -340,7 +530,8 @@ class UpdateService {
     return installedVersion != remoteVersion;
   }
 
-  Future<void> installApk(File apkFile, ctx) async {
+  // Original installApk method remains unchanged for compatibility
+  Future<void> installApk(File apkFile, BuildContext ctx) async {
     try {
       if (Platform.isAndroid) {
         _print('Attempting to install APK: ${apkFile.path}');
@@ -367,7 +558,7 @@ class UpdateService {
       }
     } catch (e) {
       _print('APK installation failed: $e');
-      await _showInstallationInstructions(ctx);
+      await _showInstallationInstructions(ctx, "unknown"); // Updated signature
       rethrow; // Re-throw to let the caller handle it
     }
   }
@@ -394,7 +585,8 @@ class UpdateService {
     }
   }
 
-  Future<void> _showInstallationInstructions(BuildContext context) async {
+  // Updated _showInstallationInstructions with version parameter
+  Future<void> _showInstallationInstructions(BuildContext context, String version) async {
     final tempDir = await getTemporaryDirectory();
     final apkFiles = Directory(tempDir.path).listSync().where((file) {
       return file.path.contains('mahakka_update_') && file.path.endsWith('.apk');
@@ -518,7 +710,12 @@ class UpdateService {
 
 // Updated providers using NotifierProvider
 final updateServiceProvider = Provider<UpdateService>((ref) {
-  return UpdateService();
+  final service = UpdateService();
+  // Initialize clean state when the service is first created
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    service.initializeCleanState();
+  });
+  return service;
 });
 
 final updateInfoProvider = NotifierProvider<UpdateInfoNotifier, UpdateInfo>(UpdateInfoNotifier.new);

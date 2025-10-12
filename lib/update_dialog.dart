@@ -208,7 +208,6 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
           // if (_verificationResult.isEmpty && !_isDownloading && !_isVerifying) ...[
           TextButton(
             onPressed: () {
-              ref.read(updateServiceProvider).saveReminderTime();
               Navigator.pop(context);
             },
             child: Text(_laterText, style: TextStyle(color: theme.colorScheme.onSurface)),

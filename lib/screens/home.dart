@@ -250,11 +250,11 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
         }
 
         return Positioned(
-          top: 57,
+          top: 54,
           left: visiblePosition * tabWidth,
           child: Container(
             width: tabWidth,
-            height: 3,
+            height: 6,
             decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(2)),
           ),
         );

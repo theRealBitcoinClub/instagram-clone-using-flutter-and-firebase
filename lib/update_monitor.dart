@@ -13,29 +13,53 @@ class UpdateMonitor extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final updateInfo = ref.watch(updateInfoProvider);
-    final updateService = ref.read(updateServiceProvider);
 
     // Initialize translations
-    final updateAvailableText = ref.watch(autoTranslationTextProvider('Update Available')).value ?? 'Update Available';
-    final updateNowText = ref.watch(autoTranslationTextProvider('Tap here')).value ?? 'Tap here';
-    final updateButton = ref.watch(autoTranslationTextProvider('UPDATE')).value ?? 'UPDATE';
-    final installReadyText = ref.watch(autoTranslationTextProvider('Installation Ready')).value ?? 'Installation Ready';
-    final installNowText = ref.watch(autoTranslationTextProvider('Tap to install')).value ?? 'Tap to install';
-    final installButton = ref.watch(autoTranslationTextProvider('INSTALL')).value ?? 'INSTALL';
+    // final updateAvailableText = ref.watch(autoTranslationTextProvider('Update Available')).value ?? 'Update Available';
+    // final updateNowText = ref.watch(autoTranslationTextProvider('Tap here')).value ?? 'Tap here';
+    // final updateButton = ref.watch(autoTranslationTextProvider('UPDATE')).value ?? 'UPDATE';
+    // final installReadyText = ref.watch(autoTranslationTextProvider('Installation Ready')).value ?? 'Installation Ready';
+    // final installNowText = ref.watch(autoTranslationTextProvider('Tap to install')).value ?? 'Tap to install';
+    // final installButton = ref.watch(autoTranslationTextProvider('INSTALL')).value ?? 'INSTALL';
+
+    final updateAvailableTextAsync = ref.watch(autoTranslationTextProvider('Update Available'));
+    final updateNowTextAsync = ref.watch(autoTranslationTextProvider('Tap here'));
+    final updateButtonAsync = ref.watch(autoTranslationTextProvider('UPDATE'));
+    final installReadyTextAsync = ref.watch(autoTranslationTextProvider('Installation Ready'));
+    final installNowTextAsync = ref.watch(autoTranslationTextProvider('Tap to install'));
+    final installButtonAsync = ref.watch(autoTranslationTextProvider('INSTALL'));
 
     // Check if we should show update snackbar
-    if (updateInfo.updateAvailable && updateService.shouldShowReminder(updateInfo)) {
+    if (updateInfo.isUpdateAvailable &&
+        _areTranslationsReady([
+          updateAvailableTextAsync,
+          updateNowTextAsync,
+          updateButtonAsync,
+          installReadyTextAsync,
+          installNowTextAsync,
+          installButtonAsync,
+        ])) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         final isAlreadyDownloaded = await _isUpdateAlreadyDownloaded(updateInfo.latestVersion);
         if (isAlreadyDownloaded) {
-          _showInstallationSnackBar(context, installReadyText, installNowText, installButton, updateInfo.latestVersion);
+          _showInstallationSnackBar(
+            context,
+            installReadyTextAsync.value!,
+            installNowTextAsync.value!,
+            installButtonAsync.value!,
+            updateInfo.latestVersion,
+          );
         } else {
-          _showUpdateSnackBar(context, updateAvailableText, updateNowText, updateButton);
+          _showUpdateSnackBar(context, updateAvailableTextAsync.value!, updateNowTextAsync.value!, updateButtonAsync.value!);
         }
       });
     }
 
     return const SizedBox.shrink();
+  }
+
+  bool _areTranslationsReady(List<AsyncValue<String?>> translationValues) {
+    return translationValues.every((translation) => translation is AsyncData<String?> && translation.value != null);
   }
 
   Future<bool> _isUpdateAlreadyDownloaded(String latestVersion) async {

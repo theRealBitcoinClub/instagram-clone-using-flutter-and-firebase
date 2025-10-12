@@ -11,61 +11,39 @@ import 'package:http/http.dart' as http;
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class UpdateInfo {
-  final bool updateAvailable;
   final String currentVersion;
   final String latestVersion;
-  final DateTime lastReminderTime;
   final String? expectedSha256;
-  final String detectedAbi;
 
-  UpdateInfo({
-    required this.updateAvailable,
-    required this.currentVersion,
-    required this.latestVersion,
-    required this.lastReminderTime,
-    this.expectedSha256,
-    required this.detectedAbi,
-  });
+  UpdateInfo({required this.currentVersion, required this.latestVersion, this.expectedSha256});
 
-  UpdateInfo copyWith({
-    bool? updateAvailable,
-    String? currentVersion,
-    String? latestVersion,
-    DateTime? lastReminderTime,
-    String? expectedSha256,
-    String? detectedAbi,
-  }) {
+  UpdateInfo copyWith({String? currentVersion, String? latestVersion, String? expectedSha256}) {
     return UpdateInfo(
-      updateAvailable: updateAvailable ?? this.updateAvailable,
       currentVersion: currentVersion ?? this.currentVersion,
       latestVersion: latestVersion ?? this.latestVersion,
-      lastReminderTime: lastReminderTime ?? this.lastReminderTime,
       expectedSha256: expectedSha256 ?? this.expectedSha256,
-      detectedAbi: detectedAbi ?? this.detectedAbi,
     );
+  }
+
+  bool get isUpdateAvailable {
+    return currentVersion != latestVersion;
   }
 
   @override
   String toString() {
     return 'UpdateInfo{'
-        'updateAvailable: $updateAvailable, '
         'currentVersion: $currentVersion, '
         'latestVersion: $latestVersion, '
-        'lastReminderTime: $lastReminderTime, '
         'expectedSha256: $expectedSha256, '
-        'detectedAbi: $detectedAbi'
         '}';
   }
 }
 
 class UpdateService {
   static const String baseUrl = "https://mahakka-apk.vercel.app/";
-  static const String lastUpdateReminderKey = 'last_update_reminder';
-  static const Duration reminderCooldown = Duration(hours: 12);
-  static const Duration checkInterval = Duration(seconds: 300);
+  static const Duration checkInterval = Duration(seconds: 180);
   static const int requiredFreeSpaceMB = 111; // 222MB buffer for APK + app operation
 
   // Build-time ABI - 100% reliable
@@ -76,7 +54,7 @@ class UpdateService {
     return 'arm64-v8a';
   }
 
-  String get currentVersion => "4.3.17-BCH";
+  String get currentVersion => "4.3.26-BCH";
 
   // URL construction using version folders and ABI-specific files
   String getVersionCheckUrl() => '$baseUrl/version.txt';
@@ -112,10 +90,6 @@ class UpdateService {
     try {
       final versionResponse = await http.get(Uri.parse(getVersionCheckUrl()));
 
-      final prefs = await SharedPreferences.getInstance();
-      final lastReminderMillis = prefs.getInt(lastUpdateReminderKey) ?? 0;
-      final lastReminderTime = DateTime.fromMillisecondsSinceEpoch(lastReminderMillis);
-
       if (versionResponse.statusCode == 200) {
         final String latestVersion = versionResponse.body.trim();
         final updateAvailable = _isNewVersionAvailable(currentVersion, latestVersion);
@@ -128,37 +102,13 @@ class UpdateService {
 
         _print('Update check: Current=$currentVersion, Latest=$latestVersion, UpdateAvailable=$updateAvailable, ABI=$currentAbi');
 
-        return UpdateInfo(
-          updateAvailable: updateAvailable,
-          currentVersion: currentVersion,
-          latestVersion: latestVersion,
-          lastReminderTime: lastReminderTime,
-          expectedSha256: expectedSha256,
-          detectedAbi: currentAbi,
-        );
+        return UpdateInfo(currentVersion: currentVersion, latestVersion: latestVersion, expectedSha256: expectedSha256);
       }
 
-      return UpdateInfo(
-        updateAvailable: false,
-        currentVersion: currentVersion,
-        latestVersion: currentVersion,
-        lastReminderTime: lastReminderTime,
-        detectedAbi: currentAbi,
-      );
+      return UpdateInfo(currentVersion: currentVersion, latestVersion: currentVersion);
     } catch (e) {
-      final prefs = await SharedPreferences.getInstance();
-      final lastReminderMillis = prefs.getInt(lastUpdateReminderKey) ?? 0;
-      final lastReminderTime = DateTime.fromMillisecondsSinceEpoch(lastReminderMillis);
-
       _print('Update check error: $e');
-
-      return UpdateInfo(
-        updateAvailable: false,
-        currentVersion: currentVersion,
-        latestVersion: currentVersion,
-        lastReminderTime: lastReminderTime,
-        detectedAbi: currentAbi,
-      );
+      return UpdateInfo(currentVersion: currentVersion, latestVersion: currentVersion);
     }
   }
 
@@ -386,18 +336,6 @@ class UpdateService {
     return calculatedSha256 == userSha256.toLowerCase().trim();
   }
 
-  Future<void> saveReminderTime() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(lastUpdateReminderKey, DateTime.now().millisecondsSinceEpoch);
-  }
-
-  bool shouldShowReminder(UpdateInfo updateInfo) {
-    if (!updateInfo.updateAvailable) return false;
-
-    final timeSinceLastReminder = DateTime.now().difference(updateInfo.lastReminderTime);
-    return timeSinceLastReminder > reminderCooldown;
-  }
-
   bool _isNewVersionAvailable(String installedVersion, String remoteVersion) {
     return installedVersion != remoteVersion;
   }
@@ -596,13 +534,7 @@ class UpdateInfoNotifier extends Notifier<UpdateInfo> {
     final updateService = ref.read(updateServiceProvider);
 
     // Initial state
-    final initialInfo = UpdateInfo(
-      updateAvailable: false,
-      currentVersion: updateService.currentVersion,
-      latestVersion: updateService.currentVersion,
-      lastReminderTime: DateTime.now(),
-      detectedAbi: updateService.currentAbi,
-    );
+    final initialInfo = UpdateInfo(currentVersion: updateService.currentVersion, latestVersion: updateService.currentVersion);
 
     // Set up periodic checking
     _startPeriodicChecks(updateService);
@@ -616,7 +548,9 @@ class UpdateInfoNotifier extends Notifier<UpdateInfo> {
 
     // Initial check
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _performUpdateCheck(updateService);
+      Future.delayed(Duration(seconds: 30), () {
+        _performUpdateCheck(updateService);
+      });
     });
 
     // Periodic checks
@@ -629,7 +563,6 @@ class UpdateInfoNotifier extends Notifier<UpdateInfo> {
     try {
       if (kDebugMode) print('Update check');
       final updateInfo = await updateService.checkForUpdates();
-
       if (kDebugMode) print('Update result: $updateInfo');
       state = updateInfo;
     } catch (e) {

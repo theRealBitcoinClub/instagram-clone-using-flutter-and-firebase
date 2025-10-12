@@ -21,6 +21,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
   bool _isDownloading = false;
   bool _isVerifying = false;
   bool _showManualCheck = false;
+  bool _hasError = false;
   double _downloadProgress = 0.0;
   final TextEditingController _sha256Controller = TextEditingController();
   String _verificationResult = '';
@@ -62,6 +63,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
     // Initialize translations in build method since it's reactive
     _initializeTranslations();
 
+    var isErrorState = _verificationResult.contains('failed') || _hasError;
     return AlertDialog(
       backgroundColor: theme.dialogBackgroundColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -112,16 +114,13 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
               padding: EdgeInsets.all(12),
               margin: EdgeInsets.only(top: 12),
               decoration: BoxDecoration(
-                color: _verificationResult.contains('failed') ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                color: isErrorState ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: _verificationResult.contains('failed') ? Colors.red : Colors.green),
+                border: Border.all(color: isErrorState ? Colors.red : Colors.green),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    _verificationResult.contains('failed') ? Icons.error_outline : Icons.check_circle,
-                    color: _verificationResult.contains('failed') ? Colors.red : Colors.green,
-                  ),
+                  Icon(isErrorState ? Icons.error_outline : Icons.check_circle, color: isErrorState ? Colors.red : Colors.green),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(_verificationResult, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface)),
@@ -261,12 +260,14 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
       _isDownloading = true;
       _downloadProgress = 0.0;
       _verificationResult = '';
+      _hasError = false;
     });
 
     final updateService = ref.read(updateServiceProvider);
     final updateInfo = ref.read(updateInfoProvider);
 
     await updateService.downloadAndInstallApk(
+      latestVersion: updateInfo.latestVersion,
       onProgress: (bytes, total) {
         setState(() {
           _downloadProgress = bytes / total;
@@ -296,6 +297,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
           _isDownloading = false;
           _isVerifying = false;
           _verificationResult = error;
+          _hasError = true;
         });
       },
       expectedSha256: updateInfo.expectedSha256,

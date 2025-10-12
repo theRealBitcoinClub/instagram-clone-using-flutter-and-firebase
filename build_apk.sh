@@ -37,7 +37,7 @@ if [ ! -f "$ORIGINAL_APK_PATH" ]; then
 fi
 
 # Define new APK name
-NEW_APK_NAME="mahakka_com-${VERSION_NAME}-${VERSION_CODE}.apk"
+NEW_APK_NAME="mahakka_com-${VERSION_NAME}.apk"
 NEW_APK_PATH="build/app/outputs/flutter-apk/${NEW_APK_NAME}"
 
 # Rename the APK file

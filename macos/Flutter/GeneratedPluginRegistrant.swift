@@ -13,8 +13,11 @@ import flutter_avif_macos
 import flutter_inappwebview_macos
 import flutter_secure_storage_macos
 import isar_community_flutter_libs
+import location
+import open_file_mac
 import package_info_plus
 import path_provider_foundation
+import phone_info
 import share_plus
 import shared_preferences_foundation
 import sqflite_darwin
@@ -31,8 +34,11 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   InAppWebViewFlutterPlugin.register(with: registry.registrar(forPlugin: "InAppWebViewFlutterPlugin"))
   FlutterSecureStoragePlugin.register(with: registry.registrar(forPlugin: "FlutterSecureStoragePlugin"))
   IsarFlutterLibsPlugin.register(with: registry.registrar(forPlugin: "IsarFlutterLibsPlugin"))
+  LocationPlugin.register(with: registry.registrar(forPlugin: "LocationPlugin"))
+  OpenFilePlugin.register(with: registry.registrar(forPlugin: "OpenFilePlugin"))
   FPPPackageInfoPlusPlugin.register(with: registry.registrar(forPlugin: "FPPPackageInfoPlusPlugin"))
   PathProviderPlugin.register(with: registry.registrar(forPlugin: "PathProviderPlugin"))
+  PhoneInfoPlugin.register(with: registry.registrar(forPlugin: "PhoneInfoPlugin"))
   SharePlusMacosPlugin.register(with: registry.registrar(forPlugin: "SharePlusMacosPlugin"))
   SharedPreferencesPlugin.register(with: registry.registrar(forPlugin: "SharedPreferencesPlugin"))
   SqflitePlugin.register(with: registry.registrar(forPlugin: "SqflitePlugin"))

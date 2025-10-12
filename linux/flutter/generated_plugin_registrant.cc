@@ -9,6 +9,8 @@
 #include <flutter_avif_linux/flutter_avif_linux_plugin.h>
 #include <flutter_secure_storage_linux/flutter_secure_storage_linux_plugin.h>
 #include <isar_community_flutter_libs/isar_flutter_libs_plugin.h>
+#include <open_file_linux/open_file_linux_plugin.h>
+#include <phone_info/phone_info_plugin.h>
 #include <url_launcher_linux/url_launcher_plugin.h>
 
 void fl_register_plugins(FlPluginRegistry* registry) {
@@ -21,6 +23,12 @@ void fl_register_plugins(FlPluginRegistry* registry) {
   g_autoptr(FlPluginRegistrar) isar_community_flutter_libs_registrar =
       fl_plugin_registry_get_registrar_for_plugin(registry, "IsarFlutterLibsPlugin");
   isar_flutter_libs_plugin_register_with_registrar(isar_community_flutter_libs_registrar);
+  g_autoptr(FlPluginRegistrar) open_file_linux_registrar =
+      fl_plugin_registry_get_registrar_for_plugin(registry, "OpenFileLinuxPlugin");
+  open_file_linux_plugin_register_with_registrar(open_file_linux_registrar);
+  g_autoptr(FlPluginRegistrar) phone_info_registrar =
+      fl_plugin_registry_get_registrar_for_plugin(registry, "PhoneInfoPlugin");
+  phone_info_plugin_register_with_registrar(phone_info_registrar);
   g_autoptr(FlPluginRegistrar) url_launcher_linux_registrar =
       fl_plugin_registry_get_registrar_for_plugin(registry, "UrlLauncherPlugin");
   url_launcher_plugin_register_with_registrar(url_launcher_linux_registrar);

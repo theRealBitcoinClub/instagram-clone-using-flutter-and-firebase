@@ -228,6 +228,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
             type: IAB.success,
             icon: Icons.copy_outlined,
           ),
+          SizedBox(width: 1),
           IconAction(text: "SHARE", onTap: () => _shareAddress(addressToShow), type: IAB.alternative, icon: Icons.share_outlined),
         ],
       ),

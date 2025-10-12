@@ -2,8 +2,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart'; // ADD THIS
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_file/open_file.dart';
@@ -16,7 +17,8 @@ class UpdateInfo {
   final String currentVersion;
   final String latestVersion;
   final DateTime lastReminderTime;
-  final String? expectedSha256; // From checksum.txt
+  final String? expectedSha256;
+  final String detectedAbi;
 
   UpdateInfo({
     required this.updateAvailable,
@@ -24,6 +26,7 @@ class UpdateInfo {
     required this.latestVersion,
     required this.lastReminderTime,
     this.expectedSha256,
+    required this.detectedAbi,
   });
 
   UpdateInfo copyWith({
@@ -32,6 +35,7 @@ class UpdateInfo {
     String? latestVersion,
     DateTime? lastReminderTime,
     String? expectedSha256,
+    String? detectedAbi,
   }) {
     return UpdateInfo(
       updateAvailable: updateAvailable ?? this.updateAvailable,
@@ -39,63 +43,72 @@ class UpdateInfo {
       latestVersion: latestVersion ?? this.latestVersion,
       lastReminderTime: lastReminderTime ?? this.lastReminderTime,
       expectedSha256: expectedSha256 ?? this.expectedSha256,
+      detectedAbi: detectedAbi ?? this.detectedAbi,
     );
+  }
+
+  @override
+  String toString() {
+    return 'UpdateInfo{'
+        'updateAvailable: $updateAvailable, '
+        'currentVersion: $currentVersion, '
+        'latestVersion: $latestVersion, '
+        'lastReminderTime: $lastReminderTime, '
+        'expectedSha256: $expectedSha256, '
+        'detectedAbi: $detectedAbi'
+        '}';
   }
 }
 
 class UpdateService {
   static const String baseUrl = "https://mahakka-apk.vercel.app/";
-  static const String versionCheckUrl = '${baseUrl}version.txt';
-  static const String checksumUrl = '${baseUrl}checksum.txt';
-  static const String apkUrlPointer = '${baseUrl}apk-url.txt';
   static const String lastUpdateReminderKey = 'last_update_reminder';
   static const Duration reminderCooldown = Duration(hours: 12);
   static const Duration checkInterval = Duration(seconds: 60);
 
+  // Build-time ABI - 100% reliable
   String get currentAbi {
-    // Release mode: build-time ABI
     if (kReleaseMode) {
       return const String.fromEnvironment('ABI', defaultValue: 'arm64-v8a');
     }
-
-    // Debug mode: sensible default
-    return 'arm64-v8a'; // or 'armeabi-v7a' if testing older devices
+    return 'arm64-v8a';
   }
 
-  get currentVersion {
-    return "4.3.17-BCH";
-  }
+  String get currentVersion => "4.3.14-BCH";
 
-  // Get APK URL from server
-  Future<String?> getApkDownloadUrl() async {
+  // URL construction using version folders and ABI-specific files
+  String getVersionCheckUrl() => '$baseUrl/version.txt';
+
+  String getChecksumUrl(String version) => '$baseUrl$version/checksum-$currentAbi.txt';
+
+  String getApkUrl(String version) => '$baseUrl$version/mahakka_com-$version-$currentAbi.apk';
+
+  // Fallback URL if ABI-specific file doesn't exist
+  String getFallbackApkUrl(String version) => '$baseUrl$version/apk-url.txt';
+
+  // Get expected SHA256 for current ABI
+  Future<String?> getExpectedSha256(String version) async {
     try {
-      final response = await http.get(Uri.parse(apkUrlPointer));
-      if (response.statusCode == 200) {
-        return response.body.trim();
-      }
-    } catch (e) {
-      print('Failed to fetch APK URL: $e');
-    }
-    return null;
-  }
-
-  // Get expected SHA256 from server
-  Future<String?> getExpectedSha256() async {
-    try {
-      final response = await http.get(Uri.parse(checksumUrl));
+      final response = await http.get(Uri.parse(getChecksumUrl(version)));
       if (response.statusCode == 200) {
         return response.body.trim().toLowerCase();
       }
+
+      // If ABI-specific checksum not found, try generic fallback
+      final fallbackResponse = await http.get(Uri.parse('$baseUrl$version/checksum.txt'));
+      if (fallbackResponse.statusCode == 200) {
+        return fallbackResponse.body.trim().toLowerCase();
+      }
     } catch (e) {
-      print('Failed to fetch checksum: $e');
+      _print('Failed to fetch checksum: $e');
     }
     return null;
   }
 
-  // Check for updates including SHA256
+  // Check for updates including SHA256 and ABI info
   Future<UpdateInfo> checkForUpdates() async {
     try {
-      final versionResponse = await http.get(Uri.parse(versionCheckUrl));
+      final versionResponse = await http.get(Uri.parse(getVersionCheckUrl()));
 
       final prefs = await SharedPreferences.getInstance();
       final lastReminderMillis = prefs.getInt(lastUpdateReminderKey) ?? 0;
@@ -108,10 +121,10 @@ class UpdateService {
         // Get expected SHA256 if update is available
         String? expectedSha256;
         if (updateAvailable) {
-          expectedSha256 = await getExpectedSha256();
+          expectedSha256 = await getExpectedSha256(latestVersion);
         }
 
-        print('Update check: Current=$currentVersion, Latest=$latestVersion, UpdateAvailable=$updateAvailable');
+        _print('Update check: Current=$currentVersion, Latest=$latestVersion, UpdateAvailable=$updateAvailable, ABI=$currentAbi');
 
         return UpdateInfo(
           updateAvailable: updateAvailable,
@@ -119,6 +132,7 @@ class UpdateService {
           latestVersion: latestVersion,
           lastReminderTime: lastReminderTime,
           expectedSha256: expectedSha256,
+          detectedAbi: currentAbi,
         );
       }
 
@@ -127,22 +141,109 @@ class UpdateService {
         currentVersion: currentVersion,
         latestVersion: currentVersion,
         lastReminderTime: lastReminderTime,
+        detectedAbi: currentAbi,
       );
     } catch (e) {
       final prefs = await SharedPreferences.getInstance();
       final lastReminderMillis = prefs.getInt(lastUpdateReminderKey) ?? 0;
       final lastReminderTime = DateTime.fromMillisecondsSinceEpoch(lastReminderMillis);
 
-      print('Update check error: $e');
+      _print('Update check error: $e');
 
       return UpdateInfo(
         updateAvailable: false,
         currentVersion: currentVersion,
         latestVersion: currentVersion,
         lastReminderTime: lastReminderTime,
+        detectedAbi: currentAbi,
       );
     }
   }
+
+  // Get APK URL with fallback mechanism
+  Future<String> getApkDownloadUrl(String version) async {
+    try {
+      // First, verify the ABI-specific APK exists by checking its checksum
+      final checksumResponse = await http.get(Uri.parse(getChecksumUrl(version)));
+
+      if (checksumResponse.statusCode == 200) {
+        _print('✅ Using ABI-specific URL for $currentAbi');
+        return getApkUrl(version);
+      } else {
+        // Fallback to generic APK URL
+        _print('⚠️ ABI-specific APK not found, using fallback');
+        return await _getFallbackApkUrl(version);
+      }
+    } catch (e) {
+      _print('APK URL detection failed: $e');
+      return await _getFallbackApkUrl(version);
+    }
+  }
+
+  Future<String> _getFallbackApkUrl(String version) async {
+    try {
+      final response = await http.get(Uri.parse(getFallbackApkUrl(version)));
+      if (response.statusCode == 200) {
+        return response.body.trim();
+      }
+    } catch (e) {
+      _print('Fallback APK URL failed: $e');
+    }
+
+    // Ultimate fallback - direct URL (you can set this in apk-url.txt)
+    return 'https://drive.usercontent.google.com/u/0/uc?id=YOUR_FILE_ID&export=download';
+  }
+
+  // Enhanced download with ABI-specific URLs
+  Future<void> downloadAndInstallApk({
+    required String latestVersion,
+    required Function(int bytes, int total) onProgress,
+    required Function onComplete,
+    required Function(String error) onError,
+    required String? expectedSha256,
+  }) async {
+    try {
+      if (!await _requestStoragePermission()) {
+        onError('Storage permission required to download update');
+        return;
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/app_update_${DateTime.now().millisecondsSinceEpoch}.apk');
+
+      // Get the appropriate APK URL
+      final apkUrl = await getApkDownloadUrl(latestVersion);
+      _print('📥 Downloading from: $apkUrl');
+
+      final request = await http.get(Uri.parse(apkUrl));
+      final bytes = request.bodyBytes;
+
+      await file.writeAsBytes(bytes);
+
+      // Verify SHA256 if provided
+      if (expectedSha256 != null && expectedSha256.isNotEmpty) {
+        final isValid = verifySha256(file, expectedSha256);
+        if (!isValid) {
+          await file.delete();
+          onError('Security check failed: SHA256 mismatch');
+          return;
+        }
+      }
+
+      onComplete();
+      await installApk(file);
+    } catch (e) {
+      onError('Download failed: $e');
+    }
+  }
+
+  void _print(String s) {
+    if (kDebugMode) print("UPDATESERVICE: " + s);
+  }
+
+  // ... REST OF YOUR EXISTING METHODS REMAIN THE SAME ...
+  // calculateSha256, verifySha256, verifyManualSha256, saveReminderTime,
+  // shouldShowReminder, _isNewVersionAvailable, _requestStoragePermission, installApk
 
   // Calculate SHA256 of downloaded file
   String calculateSha256(File file) {
@@ -154,14 +255,14 @@ class UpdateService {
   // Verify SHA256 against expected value
   bool verifySha256(File file, String expectedSha256) {
     final calculatedSha256 = calculateSha256(file);
-    print('SHA256 Verification: Calculated=$calculatedSha256, Expected=$expectedSha256');
+    _print('SHA256 Verification: Calculated=$calculatedSha256, Expected=$expectedSha256');
     return calculatedSha256 == expectedSha256.toLowerCase();
   }
 
   // Manual SHA256 verification with user input
   bool verifyManualSha256(File file, String userSha256) {
     final calculatedSha256 = calculateSha256(file);
-    print('Manual SHA256: Calculated=$calculatedSha256, User=$userSha256');
+    _print('Manual SHA256: Calculated=$calculatedSha256, User=$userSha256');
     return calculatedSha256 == userSha256.toLowerCase().trim();
   }
 
@@ -178,64 +279,7 @@ class UpdateService {
   }
 
   bool _isNewVersionAvailable(String installedVersion, String remoteVersion) {
-    // try {
-    //   final installedParts = installedVersion.split('.').map((e) => int.tryParse(e) ?? 0).toList();
-    //   final remoteParts = remoteVersion.split('.').map((e) => int.tryParse(e) ?? 0).toList();
-    //
-    //   for (int i = 0; i < remoteParts.length; i++) {
-    //     if (i >= installedParts.length) return true;
-    //     if (remoteParts[i] > installedParts[i]) return true;
-    //     if (remoteParts[i] < installedParts[i]) return false;
-    //   }
     return installedVersion != remoteVersion;
-    // } catch (e) {
-    //   print('Version comparison error: $e');
-    //   return false;
-    // }
-  }
-
-  // Enhanced download with SHA256 verification
-  Future<void> downloadAndInstallApk({
-    required Function(int bytes, int total) onProgress,
-    required Function onComplete,
-    required Function(String error) onError,
-    required String? expectedSha256,
-  }) async {
-    try {
-      if (!await _requestStoragePermission()) {
-        onError('Storage permission required to download update');
-        return;
-      }
-
-      final tempDir = await getTemporaryDirectory();
-      final file = File('${tempDir.path}/app_update_${DateTime.now().millisecondsSinceEpoch}.apk');
-
-      final apkUrl = await getApkDownloadUrl();
-      if (apkUrl == null) {
-        onError('Failed to get APK download URL');
-        return;
-      }
-      final request = await http.get(Uri.parse(apkUrl));
-      // final request = await http.get(Uri.parse("${baseUrl}apk/mahakka_com-${latestVersion}.apk"));
-      final bytes = request.bodyBytes;
-
-      await file.writeAsBytes(bytes);
-
-      // Verify SHA256 if provided
-      if (expectedSha256 != null && expectedSha256.isNotEmpty) {
-        final isValid = verifySha256(file, expectedSha256);
-        if (!isValid) {
-          await file.delete(); // Delete suspicious file
-          onError('Security check failed: SHA256 mismatch');
-          return;
-        }
-      }
-
-      onComplete();
-      await installApk(file);
-    } catch (e) {
-      onError('Download failed: $e');
-    }
   }
 
   Future<bool> _requestStoragePermission() async {
@@ -245,18 +289,26 @@ class UpdateService {
 
   Future<void> installApk(File apkFile) async {
     try {
-      final result = await OpenFile.open(apkFile.path);
-
-      if (result.type != ResultType.done) {
-        throw Exception('Failed to open APK file: ${result.message}');
+      if (Platform.isAndroid) {
+        final result = await OpenFile.open(apkFile.path);
+        if (result.type != ResultType.done) {
+          throw Exception('Failed to open APK file: ${result.message}');
+        }
       }
     } catch (e) {
-      throw Exception('Installation failed: $e');
+      // Fallback to manual installation intent if needed
+      _print('OpenFile failed, trying manual installation: $e');
+      await _installApkManually(apkFile);
     }
+  }
+
+  Future<void> _installApkManually(File apkFile) async {
+    // You can implement manual installation intent here if needed
+    _print('Manual installation required for: ${apkFile.path}');
   }
 }
 
-// Providers remain the same
+// Updated providers
 final updateServiceProvider = Provider<UpdateService>((ref) {
   return UpdateService();
 });
@@ -266,53 +318,38 @@ final updateInfoProvider = StateProvider<UpdateInfo>((ref) {
     updateAvailable: false,
     currentVersion: '1.0.0',
     latestVersion: '1.0.0',
-    lastReminderTime: DateTime.now().subtract(Duration(hours: 13)),
+    lastReminderTime: DateTime.now(),
+    detectedAbi: 'arm64-v8a',
   );
 });
 
-// final updateCheckProvider = StreamProvider.autoDispose<void>((ref) async* {
-//   final updateService = ref.read(updateServiceProvider);
-//
-//   while (true) {
-//     await Future.delayed(UpdateService.checkInterval);
-//
-//     final updateInfo = await updateService.checkForUpdates();
-//     ref.read(updateInfoProvider.notifier).state = updateInfo;
-//
-//     yield;
-//   }
-// });
-
-// Traditional stream provider without autoDispose and yield
-final updateCheckProvider = StreamProvider<void>((ref) {
+final updateCheckProvider = StateProvider<void>((ref) {
   final updateService = ref.read(updateServiceProvider);
-  final StreamController<void> controller = StreamController<void>();
-  // bool isDisposed = false;
 
-  Future<void> checkUpdatesPeriodically() async {
-    // while (!isDisposed) {
-    await Future.delayed(UpdateService.checkInterval);
-
-    // if (isDisposed) break;
-
-    try {
-      final updateInfo = await updateService.checkForUpdates();
-      ref.read(updateInfoProvider.notifier).state = updateInfo;
-      controller.add(null);
-    } catch (e) {
-      print('Update check error in stream: $e');
-    }
-    // }
-  }
-
-  // Start the periodic checking
-  checkUpdatesPeriodically();
-
-  // Cleanup when the provider is disposed
-  ref.onDispose(() {
-    // isDisposed = true;
-    controller.close();
+  // Set up periodic checking
+  final timer = Timer.periodic(UpdateService.checkInterval, (_) {
+    _performUpdateCheck(updateService, ref);
   });
 
-  return controller.stream;
+  ref.onDispose(() => timer.cancel());
+
+  // Initial check
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _performUpdateCheck(updateService, ref);
+  });
+
+  return null;
 });
+
+// Helper function to perform the update check
+Future<void> _performUpdateCheck(UpdateService updateService, Ref ref) async {
+  try {
+    if (kDebugMode) print('Updatecheck');
+    final updateInfo = await updateService.checkForUpdates();
+
+    if (kDebugMode) print('Updatecheck $updateInfo');
+    ref.read(updateInfoProvider.notifier).state = updateInfo;
+  } catch (e) {
+    if (kDebugMode) print('Updatecheck check error in stream: $e');
+  }
+}

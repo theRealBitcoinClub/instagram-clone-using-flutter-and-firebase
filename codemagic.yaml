@@ -46,7 +46,7 @@ workflows:
           echo "🔢 Version Code: $VERSION_CODE"
 
           # Set custom APK name with hyphens
-          CUSTOM_APK_NAME="mahakka-com-${VERSION_NAME}-${VERSION_CODE}.apk"
+          CUSTOM_APK_NAME="mahakka-com-${VERSION_NAME}.apk"
           echo "🏷️ Custom APK Name: $CUSTOM_APK_NAME"
 
           echo "🔍 Debug: Environment variables check..."

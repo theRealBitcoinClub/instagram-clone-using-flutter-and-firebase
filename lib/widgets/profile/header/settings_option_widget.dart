@@ -46,12 +46,12 @@ class SettingsOptionWidget extends ConsumerWidget {
         : onSelect;
 
     return SimpleDialogOption(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 21, vertical: 12),
       onPressed: onPressedCallback,
       child: Row(
         children: [
           Icon(icon, color: color, size: 24),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Text(displayText, style: theme.textTheme.bodyLarge?.copyWith(color: color, letterSpacing: 1)),
         ],
       ),

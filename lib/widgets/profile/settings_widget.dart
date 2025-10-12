@@ -7,6 +7,7 @@ import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
+import 'package:mahakka/system_information_dialog.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/views_taggable/widgets/qr_code_dialog.dart';
 import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
@@ -55,6 +56,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   static const String _replayIntroText = "INTRO";
   static const String _backupText = "BACKUP";
   static const String _logoutText = "LOGOUT";
+  static const String _analyticsText = "ANALYZE";
   static const String _nameHintText = "Name";
   static const String _bioHintText = "Bio/Text";
   static const String _imgurHintText = "e.g. https://i.imgur.com/X32JJS.jpg";
@@ -318,6 +320,14 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             onSelect: _logout,
             isDestructive: true,
             isEnabled: allowLogout,
+          ),
+          const Divider(),
+          SettingsOptionWidget(
+            theme: theme,
+            icon: Icons.analytics_outlined,
+            text: _analyticsText,
+            dialogContext: context,
+            onSelect: () => showSystemInformationDialog(context),
           ),
         ],
       ),

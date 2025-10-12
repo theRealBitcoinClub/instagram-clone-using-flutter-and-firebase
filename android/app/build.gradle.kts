@@ -29,8 +29,8 @@ val flutterCompileSdkVersion = 36
 val flutterMinSdkVersion = 27
 val flutterTargetSdkVersion = 36
 val flutterNdkVersion = "27.0.12077973"
-val flutterVersionCode = 2025101106
-val flutterVersionName = "4.3.14-BCH"
+val flutterVersionCode = 2025101109
+val flutterVersionName = "4.3.17-BCH"
 
 android {
     namespace = "com.mahakka"
@@ -111,13 +111,16 @@ android {
                 signingConfigs.getByName("debug")
             }
 
-            // Optional: Add proguard rules for release build
             isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+            isShrinkResources = true
+            //proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro") // CHANGED to optimize version
         }
 
         debug {
             signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

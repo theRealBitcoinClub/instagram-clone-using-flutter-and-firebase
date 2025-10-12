@@ -11,6 +11,7 @@ import 'package:mahakka/firebase_options.dart';
 import 'package:mahakka/provider/isar_provider.dart';
 import 'package:mahakka/route%20handling/auth_page.dart';
 import 'package:mahakka/theme_provider.dart';
+import 'package:mahakka/update_monitor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
@@ -120,7 +121,12 @@ class MyApp extends ConsumerWidget {
             debugShowCheckedModeBanner: false,
             title: 'mahakka.com',
             theme: loadedThemeState.currentTheme,
-            home: const AuthPage(),
+            home: Stack(
+              children: [
+                const AuthPage(), // Your main content
+                const UpdateMonitor(), // Update monitoring overlay
+              ],
+            ),
           );
         },
         loading: () {

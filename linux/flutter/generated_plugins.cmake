@@ -6,6 +6,8 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_avif_linux
   flutter_secure_storage_linux
   isar_community_flutter_libs
+  open_file_linux
+  phone_info
   url_launcher_linux
 )
 

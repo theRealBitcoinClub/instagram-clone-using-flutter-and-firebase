@@ -253,7 +253,9 @@ class GalleryActionButtonRow extends ConsumerWidget {
               child: Row(
                 children: [
                   IconAction(flex: 4, text: "RESET", onTap: () => resetSelection(ref), type: IAB.cancel, icon: Icons.refresh),
+                  SizedBox(width: 1),
                   IconAction(flex: 3, text: "LINK", onTap: () => _shareImage(cid), type: IAB.alternative, icon: Icons.link),
+                  SizedBox(width: 1),
                   IconAction(
                     flex: 4,
                     text: "PUBLISH",
@@ -270,6 +272,7 @@ class GalleryActionButtonRow extends ConsumerWidget {
               child: Row(
                 children: [
                   IconAction(text: "CANCEL", onTap: () => Navigator.of(context).pop(), type: IAB.cancel, icon: Icons.cancel_outlined),
+                  SizedBox(width: 1),
                   IconAction(text: "CREATE", onTap: () => _createNewIpfsPin(context), type: IAB.success, icon: Icons.upload_outlined),
                 ],
               ),

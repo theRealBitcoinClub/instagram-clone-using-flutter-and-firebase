@@ -179,6 +179,7 @@ class _UrlConfirmationDialog extends StatelessWidget {
                     type: IAB.alternative,
                     icon: Icons.share_outlined,
                   ),
+                  SizedBox(width: 1),
                   IconAction(
                     text: "yes",
                     size: 12,

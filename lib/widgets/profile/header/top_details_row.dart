@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
+import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/profile/header/stat_widget.dart';
@@ -30,6 +31,9 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    var text = !isOwnProfile ? "Gift" : 'Settings';
+    text = ref.watch(autoTranslationTextProvider(text)).value ?? text;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 15, 15, 12),
       child: Row(
@@ -51,7 +55,7 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: SettingsButtonUniversal(
                     buttonType: ButtonType.outlined,
-                    text: !isOwnProfile ? "Send Tip" : 'Profile/Settings',
+                    text: text,
                     onPressed: isOwnProfile ? onProfileButtonPressed : () => _showTipDialog(context, theme, creator),
                   ),
                 ),

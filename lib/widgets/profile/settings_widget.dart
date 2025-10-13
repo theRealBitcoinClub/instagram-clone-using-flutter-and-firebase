@@ -16,6 +16,7 @@ import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:mahakka/widgets/muted_creators_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../main.dart';
 import '../../provider/profile_data_model_provider.dart';
 import '../../provider/translation_service.dart';
 import '../../provider/user_provider.dart';
@@ -103,7 +104,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   }
 
   void _initAllowLogout() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    SharedPreferences prefs = ref.read(sharedPreferencesProvider);
     if (mounted) {
       setState(() {
         allowLogout = prefs.getBool(_mnemonicBackupKey) ?? false;

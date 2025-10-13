@@ -90,7 +90,7 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
         return;
       }
 
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = ref.read(sharedPreferencesProvider);
       await prefs.setStringList(_mutedCreatorsKey + userId, newMutedCreators);
 
       state = newMutedCreators;
@@ -116,7 +116,7 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
 
     try {
       final newMutedCreators = state.where((id) => id != creatorId).toList();
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = ref.read(sharedPreferencesProvider);
       await prefs.setStringList(_mutedCreatorsKey + userId, newMutedCreators);
       state = newMutedCreators;
 

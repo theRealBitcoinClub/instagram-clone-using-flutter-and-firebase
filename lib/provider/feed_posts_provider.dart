@@ -3,6 +3,7 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/providers/token_limits_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../main.dart';
 import '../memo/firebase/post_service_feed.dart';
 import '../repositories/feed_post_cache.dart';
 import '../repositories/post_repository.dart';
@@ -134,7 +135,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
 
   Future<void> _initSharedPreferences() async {
     try {
-      _prefs = await SharedPreferences.getInstance();
+      _prefs = _ref.read(sharedPreferencesProvider);
       print('FPPR:💾 SharedPreferences initialized');
     } catch (e, s) {
       print('FPPR:❌ SharedPreferences initialization ERROR: $e');

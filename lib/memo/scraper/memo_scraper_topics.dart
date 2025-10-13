@@ -13,6 +13,7 @@ import 'package:mahakka/memo_data_checker.dart';
 import 'package:mahakka/youtube_video_checker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../main.dart';
 import '../firebase/topic_service.dart';
 
 class MemoScraperTopic {
@@ -27,7 +28,7 @@ class MemoScraperTopic {
   /// [startOffset]: Starting offset for pagination
   /// [endOffset]: Ending offset for pagination
   Future<void> startScrapeTopics(String cacheId, int startOffset, int endOffset) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = ref.read(sharedPreferencesProvider);
     final topicService = TopicService();
     final postService = PostScraperFirebaseService();
 
@@ -149,7 +150,7 @@ class MemoScraperTopic {
         }
 
         final topicKey = "$keyTopic$cacheId${topic.url}";
-        (await SharedPreferences.getInstance()).setString(topicKey, topic.postCount.toString());
+        (ref.read(sharedPreferencesProvider)).setString(topicKey, topic.postCount.toString());
         // Clear posts to free memory (they're already persisted)
         // topic.posts.clear();
       } catch (e) {

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../main.dart';
 import '../memo/scraper/memo_scraper_tag.dart';
 import '../memo/scraper/memo_scraper_topics.dart';
 
@@ -29,7 +30,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     _print("BGS: 🚀 Initializing and starting timer! 🎯");
 
     // Initialize SharedPreferences
-    _prefs = await SharedPreferences.getInstance();
+    _prefs = ref.read(sharedPreferencesProvider);
 
     // Check if we should run scraping based on last scrape time
     if (_shouldRunScraping()) {

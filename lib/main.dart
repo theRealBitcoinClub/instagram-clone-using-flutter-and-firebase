@@ -19,7 +19,7 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
 });
 
 final sharedPreferencesInitializerProvider = FutureProvider<SharedPreferences>((ref) async {
-  return await SharedPreferences.getInstance();
+  return ref.read(sharedPreferencesProvider);
 });
 
 final languageCodeProvider = StateProvider<String>((ref) {
@@ -71,34 +71,15 @@ class SystemLanguage {
 }
 
 void main() async {
-  // Handle Flutter errors silently
-  // FlutterError.onError = (details) {
-  //   print('Flutter error silenced: ${details.exception}');
-  // };
-  //
-  // // Handle Dart errors
-  // PlatformDispatcher.instance.onError = (error, stack) {
-  //   print('Dart error silenced: $error');
-  //   return true; // Prevents default error handling
-  // };
-  // Load .env file
   await dotenv.load(fileName: "telegram.env");
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // runApp(const ProviderScope(child: MyApp()));
-  // Initialize SharedPreferences before running the app
   final sharedPreferences = await SharedPreferences.getInstance();
-  // Initialize providers before running the app
-  // final container = ProviderContainer();
-
-  // Create ONE container
   final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(sharedPreferences)]);
-  // await container.read(muteCreatorProvider.notifier).initialize(sharedPreferences);
 
   runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
-  // runApp(ProviderScope(overrides: [sharedPreferencesProvider.overrideWithValue(sharedPreferences)], child: const MyApp()));
 }
 
 class MyApp extends ConsumerWidget {

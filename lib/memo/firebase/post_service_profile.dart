@@ -7,6 +7,7 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../config.dart';
+import '../../main.dart';
 import '../../repositories/profile_post_cache.dart';
 
 class PostServiceProfile {
@@ -26,7 +27,7 @@ class PostServiceProfile {
 
     try {
       final postCache = ref.read(profilePostCacheProvider);
-      final sharedPrefs = await SharedPreferences.getInstance();
+      final sharedPrefs = ref.read(sharedPreferencesProvider);
       final countKey = '${limit}_post_count_$creatorId';
 
       final currentCount = await _getPostCountByCreatorId(creatorId);

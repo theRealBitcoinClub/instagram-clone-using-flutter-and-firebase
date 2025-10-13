@@ -7,8 +7,8 @@ import 'package:mahakka/memo/firebase/post_scraper_firebase_service.dart';
 import 'package:mahakka/memo/firebase/tag_service.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../main.dart';
 import '../model/memo_model_post.dart';
 import 'memo_post_scraper.dart';
 
@@ -31,7 +31,7 @@ class MemoScraperTag {
   Future<void> startScrapeTags(List<String> orderBy, int startOffset, int endOffset) async {
     for (String order in orderBy) {
       for (int offset = startOffset; offset >= endOffset; offset -= 25) {
-        final prefs = await SharedPreferences.getInstance();
+        final prefs = ref.read(sharedPreferencesProvider);
         // check if the first tag has changed
         final sampleTags = await scrapeTags(order, offset);
         if (sampleTags.isEmpty) continue;
@@ -72,7 +72,7 @@ class MemoScraperTag {
 
   /// Filters tags to find only those with new posts
   Future<List<MemoModelTag>> _filterTagsWithNewPosts(List<MemoModelTag> allTags) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = ref.read(sharedPreferencesProvider);
 
     final List<MemoModelTag> tagsWithNewPosts = [];
 
@@ -91,7 +91,7 @@ class MemoScraperTag {
   }
 
   Future<void> persistPostcountAfterSuccessfulScrape(MemoModelTag tag) async {
-    var prefs = await SharedPreferences.getInstance();
+    var prefs = ref.read(sharedPreferencesProvider);
     await prefs.setString("$prefskey$cacheId${tag.name}", tag.postCount.toString());
   }
 

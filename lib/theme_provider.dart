@@ -1,9 +1,9 @@
 // lib/theme_provider.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'app_themes.dart'; // Your theme definitions
+import 'app_themes.dart';
+import 'main.dart'; // Your theme definitions
 
 // State class for theme (optional but good for clarity if more state is added)
 class ThemeState {
@@ -16,15 +16,16 @@ class ThemeState {
 final ThemeState defaultThemeState = ThemeState(currentTheme: darkTheme, isDarkMode: true);
 
 class ThemeNotifier extends StateNotifier<AsyncValue<ThemeState>> {
-  ThemeNotifier() : super(const AsyncValue.loading()) {
+  ThemeNotifier(this.ref) : super(const AsyncValue.loading()) {
     _loadThemePreference();
   }
 
+  Ref ref;
   static const String _themePrefKey = 'isDarkMode';
 
   Future<void> _loadThemePreference() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = ref.read(sharedPreferencesProvider);
       final isDarkModePref = prefs.getBool(_themePrefKey) ?? true; // Default to false (light mode)
       state = AsyncValue.data(ThemeState(currentTheme: isDarkModePref ? darkTheme : lightTheme, isDarkMode: isDarkModePref));
     } catch (e, stackTrace) {
@@ -42,7 +43,7 @@ class ThemeNotifier extends StateNotifier<AsyncValue<ThemeState>> {
       state = AsyncValue.data(ThemeState(currentTheme: newIsDarkMode ? darkTheme : lightTheme, isDarkMode: newIsDarkMode));
 
       try {
-        final prefs = await SharedPreferences.getInstance();
+        final prefs = ref.read(sharedPreferencesProvider);
         await prefs.setBool(_themePrefKey, newIsDarkMode);
       } catch (e) {
         print("Error saving theme preference: $e");
@@ -58,7 +59,7 @@ class ThemeNotifier extends StateNotifier<AsyncValue<ThemeState>> {
       state = AsyncValue.data(ThemeState(currentTheme: isDark ? darkTheme : lightTheme, isDarkMode: isDark));
 
       try {
-        final prefs = await SharedPreferences.getInstance();
+        final prefs = ref.read(sharedPreferencesProvider);
         await prefs.setBool(_themePrefKey, isDark);
       } catch (e) {
         print("Error saving theme preference: $e");
@@ -78,7 +79,7 @@ class ThemeNotifier extends StateNotifier<AsyncValue<ThemeState>> {
 // The global provider for ThemeNotifier
 // It will now provide AsyncValue<ThemeState>
 final themeNotifierProvider = StateNotifierProvider<ThemeNotifier, AsyncValue<ThemeState>>((ref) {
-  return ThemeNotifier();
+  return ThemeNotifier(ref);
 });
 // Helper providers to reduce boilerplate
 final themeStateProvider = Provider<ThemeState>((ref) {

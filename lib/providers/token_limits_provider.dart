@@ -7,8 +7,8 @@ import 'package:mahakka/provider/profile_balance_provider.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/providers/scroll_controller_provider.dart';
 import 'package:mahakka/repositories/creator_repository.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../main.dart';
 import '../provider/user_provider.dart';
 
 class TokenLimitConstants {
@@ -236,7 +236,7 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
   }
 
   Future<void> _loadCachedBalance() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = ref.read(sharedPreferencesProvider);
     final cachedBalance = prefs.getInt('cached_balance_token');
     final cachedTimestamp = prefs.getInt('cached_balance_timestamp');
 
@@ -257,7 +257,7 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
   }
 
   Future<void> _saveCachedBalance(int balance) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setInt('cached_balance_token', balance);
     await prefs.setInt('cached_balance_timestamp', DateTime.now().millisecondsSinceEpoch);
     _cachedBalanceForDowngrade = balance;
@@ -266,7 +266,7 @@ class TokenLimitsNotifier extends AsyncNotifier<TokenLimitsState> {
   }
 
   Future<void> _clearCachedBalance() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = ref.read(sharedPreferencesProvider);
     await prefs.remove('cached_balance_token');
     await prefs.remove('cached_balance_timestamp');
     _cachedBalanceForDowngrade = null;

@@ -7,8 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../main.dart';
 import '../provider/user_provider.dart';
 
 // 1. (Optional but good practice) Define a provider for AuthChecker itself
@@ -88,7 +88,7 @@ class AuthChecker {
   }
 
   Future<MemoModelUser?> createUserFromMnemonic() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = _ref.read(sharedPreferencesProvider);
     String? encryptedMnemonic = prefs.getString("encrypted_mnemonic");
 
     if (encryptedMnemonic == null || encryptedMnemonic.isEmpty) return null;
@@ -105,7 +105,7 @@ class AuthChecker {
 
   // Get the mnemonic hash for the current user (if exists)
   Future<String?> getCurrentUserMnemonicHash() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = _ref.read(sharedPreferencesProvider);
     String? encryptedMnemonic = prefs.getString("encrypted_mnemonic");
 
     if (encryptedMnemonic == null || encryptedMnemonic.isEmpty) return null;
@@ -121,7 +121,7 @@ class AuthChecker {
 
   // Get cached mnemonic hash from SharedPreferences (faster, for frequent access)
   Future<String?> getCachedMnemonicHash() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = _ref.read(sharedPreferencesProvider);
     return prefs.getString("mnemonic_hash");
   }
 
@@ -133,7 +133,7 @@ class AuthChecker {
       }
 
       // Encrypt and save to SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = _ref.read(sharedPreferencesProvider);
       String encryptedMnemonic = await _encryptMnemonic(mnemonic);
       await prefs.setString("encrypted_mnemonic", encryptedMnemonic);
 
@@ -156,7 +156,7 @@ class AuthChecker {
 
   Future<String> logOut() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = _ref.read(sharedPreferencesProvider);
       // Remove encrypted mnemonic and cached hash
       await prefs.remove("encrypted_mnemonic");
       await prefs.remove("mnemonic_hash");
@@ -186,13 +186,13 @@ class AuthChecker {
 
   // Check if user is logged in (has a mnemonic)
   Future<bool> isUserLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = _ref.read(sharedPreferencesProvider);
     return prefs.containsKey("encrypted_mnemonic");
   }
 
   // Clear all secure data (for debugging or complete reset)
   Future<void> clearAllSecureData() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = _ref.read(sharedPreferencesProvider);
     await prefs.remove("encrypted_mnemonic");
     await prefs.remove("mnemonic_hash");
     await _secureStorage.delete(key: "encryption_key");

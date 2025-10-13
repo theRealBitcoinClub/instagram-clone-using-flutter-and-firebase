@@ -4,8 +4,8 @@ import 'dart:convert'; // ADD THIS IMPORT
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/utils/snackbar.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../main.dart';
 import 'intro_enums.dart';
 
 final introStateNotifierProvider = StateNotifierProvider<IntroStateNotifier, Map<IntroType, IntroState>>((ref) {
@@ -69,7 +69,7 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
   static const String key = "iiiintroo2";
 
   Future<void> _loadAllIntroStates() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = ref.read(sharedPreferencesProvider);
     final newState = <IntroType, IntroState>{};
 
     for (final introType in IntroType.values) {
@@ -102,7 +102,7 @@ class IntroStateNotifier extends StateNotifier<Map<IntroType, IntroState>> {
   }
 
   Future<void> _saveIntroState(IntroType introType) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = ref.read(sharedPreferencesProvider);
     final introState = state[introType];
 
     if (introState != null) {

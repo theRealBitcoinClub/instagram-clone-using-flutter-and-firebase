@@ -10,8 +10,8 @@ import 'package:mahakka/repositories/creator_repository.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../main.dart';
 import '../../memo/model/memo_model_creator.dart';
 import '../../memo/model/memo_model_user.dart';
 import '../../utils/snackbar.dart';
@@ -48,7 +48,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   }
 
   Future<void> _loadToggleState(BuildContext ctx) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = ref.read(sharedPreferencesProvider);
     _isToggleEnabled = widget.tokenOnly || widget.memoOnly ? false : true;
     // _isToggleEnabled = widget.tokenOnly ? false : (widget.cashtokenAddress != null && widget.cashtokenAddress!.isNotEmpty);
     if (widget.memoOnly) _isToggleEnabled = false;
@@ -73,7 +73,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   }
 
   Future<void> _saveToggleState(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setBool(toggleKey, value);
   }
 

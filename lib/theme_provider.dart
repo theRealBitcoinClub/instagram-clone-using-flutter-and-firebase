@@ -1,6 +1,7 @@
 // lib/theme_provider.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'app_themes.dart';
 import 'main.dart'; // Your theme definitions
@@ -40,6 +41,11 @@ class ThemeNotifier extends StateNotifier<AsyncValue<ThemeState>> {
     // Only proceed if current state is data (not loading or error)
     state.whenData((currentThemeState) async {
       final newIsDarkMode = !currentThemeState.isDarkMode;
+      try {
+        Sentry.addBreadcrumb(
+          Breadcrumb.userInteraction(data: {"newIsDarkMode:": newIsDarkMode}, message: newIsDarkMode.toString(), subCategory: "newIsDarkMode"),
+        );
+      } catch (e) {}
       state = AsyncValue.data(ThemeState(currentTheme: newIsDarkMode ? darkTheme : lightTheme, isDarkMode: newIsDarkMode));
 
       try {

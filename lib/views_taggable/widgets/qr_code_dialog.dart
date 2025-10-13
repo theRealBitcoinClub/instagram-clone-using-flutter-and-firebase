@@ -83,7 +83,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   }
 
   String convertToBchFormat(String? legacyAddress) {
-    if (legacyAddress == null) return "";
+    if (legacyAddress == null || legacyAddress.trim().isEmpty) return "";
 
     const cashAddressHrp = 'bitcoincash';
 
@@ -159,10 +159,12 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     final TextTheme textTheme = theme.textTheme;
     MemoModelCreator? creator = ref.watch(getCreatorProvider(widget.memoProfileId)).value;
     String cashtokenAddress = creator?.bchAddressCashtokenAware ?? "";
-    String? legacyAddress = creator?.id;
+    String legacyAddress = creator?.id ?? "";
 
-    String cashtokenAddressShorter = cashtokenAddress.isNotEmpty ? cashtokenAddress.substring(12) : "";
-    final String addressShorter = _isCashtokenFormat ? cashtokenAddressShorter : convertToBchFormat(legacyAddress).substring(12);
+    String cashtokenAddressShorter = shortenAddress(cashtokenAddress);
+    String legacyAddressShorter = shortenAddress(legacyAddress);
+
+    final String addressShorter = _isCashtokenFormat ? cashtokenAddressShorter : legacyAddressShorter;
     final String addressToShow = _isCashtokenFormat ? cashtokenAddress : convertToBchFormat(legacyAddress);
     final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo";
     final String balanceText = _getBalanceText(_isCashtokenFormat, creator);
@@ -214,6 +216,10 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
         ),
       ),
     );
+  }
+
+  String shortenAddress(String addr) {
+    return addr.isNotEmpty && addr.startsWith("bitcoincash:") ? convertToBchFormat(addr).substring(12) : "";
   }
 
   Container buildActionButtons(BuildContext dialogCtx, String addressToShow) {

@@ -8,6 +8,7 @@ import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
 import 'package:mahakka/widgets/add/language_selector_widget.dart';
 import 'package:mahakka/widgets/burner_balance_widget.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'intros/intro_enums.dart';
 import 'intros/wrapped_animated_intro_target.dart';
@@ -63,6 +64,13 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
 
   Future<void> selectLanguageCode(WidgetRef ref, BuildContext context) async {
     final selectedLangCode = await LanguageSelectorWidget.showLanguageSelector(context: context);
+
+    try {
+      Sentry.addBreadcrumb(
+        Breadcrumb.userInteraction(data: {"selectedLangCode:": selectedLangCode}, message: selectedLangCode, subCategory: "languageselector"),
+      );
+    } catch (e) {}
+
     if (selectedLangCode != null) {
       final success = await setUserLanguage(ref, selectedLangCode);
       MahakkaLanguage selectedLang = MahakkaLanguage.getLanguageByCode(selectedLangCode)!;

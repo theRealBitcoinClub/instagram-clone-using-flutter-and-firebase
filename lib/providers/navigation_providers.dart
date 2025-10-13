@@ -1,8 +1,9 @@
 // lib/provider/navigation_providers.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/utils/snackbar.dart';
+import 'package:mahakka/widgets/add/language_selector_widget.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../provider/user_provider.dart';
 import '../providers/webview_providers.dart';
@@ -32,10 +33,6 @@ class NavigationState {
       isViewingOwnProfile: isViewingOwnProfile ?? this.isViewingOwnProfile,
     );
   }
-
-  // Helper getters
-  // bool get hasProfileTarget => profileTargetId.isNotEmpty;
-  // bool get isProfileTabActive => currentTabIndex == AppTab.profile.tabIndex;
 }
 
 // Navigation state notifier with convenience methods
@@ -45,13 +42,13 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
   NavigationStateNotifier(this._ref) : super(const NavigationState(currentTabIndex: 0));
 
   // Add this helper method to dismiss keyboard
-  void _dismissKeyboard() {
-    // Method 1: System channels approach (most reliable)
-    SystemChannels.textInput.invokeMethod('TextInput.hide');
-
-    // Method 2: Focus scope approach (alternative)
-    // FocusManager.instance.primaryFocus?.unfocus();
-  }
+  // void _dismissKeyboard() {
+  //   // Method 1: System channels approach (most reliable)
+  //   SystemChannels.textInput.invokeMethod('TextInput.hide');
+  //
+  //   // Method 2: Focus scope approach (alternative)
+  //   // FocusManager.instance.primaryFocus?.unfocus();
+  // }
 
   // Main navigation method that handles all scenarios
   void _doNavigate({
@@ -64,7 +61,24 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
     BuildContext? context,
   }) {
     try {
-      _dismissKeyboard();
+      Sentry.addBreadcrumb(
+        Breadcrumb.userInteraction(
+          data: {
+            "profileId:": profileTargetId ?? "null",
+            "tabIndex:": tabIndex.toString(),
+            "webViewTarget:": webViewTarget ?? "null",
+            "webViewValue:": webViewValue ?? "null",
+            "snackbarMessage:": snackbarMessage?.toString(),
+          },
+          message: snackbarMessage,
+          viewId: tabIndex.toString(),
+          subCategory: "navigation",
+        ),
+      );
+    } catch (e) {}
+
+    try {
+      LanguageSelectorDialog.forceDismissKeyboard();
     } catch (e) {}
     bool isOwnProfile = profileTargetId == null || profileTargetId.isEmpty ? true : _ref.read(userProvider)!.id == profileTargetId;
     // Validate tab index
@@ -167,44 +181,6 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
   void navigateBackToFeed() {
     navigateToFeed(); // This includes profile target reset
   }
-
-  // Explicitly reset profile target (useful for edge cases)
-  // void resetProfileTarget() {
-  //   state = state.copyWith(profileTargetId: '');
-  // }
-
-  // ========== BASIC TAB NAVIGATION ==========
-
-  // void setTab(int newIndex) {
-  //   _doNavigate(tabIndex: newIndex);
-  //   // Note: profile target will be auto-reset when leaving profile tab
-  // }
-
-  void nextTab() {
-    // Only navigate through visible tabs
-    final visibleTabs = AppTab.values.where((tab) => tab.isVisibleOnBar).toList();
-    final currentVisibleIndex = _getCurrentVisibleIndex();
-    final newVisibleIndex = (currentVisibleIndex + 1) % visibleTabs.length;
-    final newTabIndex = visibleTabs[newVisibleIndex].tabIndex;
-
-    _doNavigate(tabIndex: newTabIndex);
-  }
-
-  void previousTab() {
-    // Only navigate through visible tabs
-    final visibleTabs = AppTab.values.where((tab) => tab.isVisibleOnBar).toList();
-    final currentVisibleIndex = _getCurrentVisibleIndex();
-    final newVisibleIndex = (currentVisibleIndex - 1 + visibleTabs.length) % visibleTabs.length;
-    final newTabIndex = visibleTabs[newVisibleIndex].tabIndex;
-
-    _doNavigate(tabIndex: newTabIndex);
-  }
-
-  int _getCurrentVisibleIndex() {
-    final visibleTabs = AppTab.values.where((tab) => tab.isVisibleOnBar).toList();
-    final currentTab = AppTab.values.firstWhere((tab) => tab.tabIndex == state.currentTabIndex);
-    return visibleTabs.indexWhere((tab) => tab.tabIndex == currentTab.tabIndex);
-  }
 }
 
 // ========== PROVIDERS ==========
@@ -220,14 +196,6 @@ final profileTargetIdProvider = Provider<String>((ref) {
   return ref.watch(navigationStateProvider).profileTargetId;
 });
 
-// final hasProfileTargetProvider = Provider<bool>((ref) {
-//   return ref.watch(navigationStateProvider).hasProfileTarget;
-// });
-
 final isOwnProfileProvider = Provider<bool>((ref) {
   return ref.watch(navigationStateProvider).isViewingOwnProfile;
 });
-//
-// final isProfileTabActiveProvider = Provider<bool>((ref) {
-//   return ref.watch(navigationStateProvider).isProfileTabActive;
-// });

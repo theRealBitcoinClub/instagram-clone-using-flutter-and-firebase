@@ -384,7 +384,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
           ),
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
-          actions: [AppBarBurnMahakkaTheme.buildThemeIcon(ref, context)],
+          actions: [AppBarBurnMahakkaTheme.buildThemeIcon(ref, context, theme)],
         ),
         body: SafeArea(
           child: Stack(

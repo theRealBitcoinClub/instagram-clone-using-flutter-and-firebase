@@ -29,37 +29,88 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
     MahakkaLanguage lang = MahakkaLanguage.getLanguageByCode(currentLang)!;
 
     return AppBar(
-      centerTitle: true,
       toolbarHeight: height,
       leading: BurnerBalanceWidget(),
       leadingWidth: 153,
-      title: showTitle
-          ? IconButton(
-              onPressed: ref.read(feedScrollControllerProvider.notifier).resetScroll,
-              icon: Icon(Icons.arrow_circle_up_outlined, color: theme.colorScheme.onPrimary.withAlpha(111)),
-            )
-          : null,
-      actions: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {
-              selectLanguageCode(ref, context);
-            },
-            borderRadius: BorderRadius.circular(18.0),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 9.0, vertical: 9.0),
-              child: Text(
-                "${lang.flag}  ${lang.name}",
-                style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.w400),
+      // Remove centerTitle and use flexibleSpace for true centering
+      flexibleSpace: SafeArea(
+        child: Row(
+          children: [
+            SizedBox(width: 153), // Match leadingWidth
+            Expanded(
+              child: showTitle
+                  ? Center(
+                      child: IconButton(
+                        onPressed: ref.read(feedScrollControllerProvider.notifier).resetScroll,
+                        icon: Icon(Icons.arrow_drop_up_outlined, color: theme.colorScheme.onPrimary),
+                      ),
+                    )
+                  : const SizedBox(),
+            ),
+            SizedBox(
+              width: 153, // Approximate width for actions area
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        selectLanguageCode(ref, context);
+                      },
+                      borderRadius: BorderRadius.circular(18.0),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 9.0, vertical: 9.0),
+                        child: Text(
+                          "${lang.flag}  ${lang.name}",
+                          style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.w400),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  buildThemeIcon(ref, context, theme),
+                ],
               ),
             ),
-          ),
+          ],
         ),
-        const SizedBox(width: 6),
-        buildThemeIcon(ref, context),
-      ],
+      ),
+      title: null, // Remove title since we're using flexibleSpace
+      actions: [], // Remove actions since they're in flexibleSpace
     );
+    //   AppBar(
+    //   centerTitle: true,
+    //   toolbarHeight: height,
+    //   leading: BurnerBalanceWidget(),
+    //   leadingWidth: 153,
+    //   title: showTitle
+    //       ? IconButton(
+    //           onPressed: ref.read(feedScrollControllerProvider.notifier).resetScroll,
+    //           icon: Icon(Icons.arrow_circle_up_outlined, color: theme.colorScheme.onPrimary.withAlpha(111)),
+    //         )
+    //       : null,
+    //   actions: [
+    //     Material(
+    //       color: Colors.transparent,
+    //       child: InkWell(
+    //         onTap: () {
+    //           selectLanguageCode(ref, context);
+    //         },
+    //         borderRadius: BorderRadius.circular(18.0),
+    //         child: Padding(
+    //           padding: const EdgeInsets.symmetric(horizontal: 9.0, vertical: 9.0),
+    //           child: Text(
+    //             "${lang.flag}  ${lang.name}",
+    //             style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.w400),
+    //           ),
+    //         ),
+    //       ),
+    //     ),
+    //     const SizedBox(width: 6),
+    //     buildThemeIcon(ref, context),
+    //   ],
+    // );
   }
 
   Future<void> selectLanguageCode(WidgetRef ref, BuildContext context) async {
@@ -84,9 +135,13 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
     }
   }
 
-  static Widget buildThemeIcon(WidgetRef ref, BuildContext context) {
-    var icon = Icon(size: 24, ref.watch(isDarkModeProvider) ? Icons.light_mode_outlined : Icons.dark_mode_outlined);
-    if (ref.read(currentTabIndexProvider) == AppTab.profile.tabIndex)
+  static Widget buildThemeIcon(WidgetRef ref, BuildContext context, theme) {
+    var icon = Icon(
+      size: 24,
+      ref.watch(isDarkModeProvider) ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+      color: theme.colorScheme.onPrimary,
+    );
+    if (ref.read(currentTabIndexProvider) == AppTab.profile.tabIndex) {
       return WrappedAnimatedIntroTarget(
         doNotAnimate: false,
         introType: IntroType.mainApp,
@@ -97,6 +152,7 @@ class AppBarBurnMahakkaTheme extends ConsumerWidget implements PreferredSizeWidg
         },
         child: icon,
       );
+    }
     // return IconButton(padding: EdgeInsets.zero, onPressed: () => ref.read(themeNotifierProvider.notifier).toggleTheme(), icon: icon);
 
     return WrappedAnimatedIntroTarget(

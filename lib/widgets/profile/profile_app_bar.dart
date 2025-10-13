@@ -73,7 +73,7 @@ class ProfileAppBar extends ConsumerWidget implements PreferredSizeWidget {
           overflow: TextOverflow.ellipsis,
         ),
       ),
-      actions: [AppBarBurnMahakkaTheme.buildThemeIcon(ref, context)],
+      actions: [AppBarBurnMahakkaTheme.buildThemeIcon(ref, context, theme)],
     );
   }
 

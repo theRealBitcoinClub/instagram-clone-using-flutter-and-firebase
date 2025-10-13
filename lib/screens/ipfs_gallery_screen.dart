@@ -30,11 +30,11 @@ class IPFSGalleryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedCid = ref.watch(selectedCidProvider);
     final hasSelection = selectedCid != null;
-    var themeData = Theme.of(context);
-    final TextTheme textTheme = themeData.textTheme;
+    var theme = Theme.of(context);
+    final TextTheme textTheme = theme.textTheme;
     final backgroundColor = ref.watch(isDarkModeProvider) ? Colors.black.withAlpha(133) : Colors.white.withAlpha(133);
     final validCids = ipfsCids.reversed.where((cid) => cid.isNotEmpty).toList();
-    var colorScheme = themeData.colorScheme;
+    var colorScheme = theme.colorScheme;
 
     var s = 'Tap image to select or create new one';
     String title = ref.watch(autoTranslationTextProvider(s)).value ?? s;
@@ -46,7 +46,7 @@ class IPFSGalleryScreen extends ConsumerWidget {
         title: Text(hasSelection ? '${selectedCid}' : title, style: textTheme.bodySmall!.copyWith(color: colorScheme.onPrimary)),
         leading: IconButton(icon: const Icon(Icons.cancel_outlined), onPressed: () => closeAndReset(ref, context)),
         actions: [
-          AppBarBurnMahakkaTheme.buildThemeIcon(ref, context),
+          AppBarBurnMahakkaTheme.buildThemeIcon(ref, context, theme),
           if (!hasSelection)
             IconButton(
               icon: Icon(Icons.upload_outlined, color: colorScheme.onPrimary),

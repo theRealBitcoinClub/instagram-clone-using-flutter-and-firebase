@@ -251,8 +251,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             Expanded(
               child: TabBar(
                 controller: _tabController,
-                dividerHeight: 1,
-                dividerColor: theme.dividerColor.withAlpha(122),
+                dividerHeight: 2,
+                dividerColor: theme.dividerColor.withAlpha(153),
                 indicatorSize: TabBarIndicatorSize.tab,
                 labelColor: theme.colorScheme.secondary,
                 unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
@@ -265,7 +265,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
                     bottom: BorderSide(width: 3, style: BorderStyle.solid, color: theme.colorScheme.secondary),
                   ),
                 ),
-                indicatorPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                indicatorPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                 tabs: tabs(),
               ),
             ),
@@ -311,7 +311,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             dialogContext: context,
             onSelect: () => _replayIntros(),
           ),
-          Divider(color: theme.dividerColor.withAlpha(111)),
+          Divider(color: theme.dividerColor.withAlpha(153), thickness: 2),
           SettingsOptionWidget(
             theme: theme,
             icon: Icons.security_outlined,
@@ -328,7 +328,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             isDestructive: true,
             isEnabled: allowLogout,
           ),
-          Divider(color: theme.dividerColor.withAlpha(111)),
+          Divider(color: theme.dividerColor.withAlpha(153), thickness: 2),
           SettingsOptionWidget(
             theme: theme,
             icon: Icons.analytics_outlined,

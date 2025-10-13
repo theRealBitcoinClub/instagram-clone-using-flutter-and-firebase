@@ -22,6 +22,7 @@ import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 import 'package:mahakka/widgets/profile/profile_tab_selector.dart';
 import 'package:mahakka/widgets/profile/settings_widget.dart';
 import 'package:mahakka/widgets/profile/youtube_controller_manager.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../intros/intro_enums.dart';
 import '../intros/intro_overlay.dart';
@@ -55,6 +56,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
   }
 
   void _updateViewMode(int newMode) {
+    Sentry.addBreadcrumb(Breadcrumb(message: "profile viewmode $newMode"));
     if (newMode != _viewMode) {
       setState(() {
         _viewMode = newMode;
@@ -160,6 +162,7 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
     final List<int> availableTabs = [0, 1, 2, 4]; // Your tab indices
     final currentTabIndex = availableTabs.indexOf(_viewMode);
     final newTabIndex = (currentTabIndex + direction).clamp(0, availableTabs.length - 1);
+    Sentry.addBreadcrumb(Breadcrumb(message: "swipe newTabIndex $newTabIndex"));
 
     if (newTabIndex != currentTabIndex) {
       _updateViewMode(availableTabs[newTabIndex]);

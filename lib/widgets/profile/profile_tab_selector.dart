@@ -147,8 +147,15 @@ class _ProfileTabSelectorState extends State<ProfileTabSelector> with SingleTick
         padding: EdgeInsets.zero,
         dividerHeight: 0,
         controller: _tabController,
-        indicator: const BoxDecoration(color: Colors.black26),
+        indicator: BoxDecoration(
+          color: Colors.black.withAlpha(33),
+          border: Border(
+            bottom: BorderSide(color: theme.colorScheme.surface, width: 1),
+            top: BorderSide(color: theme.colorScheme.surface, width: 1.5),
+          ),
+        ),
         indicatorSize: TabBarIndicatorSize.tab,
+        indicatorPadding: EdgeInsetsGeometry.zero,
         labelColor: theme.colorScheme.onPrimary,
         unselectedLabelColor: theme.colorScheme.onPrimary.withAlpha(169),
         onTap: _handleTabTap,

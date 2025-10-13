@@ -85,8 +85,6 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   String convertToBchFormat(String? legacyAddress) {
     if (legacyAddress == null || legacyAddress.trim().isEmpty) return "";
 
-    const cashAddressHrp = 'bitcoincash';
-
     try {
       return BitcoinCashAddress.fromBaseAddress(
         P2pkhAddress.fromAddress(address: legacyAddress, network: BitcoinNetwork.mainnet, type: P2pkhAddressType.p2pkh),
@@ -162,9 +160,8 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     String legacyAddress = creator?.id ?? "";
 
     String cashtokenAddressShorter = shortenAddress(cashtokenAddress);
-    String legacyAddressShorter = shortenAddress(legacyAddress);
 
-    final String addressShorter = _isCashtokenFormat ? cashtokenAddressShorter : legacyAddressShorter;
+    final String addressShorter = _isCashtokenFormat ? cashtokenAddressShorter : legacyAddress;
     final String addressToShow = _isCashtokenFormat ? cashtokenAddress : convertToBchFormat(legacyAddress);
     final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo";
     final String balanceText = _getBalanceText(_isCashtokenFormat, creator);

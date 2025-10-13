@@ -98,7 +98,8 @@ class _IntroOverlayState extends ConsumerState<IntroOverlay> with SingleTickerPr
     }
 
     final content = introState.currentStep.content;
-    final displayText = introState.isStepTriggered(introState.currentStep) ? content.triggeredText : content.initText;
+    bool stepTriggered = introState.isStepTriggered(introState.currentStep);
+    final displayText = stepTriggered ? content.triggeredText : content.initText;
 
     return GestureDetector(
       onTap: _nextStep,
@@ -108,14 +109,14 @@ class _IntroOverlayState extends ConsumerState<IntroOverlay> with SingleTickerPr
           child: AnimatedBuilder(
             animation: _opacityAnimation,
             builder: (context, child) => Opacity(opacity: _opacityAnimation.value, child: child),
-            child: _buildStepContent(introState, displayText),
+            child: _buildStepContent(introState, displayText, stepTriggered),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStepContent(IntroState introState, String displayText) {
+  Widget _buildStepContent(IntroState introState, String displayText, bool stepTriggered) {
     final screenSize = MediaQuery.of(context).size;
     final content = introState.currentStep.content;
     final absolutePosition = content.target.getAbsolutePosition(screenSize);
@@ -125,7 +126,7 @@ class _IntroOverlayState extends ConsumerState<IntroOverlay> with SingleTickerPr
     return Stack(
       children: [
         _buildTextContent(displayText, currentIndex, steps.length),
-        _buildFingerPointer(absolutePosition, content.target),
+        if (!stepTriggered) _buildFingerPointer(absolutePosition, content.target, stepTriggered),
         _buildSkipButton(),
       ],
     );
@@ -200,7 +201,7 @@ class _IntroOverlayState extends ConsumerState<IntroOverlay> with SingleTickerPr
     );
   }
 
-  Widget _buildFingerPointer(Offset position, IntroTarget target) {
+  Widget _buildFingerPointer(Offset position, IntroTarget target, hasTriggered) {
     return Positioned(
       left: position.dx - 30,
       top: position.dy - 30,

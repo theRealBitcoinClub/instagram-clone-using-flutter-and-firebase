@@ -76,9 +76,9 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       // Tab(icon: Icon(Icons.account_circle_outlined), text: 'Creator'),
       // Tab(icon: Icon(Icons.currency_bitcoin_rounded), text: 'Tips'),
       // Tab(icon: Icon(Icons.settings), text: 'User'),
-      Tab(height: 64, icon: Icon(Icons.account_circle_outlined, size: 36)),
-      Tab(height: 64, icon: Icon(Icons.currency_bitcoin_rounded, size: 36)),
-      Tab(height: 64, icon: Icon(Icons.settings, size: 36)),
+      Tab(height: 69, icon: Icon(Icons.account_circle_outlined, size: 33)),
+      Tab(height: 69, icon: Icon(Icons.currency_bitcoin_rounded, size: 33)),
+      Tab(height: 69, icon: Icon(Icons.settings, size: 33)),
     ];
   }
 
@@ -245,7 +245,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   Widget _buildDialogHeader(ThemeData theme) {
     return Container(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        padding: const EdgeInsets.all(0),
         child: Row(
           children: [
             Expanded(
@@ -254,11 +254,17 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
                 dividerHeight: 1,
                 dividerColor: theme.dividerColor.withAlpha(122),
                 indicatorSize: TabBarIndicatorSize.tab,
-                labelColor: theme.colorScheme.primary,
+                labelColor: theme.colorScheme.secondary,
                 unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
                 unselectedLabelStyle: theme.textTheme.labelMedium,
                 labelStyle: theme.textTheme.labelMedium!.copyWith(fontWeight: FontWeight.bold),
-                indicator: BoxDecoration(color: theme.colorScheme.onSurface.withAlpha(12)),
+                indicator: BoxDecoration(
+                  color: theme.colorScheme.onSurface.withAlpha(12),
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                  border: Border(
+                    bottom: BorderSide(width: 3, style: BorderStyle.solid, color: theme.colorScheme.secondary),
+                  ),
+                ),
                 indicatorPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 2),
                 tabs: tabs(),
               ),
@@ -305,7 +311,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             dialogContext: context,
             onSelect: () => _replayIntros(),
           ),
-          const Divider(),
+          Divider(color: theme.dividerColor.withAlpha(111)),
           SettingsOptionWidget(
             theme: theme,
             icon: Icons.security_outlined,
@@ -322,7 +328,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             isDestructive: true,
             isEnabled: allowLogout,
           ),
-          const Divider(),
+          Divider(color: theme.dividerColor.withAlpha(111)),
           SettingsOptionWidget(
             theme: theme,
             icon: Icons.analytics_outlined,
@@ -337,7 +343,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
   Widget _buildGeneralTab(ThemeData theme) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(0),
+      padding: const EdgeInsets.only(top: 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -445,8 +451,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
               child: Consumer(
                 builder: (context, ref, child) {
                   final displayName = _getTipAmountDisplayName(amount);
-                  final translatedDisplayName = ref.watch(autoTranslationTextProvider(displayName));
-                  return Text(translatedDisplayName.value ?? displayName);
+                  // final translatedDisplayName = ref.watch(autoTranslationTextProvider(displayName));
+                  return Text(displayName);
                 },
               ),
             );
@@ -472,7 +478,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   String _getTipAmountDisplayName(TipAmount amount) {
     final String name = amount.name[0].toUpperCase() + amount.name.substring(1);
     final formattedValue = amount.value.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
-    return "$name ($formattedValue satoshis)";
+    return "$name ($formattedValue sats)";
   }
 
   void _onSavePressed() {

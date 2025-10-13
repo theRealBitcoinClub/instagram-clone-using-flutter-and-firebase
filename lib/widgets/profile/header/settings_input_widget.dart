@@ -29,7 +29,7 @@ class SettingsInputWidget extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.only(top: 3),
-            child: Icon(icon, color: theme.colorScheme.onSurface.withOpacity(0.7), size: 27),
+            child: Icon(icon, color: theme.colorScheme.onSurface.withOpacity(0.7), size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(

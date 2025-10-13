@@ -6,12 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:location/location.dart';
 import 'package:mahakka/provider/translation_service.dart';
+import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/providers/token_limits_provider.dart';
 import 'package:mahakka/repositories/creator_repository.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/update_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:phone_info/phone_info.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
 // Add this import for your custom phone info plugin
@@ -343,6 +345,13 @@ class _SystemInformationDialogState extends ConsumerState<SystemInformationDialo
     if (_systemInfo.isNotEmpty) {
       // Use the non-deprecated SharePlus method
       SharePlus.instance.share(ShareParams(text: _systemInfo, title: 'Mahakka System Report'));
+      Sentry.captureMessage(_systemInfo, level: SentryLevel.info);
+      Sentry.captureEvent(
+        SentryEvent(
+          message: SentryMessage(_systemInfo),
+          user: SentryUser(id: ref.read(userProvider)!.id),
+        ),
+      );
       print(_systemInfo);
     }
   }

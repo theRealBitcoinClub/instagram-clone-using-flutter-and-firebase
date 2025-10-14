@@ -17,6 +17,7 @@ class MnemonicBackupWidget extends ConsumerStatefulWidget {
 
 class _MnemonicBackupWidgetState extends ConsumerState<MnemonicBackupWidget> {
   late final List<String> _mnemonicWords;
+  late final String _mnemonicBackupKey;
   bool _didAttemptConfirm = false;
 
   // DRY text constants
@@ -32,19 +33,19 @@ class _MnemonicBackupWidgetState extends ConsumerState<MnemonicBackupWidget> {
   static const String _lastWordLabel = "Last Word";
   static const String _incorrectFirstWord = "Incorrect first word.";
   static const String _incorrectLastWord = "Incorrect last word.";
-  static const String _cancelText = "CANCEL";
-  static const String _confirmText = "CONFIRM";
 
   @override
   void initState() {
     super.initState();
     _mnemonicWords = widget.mnemonic.split(' ');
+    _mnemonicBackupKey = widget.mnemonicBackupKey;
   }
 
   void _showVerificationDialog(BuildContext context) {
     final _firstWordCtrl = TextEditingController();
     final _lastWordCtrl = TextEditingController();
     final _formKey = GlobalKey<FormState>();
+    final sharedPrefsProvider = ref.read(sharedPreferencesProvider);
 
     showDialog(
       context: context,
@@ -116,7 +117,7 @@ class _MnemonicBackupWidgetState extends ConsumerState<MnemonicBackupWidget> {
                     onTap: () {
                       _didAttemptConfirm = true;
                       if (_formKey.currentState!.validate()) {
-                        ref.read(sharedPreferencesProvider).setBool(widget.mnemonicBackupKey, true);
+                        sharedPrefsProvider.setBool(_mnemonicBackupKey, true);
                         Navigator.of(dialogContext).pop();
                       }
                     },

@@ -207,7 +207,7 @@ class _IntroOverlayState extends ConsumerState<IntroOverlay> with SingleTickerPr
       top: position.dy - 30,
       child: Transform.rotate(
         angle: target.rotation,
-        child: const Icon(Icons.arrow_circle_up_sharp, size: 90, color: Colors.white),
+        child: const Icon(Icons.arrow_upward_rounded, size: 72, color: Colors.white),
       ),
     );
   }

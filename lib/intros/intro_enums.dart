@@ -197,14 +197,14 @@ class IntroTarget {
   const IntroTarget({required this.position, required this.rotation, this.width = 50, this.height = 50});
 
   // Predefined targets
-  static const topRight = IntroTarget(position: Offset(0.84, 0.05), rotation: 0.3);
+  static const topRight = IntroTarget(position: Offset(0.87, 0.05), rotation: 0.3);
   static const topLeft = IntroTarget(position: Offset(0.10, 0.05), rotation: 5.7);
   static const profileSettings = IntroTarget(position: Offset(0.6, 0.20), rotation: 0);
   static const profileStats = IntroTarget(position: Offset(0.4, 0.1), rotation: 1.5);
 
-  static const bottomCenter = IntroTarget(position: Offset(0.45, 0.72), rotation: 3.10);
+  static const bottomCenter = IntroTarget(position: Offset(0.45, 0.75), rotation: 3.10);
 
-  static const bottomRight = IntroTarget(position: const Offset(0.76, 0.72), rotation: 3.0);
+  static const bottomRight = IntroTarget(position: const Offset(0.76, 0.75), rotation: 3.0);
 
   Offset getAbsolutePosition(Size screenSize) {
     return Offset(position.dx * screenSize.width, position.dy * screenSize.height);

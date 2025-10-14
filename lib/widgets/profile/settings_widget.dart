@@ -88,7 +88,6 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
     _tabController = TabController(length: tabs().length, vsync: this);
     _tabController.addListener(_handleTabSelection);
-    _initAllowLogout();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tabController.index = widget.initialTab.index;
@@ -105,11 +104,9 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
   void _initAllowLogout() async {
     SharedPreferences prefs = ref.read(sharedPreferencesProvider);
-    if (mounted) {
-      setState(() {
-        allowLogout = prefs.getBool(_mnemonicBackupKey) ?? false;
-      });
-    }
+    setState(() {
+      allowLogout = prefs.getBool(_mnemonicBackupKey) ?? false;
+    });
   }
 
   void _initializeControllers(MemoModelCreator creator, MemoModelUser user) {
@@ -138,6 +135,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     final theme = Theme.of(context);
     final user = ref.watch(userProvider)!;
     _mnemonicBackupKey = 'mnemonic_backup_verified${user.id}';
+    _initAllowLogout();
 
     final profileDataAsync = ref.watch(profileDataNotifier);
 
@@ -325,7 +323,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             text: _logoutText,
             dialogContext: context,
             onSelect: _logout,
-            isDestructive: true,
+            isLogout: true,
             isEnabled: allowLogout,
           ),
           Divider(color: theme.dividerColor.withAlpha(153), thickness: 2),
@@ -597,13 +595,9 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       builder: (ctx) => MnemonicBackupWidget(
         mnemonic: user.mnemonic,
         onVerificationComplete: () {
-          SharedPreferences.getInstance().then((prefs) {
-            prefs.setBool(_mnemonicBackupKey, true);
-            if (mounted) {
-              setState(() {
-                allowLogout = true;
-              });
-            }
+          setState(() {
+            ref.read(sharedPreferencesProvider).setBool(_mnemonicBackupKey, true);
+            allowLogout = true;
           });
         },
       ),

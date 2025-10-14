@@ -9,7 +9,7 @@ class SettingsOptionWidget extends ConsumerWidget {
   final String text;
   final BuildContext dialogContext;
   final VoidCallback onSelect;
-  final bool isDestructive;
+  final bool isLogout;
   final bool isEnabled;
 
   const SettingsOptionWidget({
@@ -19,7 +19,7 @@ class SettingsOptionWidget extends ConsumerWidget {
     required this.text,
     required this.dialogContext,
     required this.onSelect,
-    this.isDestructive = false,
+    this.isLogout = false,
     this.isEnabled = true,
   });
 
@@ -35,15 +35,19 @@ class SettingsOptionWidget extends ConsumerWidget {
   }
 
   Widget _buildContent(BuildContext context, String displayText, ref) {
-    final baseColor = isDestructive ? theme.colorScheme.error : (theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface);
-    final color = isEnabled ? baseColor.withAlpha(222) : baseColor.withAlpha(153);
+    // final baseColor = isLogout ? theme.colorScheme.error : (theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface);
+    // final color = isEnabled ? baseColor.withAlpha(222) : baseColor.withAlpha(153);
+    // final baseColor = isLogout ? theme.colorScheme.error : (theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface);
+    final color = isEnabled ? theme.colorScheme.onSurface.withAlpha(222) : theme.colorScheme.onSurface.withAlpha(153);
 
     final onPressedCallback = isEnabled
         ? () {
             Navigator.of(dialogContext).pop();
             onSelect();
           }
-        : onSelect;
+        : () {
+            onSelect();
+          };
 
     return SimpleDialogOption(
       padding: const EdgeInsets.symmetric(horizontal: 21, vertical: 12),

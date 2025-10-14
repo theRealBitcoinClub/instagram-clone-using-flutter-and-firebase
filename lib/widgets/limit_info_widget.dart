@@ -126,7 +126,7 @@ class LimitInfoWidget extends ConsumerWidget {
     return Center(
       child: Container(
         clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(6)),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(9)),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -138,6 +138,7 @@ class LimitInfoWidget extends ConsumerWidget {
               type: IAB.cancel,
               icon: Icons.support_agent_outlined,
             ),
+            SizedBox(width: 1),
             IconAction(
               text: 'Swap',
               onTap: () {
@@ -146,6 +147,7 @@ class LimitInfoWidget extends ConsumerWidget {
               type: IAB.alternative,
               icon: Icons.swap_horizontal_circle_outlined,
             ),
+            SizedBox(width: 1),
             IconAction(
               text: 'Deposit',
               onTap: () {

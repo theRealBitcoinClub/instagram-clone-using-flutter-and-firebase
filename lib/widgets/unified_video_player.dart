@@ -317,7 +317,7 @@ class _UnifiedVideoPlayerState extends ConsumerState<UnifiedVideoPlayer> {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   ),
                   icon: Icon(Icons.open_in_browser, size: 20),
-                  label: Text('Open in Browser', style: _textTheme.bodyMedium),
+                  label: Text('Open in Browser', style: _textTheme.bodyMedium!.copyWith(color: _theme.colorScheme.onPrimary)),
                 ),
               ],
             ),

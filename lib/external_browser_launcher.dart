@@ -168,7 +168,8 @@ class _UrlConfirmationDialog extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  IconAction(text: "cancel", size: 12, onTap: () => Navigator.of(context).pop(), type: IAB.cancel, icon: Icons.cancel_outlined),
+                  IconAction(text: "no", size: 12, onTap: () => Navigator.of(context).pop(), type: IAB.cancel, icon: Icons.cancel_outlined),
+                  SizedBox(width: 1),
                   IconAction(
                     text: "share",
                     size: 12,

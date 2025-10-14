@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:battery_plus/battery_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -312,16 +313,61 @@ class _SystemInformationDialogState extends ConsumerState<SystemInformationDialo
       buffer.writeln('Architecture: ${_phoneInfo?['architecture'] ?? 'N/A'}');
       buffer.writeln('Device ID: ${_phoneInfo?['deviceId'] ?? 'N/A'}');
 
-      // Battery info
-      final batteryInfo = await PhoneInfoPlugin.getBatteryInfo();
-      buffer.writeln('Battery Level: ${batteryInfo['level'] ?? 'N/A'}%');
-      buffer.writeln('Battery Status: ${batteryInfo['status'] ?? 'N/A'}');
+      // Use battery_plus package for reliable battery info
+      final battery = Battery();
+      try {
+        final batteryLevel = await battery.batteryLevel;
+        final batteryStatus = await battery.batteryState;
+        final isInSaveMode = await battery.isInBatterySaveMode;
+
+        buffer.writeln('Battery Level: $batteryLevel%');
+        buffer.writeln('Battery Status: ${_formatBatteryStatus(batteryStatus)}');
+        buffer.writeln('Battery Save Mode: $isInSaveMode');
+      } catch (e) {
+        buffer.writeln('Battery Info: Error - ${e.toString()}');
+      }
+
       buffer.writeln();
     } catch (e) {
       buffer.writeln('Device Info: Error - ${e.toString()}');
       buffer.writeln();
     }
   }
+
+  String _formatBatteryStatus(BatteryState status) {
+    switch (status) {
+      case BatteryState.charging:
+        return 'Charging';
+      case BatteryState.discharging:
+        return 'Discharging';
+      case BatteryState.full:
+        return 'Full';
+      case BatteryState.unknown:
+      default:
+        return 'Unknown';
+    }
+  }
+  // Future<void> appendDeviceInfo(StringBuffer buffer) async {
+  //   try {
+  //     _phoneInfo = await PhoneInfoPlugin.getPhoneInfo();
+  //     buffer.writeln('=== DEVICE INFORMATION ===');
+  //     buffer.writeln('Device: ${_phoneInfo?['deviceName'] ?? 'N/A'}');
+  //     buffer.writeln('Manufacturer: ${_phoneInfo?['manufacturer'] ?? 'N/A'}');
+  //     buffer.writeln('Model: ${_phoneInfo?['model'] ?? 'N/A'}');
+  //     buffer.writeln('OS Version: ${_phoneInfo?['osVersion'] ?? 'N/A'}');
+  //     buffer.writeln('Architecture: ${_phoneInfo?['architecture'] ?? 'N/A'}');
+  //     buffer.writeln('Device ID: ${_phoneInfo?['deviceId'] ?? 'N/A'}');
+  //
+  //     // Battery info
+  //     final batteryInfo = await PhoneInfoPlugin.getBatteryInfo();
+  //     buffer.writeln('Battery Level: ${batteryInfo['level'] ?? 'N/A'}%');
+  //     buffer.writeln('Battery Status: ${batteryInfo['status'] ?? 'N/A'}');
+  //     buffer.writeln();
+  //   } catch (e) {
+  //     buffer.writeln('Device Info: Error - ${e.toString()}');
+  //     buffer.writeln();
+  //   }
+  // }
 
   Future<void> appendLocationInfo(StringBuffer buffer) async {
     try {

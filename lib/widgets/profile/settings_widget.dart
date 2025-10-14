@@ -71,7 +71,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   static const String _profileFailedText = "Profile/Tips failed:";
   static const String _onChainCostText = "Name, text and image are stored on-chain, that costs memo fee!";
   static const String _addFundsText = "Add funds to your balance!";
-  static const List<String> _tabTitles = ["Profile", "Donations", "Settings"];
+  static const List<String> _tabTitles = ["Profile", "Donation", "Settings"];
 
   List<Widget> tabs() {
     return const [

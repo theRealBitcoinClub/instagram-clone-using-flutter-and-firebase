@@ -181,7 +181,7 @@ class _IntroOverlayState extends ConsumerState<IntroOverlay> with SingleTickerPr
                 (index) => Container(
                   width: 8,
                   height: 8,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: currentIndex == index ? Colors.white : Colors.white.withOpacity(0.5),
@@ -191,9 +191,12 @@ class _IntroOverlayState extends ConsumerState<IntroOverlay> with SingleTickerPr
             ),
             const SizedBox(height: 16),
             // Animated Subline
-            _AnimatedTranslationText(
-              text: "Touch where the arrow indicates to continue",
-              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, fontStyle: FontStyle.italic),
+            Padding(
+              padding: EdgeInsetsGeometry.symmetric(horizontal: 27),
+              child: _AnimatedTranslationText(
+                text: "Touch where the arrow indicates to continue",
+                style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, fontStyle: FontStyle.italic),
+              ),
             ),
           ],
         ),

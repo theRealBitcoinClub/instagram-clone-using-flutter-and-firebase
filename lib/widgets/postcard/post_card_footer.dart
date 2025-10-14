@@ -156,9 +156,16 @@ class PostCardFooter extends ConsumerWidget {
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               const SizedBox(width: 2),
-              Text(
-                post.topicId,
-                style: theme.textTheme.bodyLarge?.copyWith(color: hasSelectedTopic ? color : color2, fontWeight: FontWeight.normal),
+              SizedBox(
+                width: 288,
+                child: Text(
+                  post.topicId,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: hasSelectedTopic ? color : color2,
+                    fontWeight: FontWeight.normal,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
             ],
           ),

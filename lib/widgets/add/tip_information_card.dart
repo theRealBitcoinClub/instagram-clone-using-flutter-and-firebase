@@ -41,7 +41,7 @@ class TipInformationCard extends ConsumerWidget {
         (user.temporaryTipAmount != null && user.temporaryTipAmount != user.tipAmountEnumPersistent) ||
         (user.temporaryTipReceiver != null && user.temporaryTipReceiver != user.tipReceiverPersistent);
 
-    var s = 'Custom donation ' + (isPostCreationNotReply ? '' : '& receiver ') + 'for this post only';
+    var s = 'Custom donation ${isPostCreationNotReply ? '' : '& receiver '}for this post only';
     var customTipTranslated = ref.watch(autoTranslationTextProvider(s)).value ?? s;
 
     var t = 'Donation Total';

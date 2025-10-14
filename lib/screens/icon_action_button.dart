@@ -12,7 +12,6 @@ class IconAction extends ConsumerWidget {
   final VoidCallback onTap;
   final IAB type;
   final IconData icon;
-  final bool skipTranslation;
   final int flex;
   final bool disabled; // New boolean parameter to disable the button
   final String? disabledMessage; // New parameter for snackbar message when disabled
@@ -24,7 +23,6 @@ class IconAction extends ConsumerWidget {
     required this.onTap,
     required this.type,
     required this.icon,
-    this.skipTranslation = false,
     this.flex = 1,
     this.disabled = false, // Default to false (enabled)
     this.disabledMessage, // Optional disabled message
@@ -62,7 +60,7 @@ class IconAction extends ConsumerWidget {
     }
 
     // Get translated text or fallback to original
-    var displayText = skipTranslation ? text : ref.watch(autoTranslationTextProvider(text)).value ?? text;
+    var displayText = ref.watch(autoTranslationTextProvider(text)).value ?? text;
     // displayText = displayText.split(" ")[0];
 
     return Expanded(

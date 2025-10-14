@@ -1,7 +1,18 @@
 // models/cached_translation_db.dart
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:isar_community/isar.dart';
 
 part 'cached_translation_db.g.dart';
+
+// Helper function to generate a hash key for cache
+String shaCacheKey(String text, String targetLang) {
+  final key = '$text|$targetLang';
+  final bytes = utf8.encode(key);
+  final digest = sha256.convert(bytes);
+  return digest.toString();
+}
 
 @Collection()
 class CachedTranslationDb {
@@ -26,8 +37,8 @@ class CachedTranslationDb {
   }
 
   // Public static method to generate cache key
-  static String generateCacheKey(String postId, String languageCode) {
-    return 'asdf$postId|$languageCode';
+  static String generateCacheKey(String key, String languageCode) {
+    return key.length > 60 ? shaCacheKey(key, languageCode) : '$key|$languageCode';
   }
 
   @override

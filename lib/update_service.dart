@@ -43,7 +43,7 @@ class UpdateInfo {
 
 class UpdateService {
   static const String baseUrl = "https://mahakka-apk.vercel.app/";
-  static const Duration checkInterval = Duration(seconds: 180);
+  static const Duration checkInterval = Duration(seconds: 90);
   static const int requiredFreeSpaceMB = 111; // 222MB buffer for APK + app operation
 
   // Build-time ABI - 100% reliable
@@ -745,7 +745,7 @@ class UpdateInfoNotifier extends Notifier<UpdateInfo> {
 
     // Initial check
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(Duration(seconds: 30), () {
+      Future.delayed(Duration(seconds: 15), () {
         _performUpdateCheck(updateService);
       });
     });

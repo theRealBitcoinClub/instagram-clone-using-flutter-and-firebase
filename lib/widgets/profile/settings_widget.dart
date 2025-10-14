@@ -88,6 +88,8 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
     _tabController = TabController(length: tabs().length, vsync: this);
     _tabController.addListener(_handleTabSelection);
+    _mnemonicBackupKey = 'mnemonic_backup_verified${ref.read(userProvider)!.id}';
+    _initAllowLogout();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tabController.index = widget.initialTab.index;
@@ -102,7 +104,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     }
   }
 
-  void _initAllowLogout() async {
+  void _initAllowLogout() {
     SharedPreferences prefs = ref.read(sharedPreferencesProvider);
     setState(() {
       allowLogout = prefs.getBool(_mnemonicBackupKey) ?? false;
@@ -134,9 +136,6 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final user = ref.watch(userProvider)!;
-    _mnemonicBackupKey = 'mnemonic_backup_verified${user.id}';
-    _initAllowLogout();
-
     final profileDataAsync = ref.watch(profileDataNotifier);
 
     return profileDataAsync.when(
@@ -592,15 +591,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     final user = ref.read(userProvider)!;
     showDialog(
       context: context,
-      builder: (ctx) => MnemonicBackupWidget(
-        mnemonic: user.mnemonic,
-        onVerificationComplete: () {
-          setState(() {
-            ref.read(sharedPreferencesProvider).setBool(_mnemonicBackupKey, true);
-            allowLogout = true;
-          });
-        },
-      ),
+      builder: (ctx) => MnemonicBackupWidget(mnemonic: user.mnemonic, mnemonicBackupKey: _mnemonicBackupKey),
     );
   }
 

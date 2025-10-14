@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
 
+import '../../main.dart';
 import '../../provider/translation_service.dart';
 
 class MnemonicBackupWidget extends ConsumerStatefulWidget {
   final String mnemonic;
-  final VoidCallback onVerificationComplete;
+  final String mnemonicBackupKey;
 
-  const MnemonicBackupWidget({Key? key, required this.mnemonic, required this.onVerificationComplete}) : super(key: key);
+  const MnemonicBackupWidget({Key? key, required this.mnemonic, required this.mnemonicBackupKey}) : super(key: key);
 
   @override
   ConsumerState<MnemonicBackupWidget> createState() => _MnemonicBackupWidgetState();
@@ -115,8 +116,8 @@ class _MnemonicBackupWidgetState extends ConsumerState<MnemonicBackupWidget> {
                     onTap: () {
                       _didAttemptConfirm = true;
                       if (_formKey.currentState!.validate()) {
+                        ref.read(sharedPreferencesProvider).setBool(widget.mnemonicBackupKey, true);
                         Navigator.of(dialogContext).pop();
-                        widget.onVerificationComplete();
                       }
                     },
                   ),

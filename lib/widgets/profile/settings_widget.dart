@@ -49,6 +49,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
   late TabController _tabController;
   int _currentTabIndex = 0;
+  // String _selectedTabTitle = "Profile";
 
   // DRY text constants
   static const String _closeDialogText = "CLOSE";
@@ -70,6 +71,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   static const String _profileFailedText = "Profile/Tips failed:";
   static const String _onChainCostText = "Name, text and image are stored on-chain, that costs memo fee!";
   static const String _addFundsText = "Add funds to your balance!";
+  static const List<String> _tabTitles = ["Profile", "Donations", "Settings"];
 
   List<Widget> tabs() {
     return const [
@@ -100,6 +102,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     if (_tabController.indexIsChanging) {
       setState(() {
         _currentTabIndex = _tabController.index;
+        // _selectedTabTitle = _tabTitles[_currentTabIndex];
       });
     }
   }
@@ -161,7 +164,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     return Dialog(
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 441),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 480),
         child: const Center(child: CircularProgressIndicator()),
       ),
     );
@@ -171,7 +174,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     return Dialog(
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 441),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 480),
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -216,11 +219,12 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
       backgroundColor: theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       shape: theme.dialogTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 441),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 480),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildDialogHeader(theme),
+            buildTitleHeader(theme),
+            _buildTabSelector(theme),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -239,7 +243,39 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     );
   }
 
-  Widget _buildDialogHeader(ThemeData theme) {
+  Widget buildTitleHeader(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary,
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+      ),
+      child: Consumer(
+        builder: (context, ref, child) {
+          final translatedTitles = _tabTitles.map((title) => ref.watch(autoTranslationTextProvider(title)).value ?? title).toList();
+          final currentTitle = translatedTitles[_currentTabIndex];
+
+          return Center(
+            child: Text(currentTitle, style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.onPrimary)),
+          );
+        },
+      ),
+    );
+  }
+  // Container buildTitleHeader(theme) {
+  //   return Container(
+  //     padding: const EdgeInsets.all(12),
+  //     decoration: BoxDecoration(
+  //       color: theme.colorScheme.primary,
+  //       borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+  //     ),
+  //     child: Center(
+  //       child: Text(_selectedTabTitle, style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.onPrimary)),
+  //     ),
+  //   );
+  // }
+
+  Widget _buildTabSelector(ThemeData theme) {
     return Container(
       child: Padding(
         padding: const EdgeInsets.all(0),
@@ -257,7 +293,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
                 labelStyle: theme.textTheme.labelMedium!.copyWith(fontWeight: FontWeight.bold),
                 indicator: BoxDecoration(
                   color: theme.colorScheme.onSurface.withAlpha(12),
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                  // borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
                   border: Border(
                     bottom: BorderSide(width: 3, style: BorderStyle.solid, color: theme.colorScheme.secondary),
                   ),

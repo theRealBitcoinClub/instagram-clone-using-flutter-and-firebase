@@ -36,6 +36,7 @@ class QrCodeDialog extends ConsumerStatefulWidget {
 class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   bool _isCashtokenFormat = true;
   bool _isToggleEnabled = true;
+  bool _zoomQr = false;
   var toggleKey;
   late final ProfileBalanceProvider _balanceProvider; // Store provider reference
 
@@ -157,23 +158,28 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
     final TextTheme textTheme = theme.textTheme;
     MemoModelCreator? creator = ref.watch(getCreatorProvider(widget.memoProfileId)).value;
     String cashtokenAddress = creator?.bchAddressCashtokenAware ?? "";
-    String legacyAddress = creator?.id ?? "";
+    String memoAdressCashtokenFormat = convertToBchFormat(creator?.id ?? "");
 
     String cashtokenAddressShorter = shortenAddress(cashtokenAddress);
+    String memoAddressShorter = shortenAddress(memoAdressCashtokenFormat);
 
-    final String addressShorter = _isCashtokenFormat ? cashtokenAddressShorter : legacyAddress;
-    final String addressToShow = _isCashtokenFormat ? cashtokenAddress : convertToBchFormat(legacyAddress);
+    final String addressShorter = _isCashtokenFormat ? cashtokenAddressShorter : memoAddressShorter;
+    final String addressShareCopy = _isCashtokenFormat ? cashtokenAddress : memoAdressCashtokenFormat;
     final String qrImageAsset = _isCashtokenFormat ? "cashtoken" : "memo";
     final String balanceText = _getBalanceText(_isCashtokenFormat, creator);
 
     return Dialog(
+      insetPadding: _zoomQr ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: 27),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(21, 18, 21, 24),
+        padding: _zoomQr ? EdgeInsets.zero : EdgeInsets.fromLTRB(18, 18, 18, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            buildHeaderRow(balanceText, textTheme, colorScheme, dialogCtx),
+            Padding(
+              padding: !_zoomQr ? EdgeInsets.zero : EdgeInsets.fromLTRB(27, 18, 12, 0),
+              child: buildHeaderRow(balanceText, textTheme, colorScheme, dialogCtx),
+            ),
             if (_isToggleEnabled) const SizedBox(height: 6),
             if (_isToggleEnabled) _buildTabSelector(theme, colorScheme, dialogCtx),
             const SizedBox(height: 12),
@@ -183,15 +189,18 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                 return FadeTransition(opacity: animation, child: child);
               },
               child: GestureDetector(
-                key: ValueKey(addressToShow),
+                key: ValueKey(addressShareCopy),
                 onTap: () {
-                  _copyToClipboard(dialogCtx, addressToShow, "Address copied!");
+                  _copyToClipboard(dialogCtx, addressShareCopy, "Address copied!");
                 },
                 onLongPress: () {
-                  closeDialog(dialogCtx);
+                  setState(() {
+                    _zoomQr = !_zoomQr;
+                  });
+                  // closeDialog(dialogCtx);
                 },
                 child: Container(
-                  key: ValueKey(addressToShow),
+                  key: ValueKey(addressShareCopy),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -199,16 +208,19 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
                     border: Border.all(color: theme.dividerColor, width: 1),
                   ),
                   child: PrettyQrView.data(
-                    data: addressToShow,
+                    data: addressShareCopy,
                     decoration: PrettyQrDecoration(image: PrettyQrDecorationImage(image: AssetImage("assets/images/$qrImageAsset.png"))),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 12),
-            buildAddressText(addressToShow, addressShorter, textTheme, colorScheme),
+            buildAddressText(addressShareCopy, addressShorter, textTheme, colorScheme),
             const SizedBox(height: 12),
-            buildActionButtons(dialogCtx, addressToShow),
+            Padding(
+              padding: !_zoomQr ? EdgeInsets.zero : EdgeInsets.fromLTRB(21, 6, 21, 21),
+              child: buildActionButtons(dialogCtx, addressShareCopy),
+            ),
           ],
         ),
       ),
@@ -246,7 +258,9 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
           message: addressToShow,
           child: Text(
             addressShorter,
-            style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
+            style: _zoomQr
+                ? textTheme.bodyLarge!.copyWith(color: colorScheme.onSurface, fontWeight: FontWeight.w400)
+                : textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),

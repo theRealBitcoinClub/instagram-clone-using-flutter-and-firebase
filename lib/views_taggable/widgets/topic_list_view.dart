@@ -25,9 +25,9 @@ class _TaggerTopicListViewState extends BaseScrollableListViewState<TaggerTopicL
     return Column(
       children: widget.topics.map((topic) {
         return ListTile(
-          minTileHeight: 44,
+          minTileHeight: 45,
           leading: CircleAvatar(
-            radius: 16,
+            radius: 15,
             backgroundColor: colorScheme.primary.withAlpha(159),
             child: Text(
               "@",
@@ -48,7 +48,7 @@ class _TaggerTopicListViewState extends BaseScrollableListViewState<TaggerTopicL
     return Center(
       heightFactor: 6,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        padding: const EdgeInsets.fromLTRB(15, 0, 15, 9),
         child: Text(
           translated,
           style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 1.2),

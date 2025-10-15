@@ -29,7 +29,7 @@ class _TaggerHashtagListViewState extends BaseScrollableListViewState<TaggerHash
       direction: Axis.horizontal,
       alignment: WrapAlignment.start,
       runAlignment: WrapAlignment.start,
-      spacing: 8.0,
+      spacing: 9.0,
       runSpacing: 6.0,
       children: widget.hashtags.map((hashtag) {
         return GestureDetector(
@@ -53,7 +53,7 @@ class _TaggerHashtagListViewState extends BaseScrollableListViewState<TaggerHash
     return Center(
       heightFactor: 6,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        padding: const EdgeInsets.fromLTRB(15, 0, 15, 9),
         child: Text(
           translated,
           style: textTheme.bodyMedium!.copyWith(color: colorScheme.onSurfaceVariant, letterSpacing: 1.2),

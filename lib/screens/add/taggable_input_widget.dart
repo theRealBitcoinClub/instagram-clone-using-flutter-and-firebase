@@ -70,8 +70,8 @@ class TaggableInputWidget extends ConsumerWidget {
 
   Map<String, TextStyle> _buildTriggerStyles(ThemeData theme) {
     return {
-      "@": theme.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.bold),
-      "#": theme.textTheme.bodyLarge!.copyWith(fontStyle: FontStyle.italic),
+      "@": theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+      "#": theme.textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
     };
   }
 }

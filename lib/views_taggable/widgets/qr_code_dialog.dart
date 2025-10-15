@@ -172,12 +172,12 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
       insetPadding: _zoomQr ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: 27),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: _zoomQr ? EdgeInsets.zero : EdgeInsets.fromLTRB(18, 18, 18, 24),
+        padding: _zoomQr ? EdgeInsets.zero : EdgeInsets.fromLTRB(18, 15, 18, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: !_zoomQr ? EdgeInsets.zero : EdgeInsets.fromLTRB(27, 18, 12, 0),
+              padding: !_zoomQr ? EdgeInsets.fromLTRB(12, 0, 0, 0) : EdgeInsets.fromLTRB(27, 18, 12, 0),
               child: buildHeaderRow(balanceText, textTheme, colorScheme, dialogCtx),
             ),
             if (_isToggleEnabled) const SizedBox(height: 6),
@@ -280,7 +280,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
           ),
         ),
         IconButton(
-          icon: Icon(Icons.close, color: colorScheme.onSurface, size: 33),
+          icon: Icon(Icons.close, color: colorScheme.onSurface, size: 30),
           onPressed: () => closeDialog(dialogCtx),
           tooltip: 'Close',
           padding: EdgeInsets.zero,

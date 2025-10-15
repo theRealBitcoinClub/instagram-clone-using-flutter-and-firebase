@@ -29,6 +29,7 @@ dependencies:
   device_info_plus: ^12.1.0
   clipboard: ^2.0.2
   html: ^0.15.6
+  filter_text: ^1.0.2
   cached_network_image: ^3.4.1
   shared_preferences: ^2.5.3
   youtube_player_flutter: ^9.1.3

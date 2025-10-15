@@ -136,7 +136,6 @@ class PostCardFooter extends ConsumerWidget {
 
   Widget _buildTopicCheckBoxWidget(ThemeData theme) {
     var color = theme.colorScheme.secondary;
-    var color2 = theme.colorScheme.onSurface;
     return Align(
       alignment: Alignment.centerLeft,
       child: InkWell(
@@ -151,7 +150,7 @@ class PostCardFooter extends ConsumerWidget {
                 value: hasSelectedTopic,
                 onChanged: (value) => onSelectTopic(),
                 activeColor: color,
-                checkColor: color2,
+                checkColor: theme.colorScheme.onSecondary,
                 visualDensity: VisualDensity.comfortable,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -161,8 +160,8 @@ class PostCardFooter extends ConsumerWidget {
                 child: Text(
                   post.topicId,
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: hasSelectedTopic ? color : color2,
-                    fontWeight: FontWeight.normal,
+                    color: hasSelectedTopic ? color : theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.bold,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -186,55 +185,6 @@ class PostCardFooter extends ConsumerWidget {
           onSelectHashtag: (index) => onSelectHashtag(index),
         ),
       ),
-    );
-  }
-
-  Widget _buildCancelButtonWidget(ThemeData theme) {
-    return TextButton(
-      style: TextButton.styleFrom(
-        foregroundColor: theme.colorScheme.error,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: theme.colorScheme.error.withOpacity(0.5)),
-        ),
-        textStyle: theme.textTheme.labelLarge,
-      ),
-      onPressed: onCancel,
-      child: const Text("Reset"),
-    );
-  }
-
-  Widget _buildRepostButtonWidget(ThemeData theme) {
-    return TextButton(
-      style: TextButton.styleFrom(
-        foregroundColor: Colors.yellow[900],
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: Colors.yellow[900]!.withOpacity(0.5)),
-        ),
-        textStyle: theme.textTheme.labelLarge,
-      ),
-      onPressed: () => onSend(isRepost: true),
-      child: const Text("Repost"),
-    );
-  }
-
-  Widget _buildSendButtonWidget(ThemeData theme) {
-    String buttonText = "Post";
-    if (hasSelectedTopic && selectedHashtags.any((s) => s)) {
-      buttonText = "Reply w/ tags";
-    } else if (hasSelectedTopic) {
-      buttonText = "Topic reply";
-    } else if (selectedHashtags.any((s) => s)) {
-      buttonText = "Post /w tags";
-    }
-
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
-      onPressed: onSend,
-      child: Text(buttonText),
     );
   }
 }

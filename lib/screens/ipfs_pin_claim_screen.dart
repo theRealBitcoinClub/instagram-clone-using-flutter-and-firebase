@@ -55,7 +55,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
   final String _serverUrl = 'https://file-stage.fullstack.cash';
 
   // DRY text constants
-  static const String _insufficientBalanceText = 'Insufficient balance for IPFS operation. Please add more BCH to your wallet.';
+  static const String _insufficientBalanceText = 'You need to add more funds to your wallet.';
   static const String _uploadSuccessText = 'Upload successful, now its pinning to the IPFS!';
   static const String _selectImageText = 'SELECT IMAGE';
   static const String _changeImageText = 'CHANGE IMAGE';
@@ -553,8 +553,8 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
             OutlinedButton(
               onPressed: _removeFile,
               style: ButtonStyle(
-                foregroundColor: MaterialStateProperty.all(colorScheme.error.withAlpha(198)),
-                side: MaterialStateProperty.all(BorderSide(color: colorScheme.error.withAlpha(198))),
+                foregroundColor: MaterialStateProperty.all(colorScheme.onSurface.withAlpha(198)),
+                side: MaterialStateProperty.all(BorderSide(color: colorScheme.onSurface.withAlpha(198))),
               ),
               child: Consumer(
                 builder: (context, ref, child) {
@@ -587,6 +587,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
       child: Padding(
         padding: const EdgeInsets.only(top: 6, bottom: 6),
         child: Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(8)),
           child: Consumer(

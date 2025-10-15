@@ -49,14 +49,6 @@ class ProfileHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressIndicator() {
-    return const LinearProgressIndicator(
-      minHeight: 2.5,
-      valueColor: AlwaysStoppedAnimation(Colors.white70),
-      backgroundColor: Colors.transparent,
-    );
-  }
-
   Widget _buildNameRow(MemoModelCreator creator, ThemeData theme) {
     var name = creator.nameMaxLengthAware;
     return Padding(

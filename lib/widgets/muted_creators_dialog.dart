@@ -1,6 +1,7 @@
 // muted_creators_dialog.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/providers/token_limits_provider.dart';
 import 'package:mahakka/widgets/cached_avatar.dart';
 
@@ -20,6 +21,8 @@ class MutedCreatorsDialog extends ConsumerWidget {
     // ref.watch(profileBalanceProvider);
     int currentMuteLimit = ref.watch(muteLimitProvider);
 
+    var header = 'Muted Creators';
+    String translatedHeader = ref.watch(autoTranslationTextProvider(header)).value ?? header;
     return Dialog(
       backgroundColor: colorScheme.surface,
       // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
@@ -38,7 +41,7 @@ class MutedCreatorsDialog extends ConsumerWidget {
                 children: [
                   Padding(
                     padding: EdgeInsets.fromLTRB(21, 6, 0, 0),
-                    child: Text('Muted Creators', style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface)),
+                    child: Text(translatedHeader, style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface)),
                   ),
                   Padding(
                     padding: EdgeInsets.fromLTRB(0, 6, 9, 0),

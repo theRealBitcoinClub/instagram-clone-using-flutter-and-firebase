@@ -255,7 +255,15 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
           child: Container(
             width: tabWidth,
             height: 6,
-            decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(3)),
+            decoration: BoxDecoration(
+              color: theme.primaryColor,
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(6),
+                topLeft: Radius.circular(6),
+                // topRight: _currentTabIndex != 2 ? Radius.circular(9) : Radius.zero,
+                // topLeft: _currentTabIndex != 0 ? Radius.circular(9) : Radius.zero,
+              ),
+            ),
           ),
         );
       },

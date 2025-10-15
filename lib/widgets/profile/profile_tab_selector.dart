@@ -150,8 +150,8 @@ class _ProfileTabSelectorState extends State<ProfileTabSelector> with SingleTick
         indicator: BoxDecoration(
           color: Colors.black.withAlpha(33),
           border: Border(
-            bottom: BorderSide(color: theme.colorScheme.surface, width: 1),
-            top: BorderSide(color: theme.colorScheme.surface, width: 1.5),
+            bottom: BorderSide(color: theme.scaffoldBackgroundColor, width: 1),
+            top: BorderSide(color: theme.colorScheme.surface, width: 1),
           ),
         ),
         indicatorSize: TabBarIndicatorSize.tab,

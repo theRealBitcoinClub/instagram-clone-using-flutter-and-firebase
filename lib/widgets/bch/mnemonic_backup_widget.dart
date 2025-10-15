@@ -70,33 +70,53 @@ class _MnemonicBackupWidgetState extends ConsumerState<MnemonicBackupWidget> {
                   },
                 ),
                 const SizedBox(height: 24),
-                TextFormField(
-                  style: textTheme2.bodyLarge!.copyWith(fontWeight: FontWeight.w400),
-                  controller: _firstWordCtrl,
-                  decoration: InputDecoration(labelText: _firstWordLabel, labelStyle: textTheme2.bodyMedium, hintStyle: textTheme2.bodyMedium),
-                  onChanged: (_) {
-                    if (_didAttemptConfirm) _formKey.currentState?.validate();
-                  },
-                  validator: (value) {
-                    if (value == null || value.trim().toLowerCase() != _mnemonicWords.first) {
-                      return _incorrectFirstWord; // Keep error messages in English as they're technical
-                    }
-                    return null;
+                Consumer(
+                  builder: (context, ref, child) {
+                    var transFirstWordLabel = ref.watch(autoTranslationTextProvider(_firstWordLabel)).value ?? _firstWordLabel;
+                    var transIncorrectfirstword = ref.watch(autoTranslationTextProvider(_incorrectFirstWord)).value ?? _incorrectFirstWord;
+                    return TextFormField(
+                      style: textTheme2.bodyLarge!.copyWith(fontWeight: FontWeight.w400),
+                      controller: _firstWordCtrl,
+                      decoration: InputDecoration(
+                        labelText: transFirstWordLabel,
+                        labelStyle: textTheme2.bodyMedium,
+                        hintStyle: textTheme2.bodyMedium,
+                      ),
+                      onChanged: (_) {
+                        if (_didAttemptConfirm) _formKey.currentState?.validate();
+                      },
+                      validator: (value) {
+                        if (value == null || value.trim().toLowerCase() != _mnemonicWords.first) {
+                          return transIncorrectfirstword;
+                        }
+                        return null;
+                      },
+                    );
                   },
                 ),
                 const SizedBox(height: 8),
-                TextFormField(
-                  style: textTheme2.bodyLarge!.copyWith(fontWeight: FontWeight.w400),
-                  controller: _lastWordCtrl,
-                  decoration: InputDecoration(labelText: _lastWordLabel, labelStyle: textTheme2.bodyMedium, hintStyle: textTheme2.bodyMedium),
-                  onChanged: (_) {
-                    if (_didAttemptConfirm) _formKey.currentState?.validate();
-                  },
-                  validator: (value) {
-                    if (value == null || value.trim().toLowerCase() != _mnemonicWords.last) {
-                      return _incorrectLastWord; // Keep error messages in English as they're technical
-                    }
-                    return null;
+                Consumer(
+                  builder: (context, ref, child) {
+                    var transLastWordLabel = ref.watch(autoTranslationTextProvider(_lastWordLabel)).value ?? _lastWordLabel;
+                    var transIncorrectLastword = ref.watch(autoTranslationTextProvider(_incorrectLastWord)).value ?? _incorrectLastWord;
+                    return TextFormField(
+                      style: textTheme2.bodyLarge!.copyWith(fontWeight: FontWeight.w400),
+                      controller: _lastWordCtrl,
+                      decoration: InputDecoration(
+                        labelText: transLastWordLabel,
+                        labelStyle: textTheme2.bodyMedium,
+                        hintStyle: textTheme2.bodyMedium,
+                      ),
+                      onChanged: (_) {
+                        if (_didAttemptConfirm) _formKey.currentState?.validate();
+                      },
+                      validator: (value) {
+                        if (value == null || value.trim().toLowerCase() != _mnemonicWords.last) {
+                          return transIncorrectLastword;
+                        }
+                        return null;
+                      },
+                    );
                   },
                 ),
               ],

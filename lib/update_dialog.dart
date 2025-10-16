@@ -46,6 +46,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
   String _latestVersionText = 'Latest version';
   String _noChecksumText = 'No automated checksum available';
   String _noApkFoundText = 'No downloaded APK found';
+  String _foundApk = 'Found downloaded APK. Ready to install.';
   String _installNowText = 'Install Now';
   String _tryManualCheckText = 'Try Manual Check';
 
@@ -71,7 +72,8 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
     if (apkFiles.isNotEmpty) {
       final latestApk = File(apkFiles.last.path);
       setState(() {
-        _verificationResult = 'Found downloaded APK. Ready to install.';
+        _hasError = false;
+        _verificationResult = _foundApk;
       });
 
       // Auto-proceed to installation after a brief delay
@@ -79,7 +81,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
       _proceedWithInstallation();
     } else {
       setState(() {
-        _verificationResult = 'No downloaded APK found. Please download again.';
+        _verificationResult = _noApkFoundText;
         _hasError = true;
       });
     }
@@ -127,13 +129,13 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
             Column(
               children: [
                 Text(_downloadingText, style: theme.textTheme.bodyMedium),
-                SizedBox(height: 16),
+                SizedBox(height: 15),
                 LinearProgressIndicator(
                   value: _downloadProgress,
                   backgroundColor: theme.colorScheme.surfaceVariant,
                   color: theme.colorScheme.primary,
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: 9),
                 Text('${(_downloadProgress * 100).toStringAsFixed(1)}%', style: theme.textTheme.bodySmall, textAlign: TextAlign.center),
               ],
             ),
@@ -142,7 +144,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
             Column(
               children: [
                 Text(_verifyingText, style: theme.textTheme.bodyMedium),
-                SizedBox(height: 16),
+                SizedBox(height: 15),
                 CircularProgressIndicator(color: theme.colorScheme.primary),
               ],
             ),
@@ -160,7 +162,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
               child: Row(
                 children: [
                   Icon(isErrorState ? Icons.error_outline : Icons.check_circle, color: isErrorState ? Colors.red : Colors.green),
-                  SizedBox(width: 8),
+                  SizedBox(width: 9),
                   Expanded(
                     child: Text(_verificationResult, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface)),
                   ),
@@ -301,6 +303,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
     _noApkFoundText = ref.watch(autoTranslationTextProvider(_noApkFoundText)).value ?? _noApkFoundText;
     _installNowText = ref.watch(autoTranslationTextProvider(_installNowText)).value ?? _installNowText;
     _tryManualCheckText = ref.watch(autoTranslationTextProvider(_tryManualCheckText)).value ?? _tryManualCheckText;
+    _foundApk = ref.watch(autoTranslationTextProvider(_foundApk)).value ?? _foundApk;
   }
 
   void _startUpdate() async {
@@ -356,6 +359,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
     if (_sha256Controller.text.isEmpty) return;
 
     setState(() {
+      _hasError = false;
       _isVerifying = true;
       _verificationResult = '';
       _showManualCheck = false;

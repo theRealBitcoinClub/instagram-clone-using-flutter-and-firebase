@@ -194,7 +194,7 @@ void main() {
 
     test('getExpectedSha256 should handle version correctly', () async {
       // This test might need mocking depending on your implementation
-      final version = '4.3.65-BCH';
+      final version = '4.3.62-BCH';
       final sha256 = await updateService.getExpectedSha256(version);
 
       // sha256 might be null if network call fails, which is OK for test

@@ -1,15 +1,19 @@
 import 'dart:async'; // For potential future concurrency, though not strictly needed here yet
+import 'dart:convert';
 
+import 'package:http/http.dart' as http;
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../config_hide_on_feed_trigger.dart';
 import '../../memo_data_checker.dart';
 import '../../youtube_video_checker.dart';
+import '../api/memo_model_post_api.dart';
 import '../memo_reg_exp.dart';
 
 const scraperPageSize = 25;
@@ -94,7 +98,7 @@ class MemoPostScraper {
           _logInfo("No new posts found at offset $currentOffset.");
         }
       } catch (e, s) {
-        _logError("Failed to scrape posts from $scrapeUrl", e, s);
+        _logError("Failed to scrape posts from $scrapeUrl", e: e);
         // Decide on error strategy:
         // - continue; // to try the next offset (might lead to missed data if temporary issue)
         // - break; // to stop paginating on first error
@@ -145,14 +149,90 @@ class MemoPostScraper {
   }
 
   Future<MemoModelPost?> fetchAndParsePost(String postId, {bool filterOn = true}) async {
-    final String scrapeUrl = "post/$postId";
-    _logInfo("Scraping post from: $scrapeUrl");
+    // First try: Fetch from the new API
+    try {
+      _logInfo("Attempting to fetch post from API for txHash: $postId");
+      final MemoModelPost? apiPost = await _fetchPostFromAPI(postId);
 
-    var postData = await MemoScraperUtil.createScraperObj(scrapeUrl, _buildPostsScraperConfig(), nocache: true);
+      if (apiPost != null) {
+        _logInfo("Successfully fetched post from API: $postId");
+        return apiPost;
+      } else {
+        _logInfo("API returned null for post: $postId, falling back to scraping");
+      }
+    } catch (e) {
+      _logError("API fetch failed for post $postId: $e");
+      _logInfo("Falling back to scraping for post: $postId");
+    }
 
-    MemoModelPost? post = await parsePost(postData.values.first, filterOn: filterOn);
-    return post;
+    // Fallback: Use the existing scraping strategy
+    try {
+      final String scrapeUrl = "post/$postId";
+      _logInfo("Scraping post from: $scrapeUrl");
+
+      var postData = await MemoScraperUtil.createScraperObj(scrapeUrl, _buildPostsScraperConfig(), nocache: true);
+
+      MemoModelPost? post = await parsePost(postData.values.first, filterOn: filterOn);
+
+      if (post != null) {
+        _logInfo("Successfully scraped post: $postId");
+      } else {
+        _logError("Scraping also failed to return a post for: $postId");
+      }
+
+      return post;
+    } catch (e) {
+      _logError("Scraping also failed for post $postId: $e");
+      return null;
+    }
   }
+
+  Future<MemoModelPost?> _fetchPostFromAPI(String txHash) async {
+    try {
+      final String apiUrl = "https://beta-api.memo.cash/post/details?txHash=$txHash";
+      _logInfo("Making API request to: $apiUrl");
+
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+
+        // Check if the API returned success and has data
+        if (responseData['tx_hash'] == txHash) {
+          final apiPost = MemoModelPostAPI.fromJson(responseData);
+          return apiPost.toMemoModelPost();
+        } else {
+          _logError("API returned unsuccessful response for $txHash: ${responseData['error'] ?? 'Unknown error'}");
+          return null;
+        }
+      } else {
+        _logError("API request failed with status code: ${response.statusCode} for $txHash");
+        return null;
+      }
+    } catch (e) {
+      _logError("Exception in _fetchPostFromAPI for $txHash: $e");
+      rethrow; // Re-throw to be caught by the outer try-catch
+    }
+  }
+
+  void _logInfo(String message) {
+    print("MemoPostScraper INFO: $message");
+    Sentry.logger.info("MemoPostScraper: $message");
+  }
+
+  void _logError(String message, {e}) {
+    Sentry.logger.error("MemoPostScraper ERROR: $message error: $e");
+  }
+
+  // Future<MemoModelPost?> fetchAndParsePost(String postId, {bool filterOn = true}) async {
+  //   final String scrapeUrl = "post/$postId";
+  //   _logInfo("Scraping post from: $scrapeUrl");
+  //
+  //   var postData = await MemoScraperUtil.createScraperObj(scrapeUrl, _buildPostsScraperConfig(), nocache: true);
+  //
+  //   MemoModelPost? post = await parsePost(postData.values.first, filterOn: filterOn);
+  //   return post;
+  // }
 
   Future<MemoModelPost?> parsePost(postData, {bool filterOn = true}) async {
     var item = postData;
@@ -269,7 +349,7 @@ class MemoPostScraper {
         return null;
       }
     } catch (e, s) {
-      _logError("Error during post-processing (extractUrlsAndHashtags or filtering) for txHash: ${post.id}", e, s);
+      _logError("Error during post-processing (extractUrlsAndHashtags or filtering) for txHash: ${post.id}", e: e);
       return null; // Skip this post on error
     }
     return post;

@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 class UpdateInfo {
   final String currentVersion;
@@ -54,7 +55,7 @@ class UpdateService {
     return 'arm64-v8a';
   }
 
-  String get currentVersion => "4.3.56-BCH";
+  String get currentVersion => "4.3.59-BCH";
 
   // URL construction using version folders and ABI-specific files
   String getVersionCheckUrl() => '$baseUrl/version.txt';
@@ -66,34 +67,65 @@ class UpdateService {
   // Fallback URL if ABI-specific file doesn't exist
   String getFallbackApkUrl(String version) => '$baseUrl$version/apk-url.txt';
 
-  // Get expected SHA256 for current ABI
+  http.Client createNonCachingClient() {
+    return http.Client();
+  }
+
   Future<String?> getExpectedSha256(String version) async {
+    final client = createNonCachingClient();
+
     try {
-      final response = await http.get(Uri.parse(getChecksumUrl(version)));
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final headers = {'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': '0'};
+
+      final response = await client.get(Uri.parse('${getChecksumUrl(version)}?t=$timestamp'), headers: headers);
+
       if (response.statusCode == 200) {
         return response.body.trim().toLowerCase();
       }
 
-      // If ABI-specific checksum not found, try generic fallback
-      final fallbackResponse = await http.get(Uri.parse('$baseUrl$version/checksum.txt'));
+      final fallbackResponse = await client.get(Uri.parse('$baseUrl$version/checksum.txt?t=$timestamp'), headers: headers);
+
       if (fallbackResponse.statusCode == 200) {
         return fallbackResponse.body.trim().toLowerCase();
       }
     } catch (e) {
       _print('Failed to fetch checksum: $e');
+    } finally {
+      client.close(); // Always close the client
     }
     return null;
   }
 
+  // // Get expected SHA256 for current ABI
+  // Future<String?> getExpectedSha256(String version) async {
+  //   try {
+  //     final response = await http.get(Uri.parse(getChecksumUrl(version)));
+  //     if (response.statusCode == 200) {
+  //       return response.body.trim().toLowerCase();
+  //     }
+  //
+  //     // If ABI-specific checksum not found, try generic fallback
+  //     final fallbackResponse = await http.get(Uri.parse('$baseUrl$version/checksum.txt'));
+  //     if (fallbackResponse.statusCode == 200) {
+  //       return fallbackResponse.body.trim().toLowerCase();
+  //     }
+  //   } catch (e) {
+  //     _print('Failed to fetch checksum: $e');
+  //   }
+  //   return null;
+  // }
+
   void debugSha256Verification(File file, String expectedSha256) {
     final calculated = calculateSha256Sync(file);
-    print('=== SHA256 DEBUG ===');
-    print('Expected: "$expectedSha256" (length: ${expectedSha256?.length})');
-    print('Calculated: "$calculated" (length: ${calculated.length})');
-    print('Expected (lower): "${expectedSha256?.toLowerCase()}"');
-    print('Calculated (lower): "${calculated.toLowerCase()}"');
-    print('Match: ${calculated.toLowerCase() == expectedSha256?.toLowerCase()}');
-    print('===================');
+    Sentry.logger.debug("UPDATE SERVICE expectedSha256 $expectedSha256");
+    // print('=== SHA256 DEBUG ===');
+    // print('Expected: "$expectedSha256" (length: ${expectedSha256?.length})');
+    // print('Calculated: "$calculated" (length: ${calculated.length})');
+    // print('Expected (lower): "${expectedSha256?.toLowerCase()}"');
+    // print('Calculated (lower): "${calculated.toLowerCase()}"');
+    // print('Match: ${calculated.toLowerCase() == expectedSha256?.toLowerCase()}');
+    // print('===================');
   }
 
   // Check for updates including SHA256 and ABI info
@@ -486,6 +518,7 @@ class UpdateService {
     debugSha256Verification(file, expectedSha256);
     try {
       final calculatedSha256 = await calculateSha256(file);
+      Sentry.logger.debug("UPDATE SERVICE calculatedSha256 $calculatedSha256");
       _print('SHA256 Verification: Calculated=$calculatedSha256, Expected=$expectedSha256');
       return calculatedSha256 == expectedSha256.toLowerCase();
     } catch (e) {
@@ -520,7 +553,18 @@ class UpdateService {
   }
 
   // Manual SHA256 verification with user input (unchanged)
-  bool verifyManualSha256(File file, String userSha256) {
+  bool verifyManualSha256(File file, String userSha256, String previousError) {
+    try {
+      Sentry.captureEvent(
+        SentryEvent(
+          message: SentryMessage("Manual SHA256 verification ${file.path}"),
+          breadcrumbs: [
+            Breadcrumb(message: previousError),
+            Breadcrumb(message: userSha256),
+          ],
+        ),
+      );
+    } catch (e) {}
     final calculatedSha256 = calculateSha256Sync(file);
     _print('Manual SHA256: Calculated=$calculatedSha256, User=$userSha256');
     return calculatedSha256 == userSha256.toLowerCase().trim();

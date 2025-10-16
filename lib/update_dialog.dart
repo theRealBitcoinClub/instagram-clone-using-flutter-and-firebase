@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/update_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -27,7 +28,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
   String _verificationResult = '';
 
   // Private properties for all strings initialized with original text
-  String _updateTitle = 'Update Available';
+  String _updateTitle = '⭐⭐⭐ Update ⭐⭐⭐';
   String _updateMessage = 'A new version is available. Would you like to update now?';
   String _laterText = 'Later';
   String _updateNowText = 'Update Now';
@@ -101,7 +102,8 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
 
     var isErrorState = _verificationResult.contains('failed') || _hasError;
     return AlertDialog(
-      backgroundColor: theme.dialogBackgroundColor,
+      insetPadding: EdgeInsets.symmetric(horizontal: 21),
+      backgroundColor: theme.dialogTheme.backgroundColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Row(
         children: [
@@ -189,7 +191,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _performManualVerification,
+                        onPressed: () => _performManualVerification(_verificationResult),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: theme.colorScheme.primary,
                           foregroundColor: theme.colorScheme.onPrimary,
@@ -252,17 +254,28 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
           ),
 
         if (_verificationResult.contains('failed') && !_showManualCheck)
-          // if (true)
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _showManualCheck = true;
-                _verificationResult = '';
-              });
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
-            child: Text(_tryManualCheckText),
+          Container(
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+            clipBehavior: Clip.antiAlias,
+            child: Row(
+              children: [
+                IconAction(text: "cancel", onTap: _cleanUpAndClose, type: IAB.cancel, icon: Icons.cancel_outlined),
+                SizedBox(width: 1),
+                IconAction(text: "update", onTap: _cleanUpAndRetry, type: IAB.alternative, icon: Icons.repeat_outlined),
+              ],
+            ),
           ),
+        // if (true)
+        // ElevatedButton(
+        //   onPressed: () {
+        //     setState(() {
+        //       _showManualCheck = true;
+        //       _verificationResult = '';
+        //     });
+        //   },
+        //   style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+        //   child: Text(_tryManualCheckText),
+        // ),
       ],
     );
   }
@@ -339,7 +352,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
     );
   }
 
-  void _performManualVerification() async {
+  void _performManualVerification(String errorMessage) async {
     if (_sha256Controller.text.isEmpty) return;
 
     setState(() {
@@ -356,7 +369,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
 
     if (apkFiles.isNotEmpty) {
       final latestApk = File(apkFiles.last.path);
-      final isValid = updateService.verifyManualSha256(latestApk, _sha256Controller.text);
+      final isValid = updateService.verifyManualSha256(latestApk, _sha256Controller.text, errorMessage);
 
       setState(() {
         _isVerifying = false;
@@ -388,5 +401,21 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
         });
       }
     }
+  }
+
+  void _cleanUpAndClose() {
+    ref.read(updateServiceProvider).forceCleanupDownloads();
+    Navigator.pop(context);
+  }
+
+  void _cleanUpAndRetry() async {
+    setState(() {
+      _hasError = false;
+      _verificationResult = '';
+      _isDownloading = false;
+      _isVerifying = false;
+    });
+    await ref.read(updateServiceProvider).forceCleanupDownloads();
+    _startUpdate();
   }
 }

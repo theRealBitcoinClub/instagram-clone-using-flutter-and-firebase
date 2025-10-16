@@ -253,6 +253,17 @@ const Map<String, Map<String, String>> _staticVocabulary = {
     'ja': '再投稿',
     'ru': 'Репост',
   },
+  'retry': {
+    'zh-cn': '重试',
+    'de': 'Wiederholen',
+    'en': 'Retry',
+    'es': 'Reintentar',
+    'tl': 'Subukan muli',
+    'fr': 'Réessayer',
+    'it': 'Riprova',
+    'ja': '再試行',
+    'ru': 'Повторить',
+  },
 };
 
 class TranslationCache {

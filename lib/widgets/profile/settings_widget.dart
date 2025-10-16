@@ -62,15 +62,15 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   static const String _nameHintText = "Name";
   static const String _bioHintText = "Bio/Text";
   static const String _imgurHintText = "e.g. https://i.imgur.com/X32JJS.jpg";
-  static const String _tipReceiverLabel = "Tip Receiver";
-  static const String _tipAmountLabel = "Tip Amount";
+  static const String _tipReceiverLabel = "Donation Receiver";
+  static const String _tipAmountLabel = "Donation Amount";
   static const String _noChangesText = "No changes to save. 🤔";
-  static const String _profileTipsSuccessText = "Profile & Tips updated successfully! ✨";
+  static const String _profileTipsSuccessText = "Profile & Donations updated successfully! ✨";
   static const String _profileSuccessText = "Profile updated successfully! ✨";
-  static const String _tipsSuccessText = "Tips updated successfully! ✨";
+  static const String _tipsSuccessText = "Donations updated successfully! ✨";
   static const String _profileFailedText = "Profile/Tips failed:";
   static const String _onChainCostText = "Name, text and image are stored on-chain, that costs memo fee!";
-  static const String _addFundsText = "Add funds to your balance!";
+  static const String _addFundsText = "Add funds to your wallet!";
   static const List<String> _tabTitles = ["Profile", "Donation", "Settings"];
 
   List<Widget> tabs() {

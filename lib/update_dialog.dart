@@ -109,8 +109,8 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Row(
         children: [
-          Icon(Icons.system_update_rounded, color: theme.colorScheme.primary),
-          SizedBox(width: 12),
+          // Icon(Icons.system_update_rounded, color: theme.colorScheme.primary),
+          // SizedBox(width: 12),
           Text(_updateTitle, style: theme.textTheme.titleLarge),
         ],
       ),
@@ -183,9 +183,9 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
                   decoration: InputDecoration(
                     hintText: 'a1b2c3d4e5f6...',
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                   ),
-                  style: TextStyle(fontFamily: 'Monospace'),
+                  style: theme.textTheme.bodyMedium,
                   maxLines: 2,
                 ),
                 SizedBox(height: 12),
@@ -263,7 +263,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
               children: [
                 IconAction(text: "cancel", onTap: _cleanUpAndClose, type: IAB.cancel, icon: Icons.cancel_outlined),
                 SizedBox(width: 1),
-                IconAction(text: "update", onTap: _cleanUpAndRetry, type: IAB.alternative, icon: Icons.repeat_outlined),
+                IconAction(text: "retry", onTap: _cleanUpAndRetry, type: IAB.alternative, icon: Icons.repeat_outlined),
               ],
             ),
           ),
@@ -308,6 +308,8 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
 
   void _startUpdate() async {
     setState(() {
+      _showManualCheck = false;
+      _isVerifying = false;
       _isDownloading = true;
       _downloadProgress = 0.0;
       _verificationResult = '';

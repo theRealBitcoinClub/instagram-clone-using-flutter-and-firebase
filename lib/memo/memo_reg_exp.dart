@@ -219,25 +219,6 @@ class MemoRegExp {
     ).allMatches(text).map((match) => match.group(0)?.trim() ?? '').where((match) => match.isNotEmpty).toList();
   }
 
-  static List<String> extractUrlsRefinedb4(String text) {
-    // Extended list of TLDs including less common ones
-    const tlds =
-        r'com|org|net|edu|gov|mil|io|co|uk|de|fr|jp|it|es|ca|au|us|br|ru|ch|se|nl|no|eu|info|biz|me|tv|cc|ws|name|mobi|asia|aero|jobs|museum|travel|cat|pro|tel|xxx|post|geo|tech|online|site|website|space|digital|cloud|link|click|blog|shop|store|art|design|dev|app|game|news|media|live|life|world|club|group|team|center|company|solutions|services|agency|network|systems|tech|engineering|consulting|management|partners|capital|ventures|investments|fund|finance|bank|insurance|legal|law|medical|health|care|pharmacy|clinic|hospital|dental|vet|edu|academy|school|college|university|institute|training|courses|education|coop|inc|llc|ltd|corp|corporation|limited|gmbh|ag|plc|sarl|bv|ab|oy|as|sk|cz|hu|pl|ro|bg|gr|hr|si|mk|al|ba|rs|me|yu|su|by|ua|kz|uz|ge|am|az|il|sa|ae|qa|om|kw|bh|eg|ma|tn|dz|ly|sd|ye|sy|jo|lb|ps|iq|ir|af|pk|in|bd|lk|np|bt|mv|mm|th|vn|kh|la|my|sg|id|ph|kr|cn|tw|hk|mo|mn|jp';
-
-    // Image extensions
-    const imageTypes =
-        r'jpg|jpeg|png|gif|bmp|webp|svg|ico|tiff|tif|heic|heif|raw|cr2|nef|arw|dng|eps|ai|psd|sketch|xd|fig|avi|mp4|mov|wmv|flv|webm|mkv|3gp|m4v|mpg|mpeg|vob|ogv|divx|m2ts|mts|ts|mxf|arf|m4a|wav|mp3|flac|aac|ogg|wma|aiff|ape|opus|pdf|doc|docx|xls|xlsx|ppt|pptx|txt|rtf|zip|rar|7z|tar|gz|iso|dmg|exe|msi|apk|deb|rpm|pkg';
-
-    final regex = RegExp(
-      r'(https?://(?:www\.)?|www\.)[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+(?:\.[a-zA-Z]{2,})*(?:/[^\s#?]*(?:\.(?:$imageTypes)(?=[\s#?]|$))?)?[^\s#]*(?:\?[^\s#]*)?(?:#[^\s]*)?'
-          .replaceFirst(r'$imageTypes', imageTypes),
-      caseSensitive: false,
-    );
-
-    final matches = regex.allMatches(text);
-    return matches.map((match) => match.group(0)!).toList();
-  }
-
   static List<String> extractUrlsRefined(String text) {
     final tlds = (CommonTLDs.mostCommonTLDs.toList()..sort((a, b) => b.length.compareTo(a.length))).join('|');
     // r'com|org|net|edu|gov|mil|io|co|uk|de|fr|jp|it|es|ca|au|us|br|ru|ch|se|nl|no|eu|info|biz|me|tv|cc|ws|name|mobi|asia|aero|jobs|museum|travel|cat|pro|tel|xxx|post|geo|tech|online|site|website|space|digital|cloud|link|click|blog|shop|store|art|design|dev|app|game|news|media|live|life|world|club|group|team|center|company|solutions|services|agency|network|systems|tech|engineering|consulting|management|partners|capital|ventures|investments|fund|finance|bank|insurance|legal|law|medical|health|care|pharmacy|clinic|hospital|dental|vet|edu|academy|school|college|university|institute|training|courses|education|coop|inc|llc|ltd|corp|corporation|limited|gmbh|ag|plc|sarl|bv|ab|oy|as|sk|cz|hu|pl|ro|bg|gr|hr|si|mk|al|ba|rs|me|yu|su|by|ua|kz|uz|ge|am|az|il|sa|ae|qa|om|kw|bh|eg|ma|tn|dz|ly|sd|ye|sy|jo|lb|ps|iq|ir|af|pk|in|bd|lk|np|bt|mv|mm|th|vn|kh|la|my|sg|id|ph|kr|cn|tw|hk|mo|mn|jp';

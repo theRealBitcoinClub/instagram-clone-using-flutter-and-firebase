@@ -42,33 +42,6 @@ class PostScraperFirebaseService {
     _persistedPostIds.add(postId);
   }
 
-  // Remove post ID from cache (useful if post gets deleted)
-  static void _removeFromPersistedCache(String postId) {
-    _persistedPostIds.remove(postId);
-  }
-
-  // Clear entire cache (useful for testing or memory management)
-  static void clearPersistedCache() {
-    _persistedPostIds.clear();
-  }
-
-  // Get current cache size for monitoring
-  static int getPersistedCacheSize() {
-    return _persistedPostIds.length;
-  }
-
-  // Batch processing methods
-  static int getBatchQueueSize() {
-    return _batchQueue.length;
-  }
-
-  //TODO need method to manually finish when scraper is done
-  void clearBatchQueue() {
-    _batchQueue.clear();
-    _cancelTimer();
-    print("Batch queue cleared");
-  }
-
   void forceProcessBatch() {
     if (_batchQueue.isEmpty) {
       print("Batch queue is empty, nothing to process");

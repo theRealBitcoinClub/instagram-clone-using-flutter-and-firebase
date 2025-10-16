@@ -55,7 +55,7 @@ class UpdateService {
     return 'arm64-v8a';
   }
 
-  String get currentVersion => "4.3.62-BCH";
+  String get currentVersion => "4.3.65-BCH";
 
   // URL construction using version folders and ABI-specific files
   String getVersionCheckUrl() => '$baseUrl/version.txt';
@@ -330,7 +330,7 @@ class UpdateService {
       if (expectedSha256 != null && expectedSha256.isNotEmpty) {
         final isValid = await verifySha256(tempFile, expectedSha256);
         if (!isValid) {
-          await _safeDelete(tempFile);
+          // await _safeDelete(tempFile);
           onError('Security check failed: SHA256 mismatch. The downloaded file may be corrupted.');
           return;
         }

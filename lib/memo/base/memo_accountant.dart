@@ -146,9 +146,6 @@ class MemoAccountant {
         case MemoRequestType.pinIpfsFile:
           response = await _executePinIpfsFile(request.data['file'] as File, request.data['cid'] as String);
           break;
-
-        default:
-          response = MemoAccountantResponse.connectionError;
       }
 
       request.completer.complete(response);

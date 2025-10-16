@@ -244,34 +244,34 @@ class PostServiceFeed {
     }
   }
 
-  Future<DocumentSnapshot?> _getDocumentSnapshot(String postId) async {
-    if (_isDebugMode) {
-      _print('PSF:    🔍📄 _getDocumentSnapshot() called for post: $postId');
-    }
-
-    try {
-      final stopwatch = Stopwatch()..start();
-      final doc = await FirebaseFirestore.instance.collection(_collectionName).doc(postId).get();
-      stopwatch.stop();
-
-      if (_isDebugMode) {
-        _print('PSF:    ✅ Document fetch completed in ${stopwatch.elapsedMilliseconds}ms');
-        _print('PSF:    📄 Document exists: ${doc.exists}');
-        if (doc.exists) {
-          _print('PSF:    📍 Document data keys: ${doc.data()?.keys.join(', ')}');
-        }
-        _print('PSF:    🔚 _getDocumentSnapshot() completed');
-      }
-
-      return doc.exists ? doc : null;
-    } catch (e) {
-      if (_isDebugMode) {
-        _print('PSF:    ❌📄 Error getting document snapshot: $e');
-        _print('PSF:    🔚 _getDocumentSnapshot() failed');
-      }
-      return null;
-    }
-  }
+  // Future<DocumentSnapshot?> _getDocumentSnapshot(String postId) async {
+  //   if (_isDebugMode) {
+  //     _print('PSF:    🔍📄 _getDocumentSnapshot() called for post: $postId');
+  //   }
+  //
+  //   try {
+  //     final stopwatch = Stopwatch()..start();
+  //     final doc = await FirebaseFirestore.instance.collection(_collectionName).doc(postId).get();
+  //     stopwatch.stop();
+  //
+  //     if (_isDebugMode) {
+  //       _print('PSF:    ✅ Document fetch completed in ${stopwatch.elapsedMilliseconds}ms');
+  //       _print('PSF:    📄 Document exists: ${doc.exists}');
+  //       if (doc.exists) {
+  //         _print('PSF:    📍 Document data keys: ${doc.data()?.keys.join(', ')}');
+  //       }
+  //       _print('PSF:    🔚 _getDocumentSnapshot() completed');
+  //     }
+  //
+  //     return doc.exists ? doc : null;
+  //   } catch (e) {
+  //     if (_isDebugMode) {
+  //       _print('PSF:    ❌📄 Error getting document snapshot: $e');
+  //       _print('PSF:    🔚 _getDocumentSnapshot() failed');
+  //     }
+  //     return null;
+  //   }
+  // }
 
   void _print(String s) {
     if (kDebugMode) print(s);

@@ -5,7 +5,6 @@ import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 
 import '../../config_hide_on_feed_trigger.dart';
@@ -176,7 +175,7 @@ class MemoPostScraper {
     final String? topicLink = item["topicLink"]?.toString();
     final String? topicHeader = item["topic"]?.toString();
     //TODO MAKE THIS COMPATIBLE WITH THE NEW @TOPIC
-    final MemoModelTopic? topic = (topicLink != null && topicHeader != null) ? MemoModelTopic(url: topicLink, id: topicHeader) : null;
+    // final MemoModelTopic? topic = (topicLink != null && topicHeader != null) ? MemoModelTopic(url: topicLink, id: topicHeader) : null;
 
     final String? text = item["msg"]?.toString();
     // final String? age = item["age"]?.toString();

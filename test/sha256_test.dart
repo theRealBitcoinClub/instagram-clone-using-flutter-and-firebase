@@ -194,13 +194,14 @@ void main() {
 
     test('getExpectedSha256 should handle version correctly', () async {
       // This test might need mocking depending on your implementation
-      final version = '4.3.29-BCH';
+      final version = '4.3.65-BCH';
       final sha256 = await updateService.getExpectedSha256(version);
 
       // sha256 might be null if network call fails, which is OK for test
-      if (sha256 != null) {
-        expect(sha256.length, 64, reason: 'SHA256 from server should be 64 characters');
-      }
+      // if (sha256 != null) {
+      expect(sha256!.length, 64, reason: 'SHA256 from server should be 64 characters');
+      expect(sha256, equals("46cc04136f70a7539bcd48f8accdabe70dc5d1a57ab7b050e6aa06f84d0dd405"));
+      // }
     });
 
     test('Current ABI should be arm64-v8a', () {

@@ -15,7 +15,6 @@ class PostServiceProfile {
   static const bool descendingOrder = true;
   final FirebaseFirestore _firestore;
   final String _collectionName;
-  final bool _debugMode = kDebugMode;
 
   PostServiceProfile({FirebaseFirestore? firestore, String collectionName = FirestoreCollections.posts})
     : _firestore = firestore ?? FirebaseFirestore.instance,

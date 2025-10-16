@@ -116,7 +116,7 @@ class PostCardFooter extends ConsumerWidget {
                           IconAction(
                             disabled: !post.hasMedia,
                             disabledMessage: "There is not image nor video attached to this publication.",
-                            text: "COPY",
+                            text: "REPOST",
                             onTap: () => onSend(isRepost: true),
                             type: IAB.success,
                             icon: Icons.repeat_outlined,

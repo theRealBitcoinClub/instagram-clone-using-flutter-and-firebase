@@ -23,7 +23,7 @@ class UpdateMonitor extends ConsumerWidget {
     // final installButton = ref.watch(autoTranslationTextProvider('INSTALL')).value ?? 'INSTALL';
 
     final updateAvailableTextAsync = ref.watch(autoTranslationTextProvider('Update Available'));
-    final updateNowTextAsync = ref.watch(autoTranslationTextProvider('Tap here'));
+    final updateNowTextAsync = ref.watch(autoTranslationTextProvider('Tap to download'));
     final updateButtonAsync = ref.watch(autoTranslationTextProvider('UPDATE'));
     final installReadyTextAsync = ref.watch(autoTranslationTextProvider('Installation Ready'));
     final installNowTextAsync = ref.watch(autoTranslationTextProvider('Tap to install'));

@@ -79,14 +79,6 @@ class _UrlConfirmationDialog extends StatelessWidget {
     required this.isDarkTheme,
   });
 
-  Color _getButtonColor(Color lightColor, Color darkColor) {
-    return isDarkTheme ? darkColor : lightColor;
-  }
-
-  Color _getTextColor(Color lightColor, Color darkColor) {
-    return isDarkTheme ? darkColor : lightColor;
-  }
-
   @override
   Widget build(BuildContext context) {
     final Color dialogBackgroundColor = isDarkTheme ? theme.dialogBackgroundColor : theme.colorScheme.surface;

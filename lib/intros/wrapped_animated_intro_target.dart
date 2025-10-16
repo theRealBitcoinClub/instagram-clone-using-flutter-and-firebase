@@ -133,8 +133,6 @@ class _WrappedAnimatedIntroTargetState extends ConsumerState<WrappedAnimatedIntr
             child: animatedContent,
           ),
         );
-        // Always wrap with GestureDetector to handle the intro action
-        return GestureDetector(onTap: _handleTap, behavior: HitTestBehavior.opaque, child: animatedContent);
       },
     );
   }

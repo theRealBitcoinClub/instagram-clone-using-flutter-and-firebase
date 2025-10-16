@@ -122,15 +122,15 @@ void main() {
       final actualSha256 = updateService.calculateSha256Sync(testApkFile);
 
       // Test correct checksum
-      final correctResult = updateService.verifyManualSha256(testApkFile, actualSha256);
+      final correctResult = updateService.verifyManualSha256(testApkFile, actualSha256, "");
       expect(correctResult, true, reason: 'Manual verification should return true for correct checksum');
 
       // Test wrong checksum
-      final wrongResult = updateService.verifyManualSha256(testApkFile, wrongSha256);
+      final wrongResult = updateService.verifyManualSha256(testApkFile, wrongSha256, "");
       expect(wrongResult, false, reason: 'Manual verification should return false for wrong checksum');
 
       // Test with spaces and different case
-      final formattedResult = updateService.verifyManualSha256(testApkFile, ' ${actualSha256.toUpperCase()} ');
+      final formattedResult = updateService.verifyManualSha256(testApkFile, ' ${actualSha256.toUpperCase()} ', "");
       expect(formattedResult, true, reason: 'Manual verification should handle formatting');
     });
 

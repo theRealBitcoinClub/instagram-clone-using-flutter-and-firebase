@@ -11,7 +11,7 @@ import '../model/memo_model_tag_light.dart';
 class TagService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const String _tagsCollection = FirestoreCollections.tag;
-  final String _tagListDocumentId = "${FirestoreCollections.tag}tag_list";
+  final String _tagListCollectionAndDocumentId = "${FirestoreCollections.tag}_map";
 
   // FIFO cache for tracking persisted tag IDs
   static final _persistedTagIds = Queue<String>();
@@ -60,18 +60,18 @@ class TagService {
   void clearBatchQueue() {
     _batchQueue.clear();
     _cancelTimer();
-    print("Tag batch queue cleared");
+    _print("Tag batch queue cleared");
   }
 
   /// Manually forces the batch to process immediately
   void forceProcessBatch() {
     if (_batchQueue.isEmpty) {
-      print("Tag batch queue is empty, nothing to process");
+      _print("Tag batch queue is empty, nothing to process");
       _executeCallbackIfNeeded(true, 0, null);
       return;
     }
 
-    print("🔄 Manually forcing tag batch processing with ${_batchQueue.length} tags...");
+    _print("🔄 Manually forcing tag batch processing with ${_batchQueue.length} tags...");
     _processBatch();
   }
 
@@ -84,7 +84,7 @@ class TagService {
     final newTags = _filterDuplicates(tags);
 
     if (newTags.isEmpty) {
-      print("All tags in the batch are duplicates, skipping...");
+      _print("All tags in the batch are duplicates, skipping...");
       _executeCallbackIfNeeded(true, 0, null);
       return;
     }
@@ -105,7 +105,7 @@ class TagService {
     for (final tag in tags) {
       final tagId = tag.id;
       if (tagId.isEmpty) {
-        print("Tag has empty ID, skipping");
+        _print("Tag has empty ID, skipping");
         continue;
       }
 
@@ -125,7 +125,7 @@ class TagService {
     }
 
     if (duplicateIds.isNotEmpty) {
-      if (kDebugMode) print("Filtered out ${duplicateIds.length} duplicate tags: ${duplicateIds.join(', ')}");
+      if (kDebugMode) _print("Filtered out ${duplicateIds.length} duplicate tags: ${duplicateIds.join(', ')}");
     }
 
     return uniqueTags;
@@ -135,14 +135,14 @@ class TagService {
     for (final tag in tags) {
       if (tag.lastPostCount == 0) _batchQueue.add(tag);
     }
-    print("Added ${tags.length} tags to batch queue. Queue size: ${_batchQueue.length}");
+    _print("Added ${tags.length} tags to batch queue. Queue size: ${_batchQueue.length}");
   }
 
   void _startOrResetTimer() {
     _cancelTimer();
 
     _batchTimer = Timer(_batchTimeout, () {
-      print("Tag batch timeout reached after ${_batchTimeout.inMinutes} minutes");
+      _print("Tag batch timeout reached after ${_batchTimeout.inMinutes} minutes");
       if (_batchQueue.isNotEmpty) {
         _processBatch();
       } else {
@@ -150,7 +150,7 @@ class TagService {
       }
     });
 
-    // print("Tag batch timer started/reset (${_batchTimeout.inMinutes} minutes)");
+    // _print("Tag batch timer started/reset (${_batchTimeout.inMinutes} minutes)");
   }
 
   void _cancelTimer() {
@@ -160,7 +160,7 @@ class TagService {
 
   Future<void> _processBatch() async {
     if (_batchQueue.isEmpty) {
-      print("Tag batch queue is empty, nothing to process");
+      _print("Tag batch queue is empty, nothing to process");
       _executeCallbackIfNeeded(true, 0, null);
       return;
     }
@@ -170,7 +170,7 @@ class TagService {
     final tagsToProcess = _batchQueue.toList();
     _batchQueue.clear();
 
-    print("Processing tag batch of ${tagsToProcess.length} tags...");
+    _print("Processing tag batch of ${tagsToProcess.length} tags...");
 
     try {
       final batch = _firestore.batch();
@@ -180,7 +180,7 @@ class TagService {
       for (final tag in tagsToProcess) {
         final tagId = tag.id;
         if (tagId.isEmpty) {
-          print("Skipping tag with empty ID");
+          _print("Skipping tag with empty ID");
           failedTagIds.add('empty_id_${tagsToProcess.indexOf(tag)}');
           continue;
         }
@@ -190,14 +190,14 @@ class TagService {
           batch.set(docRef, tag.toJson(), SetOptions(merge: true));
           successfulSaves++;
         } catch (e) {
-          print("Error adding tag $tagId to batch: $e");
+          _print("Error adding tag $tagId to batch: $e");
           failedTagIds.add(tagId);
         }
       }
 
       if (successfulSaves > 0) {
         await batch.commit();
-        print("✅ Tag batch commit successful! Saved $successfulSaves tags in 1 write operation");
+        _print("✅ Tag batch commit successful! Saved $successfulSaves tags in 1 write operation");
 
         // Add successful tags to persistence cache
         for (final tag in tagsToProcess) {
@@ -206,16 +206,62 @@ class TagService {
             _addToPersistedCache(tagId);
           }
         }
+
+        // ✅ NEW: Update the tag list with successfully processed tags
+        final successfulTags = tagsToProcess.where((t) => t.id.isNotEmpty && !failedTagIds.contains(t.id)).toList();
+        await _updateTagListWithNewIds(successfulTags);
       } else {
-        print("❌ No tags were successfully added to the batch");
+        _print("❌ No tags were successfully added to the batch");
       }
 
       _executeCallbackIfNeeded(true, successfulSaves, failedTagIds.isNotEmpty ? failedTagIds : null);
     } catch (e) {
-      print("❌ Tag batch commit failed: $e");
+      _print("❌ Tag batch commit failed: $e");
 
       final failedIds = tagsToProcess.where((t) => t.id.isNotEmpty).map((t) => t.id).toList();
       _executeCallbackIfNeeded(false, 0, failedIds.isNotEmpty ? failedIds : null);
+    }
+  }
+
+  /// Updates the tag list document with new tag IDs and their counts
+  Future<void> _updateTagListWithNewIds(List<MemoModelTag> newTags) async {
+    if (newTags.isEmpty) return;
+
+    try {
+      final tagListDocRef = _firestore.collection(_tagListCollectionAndDocumentId).doc(_tagListCollectionAndDocumentId);
+
+      // Get current document WITHOUT transaction
+      final docSnapshot = await tagListDocRef.get();
+
+      Map<String, dynamic> existingTags = {};
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        if (data != null && data.containsKey('tags')) {
+          final tagsList = List<Map<String, dynamic>>.from(data['tags'] ?? []);
+          for (final tagData in tagsList) {
+            existingTags[tagData['id']] = tagData['count'];
+          }
+        }
+      }
+
+      // Update with new tags
+      for (final tag in newTags) {
+        existingTags[tag.id] = tag.postCount;
+      }
+
+      // Convert back to list format
+      final updatedTagsList = existingTags.entries.map((entry) => {'id': entry.key, 'count': entry.value}).toList();
+
+      // Update WITHOUT transaction
+      await tagListDocRef.set({
+        'tags': updatedTagsList,
+        'last_updated': FieldValue.serverTimestamp(),
+        'total_count': updatedTagsList.length,
+      }, SetOptions(merge: true));
+
+      _print("✅ Tag list updated with ${newTags.length} new tags");
+    } catch (e) {
+      _print("❌ Error updating tag list: $e");
     }
   }
 
@@ -223,29 +269,30 @@ class TagService {
   /// Automatically initializes the document if it doesn't exist
   Future<List<MemoModelTagLight>> getLightweightTags() async {
     try {
-      final tagListDocRef = _firestore.collection(_tagsCollection).doc(_tagListDocumentId);
+      final tagListDocRef = _firestore.collection(_tagListCollectionAndDocumentId).doc(_tagListCollectionAndDocumentId);
       final tagListDoc = await tagListDocRef.get();
 
+      //TODO this is created during batch process
       // Initialize document if it doesn't exist
-      if (!tagListDoc.exists) {
-        print("🔄 Tag list document not found, initializing with existing tags...");
-
-        // Get all existing tags from the collection
-        final allTags = await getAllTags();
-
-        if (allTags.isEmpty) {
-          print("No existing tags found to initialize the tag list");
-          return [];
-        }
-
-        // Convert to lightweight format for the tag list
-        final lightTags = allTags.map((tag) => {'id': tag.id, 'count': tag.lastPostCount}).toList();
-
-        // Create the tag list document
-        await tagListDocRef.set({'tags': lightTags, 'last_updated': FieldValue.serverTimestamp(), 'total_count': lightTags.length});
-
-        print("✅ Tag list document initialized with ${lightTags.length} existing tags");
-      }
+      // if (!tagListDoc.exists) {
+      //   _print("🔄 Tag list document not found, initializing with existing tags...");
+      //
+      //   // Get all existing tags from the collection
+      //   final allTags = await getAllTags();
+      //
+      //   if (allTags.isEmpty) {
+      //     _print("No existing tags found to initialize the tag list");
+      //     return [];
+      //   }
+      //
+      //   // Convert to lightweight format for the tag list
+      //   final lightTags = allTags.map((tag) => {'id': tag.id, 'count': tag.postCount}).toList();
+      //
+      //   // Create the tag list document
+      //   await tagListDocRef.set({'tags': lightTags, 'last_updated': FieldValue.serverTimestamp(), 'total_count': lightTags.length});
+      //
+      //   _print("✅ Tag list document initialized with ${lightTags.length} existing tags");
+      // }
 
       // Document exists, proceed with normal retrieval
       final data = tagListDoc.data();
@@ -256,10 +303,10 @@ class TagService {
       final tagsList = List<Map<String, dynamic>>.from(data['tags'] ?? []);
       final lightTags = tagsList.map((tagData) => MemoModelTagLight(id: tagData['id'] ?? '', count: tagData['count'] ?? 0)).toList();
 
-      print("Retrieved ${lightTags.length} lightweight tags from tag list");
+      _print("Retrieved ${lightTags.length} lightweight tags from tag list");
       return lightTags;
     } catch (e) {
-      print("Error retrieving lightweight tags: $e");
+      _print("Error retrieving lightweight tags: $e");
       return [];
     }
   }
@@ -285,9 +332,13 @@ class TagService {
         return MemoModelTag.fromJson(data)..id = doc.id;
       }).toList();
     } catch (e, s) {
-      print("Error fetching all tags: $e");
+      _print("Error fetching all tags: $e");
       print(s);
       return [];
     }
+  }
+
+  void _print(String s) {
+    if (kDebugMode) print("TAGSERVICE: " + s);
   }
 }

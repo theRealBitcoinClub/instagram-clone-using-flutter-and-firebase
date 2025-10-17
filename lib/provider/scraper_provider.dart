@@ -8,6 +8,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../main.dart';
+import '../memo/firebase/post_scraper_firebase_service.dart';
 import '../memo/scraper/memo_scraper_tag.dart';
 import '../memo/scraper/memo_scraper_topics.dart';
 
@@ -16,7 +17,7 @@ final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraper
 const bool forceScrape = true;
 const bool saveToFirebase = true;
 const bool deepScrape = false;
-const cacheId = "letsgonownew";
+const cacheId = "okeywhynot_";
 
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
@@ -53,6 +54,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     }
 
     ref.onDispose(() {
+      PostScraperFirebaseService.clearMetadataCache();
       _scraperTimer?.cancel();
       _print("BGS: 🛑 Timer disposed! 👋");
     });
@@ -103,6 +105,9 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
   /// The main scraping logic.
   Future<void> _runScrapingProcess() async {
+    // ✅ NEW: Initialize post metadata system
+    final postService = PostScraperFirebaseService();
+    await postService.initializePostMetadata();
     // Check if we should run scraping before starting
     if (!_shouldRunScraping()) {
       _print("BGS: ⏭️ Skipping scrape - recently completed! 📅");
@@ -126,8 +131,8 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
           Sentry.logger.error("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
         }
         try {
-          await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], deepScrape ? 400 : 100, 0);
-          await MemoScraperTag(cacheId + "most", saveToFirebase, _prefs).startScrapeTags(["/most-posts"], deepScrape ? 400 : 0, 0);
+          // await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], deepScrape ? 400 : 0, 0);
+          // await MemoScraperTag(cacheId + "most", saveToFirebase, _prefs).startScrapeTags(["/most-posts"], deepScrape ? 400 : 0, 0);
         } catch (e) {
           _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
           Sentry.logger.error("BGS: ❌ An error occurred during TAG scraping: $e 🚨");

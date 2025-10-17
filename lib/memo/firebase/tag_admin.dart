@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/firebase/tag_service.dart';
+import 'package:mahakka/memo/firebase/tag_service_admin.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 
 // Callback type definition
@@ -16,7 +16,7 @@ class AdminTagsListPage extends StatefulWidget {
 }
 
 class _AdminTagsListPageState extends State<AdminTagsListPage> {
-  final TagService _tagService = TagService();
+  final TagServiceAdmin _tagService = TagServiceAdmin();
   final int _tagsPerPage = 20;
 
   List<MemoModelTag> _tags = [];

@@ -104,24 +104,12 @@ class MemoScraperTopic {
     String cacheId,
     TopicService topicService,
     PostScraperFirebaseService postService,
-    // List<MemoModelTopic> postsToPersist,
   ) async {
     for (final topic in topicsWithNewPosts) {
       try {
-        // Scrape posts for this topic
         final List<MemoModelPost> newPosts = await scrapeTopicHarvestPosts(topic, cacheId);
-
         if (newPosts.isNotEmpty) {
-          // Add posts to the topic
-          // topic.posts.addAll(newPosts);
-
-          // Save topic to Firebase
-          //TODO FOR NOW ONLY SAVE NEW TOPICS AS FIREBASE POSTCOUNT DATA IS NOT USED, only the scraped postcount is used for the scraper checks
-          // if (topic.lastPostCount == 0) await topicService.saveTopic(topic);
-
-          // Save all new posts to Firebase
-          //TODO GET A CHECKSTRING FROM GITHUB THAT INCLUDES 100 MOST RECENTLY SAVED POST IDS AND AVOID DOUBLE PERSIST
-          if (kDebugMode && saveToFirebase) {
+          if (saveToFirebase) {
             postService.savePostsBatch(
               newPosts,
               onFinish: (success, processedCount, failedPostIds) {
@@ -135,27 +123,14 @@ class MemoScraperTopic {
                 }
               },
             );
-            // for (final post in newPosts) {
-            //   await postService.savePost(post);
-            // }
           }
-
-          // ref.read(postCacheRepositoryProvider).savePosts(newPosts);
-          // ref.read(postCacheRepositoryProvider).clearPagesForFilter(null);
-
-          // Add to persist list if needed
-          // postsToPersist.add(topic);
-
           print("\nSCRAPER TOPICS\nSaved ${newPosts.length} new posts for topic: ${topic.header}");
         }
 
         final topicKey = "$keyTopic$cacheId${topic.url}";
         (ref.read(sharedPreferencesProvider)).setString(topicKey, topic.postCount.toString());
-        // Clear posts to free memory (they're already persisted)
-        // topic.posts.clear();
       } catch (e) {
         print("\nSCRAPER TOPICS\nError processing topic ${topic.header}: $e");
-        // Continue with other topics even if one fails
       }
     }
     topicService.saveTopicsBatch(

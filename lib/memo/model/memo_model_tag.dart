@@ -34,7 +34,7 @@ class MemoModelTag {
   });
 
   @JsonKey(includeFromJson: false, includeToJson: false)
-  int? lastCount;
+  int? lastPostCount;
   String id;
   final int? postCount;
   final String? lastPost; // Again, DateTime might be better for 'lastPost'

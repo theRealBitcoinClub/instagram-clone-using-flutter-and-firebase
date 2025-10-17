@@ -6,7 +6,7 @@ import '../model/memo_model_post.dart';
 
 class MemoModelPostAPI {
   final String txHash;
-  final Name name;
+  final MemoModelCreatorApi name;
   final String message;
   final String topic;
   final String date;
@@ -28,7 +28,7 @@ class MemoModelPostAPI {
   factory MemoModelPostAPI.fromJson(Map<String, dynamic> json) {
     return MemoModelPostAPI(
       txHash: json['tx_hash'] as String? ?? '',
-      name: Name.fromJson(json['name'] as Map<String, dynamic>? ?? {}),
+      name: MemoModelCreatorApi.fromJson(json['name'] as Map<String, dynamic>? ?? {}),
       message: _decodeMessage(json['message'] as String? ?? ''),
       topic: json['topic'] as String? ?? '',
       date: json['date'] as String? ?? '',
@@ -89,7 +89,7 @@ class MemoModelPostAPI {
     // Parse the date
     DateTime? createdDateTime;
     try {
-      createdDateTime = DateTime.parse(date);
+      createdDateTime = DateTime.parse(date).subtract(Duration(hours: 4));
     } catch (e) {
       // If parsing fails, use current date
       createdDateTime = DateTime.now();
@@ -144,7 +144,7 @@ class MemoModelPostAPI {
       popularityScore: tip, // Map tip to popularity score
       likeCounter: likes,
       replyCounter: replies,
-      creatorId: name.address, // Map address to creatorId
+      creatorId: name.id, // Map address to creatorId
       topicId: mainTopic,
       tagIds: tags,
       urls: allUrls,
@@ -153,26 +153,18 @@ class MemoModelPostAPI {
   }
 }
 
-class Name {
+class MemoModelCreatorApi {
   final String name;
-  final String address;
-  final String alias;
-  final String idAddress;
-  final String pic;
+  final String id;
+  final String? avatarType;
 
-  Name({required this.name, required this.address, required this.alias, required this.idAddress, required this.pic});
+  MemoModelCreatorApi({required this.name, required this.id, required this.avatarType});
 
-  factory Name.fromJson(Map<String, dynamic> json) {
-    return Name(
-      name: json['name'] as String? ?? '',
-      address: json['address'] as String? ?? '',
-      alias: json['alias'] as String? ?? '',
-      idAddress: json['id_address'] as String? ?? '',
-      pic: json['pic'] as String? ?? '',
-    );
+  factory MemoModelCreatorApi.fromJson(Map<String, dynamic> json) {
+    return MemoModelCreatorApi(name: json['name'] as String, id: json['address'] as String, avatarType: json['pic'] as String?);
   }
 
   Map<String, dynamic> toJson() {
-    return {'name': name, 'address': address, 'alias': alias, 'id_address': idAddress, 'pic': pic};
+    return {'name': name, 'id': id, 'avatarType': avatarType};
   }
 }

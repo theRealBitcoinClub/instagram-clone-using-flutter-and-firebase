@@ -130,7 +130,7 @@ class TagService {
 
   void _addToBatchQueue(List<MemoModelTag> tags) {
     for (final tag in tags) {
-      _batchQueue.add(tag);
+      if (tag.lastPostCount == 0) _batchQueue.add(tag);
     }
     print("Added ${tags.length} tags to batch queue. Queue size: ${_batchQueue.length}");
   }

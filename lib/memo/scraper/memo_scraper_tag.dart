@@ -79,10 +79,10 @@ class MemoScraperTag {
     for (final tag in allTags) {
       final tagKey = "$prefskey$cacheId${tag.name}";
       final lastPostCount = int.tryParse(prefs.getString(tagKey) ?? "0") ?? 0;
+      tag.lastPostCount = lastPostCount;
 
       if (tag.postCount != null && tag.postCount! > lastPostCount) {
         // This tag has new posts
-        tag.lastCount = lastPostCount;
         tagsWithNewPosts.add(tag);
       }
     }
@@ -103,14 +103,7 @@ class MemoScraperTag {
         final List<MemoModelPost> newPosts = await _scrapeNewPostsForTag(tag, cacheId);
 
         if (newPosts.isNotEmpty) {
-          // Save tag if it's new (no previous posts)
-          // if (tag.lastCount == 0) {
-          //TODO This be changed as soon as you need the post count data from Firebase, for now only from scrape is relevant
-          // await tagService.saveTag(tag);
-          // }
-
-          // Save all new posts
-          if (kDebugMode && saveToFirebase) {
+          if (saveToFirebase) {
             postService.savePostsBatch(
               newPosts,
               onFinish: (success, processedCount, failedPostIds) {
@@ -124,22 +117,11 @@ class MemoScraperTag {
                 }
               },
             );
-            // postService.savePostsBatch(newPosts);
-            //
-            // for (final post in newPosts) {
-            //   //TODO GET A CHECKSTRING FROM GITHUB THAT INCLUDES 100 MOST RECENTLY SAVED POST IDS AND AVOID DOUBLE PERSIST
-            //   await postService.savePost(post);
-            // }
           }
-
-          // ref.read(postCacheRepositoryProvider).savePosts(newPosts);
-          // ref.read(postCacheRepositoryProvider).clearPagesForFilter(null);
-
           _print("MSTAG: 💾 Saved ${newPosts.length} new posts for tag: ${tag.name} 🏷️");
         }
       } catch (e) {
         _print("MSTAG: ❌ Error processing tag ${tag.name}: $e 🚨");
-        // Continue with other tags even if one fails
       }
       persistPostcountAfterSuccessfulScrape(tag);
     }
@@ -160,7 +142,7 @@ class MemoScraperTag {
 
   /// Scrapes new posts for a specific tag
   Future<List<MemoModelPost>> _scrapeNewPostsForTag(MemoModelTag tag, String cacheId) async {
-    final int newPostsCount = tag.postCount! - (tag.lastCount ?? 0);
+    final int newPostsCount = tag.postCount! - (tag.lastPostCount ?? 0);
     int skippedCounter = 0;
 
     //TODO WHY IS THIS CHECKED TWICE AS IT WAS ALREADY CHECKED WHEN THIS TAG WAS ADDED TO THE LIST THATS BEING PROCESSED

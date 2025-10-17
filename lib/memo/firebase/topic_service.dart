@@ -136,7 +136,7 @@ class TopicService {
 
   void _addToBatchQueue(List<MemoModelTopic> topics) {
     for (final topic in topics) {
-      _batchQueue.add(topic);
+      if (topic.lastPostCount == 0) _batchQueue.add(topic);
     }
     print("Added ${topics.length} topics to batch queue. Queue size: ${_batchQueue.length}");
   }

@@ -3,6 +3,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/update_service.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../main.dart';
@@ -18,8 +20,8 @@ const cacheId = "letsgonownew";
 
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
-  final Duration _initialDelay = Duration(seconds: 30);
-  final Duration _scrapeInterval = kDebugMode && !forceScrape ? Duration(hours: 3) : Duration(seconds: 60);
+  final Duration _initialDelay = Duration(seconds: 15);
+  final Duration _scrapeInterval = kDebugMode && !forceScrape ? Duration(hours: 3) : Duration(seconds: 120);
   final bool _debugMode = kDebugMode;
 
   static const String _lastScrapeKey = 'last_scrape_timestamp';
@@ -31,16 +33,18 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
     // Initialize SharedPreferences
     _prefs = ref.read(sharedPreferencesProvider);
+    bool needsToUpdate = ref.watch(updateInfoProvider).isUpdateAvailable;
 
     // Check if we should run scraping based on last scrape time
-    if (_shouldRunScraping()) {
+    if (_shouldRunScraping() && !needsToUpdate) {
       _scraperTimer = Timer.periodic(_scrapeInterval, (timer) {
         _runScrapingProcess();
       });
 
       Timer(_initialDelay, () => _runScrapingProcess());
     } else {
-      _print("BGS: ⏭️ Skipping initial scrape - recently completed! 📅");
+      Sentry.logger.debug("BGS: ⏭️ Skipping initial scrape - recently completed! 📅 or needs to update: $needsToUpdate");
+      _print("BGS: ⏭️ Skipping initial scrape - recently completed! 📅 or needs to update: $needsToUpdate");
 
       // Still set up the timer for future runs
       _scraperTimer = Timer.periodic(_scrapeInterval, (timer) {
@@ -133,7 +137,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
           _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
         }
         try {
-          await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], 25, 0);
+          await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], 100, 0);
         } catch (e) {
           _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
         }

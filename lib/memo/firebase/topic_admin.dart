@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mahakka/memo/firebase/topic_service.dart';
+import 'package:mahakka/memo/firebase/topic_service_admin.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 
 // Callback type definition (can be shared or defined per page)
@@ -15,7 +15,7 @@ class AdminTopicsListPage extends StatefulWidget {
 }
 
 class _AdminTopicsListPageState extends State<AdminTopicsListPage> {
-  final TopicService _topicService = TopicService();
+  final TopicServiceAdmin _topicService = TopicServiceAdmin();
 
   Future<void> _deleteTopic(BuildContext context, String topicId, String? topicName) async {
     final confirmDelete = await showDialog<bool>(

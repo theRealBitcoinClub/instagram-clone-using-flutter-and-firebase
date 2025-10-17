@@ -125,7 +125,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
           _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
         }
         try {
-          await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], deepScrape ? 400 : 25, 0);
+          await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], deepScrape ? 400 : 100, 0);
           await MemoScraperTag(cacheId + "most", ref, saveToFirebase).startScrapeTags(["/most-posts"], deepScrape ? 400 : 0, 0);
         } catch (e) {
           _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");

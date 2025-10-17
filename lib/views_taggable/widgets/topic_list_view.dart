@@ -1,16 +1,16 @@
 // widgets/topic_list_view.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
 
 import '../../base_scrollable_list_view.dart';
 import '../../custom_flutter_tagger_controller.dart';
+import '../../memo/model/memo_model_topic_light.dart';
 
 class TaggerTopicListView extends BaseScrollableListView {
   final CustomFlutterTaggerController tagController;
-  final List<MemoModelTopic> topics;
+  final List<MemoModelTopicLight> topics;
   final SearchState searchState;
 
   const TaggerTopicListView({Key? key, required this.tagController, required this.topics, required this.searchState}) : super(key: key);
@@ -34,7 +34,7 @@ class _TaggerTopicListViewState extends BaseScrollableListViewState<TaggerTopicL
               style: textTheme.bodyMedium?.copyWith(color: colorScheme.onPrimary, fontWeight: FontWeight.bold),
             ),
           ),
-          title: Text(topic.header, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface)),
+          title: Text(topic.id, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface)),
           onTap: () => _selectTopic(topic),
         );
       }).toList(),
@@ -63,10 +63,10 @@ class _TaggerTopicListViewState extends BaseScrollableListViewState<TaggerTopicL
     return Center(heightFactor: 6, child: LinearProgressIndicator());
   }
 
-  void _selectTopic(MemoModelTopic topic) {
+  void _selectTopic(MemoModelTopicLight topic) {
     widget.tagController.addTag(
       id: topic.id.startsWith("@") ? topic.id.substring(1) : topic.id,
-      name: topic.header.startsWith("@") ? topic.header.substring(1) : topic.header,
+      name: topic.id.startsWith("@") ? topic.id.substring(1) : topic.id,
     );
     ref.read(searchViewModelProvider.notifier).clearSearch();
   }

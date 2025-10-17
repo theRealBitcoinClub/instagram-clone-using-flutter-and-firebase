@@ -6,9 +6,12 @@ import 'package:flutter/foundation.dart';
 import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 
+import '../model/memo_model_topic_light.dart';
+
 class TopicService {
   final FirebaseFirestore _firestore;
   final String _collectionName;
+  final String _topicListDocumentId;
 
   // FIFO cache for tracking persisted topic IDs
   static final _persistedTopicIds = Queue<String>();
@@ -23,7 +26,98 @@ class TopicService {
 
   TopicService({FirebaseFirestore? firestore, String collectionName = FirestoreCollections.topic})
     : _firestore = firestore ?? FirebaseFirestore.instance,
-      _collectionName = collectionName;
+      _collectionName = collectionName,
+      _topicListDocumentId = "${collectionName}topic_list";
+
+  /// Retrieves all lightweight topics from the topic list document
+  /// Automatically initializes the document if it doesn't exist
+  Future<List<MemoModelTopicLight>> getLightweightTopics() async {
+    try {
+      final topicListDocRef = _firestore.collection(_collectionName).doc(_topicListDocumentId);
+      final topicListDoc = await topicListDocRef.get();
+
+      // Initialize document if it doesn't exist
+      if (!topicListDoc.exists) {
+        print("🔄 Topic list document not found, initializing with existing topics...");
+
+        // Get all existing topics from the collection
+        final allTopics = await getAllTopics();
+
+        if (allTopics.isEmpty) {
+          print("No existing topics found to initialize the topic list");
+          return [];
+        }
+
+        // Convert to lightweight format for the topic list
+        final lightTopics = allTopics.map((topic) => {'id': sanitizeFirestoreId(topic.id), 'count': topic.lastPostCount}).toList();
+
+        // Create the topic list document
+        await topicListDocRef.set({'topics': lightTopics, 'last_updated': FieldValue.serverTimestamp(), 'total_count': lightTopics.length});
+
+        print("✅ Topic list document initialized with ${lightTopics.length} existing topics");
+      }
+
+      // Document exists, proceed with normal retrieval
+      final data = topicListDoc.data();
+      if (data == null || !data.containsKey('topics')) {
+        return [];
+      }
+
+      final topicsList = List<Map<String, dynamic>>.from(data['topics'] ?? []);
+      final lightTopics = topicsList
+          .map((topicData) => MemoModelTopicLight(id: topicData['id'] ?? '', count: topicData['count'] ?? 0))
+          .toList();
+
+      print("Retrieved ${lightTopics.length} lightweight topics from topic list");
+      return lightTopics;
+    } catch (e) {
+      print("Error retrieving lightweight topics: $e");
+      return [];
+    }
+  }
+
+  Future<void> _updateTopicListWithNewIds(List<MemoModelTopic> newTopics) async {
+    if (newTopics.isEmpty) return;
+
+    try {
+      final topicListDocRef = _firestore.collection(_collectionName).doc(_topicListDocumentId);
+
+      await _firestore.runTransaction((transaction) async {
+        final docSnapshot = await transaction.get(topicListDocRef);
+
+        Map<String, dynamic> existingTopics = {};
+        if (docSnapshot.exists) {
+          final data = docSnapshot.data();
+          if (data != null && data.containsKey('topics')) {
+            // Convert list to map for easier updates
+            final topicsList = List<Map<String, dynamic>>.from(data['topics'] ?? []);
+            for (final topicData in topicsList) {
+              existingTopics[topicData['id']] = topicData['count'];
+            }
+          }
+        }
+
+        // Update with new topics (overwrite existing counts if topics already exist)
+        for (final topic in newTopics) {
+          final sanitizedId = sanitizeFirestoreId(topic.id);
+          existingTopics[sanitizedId] = topic.postCount;
+        }
+
+        // Convert back to list format for Firestore
+        final updatedTopicsList = existingTopics.entries.map((entry) => {'id': entry.key, 'count': entry.value}).toList();
+
+        transaction.set(topicListDocRef, {
+          'topics': updatedTopicsList,
+          'last_updated': FieldValue.serverTimestamp(),
+          'total_count': updatedTopicsList.length,
+        }, SetOptions(merge: true));
+      });
+
+      print("✅ Topic list updated with ${newTopics.length} new topics");
+    } catch (e) {
+      print("❌ Error updating topic list: $e");
+    }
+  }
 
   // Check if topic is already persisted
   static bool _isTopicAlreadyPersisted(String topicId) {
@@ -210,6 +304,10 @@ class TopicService {
             _addToPersistedCache(sanitizeFirestoreId(topicId));
           }
         }
+
+        // ✅ NEW: Update the topic list with successfully processed topics
+        final successfulTopics = topicsToProcess.where((t) => t.id.isNotEmpty && !failedTopicIds.contains(t.id)).toList();
+        await _updateTopicListWithNewIds(successfulTopics);
       } else {
         print("❌ No topics were successfully added to the batch");
       }
@@ -255,17 +353,5 @@ class TopicService {
       print(s);
       return [];
     }
-  }
-
-  Future<List<MemoModelTopic>> searchTopics(String query) async {
-    if (query.isEmpty) return [];
-    final String lowerQuery = query.toLowerCase();
-    QuerySnapshot snapshot = await _firestore
-        .collection(_collectionName)
-        .where('header_lowercase', isGreaterThanOrEqualTo: lowerQuery)
-        .where('header_lowercase', isLessThanOrEqualTo: lowerQuery + '\uf8ff')
-        .limit(10)
-        .get();
-    return snapshot.docs.map((doc) => MemoModelTopic.fromJson(doc.data() as Map<String, dynamic>)..id = doc.id).toList();
   }
 }

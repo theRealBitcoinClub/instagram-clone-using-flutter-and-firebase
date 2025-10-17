@@ -13,7 +13,7 @@ import '../memo/scraper/memo_scraper_topics.dart';
 
 final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraperManager, void>(() => BackgroundScraperManager());
 
-const bool forceScrape = false;
+const bool forceScrape = true;
 const bool saveToFirebase = true;
 const bool deepScrape = false;
 const cacheId = "letsgonownew";
@@ -123,23 +123,27 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
           await MemoScraperTopic(ref, saveToFirebase).startScrapeTopics(cacheId + "topics", deepScrape ? 200 : 0, 0);
         } catch (e) {
           _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
+          Sentry.logger.error("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
         }
         try {
           await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], deepScrape ? 400 : 100, 0);
           await MemoScraperTag(cacheId + "most", ref, saveToFirebase).startScrapeTags(["/most-posts"], deepScrape ? 400 : 0, 0);
         } catch (e) {
           _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
+          Sentry.logger.error("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
         }
       } else {
         try {
           await MemoScraperTopic(ref, saveToFirebase).startScrapeTopics(cacheId + "topics", 0, 0);
         } catch (e) {
           _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
+          Sentry.logger.error("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
         }
         try {
-          await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], 100, 0);
+          await MemoScraperTag(cacheId + "recent", ref, saveToFirebase).startScrapeTags(["/recent"], 0, 0);
         } catch (e) {
           _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
+          Sentry.logger.error("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
         }
       }
 

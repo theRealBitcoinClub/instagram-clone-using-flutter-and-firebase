@@ -6,9 +6,12 @@ import 'package:flutter/foundation.dart';
 import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 
+import '../model/memo_model_tag_light.dart';
+
 class TagService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const String _tagsCollection = FirestoreCollections.tag;
+  final String _tagListDocumentId = "${FirestoreCollections.tag}tag_list";
 
   // FIFO cache for tracking persisted tag IDs
   static final _persistedTagIds = Queue<String>();
@@ -213,6 +216,51 @@ class TagService {
 
       final failedIds = tagsToProcess.where((t) => t.id.isNotEmpty).map((t) => t.id).toList();
       _executeCallbackIfNeeded(false, 0, failedIds.isNotEmpty ? failedIds : null);
+    }
+  }
+
+  /// Retrieves all lightweight tags from the tag list document
+  /// Automatically initializes the document if it doesn't exist
+  Future<List<MemoModelTagLight>> getLightweightTags() async {
+    try {
+      final tagListDocRef = _firestore.collection(_tagsCollection).doc(_tagListDocumentId);
+      final tagListDoc = await tagListDocRef.get();
+
+      // Initialize document if it doesn't exist
+      if (!tagListDoc.exists) {
+        print("🔄 Tag list document not found, initializing with existing tags...");
+
+        // Get all existing tags from the collection
+        final allTags = await getAllTags();
+
+        if (allTags.isEmpty) {
+          print("No existing tags found to initialize the tag list");
+          return [];
+        }
+
+        // Convert to lightweight format for the tag list
+        final lightTags = allTags.map((tag) => {'id': tag.id, 'count': tag.lastPostCount}).toList();
+
+        // Create the tag list document
+        await tagListDocRef.set({'tags': lightTags, 'last_updated': FieldValue.serverTimestamp(), 'total_count': lightTags.length});
+
+        print("✅ Tag list document initialized with ${lightTags.length} existing tags");
+      }
+
+      // Document exists, proceed with normal retrieval
+      final data = tagListDoc.data();
+      if (data == null || !data.containsKey('tags')) {
+        return [];
+      }
+
+      final tagsList = List<Map<String, dynamic>>.from(data['tags'] ?? []);
+      final lightTags = tagsList.map((tagData) => MemoModelTagLight(id: tagData['id'] ?? '', count: tagData['count'] ?? 0)).toList();
+
+      print("Retrieved ${lightTags.length} lightweight tags from tag list");
+      return lightTags;
+    } catch (e) {
+      print("Error retrieving lightweight tags: $e");
+      return [];
     }
   }
 

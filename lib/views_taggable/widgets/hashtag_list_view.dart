@@ -1,7 +1,7 @@
 // widgets/hashtag_list_view.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mahakka/memo/model/memo_model_tag.dart';
+import 'package:mahakka/memo/model/memo_model_tag_light.dart';
 import 'package:mahakka/provider/translation_service.dart';
 import 'package:mahakka/views_taggable/view_models/search_view_model.dart';
 import 'package:mahakka/views_taggable/widgets/loading_indicator.dart';
@@ -12,7 +12,7 @@ import '../../custom_flutter_tagger_controller.dart';
 
 class TaggerHashtagListView extends BaseScrollableListView {
   final CustomFlutterTaggerController tagController;
-  final List<MemoModelTag> hashtags;
+  final List<MemoModelTagLight> hashtags;
   final SearchState searchState;
   // final WidgetRef ref;
 
@@ -38,7 +38,7 @@ class _TaggerHashtagListViewState extends BaseScrollableListViewState<TaggerHash
             decoration: HashtagDisplayWidget.borderDecoration(isSelected: true, theme: theme),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-              child: Text("#${hashtag.name}", style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface)),
+              child: Text("#${hashtag.id}", style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface)),
             ),
           ),
         );
@@ -68,8 +68,8 @@ class _TaggerHashtagListViewState extends BaseScrollableListViewState<TaggerHash
     return Center(heightFactor: 6, child: LoadingWidget());
   }
 
-  void _selectHashtag(MemoModelTag hashtag) {
-    widget.tagController.addTag(id: hashtag.id, name: hashtag.name);
+  void _selectHashtag(MemoModelTagLight hashtag) {
+    widget.tagController.addTag(id: hashtag.id, name: hashtag.id);
     ref.read(searchViewModelProvider.notifier).clearSearch();
   }
 

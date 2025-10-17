@@ -3,8 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/firebase/tag_service.dart';
 import 'package:mahakka/memo/firebase/topic_service.dart';
-import 'package:mahakka/memo/model/memo_model_tag.dart';
-import 'package:mahakka/memo/model/memo_model_topic.dart';
+
+import '../../memo/model/memo_model_tag_light.dart';
+import '../../memo/model/memo_model_topic_light.dart';
 
 enum SearchResultView { hashtag, topics, hintText }
 
@@ -16,8 +17,8 @@ final searchViewModelProvider = StateNotifierProvider<SearchViewModel, SearchSta
 );
 
 class SearchState {
-  final List<MemoModelTopic> topics;
-  final List<MemoModelTag> hashtags;
+  final List<MemoModelTopicLight> topics;
+  final List<MemoModelTagLight> hashtags;
   final SearchResultView activeView;
   final bool isLoading;
   final String? error;
@@ -31,8 +32,8 @@ class SearchState {
   });
 
   SearchState copyWith({
-    List<MemoModelTopic>? topics,
-    List<MemoModelTag>? hashtags,
+    List<MemoModelTopicLight>? topics,
+    List<MemoModelTagLight>? hashtags,
     SearchResultView? activeView,
     bool? isLoading,
     String? error,
@@ -51,8 +52,8 @@ class SearchViewModel extends StateNotifier<SearchState> {
   final TopicService _topicService;
   final TagService _tagService;
 
-  List<MemoModelTopic>? _cachedTopics;
-  List<MemoModelTag>? _cachedTags;
+  List<MemoModelTopicLight>? _cachedTopics;
+  List<MemoModelTagLight>? _cachedTags;
 
   bool get _isTopicsCacheValid => _cachedTopics != null;
   bool get _isTagsCacheValid => _cachedTags != null;
@@ -66,10 +67,10 @@ class SearchViewModel extends StateNotifier<SearchState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final results = await Future.wait([_topicService.getAllTopics(), _tagService.getAllTags()]);
+      final results = await Future.wait([_topicService.getLightweightTopics(), _tagService.getAllTags()]);
 
-      _cachedTopics = results[0] as List<MemoModelTopic>;
-      _cachedTags = results[1] as List<MemoModelTag>;
+      _cachedTopics = results[0] as List<MemoModelTopicLight>;
+      _cachedTags = results[1] as List<MemoModelTagLight>;
 
       state = state.copyWith(isLoading: false);
     } catch (error, stackTrace) {
@@ -83,10 +84,10 @@ class SearchViewModel extends StateNotifier<SearchState> {
 
     try {
       if (!_isTopicsCacheValid) {
-        _cachedTopics = await _topicService.getAllTopics();
+        _cachedTopics = await _topicService.getLightweightTopics();
       }
       if (!_isTagsCacheValid) {
-        _cachedTags = await _tagService.getAllTags();
+        _cachedTags = await _tagService.getLightweightTags();
       }
 
       return true;
@@ -113,7 +114,8 @@ class SearchViewModel extends StateNotifier<SearchState> {
     await Future.delayed(const Duration(milliseconds: 250));
 
     final trimmedQuery = query.toLowerCase().trim();
-    final results = _cachedTopics!.where((topic) => topic.header.toLowerCase().startsWith(trimmedQuery)).toList();
+    final results = _cachedTopics!.where((topic) => topic.id.toLowerCase().startsWith(trimmedQuery)).toList();
+    results.sort((a, b) => b.count.compareTo(a.count));
 
     state = state.copyWith(topics: results, isLoading: false);
   }
@@ -132,7 +134,8 @@ class SearchViewModel extends StateNotifier<SearchState> {
     await Future.delayed(const Duration(milliseconds: 250));
 
     final trimmedQuery = query.toLowerCase().trim();
-    final results = _cachedTags!.where((tag) => tag.name.toLowerCase().startsWith(trimmedQuery)).toList();
+    final results = _cachedTags!.where((tag) => tag.id.toLowerCase().startsWith(trimmedQuery)).toList();
+    results.sort((a, b) => b.count.compareTo(a.count));
 
     state = state.copyWith(hashtags: results, isLoading: false);
   }

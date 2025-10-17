@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
@@ -7,18 +6,18 @@ import 'package:mahakka/memo/firebase/post_scraper_firebase_service.dart';
 import 'package:mahakka/memo/firebase/tag_service.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../main.dart';
 import '../model/memo_model_post.dart';
 import 'memo_post_scraper.dart';
 
 const prefskey = "lastTagScrape123";
 
 class MemoScraperTag {
-  final Ref ref;
+  final SharedPreferences prefs;
   final bool saveToFirebase;
   final String cacheId;
-  MemoScraperTag(this.cacheId, this.ref, this.saveToFirebase);
+  MemoScraperTag(this.cacheId, this.saveToFirebase, this.prefs);
   final tagService = TagService();
   final postService = PostScraperFirebaseService();
   bool _debugMode = kDebugMode;
@@ -31,7 +30,6 @@ class MemoScraperTag {
   Future<void> startScrapeTags(List<String> orderBy, int startOffset, int endOffset) async {
     for (String order in orderBy) {
       for (int offset = startOffset; offset >= endOffset; offset -= 25) {
-        final prefs = ref.read(sharedPreferencesProvider);
         // check if the first tag has changed
         final sampleTags = await scrapeTags(order, offset);
         if (sampleTags.isEmpty) continue;
@@ -72,8 +70,6 @@ class MemoScraperTag {
 
   /// Filters tags to find only those with new posts
   Future<List<MemoModelTag>> _filterTagsWithNewPosts(List<MemoModelTag> allTags) async {
-    final prefs = ref.read(sharedPreferencesProvider);
-
     final List<MemoModelTag> tagsWithNewPosts = [];
 
     for (final tag in allTags) {
@@ -91,7 +87,6 @@ class MemoScraperTag {
   }
 
   Future<void> persistPostcountAfterSuccessfulScrape(MemoModelTag tag) async {
-    var prefs = ref.read(sharedPreferencesProvider);
     await prefs.setString("$prefskey$cacheId${tag.name}", tag.postCount.toString());
   }
 

@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/config_hide_on_feed_trigger.dart';
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
@@ -13,22 +12,16 @@ import 'package:mahakka/memo_data_checker.dart';
 import 'package:mahakka/youtube_video_checker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../main.dart';
 import '../firebase/topic_service.dart';
 
 class MemoScraperTopic {
-  final Ref ref;
   final bool saveToFirebase;
+  final SharedPreferences prefs;
 
-  MemoScraperTopic(this.ref, this.saveToFirebase);
+  MemoScraperTopic(this.saveToFirebase, this.prefs);
 
   /// Main entry point for scraping topics and their posts
-  /// [postsToPersist]: List to accumulate posts that need to be persisted
-  /// [cacheId]: Unique identifier for caching purposes
-  /// [startOffset]: Starting offset for pagination
-  /// [endOffset]: Ending offset for pagination
   Future<void> startScrapeTopics(String cacheId, int startOffset, int endOffset) async {
-    final prefs = ref.read(sharedPreferencesProvider);
     final topicService = TopicService();
     final postService = PostScraperFirebaseService();
 
@@ -42,7 +35,7 @@ class MemoScraperTopic {
       }
 
       // Filter topics that have new posts
-      final List<MemoModelTopic> topicsWithNewPosts = await _filterTopicsWithNewPosts(prefs, allTopics, cacheId);
+      final List<MemoModelTopic> topicsWithNewPosts = await _filterTopicsWithNewPosts(allTopics, cacheId);
 
       if (topicsWithNewPosts.isEmpty) {
         print("\nSCRAPER TOPICS\nNo new posts found for offset $offset");
@@ -51,7 +44,6 @@ class MemoScraperTopic {
 
       // Process each topic with new posts
       await _processTopicsWithNewPosts(topicsWithNewPosts, cacheId, topicService, postService);
-      // await _processTopicsWithNewPosts(topicsWithNewPosts, cacheId, topicService, postService, postsToPersist);
 
       print("\nSCRAPER TOPICS\nScraped offset $offset - Found ${topicsWithNewPosts.length} topics with new posts");
     }
@@ -59,7 +51,6 @@ class MemoScraperTopic {
     topicService.forceProcessBatch();
     postService.forceProcessBatch();
     print("\nSCRAPER TOPICS\nFINISHED SCRAPING TOPICS: $cacheId");
-    // return postsToPersist;
   }
 
   /// Scrapes topics from the memo.cash website
@@ -79,7 +70,7 @@ class MemoScraperTopic {
   final String keyTopic = "TopicScrape123";
 
   /// Filters topics to find only those with new posts using lastPostCount
-  Future<List<MemoModelTopic>> _filterTopicsWithNewPosts(SharedPreferences prefs, List<MemoModelTopic> allTopics, String cacheId) async {
+  Future<List<MemoModelTopic>> _filterTopicsWithNewPosts(List<MemoModelTopic> allTopics, String cacheId) async {
     final List<MemoModelTopic> topicsWithNewPosts = [];
 
     for (final topic in allTopics) {
@@ -127,12 +118,15 @@ class MemoScraperTopic {
           print("\nSCRAPER TOPICS\nSaved ${newPosts.length} new posts for topic: ${topic.header}");
         }
 
+        // Save the updated post count to SharedPreferences
         final topicKey = "$keyTopic$cacheId${topic.url}";
-        (ref.read(sharedPreferencesProvider)).setString(topicKey, topic.postCount.toString());
+        await prefs.setString(topicKey, topic.postCount.toString());
       } catch (e) {
         print("\nSCRAPER TOPICS\nError processing topic ${topic.header}: $e");
       }
     }
+
+    // Save topics batch
     topicService.saveTopicsBatch(
       topicsWithNewPosts,
       onFinish: (success, processedCount, failedIds) {
@@ -168,8 +162,6 @@ class MemoScraperTopic {
       final List<MemoModelPost> allPosts = await _parsePostsFromData(postsData, topic);
 
       // Return only the new posts (most recent ones first)
-      // Since posts are typically ordered newest first, take the first N new posts
-      //TODO WHAT IF POSTS GET FILTERED BUT ANYWAY THE LAST NEW POST IS SAVED?
       return allPosts.reversed.take(newPostsCount).toList();
     } catch (e) {
       print("\nSCRAPER TOPICS\nError scraping posts for topic ${topic.header}: $e");
@@ -254,8 +246,6 @@ class MemoScraperTopic {
     try {
       final List postItems = postsData.values.first as List;
 
-      //TODO CHECK FOR LAST POST COUNT ONLY PROCESS NEW POST (thats achieved by the take method after this parsing method)
-      //TODO WHAT IF POSTS GET FILTERED BUT ANYWAY THE LAST NEW POST IS SAVED?
       for (final Map<String, Object> postData in postItems) {
         try {
           final MemoModelPost post = _createPostFromData(postData, topic);
@@ -324,11 +314,6 @@ class MemoScraperTopic {
 
     // Set up references and IDs
     MemoScraperUtil.linkReferencesAndSetId(post, topicId: topic.id, creatorId: creator.id);
-
-    // bool hasAtleastWhitelistedDomain = MemoRegExp(post.text!).hasAnyWhitelistedMediaUrl();
-    // if (!hasAtleastWhitelistedDomain) {
-    //   post.text = TextFilter.replaceNonWhitelistedDomains(post.text!);
-    // }
 
     return post;
   }

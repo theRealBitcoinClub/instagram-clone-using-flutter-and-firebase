@@ -42,18 +42,23 @@ class MemoPublisher {
   }
 
   Future<MemoAccountantResponse> doPublish({String topic = "", List<MemoTip> tips = const []}) async {
-    if (_ref.read(userProvider)!.mnemonic != null &&
-        (_memoAction == MemoCode.profileMessage || _memoAction == MemoCode.topicMessage || _memoAction == MemoCode.postLike)) {
-      var userId = _ref.read(userProvider)!.id;
-      var creator = await _ref.read(getCreatorProvider(userId).future);
-      if (creator != null && creator.balanceToken > 0) {
-        bool hasBurned = await triggerBurnTokens();
-        if (hasBurned && tips.isNotEmpty) {
-          tips.removeWhere(
-            (element) => element.receiverAddress == MemoBitcoinBase.bchBurnerAddress,
-          ); //remove the burner tip if user has contributed via token
+    try {
+      if (_ref.read(userProvider)!.mnemonic != null &&
+          (_memoAction == MemoCode.profileMessage || _memoAction == MemoCode.topicMessage || _memoAction == MemoCode.postLike)) {
+        var userId = _ref.read(userProvider)!.id;
+        var creator = await _ref.read(getCreatorProvider(userId).future);
+        if (creator != null && creator.balanceToken > 0) {
+          bool hasBurned = await triggerBurnTokens();
+          if (hasBurned && tips.isNotEmpty) {
+            tips.removeWhere(
+              (element) => element.receiverAddress == MemoBitcoinBase.bchBurnerAddress,
+            ); //remove the burner tip if user has contributed via token
+          }
         }
       }
+    } catch (e) {
+      Sentry.captureException(e);
+      Sentry.logger.error("doPublish triggerburn UNEXPECTED ERROR: $e");
     }
 
     if (_memoAction == MemoCode.profileMessage || _memoAction == MemoCode.topicMessage) topic = _addSuperTagAndSuperTopic(topic);

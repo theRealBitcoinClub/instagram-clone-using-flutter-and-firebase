@@ -95,7 +95,7 @@ class MemoScraperTag {
     for (final tag in tagsWithNewPosts) {
       try {
         // Scrape new posts for this tag
-        final List<MemoModelPost> newPosts = await _scrapeNewPostsForTag(tag, cacheId);
+        final List<MemoModelPost> newPosts = await _scrapePostsByTag(tag, cacheId);
 
         if (newPosts.isNotEmpty) {
           if (saveToFirebase) {
@@ -136,7 +136,7 @@ class MemoScraperTag {
   }
 
   /// Scrapes new posts for a specific tag
-  Future<List<MemoModelPost>> _scrapeNewPostsForTag(MemoModelTag tag, String cacheId) async {
+  Future<List<MemoModelPost>> _scrapePostsByTag(MemoModelTag tag, String cacheId) async {
     final int newPostsCount = tag.postCount! - (tag.lastPostCount ?? 0);
     int skippedCounter = 0;
 

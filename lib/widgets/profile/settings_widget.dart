@@ -110,7 +110,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   void _initAllowLogout() {
     SharedPreferences prefs = ref.read(sharedPreferencesProvider);
     setState(() {
-      allowLogout = prefs.getBool(_mnemonicBackupKey) ?? false;
+      allowLogout = ref.read(userProvider)!.mnemonic == null ? true : prefs.getBool(_mnemonicBackupKey) ?? false;
     });
   }
 
@@ -345,13 +345,15 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
             onSelect: () => _replayIntros(),
           ),
           Divider(color: theme.dividerColor.withAlpha(153), thickness: 2),
-          SettingsOptionWidget(
-            theme: theme,
-            icon: Icons.security_outlined,
-            text: _backupText,
-            dialogContext: context,
-            onSelect: _showMnemonicBackupDialog,
-          ),
+          ref.read(userProvider)!.mnemonic == null
+              ? SizedBox.shrink()
+              : SettingsOptionWidget(
+                  theme: theme,
+                  icon: Icons.security_outlined,
+                  text: _backupText,
+                  dialogContext: context,
+                  onSelect: _showMnemonicBackupDialog,
+                ),
           SettingsOptionWidget(
             theme: theme,
             icon: Icons.logout_rounded,
@@ -627,7 +629,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
     final user = ref.read(userProvider)!;
     showDialog(
       context: context,
-      builder: (ctx) => MnemonicBackupWidget(mnemonic: user.mnemonic, mnemonicBackupKey: _mnemonicBackupKey),
+      builder: (ctx) => MnemonicBackupWidget(mnemonic: user.mnemonic!, mnemonicBackupKey: _mnemonicBackupKey),
     );
   }
 

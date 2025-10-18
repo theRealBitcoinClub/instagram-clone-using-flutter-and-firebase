@@ -273,4 +273,12 @@ class MemoVerifier {
 
     return "success";
   }
+
+  bool isValidWif() {
+    try {
+      return RegExp(r'^[5KL][1-9A-HJ-NP-Za-km-z]{50,51}$').hasMatch(text);
+    } catch (e) {
+      return false;
+    }
+  }
 }

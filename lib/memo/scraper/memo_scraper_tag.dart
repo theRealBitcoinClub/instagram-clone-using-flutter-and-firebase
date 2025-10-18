@@ -34,7 +34,7 @@ class MemoScraperTag {
         final sampleTags = await scrapeTags(order, offset);
         if (sampleTags.isEmpty) continue;
 
-        final key = "$prefskey$cacheId$offset";
+        final key = "$prefskey$cacheId$orderBy$offset";
         final checkString = "${sampleTags[0].lastPost}${sampleTags[0].postCount}";
         final lastCheckString = prefs.getString(key);
 

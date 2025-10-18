@@ -280,7 +280,7 @@ class MemoAccountant {
       }
 
       // Proceed with pinning and verify the result
-      final result = await ipfsService.pinClaimBCH(file, cid, currentUser.mnemonic);
+      final result = await ipfsService.pinClaimBCH(file, cid, mnemonic: currentUser.mnemonic, wif: currentUser.wifLegacy);
 
       // Verify the pinClaimBCH result
       final verificationResult = _verifyPinClaimResult(result, cid);
@@ -361,7 +361,7 @@ class MemoAccountant {
 
   // Original helper methods (unchanged)
   Future<MemoAccountantResponse> _tryPublishLike(MemoModelPost post, String wif) async {
-    var mp = await MemoPublisher.create(ref, MemoBitcoinBase.reOrderTxHash(post.id!), MemoCode.postLike, wif: wif);
+    var mp = await MemoPublisher.create(ref, MemoBitcoinBase.reOrderTxHash(post.id!), MemoCode.postLike, wif);
     List<MemoTip> tips = parseTips(creatorId: post.creatorId.isNotEmpty ? post.creatorId : post.creator!.id);
     return mp.doPublish(tips: tips);
   }
@@ -375,7 +375,7 @@ class MemoAccountant {
   }
 
   Future<MemoAccountantResponse> _publishToMemo(MemoCode c, String text, {String? top, required List<MemoTip> tips}) async {
-    MemoPublisher mp = await MemoPublisher.create(ref, text, c, wif: user.wifLegacy);
+    MemoPublisher mp = await MemoPublisher.create(ref, text, c, user.wifLegacy);
     return mp.doPublish(topic: top ?? "", tips: tips);
   }
 

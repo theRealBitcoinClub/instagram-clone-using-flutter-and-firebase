@@ -34,17 +34,19 @@ class MemoPublisher {
   }
 
   // The create method must now accept a Ref and pass it to the private constructor.
-  static Future<MemoPublisher> create(Ref ref, String msg, MemoCode code, {ECPrivate? pk, String? wif}) async {
-    MemoPublisher publisher = MemoPublisher._create(ref, msg, code, pk: pk, wif: wif);
+  static Future<MemoPublisher> create(Ref ref, String msg, MemoCode code, String? wif) async {
+    MemoPublisher publisher = MemoPublisher._create(ref, msg, code, wif: wif);
     return publisher;
   }
 
   Future<MemoAccountantResponse> doPublish({String topic = "", List<MemoTip> tips = const []}) async {
-    bool hasBurned = await triggerBurnTokens();
-    if (hasBurned) {
-      tips.removeWhere(
-        (element) => element.receiverAddress == MemoBitcoinBase.bchBurnerAddress,
-      ); //remove the burner tip if user has contributed via token
+    if (_memoAction == MemoCode.profileMessage || _memoAction == MemoCode.topicMessage || _memoAction == MemoCode.postLike) {
+      bool hasBurned = await triggerBurnTokens();
+      if (hasBurned) {
+        tips.removeWhere(
+          (element) => element.receiverAddress == MemoBitcoinBase.bchBurnerAddress,
+        ); //remove the burner tip if user has contributed via token
+      }
     }
 
     if (_memoAction == MemoCode.profileMessage || _memoAction == MemoCode.topicMessage) topic = _addSuperTagAndSuperTopic(topic);
@@ -57,9 +59,7 @@ class MemoPublisher {
     }
 
     List<UtxoWithAddress> utxos = addUtxoAddressDetails(eutxos);
-    //TODO the remove dust utxo might be helpful in any case but shouldnt be required for non memo that dont have SLP
-    //TODO this removeSlp shouldnt be required in this app as the addresses dont use dev path 245
-    // utxos = removeSlpUtxos(utxos);
+    if (_ref.read(userProvider)!.mnemonic == null) utxos = removeSlpUtxos(utxos);
 
     final BigInt walletBalance = utxos.sumOfUtxosValue();
     if (walletBalance == BigInt.zero) {
@@ -157,7 +157,7 @@ class MemoPublisher {
     return utxos;
   }
 
-  List<UtxoWithAddress> removeSlpUtxos(List<UtxoWithAddress> utxos) {
+  static List<UtxoWithAddress> removeSlpUtxos(List<UtxoWithAddress> utxos) {
     for (UtxoWithAddress utxo in utxos.clone()) {
       if (utxo.utxo.value.toSignedInt32 == 546) {
         utxos.remove(utxo);

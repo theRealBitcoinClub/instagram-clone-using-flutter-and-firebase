@@ -9,6 +9,7 @@ import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/firebase/user_service.dart';
 import 'package:mahakka/memo_data_checker.dart';
+import 'package:mahakka/provider/user_provider.dart';
 
 import '../../provider/electrum_provider.dart';
 import '../../repositories/creator_repository.dart';
@@ -249,7 +250,7 @@ class MemoModelCreator {
   Future<void> refreshBalanceMahakka(Ref ref) async {
     print("refreshBalanceMahakka");
     final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-    Balance balances = await base.getBalances(bchAddressCashtokenAware);
+    Balance balances = await base.getBalances(bchAddressCashtokenAware, isWifUser: ref.read(userProvider)!.mnemonic == null);
     balanceBch = balances.bch;
     balanceToken = balances.token;
     ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: false);
@@ -258,7 +259,7 @@ class MemoModelCreator {
   Future<void> refreshBalanceMemo(Ref ref) async {
     print("refreshBalanceMemo");
     final MemoBitcoinBase base = await ref.read(electrumServiceProvider.future);
-    balanceMemo = await base.getBalances(id).then((value) => value.bch);
+    balanceMemo = await base.getBalances(id, isWifUser: ref.read(userProvider)!.mnemonic == null).then((value) => value.bch);
     ref.read(creatorRepositoryProvider).saveToCache(this, saveToFirebase: false);
   }
 

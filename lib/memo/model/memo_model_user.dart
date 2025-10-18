@@ -83,7 +83,7 @@ class MemoModelUser {
   @JsonKey(includeFromJson: false, includeToJson: false)
   late ECPrivate pkLegacy;
   @JsonKey(includeFromJson: false, includeToJson: false)
-  late String mnemonic;
+  String? mnemonic;
   @JsonKey(includeFromJson: false, includeToJson: false)
   late String wifBchCashtoken;
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -106,13 +106,25 @@ class MemoModelUser {
        tipAmountSerialized = tipAmount,
        ipfsCids = ipfsCids ?? [];
 
-  factory MemoModelUser.fromMnemonic({required String mnemonic}) {
-    if (MemoVerifier(mnemonic).verifyMnemonic() != "success") {
-      throw ArgumentError('Invalid mnemonic.');
+  factory MemoModelUser.fromBackup({String? mnemonic, String? wif}) {
+    if (mnemonic == null && wif == null) {
+      throw ArgumentError('Either mnemonic or wif must be provided.');
+    }
+    if (mnemonic != null && wif != null) {
+      throw ArgumentError('Only one of mnemonic or wif can be provided.');
+    }
+    if (mnemonic != null) {
+      if (MemoVerifier(mnemonic).verifyMnemonic() != "success") {
+        throw ArgumentError('Invalid mnemonic.');
+      }
     }
 
-    final pkLegacy = MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathMemoBch);
-    final pkBchCashtoken = MemoBitcoinBase.createBip44PrivateKey(mnemonic, MemoBitcoinBase.derivationPathCashtoken);
+    final pkLegacy = MemoBitcoinBase.createBip44PrivateKey(mnemonic: mnemonic, devPath: MemoBitcoinBase.derivationPathMemoBch, wif: wif);
+    final pkBchCashtoken = MemoBitcoinBase.createBip44PrivateKey(
+      mnemonic: mnemonic,
+      devPath: MemoBitcoinBase.derivationPathCashtoken,
+      wif: wif,
+    );
 
     final p2pkhWt = P2pkhAddress.fromHash160(addrHash: pkBchCashtoken.getPublic().toHash160Hex(), type: P2pkhAddressType.p2pkhwt);
     final bchCashtokenAware = p2pkhWt.toAddress(BitcoinCashNetwork.mainnet);

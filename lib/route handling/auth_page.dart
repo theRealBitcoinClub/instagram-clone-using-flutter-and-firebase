@@ -41,8 +41,7 @@ class AuthPage extends ConsumerWidget {
     //   // Or proceed to login/register, logging the error
     // }
 
-    if (user != null && user.mnemonic.isNotEmpty) {
-      // return
+    if (user != null && user.hasInit) {
       return HomeSceen(key: ValueKey("home${user.id}_$limit"));
     } else {
       return const LoginScreen();

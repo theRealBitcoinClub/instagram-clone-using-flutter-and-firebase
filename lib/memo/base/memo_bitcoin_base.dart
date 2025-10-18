@@ -98,7 +98,16 @@ class MemoBitcoinBase {
     _badServers.clear();
   }
 
-  Future<Balance> getBalances(String address) async {
+  static List<ElectrumUtxo> removeSlpUtxos(List<ElectrumUtxo> utxos) {
+    for (ElectrumUtxo utxo in utxos.clone()) {
+      if (utxo.value.toSignedInt32 == 546) {
+        utxos.remove(utxo);
+      }
+    }
+    return utxos;
+  }
+
+  Future<Balance> getBalances(String address, {bool isWifUser = false}) async {
     const tokenId = MemoBitcoinBase.tokenId;
     final isLegacy = !address.startsWith('bitcoincash:');
     final hasToken = address.startsWith('bitcoincash:z');
@@ -113,7 +122,10 @@ class MemoBitcoinBase {
         typedAddress = BitcoinCashAddress(address);
       }
 
-      final electrumUtxos = await requestElectrumUtxos(typedAddress, includeCashtokens: hasToken);
+      var electrumUtxos = await requestElectrumUtxos(typedAddress, includeCashtokens: hasToken);
+      if (isWifUser) {
+        electrumUtxos = removeSlpUtxos(electrumUtxos);
+      }
 
       print('Found ${electrumUtxos.length} UTXOs for the address.');
 
@@ -218,14 +230,16 @@ class MemoBitcoinBase {
     return P2pkhAddress.fromHash160(addrHash: pubKey.toAddress().addressProgram, type: P2pkhAddressType.p2pkh);
   }
 
-  static ECPrivate createBip44PrivateKey(String mnemonic, String derivationPath) {
-    //TODO check that derivationPath is one of specified Enums
+  static ECPrivate createBip44PrivateKey({String? mnemonic, String? devPath, String? wif}) {
+    if (wif == null) {
+      List<int> seed = Bip39SeedGenerator(Mnemonic.fromString(mnemonic!)).generate();
 
-    List<int> seed = Bip39SeedGenerator(Mnemonic.fromString(mnemonic)).generate();
-
-    Bip32Slip10Secp256k1 bip32 = Bip32Slip10Secp256k1.fromSeed(seed);
-    Bip32Base bip44 = bip32.derivePath(derivationPath);
-    return ECPrivate.fromBytes(bip44.privateKey.raw);
+      Bip32Slip10Secp256k1 bip32 = Bip32Slip10Secp256k1.fromSeed(seed);
+      Bip32Base bip44 = bip32.derivePath(devPath!);
+      return ECPrivate.fromBytes(bip44.privateKey.raw);
+    } else {
+      return ECPrivate.fromWif(wif, netVersion: BitcoinCashNetwork.mainnet.wifNetVer);
+    }
   }
 
   Future<String> broadcastTransaction(BtcTransaction tx) async {
@@ -253,12 +267,12 @@ class MemoBitcoinBase {
     return reversedHexString;
   }
 
-  Future<String> sendIpfs(List<Map<String, dynamic>> outputs, String mnemonic) async {
+  Future<String> sendIpfs(List<Map<String, dynamic>> outputs, {String? mnemonic, String? wif}) async {
     try {
       if (outputs.isEmpty) {
         throw Exception('No outputs provided for transaction');
       }
-      final privateKey = createBip44PrivateKey(mnemonic, derivationPathMemoBch);
+      final privateKey = createBip44PrivateKey(mnemonic: mnemonic, devPath: derivationPathMemoBch, wif: wif);
       final senderAddress = createAddressP2PKHWT(privateKey);
       final cashAddress = BitcoinCashAddress.fromBaseAddress(senderAddress);
       final electrumUtxos = await requestElectrumUtxos(cashAddress);

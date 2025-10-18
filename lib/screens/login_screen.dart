@@ -26,7 +26,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   bool _isInputValid = false;
   String? _errorMessage;
   bool _isLoading = false;
-  String _processedMnemonic = "";
+  String? _processedMnemonic;
+  String? _verifiedWif;
   Timer? _clipboardTimer;
   final FocusNode _mnemonicFocusNode = FocusNode();
 
@@ -113,6 +114,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   }
 
   void _handleInput() {
+    if (hasValidWif()) return;
+
     final text = _mnemonicController.text;
     final selection = _mnemonicController.selection;
 
@@ -161,6 +164,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
 
   int _previousTextLength = 0;
 
+  bool hasValidWif() {
+    var inputTrimmed = _mnemonicController.text.trim();
+    if (inputTrimmed.isEmpty) {
+      return false;
+    }
+
+    if (MemoVerifier(inputTrimmed).isValidWif()) {
+      _verifiedWif = inputTrimmed;
+
+      setState(() {
+        _isInputValid = true;
+        _errorMessage = null;
+      });
+      return true;
+    }
+
+    return false;
+  }
+
   void _validateMnemonic() async {
     var inputTrimmed = _mnemonicController.text.trim();
     if (inputTrimmed.isEmpty) {
@@ -172,7 +194,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
     }
 
     _processedMnemonic = toLowCaseAndRemoveTooManySpaces(inputTrimmed);
-    String verifiedMnemonic = MemoVerifier(_processedMnemonic).verifyMnemonic();
+    String verifiedMnemonic = MemoVerifier(_processedMnemonic!).verifyMnemonic();
 
     if (verifiedMnemonic != "success") {
       verifiedMnemonic = await ref.read(autoTranslationTextProvider(verifiedMnemonic).future);
@@ -206,7 +228,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
   Future<void> doHeavyWork() async {
     try {
       final authChecker = ref.read(authCheckerProvider);
-      String res = await authChecker.loginInWithMnemonic(_processedMnemonic);
+      String res = await authChecker.loginInWithMnemonic(mnemonic: _processedMnemonic, wif: _verifiedWif);
       if (res != "success") {
         if (mounted) {
           ref.read(snackbarServiceProvider).showPartiallyTranslatedSnackBar(translateable: res, type: SnackbarType.error);

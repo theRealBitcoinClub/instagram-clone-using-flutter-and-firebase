@@ -54,6 +54,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     }
 
     ref.onDispose(() {
+      isScraping = false;
       PostScraperFirebaseService.clearMetadataCache();
       _scraperTimer?.cancel();
       _print("BGS: 🛑 Timer disposed! 👋");
@@ -111,57 +112,86 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
       return;
     }
     if (isScraping) {
-      _print("BGS: ⏭️ Skipping scrape - its still running!");
+      _print("BGS: ⏭️ Skipping scrape - it's still running!");
       return;
     }
-    isScraping = true;
 
+    isScraping = true;
     state = const AsyncValue.loading();
     _print("BGS: 🚀 Started scraping process... 🎣");
 
     try {
-      // ✅ NEW: Initialize post metadata system
-      final postService = PostScraperFirebaseService();
-      await postService.initializePostMetadata();
-      if (_debugMode) {
-        _print("BGS: debug mode scraping, forceScrape: $forceScrape, deepScrape: $deepScrape");
-        try {
-          // await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topics", deepScrape ? 200 : 0, 0);
-        } catch (e) {
-          _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
-          Sentry.logger.error("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
-        }
-        try {
-          await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], deepScrape ? 400 : 100, 0);
-          // await MemoScraperTag(cacheId + "most", saveToFirebase, _prefs).startScrapeTags(["/most-posts"], deepScrape ? 400 : 0, 0);
-        } catch (e) {
-          _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
-          Sentry.logger.error("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
-        }
-      } else {
-        try {
-          await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topics", 0, 0);
-        } catch (e) {
-          _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
-          Sentry.logger.error("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
-        }
-        try {
-          await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], 100, 0);
-        } catch (e) {
-          _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
-          Sentry.logger.error("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
-        }
-      }
+      // Use runZonedGuarded to catch even unhandled asynchronous errors
+      await runZonedGuarded(
+        () async {
+          // ✅ NEW: Initialize post metadata system
+          final postService = PostScraperFirebaseService();
+          await postService.initializePostMetadata();
 
-      // Update last scrape time only on successful completion
-      await _updateLastScrapeTime();
-      state = const AsyncValue.data(null);
-      _print("BGS: ✅ Scraping process completed! 🎉");
+          if (_debugMode) {
+            _print("BGS: debug mode scraping, forceScrape: $forceScrape, deepScrape: $deepScrape");
+            await _runDebugScraping();
+          } else {
+            await _runProductionScraping();
+          }
+
+          // Update last scrape time only on successful completion
+          await _updateLastScrapeTime();
+          state = const AsyncValue.data(null);
+          _print("BGS: ✅ Scraping process completed! 🎉");
+        },
+        (error, stackTrace) {
+          // This catches even unhandled async errors
+          _print("BGS: ❌ Unhandled error during scraping: $error 🚨");
+          Sentry.captureException(error, stackTrace: stackTrace);
+          state = AsyncValue.error(error, stackTrace);
+        },
+      );
     } catch (e, s) {
+      // This catches synchronous errors
+      _print("BGS: ❌ Synchronous error during scraping: $e 🚨");
+      Sentry.captureException(e, stackTrace: s);
       state = AsyncValue.error(e, s);
-      _print("BGS: ❌ An error occurred during scraping: $e 🚨");
     } finally {
+      // This should now be much more reliable
       isScraping = false;
+      _print("BGS: 🔓 Scraping state reset - isScraping: $isScraping");
+    }
+  }
+
+  // Extract the scraping logic for better organization
+  Future<void> _runDebugScraping() async {
+    try {
+      // await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topics", deepScrape ? 200 : 0, 0);
+    } catch (e) {
+      _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
+      Sentry.captureException(e);
+      // Don't rethrow - we want to continue with tag scraping
+    }
+
+    try {
+      await MemoScraperTag("${cacheId}recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], deepScrape ? 500 : 100, 0);
+      await MemoScraperTag("${cacheId}most", saveToFirebase, _prefs).startScrapeTags(["/most-posts"], deepScrape ? 500 : 0, 0);
+    } catch (e) {
+      _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
+      Sentry.captureException(e);
+      // Don't rethrow - we've logged the error
+    }
+  }
+
+  Future<void> _runProductionScraping() async {
+    try {
+      await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topics", 0, 0);
+    } catch (e) {
+      _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
+      Sentry.captureException(e);
+    }
+
+    try {
+      await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], 100, 0);
+    } catch (e) {
+      _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
+      Sentry.captureException(e);
     }
   }
 

@@ -58,7 +58,7 @@ class IpfsPinClaimService {
     return response;
   }
 
-  Future<Map<String, String>> pinClaimBCH(File file, String cid, String mnemonic) async {
+  Future<Map<String, String>> pinClaimBCH(File file, String cid, {String? mnemonic, String? wif}) async {
     const maxRetries = 3;
     int attempt = 0;
 
@@ -97,7 +97,7 @@ class IpfsPinClaimService {
           {'address': address, 'amountSat': amountSat},
         ];
 
-        final txid = await bitcoinBase.sendIpfs(outputs, mnemonic);
+        final txid = await bitcoinBase.sendIpfs(outputs, mnemonic: mnemonic, wif: wif);
         print('IpfsPinClaimService: Transaction sent successfully, txid: $txid');
 
         // Wait for the transaction delay

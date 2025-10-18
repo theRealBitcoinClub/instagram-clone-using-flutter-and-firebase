@@ -6,8 +6,10 @@ import 'package:mahakka/memo/base/memo_bitcoin_base.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_tip.dart';
 import 'package:mahakka/provider/user_provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../provider/electrum_provider.dart';
+import '../../repositories/creator_repository.dart';
 import 'memo_code.dart';
 import 'memo_transaction_builder.dart';
 
@@ -40,12 +42,17 @@ class MemoPublisher {
   }
 
   Future<MemoAccountantResponse> doPublish({String topic = "", List<MemoTip> tips = const []}) async {
-    if (_memoAction == MemoCode.profileMessage || _memoAction == MemoCode.topicMessage || _memoAction == MemoCode.postLike) {
-      bool hasBurned = await triggerBurnTokens();
-      if (hasBurned) {
-        tips.removeWhere(
-          (element) => element.receiverAddress == MemoBitcoinBase.bchBurnerAddress,
-        ); //remove the burner tip if user has contributed via token
+    if (_ref.read(userProvider)!.mnemonic != null &&
+        (_memoAction == MemoCode.profileMessage || _memoAction == MemoCode.topicMessage || _memoAction == MemoCode.postLike)) {
+      var userId = _ref.read(userProvider)!.id;
+      var creator = await _ref.read(getCreatorProvider(userId).future);
+      if (creator != null && creator.balanceToken > 0) {
+        bool hasBurned = await triggerBurnTokens();
+        if (hasBurned && tips.isNotEmpty) {
+          tips.removeWhere(
+            (element) => element.receiverAddress == MemoBitcoinBase.bchBurnerAddress,
+          ); //remove the burner tip if user has contributed via token
+        }
       }
     }
 
@@ -176,10 +183,12 @@ class MemoPublisher {
       BitcoinCashAddress senderBCHp2pkhwt = BitcoinCashAddress.fromBaseAddress(senderP2PKHWT);
       List<ElectrumUtxo> electrumUTXOs = await base.requestElectrumUtxos(senderBCHp2pkhwt, includeCashtokens: true);
 
-      if (electrumUTXOs.length == 0) {
+      if (electrumUTXOs.isEmpty) {
         print("Zero UTXOs found");
         return false;
       }
+
+      if (_ref.read(userProvider)!.mnemonic == null) electrumUTXOs = MemoBitcoinBase.removeSlpUtxos(electrumUTXOs);
 
       List<UtxoWithAddress> utxos = base.getSpecificTokenAndGeneralUtxos(electrumUTXOs, senderBCHp2pkhwt, bip44Sender, MemoBitcoinBase.tokenId);
 
@@ -210,6 +219,8 @@ class MemoPublisher {
       base.broadcastTransaction(signedTx);
       return true;
     } catch (e) {
+      Sentry.captureException(e);
+      Sentry.logger.error("UNEXPECTED ERROR: BURN TOKEN: $e");
       print("UNEXPECTED ERROR: BURN TOKEN: $e");
       return false;
     }

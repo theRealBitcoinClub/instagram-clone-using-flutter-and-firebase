@@ -673,6 +673,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                   onCancel: _onCancel,
                   // maxTagsCounter: MemoVerifier.maxHashtags,
                 ),
+                if (_isSendingReplyTx) AnimGrowFade(show: _isSendingReplyTx, child: LinearProgressIndicator(minHeight: 1.5)),
               ],
             ),
           ),

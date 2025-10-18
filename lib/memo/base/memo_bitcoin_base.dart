@@ -275,8 +275,10 @@ class MemoBitcoinBase {
       final privateKey = createBip44PrivateKey(mnemonic: mnemonic, devPath: derivationPathMemoBch, wif: wif);
       final senderAddress = createAddressP2PKHWT(privateKey);
       final cashAddress = BitcoinCashAddress.fromBaseAddress(senderAddress);
-      final electrumUtxos = await requestElectrumUtxos(cashAddress);
+      var electrumUtxos = await requestElectrumUtxos(cashAddress);
+      if (mnemonic == null) electrumUtxos = removeSlpUtxos(electrumUtxos);
       final utxosWithAddress = transformUtxosAddAddressDetails(electrumUtxos, cashAddress, privateKey);
+
       final totalBalance = utxosWithAddress.fold(BigInt.zero, (previousValue, element) => previousValue + element.utxo.value);
       final bitcoinOutputs = <BitcoinOutput>[];
       BigInt totalOutputAmount = BigInt.zero;

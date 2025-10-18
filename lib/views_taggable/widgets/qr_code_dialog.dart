@@ -91,7 +91,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
         P2pkhAddress.fromAddress(address: legacyAddress, network: BitcoinNetwork.mainnet, type: P2pkhAddressType.p2pkh),
       ).address;
     } catch (e) {
-      _logError('An error occurred during address conversion: $e');
+      _logError('An error occurred during legacyAddress $legacyAddress conversion: $e');
       return legacyAddress;
     }
   }
@@ -228,7 +228,7 @@ class _QrCodeDialogState extends ConsumerState<QrCodeDialog> {
   }
 
   String shortenAddress(String addr) {
-    return addr.isNotEmpty && addr.startsWith("bitcoincash:") ? convertToBchFormat(addr).substring(12) : "";
+    return addr.isNotEmpty && addr.startsWith("bitcoincash:") ? addr.substring(12) : "";
   }
 
   Container buildActionButtons(BuildContext dialogCtx, String addressToShow) {

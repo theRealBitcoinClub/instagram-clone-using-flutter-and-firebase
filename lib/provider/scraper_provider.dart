@@ -21,8 +21,8 @@ const cacheId = "okeywhynot_";
 
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
-  final Duration _initialDelay = Duration(seconds: 15);
-  final Duration _scrapeInterval = kDebugMode && !forceScrape ? Duration(hours: 3) : Duration(seconds: 120);
+  final Duration _initialDelay = Duration(seconds: 10);
+  final Duration _scrapeInterval = kDebugMode && !forceScrape ? Duration(hours: 3) : Duration(seconds: 60);
   final bool _debugMode = kDebugMode;
 
   static const String _lastScrapeKey = 'last_scrape_timestamp';
@@ -34,7 +34,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
     // Initialize SharedPreferences
     _prefs = ref.read(sharedPreferencesProvider);
-    bool needsToUpdate = ref.watch(updateInfoProvider).isUpdateAvailable;
+    bool needsToUpdate = forceScrape ? false : ref.watch(updateInfoProvider).isUpdateAvailable;
 
     // Check if we should run scraping based on last scrape time
     if (_shouldRunScraping() && !needsToUpdate) {
@@ -105,9 +105,6 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
   /// The main scraping logic.
   Future<void> _runScrapingProcess() async {
-    // ✅ NEW: Initialize post metadata system
-    final postService = PostScraperFirebaseService();
-    await postService.initializePostMetadata();
     // Check if we should run scraping before starting
     if (!_shouldRunScraping()) {
       _print("BGS: ⏭️ Skipping scrape - recently completed! 📅");
@@ -120,10 +117,14 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     isScraping = true;
 
     state = const AsyncValue.loading();
-    _print("BGS: 🚀 Starting scraping process... 🎣");
+    _print("BGS: 🚀 Started scraping process... 🎣");
 
     try {
+      // ✅ NEW: Initialize post metadata system
+      final postService = PostScraperFirebaseService();
+      await postService.initializePostMetadata();
       if (_debugMode) {
+        _print("BGS: debug mode scraping, forceScrape: $forceScrape, deepScrape: $deepScrape");
         try {
           // await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topics", deepScrape ? 200 : 0, 0);
         } catch (e) {
@@ -131,7 +132,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
           Sentry.logger.error("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
         }
         try {
-          await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], deepScrape ? 400 : 0, 0);
+          await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], deepScrape ? 400 : 100, 0);
           // await MemoScraperTag(cacheId + "most", saveToFirebase, _prefs).startScrapeTags(["/most-posts"], deepScrape ? 400 : 0, 0);
         } catch (e) {
           _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
@@ -145,7 +146,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
           Sentry.logger.error("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
         }
         try {
-          await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], 0, 0);
+          await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], 100, 0);
         } catch (e) {
           _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
           Sentry.logger.error("BGS: ❌ An error occurred during TAG scraping: $e 🚨");

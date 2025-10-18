@@ -15,9 +15,6 @@ class PostScraperFirebaseService {
   static const String _metadataCollection = '${FirestoreCollections.posts}_metadata';
   static const int _maxIdsPerDocument = 10000;
   static final _metadataCache = <String, Set<String>>{}; // document_id -> post_ids
-  static bool _isMetadataInitialized = false;
-  static bool _isMetadataInitializedGlobally = false;
-  static Completer<void>? _initializationCompleter;
 
   static final _persistedPostIds = Queue<String>();
   static const int _maxCacheSize = 100000;
@@ -33,61 +30,30 @@ class PostScraperFirebaseService {
     : _firestore = firestore ?? FirebaseFirestore.instance,
       _collectionName = collectionName;
 
-  /// Initializes post metadata only if no metadata documents exist yet
   Future<void> initializePostMetadata() async {
-    // If already initialized, return immediately
-    if (_isMetadataInitializedGlobally) {
-      return;
-    }
-
-    // If initialization is in progress, wait for it to complete
-    if (_initializationCompleter != null) {
-      await _initializationCompleter!.future;
-      return;
-    }
-
-    _initializationCompleter = Completer<void>();
-
     try {
       _print("🔄 Checking if post metadata needs initialization...");
-
-      // Check if any metadata documents already exist
       final existingMetadata = await _firestore.collection(_metadataCollection).limit(1).get();
 
-      // If metadata documents already exist, just load them into cache
       if (existingMetadata.docs.isNotEmpty) {
         _print("📊 Metadata documents already exist, loading into cache...");
         await _loadAllMetadataIntoCache();
-        _isMetadataInitializedGlobally = true;
-        _initializationCompleter!.complete();
         return;
       }
 
-      // Only initialize if no metadata documents exist
       _print("🔄 No metadata documents found, initializing from existing posts...");
-
-      // Clear existing cache
       _metadataCache.clear();
-
-      // Get all existing post IDs from the posts collection
       final allPostIds = await _getAllExistingPostIds();
 
       if (allPostIds.isEmpty) {
         _print("No existing posts found for metadata initialization");
-        _isMetadataInitializedGlobally = true;
-        _initializationCompleter!.complete();
         return;
       }
 
       // Distribute post IDs across metadata documents
       await _distributePostIdsToMetadataDocs(allPostIds);
-
-      _isMetadataInitializedGlobally = true;
-      _initializationCompleter!.complete();
       _print("✅ Post metadata initialized with ${allPostIds.length} post IDs across ${_metadataCache.length} documents");
     } catch (e) {
-      _initializationCompleter!.completeError(e);
-      _initializationCompleter = null;
       _print("❌ Error initializing post metadata: $e");
       rethrow;
     }
@@ -281,15 +247,13 @@ class PostScraperFirebaseService {
   /// Clears the metadata cache (call this in onDispose)
   static void clearMetadataCache() {
     _metadataCache.clear();
-    _isMetadataInitializedGlobally = false; // ✅ Reset this too
-    _initializationCompleter = null; // ✅ And this
     print("🧹 Metadata cache cleared");
   }
 
   /// Gets metadata cache statisticsl
   static Map<String, dynamic> getMetadataCacheStats() {
     final totalIds = _metadataCache.values.fold<int>(0, (sum, ids) => sum + ids.length);
-    return {'cached_documents': _metadataCache.length, 'total_cached_ids': totalIds, 'is_initialized': _isMetadataInitialized};
+    return {'cached_documents': _metadataCache.length, 'total_cached_ids': totalIds};
   }
 
   // Check if post is already persisted and add to cache if saving

@@ -209,7 +209,7 @@ class TagService {
 
         // ✅ NEW: Update the tag list with successfully processed tags
         final successfulTags = tagsToProcess.where((t) => t.id.isNotEmpty && !failedTagIds.contains(t.id)).toList();
-        await _updateTagListWithNewIds(successfulTags);
+        await _updateTagListCountAndAddNewIds(successfulTags);
       } else {
         _print("❌ No tags were successfully added to the batch");
       }
@@ -223,8 +223,7 @@ class TagService {
     }
   }
 
-  /// Updates the tag list document with new tag IDs and their counts
-  Future<void> _updateTagListWithNewIds(List<MemoModelTag> newTags) async {
+  Future<void> _updateTagListCountAndAddNewIds(List<MemoModelTag> newTags) async {
     if (newTags.isEmpty) return;
 
     try {

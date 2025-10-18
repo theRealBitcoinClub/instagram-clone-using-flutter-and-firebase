@@ -55,7 +55,7 @@ class MemoScraperTag {
         }
 
         // Process each tag with new posts
-        await _processTagsWithNewPosts(tagsWithNewPosts);
+        await _scrapeTagsWithNewPosts(tagsWithNewPosts);
 
         //ITS IMPORTANT TO SET THE CHECKSTRING ONLY AFTER SUCCESSFULLY SCRAPING
         await prefs.setString(key, checkString);
@@ -91,7 +91,7 @@ class MemoScraperTag {
   }
 
   /// Processes tags that have new posts by scraping their content
-  Future<void> _processTagsWithNewPosts(List<MemoModelTag> tagsWithNewPosts) async {
+  Future<void> _scrapeTagsWithNewPosts(List<MemoModelTag> tagsWithNewPosts) async {
     for (final tag in tagsWithNewPosts) {
       try {
         // Scrape new posts for this tag

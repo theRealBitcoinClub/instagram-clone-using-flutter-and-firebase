@@ -125,13 +125,13 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     try {
       if (_debugMode) {
         try {
-          await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topics", deepScrape ? 200 : 0, 0);
+          // await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topics", deepScrape ? 200 : 0, 0);
         } catch (e) {
           _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
           Sentry.logger.error("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
         }
         try {
-          // await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], deepScrape ? 400 : 0, 0);
+          await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], deepScrape ? 400 : 0, 0);
           // await MemoScraperTag(cacheId + "most", saveToFirebase, _prefs).startScrapeTags(["/most-posts"], deepScrape ? 400 : 0, 0);
         } catch (e) {
           _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");

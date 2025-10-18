@@ -228,8 +228,7 @@ class TopicService {
 
   void _addToBatchQueue(List<MemoModelTopic> topics) {
     for (final topic in topics) {
-      //TODO the topics are not individually saved, their count is held in metadata object, all the implementation should be using the metadata type implementattion?
-      if (topic.lastPostCount == 0) _batchQueue.add(topic);
+      _batchQueue.add(topic);
     }
     print("Added ${topics.length} topics to batch queue. Queue size: ${_batchQueue.length}");
   }

@@ -81,14 +81,38 @@ class MemoPostScraper {
 
     for (int currentOffset = initialOffset; currentOffset >= 0; currentOffset -= offsetStep) {
       final String scrapeUrl = useRawUrl ? baseUrl : "$baseUrl?offset=$currentOffset&x=$cacheId";
-      _logInfo("Scraping posts from: $scrapeUrl");
+      final String apiUrl =
+          "https://beta-api.memo.cash/post/tag?tag=${baseUrl.split("/").last.split("?").first}&offset=$currentOffset&x=$cacheId";
+      _logInfo("Scraping posts scrapeUrl: $scrapeUrl");
+      _logInfo("Scraping posts apiUrl: $apiUrl");
+
+      Iterable<dynamic>? fetchedFromApiList;
+      Map<String, Object>? scrapedData;
 
       try {
-        final Map<String, Object> scrapedData = await MemoScraperUtil.createScraper(scrapeUrl, config);
+        var response = await http.get(Uri.parse(apiUrl));
+        if (response.statusCode == 200) {
+          fetchedFromApiList = json.decode(response.body);
+        } else {
+          _logWarning("Api request response.statusCode != 200 $apiUrl, ${response.statusCode}, fallback to scraper");
+        }
+      } catch (e) {
+        _logError("Api request $apiUrl failed, fallback to scraper", e: e);
+      }
+
+      try {
+        if (fetchedFromApiList == null) scrapedData = await MemoScraperUtil.createScraper(scrapeUrl, config);
+      } catch (e) {
+        _logError("Scraping failed for $scrapeUrl", e: e);
+      }
+      _logInfo("success on api: ${fetchedFromApiList != null}, success on scrape: ${scrapedData != null}");
+
+      try {
         final List<MemoModelPost> newPosts = await _parseScrapedPostData(
-          scrapedData,
+          scrapedData: scrapedData,
           skippedPostWasFiltered: onSkipPost,
           newPostCount: newPostCount,
+          postListFromApiFetch: fetchedFromApiList,
         );
 
         if (newPosts.isNotEmpty) {
@@ -99,11 +123,6 @@ class MemoPostScraper {
         }
       } catch (e, s) {
         _logError("Failed to scrape posts from $scrapeUrl", e: e);
-        // Decide on error strategy:
-        // - continue; // to try the next offset (might lead to missed data if temporary issue)
-        // - break; // to stop paginating on first error
-        // - throw e; // to propagate the error up
-        // For now, let's continue to the next offset but log the error.
       }
     }
 
@@ -113,15 +132,25 @@ class MemoPostScraper {
 
   // --- Data Parsing Logic ---
 
-  Future<List<MemoModelPost>> _parseScrapedPostData(Map<String, Object> scrapedData, {skippedPostWasFiltered, newPostCount}) async {
+  Future<List<MemoModelPost>> _parseScrapedPostData({
+    Map<String, Object>? scrapedData,
+    skippedPostWasFiltered,
+    newPostCount,
+    Iterable? postListFromApiFetch,
+  }) async {
     final List<MemoModelPost> postList = [];
 
-    if (scrapedData.values.isEmpty) {
+    if (scrapedData != null && scrapedData.values.isEmpty) {
       _logWarning("No data values found in scraped post data.");
       return postList;
     }
 
-    final dynamic postDataList = scrapedData.values.first;
+    if (scrapedData == null && postListFromApiFetch == null) {
+      _logError("No API data nor scrape data)");
+      return postList;
+    }
+
+    final dynamic postDataList = postListFromApiFetch ?? scrapedData!.values.first;
 
     // Early exit if it's a known non-post page
     if (postDataList.toString().contains("memo.cash")) {
@@ -137,13 +166,14 @@ class MemoPostScraper {
 
     int index = 0;
     for (final dynamic postData in postDataList) {
-      MemoModelPost? post = await parsePost(postData);
+      MemoModelPost? post = await parsePost(postData, isFromApiFetch: postListFromApiFetch != null);
       if (newPostCount != -1 && index++ >= newPostCount) return postList;
 
-      if (post != null)
+      if (post != null) {
         postList.add(post);
-      else
+      } else {
         skippedPostWasFiltered();
+      }
     }
     return postList;
   }
@@ -172,7 +202,7 @@ class MemoPostScraper {
 
       var postData = await MemoScraperUtil.createScraperObj(scrapeUrl, _buildPostsScraperConfig(), nocache: true);
 
-      MemoModelPost? post = await parsePost(postData.values.first, filterOn: filterOn);
+      MemoModelPost? post = await parsePost(postData.values.first, strictFilter: filterOn);
 
       if (post != null) {
         _logInfo("Successfully scraped post: $postId");
@@ -234,7 +264,7 @@ class MemoPostScraper {
   //   return post;
   // }
 
-  Future<MemoModelPost?> parsePost(postData, {bool filterOn = true}) async {
+  Future<MemoModelPost?> parsePost(postData, {bool strictFilter = true, bool isFromApiFetch = false}) async {
     var item = postData;
     if (postData is! Map<String, Object?>) {
       if (postData[0] is Map<String, Object?>)
@@ -249,9 +279,69 @@ class MemoPostScraper {
     if (item["reply"]?.toString().contains("replied") ?? false) {
       return null;
     }
+    MemoModelPost post;
+    if (isFromApiFetch) {
+      post = MemoModelPostAPI.fromJson(item).toMemoModelPost();
+    } else {
+      post = parsePostFromScraperObject(item);
+    }
 
-    // --- Robust data extraction with type checks and defaults ---
+    if (!(await hitsTheFilter(post, strictFilter)))
+      return post;
+    else
+      return null;
+  }
 
+  Future<bool> hitsTheFilter(MemoModelPost post, bool strictFilter) async {
+    if (strictFilter && MemoScraperUtil.isTextOnly(post)) {
+      return true;
+    }
+
+    if (post.youtubeId != null && !(await YouTubeVideoChecker().isVideoAvailable(post.youtubeId!))) return true;
+    if (post.imgurUrl != null && !(await MemoDataChecker().isImageValid(url: post.imgurUrl!))) return true;
+
+    //TODO MAKE SURE THAT TWITTER IMAGE POSTS ARE NOT DISMISSED BUT SHALL ONLY HAVE EMPTY MEDIA ID SO THAT THE USER CAN STILL HIT THE LINK IN DESCRIPTION
+
+    //TODO replace the trigger URLS, replace all the URLs except one that is used for preview
+
+    if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase())) && !post.hasImageMedia) {
+      return true;
+    }
+
+    try {
+      // Alternatively, check if all URLs are whitelisted
+      //TODO boost this post on feed
+      bool hasOnlyWhitelistedUrls = MemoRegExp.hasOnlyWhitelistedUrls(post.urls);
+
+      bool hasAtleastWhitelistedDomain = MemoRegExp(post.text!).hasAnyWhitelistedMediaUrl();
+      // if (!hasAtleastWhitelistedDomain) {
+      //   post.text = TextFilter.replaceNonWhitelistedDomains(post.text!);
+      // }
+
+      //TODO specific posts only appear on own profile if user has sufficient token
+
+      // Or if you want to be more specific about what constitutes "text URLs"
+      if (strictFilter &&
+          post.imgurUrl == null &&
+          post.youtubeId == null &&
+          post.imageUrl == null &&
+          post.ipfsCid == null &&
+          post.videoUrl == null &&
+          !hasAtleastWhitelistedDomain) {
+        // If no image, and has URLs that aren't from approved media domains, skip.
+        _logInfo(
+          "Skipping post (only text, no imgur (let imgur & youtube pass always), has zero whitelisted domains): ${post.urls.toString()}",
+        );
+        return true;
+      }
+    } catch (e, s) {
+      _logError("Error during post-processing (extractUrlsAndHashtags or filtering) for txHash: ${post.id}", e: e);
+      return true; // Skip this post on error
+    }
+    return false;
+  }
+
+  MemoModelPost parsePostFromScraperObject(item) {
     final String? topicLink = item["topicLink"]?.toString();
     final String? topicHeader = item["topic"]?.toString();
     //TODO MAKE THIS COMPATIBLE WITH THE NEW @TOPIC
@@ -307,51 +397,6 @@ class MemoPostScraper {
       // likeCounter and replyCounter were commented out, assuming they are not used.
     );
     MemoScraperUtil.linkReferencesAndSetId(post, topicId: topicHeader, creatorId: creator!.id);
-
-    if (filterOn && MemoScraperUtil.isTextOnly(post)) {
-      return null;
-    }
-
-    if (post.youtubeId != null && !(await YouTubeVideoChecker().isVideoAvailable(post.youtubeId!))) return null;
-    if (post.imgurUrl != null && !(await MemoDataChecker().isImageValid(url: post.imgurUrl!))) return null;
-
-    //TODO MAKE SURE THAT TWITTER IMAGE POSTS ARE NOT DISMISSED BUT SHALL ONLY HAVE EMPTY MEDIA ID SO THAT THE USER CAN STILL HIT THE LINK IN DESCRIPTION
-
-    //TODO replace the trigger URLS, replace all the URLs except one that is used for preview
-
-    if (post.text != null && hideOnFeedTrigger.any((word) => post.text!.toLowerCase().contains(word.toLowerCase())) && !post.hasImageMedia)
-      return null;
-
-    try {
-      // Alternatively, check if all URLs are whitelisted
-      //TODO boost this post on feed
-      bool hasOnlyWhitelistedUrls = MemoRegExp.hasOnlyWhitelistedUrls(post.urls);
-
-      bool hasAtleastWhitelistedDomain = MemoRegExp(post.text!).hasAnyWhitelistedMediaUrl();
-      // if (!hasAtleastWhitelistedDomain) {
-      //   post.text = TextFilter.replaceNonWhitelistedDomains(post.text!);
-      // }
-
-      //TODO specific posts only appear on own profile if user has sufficient token
-
-      // Or if you want to be more specific about what constitutes "text URLs"
-      if (filterOn &&
-          post.imgurUrl == null &&
-          post.youtubeId == null &&
-          post.imageUrl == null &&
-          post.ipfsCid == null &&
-          post.videoUrl == null &&
-          !hasAtleastWhitelistedDomain) {
-        // If no image, and has URLs that aren't from approved media domains, skip.
-        _logInfo(
-          "Skipping post (only text, no imgur (let imgur & youtube pass always), has zero whitelisted domains): ${post.urls.toString()}",
-        );
-        return null;
-      }
-    } catch (e, s) {
-      _logError("Error during post-processing (extractUrlsAndHashtags or filtering) for txHash: ${post.id}", e: e);
-      return null; // Skip this post on error
-    }
     return post;
   }
 }

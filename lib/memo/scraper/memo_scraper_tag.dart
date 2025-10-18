@@ -34,13 +34,13 @@ class MemoScraperTag {
         final sampleTags = await scrapeTags(order, offset);
         if (sampleTags.isEmpty) continue;
 
-        final key = "$prefskey$cacheId";
+        final key = "$prefskey$cacheId$offset";
         final checkString = "${sampleTags[0].lastPost}${sampleTags[0].postCount}";
         final lastCheckString = prefs.getString(key);
 
         if (lastCheckString == checkString) {
           _print("MSTAG: ⏭️ Stop scraping - no changes detected! 🚫");
-          return; // Stop scraping - no changes detected
+          continue; // Stop scraping - no changes detected
         }
 
         // Scrape tags for current order and offset

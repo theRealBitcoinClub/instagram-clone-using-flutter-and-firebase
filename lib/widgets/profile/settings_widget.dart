@@ -14,9 +14,9 @@ import 'package:mahakka/widgets/animations/animated_grow_fade_in.dart';
 import 'package:mahakka/widgets/bch/mnemonic_backup_widget.dart';
 import 'package:mahakka/widgets/memo_confetti.dart';
 import 'package:mahakka/widgets/muted_creators_dialog.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../main.dart';
+import '../../memo/isar/isar_shared_preferences.dart';
 import '../../provider/profile_data_model_provider.dart';
 import '../../provider/translation_service.dart';
 import '../../provider/user_provider.dart';
@@ -108,7 +108,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
   }
 
   void _initAllowLogout() {
-    SharedPreferences prefs = ref.read(sharedPreferencesProvider);
+    IsarSharedPreferences prefs = ref.read(sharedPreferencesProvider);
     setState(() {
       allowLogout = ref.read(userProvider)!.mnemonic == null ? true : prefs.getBool(_mnemonicBackupKey) ?? false;
     });

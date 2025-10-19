@@ -1,5 +1,7 @@
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/provider/user_provider.dart';
 
 import 'socket/electrum_websocket_service.dart';
 
@@ -60,13 +62,14 @@ class MemoBitcoinBase {
   ElectrumWebSocketService? service;
   BitcoinCashNetwork? network;
   ElectrumProvider? provider;
+  Ref ref;
 
-  MemoBitcoinBase._create() {
+  MemoBitcoinBase._create(this.ref) {
     network = BitcoinCashNetwork.mainnet;
   }
 
-  static Future<MemoBitcoinBase> create() async {
-    MemoBitcoinBase instance = MemoBitcoinBase._create();
+  static Future<MemoBitcoinBase> create(ref) async {
+    MemoBitcoinBase instance = MemoBitcoinBase._create(ref);
 
     // Create a list of servers to try, excluding any from the bad servers list.
     final serversToTry = mainnetServers.where((server) => !_badServers.contains(server)).toList();
@@ -107,7 +110,7 @@ class MemoBitcoinBase {
     return utxos;
   }
 
-  Future<Balance> getBalances(String address, {bool isWifUser = false}) async {
+  Future<Balance> getBalances(String address) async {
     const tokenId = MemoBitcoinBase.tokenId;
     final isLegacy = !address.startsWith('bitcoincash:');
     final hasToken = address.startsWith('bitcoincash:z');
@@ -123,7 +126,8 @@ class MemoBitcoinBase {
       }
 
       var electrumUtxos = await requestElectrumUtxos(typedAddress, includeCashtokens: hasToken);
-      if (isWifUser) {
+      //TODO this implies that any other creator except own user balance with slp tx will still have a wrong balance displayed
+      if (ref.read(userProvider)!.mnemonic == null) {
         electrumUtxos = removeSlpUtxos(electrumUtxos);
       }
 

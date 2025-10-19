@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:mahakka/config_hide_on_feed_trigger.dart';
 import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
+import 'package:mahakka/memo/api/memo_model_post_api.dart';
 import 'package:mahakka/memo/firebase/post_scraper_firebase_service.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
@@ -10,13 +14,13 @@ import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 import 'package:mahakka/memo_data_checker.dart';
 import 'package:mahakka/youtube_video_checker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../firebase/topic_service.dart';
+import '../isar/isar_shared_preferences.dart';
 
 class MemoScraperTopic {
   final bool saveToFirebase;
-  final SharedPreferences prefs;
+  final IsarSharedPreferences prefs;
 
   MemoScraperTopic(this.saveToFirebase, this.prefs);
 
@@ -30,7 +34,7 @@ class MemoScraperTopic {
       final List<MemoModelTopic> allTopics = await scrapeTopics(offset, cacheId);
 
       if (allTopics.isEmpty) {
-        print("\nSCRAPER TOPICS\nNo topics found for offset $offset");
+        _print("\nSCRAPER TOPICS\nNo topics found for offset $offset");
         continue;
       }
 
@@ -38,19 +42,19 @@ class MemoScraperTopic {
       final List<MemoModelTopic> topicsWithNewPosts = await _filterTopicsWithNewPosts(allTopics, cacheId);
 
       if (topicsWithNewPosts.isEmpty) {
-        print("\nSCRAPER TOPICS\nNo new posts found for offset $offset");
+        _print("\nSCRAPER TOPICS\nNo new posts found for offset $offset");
         continue;
       }
 
       // Process each topic with new posts
       await _processTopicsWithNewPosts(topicsWithNewPosts, cacheId, topicService, postService);
 
-      print("\nSCRAPER TOPICS\nScraped offset $offset - Found ${topicsWithNewPosts.length} topics with new posts");
+      _print("\nSCRAPER TOPICS\nScraped offset $offset - Found ${topicsWithNewPosts.length} topics with new posts");
     }
 
     topicService.forceProcessBatch();
     postService.forceProcessBatch();
-    print("\nSCRAPER TOPICS\nFINISHED SCRAPING TOPICS: $cacheId");
+    _print("\nSCRAPER TOPICS\nFINISHED SCRAPING TOPICS: $cacheId");
   }
 
   /// Scrapes topics from the memo.cash website
@@ -62,7 +66,7 @@ class MemoScraperTopic {
 
       return _parseTopicsFromData(topicsData);
     } catch (e) {
-      print("\nSCRAPER TOPICS\nError scraping topics: $e");
+      _print("\nSCRAPER TOPICS\nError scraping topics: $e");
       return [];
     }
   }
@@ -105,24 +109,24 @@ class MemoScraperTopic {
               newPosts,
               onFinish: (success, processedCount, failedPostIds) {
                 if (success) {
-                  if (kDebugMode) print("✅ Batch completed! Processed $processedCount posts");
+                  if (kDebugMode) _print("✅ Batch completed! Processed $processedCount posts");
                   if (failedPostIds != null) {
-                    print("❌ Failed posts: ${failedPostIds.join(', ')}");
+                    _print("❌ Failed posts: ${failedPostIds.join(', ')}");
                   }
                 } else {
-                  print("❌ Batch failed");
+                  _print("❌ Batch failed");
                 }
               },
             );
           }
-          print("\nSCRAPER TOPICS\nSaved ${newPosts.length} new posts for topic: ${topic.header}");
+          _print("\nSCRAPER TOPICS\nSaved ${newPosts.length} new posts for topic: ${topic.header}");
         }
 
         // Save the updated post count to SharedPreferences
         final topicKey = "$keyTopic$cacheId${topic.url}";
         await prefs.setString(topicKey, topic.postCount.toString());
       } catch (e) {
-        print("\nSCRAPER TOPICS\nError processing topic ${topic.header}: $e");
+        _print("\nSCRAPER TOPICS\nError processing topic ${topic.header}: $e");
       }
     }
 
@@ -131,12 +135,12 @@ class MemoScraperTopic {
       topicsWithNewPosts,
       onFinish: (success, processedCount, failedIds) {
         if (success) {
-          if (kDebugMode) print("✅ Batch completed! Processed $processedCount Topics");
+          if (kDebugMode) _print("✅ Batch completed! Processed $processedCount Topics");
           if (failedIds != null) {
-            print("❌ Failed topics: ${failedIds.join(', ')}");
+            _print("❌ Failed topics: ${failedIds.join(', ')}");
           }
         } else {
-          print("❌ Batch failed");
+          _print("❌ Batch failed");
         }
       },
     );
@@ -150,21 +154,38 @@ class MemoScraperTopic {
       return [];
     }
 
+    var scrapeUrl = "${topic.url!}?x=$cacheId";
+    String apiUrl = "https://beta-api.memo.cash/post/topic?topic=${topic.url!.split("/").last}";
+    Iterable<dynamic>? fetchedFromApiList;
+    Map<String, Object>? postsData;
+
     try {
-      // Scrape all posts for this topic
-      final Map<String, Object> postsData = await MemoScraperUtil.createScraper(
-        "${topic.url!}?x=$cacheId",
-        _createPostScraperConfig(),
-        mockData: mockData,
-      );
-
-      // Parse all posts
-      final List<MemoModelPost> allPosts = await _parsePostsFromData(postsData, topic);
-
-      // Return only the new posts (most recent ones first)
-      return allPosts.reversed.take(newPostsCount).toList();
+      var response = await http.get(Uri.parse(apiUrl));
+      if (response.statusCode == 200) {
+        fetchedFromApiList = json.decode(response.body);
+      } else {
+        _print("Api request response.statusCode != 200 $apiUrl, ${response.statusCode}, fallback to scraper");
+      }
     } catch (e) {
-      print("\nSCRAPER TOPICS\nError scraping posts for topic ${topic.header}: $e");
+      _print("Api request url: $apiUrl failed, fallback to scraper, error: $e");
+    }
+
+    try {
+      if (fetchedFromApiList == null) {
+        postsData = await MemoScraperUtil.createScraper(scrapeUrl, _createPostScraperConfig(), mockData: mockData);
+      }
+    } catch (e) {
+      _print("Scraping failed for url: $scrapeUrl error: $e");
+    }
+    _print("success on api: ${fetchedFromApiList != null}, url: $apiUrl, success on scrape: ${postsData != null}, url: $scrapeUrl");
+
+    try {
+      // Parse all posts
+      final List<MemoModelPost> allPosts = await _parsePostsFromData(topic, postsData: postsData, postListFromApiFetch: fetchedFromApiList);
+
+      return allPosts.take(newPostsCount).toList();
+    } catch (e) {
+      _print("\nSCRAPER TOPICS\nError scraping posts for topic ${topic.header}: $e");
       return [];
     }
   }
@@ -209,7 +230,7 @@ class MemoScraperTopic {
         itemIndex += 4;
       }
     } catch (e) {
-      print("\nSCRAPER TOPICS\nError parsing topics data: $e");
+      _print("\nSCRAPER TOPICS\nError parsing topics data: $e");
     }
 
     return topicList;
@@ -240,15 +261,22 @@ class MemoScraperTopic {
   }
 
   /// Parses posts from the scraped response
-  Future<List<MemoModelPost>> _parsePostsFromData(Map<String, Object> postsData, MemoModelTopic topic) async {
+  Future<List<MemoModelPost>> _parsePostsFromData(
+    MemoModelTopic topic, {
+    Map<String, Object>? postsData,
+    Iterable? postListFromApiFetch,
+  }) async {
     final List<MemoModelPost> postList = [];
 
     try {
-      final List postItems = postsData.values.first as List;
+      var isScraperFetch = postListFromApiFetch == null;
+      final List postItems = isScraperFetch ? postsData!.values.first as List : postListFromApiFetch.toList();
 
-      for (final Map<String, Object> postData in postItems) {
+      for (final Map<String, dynamic> postMap in postItems) {
         try {
-          final MemoModelPost post = _createPostFromData(postData, topic);
+          final MemoModelPost post = isScraperFetch
+              ? _createPostFromData(postMap, topic)
+              : MemoModelPostAPI.fromJson(postMap).toMemoModelPost();
 
           post.text ??= "";
           if (MemoScraperUtil.isTextOnly(post)) {
@@ -266,25 +294,25 @@ class MemoScraperTopic {
 
           postList.add(post);
         } catch (e) {
-          print("\nSCRAPER TOPICS\nError parsing individual post: $e");
+          _print("\nSCRAPER TOPICS\nError parsing individual post: $e");
         }
       }
     } catch (e) {
-      print("\nSCRAPER TOPICS\nError parsing posts data: $e");
+      _print("\nSCRAPER TOPICS\nError parsing posts data: $e");
     }
 
     return postList;
   }
 
   /// Creates a MemoModelPost from scraped post data
-  MemoModelPost _createPostFromData(Map<String, Object> postData, MemoModelTopic topic) {
+  MemoModelPost _createPostFromData(Map<String, dynamic> postData, MemoModelTopic topic) {
     // Parse like count with error handling
     int likeCount = 0;
     try {
       final String likeText = postData["likeCount"].toString();
       likeCount = int.tryParse(likeText.split("\n")[0]) ?? 0;
     } catch (e) {
-      print("\nSCRAPER TOPICS\nError parsing like count: $e");
+      _print("\nSCRAPER TOPICS\nError parsing like count: $e");
     }
 
     // Create creator object
@@ -320,11 +348,15 @@ class MemoScraperTopic {
 
   /// Debug method to print topic information
   void printCurrentMemoModelTopic(MemoModelTopic currentTopic) {
-    print("\nSCRAPER TOPICS\nTopic: ${currentTopic.header}");
-    print("\nSCRAPER TOPICS\nURL: ${currentTopic.url}");
-    print("\nSCRAPER TOPICS\nFollowers: ${currentTopic.followerCount}");
-    print("\nSCRAPER TOPICS\nPost Count: ${currentTopic.postCount}");
-    print("\nSCRAPER TOPICS\nLast Post Count: ${currentTopic.lastPostCount}");
-    print("\nSCRAPER TOPICS\nLast Post: ${currentTopic.lastPost}");
+    _print("\nSCRAPER TOPICS\nTopic: ${currentTopic.header}");
+    _print("\nSCRAPER TOPICS\nURL: ${currentTopic.url}");
+    _print("\nSCRAPER TOPICS\nFollowers: ${currentTopic.followerCount}");
+    _print("\nSCRAPER TOPICS\nPost Count: ${currentTopic.postCount}");
+    _print("\nSCRAPER TOPICS\nLast Post Count: ${currentTopic.lastPostCount}");
+    _print("\nSCRAPER TOPICS\nLast Post: ${currentTopic.lastPost}");
+  }
+
+  void _print(String s) {
+    if (kDebugMode) print("TOPSCRAPE: $s");
   }
 }

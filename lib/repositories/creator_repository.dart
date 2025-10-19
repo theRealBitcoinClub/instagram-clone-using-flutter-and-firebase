@@ -11,8 +11,8 @@ import 'package:mahakka/memo/firebase/creator_service.dart';
 import 'package:mahakka/memo/isar/memo_model_creator_db.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/scraper/memo_creator_scraper.dart';
-import 'package:mahakka/provider/isar_provider.dart';
 
+import '../main.dart';
 import '../providers/avatar_refresh_provider.dart';
 
 class CreatorRepository {
@@ -22,7 +22,7 @@ class CreatorRepository {
 
   CreatorRepository(this.ref);
 
-  Future<Isar> get _isar async => await ref.read(unifiedIsarProvider.future);
+  Isar get _isar => ref.read(isarProvider);
 
   // --- STREAM SUPPORT ---
 

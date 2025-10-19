@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
 
+import '../main.dart';
 import '../memo/isar/memo_model_post_db.dart';
 import '../memo/model/memo_model_post.dart';
-import '../provider/isar_provider.dart';
 
 final profilePostCacheProvider = Provider((ref) => ProfilePostCache(ref));
 
@@ -17,7 +17,7 @@ class ProfilePostCache {
 
   Future<Isar> get _profileIsar async {
     _print('💾 PPC: Getting Profile Isar instance');
-    final isar = await ref.read(unifiedIsarProvider.future);
+    final isar = ref.read(isarProvider);
     _print('💾 PPC: Profile Isar instance obtained');
     return isar;
   }

@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/providers/token_limits_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../main.dart';
 import '../memo/firebase/post_service_feed.dart';
+import '../memo/isar/isar_shared_preferences.dart';
 import '../repositories/feed_post_cache.dart';
 import '../repositories/post_repository.dart';
 import 'mute_creator_provider.dart';
@@ -106,7 +106,7 @@ class FeedPostsNotifier extends StateNotifier<FeedState> {
   int _currentFeedLimit = 0;
 
   // static const String _lastTotalCountKey = 'last_total_post_count';
-  SharedPreferences? _prefs;
+  IsarSharedPreferences? _prefs;
 
   FeedPostsNotifier(this._ref, this._postService, this._cacheRepository)
     : _currentFeedLimit = _ref.read(feedLimitProvider),

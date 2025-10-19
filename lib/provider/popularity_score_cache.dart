@@ -1,10 +1,10 @@
 // Add this to post_cache_repository.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
-import 'package:mahakka/provider/isar_provider.dart';
 import 'package:mahakka/provider/post_update_provider.dart';
 import 'package:mahakka/provider/user_provider.dart';
 
+import '../main.dart';
 import '../memo/isar/memo_model_post_db.dart';
 import '../memo/model/memo_model_post.dart';
 import '../memo/model/memo_model_user.dart';
@@ -85,7 +85,7 @@ class PopularityScoreCache {
   Future<List<MemoModelPost>> _getAllPostsById(String postId) async {
     print('🔍 PSC: _getAllPostsById called for: $postId');
 
-    final isar = await ref.read(unifiedIsarProvider.future);
+    final isar = ref.read(isarProvider);
 
     // This query uses the composite index for postId lookup
     // Returns both feed and profile posts with the same postId
@@ -115,7 +115,7 @@ class PopularityScoreCache {
       throw StateError('Post type must be set for database operations. Post: ${post.id}');
     }
 
-    final isar = await ref.read(unifiedIsarProvider.future);
+    final isar = ref.read(isarProvider);
 
     try {
       await isar.writeTxn(() async {

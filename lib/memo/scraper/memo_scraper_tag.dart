@@ -6,15 +6,15 @@ import 'package:mahakka/memo/firebase/post_scraper_firebase_service.dart';
 import 'package:mahakka/memo/firebase/tag_service.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../isar/isar_shared_preferences.dart';
 import '../model/memo_model_post.dart';
 import 'memo_post_scraper.dart';
 
 const prefskey = "lastTagScrape123";
 
 class MemoScraperTag {
-  final SharedPreferences prefs;
+  final IsarSharedPreferences prefs;
   final bool saveToFirebase;
   final String cacheId;
   MemoScraperTag(this.cacheId, this.saveToFirebase, this.prefs);

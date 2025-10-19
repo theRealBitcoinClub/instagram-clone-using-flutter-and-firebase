@@ -4,11 +4,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../config.dart';
 import '../../main.dart';
 import '../../repositories/profile_post_cache.dart';
+import '../isar/isar_shared_preferences.dart';
 
 class PostServiceProfile {
   static const String orderByField = "createdDateTime";
@@ -60,7 +60,7 @@ class PostServiceProfile {
     String creatorId,
     int limit,
     ProfilePostCache postCache,
-    SharedPreferences sharedPrefs,
+    IsarSharedPreferences sharedPrefs,
     String countKey,
     int currentCount,
   ) async {

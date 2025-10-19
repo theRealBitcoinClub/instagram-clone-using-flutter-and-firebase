@@ -5,8 +5,8 @@ import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/provider/translation_sequencer.dart';
 import 'package:mahakka/provider/translation_service.dart';
 
+import '../main.dart';
 import '../memo/isar/cached_translation_db.dart';
-import 'isar_provider.dart';
 
 const Map<String, Map<String, String>> _staticVocabulary = {
   'cancel': {
@@ -286,7 +286,7 @@ class TranslationCache {
     }
 
     // Fall back to cache
-    final isar = await ref.read(unifiedIsarProvider.future);
+    final isar = ref.read(isarProvider);
     final cacheKey = _generateKey(key, languageCode);
 
     final cached = await isar.cachedTranslationDbs.where().cacheKeyEqualTo(cacheKey).findFirst();
@@ -310,7 +310,7 @@ class TranslationCache {
   }
 
   // Future<String?> get(String key, String languageCode) async {
-  //   final isar = await ref.read(unifiedIsarProvider.future);
+  //   final isar = ref.read(isarProvider);
   //   final cacheKey = _generateKey(key, languageCode);
   //
   //   final cached = await isar.cachedTranslationDbs.where().cacheKeyEqualTo(cacheKey).findFirst();
@@ -319,7 +319,7 @@ class TranslationCache {
   // }
 
   Future<void> put(String key, String languageCode, String translatedText) async {
-    final isar = await ref.read(unifiedIsarProvider.future);
+    final isar = ref.read(isarProvider);
 
     await isar.writeTxn(() async {
       final cacheKey = _generateKey(key, languageCode);
@@ -343,14 +343,14 @@ class TranslationCache {
   }
 
   Future<void> clear() async {
-    final isar = await ref.read(unifiedIsarProvider.future);
+    final isar = ref.read(isarProvider);
     await isar.writeTxn(() async {
       await isar.cachedTranslationDbs.clear();
     });
   }
 
   Future<int> get size async {
-    final isar = await ref.read(unifiedIsarProvider.future);
+    final isar = ref.read(isarProvider);
     return await isar.cachedTranslationDbs.count();
   }
 

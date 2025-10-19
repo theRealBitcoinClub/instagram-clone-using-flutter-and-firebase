@@ -11,35 +11,45 @@ MemoModelUser _$MemoModelUserFromJson(Map<String, dynamic> json) =>
         id: json['id'] as String,
         bchAddressCashtokenAware: json['bchAddressCashTokenAware'] as String,
         legacyAddressMemoBch: json['legacyAddressMemoBch'] as String,
-        legacyAddressMemoBchAsCashaddress: json['legacyAddressMemoBchAsCashaddress'] as String,
+        legacyAddressMemoBchAsCashaddress:
+            json['legacyAddressMemoBchAsCashaddress'] as String,
         tipReceiver: $enumDecode(_$TipReceiverEnumMap, json['tipReceiver']),
         tipAmount: $enumDecode(_$TipAmountEnumMap, json['tipAmount']),
-        ipfsCids: (json['ipfsCids'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+        ipfsCids:
+            (json['ipfsCids'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
       )
-      ..tipReceiverSerialized = $enumDecode(_$TipReceiverEnumMap, json['tipReceiverSerialized'])
-      ..tipAmountSerialized = $enumDecode(_$TipAmountEnumMap, json['tipAmountSerialized']);
+      ..tipReceiverSerialized = $enumDecode(
+        _$TipReceiverEnumMap,
+        json['tipReceiverSerialized'],
+      )
+      ..tipAmountSerialized = $enumDecode(
+        _$TipAmountEnumMap,
+        json['tipAmountSerialized'],
+      );
 
-Map<String, dynamic> _$MemoModelUserToJson(MemoModelUser instance) => <String, dynamic>{
-  'id': instance.id,
-  'bchAddressCashTokenAware': instance.bchAddressCashtokenAware,
-  'legacyAddressMemoBch': instance.legacyAddressMemoBch,
-  'legacyAddressMemoBchAsCashaddress': instance.legacyAddressMemoBchAsCashaddress,
-  'tipReceiverSerialized': _$TipReceiverEnumMap[instance.tipReceiverSerialized]!,
-  'tipAmountSerialized': _$TipAmountEnumMap[instance.tipAmountSerialized]!,
-  'ipfsCids': instance.ipfsCids,
-  'tipAmount': instance.tipAmount,
-  'tipReceiver': _$TipReceiverEnumMap[instance.tipReceiver]!,
-};
+Map<String, dynamic> _$MemoModelUserToJson(MemoModelUser instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'bchAddressCashTokenAware': instance.bchAddressCashtokenAware,
+      'legacyAddressMemoBch': instance.legacyAddressMemoBch,
+      'legacyAddressMemoBchAsCashaddress':
+          instance.legacyAddressMemoBchAsCashaddress,
+      'tipReceiverSerialized':
+          _$TipReceiverEnumMap[instance.tipReceiverSerialized]!,
+      'tipAmountSerialized': _$TipAmountEnumMap[instance.tipAmountSerialized]!,
+      'ipfsCids': instance.ipfsCids,
+      'tipAmount': instance.tipAmount,
+      'tipReceiver': _$TipReceiverEnumMap[instance.tipReceiver]!,
+    };
 
 const _$TipReceiverEnumMap = {
   TipReceiver.creator: 'creator',
-  // TipReceiver.burn20Creator80: 'burn20Creator80',
   TipReceiver.burn25Creator75: 'burn25Creator75',
-  // TipReceiver.burn40Creator60: 'burn40Creator60',
   TipReceiver.both: 'both',
-  // TipReceiver.burn60Creator40: 'burn60Creator40',
   TipReceiver.burn75Creator25: 'burn75Creator25',
-  // TipReceiver.burn80Creator20: 'burn80Creator20',
   TipReceiver.app: 'app',
 };
 

@@ -9,14 +9,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
 import 'package:mahakka/app_themes.dart';
 import 'package:mahakka/firebase_options.dart';
-import 'package:mahakka/provider/isar_provider.dart';
+import 'package:mahakka/memo/isar/memo_model_creator_db.dart';
 import 'package:mahakka/route%20handling/auth_page.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/update_monitor.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../memo/isar/cached_translation_db.dart';
+import '../memo/isar/isar_shared_preferences_model.dart';
+import '../memo/isar/memo_model_post_db.dart';
+import 'memo/isar/isar_shared_preferences.dart';
 
 // Add OneSignal provider
 final oneSignalProvider = Provider<OneSignalController>((ref) {
@@ -81,12 +86,8 @@ class SentryConfig {
   SentryConfig({required this.dsn, required this.environment, required this.release});
 }
 
-final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+final sharedPreferencesProvider = Provider<IsarSharedPreferences>((ref) {
   throw UnimplementedError('SharedPreferencesProvider was not initialized');
-});
-
-final sharedPreferencesInitializerProvider = FutureProvider<SharedPreferences>((ref) async {
-  return ref.read(sharedPreferencesProvider);
 });
 
 final languageCodeProvider = StateProvider<String>((ref) {
@@ -168,7 +169,7 @@ void _enhanceSentryContext() async {
       // );
 
       // Set the complete contexts object
-      scope.setUser(SentryUser());
+      // scope.setUser(SentryUser());
       // scope.setContexts(key, value)
 
       // Also set as tags for easy filtering
@@ -186,6 +187,10 @@ void _enhanceSentryContext() async {
   }
 }
 
+final isarProvider = Provider<Isar>((ref) {
+  throw UnimplementedError('Isar was not initialized');
+});
+
 void main() async {
   await dotenv.load(fileName: "telegram.env");
 
@@ -195,8 +200,32 @@ void main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  final sharedPreferences = await SharedPreferences.getInstance();
-  final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(sharedPreferences)]);
+  // Open Isar directly
+  final dir = await getApplicationDocumentsDirectory();
+  final isar = await Isar.open(
+    [MemoModelCreatorDbSchema, MemoModelPostDbSchema, CachedTranslationDbSchema, IsarPreferenceSchema],
+    directory: dir.path,
+    name: 'mahakka_mka',
+    maxSizeMiB: 144,
+  );
+
+  await IsarSharedPreferences.initialize(isar: isar);
+  final isarPrefs = await IsarSharedPreferences.getInstance();
+
+  final finalContainer = ProviderContainer(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(isarPrefs),
+      isarProvider.overrideWithValue(isar), // Provide the ready Isar instance
+    ],
+  );
+  // Get Isar instance first
+  // final isar = await containerInit.read(unifiedIsarProvider.future);
+  // // Initialize IsarSharedPreferences
+  // await IsarSharedPreferences.initialize(isar: isar);
+  // final isarPrefs = await IsarSharedPreferences.getInstance();
+  //
+  // // Override the provider with IsarSharedPreferences instance
+  // final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(isarPrefs)]);
 
   // Initialize OneSignal
   final oneSignalController = OneSignalController();
@@ -214,59 +243,64 @@ void main() async {
     await SentryFlutter.init(
       (options) {
         // === SIMPLIFIED CORE CONFIGURATION ===
-        options.dsn = sentryConfig.dsn;
-        options.environment = sentryConfig.environment;
-        options.release = sentryConfig.release;
-
-        // === BASIC PERFORMANCE MONITORING ===
-        options.tracesSampleRate = 1.0;
-        options.enableAutoPerformanceTracing = true;
-
-        // === BASIC ERROR CONTEXT ===
-        options.sendDefaultPii = true;
-        options.attachStacktrace = true;
-        options.diagnosticLevel = SentryLevel.debug;
-
-        // === NATIVE CRASH HANDLING ===
-        options.enableNativeCrashHandling = true;
-        // options.enableOutOfMemoryTracking = true;
-        options.anrEnabled = true;
-        options.anrTimeoutInterval = Duration(milliseconds: 5000);
-
-        // === SESSION TRACKING ===
-        options.enableAutoSessionTracking = true;
-
-        // === BREADCRUMBS (ESSENTIAL ONLY) ===
-        options.enableAppLifecycleBreadcrumbs = true;
-        options.enableUserInteractionBreadcrumbs = true;
-
-        options.enableLogs = true;
-
-        // === REMOVED COMPLEX FEATURES CAUSING ERRORS ===
-        // options.attachScreenshot = false; // Remove for now
-        // options.attachViewHierarchy = false; // Remove for now
-        // options.enableTimeToFullDisplayTracing = false; // Remove for now
-        // options.replay.sessionSampleRate = 0.0; // Disable session replay
-        // options.profilesSampleRate = 0.0; // Disable profiling for now
-        // options.enableFramesTracking = true; // This should work now with SentryWidgetsFlutterBinding
-
-        // === SIMPLIFIED NETWORK SETTINGS ===
-        options.connectionTimeout = Duration(seconds: 10);
-        options.readTimeout = Duration(seconds: 10);
-
-        // === BASIC REPORTING ===
-        options.reportSilentFlutterErrors = true;
-        options.reportPackages = true;
+        createSentryConfig(options, sentryConfig);
       },
       appRunner: () {
         _enhanceSentryContext();
-        runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
+        runApp(UncontrolledProviderScope(container: finalContainer, child: const MyApp()));
       },
     );
   } else {
     // Run without Sentry if DSN is not configured
-    runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
+    runApp(UncontrolledProviderScope(container: finalContainer, child: const MyApp()));
   }
+}
+
+void createSentryConfig(SentryFlutterOptions options, SentryConfig sentryConfig) {
+  // === SIMPLIFIED CORE CONFIGURATION ===
+  options.dsn = sentryConfig.dsn;
+  options.environment = sentryConfig.environment;
+  options.release = sentryConfig.release;
+
+  // === BASIC PERFORMANCE MONITORING ===
+  options.tracesSampleRate = 1.0;
+  options.enableAutoPerformanceTracing = true;
+
+  // === BASIC ERROR CONTEXT ===
+  options.sendDefaultPii = true;
+  options.attachStacktrace = true;
+  options.diagnosticLevel = SentryLevel.debug;
+
+  // === NATIVE CRASH HANDLING ===
+  options.enableNativeCrashHandling = true;
+  // options.enableOutOfMemoryTracking = true;
+  options.anrEnabled = true;
+  options.anrTimeoutInterval = Duration(milliseconds: 5000);
+
+  // === SESSION TRACKING ===
+  options.enableAutoSessionTracking = true;
+
+  // === BREADCRUMBS (ESSENTIAL ONLY) ===
+  options.enableAppLifecycleBreadcrumbs = true;
+  options.enableUserInteractionBreadcrumbs = true;
+
+  options.enableLogs = true;
+
+  // === REMOVED COMPLEX FEATURES CAUSING ERRORS ===
+  // options.attachScreenshot = false; // Remove for now
+  // options.attachViewHierarchy = false; // Remove for now
+  // options.enableTimeToFullDisplayTracing = false; // Remove for now
+  // options.replay.sessionSampleRate = 0.0; // Disable session replay
+  // options.profilesSampleRate = 0.0; // Disable profiling for now
+  // options.enableFramesTracking = true; // This should work now with SentryWidgetsFlutterBinding
+
+  // === SIMPLIFIED NETWORK SETTINGS ===
+  options.connectionTimeout = Duration(seconds: 10);
+  options.readTimeout = Duration(seconds: 10);
+
+  // === BASIC REPORTING ===
+  options.reportSilentFlutterErrors = true;
+  options.reportPackages = true;
 }
 
 class MyApp extends ConsumerWidget {
@@ -279,44 +313,30 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<ThemeState> themeState = ref.watch(themeNotifierProvider);
-    final AsyncValue<Isar> isar = ref.watch(unifiedIsarProvider);
 
-    return isar.when(
-      data: (isar) => themeState.when(
-        data: (loadedThemeState) {
-          return MaterialApp(
-            navigatorObservers: [SentryNavigatorObserver()],
-            scaffoldMessengerKey: scaffoldMessengerKey,
-            debugShowCheckedModeBanner: false,
-            title: 'mahakka.com',
-            theme: loadedThemeState.currentTheme,
-            home: Stack(children: [const AuthPage(), const UpdateMonitor()]),
-          );
-        },
-        loading: () {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            home: Scaffold(body: Center(child: CircularProgressIndicator())),
-          );
-        },
-        error: (error, stackTrace) {
-          print("Error loading theme in MyApp: $error");
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: darkTheme,
-            home: Scaffold(body: Center(child: Text("Error loading application theme."))),
-          );
-        },
-      ),
-      loading: () => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(body: Center(child: CircularProgressIndicator())),
-      ),
-      error: (error, stackTrace) {
-        print("Error initializing database: $error");
+    return themeState.when(
+      data: (loadedThemeState) {
+        return MaterialApp(
+          navigatorObservers: [SentryNavigatorObserver()],
+          scaffoldMessengerKey: scaffoldMessengerKey,
+          debugShowCheckedModeBanner: false,
+          title: 'mahakka.com',
+          theme: loadedThemeState.currentTheme,
+          home: Stack(children: [const AuthPage(), const UpdateMonitor()]),
+        );
+      },
+      loading: () {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          home: Scaffold(body: Center(child: Text("Error initializing database"))),
+          home: Scaffold(body: Center(child: CircularProgressIndicator())),
+        );
+      },
+      error: (error, stackTrace) {
+        print("Error loading theme in MyApp: $error");
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: darkTheme,
+          home: Scaffold(body: Center(child: Text("Error loading application theme."))),
         );
       },
     );

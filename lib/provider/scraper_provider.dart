@@ -5,10 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/update_service.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../main.dart';
 import '../memo/firebase/post_scraper_firebase_service.dart';
+import '../memo/isar/isar_shared_preferences.dart';
 import '../memo/scraper/memo_scraper_tag.dart';
 import '../memo/scraper/memo_scraper_topics.dart';
 
@@ -26,7 +26,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
   final bool _debugMode = kDebugMode;
 
   static const String _lastScrapeKey = 'last_scrape_timestamp';
-  late SharedPreferences _prefs;
+  late IsarSharedPreferences _prefs;
 
   @override
   Future<void> build() async {
@@ -162,7 +162,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
   // Extract the scraping logic for better organization
   Future<void> _runDebugScraping() async {
     try {
-      // await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topics", deepScrape ? 200 : 0, 0);
+      await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topicz", deepScrape ? 200 : 25, 0);
     } catch (e) {
       _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
       Sentry.captureException(e);
@@ -181,7 +181,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
   Future<void> _runProductionScraping() async {
     try {
-      await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topics", 0, 0);
+      await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topicz", 25, 0);
     } catch (e) {
       _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
       Sentry.captureException(e);

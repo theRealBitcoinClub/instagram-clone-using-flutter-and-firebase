@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
 
+import '../main.dart';
 import '../memo/isar/memo_model_post_db.dart';
 import '../memo/model/memo_model_post.dart';
-import '../provider/isar_provider.dart';
 import '../provider/mute_creator_provider.dart';
 
 final feedPostCacheProvider = Provider((ref) => FeedPostCache(ref));
@@ -21,7 +21,7 @@ class FeedPostCache {
   // Separate database getters
   Future<Isar> get _feedIsar async {
     _print('💾 FPC: Getting Feed Isar instance');
-    final isar = await ref.read(unifiedIsarProvider.future);
+    final isar = ref.read(isarProvider);
     _print('💾 FPC: Feed Isar instance obtained');
     return isar;
   }

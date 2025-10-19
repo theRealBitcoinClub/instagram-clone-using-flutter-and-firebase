@@ -39,7 +39,7 @@ class ElectrumServiceNotifier extends AsyncNotifier<MemoBitcoinBase> {
   Future<MemoBitcoinBase> _createServiceWithRetry() async {
     for (int attempt = 1; attempt <= _maxReconnectAttempts; attempt++) {
       try {
-        final bitcoinBase = await MemoBitcoinBase.create();
+        final bitcoinBase = await MemoBitcoinBase.create(ref);
         print("Successfully connected to Electrum server");
         _reconnectAttempts = 0;
         return bitcoinBase;

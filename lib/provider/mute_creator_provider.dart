@@ -2,10 +2,10 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/memo/isar/isar_shared_preferences.dart';
 import 'package:mahakka/provider/user_provider.dart';
 import 'package:mahakka/providers/token_limits_provider.dart';
 import 'package:mahakka/utils/snackbar.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../main.dart';
 import '../memo/model/memo_model_creator.dart';
@@ -55,7 +55,7 @@ class MuteCreatorNotifier extends StateNotifier<List<String>> {
   Ref ref;
 
   // Call this during app initialization - must be called before using the provider
-  Future<void> initialize(SharedPreferences prefs, String userId) async {
+  Future<void> initialize(IsarSharedPreferences prefs, String userId) async {
     if (_isInitialized) {
       print('ℹ️ MuteCreator: Already initialized');
       return;

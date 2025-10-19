@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/memo/base/memo_accountant.dart';
@@ -70,6 +72,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
   @override
   void dispose() {
+    _inputDebounceTimer?.cancel();
     _textEditController.dispose();
     super.dispose();
   }
@@ -389,14 +392,23 @@ class _PostCardState extends ConsumerState<PostCard> {
     });
   }
 
+  Timer? _inputDebounceTimer;
+  static const Duration _inputDebounceDuration = Duration(milliseconds: 1000);
+
   void _onInputText(String value) {
     if (!mounted) return;
 
-    if (value.contains("@@")) _textEditController.text = value.replaceAll("@@", "@");
+    // Immediate cleanup of double characters
+    if (value.contains("@@")) {
+      _textEditController.text = value.replaceAll("@@", "@");
+    }
+    if (value.contains("##")) {
+      _textEditController.text = value.replaceAll("##", "#");
+    }
 
-    if (value.contains("##")) _textEditController.text = value.replaceAll("##", "#");
-
+    // Handle newline immediately (for send action)
     if (value.contains('\n')) {
+      _inputDebounceTimer?.cancel();
       _textEditController.text = value.replaceAll("\n", "");
       if (_showSend) {
         _onSend();
@@ -404,16 +416,51 @@ class _PostCardState extends ConsumerState<PostCard> {
       return;
     }
 
-    setState(() {
-      final currentTextHashtags = MemoRegExp.extractHashtags(value);
-      final currentTextHashtagsLower = currentTextHashtags.map((tag) => tag.toLowerCase()).toSet();
+    // Cancel previous timer
+    _inputDebounceTimer?.cancel();
 
-      for (int i = 0; i < _selectedHashtags.length && i < widget.post.tagIds.length; i++) {
-        _selectedHashtags[i] = currentTextHashtagsLower.contains(widget.post.tagIds[i].toLowerCase());
-      }
-      _evaluateShowSendButton(value);
+    // Start new timer for debounced processing
+    _inputDebounceTimer = Timer(_inputDebounceDuration, () {
+      if (!mounted) return;
+      _processInputText(value);
     });
   }
+
+  void _processInputText(String value) {
+    final currentTextHashtags = MemoRegExp.extractHashtags(value);
+    final currentTextHashtagsLower = currentTextHashtags.map((tag) => tag.toLowerCase()).toSet();
+
+    for (int i = 0; i < _selectedHashtags.length && i < widget.post.tagIds.length; i++) {
+      _selectedHashtags[i] = currentTextHashtagsLower.contains(widget.post.tagIds[i].toLowerCase());
+    }
+    _evaluateShowSendButton(value);
+  }
+
+  // void _onInputText(String value) {
+  //   if (!mounted) return;
+  //
+  //   if (value.contains("@@")) _textEditController.text = value.replaceAll("@@", "@");
+  //
+  //   if (value.contains("##")) _textEditController.text = value.replaceAll("##", "#");
+  //
+  //   if (value.contains('\n')) {
+  //     _textEditController.text = value.replaceAll("\n", "");
+  //     if (_showSend) {
+  //       _onSend();
+  //     }
+  //     return;
+  //   }
+  //
+  //   setState(() {
+  //     final currentTextHashtags = MemoRegExp.extractHashtags(value);
+  //     final currentTextHashtagsLower = currentTextHashtags.map((tag) => tag.toLowerCase()).toSet();
+  //
+  //     for (int i = 0; i < _selectedHashtags.length && i < widget.post.tagIds.length; i++) {
+  //       _selectedHashtags[i] = currentTextHashtagsLower.contains(widget.post.tagIds[i].toLowerCase());
+  //     }
+  //     _evaluateShowSendButton(value);
+  //   });
+  // }
 
   void _onSelectHashtag(int index) {
     if (!mounted || index < 0 || index >= widget.post.tagIds.length) return;
@@ -454,35 +501,91 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   void _evaluateShowSendButton(String currentText) {
-    String textWithoutTopicNorTags = currentText;
+    // Early exit for empty text
+    if (currentText.isEmpty) {
+      _updateSendButtonState(false);
+      return;
+    }
+
+    // Calculate requirements efficiently
+    final bool meetsLengthRequirement = _checkLengthRequirements(currentText);
+    final bool hasRequiredContent = _checkContentRequirements(currentText);
+
+    final bool shouldShowSend = _hasSelectedTopic ? meetsLengthRequirement : hasRequiredContent && meetsLengthRequirement;
+
+    _updateSendButtonState(shouldShowSend);
+  }
+
+  bool _checkLengthRequirements(String text) {
+    // More efficient length calculation
+    final textWithoutTags = _removeTagsFromText(text);
+    return textWithoutTags.length >= MemoVerifier.minPostLength && text.length <= MemoVerifier.maxPostLength;
+  }
+
+  String _removeTagsFromText(String text) {
+    // Single pass removal - more efficient
+    String result = text;
     for (String tag in widget.post.tagIds) {
-      textWithoutTopicNorTags = textWithoutTopicNorTags.replaceAll(tag, "").trim();
+      result = result.replaceAll(tag, '');
     }
+    result = result.replaceAll(widget.post.topicId, '');
+    return result.trim();
+  }
 
-    textWithoutTopicNorTags = textWithoutTopicNorTags.replaceAll(widget.post.topicId, "").trim();
+  bool _checkContentRequirements(String text) {
+    // Check selected hashtags first (fast)
+    if (_selectedHashtags.any((s) => s)) return true;
 
-    bool hasAnySelectedOrOtherHashtagsInText = _selectedHashtags.any((s) => s);
-    if (!hasAnySelectedOrOtherHashtagsInText) {
-      hasAnySelectedOrOtherHashtagsInText = MemoRegExp.extractHashtags(currentText).isNotEmpty;
-    }
+    // Only use regex if necessary
+    return MemoRegExp.extractHashtags(text).isNotEmpty;
+  }
 
-    final bool meetsLengthRequirement =
-        textWithoutTopicNorTags.length >= MemoVerifier.minPostLength && currentText.length <= MemoVerifier.maxPostLength;
-
-    final bool newShowSendState = _hasSelectedTopic ? meetsLengthRequirement : hasAnySelectedOrOtherHashtagsInText && meetsLengthRequirement;
-
-    if (newShowSendState != _showSend) {
+  void _updateSendButtonState(bool newShowSend) {
+    if (newShowSend != _showSend) {
       setState(() {
-        _showSend = newShowSendState;
+        _showSend = newShowSend;
       });
 
-      // Trigger the callback when showSend changes from false to true
-      if (_showSend && !_previousShowSendState && widget.onShowSendButton != null) {
+      // Trigger callback for false→true transitions
+      if (newShowSend && widget.onShowSendButton != null) {
         widget.onShowSendButton!();
       }
-      _previousShowSendState = _showSend;
     }
+
+    // No need to maintain _previousShowSendState separately!
+    // _showSend already represents the current state
   }
+
+  // void _evaluateShowSendButton(String currentText) {
+  //   String textWithoutTopicNorTags = currentText;
+  //   for (String tag in widget.post.tagIds) {
+  //     textWithoutTopicNorTags = textWithoutTopicNorTags.replaceAll(tag, "").trim();
+  //   }
+  //
+  //   textWithoutTopicNorTags = textWithoutTopicNorTags.replaceAll(widget.post.topicId, "").trim();
+  //
+  //   bool hasAnySelectedOrOtherHashtagsInText = _selectedHashtags.any((s) => s);
+  //   if (!hasAnySelectedOrOtherHashtagsInText) {
+  //     hasAnySelectedOrOtherHashtagsInText = MemoRegExp.extractHashtags(currentText).isNotEmpty;
+  //   }
+  //
+  //   final bool meetsLengthRequirement =
+  //       textWithoutTopicNorTags.length >= MemoVerifier.minPostLength && currentText.length <= MemoVerifier.maxPostLength;
+  //
+  //   final bool newShowSendState = _hasSelectedTopic ? meetsLengthRequirement : hasAnySelectedOrOtherHashtagsInText && meetsLengthRequirement;
+  //
+  //   if (newShowSendState != _showSend) {
+  //     setState(() {
+  //       _showSend = newShowSendState;
+  //     });
+  //
+  //     // Trigger the callback when showSend changes from false to true
+  //     if (_showSend && !_previousShowSendState && widget.onShowSendButton != null) {
+  //       widget.onShowSendButton!();
+  //     }
+  //     _previousShowSendState = _showSend;
+  //   }
+  // }
 
   void _onSend({bool isRepost = false}) async {
     if (isRepost && !widget.post.hasMedia) return;

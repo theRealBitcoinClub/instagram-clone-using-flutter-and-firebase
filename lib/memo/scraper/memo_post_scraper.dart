@@ -89,15 +89,19 @@ class MemoPostScraper {
       Iterable<dynamic>? fetchedFromApiList;
       Map<String, Object>? scrapedData;
 
-      try {
-        var response = await http.get(Uri.parse(apiUrl));
-        if (response.statusCode == 200) {
-          fetchedFromApiList = json.decode(response.body);
-        } else {
-          _logWarning("Api request response.statusCode != 200 $apiUrl, ${response.statusCode}, fallback to scraper");
+      if (cacheId.contains("most")) {
+        _logInfo("skipping api as it is most-scrape not recent");
+      } else {
+        try {
+          var response = await http.get(Uri.parse(apiUrl));
+          if (response.statusCode == 200) {
+            fetchedFromApiList = json.decode(response.body);
+          } else {
+            _logWarning("Api request response.statusCode != 200 $apiUrl, ${response.statusCode}, fallback to scraper");
+          }
+        } catch (e) {
+          _logError("Api request $apiUrl failed, fallback to scraper", e: e);
         }
-      } catch (e) {
-        _logError("Api request $apiUrl failed, fallback to scraper", e: e);
       }
 
       try {

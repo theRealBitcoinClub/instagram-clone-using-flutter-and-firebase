@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 
 import '../../custom_flutter_tagger_controller.dart';
 import '../../widgets/character_limited_textfield.dart';
 
-class PostComposerWidget extends StatelessWidget {
+class PostComposerWidget extends ConsumerWidget {
   final CustomFlutterTaggerController controller;
   final VoidCallback? onSend;
   final EdgeInsets insets;
@@ -13,6 +14,7 @@ class PostComposerWidget extends StatelessWidget {
   final ValueChanged<String> onInputText;
   final String hintText;
   final Key? containerKey;
+  final int mediaUrlLength;
 
   const PostComposerWidget({
     Key? key,
@@ -23,10 +25,11 @@ class PostComposerWidget extends StatelessWidget {
     required this.hintText,
     this.containerKey,
     required this.onInputText,
+    required this.mediaUrlLength,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext ctx) {
+  Widget build(BuildContext ctx, WidgetRef ref) {
     final ThemeData theme = Theme.of(ctx);
     final ColorScheme colorScheme = theme.colorScheme;
     final MainAxisAlignment columnMainAxisAlignment = insets == EdgeInsets.zero ? MainAxisAlignment.end : MainAxisAlignment.start;
@@ -47,7 +50,7 @@ class PostComposerWidget extends StatelessWidget {
                 child: SizedBox(
                   child: CharacterLimitedTextField(
                     controller: controller,
-                    maxLength: MemoVerifier.maxPostLength,
+                    maxLength: MemoVerifier.maxPostLength - mediaUrlLength,
                     hintText: hintText,
                     onChanged: onInputText,
                     minLines: 4,

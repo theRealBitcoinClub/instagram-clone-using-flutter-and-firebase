@@ -181,6 +181,23 @@ class AddPostController extends StateNotifier<void> {
     return imgurUrl.isNotEmpty || youtubeId.isNotEmpty || ipfsCid.isNotEmpty || odyseeUrl.isNotEmpty;
   }
 
+  int mediaUrlLength() {
+    final imgurUrl = ref.read(imgurUrlProvider);
+    final youtubeId = ref.read(youtubeVideoIdProvider);
+    final ipfsCid = ref.read(ipfsCidProvider);
+    final odyseeUrl = ref.read(odyseeUrlProvider);
+
+    return imgurUrl.isNotEmpty
+        ? imgurUrl.length
+        : youtubeId.isNotEmpty
+        ? youtubeId.length
+        : ipfsCid.isNotEmpty
+        ? ipfsCid.length
+        : odyseeUrl.isNotEmpty
+        ? odyseeUrl.length
+        : 0;
+  }
+
   // In AddPostController class
   void showIpfsUploadScreen() {
     IpfsPinClaimScreen.show(_context);

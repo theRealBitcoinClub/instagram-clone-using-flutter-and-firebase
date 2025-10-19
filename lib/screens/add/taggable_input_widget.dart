@@ -17,7 +17,8 @@ class TaggableInputWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final searchViewModel = ref.read(searchViewModelProvider.notifier);
-    final postController = ref.read(addPostControllerProvider.notifier);
+    final postController = ref.watch(addPostControllerProvider.notifier);
+    int mediaUrlLength = postController.mediaUrlLength();
     final textInputController = ref.watch(taggableControllerProvider);
     final focusNode = ref.watch(focusNodeProvider);
     final viewInsets = MediaQuery.of(context).viewInsets;
@@ -54,6 +55,7 @@ class TaggableInputWidget extends ConsumerWidget {
                   postController.publishPost(); // ADD: widget. prefix
                 }
               },
+              mediaUrlLength: mediaUrlLength,
               focusNode: focusNode, // ADD: widget. prefix
               containerKey: containerKey,
               insets: viewInsets, // ADD: widget. prefix

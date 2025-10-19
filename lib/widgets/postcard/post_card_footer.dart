@@ -23,6 +23,7 @@ class PostCardFooter extends ConsumerWidget {
   final VoidCallback onSelectTopic;
   final onSend;
   final VoidCallback onCancel;
+  final String? topicIdPrefix;
   // final int maxTagsCounter;
 
   const PostCardFooter({
@@ -38,6 +39,7 @@ class PostCardFooter extends ConsumerWidget {
     required this.onSelectTopic,
     required this.onSend,
     required this.onCancel,
+    this.topicIdPrefix,
     // required this.maxTagsCounter,
   });
 
@@ -84,9 +86,10 @@ class PostCardFooter extends ConsumerWidget {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: CharacterLimitedTextField(
+                  topicIdPrefix: topicIdPrefix,
                   controller: textEditController,
                   maxLength: MemoVerifier.maxPostLength,
-                  hintText: 'Write your reply...',
+                  hintText: "Touch here to write...",
                   onChanged: onInputText,
                 ),
               ),

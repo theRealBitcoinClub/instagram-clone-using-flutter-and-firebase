@@ -46,8 +46,6 @@ class PostCard extends ConsumerStatefulWidget {
 
 class _PostCardState extends ConsumerState<PostCard> {
   static const double _altImageHeight = 50.0;
-  // static const int _maxTagsCounter = 3;
-  // static const int _minTextLength = 20;
   bool _isAnimatingLikeConfirmation = false;
   bool _isSendingLikeTx = false;
   bool _isSendingReplyTx = false;
@@ -58,7 +56,11 @@ class _PostCardState extends ConsumerState<PostCard> {
   late TextEditingController _textEditController;
   bool _showYouTubePlayer = false;
   bool _isAnimatingYouTube = false;
-  bool _previousShowSendState = false; // Track previous state
+
+  // New prefix topic state
+  String _immutableTopicPrefix = "";
+  Timer? _inputDebounceTimer;
+  static const Duration _inputDebounceDuration = Duration(milliseconds: 1000);
 
   @override
   void initState() {
@@ -67,7 +69,6 @@ class _PostCardState extends ConsumerState<PostCard> {
     _initializeSelectedHashtags();
     _showYouTubePlayer = false;
     _isAnimatingYouTube = false;
-    _previousShowSendState = _showSend;
   }
 
   @override
@@ -125,6 +126,8 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   Widget _buildYouTubePlayerWithOverlay(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    var longPress = "Long press to minimize";
+    longPress = ref.watch(autoTranslationTextProvider(longPress)).value ?? longPress;
     return Stack(
       children: [
         UnifiedVideoPlayer(
@@ -156,7 +159,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                   Icon(Icons.touch_app, color: Colors.white, size: 20),
                   const SizedBox(width: 6),
                   Text(
-                    "Long press to minimize",
+                    longPress,
                     style: textTheme.bodySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 14),
                   ),
                 ],
@@ -169,6 +172,9 @@ class _PostCardState extends ConsumerState<PostCard> {
   }
 
   Widget _buildYouTubePlaceholder(ThemeData theme, ColorScheme colorScheme, TextTheme textTheme) {
+    var doubleTap = "Double tap to replay";
+    doubleTap = ref.watch(autoTranslationTextProvider(doubleTap)).value ?? doubleTap;
+
     return Container(
       color: theme.colorScheme.primary.withAlpha(222),
       child: Center(
@@ -186,7 +192,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                   "YouTube Video",
                   style: textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.w500),
                 ),
-                Text("Double tap to play", style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onPrimary.withAlpha(222))),
+                Text(doubleTap, style: textTheme.bodySmall?.copyWith(color: theme.colorScheme.onPrimary.withAlpha(222))),
               ],
             ),
           ],
@@ -223,7 +229,6 @@ class _PostCardState extends ConsumerState<PostCard> {
           imageUrl: widget.post.ipfsCid!,
           sourceType: ImageSourceType.ipfs,
           fitMode: ImageFitMode.contain,
-          // aspectRatio: 16 / 9,
           border: Border(),
           backgroundColor: colorScheme.surface,
           showLoadingProgress: true,
@@ -286,13 +291,13 @@ class _PostCardState extends ConsumerState<PostCard> {
   Widget _buildFallbackWidget(ColorScheme colorScheme) {
     return Divider(color: colorScheme.surfaceVariant.withAlpha(153), height: 9, thickness: 1);
 
-    Container(
-      height: _altImageHeight,
-      color: colorScheme.surface,
-      child: Center(
-        child: Icon(Icons.article_outlined, color: colorScheme.onSurfaceVariant.withAlpha(123), size: _altImageHeight * 0.6),
-      ),
-    );
+    // Container(
+    //   height: _altImageHeight,
+    //   color: colorScheme.surface,
+    //   child: Center(
+    //     child: Icon(Icons.article_outlined, color: colorScheme.onSurfaceVariant.withAlpha(123), size: _altImageHeight * 0.6),
+    //   ),
+    // );
   }
 
   Stack _wrapInAnimationStack(ThemeData theme, Widget wrappedInAnimationWidget) {
@@ -377,28 +382,20 @@ class _PostCardState extends ConsumerState<PostCard> {
 
   void _onSelectTopic() {
     if (!mounted) return;
+
     setState(() {
-      if (widget.post.topicId.startsWith("@")) widget.post.topicId = widget.post.topicId.substring(1);
+      final topicId = widget.post.topicId.startsWith("@") ? widget.post.topicId.substring(1) : widget.post.topicId;
 
       _hasSelectedTopic = !_hasSelectedTopic;
-      if (_hasSelectedTopic) {
-        _textEditController.text = _textEditController.text.replaceAll("@${widget.post.topicId}", "").trim();
-        _textEditController.text = "@${widget.post.topicId} ${_textEditController.text}";
-      } else {
-        _textEditController.text = _textEditController.text.replaceAll("@${widget.post.topicId}", "").trim();
-      }
+
+      _immutableTopicPrefix = _hasSelectedTopic ? "@$topicId: " : "";
+
       _showInput = _hasSelectedTopic || _selectedHashtags.any((selected) => selected);
       _evaluateShowSendButton(_textEditController.text);
     });
   }
 
-  Timer? _inputDebounceTimer;
-  static const Duration _inputDebounceDuration = Duration(milliseconds: 1000);
-
   void _onInputText(String value) {
-    if (!mounted) return;
-
-    // Immediate cleanup of double characters
     if (value.contains("@@")) {
       _textEditController.text = value.replaceAll("@@", "@");
     }
@@ -409,7 +406,7 @@ class _PostCardState extends ConsumerState<PostCard> {
     // Handle newline immediately (for send action)
     if (value.contains('\n')) {
       _inputDebounceTimer?.cancel();
-      _textEditController.text = value.replaceAll("\n", "");
+      value = value.replaceAll("\n", "");
       if (_showSend) {
         _onSend();
       }
@@ -435,32 +432,6 @@ class _PostCardState extends ConsumerState<PostCard> {
     }
     _evaluateShowSendButton(value);
   }
-
-  // void _onInputText(String value) {
-  //   if (!mounted) return;
-  //
-  //   if (value.contains("@@")) _textEditController.text = value.replaceAll("@@", "@");
-  //
-  //   if (value.contains("##")) _textEditController.text = value.replaceAll("##", "#");
-  //
-  //   if (value.contains('\n')) {
-  //     _textEditController.text = value.replaceAll("\n", "");
-  //     if (_showSend) {
-  //       _onSend();
-  //     }
-  //     return;
-  //   }
-  //
-  //   setState(() {
-  //     final currentTextHashtags = MemoRegExp.extractHashtags(value);
-  //     final currentTextHashtagsLower = currentTextHashtags.map((tag) => tag.toLowerCase()).toSet();
-  //
-  //     for (int i = 0; i < _selectedHashtags.length && i < widget.post.tagIds.length; i++) {
-  //       _selectedHashtags[i] = currentTextHashtagsLower.contains(widget.post.tagIds[i].toLowerCase());
-  //     }
-  //     _evaluateShowSendButton(value);
-  //   });
-  // }
 
   void _onSelectHashtag(int index) {
     if (!mounted || index < 0 || index >= widget.post.tagIds.length) return;
@@ -507,8 +478,10 @@ class _PostCardState extends ConsumerState<PostCard> {
       return;
     }
 
-    // Calculate requirements efficiently
-    final bool meetsLengthRequirement = _checkLengthRequirements(currentText);
+    final totalLength = currentText.length + (_hasSelectedTopic ? _immutableTopicPrefix.length : 0);
+
+    final bool meetsLengthRequirement = currentText.length >= MemoVerifier.minPostLength && totalLength <= MemoVerifier.maxPostLength;
+
     final bool hasRequiredContent = _checkContentRequirements(currentText);
 
     final bool shouldShowSend = _hasSelectedTopic ? meetsLengthRequirement : hasRequiredContent && meetsLengthRequirement;
@@ -516,27 +489,11 @@ class _PostCardState extends ConsumerState<PostCard> {
     _updateSendButtonState(shouldShowSend);
   }
 
-  bool _checkLengthRequirements(String text) {
-    // More efficient length calculation
-    final textWithoutTags = _removeTagsFromText(text);
-    return textWithoutTags.length >= MemoVerifier.minPostLength && text.length <= MemoVerifier.maxPostLength;
-  }
-
-  String _removeTagsFromText(String text) {
-    // Single pass removal - more efficient
-    String result = text;
-    for (String tag in widget.post.tagIds) {
-      result = result.replaceAll(tag, '');
-    }
-    result = result.replaceAll(widget.post.topicId, '');
-    return result.trim();
-  }
-
   bool _checkContentRequirements(String text) {
     // Check selected hashtags first (fast)
     if (_selectedHashtags.any((s) => s)) return true;
 
-    // Only use regex if necessary
+    // Simple hashtag check - no prefix to worry about
     return MemoRegExp.extractHashtags(text).isNotEmpty;
   }
 
@@ -551,47 +508,17 @@ class _PostCardState extends ConsumerState<PostCard> {
         widget.onShowSendButton!();
       }
     }
-
-    // No need to maintain _previousShowSendState separately!
-    // _showSend already represents the current state
   }
-
-  // void _evaluateShowSendButton(String currentText) {
-  //   String textWithoutTopicNorTags = currentText;
-  //   for (String tag in widget.post.tagIds) {
-  //     textWithoutTopicNorTags = textWithoutTopicNorTags.replaceAll(tag, "").trim();
-  //   }
-  //
-  //   textWithoutTopicNorTags = textWithoutTopicNorTags.replaceAll(widget.post.topicId, "").trim();
-  //
-  //   bool hasAnySelectedOrOtherHashtagsInText = _selectedHashtags.any((s) => s);
-  //   if (!hasAnySelectedOrOtherHashtagsInText) {
-  //     hasAnySelectedOrOtherHashtagsInText = MemoRegExp.extractHashtags(currentText).isNotEmpty;
-  //   }
-  //
-  //   final bool meetsLengthRequirement =
-  //       textWithoutTopicNorTags.length >= MemoVerifier.minPostLength && currentText.length <= MemoVerifier.maxPostLength;
-  //
-  //   final bool newShowSendState = _hasSelectedTopic ? meetsLengthRequirement : hasAnySelectedOrOtherHashtagsInText && meetsLengthRequirement;
-  //
-  //   if (newShowSendState != _showSend) {
-  //     setState(() {
-  //       _showSend = newShowSendState;
-  //     });
-  //
-  //     // Trigger the callback when showSend changes from false to true
-  //     if (_showSend && !_previousShowSendState && widget.onShowSendButton != null) {
-  //       widget.onShowSendButton!();
-  //     }
-  //     _previousShowSendState = _showSend;
-  //   }
-  // }
 
   void _onSend({bool isRepost = false}) async {
     if (isRepost && !widget.post.hasMedia) return;
 
     if (!mounted) return;
-    final String textToSend = _textEditController.text.trim();
+    String textToSend = _textEditController.text.trim();
+    if (_hasSelectedTopic && _immutableTopicPrefix.isNotEmpty) {
+      textToSend = '$_immutableTopicPrefix$textToSend';
+    }
+
     final verifier = MemoVerifierDecorator(textToSend)
         .addValidator(InputValidators.verifyPostLength)
         .addValidator(InputValidators.verifyMinWordCount)
@@ -664,6 +591,7 @@ class _PostCardState extends ConsumerState<PostCard> {
   void _clearInputs() {
     _textEditController.clear();
     _hasSelectedTopic = false;
+    _immutableTopicPrefix = "";
     _showSend = false;
     _showInput = false;
     _initializeSelectedHashtags();
@@ -763,6 +691,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                 PostCardHeader(post: widget.post, onLikePostTipCreator: _sendTipToCreator, index: widget.index),
                 _buildPostMedia(theme, colorScheme, textTheme),
                 PostCardFooter(
+                  topicIdPrefix: _immutableTopicPrefix,
                   post: widget.post,
                   textEditController: _textEditController,
                   showInput: _showInput,
@@ -774,7 +703,6 @@ class _PostCardState extends ConsumerState<PostCard> {
                   onSelectTopic: _onSelectTopic,
                   onSend: _onSend,
                   onCancel: _onCancel,
-                  // maxTagsCounter: MemoVerifier.maxHashtags,
                 ),
                 if (_isSendingReplyTx) AnimGrowFade(show: _isSendingReplyTx, child: LinearProgressIndicator(minHeight: 1.5)),
               ],

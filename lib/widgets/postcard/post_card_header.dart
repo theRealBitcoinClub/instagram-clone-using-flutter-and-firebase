@@ -105,7 +105,7 @@ class PostCardHeader extends ConsumerWidget {
       children: [
         if (index != null)
           Text(
-            "[${(index! + 1).toString().padLeft(2, '0')}/$feedLimit] ",
+            "${(index! + 1).toString().padLeft(2, '0')}/$feedLimit",
             style: theme.textTheme.titleSmall!.copyWith(color: theme.colorScheme.secondary.withAlpha(153)),
           ),
         // if (post.createdDateTime != null)

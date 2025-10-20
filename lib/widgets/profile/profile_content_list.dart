@@ -203,7 +203,7 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
   }
 
   Widget _buildTextOnlyListItem(BuildContext context, ThemeData theme, MemoModelPost post, int index) {
-    final String postTimestamp = post.age;
+    final String postTimestamp = post.createdDateTime!.toLocal().toString().split(' ')[0];
 
     return Card(
       color: ref.read(themeNotifierProvider).value!.isDarkMode ? Colors.black.withAlpha(33) : Colors.white.withAlpha(169),
@@ -226,11 +226,11 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
                   ),
                 ),
                 const SizedBox(width: 9),
-                // if (postTimestamp.isNotEmpty)
-                //   Text(
-                //     postTimestamp,
-                //     style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7), fontSize: 11),
-                //   ),
+                if (postTimestamp.isNotEmpty)
+                  Text(
+                    postTimestamp,
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7), fontSize: 11),
+                  ),
               ],
             ),
             const SizedBox(height: 5),

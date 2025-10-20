@@ -264,6 +264,28 @@ const Map<String, Map<String, String>> _staticVocabulary = {
     'ja': '再試行',
     'ru': 'Повторить',
   },
+  'allow': {
+    'zh-cn': '允许',
+    'de': 'Erlauben',
+    'en': 'Allow',
+    'es': 'Permitir',
+    'tl': 'Payagan',
+    'fr': 'Autoriser',
+    'it': 'Consentire',
+    'ja': '許可する',
+    'ru': 'Разрешить',
+  },
+  'later': {
+    'zh-cn': '稍后',
+    'de': 'Später',
+    'en': 'Later',
+    'es': 'Más tarde',
+    'tl': 'Mamaya',
+    'fr': 'Plus tard',
+    'it': 'Più tardi',
+    'ja': '後で',
+    'ru': 'Позже',
+  },
 };
 
 class TranslationCache {

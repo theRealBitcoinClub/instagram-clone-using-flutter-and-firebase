@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mahakka/provider/translation_service.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sentry/sentry.dart';
@@ -11,38 +13,40 @@ class PermissionHelper {
       // For Android 13+ (API 33+), we need to use the permission handler
       if (Platform.isAndroid) {
         final status = await Permission.notification.status;
-
-        if (status.isDenied || status.isPermanentlyDenied) {
-          // Show custom explanation dialog
-          final shouldRequest = context == null ? true : await _showPermissionDialog(context);
-          if (shouldRequest) {
-            final result = await Permission.notification.request();
-            _print('Notification permission granted result: $result');
-          }
+        if (status.isGranted) return;
+        // Show custom explanation dialog
+        final shouldRequest = context == null ? true : await _showPermissionDialog(context);
+        if (shouldRequest) {
+          final result = await Permission.notification.request();
+          _print('Notification permission granted result: $result');
+        } else {
           _print('Notification permission denied');
-        } else if (status.isGranted) {
-          _print('Notification permission granted already');
         }
       }
-
-      // For other platforms or as fallback, use OneSignal's method
-      // _requestNotificationPermission();
     } catch (e) {
       _print('Permission request error: $e');
     }
   }
 
+  static const String title = 'Notifications';
+  static const String content =
+      'A few times per year, Mahakka would like to receive notifications, to keep you updated on important news & free token lotteries.';
+  static const String notNow = 'Later';
+  static const String allow = 'Allow';
+
   static Future<bool> _showPermissionDialog(BuildContext context) async {
     try {
+      final translations = await _loadDialogTranslations(context);
+
       return await showDialog<bool>(
             context: context,
             barrierDismissible: false,
             builder: (context) => AlertDialog(
-              title: Text('Enable Notifications'),
-              content: Text('Once or twice per year, we want to send you free token lottery notifications!'),
+              title: Text(translations['title'] ?? title),
+              content: Text(translations['content'] ?? content),
               actions: [
-                TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text('Not Now')),
-                ElevatedButton(onPressed: () => Navigator.of(context).pop(true), child: Text('Allow')),
+                TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(translations['notNow'] ?? notNow)),
+                ElevatedButton(onPressed: () => Navigator.of(context).pop(true), child: Text(translations['allow'] ?? allow)),
               ],
             ),
           ) ??
@@ -50,6 +54,24 @@ class PermissionHelper {
     } catch (e) {
       Sentry.captureException(e);
       return true;
+    }
+  }
+
+  static Future<Map<String, String>> _loadDialogTranslations(BuildContext context) async {
+    final ref = ProviderScope.containerOf(context);
+
+    try {
+      final titleFuture = ref.read(autoTranslationTextProvider(title).future);
+      final contentFuture = ref.read(autoTranslationTextProvider(content).future);
+      final notNowFuture = ref.read(autoTranslationTextProvider(notNow).future);
+      final allowFuture = ref.read(autoTranslationTextProvider(allow).future);
+
+      final results = await Future.wait([titleFuture, contentFuture, notNowFuture, allowFuture]);
+
+      return {'title': results[0], 'content': results[1], 'notNow': results[2], 'allow': results[3]};
+    } catch (e) {
+      Sentry.captureException(e);
+      return {};
     }
   }
   //

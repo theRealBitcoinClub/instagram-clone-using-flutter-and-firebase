@@ -10,6 +10,7 @@ import 'package:mahakka/widgets/limit_info_widget.dart';
 import 'package:mahakka/widgets/profile/profile_placeholders.dart';
 import 'package:mahakka/widgets/unified_video_player.dart';
 import 'package:mahakka/youtube_video_checker.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 void _logListError(String message, [dynamic error, StackTrace? stackTrace]) {
@@ -203,8 +204,12 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
   }
 
   Widget _buildTextOnlyListItem(BuildContext context, ThemeData theme, MemoModelPost post, int index) {
-    final String postTimestamp = post.createdDateTime!.toLocal().toString().split(' ')[0];
-
+    String postTimestamp = "";
+    try {
+      postTimestamp = post.createdDateTime!.toLocal().toString().split(' ')[0];
+    } catch (e) {
+      Sentry.captureException(e);
+    }
     return Card(
       color: ref.read(themeNotifierProvider).value!.isDarkMode ? Colors.black.withAlpha(33) : Colors.white.withAlpha(169),
       elevation: 1.0,

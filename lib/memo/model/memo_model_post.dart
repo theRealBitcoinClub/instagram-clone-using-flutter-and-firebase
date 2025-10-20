@@ -114,7 +114,12 @@ class MemoModelPost {
   void _initializeCreatedDateTime() {
     if (createdDateTime == null && created != null && created!.isNotEmpty) {
       try {
-        createdDateTime = DateTime.parse(created!);
+        if (created!.endsWith("Z")!) {
+          createdDateTime = DateTime.parse(created!);
+        } else {
+          //expect that the data was scraped not fetched via API
+          createdDateTime = DateTime.parse(created!).add(Duration(hours: 7));
+        }
       } catch (e) {
         // print("Error parsing 'created' string to DateTime: $e");
       }
@@ -152,12 +157,8 @@ class MemoModelPost {
   String _calculateAgeString() {
     if (createdDateTime == null) return "";
 
-    // Convert both DateTime objects to UTC for a correct comparison.
     final DateTime nowUtc = DateTime.now().toUtc();
-    final DateTime createdUtc = createdDateTime!.subtract(Duration(hours: 0));
-
-    // Calculate the difference between the two UTC times.
-    final Duration difference = nowUtc.difference(createdUtc);
+    final Duration difference = nowUtc.difference(createdDateTime!);
 
     if (difference.inSeconds < 60) return "${difference.inSeconds}s";
     if (difference.inMinutes < 60) return "${difference.inMinutes}m";

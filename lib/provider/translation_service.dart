@@ -6,6 +6,8 @@ import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/provider/translation_cache.dart';
 import 'package:mahakka/utils/snackbar.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:translator/translator.dart';
 
 import '../screens/add_post_controller.dart';
@@ -247,6 +249,12 @@ class TranslationService {
     if (ref.read(isTranslatingProvider)) return;
 
     final selectedLang = availableLanguages.firstWhere((lang) => lang.code == selectedLangCode, orElse: () => availableLanguages[1]);
+
+    try {
+      OneSignal.User.setLanguage(selectedLangCode);
+    } catch (e) {
+      Sentry.captureException(e);
+    }
 
     final detectedLanguage = _ref.read(detectedLanguageProvider);
     _ref.read(targetLanguageProvider.notifier).state = selectedLang;

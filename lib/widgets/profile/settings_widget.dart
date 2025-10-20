@@ -6,6 +6,7 @@ import 'package:mahakka/intros/intro_state_notifier.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_user.dart';
+import 'package:mahakka/permission_helper.dart';
 import 'package:mahakka/screens/icon_action_button.dart';
 import 'package:mahakka/system_information_dialog.dart';
 import 'package:mahakka/utils/snackbar.dart';
@@ -95,6 +96,7 @@ class _SettingsWidgetState extends ConsumerState<SettingsWidget> with SingleTick
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tabController.index = widget.initialTab.index;
+      PermissionHelper.requestNotificationPermission(context);
     });
   }
 

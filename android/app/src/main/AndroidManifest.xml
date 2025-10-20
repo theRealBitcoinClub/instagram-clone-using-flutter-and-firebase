@@ -78,6 +78,9 @@
 
         <service
             android:name="com.onesignal.OSNotificationRestoreWorkManager"
-            android:exported="false" />
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            tools:targetApi="26" />
+
     </application>
 </manifest>

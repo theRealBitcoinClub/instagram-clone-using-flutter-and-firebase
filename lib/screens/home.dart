@@ -14,6 +14,7 @@ import 'package:mahakka/utils/snackbar.dart';
 import '../intros/intro_animated_icon.dart';
 import '../ipfs/ipfs_pin_claim_service.dart';
 import '../memo/memo_webview_screen.dart';
+import '../permission_helper.dart';
 import '../provider/electrum_provider.dart';
 import '../provider/scraper_provider.dart';
 import '../providers/scroll_controller_provider.dart';
@@ -55,6 +56,9 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       final ipfsService = IpfsPinClaimService(bitcoinBase: bitcoinBase, serverUrl: 'https://file-stage.fullstack.cash');
       ipfsService.executeFakeApiRequestForWakeUp();
     });
+    context.afterLayout(() {
+      PermissionHelper.requestNotificationPermission(context);
+    }, refreshUI: false);
   }
 
   void _animateIndicatorToTab(int targetIndex) {

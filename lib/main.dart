@@ -10,6 +10,7 @@ import 'package:isar_community/isar.dart';
 import 'package:mahakka/app_themes.dart';
 import 'package:mahakka/firebase_options.dart';
 import 'package:mahakka/memo/isar/memo_model_creator_db.dart';
+import 'package:mahakka/permission_helper.dart';
 import 'package:mahakka/route%20handling/auth_page.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/update_monitor.dart';
@@ -35,37 +36,16 @@ class OneSignalController {
       OneSignal.Debug.setAlertLevel(OSLogLevel.none);
       OneSignal.consentRequired(false);
       OneSignal.initialize(dotenv.env['ONE_SIGNAL']!); // Replace with your app ID
-      OneSignal.LiveActivities.setupDefault();
-      OneSignal.Notifications.clearAll();
-      // // Remove this method to stop OneSignal Debugging
-      // OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
-      //
-      // // Initialize OneSignal
-      // OneSignal.initialize(dotenv.env['ONE_SIGNAL']!); // Replace with your app ID
-      //
-      // // Request permission for iOS (optional for Android)
-      // OneSignal.Notifications.requestPermission(true);
+      // Request permission with fallback handling
+      PermissionHelper.requestNotificationPermission(null);
+      // Set up notification handlers
+      PermissionHelper.setupNotificationHandlers();
 
-      // Handle notification clicks
-      // OneSignal.Notifications.addClickListener((event) {
-      //   // Handle notification click
-      //   print('Notification clicked: ${event.notification}');
-      //   // You can navigate to specific screens based on notification data
-      //   final additionalData = event.notification.additionalData;
-      //   if (additionalData != null) {
-      //     print('Additional data: $additionalData');
-      //     // Handle custom data from notification
-      //   }
-      // });
-      //
-      // // Handle notification received while app is in foreground
-      // OneSignal.Notifications.addForegroundWillDisplayListener((event) {
-      //   print('Notification received in foreground: ${event.notification}');
-      //   // You can prevent the notification from showing by using:
-      //   // event.preventDefault();
-      //   // event.notification.display(); to display it later
-      // });
-    } catch (e) {}
+      // Clear any existing notifications
+      OneSignal.Notifications.clearAll();
+    } catch (e) {
+      Sentry.captureException(e);
+    }
   }
 }
 
@@ -95,6 +75,7 @@ final languageCodeProvider = StateProvider<String>((ref) {
     final prefs = ref.read(sharedPreferencesProvider);
     return prefs.getString('user_language22') ?? SystemLanguage.getLanguageCode();
   } catch (e) {
+    Sentry.captureException(e);
     // Fallback to system language if SharedPreferences fails
     return SystemLanguage.getLanguageCode();
   }
@@ -178,12 +159,12 @@ void _enhanceSentryContext() async {
       scope.setTag('app.name', packageInfo.appName);
       scope.setTag('device.platform', Platform.operatingSystem);
 
-      print('Sentry context enhanced successfully');
+      Sentry.logger.debug('Sentry context enhanced successfully');
     });
   } catch (e, stackTrace) {
     // Report the context enhancement error to Sentry
     Sentry.captureException(e, stackTrace: stackTrace, hint: Hint.withMap({'context': 'sentry_context_enhancement'}));
-    print('Sentry context enhancement failed: $e');
+    Sentry.logger.error('Sentry context enhancement failed: $e');
   }
 }
 

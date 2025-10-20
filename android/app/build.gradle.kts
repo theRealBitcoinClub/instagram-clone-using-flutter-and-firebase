@@ -102,13 +102,8 @@ android {
             "it",           // Italian
             "ja",           // Japanese
             "ru",           // Russian
-            "zh",           // Chinese
-            "zh-CN",        // Chinese Simplified
-            "zh-Hans",      // Chinese Simplified
-            "zh-Hans-CN",   // Chinese Simplified China
+            "zh",           // Chinese (will include zh-CN, zh-TW, etc.)
             "tl",           // Tagalog
-            "fil",          // Filipino
-            "fil-PH"        // Filipino Philippines
         ))
     }
 

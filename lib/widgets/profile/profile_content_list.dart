@@ -190,7 +190,8 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
               children: [
                 if (videoPost.text != null && videoPost.text!.isNotEmpty) ...[PostExpandableText(post: videoPost), const SizedBox(height: 8)],
                 Text(
-                  "${widget.creatorName}, ${videoPost.age}",
+                  // "${widget.creatorName}, ${videoPost.age}",
+                  "${widget.creatorName}",
                   style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8)),
                 ),
               ],
@@ -224,12 +225,12 @@ class _ProfileContentListState extends ConsumerState<ProfileContentList> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 8),
-                if (postTimestamp.isNotEmpty)
-                  Text(
-                    postTimestamp,
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7), fontSize: 11),
-                  ),
+                const SizedBox(width: 9),
+                // if (postTimestamp.isNotEmpty)
+                //   Text(
+                //     postTimestamp,
+                //     style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7), fontSize: 11),
+                //   ),
               ],
             ),
             const SizedBox(height: 5),

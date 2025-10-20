@@ -398,9 +398,9 @@ class _FullScreenPostActivityState extends State<FullScreenPostActivity> with Ti
             ),
           ),
           PopularityScoreWidget(initialScore: post.popularityScore, textStyle: widget.theme.textTheme.titleMedium),
-          Text(" sats, "),
-          const SizedBox(width: 8),
-          Text("${post.age} ago", style: widget.theme.textTheme.titleSmall?.copyWith(color: textColor)),
+          Text(" sats"),
+          const SizedBox(width: 9),
+          // Text("${post.age} ago", style: widget.theme.textTheme.titleSmall?.copyWith(color: textColor)),
         ],
       ),
     );

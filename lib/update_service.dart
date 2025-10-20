@@ -55,7 +55,7 @@ class UpdateService {
     return 'arm64-v8a';
   }
 
-  String get currentVersion => "4.5.2-BCH";
+  String get currentVersion => "4.5.3-BCH";
 
   // URL construction using version folders and ABI-specific files
   String getVersionCheckUrl() => '$baseUrl/version.txt';

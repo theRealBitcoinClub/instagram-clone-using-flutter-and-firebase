@@ -108,18 +108,14 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
       backgroundColor: theme.dialogTheme.backgroundColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Row(
-        children: [
-          // Icon(Icons.system_update_rounded, color: theme.colorScheme.primary),
-          // SizedBox(width: 12),
-          Text(_updateTitle, style: theme.textTheme.titleLarge),
-        ],
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [Text(_updateTitle, style: theme.textTheme.titleLarge)],
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!_isDownloading && !_isVerifying && !_showManualCheck)
-            // if (!_isDownloading && !_isVerifying)
             Text(
               '$_updateMessage\n\n$_currentVersionText: ${updateInfo.currentVersion}\n$_latestVersionText: ${updateInfo.latestVersion}',
               style: theme.textTheme.bodyMedium,

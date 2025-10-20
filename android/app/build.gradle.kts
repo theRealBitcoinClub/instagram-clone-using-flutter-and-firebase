@@ -93,6 +93,23 @@ android {
         targetSdk = flutterTargetSdkVersion
         versionCode = flutterVersionCode
         versionName = flutterVersionName
+        // ADD THIS LINE for language support
+        resourceConfigurations.addAll(listOf(
+            "en",           // English
+            "es",           // Spanish
+            "de",           // German
+            "fr",           // French
+            "it",           // Italian
+            "ja",           // Japanese
+            "ru",           // Russian
+            "zh",           // Chinese
+            "zh-CN",        // Chinese Simplified
+            "zh-Hans",      // Chinese Simplified
+            "zh-Hans-CN",   // Chinese Simplified China
+            "tl",           // Tagalog
+            "fil",          // Filipino
+            "fil-PH"        // Filipino Philippines
+        ))
     }
 
     buildTypes {

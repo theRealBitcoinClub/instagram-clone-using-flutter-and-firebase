@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/intros/intro_enums.dart';
 import 'package:mahakka/intros/intro_state_notifier.dart';
+import 'package:mahakka/main.dart';
+import 'package:mahakka/memo/isar/isar_shared_preferences.dart';
 import 'package:mahakka/providers/navigation_providers.dart';
 import 'package:mahakka/screens/add_screen.dart';
 import 'package:mahakka/screens/feed_screen.dart';
@@ -40,6 +42,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
   void initState() {
     super.initState();
     final initialIndex = ref.read(currentTabIndexProvider);
+    var prefs = ref.read(sharedPreferencesProvider);
     _currentTabIndex = initialIndex;
     _previousTabIndex = initialIndex;
 
@@ -56,9 +59,19 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
       final ipfsService = IpfsPinClaimService(bitcoinBase: bitcoinBase, serverUrl: 'https://file-stage.fullstack.cash');
       ipfsService.executeFakeApiRequestForWakeUp();
     });
-    context.afterLayout(() {
-      PermissionHelper.requestNotificationPermission(context);
-    }, refreshUI: false);
+
+    requestNotificationPermissionEveryThreeAppStarts(prefs);
+  }
+
+  void requestNotificationPermissionEveryThreeAppStarts(IsarSharedPreferences prefs) {
+    var key = "startAppCounter";
+    var startCounter = prefs.getInt(key) ?? 1;
+    prefs.setInt(key, ++startCounter);
+    if (startCounter % 3 == 0) {
+      context.afterLayout(() {
+        PermissionHelper.requestNotificationPermission(context);
+      }, refreshUI: false);
+    }
   }
 
   void _animateIndicatorToTab(int targetIndex) {

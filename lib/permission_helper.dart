@@ -26,7 +26,7 @@ class PermissionHelper {
       }
 
       // For other platforms or as fallback, use OneSignal's method
-      _requestNotificationPermission();
+      // _requestNotificationPermission();
     } catch (e) {
       _print('Permission request error: $e');
     }
@@ -52,28 +52,28 @@ class PermissionHelper {
       return true;
     }
   }
-
-  static Future<void> _requestNotificationPermission() async {
-    try {
-      // Check current permission status
-      final status = OneSignal.Notifications.permission;
-
-      if (status == false) {
-        // Request permission if not granted
-        final granted = await OneSignal.Notifications.requestPermission(true);
-
-        if (granted) {
-          _print('Notification permission granted');
-        } else {
-          _print('Notification permission denied');
-        }
-      } else {
-        _print('Notification permission already granted');
-      }
-    } catch (e) {
-      Sentry.captureException(e);
-    }
-  }
+  //
+  // static Future<void> _requestNotificationPermission() async {
+  //   try {
+  //     // Check current permission status
+  //     final status = OneSignal.Notifications.permission;
+  //
+  //     if (status == false) {
+  //       // Request permission if not granted
+  //       final granted = await OneSignal.Notifications.requestPermission(true);
+  //
+  //       if (granted) {
+  //         _print('Notification permission granted');
+  //       } else {
+  //         _print('Notification permission denied');
+  //       }
+  //     } else {
+  //       _print('Notification permission already granted');
+  //     }
+  //   } catch (e) {
+  //     Sentry.captureException(e);
+  //   }
+  // }
 
   static void setupNotificationHandlers() {
     try {

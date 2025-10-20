@@ -37,7 +37,7 @@ class OneSignalController {
       OneSignal.consentRequired(false);
       OneSignal.initialize(dotenv.env['ONE_SIGNAL']!); // Replace with your app ID
       // Request permission with fallback handling
-      PermissionHelper.requestNotificationPermission(null);
+      // PermissionHelper.requestNotificationPermission(null);
       // Set up notification handlers
       PermissionHelper.setupNotificationHandlers();
 

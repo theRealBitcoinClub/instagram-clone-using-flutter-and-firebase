@@ -9,7 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:sentry/sentry.dart';
 
 class PermissionHelper {
-  static void requestNotificationPermission(BuildContext? context) async {
+  static void requestNotificationPermission(BuildContext context) async {
     try {
       // For Android 13+ (API 33+), we need to use the permission handler
       if (Platform.isAndroid) {
@@ -19,7 +19,7 @@ class PermissionHelper {
           return;
         }
         // Show custom explanation dialog
-        final shouldRequest = context == null ? true : await _showPermissionDialog(context);
+        final shouldRequest = await _showPermissionDialog(context);
         if (shouldRequest) {
           final result = await Permission.notification.request();
           if (result == PermissionStatus.granted) {
@@ -87,9 +87,9 @@ class PermissionHelper {
   }
 
   static Future<Map<String, String>> _loadDialogTranslations(BuildContext context) async {
-    final ref = ProviderScope.containerOf(context);
-
     try {
+      final ref = ProviderScope.containerOf(context, listen: false);
+
       final titleFuture = ref.read(autoTranslationTextProvider(title).future);
       final contentFuture = ref.read(autoTranslationTextProvider(content).future);
       final notNowFuture = ref.read(autoTranslationTextProvider(notNow).future);
@@ -103,28 +103,6 @@ class PermissionHelper {
       return {};
     }
   }
-  //
-  // static Future<void> _requestNotificationPermission() async {
-  //   try {
-  //     // Check current permission status
-  //     final status = OneSignal.Notifications.permission;
-  //
-  //     if (status == false) {
-  //       // Request permission if not granted
-  //       final granted = await OneSignal.Notifications.requestPermission(true);
-  //
-  //       if (granted) {
-  //         _print('Notification permission granted');
-  //       } else {
-  //         _print('Notification permission denied');
-  //       }
-  //     } else {
-  //       _print('Notification permission already granted');
-  //     }
-  //   } catch (e) {
-  //     Sentry.captureException(e);
-  //   }
-  // }
 
   static void setupNotificationHandlers() {
     try {

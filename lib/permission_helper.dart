@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/provider/translation_service.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
@@ -13,18 +14,46 @@ class PermissionHelper {
       // For Android 13+ (API 33+), we need to use the permission handler
       if (Platform.isAndroid) {
         final status = await Permission.notification.status;
-        if (status.isGranted) return;
+        if (status.isGranted) {
+          _initializeOneSignal();
+          return;
+        }
         // Show custom explanation dialog
         final shouldRequest = context == null ? true : await _showPermissionDialog(context);
         if (shouldRequest) {
           final result = await Permission.notification.request();
-          _print('Notification permission granted result: $result');
+          if (result == PermissionStatus.granted) {
+            _initializeOneSignal();
+            _print('Notification permission granted');
+          } else {
+            _print('Notification permission not granted');
+          }
         } else {
-          _print('Notification permission denied');
+          _print('Notification permission later');
         }
       }
     } catch (e) {
       _print('Permission request error: $e');
+    }
+  }
+
+  static void _initializeOneSignal() {
+    try {
+      OneSignal.Debug.setLogLevel(OSLogLevel.error);
+      OneSignal.Debug.setAlertLevel(OSLogLevel.none);
+      OneSignal.consentRequired(false);
+      OneSignal.initialize(dotenv.env['ONE_SIGNAL']!);
+
+      // Set up notification handlers
+      setupNotificationHandlers();
+
+      // Clear any existing notifications
+      OneSignal.Notifications.clearAll();
+
+      _print('OneSignal initialized successfully');
+    } catch (e) {
+      Sentry.captureException(e);
+      _print('OneSignal initialization failed: $e');
     }
   }
 

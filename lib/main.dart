@@ -10,11 +10,9 @@ import 'package:isar_community/isar.dart';
 import 'package:mahakka/app_themes.dart';
 import 'package:mahakka/firebase_options.dart';
 import 'package:mahakka/memo/isar/memo_model_creator_db.dart';
-import 'package:mahakka/permission_helper.dart';
 import 'package:mahakka/route%20handling/auth_page.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/update_monitor.dart';
-import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -23,31 +21,6 @@ import '../memo/isar/cached_translation_db.dart';
 import '../memo/isar/isar_shared_preferences_model.dart';
 import '../memo/isar/memo_model_post_db.dart';
 import 'memo/isar/isar_shared_preferences.dart';
-
-// Add OneSignal provider
-final oneSignalProvider = Provider<OneSignalController>((ref) {
-  return OneSignalController();
-});
-
-class OneSignalController {
-  Future<void> initialize() async {
-    try {
-      OneSignal.Debug.setLogLevel(OSLogLevel.error);
-      OneSignal.Debug.setAlertLevel(OSLogLevel.none);
-      OneSignal.consentRequired(false);
-      OneSignal.initialize(dotenv.env['ONE_SIGNAL']!); // Replace with your app ID
-      // Request permission with fallback handling
-      // PermissionHelper.requestNotificationPermission(null);
-      // Set up notification handlers
-      PermissionHelper.setupNotificationHandlers();
-
-      // Clear any existing notifications
-      OneSignal.Notifications.clearAll();
-    } catch (e) {
-      Sentry.captureException(e);
-    }
-  }
-}
 
 // Sentry configuration provider
 final sentryConfigProvider = Provider<SentryConfig>((ref) {
@@ -207,10 +180,6 @@ void main() async {
   //
   // // Override the provider with IsarSharedPreferences instance
   // final container = ProviderContainer(overrides: [sharedPreferencesProvider.overrideWithValue(isarPrefs)]);
-
-  // Initialize OneSignal
-  final oneSignalController = OneSignalController();
-  await oneSignalController.initialize();
 
   // Get Sentry config
   final sentryConfig = SentryConfig(

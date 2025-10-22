@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/base/memo_verifier.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../custom_flutter_tagger_controller.dart';
 import '../../widgets/character_limited_textfield.dart';
@@ -97,12 +98,18 @@ class PostComposerWidget extends ConsumerWidget {
       final cursorPosition = selection.baseOffset;
 
       if (cursorPosition < 0) {
-        controller.text = "${text.trim()} $action ";
+        // controller.text = "${text.trim()} $action ";
+        controller.text = "${text.trim()} $action";
         controller.selection = TextSelection.collapsed(offset: controller.text.length);
         return;
       }
 
-      final hasSpaceBefore = cursorPosition == 0 || text[cursorPosition - 1] == ' ';
+      var hasSpaceBefore = false;
+      try {
+        hasSpaceBefore = cursorPosition != 0 && text[cursorPosition - 1] == ' ';
+      } catch (e) {
+        Sentry.captureException(e);
+      }
       final hasSpaceAfter = cursorPosition == text.length || text[cursorPosition] == ' ';
 
       String newText;

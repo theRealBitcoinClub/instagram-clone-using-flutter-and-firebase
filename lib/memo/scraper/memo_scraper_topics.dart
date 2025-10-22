@@ -7,9 +7,7 @@ import 'package:mahakka/dart_web_scraper/common/enums.dart';
 import 'package:mahakka/dart_web_scraper/common/models/parser_model.dart';
 import 'package:mahakka/dart_web_scraper/common/models/scraper_config_model.dart';
 import 'package:mahakka/memo/api/memo_model_post_api.dart';
-import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/firebase/post_scraper_firebase_service.dart';
-import 'package:mahakka/memo/memo_reg_exp.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
@@ -80,13 +78,7 @@ class MemoScraperTopic {
     final List<MemoModelTopic> topicsWithNewPosts = [];
 
     for (final topic in allTopics) {
-      //filter topics that dont match the regexp
-      topic.id = topic.id.startsWith("@") ? topic.id.substring(1) : topic.id;
-      if ("@${topic.id}" != MemoRegExp.extractTopics("@${topic.id}").firstOrNull) {
-        continue;
-      }
-
-      if (topic.id.length > MemoVerifier.maxTopicLength) {
+      if (!topic.isValidId()) {
         continue;
       }
 

@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 
-import '../memo_reg_exp.dart';
 import '../model/memo_model_topic_light.dart';
 
 class TopicService {
@@ -51,10 +50,7 @@ class TopicService {
         // Convert to lightweight format for the topic list
         final lightTopics = allTopics
             .where((topic) {
-              var processedId = topic.id.startsWith("@") ? topic.id.substring(1) : topic.id;
-              processedId = "@$processedId";
-              final extractedTopic = MemoRegExp.extractTopics(processedId).firstOrNull;
-              return topic.id.length <= 30 && extractedTopic == "processedId";
+              return topic.isValidId();
             })
             .map((topic) => {'id': topic.id, 'count': topic.postCount})
             .toList();

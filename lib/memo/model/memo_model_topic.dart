@@ -1,6 +1,9 @@
 // [1]
 import 'package:json_annotation/json_annotation.dart';
+import 'package:mahakka/memo/base/memo_verifier.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+
+import '../memo_reg_exp.dart';
 
 part 'memo_model_topic.g.dart'; // This file will be generated
 
@@ -69,4 +72,11 @@ class MemoModelTopic {
 
   @override
   int get hashCode => id.hashCode;
+
+  bool isValidId() {
+    var processedId = id.startsWith("@") ? id.substring(1) : id;
+    processedId = "@$processedId";
+    final extractedTopic = MemoRegExp.extractTopics(processedId).firstOrNull;
+    return id.length <= MemoVerifier.maxTopicLength && extractedTopic == processedId;
+  }
 }

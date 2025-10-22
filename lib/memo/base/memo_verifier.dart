@@ -46,7 +46,7 @@ class MemoVerifier {
   // --- Configuration Constants ---
   static const int maxHashtags = 3;
   static const int maxTopics = 1;
-  static const int maxTopicLength = 30;
+  static const int maxTopicLength = 31;
   static const int minPostLength = 5; // Example, adjust as needed
   //TODO check if that max length works with attaching #mahakka to every post
   //TODO posts with topics will have shorter length for mentioning @topic and in addition the additional OP_CODE,

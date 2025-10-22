@@ -82,7 +82,7 @@ class MemoScraperTopic {
     for (final topic in allTopics) {
       //filter topics that dont match the regexp
       topic.id = topic.id.startsWith("@") ? topic.id.substring(1) : topic.id;
-      if (topic.id != MemoRegExp.extractTopics("@${topic.id}").firstOrNull) {
+      if ("@${topic.id}" != MemoRegExp.extractTopics("@${topic.id}").firstOrNull) {
         continue;
       }
 

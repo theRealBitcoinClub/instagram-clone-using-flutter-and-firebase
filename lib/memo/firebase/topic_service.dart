@@ -51,9 +51,10 @@ class TopicService {
         // Convert to lightweight format for the topic list
         final lightTopics = allTopics
             .where((topic) {
-              final processedId = topic.id.startsWith("@") ? topic.id.substring(1) : topic.id;
-              final extractedTopic = MemoRegExp.extractTopics("@$processedId").firstOrNull;
-              return topic.id.length <= 30 && extractedTopic == processedId;
+              var processedId = topic.id.startsWith("@") ? topic.id.substring(1) : topic.id;
+              processedId = "@$processedId";
+              final extractedTopic = MemoRegExp.extractTopics(processedId).firstOrNull;
+              return topic.id.length <= 30 && extractedTopic == "processedId";
             })
             .map((topic) => {'id': topic.id, 'count': topic.postCount})
             .toList();

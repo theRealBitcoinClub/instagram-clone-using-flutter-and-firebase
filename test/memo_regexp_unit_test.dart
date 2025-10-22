@@ -209,13 +209,24 @@ void main() {
     });
 
     test('Static extractTopics should extract topics', () {
-      var result = MemoRegExp.extractTopics(testString);
-      expect(result, contains('@topic'));
-      result = MemoRegExp.extractTopics(
-        "#odysee lets get this party https://odysee.com/@ClownfishTV:b/youtube-admits-they-censored:5 started @Flavour_Trip oh yeah http://havingfun.com why not #bchbankrun",
+      var result = MemoRegExp.extractTopics(
+        "fd fds @हिंदी  @हिंदी  @हिंदी fdf @中国人 fd f@हिंदी fds @日本語 @русский @ @ @ @notthis@butseparate @español f @\$RMZ_cashtoken  gfd gfd @_okey blabla@typo yes sir @another: and @¡one.more! #odysee lets get this party https://odysee.com/@ClownfishTV:b/youtube-admits-they-censored:5 started @¿Flavour_Trip? oh yeah http://havingfun.com why not #bchbankrun",
       );
-      expect(result, contains('@Flavour_Trip'));
-      expect(result.length, equals(1));
+      expect(result, contains('@हिंदी'));
+      expect(result, contains('@中国人'));
+      expect(result, contains('@_okey'));
+      expect(result, contains('@typo'));
+      expect(result, contains('@another:'));
+      expect(result, contains('@¿Flavour_Trip?'));
+      expect(result, contains('@español'));
+      expect(result, contains('@русский'));
+      expect(result, contains('@日本語'));
+      expect(result, contains('@¡one.more!'));
+      expect(result, contains('@\$RMZ_cashtoken'));
+      expect(result, contains('@notthis'));
+      expect(result, contains('@butseparate'));
+      //return unique set
+      expect(result.length, equals(13));
     });
 
     test('Static extractUrls should extract URLs', () {

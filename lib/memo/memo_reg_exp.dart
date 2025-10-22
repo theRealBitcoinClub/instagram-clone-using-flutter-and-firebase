@@ -5,7 +5,10 @@ class MemoRegExp {
   final String text;
   // static const topicRegex = r'\B@[a-zA-Z0-9_\-\.]+';
   // static const topicRegex = r'@[a-zA-Z0-9_\-\.]+';
-  static const topicRegex = r'(?<!\w|https?://[^\s]*|www\.[^\s]*)@[a-zA-Z0-9_\-\.]+';
+  // static const topicRegex = r'(?<!\w|https?://[^\s]*|www\.[^\s]*)@[a-zA-Z0-9_$\-\.]+';
+  // static const topicRegex = r'(?<!\S|https?://[^\s]*|www\.[^\s]*)@[a-zA-Z0-9_$\.\-:]+';
+  // static const topicRegex = r'(?<!https?://[^\s]*|www\.[^\s]*)@[a-zA-Z0-9_$\.\-:]+';
+  static const topicRegex = r'(?<!https?://[^\s]*|www\.[^\s]*)@[^\s@]+';
   static const hashtagRegex = r'#\w+';
   static const urlRegex = r'(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)';
   static const ipfsRegex = r'b[A-Za-z2-7]{58,}';
@@ -216,7 +219,7 @@ class MemoRegExp {
     return RegExp(
       pattern,
       caseSensitive: false,
-    ).allMatches(text).map((match) => match.group(0)?.trim() ?? '').where((match) => match.isNotEmpty).toList();
+    ).allMatches(text).map((match) => match.group(0)?.trim() ?? '').where((match) => match.isNotEmpty).toSet().toList();
   }
 
   static List<String> extractUrlsRefined(String text) {

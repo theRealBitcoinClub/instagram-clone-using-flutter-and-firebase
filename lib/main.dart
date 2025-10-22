@@ -10,6 +10,7 @@ import 'package:isar_community/isar.dart';
 import 'package:mahakka/app_themes.dart';
 import 'package:mahakka/firebase_options.dart';
 import 'package:mahakka/memo/isar/memo_model_creator_db.dart';
+import 'package:mahakka/permission_helper.dart';
 import 'package:mahakka/route%20handling/auth_page.dart';
 import 'package:mahakka/theme_provider.dart';
 import 'package:mahakka/update_monitor.dart';
@@ -153,6 +154,8 @@ void main() async {
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  PermissionHelper.initializeOneSignal();
 
   // Open Isar directly
   final dir = await getApplicationDocumentsDirectory();

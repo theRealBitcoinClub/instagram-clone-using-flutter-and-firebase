@@ -15,7 +15,7 @@ class PermissionHelper {
       if (Platform.isAndroid) {
         final status = await Permission.notification.status;
         if (status.isGranted) {
-          _initializeOneSignal();
+          initializeOneSignal();
           return;
         }
         // Show custom explanation dialog
@@ -23,7 +23,7 @@ class PermissionHelper {
         if (shouldRequest) {
           final result = await Permission.notification.request();
           if (result == PermissionStatus.granted) {
-            _initializeOneSignal();
+            initializeOneSignal();
             _print('Notification permission granted');
           } else {
             _print('Notification permission not granted');
@@ -37,7 +37,7 @@ class PermissionHelper {
     }
   }
 
-  static void _initializeOneSignal() {
+  static void initializeOneSignal() {
     try {
       OneSignal.Debug.setLogLevel(OSLogLevel.error);
       OneSignal.Debug.setAlertLevel(OSLogLevel.none);

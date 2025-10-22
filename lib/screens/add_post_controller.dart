@@ -100,7 +100,7 @@ class AddPostController extends StateNotifier<void> {
         clearMediaAfterPublish();
       } else {
         _showSnackBar('Publish failed: ${response.message}', isError: true);
-        showQrCodeDialog(ctx: _context, user: user, memoOnly: true, withDelay: true);
+        if (response != MemoAccountantResponse.connectionError) showQrCodeDialog(ctx: _context, user: user, memoOnly: true, withDelay: true);
       }
     } catch (e, s) {
       print("Error during publish: $e\n$s");

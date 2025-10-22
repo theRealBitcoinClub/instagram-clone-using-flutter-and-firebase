@@ -64,6 +64,6 @@ class InputValidators {
   }
 
   static MemoVerificationResponse verifyTopics(String text) {
-    return MemoVerifier(text.trim()).verifyTopicCount();
+    return MemoVerifier(text.trim()).verifyTopicCountAndLength();
   }
 }

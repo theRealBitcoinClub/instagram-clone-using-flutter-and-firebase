@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
 
+import '../memo_reg_exp.dart';
 import '../model/memo_model_topic_light.dart';
 
 class TopicService {
@@ -35,27 +36,33 @@ class TopicService {
       final topicListDocRef = _firestore.collection(_topicListCollectionAndDocumentId).doc(_topicListCollectionAndDocumentId);
       final topicListDoc = await topicListDocRef.get();
 
-      //TODO this is already created in the batching
       // Initialize document if it doesn't exist
-      // if (!topicListDoc.exists) {
-      //   print("🔄 Topic list document not found, initializing with existing topics...");
-      //
-      //   // Get all existing topics from the collection
-      //   final allTopics = await getAllTopics();
-      //
-      //   if (allTopics.isEmpty) {
-      //     print("No existing topics found to initialize the topic list");
-      //     return [];
-      //   }
-      //
-      //   // Convert to lightweight format for the topic list
-      //   final lightTopics = allTopics.map((topic) => {'id': sanitizeFirestoreId(topic.id), 'count': topic.postCount}).toList();
-      //
-      //   // Create the topic list document
-      //   await topicListDocRef.set({'topics': lightTopics, 'last_updated': FieldValue.serverTimestamp(), 'total_count': lightTopics.length});
-      //
-      //   print("✅ Topic list document initialized with ${lightTopics.length} existing topics");
-      // }
+      if (!topicListDoc.exists) {
+        print("🔄 Topic list document not found, initializing with existing topics...");
+
+        // Get all existing topics from the collection
+        final allTopics = await getAllTopics();
+
+        if (allTopics.isEmpty) {
+          print("No existing topics found to initialize the topic list");
+          return [];
+        }
+
+        // Convert to lightweight format for the topic list
+        final lightTopics = allTopics
+            .where((topic) {
+              final processedId = topic.id.startsWith("@") ? topic.id.substring(1) : topic.id;
+              final extractedTopic = MemoRegExp.extractTopics("@$processedId").firstOrNull;
+              return topic.id.length <= 30 && extractedTopic == processedId;
+            })
+            .map((topic) => {'id': topic.id, 'count': topic.postCount})
+            .toList();
+
+        // Create the topic list document
+        await topicListDocRef.set({'topics': lightTopics, 'last_updated': FieldValue.serverTimestamp(), 'total_count': lightTopics.length});
+
+        print("✅ Topic list document initialized with ${lightTopics.length} existing topics");
+      }
 
       // Document exists, proceed with normal retrieval
       final data = topicListDoc.data();

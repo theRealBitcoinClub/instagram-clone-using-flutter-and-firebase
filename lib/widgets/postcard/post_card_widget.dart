@@ -368,7 +368,7 @@ class _PostCardState extends ConsumerState<PostCard> {
         });
       } else {
         ref.read(snackbarServiceProvider).showTranslatedSnackBar(type: SnackbarType.error, response.message);
-        showQrQuickDeposit(context);
+        if (response != MemoAccountantResponse.connectionError) showQrQuickDeposit(context);
         _logError("Accountant error during tip: ${response.name}", response);
       }
     } catch (e, s) {
@@ -388,7 +388,7 @@ class _PostCardState extends ConsumerState<PostCard> {
 
       _hasSelectedTopic = !_hasSelectedTopic;
 
-      _immutableTopicPrefix = _hasSelectedTopic ? "@$topicId: " : "";
+      _immutableTopicPrefix = _hasSelectedTopic ? "@$topicId" : "";
 
       _showInput = _hasSelectedTopic || _selectedHashtags.any((selected) => selected);
       _evaluateShowSendButton(_textEditController.text);
@@ -642,7 +642,7 @@ class _PostCardState extends ConsumerState<PostCard> {
       if (result == MemoAccountantResponse.yes) {
         success = true;
       } else {
-        showQrQuickDeposit(ctx);
+        if (result != MemoAccountantResponse.connectionError) showQrQuickDeposit(ctx);
       }
     } else {
       message = "An unexpected error occurred during verification.";

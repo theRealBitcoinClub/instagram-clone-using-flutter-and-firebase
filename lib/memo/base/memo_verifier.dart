@@ -12,6 +12,7 @@ enum MemoVerificationResponse {
   // zeroTags("Add at least one visible #tag."),
   noTopicNorTag("Must include @topic or #tag."),
   moreThanOneTopic("Only one @topic allowed"),
+  topicTooLong("@topic maximum length is 30 characters"),
   tooLong("Text + media Url is too long."),
   tooLongProfileText("Text/Bio is too long."),
   tooLongProfileName("Name is too long."),
@@ -45,6 +46,7 @@ class MemoVerifier {
   // --- Configuration Constants ---
   static const int maxHashtags = 3;
   static const int maxTopics = 1;
+  static const int maxTopicLength = 30;
   static const int minPostLength = 5; // Example, adjust as needed
   //TODO check if that max length works with attaching #mahakka to every post
   //TODO posts with topics will have shorter length for mentioning @topic and in addition the additional OP_CODE,
@@ -135,9 +137,12 @@ class MemoVerifier {
     return MemoVerificationResponse.valid;
   }
 
-  MemoVerificationResponse verifyTopicCount() {
+  MemoVerificationResponse verifyTopicCountAndLength() {
     if (topics.length > maxTopics) {
       return MemoVerificationResponse.moreThanOneTopic;
+    }
+    if (topics.isNotEmpty && topics.first.length > maxTopicLength) {
+      return MemoVerificationResponse.topicTooLong;
     }
     return MemoVerificationResponse.valid;
   }
@@ -237,7 +242,7 @@ class MemoVerifier {
     result = verifyHashtagCount();
     if (result != MemoVerificationResponse.valid) return result;
 
-    result = verifyTopicCount();
+    result = verifyTopicCountAndLength();
     if (result != MemoVerificationResponse.valid) return result;
 
     result = verifyNoTopicNorTag();

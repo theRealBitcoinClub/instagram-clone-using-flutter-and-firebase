@@ -14,7 +14,7 @@ import '../memo/scraper/memo_scraper_topics.dart';
 
 final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraperManager, void>(() => BackgroundScraperManager());
 
-const bool forceScrape = true;
+const bool forceScrape = false;
 const bool saveToFirebase = true;
 const bool deepScrape = false;
 const cacheId = "okeywhynot_";
@@ -162,7 +162,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
   // Extract the scraping logic for better organization
   Future<void> _runDebugScraping() async {
     try {
-      await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topicz2", deepScrape ? 200 : 0, 0);
+      await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topicz4", deepScrape ? 500 : 25, 0);
     } catch (e) {
       _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
       Sentry.captureException(e);
@@ -170,8 +170,8 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     }
 
     try {
-      // await MemoScraperTag("${cacheId}recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], deepScrape ? 500 : 0, 0);
-      // await MemoScraperTag("${cacheId}most", saveToFirebase, _prefs).startScrapeTags(["/most-posts"], deepScrape ? 500 : 0, 0);
+      await MemoScraperTag("${cacheId}recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], deepScrape ? 1000 : 0, 0);
+      await MemoScraperTag("${cacheId}most", saveToFirebase, _prefs).startScrapeTags(["/most-posts"], deepScrape ? 500 : 0, 0);
     } catch (e) {
       _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
       Sentry.captureException(e);
@@ -181,7 +181,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
   Future<void> _runProductionScraping() async {
     try {
-      await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topicz2", 25, 0);
+      await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topicz4", 25, 0);
     } catch (e) {
       _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
       Sentry.captureException(e);

@@ -4,6 +4,7 @@ import 'dart:collection';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mahakka/memo/model/memo_model_post.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../config.dart';
 
@@ -54,7 +55,7 @@ class PostScraperFirebaseService {
       await _distributePostIdsToMetadataDocs(allPostIds);
       _print("✅ Post metadata initialized with ${allPostIds.length} post IDs across ${_metadataCache.length} documents");
     } catch (e) {
-      _print("❌ Error initializing post metadata: $e");
+      _print("❌ Error initializing post metadata: $e", e: e);
       rethrow;
     }
   }
@@ -73,7 +74,7 @@ class PostScraperFirebaseService {
       final totalIds = _metadataCache.values.fold<int>(0, (sum, ids) => sum + ids.length);
       _print("📊 Loaded ${_metadataCache.length} metadata documents with $totalIds post IDs into cache");
     } catch (e) {
-      _print("❌ Error loading metadata into cache: $e");
+      _print("❌ Error loading metadata into cache: $e", e: e);
       throw e;
     }
   }
@@ -92,7 +93,7 @@ class PostScraperFirebaseService {
       _print("📊 Found ${postIds.length} existing post IDs");
       return postIds;
     } catch (e) {
-      _print("❌ Error fetching existing post IDs: $e");
+      _print("❌ Error fetching existing post IDs: $e", e: e);
       return postIds;
     }
   }
@@ -190,7 +191,7 @@ class PostScraperFirebaseService {
         await _createNewMetadataDocument(lastDocNumber + 1, remainingIds);
       }
     } catch (e) {
-      _print("❌ Error updating metadata with new posts: $e");
+      _print("❌ Error updating metadata with new posts: $e", e: e);
     }
   }
 
@@ -400,7 +401,7 @@ class PostScraperFirebaseService {
           successfulSaves++;
           successfulPostIds.add(post.id!);
         } catch (e) {
-          _print("Error adding post ${post.id} to batch: $e");
+          _print("Error adding post ${post.id} to batch: $e", e: e);
           failedPostIds.add(post.id!);
         }
       }
@@ -423,7 +424,7 @@ class PostScraperFirebaseService {
 
       _executeCallbackIfNeeded(true, successfulSaves, failedPostIds.isNotEmpty ? failedPostIds : null);
     } catch (e) {
-      _print("❌ Batch commit failed: $e");
+      _print("❌ Batch commit failed: $e", e: e);
 
       _executeCallbackIfNeeded(false, 0, postsToProcess.where((p) => p.id != null).map((p) => p.id!).toList());
     }
@@ -451,12 +452,13 @@ class PostScraperFirebaseService {
       _addToPersistedCache(post.id!);
       _print("${post.id} Post saved successfully. ${post.text}");
     } catch (e) {
-      _print("Error saving post ${post.id}: $e");
+      _print("Error saving post ${post.id}: $e", e: e);
       // Don't add to cache if save failed
     }
   }
 
-  void _print(String s) {
+  void _print(String s, {e}) {
+    if (e != null) Sentry.captureException(e);
     if (kDebugMode) print("PSFS: " + s);
   }
 }

@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../model/memo_model_tag_light.dart';
 
@@ -190,6 +191,7 @@ class TagService {
           batch.set(docRef, tag.toJson(), SetOptions(merge: true));
           successfulSaves++;
         } catch (e) {
+          Sentry.captureException(e);
           _print("Error adding tag $tagId to batch: $e");
           failedTagIds.add(tagId);
         }
@@ -216,6 +218,7 @@ class TagService {
 
       _executeCallbackIfNeeded(true, successfulSaves, failedTagIds.isNotEmpty ? failedTagIds : null);
     } catch (e) {
+      Sentry.captureException(e);
       _print("❌ Tag batch commit failed: $e");
 
       final failedIds = tagsToProcess.where((t) => t.id.isNotEmpty).map((t) => t.id).toList();
@@ -260,6 +263,7 @@ class TagService {
 
       _print("✅ Tag list updated with ${newTags.length} new tags");
     } catch (e) {
+      Sentry.captureException(e);
       _print("❌ Error updating tag list: $e");
     }
   }
@@ -305,6 +309,7 @@ class TagService {
       _print("Retrieved ${lightTags.length} lightweight tags from tag list");
       return lightTags;
     } catch (e) {
+      Sentry.captureException(e);
       _print("Error retrieving lightweight tags: $e");
       return [];
     }
@@ -331,6 +336,7 @@ class TagService {
         return MemoModelTag.fromJson(data)..id = doc.id;
       }).toList();
     } catch (e, s) {
+      Sentry.captureException(e);
       _print("Error fetching all tags: $e");
       print(s);
       return [];

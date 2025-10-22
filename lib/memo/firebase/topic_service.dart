@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mahakka/config.dart';
 import 'package:mahakka/memo/model/memo_model_topic.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../model/memo_model_topic_light.dart';
 
@@ -75,6 +76,7 @@ class TopicService {
       print("Retrieved ${lightTopics.length} lightweight topics from topic list");
       return lightTopics;
     } catch (e) {
+      Sentry.captureException(e);
       print("Error retrieving lightweight topics: $e");
       return [];
     }
@@ -118,6 +120,7 @@ class TopicService {
 
       print("✅ Topic list updated with ${newTopics.length} new topics");
     } catch (e) {
+      Sentry.captureException(e);
       print("❌ Error updating topic list: $e");
     }
   }
@@ -201,25 +204,25 @@ class TopicService {
     final duplicateIds = <String>[];
 
     for (final topic in topics) {
-      final topicId = topic.url!;
-      // if (topicId.isEmpty) {
+      final topicUrlId = topic.url!;
+      // if (topicUrlId.isEmpty) {
       //   print("Topic has empty ID, skipping");
       //   continue;
       // }
 
-      // final sanitizedId = sanitizeFirestoreId(topicId);
-      final sanitizedId = topicId;
+      // final sanitizedId = sanitizeFirestoreId(topicUrlId);
+      final sanitizedId = topicUrlId;
 
       // Check memory cache first
       // if (_batchQueue.any((t) => sanitizeFirestoreId(t.id) == sanitizedId)) {
       if (_batchQueue.any((t) => t.url! == sanitizedId)) {
-        duplicateIds.add(topicId);
+        duplicateIds.add(topicUrlId);
         continue;
       }
 
       // Check persisted cache
       if (_isTopicAlreadyPersisted(sanitizedId)) {
-        duplicateIds.add(topicId);
+        duplicateIds.add(topicUrlId);
         continue;
       }
 
@@ -294,6 +297,7 @@ class TopicService {
           batch.set(docRef, topic.toJson(), SetOptions(merge: true));
           successfulSaves++;
         } catch (e) {
+          Sentry.captureException(e);
           print("Error adding topic $topicId to batch: $e");
           failedTopicIds.add(topicId);
         }
@@ -323,6 +327,7 @@ class TopicService {
 
       _executeCallbackIfNeeded(true, successfulSaves, failedTopicIds.isNotEmpty ? failedTopicIds : null);
     } catch (e) {
+      Sentry.captureException(e);
       print("❌ Topic batch commit failed: $e");
 
       final failedIds = topicsToProcess.where((t) => t.url!.isNotEmpty).map((t) => t.url!).toList();
@@ -360,6 +365,7 @@ class TopicService {
         // return MemoModelTopic.fromJson(data)..id = doc.id;
       }).toList();
     } catch (e, s) {
+      Sentry.captureException(e);
       print("Error fetching all topics: $e");
       print(s);
       return [];

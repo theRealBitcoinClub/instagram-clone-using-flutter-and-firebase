@@ -291,8 +291,8 @@ class TopicService {
         // }
 
         try {
-          // final String safeTopicId = sanitizeFirestoreId(topicId);
-          final String safeTopicId = topicId;
+          final String safeTopicId = sanitizeFirestoreId(topicId);
+          // final String safeTopicId = topicId;
           final docRef = _firestore.collection(_collectionName).doc(safeTopicId);
           batch.set(docRef, topic.toJson(), SetOptions(merge: true));
           successfulSaves++;
@@ -344,13 +344,13 @@ class TopicService {
     }
   }
 
-  // String sanitizeFirestoreId(String id) {
-  //   return id.replaceAll('/', '__');
-  // }
-  //
-  // String desanitizeFirestoreId(String firestoreId) {
-  //   return firestoreId.replaceAll('__', '/');
-  // }
+  String sanitizeFirestoreId(String id) {
+    return id.replaceAll('/', '__').replaceAll('.', '__dot__').replaceAll(r'\', '__backslash__');
+  }
+
+  String desanitizeFirestoreId(String firestoreId) {
+    return firestoreId.replaceAll('__', '/').replaceAll('.', '__dot__').replaceAll(r'\', '__backslash__');
+  }
 
   Future<List<MemoModelTopic>> getAllTopics() async {
     try {

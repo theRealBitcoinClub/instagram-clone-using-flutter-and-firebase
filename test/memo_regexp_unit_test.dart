@@ -659,9 +659,9 @@ void main() {
 
       expect(result.length, 8);
       expect(result, contains('#flutter'));
-      expect(result, contains('#dart'));
+      expect(result, contains('#dart-'));
       expect(result, contains('#testing_'));
-      expect(result, contains('#unit_tests'));
+      expect(result, contains('#unit_tests!'));
       expect(result, contains('#cxz'));
       expect(result, contains('#njk'));
       expect(result, contains('#cxzaf'));

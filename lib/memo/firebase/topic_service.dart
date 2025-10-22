@@ -102,8 +102,9 @@ class TopicService {
 
       // Update with new topics (overwrite existing counts if topics already exist)
       for (final topic in newTopics) {
-        final sanitizedId = sanitizeFirestoreId(topic.id);
-        existingTopics[sanitizedId] = topic.postCount;
+        // final sanitizedId = sanitizeFirestoreId(topic.id);
+        // final sanitizedId = topic.url!;
+        existingTopics[topic.id] = topic.postCount;
       }
 
       // Convert back to list format for Firestore
@@ -200,16 +201,18 @@ class TopicService {
     final duplicateIds = <String>[];
 
     for (final topic in topics) {
-      final topicId = topic.id;
-      if (topicId.isEmpty) {
-        print("Topic has empty ID, skipping");
-        continue;
-      }
+      final topicId = topic.url!;
+      // if (topicId.isEmpty) {
+      //   print("Topic has empty ID, skipping");
+      //   continue;
+      // }
 
-      final sanitizedId = sanitizeFirestoreId(topicId);
+      // final sanitizedId = sanitizeFirestoreId(topicId);
+      final sanitizedId = topicId;
 
       // Check memory cache first
-      if (_batchQueue.any((t) => sanitizeFirestoreId(t.id) == sanitizedId)) {
+      // if (_batchQueue.any((t) => sanitizeFirestoreId(t.id) == sanitizedId)) {
+      if (_batchQueue.any((t) => t.url! == sanitizedId)) {
         duplicateIds.add(topicId);
         continue;
       }
@@ -277,15 +280,16 @@ class TopicService {
       int successfulSaves = 0;
 
       for (final topic in topicsToProcess) {
-        final topicId = topic.id;
-        if (topicId.isEmpty) {
-          print("Skipping topic with empty ID");
-          failedTopicIds.add('empty_id_${topicsToProcess.indexOf(topic)}');
-          continue;
-        }
+        final topicId = topic.url!;
+        // if (topicId.isEmpty) {
+        //   print("Skipping topic with empty ID");
+        //   failedTopicIds.add('empty_id_${topicsToProcess.indexOf(topic)}');
+        //   continue;
+        // }
 
         try {
-          final String safeTopicId = sanitizeFirestoreId(topicId);
+          // final String safeTopicId = sanitizeFirestoreId(topicId);
+          final String safeTopicId = topicId;
           final docRef = _firestore.collection(_collectionName).doc(safeTopicId);
           batch.set(docRef, topic.toJson(), SetOptions(merge: true));
           successfulSaves++;
@@ -301,14 +305,17 @@ class TopicService {
 
         // Add successful topics to persistence cache
         for (final topic in topicsToProcess) {
-          final topicId = topic.id;
+          final topicId = topic.url!;
+          // final topicId = topic.id;
           if (topicId.isNotEmpty && !failedTopicIds.contains(topicId)) {
-            _addToPersistedCache(sanitizeFirestoreId(topicId));
+            _addToPersistedCache(topicId);
+            // _addToPersistedCache(sanitizeFirestoreId(topicId));
           }
         }
 
         // ✅ NEW: Update the topic list with successfully processed topics
-        final successfulTopics = topicsToProcess.where((t) => t.id.isNotEmpty && !failedTopicIds.contains(t.id)).toList();
+        final successfulTopics = topicsToProcess.where((t) => !failedTopicIds.contains(t.url)).toList();
+        // final successfulTopics = topicsToProcess.where((t) => t.id.isNotEmpty && !failedTopicIds.contains(t.id)).toList();
         await _updateTopicListWithNewIds(successfulTopics);
       } else {
         print("❌ No topics were successfully added to the batch");
@@ -318,7 +325,8 @@ class TopicService {
     } catch (e) {
       print("❌ Topic batch commit failed: $e");
 
-      final failedIds = topicsToProcess.where((t) => t.id.isNotEmpty).map((t) => t.id).toList();
+      final failedIds = topicsToProcess.where((t) => t.url!.isNotEmpty).map((t) => t.url!).toList();
+      // final failedIds = topicsToProcess.where((t) => t.id.isNotEmpty).map((t) => t.id).toList();
       _executeCallbackIfNeeded(false, 0, failedIds.isNotEmpty ? failedIds : null);
     }
   }
@@ -331,13 +339,13 @@ class TopicService {
     }
   }
 
-  String sanitizeFirestoreId(String id) {
-    return id.replaceAll('/', '__');
-  }
-
-  String desanitizeFirestoreId(String firestoreId) {
-    return firestoreId.replaceAll('__', '/');
-  }
+  // String sanitizeFirestoreId(String id) {
+  //   return id.replaceAll('/', '__');
+  // }
+  //
+  // String desanitizeFirestoreId(String firestoreId) {
+  //   return firestoreId.replaceAll('__', '/');
+  // }
 
   Future<List<MemoModelTopic>> getAllTopics() async {
     try {
@@ -348,7 +356,8 @@ class TopicService {
       }
       return querySnapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
-        return MemoModelTopic.fromJson(data)..id = doc.id;
+        return MemoModelTopic.fromJson(data);
+        // return MemoModelTopic.fromJson(data)..id = doc.id;
       }).toList();
     } catch (e, s) {
       print("Error fetching all topics: $e");

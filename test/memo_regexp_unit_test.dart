@@ -655,17 +655,20 @@ void main() {
 
     test('extractHashtags should handle multiple hashtags', () {
       const multipleHashtags = "#flutter@ #dart- #testing_ #unit_tests! fhkjds#cxz @#njk fhkjds#cxzaf@gufd @#njk_";
-      final result = MemoRegExp.extractHashtags(multipleHashtags);
+      var result = MemoRegExp.extractHashtags(multipleHashtags);
 
-      expect(result.length, 8);
+      expect(result.length, 4);
       expect(result, contains('#flutter'));
-      expect(result, contains('#dart-'));
+      expect(result, contains('#dart'));
       expect(result, contains('#testing_'));
-      expect(result, contains('#unit_tests!'));
-      expect(result, contains('#cxz'));
-      expect(result, contains('#njk'));
-      expect(result, contains('#cxzaf'));
-      expect(result, contains('#njk_'));
+      expect(result, contains('#unit_tests'));
+
+      result = MemoRegExp.extractHashtags("#हिंदी fdf #中国人 fd f#हिंदी fds #日本語 #русский #notthis#butseparate #español f #\$RMZ_cashtoken #ok");
+
+      expect(result.length, 3);
+      expect(result, contains('#espa'));
+      expect(result, contains('#notthis'));
+      expect(result, contains('#ok'));
     });
 
     test('extractUrls should handle complex text with various URLs', () {

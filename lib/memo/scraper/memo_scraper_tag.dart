@@ -6,6 +6,7 @@ import 'package:mahakka/memo/firebase/post_scraper_firebase_service.dart';
 import 'package:mahakka/memo/firebase/tag_service.dart';
 import 'package:mahakka/memo/model/memo_model_tag.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../isar/isar_shared_preferences.dart';
 import '../model/memo_model_post.dart';
@@ -28,43 +29,47 @@ class MemoScraperTag {
   /// [endOffset]: Ending offset for pagination
   /// [cacheId]: Unique identifier for caching purposes
   Future<void> startScrapeTags(List<String> orderBy, int startOffset, int endOffset) async {
-    for (String order in orderBy) {
-      for (int offset = startOffset; offset >= endOffset; offset -= 25) {
-        // check if the first tag has changed
-        final sampleTags = await scrapeTags(order, offset);
-        if (sampleTags.isEmpty) continue;
+    try {
+      for (String order in orderBy) {
+        for (int offset = startOffset; offset >= endOffset; offset -= 25) {
+          // check if the first tag has changed
+          final sampleTags = await scrapeTags(order, offset);
+          if (sampleTags.isEmpty) continue;
 
-        final key = "$prefskey$cacheId$orderBy$offset";
-        final checkString = "${sampleTags[0].lastPost}${sampleTags[0].postCount}";
-        final lastCheckString = prefs.getString(key);
+          final key = "$prefskey$cacheId$orderBy$offset";
+          final checkString = "${sampleTags[0].lastPost}${sampleTags[0].postCount}";
+          final lastCheckString = prefs.getString(key);
 
-        if (lastCheckString == checkString) {
-          _print("MSTAG: ⏭️ Stop scraping - no changes detected! 🚫");
-          continue; // Stop scraping - no changes detected
+          if (lastCheckString == checkString) {
+            _print("MSTAG: ⏭️ Stop scraping - no changes detected! 🚫");
+            continue; // Stop scraping - no changes detected
+          }
+
+          // Scrape tags for current order and offset
+          final List<MemoModelTag> allTags = await scrapeTags(order, offset);
+
+          // Filter tags that have new posts
+          final List<MemoModelTag> tagsWithNewPosts = await _filterTagsWithNewPosts(allTags);
+
+          if (tagsWithNewPosts.isEmpty) {
+            _print("MSTAG: 📭 No new posts found for $order$offset");
+            continue;
+          }
+
+          // Process each tag with new posts
+          await _scrapeTagsWithNewPosts(tagsWithNewPosts);
+
+          //ITS IMPORTANT TO SET THE CHECKSTRING ONLY AFTER SUCCESSFULLY SCRAPING
+          await prefs.setString(key, checkString);
+          _print("MSTAG: ✅ Scraped $order with offset $offset - Found ${tagsWithNewPosts.length} tags with new posts! 🎯");
         }
-
-        // Scrape tags for current order and offset
-        final List<MemoModelTag> allTags = await scrapeTags(order, offset);
-
-        // Filter tags that have new posts
-        final List<MemoModelTag> tagsWithNewPosts = await _filterTagsWithNewPosts(allTags);
-
-        if (tagsWithNewPosts.isEmpty) {
-          _print("MSTAG: 📭 No new posts found for $order$offset");
-          continue;
-        }
-
-        // Process each tag with new posts
-        await _scrapeTagsWithNewPosts(tagsWithNewPosts);
-
-        //ITS IMPORTANT TO SET THE CHECKSTRING ONLY AFTER SUCCESSFULLY SCRAPING
-        await prefs.setString(key, checkString);
-        _print("MSTAG: ✅ Scraped $order with offset $offset - Found ${tagsWithNewPosts.length} tags with new posts! 🎯");
       }
+    } catch (e) {
+      Sentry.captureException(e);
+    } finally {
+      postService.forceProcessBatch();
+      tagService.forceProcessBatch();
     }
-
-    tagService.forceProcessBatch();
-    postService.forceProcessBatch();
     _print("MSTAG: 🏁 FINISHED SCRAPING TAGS! 🎉");
   }
 
@@ -116,7 +121,7 @@ class MemoScraperTag {
           _print("MSTAG: 💾 Saved ${newPosts.length} new posts for tag: ${tag.name} 🏷️");
         }
       } catch (e) {
-        _print("MSTAG: ❌ Error processing tag ${tag.name}: $e 🚨");
+        _print("MSTAG: ❌ Error processing tag ${tag.name}: $e 🚨", e: e);
       }
       persistPostcountAfterSuccessfulScrape(tag);
     }
@@ -190,7 +195,7 @@ class MemoScraperTag {
 
       return _parseTagsFromData(data);
     } catch (e) {
-      _print("MSTAG: ❌ Error scraping tags: $e 🚨");
+      _print("MSTAG: ❌ Error scraping tags: $e 🚨", e: e);
       return [];
     }
   }
@@ -222,7 +227,7 @@ class MemoScraperTag {
         //
         result.add(tag);
       } catch (e) {
-        _print("MSTAG: ❌ Error parsing tag data: $e 🚨");
+        _print("MSTAG: ❌ Error parsing tag data: $e 🚨", e: e);
       }
     }
 
@@ -239,7 +244,9 @@ class MemoScraperTag {
     );
   }
 
-  void _print(String s) {
+  void _print(String s, {e}) {
+    if (e != null) Sentry.captureException(e);
+
     if (kDebugMode) print(s);
   }
 }

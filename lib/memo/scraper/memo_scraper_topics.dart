@@ -14,6 +14,7 @@ import 'package:mahakka/memo/model/memo_model_topic.dart';
 import 'package:mahakka/memo/scraper/memo_scraper_utils.dart';
 import 'package:mahakka/memo_data_checker.dart';
 import 'package:mahakka/youtube_video_checker.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../firebase/topic_service.dart';
 import '../isar/isar_shared_preferences.dart';
@@ -21,6 +22,8 @@ import '../isar/isar_shared_preferences.dart';
 class MemoScraperTopic {
   final bool saveToFirebase;
   final IsarSharedPreferences prefs;
+
+  final String keyTopic = "TopicScrape123";
 
   MemoScraperTopic(this.saveToFirebase, this.prefs);
 
@@ -52,8 +55,8 @@ class MemoScraperTopic {
       _print("\nSCRAPER TOPICS\nScraped offset $offset - Found ${topicsWithNewPosts.length} topics with new posts");
     }
 
-    topicService.forceProcessBatch();
     postService.forceProcessBatch();
+    topicService.forceProcessBatch(keyTopic, cacheId, prefs);
     _print("\nSCRAPER TOPICS\nFINISHED SCRAPING TOPICS: $cacheId");
   }
 
@@ -66,12 +69,11 @@ class MemoScraperTopic {
 
       return _parseTopicsFromData(topicsData);
     } catch (e) {
+      Sentry.captureException(e);
       _print("\nSCRAPER TOPICS\nError scraping topics: $e");
       return [];
     }
   }
-
-  final String keyTopic = "TopicScrape123";
 
   /// Filters topics to find only those with new posts using lastPostCount
   Future<List<MemoModelTopic>> _filterTopicsWithNewPosts(List<MemoModelTopic> allTopics, String cacheId) async {
@@ -104,50 +106,54 @@ class MemoScraperTopic {
     TopicService topicService,
     PostScraperFirebaseService postService,
   ) async {
-    for (final topic in topicsWithNewPosts) {
-      try {
-        final List<MemoModelPost> newPosts = await scrapeTopicHarvestPosts(topic, cacheId);
-        if (newPosts.isNotEmpty) {
-          if (saveToFirebase) {
-            postService.savePostsBatch(
-              newPosts,
-              onFinish: (success, processedCount, failedPostIds) {
-                if (success) {
-                  if (kDebugMode) _print("✅ Batch completed! Processed $processedCount posts");
-                  if (failedPostIds != null) {
-                    _print("❌ Failed posts: ${failedPostIds.join(', ')}");
+    try {
+      for (final topic in topicsWithNewPosts) {
+        try {
+          final List<MemoModelPost> newPosts = await scrapeTopicHarvestPosts(topic, cacheId);
+          if (newPosts.isNotEmpty) {
+            if (saveToFirebase) {
+              postService.savePostsBatch(
+                newPosts,
+                onFinish: (success, processedCount, failedPostIds) {
+                  if (success) {
+                    if (kDebugMode) _print("✅ Batch completed! Processed $processedCount posts");
+                    if (failedPostIds != null) {
+                      _print("❌ Failed posts: ${failedPostIds.join(', ')}");
+                    }
+                  } else {
+                    _print("❌ Batch failed");
                   }
-                } else {
-                  _print("❌ Batch failed");
-                }
-              },
-            );
+                },
+              );
+            }
+            _print("\nSCRAPER TOPICS\nSaved ${newPosts.length} new posts for topic: ${topic.header}");
           }
-          _print("\nSCRAPER TOPICS\nSaved ${newPosts.length} new posts for topic: ${topic.header}");
+        } catch (e) {
+          Sentry.captureException(e);
+          _print("\nSCRAPER TOPICS\nError processing topic ${topic.header}: $e");
         }
-
-        // Save the updated post count to SharedPreferences
-        final topicKey = "$keyTopic$cacheId${topic.url}";
-        await prefs.setString(topicKey, topic.postCount.toString());
-      } catch (e) {
-        _print("\nSCRAPER TOPICS\nError processing topic ${topic.header}: $e");
       }
-    }
-
-    // Save topics batch
-    topicService.saveTopicsBatch(
-      topicsWithNewPosts,
-      onFinish: (success, processedCount, failedIds) {
-        if (success) {
-          if (kDebugMode) _print("✅ Batch completed! Processed $processedCount Topics");
-          if (failedIds != null) {
-            _print("❌ Failed topics: ${failedIds.join(', ')}");
+    } catch (e) {
+      Sentry.captureException(e);
+    } finally {
+      // Save topics batch
+      topicService.saveTopicsBatch(
+        keyTopic,
+        cacheId,
+        prefs,
+        topicsWithNewPosts,
+        onFinish: (success, processedCount, failedIds) {
+          if (success) {
+            if (kDebugMode) _print("✅ Batch completed! Processed $processedCount Topics");
+            if (failedIds != null) {
+              _print("❌ Failed topics: ${failedIds.join(', ')}");
+            }
+          } else {
+            _print("❌ Batch failed");
           }
-        } else {
-          _print("❌ Batch failed");
-        }
-      },
-    );
+        },
+      );
+    }
   }
 
   /// Scrapes posts for a specific topic, only fetching new posts
@@ -171,6 +177,7 @@ class MemoScraperTopic {
         _print("Api request response.statusCode != 200 $apiUrl, ${response.statusCode}, fallback to scraper");
       }
     } catch (e) {
+      Sentry.captureException(e);
       _print("Api request url: $apiUrl failed, fallback to scraper, error: $e");
     }
 
@@ -179,6 +186,7 @@ class MemoScraperTopic {
         postsData = await MemoScraperUtil.createScraper(scrapeUrl, _createPostScraperConfig(), mockData: mockData);
       }
     } catch (e) {
+      Sentry.captureException(e);
       _print("Scraping failed for url: $scrapeUrl error: $e");
     }
     _print("success on api: ${fetchedFromApiList != null}, url: $apiUrl, success on scrape: ${postsData != null}, url: $scrapeUrl");
@@ -189,6 +197,7 @@ class MemoScraperTopic {
 
       return allPosts.take(newPostsCount).toList();
     } catch (e) {
+      Sentry.captureException(e);
       _print("\nSCRAPER TOPICS\nError scraping posts for topic ${topic.header}: $e");
       return [];
     }
@@ -234,6 +243,7 @@ class MemoScraperTopic {
         itemIndex += 4;
       }
     } catch (e) {
+      Sentry.captureException(e);
       _print("\nSCRAPER TOPICS\nError parsing topics data: $e");
     }
 
@@ -298,10 +308,12 @@ class MemoScraperTopic {
 
           postList.add(post);
         } catch (e) {
+          Sentry.captureException(e);
           _print("\nSCRAPER TOPICS\nError parsing individual post: $e");
         }
       }
     } catch (e) {
+      Sentry.captureException(e);
       _print("\nSCRAPER TOPICS\nError parsing posts data: $e");
     }
 
@@ -316,6 +328,7 @@ class MemoScraperTopic {
       final String likeText = postData["likeCount"].toString();
       likeCount = int.tryParse(likeText.split("\n")[0]) ?? 0;
     } catch (e) {
+      Sentry.captureException(e);
       _print("\nSCRAPER TOPICS\nError parsing like count: $e");
     }
 

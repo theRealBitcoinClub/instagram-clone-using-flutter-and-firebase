@@ -165,7 +165,7 @@ class TopicService {
   }
 
   /// Manually forces the batch to process immediately
-  void forceProcessBatch() {
+  void forceProcessBatch(keyTopic, cacheId, prefs) {
     if (_batchQueue.isEmpty) {
       print("Topic batch queue is empty, nothing to process");
       _executeCallbackIfNeeded(true, 0, null);
@@ -173,11 +173,17 @@ class TopicService {
     }
 
     print("🔄 Manually forcing topic batch processing with ${_batchQueue.length} topics...");
-    _processBatch();
+    _processBatch(keyTopic, cacheId, prefs);
   }
 
   /// Saves topics using batching with timeout and duplicate prevention
-  void saveTopicsBatch(List<MemoModelTopic> topics, {Function(bool success, int processedCount, List<String>? failedTopicIds)? onFinish}) {
+  void saveTopicsBatch(
+    keyTopic,
+    cacheId,
+    prefs,
+    List<MemoModelTopic> topics, {
+    Function(bool success, int processedCount, List<String>? failedTopicIds)? onFinish,
+  }) {
     if (_currentOnFinishCallback == null && onFinish != null) {
       _currentOnFinishCallback = onFinish;
     }
@@ -191,10 +197,10 @@ class TopicService {
     }
 
     _addToBatchQueue(newTopics);
-    _startOrResetTimer();
+    _startOrResetTimer(keyTopic, cacheId, prefs);
 
     if (_batchQueue.length >= _maxBatchSize) {
-      _processBatch();
+      _processBatch(keyTopic, cacheId, prefs);
     }
   }
 
@@ -243,13 +249,13 @@ class TopicService {
     print("Added ${topics.length} topics to batch queue. Queue size: ${_batchQueue.length}");
   }
 
-  void _startOrResetTimer() {
+  void _startOrResetTimer(keyTopic, cacheId, prefs) {
     _cancelTimer();
 
     _batchTimer = Timer(_batchTimeout, () {
       print("Topic batch timeout reached after ${_batchTimeout.inMinutes} minutes");
       if (_batchQueue.isNotEmpty) {
-        _processBatch();
+        _processBatch(keyTopic, cacheId, prefs);
       } else {
         _executeCallbackIfNeeded(true, 0, null);
       }
@@ -263,7 +269,7 @@ class TopicService {
     _batchTimer = null;
   }
 
-  Future<void> _processBatch() async {
+  Future<void> _processBatch(keyTopic, cacheId, prefs) async {
     if (_batchQueue.isEmpty) {
       print("Topic batch queue is empty, nothing to process");
       _executeCallbackIfNeeded(true, 0, null);
@@ -306,7 +312,10 @@ class TopicService {
       if (successfulSaves > 0) {
         await batch.commit();
         print("✅ Topic batch commit successful! Saved $successfulSaves topics in 1 write operation");
-
+        // ✅ NEW: Update the topic list with successfully processed topics
+        final successfulTopics = topicsToProcess.where((t) => !failedTopicIds.contains(t.url)).toList();
+        // final successfulTopics = topicsToProcess.where((t) => t.id.isNotEmpty && !failedTopicIds.contains(t.id)).toList();
+        await _updateTopicListWithNewIds(successfulTopics);
         // Add successful topics to persistence cache
         for (final topic in topicsToProcess) {
           final topicId = topic.url!;
@@ -315,12 +324,11 @@ class TopicService {
             _addToPersistedCache(topicId);
             // _addToPersistedCache(sanitizeFirestoreId(topicId));
           }
-        }
 
-        // ✅ NEW: Update the topic list with successfully processed topics
-        final successfulTopics = topicsToProcess.where((t) => !failedTopicIds.contains(t.url)).toList();
-        // final successfulTopics = topicsToProcess.where((t) => t.id.isNotEmpty && !failedTopicIds.contains(t.id)).toList();
-        await _updateTopicListWithNewIds(successfulTopics);
+          // Save the updated post count to SharedPreferences
+          final topicKey = "$keyTopic$cacheId${topic.url}";
+          await prefs.setString(topicKey, topic.postCount.toString());
+        }
       } else {
         print("❌ No topics were successfully added to the batch");
       }

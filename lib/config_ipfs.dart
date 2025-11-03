@@ -7,4 +7,5 @@ class IpfsConfig {
   static const String ghToken = '';
   static const String ghRepo = 'biggiebigbitcoin/mahakka';
   static const String preferredNode = 'https://free-bch.fullstack.cash/ipfs/view/';
+  static const String rewriteUrl = 'https://mahakka.com/ipfs/';
 }

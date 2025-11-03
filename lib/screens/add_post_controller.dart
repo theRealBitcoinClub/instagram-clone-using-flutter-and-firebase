@@ -156,7 +156,7 @@ class AddPostController extends StateNotifier<void> {
     } else if (imgurUrl.isNotEmpty) {
       return " $imgurUrl";
     } else if (ipfsCid.isNotEmpty) {
-      return " ${IpfsConfig.preferredNode}$ipfsCid";
+      return " ${IpfsConfig.rewriteUrl}$ipfsCid";
     } else if (odyseeUrl.isNotEmpty) {
       return " $odyseeUrl";
     }

@@ -260,7 +260,7 @@ class MemoModelPost {
     if (imageUrl != null && imageUrl!.isNotEmpty) return imageUrl!;
     if (imgurUrl != null && imgurUrl!.isNotEmpty) return imgurUrl!;
     if (videoUrl != null && videoUrl!.isNotEmpty) return videoUrl!;
-    if (ipfsCid != null && ipfsCid!.isNotEmpty) return IpfsConfig.preferredNode + ipfsCid!;
+    if (ipfsCid != null && ipfsCid!.isNotEmpty) return IpfsConfig.rewriteUrl + ipfsCid!;
     if (youtubeId != null && youtubeId!.isNotEmpty) return "https://youtu.be/$youtubeId";
     return "";
   }

@@ -135,7 +135,6 @@ class IPFSImageCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final imageUrl = '${IpfsConfig.preferredNode}$cid';
     final isDarkTheme = theme.brightness == Brightness.dark;
     final overlayColor = isDarkTheme ? Colors.black.withAlpha(133) : Colors.white.withAlpha(133);
     final backgroundColor = isDarkTheme ? Colors.black.withAlpha(133) : Colors.white.withAlpha(133);
@@ -288,7 +287,7 @@ class GalleryActionButtonRow extends ConsumerWidget {
   }
 
   void _shareImage(String selectedCid) {
-    final shareUrl = '${IpfsConfig.preferredNode}$selectedCid';
+    final shareUrl = '${IpfsConfig.rewriteUrl}$selectedCid';
     SharePlus.instance.share(ShareParams(title: "IPFS", uri: Uri.parse(shareUrl)));
   }
 

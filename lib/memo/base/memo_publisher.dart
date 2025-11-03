@@ -208,7 +208,7 @@ class MemoPublisher {
       BigInt totalAmountOfTokenAvailable = base.calculateTotalAmountOfThatToken(utxos, MemoBitcoinBase.tokenId);
 
       ForkedTransactionBuilder bchTransaction = base.buildTxToTransferTokens(
-        1,
+        100,
         senderBCHp2pkhwt,
         totalAmountInSatoshisAvailable,
         utxos,

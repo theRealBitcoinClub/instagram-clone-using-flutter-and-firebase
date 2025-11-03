@@ -40,6 +40,7 @@ class BurnerBalanceWidget extends ConsumerWidget {
                       Icon(Icons.local_fire_department_outlined, size: 22, color: theme.colorScheme.onPrimary),
                       const SizedBox(width: 2.1),
                       PopularityScoreWidget(
+                        hasDecimals: true,
                         initialScore: burnerBalance.token,
                         textStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w400, color: theme.colorScheme.onPrimary),
                       ),

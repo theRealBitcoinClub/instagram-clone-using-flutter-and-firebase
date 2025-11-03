@@ -83,6 +83,7 @@ class ProfileAvatarBalancesButtonRow extends ConsumerWidget {
         ),
         Expanded(
           child: StatWidget(
+            hasDecimals: true,
             title: MemoBitcoinBase.tokenTicker,
             count: creator.balanceToken,
             theme: theme,

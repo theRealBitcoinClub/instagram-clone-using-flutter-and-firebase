@@ -37,12 +37,14 @@ class TelegramBotPublisher {
       int tip = user.tipAmount;
       String tipReceiver = user.tipReceiver.displayName;
       int burnTotal = ref.read(bchBurnerBalanceProvider).value!.bch;
+      int tokenTotal = ref.read(bchBurnerBalanceProvider).value!.token;
 
       // Build the message text
       final messageText = _buildMessageText(
         name: name,
         postText: postText,
         burnTotal: burnTotal,
+        tokenTotal: tokenTotal,
         creator: creator,
         tip: tip,
         tipReceiver: tipReceiver,
@@ -62,13 +64,14 @@ class TelegramBotPublisher {
     required String name,
     required String postText,
     required int burnTotal,
+    required int tokenTotal,
     required MemoModelCreator creator,
     required int tip,
     required String tipReceiver,
     required String? mediaUrl,
   }) {
     return '$name published: $postText, '
-        '🔥 Burn total: ${PopularityScoreWidget.formatPopularityScore(burnTotal)} sats,'
+        '🔥 Burn total: ${PopularityScoreWidget.formatPopularityScore(burnTotal)} BCH, ${PopularityScoreWidget.formatPopularityScore(tokenTotal, hasDecimals: true)} MKA,'
         ' ${creator.profileIdShort} contributed ${PopularityScoreWidget.formatPopularityScore(tip)} sats to $tipReceiver, '
         ' ${mediaUrl == null ? creator.profileImageDetail() : ""}';
   }

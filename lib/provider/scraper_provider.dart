@@ -14,9 +14,9 @@ import '../memo/scraper/memo_scraper_topics.dart';
 
 final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraperManager, void>(() => BackgroundScraperManager());
 
-const bool forceScrape = false;
+const bool forceScrape = true;
 const bool saveToFirebase = true;
-const bool deepScrape = false;
+const bool deepScrape = true;
 const cacheId = "okeywhynot_";
 
 class BackgroundScraperManager extends AsyncNotifier<void> {

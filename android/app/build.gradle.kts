@@ -30,7 +30,7 @@ val flutterMinSdkVersion = 27
 val flutterTargetSdkVersion = 36
 val flutterNdkVersion = "27.0.12077973"
 val flutterVersionCode = 19842111
-val flutterVersionName = "4.5.12-BCH"
+val flutterVersionName = "4.5.15-BCH"
 
 android {
     namespace = "com.mahakka"
@@ -103,7 +103,7 @@ android {
             "ja",           // Japanese
             "ru",           // Russian
             "zh",           // Chinese (will include zh-CN, zh-TW, etc.)
-            "tl",           // Tagalog
+            "tl",           // Tagalog, Filipino
         ))
     }
 

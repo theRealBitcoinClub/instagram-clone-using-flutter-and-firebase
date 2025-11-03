@@ -162,7 +162,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
   // Extract the scraping logic for better organization
   Future<void> _runDebugScraping() async {
     try {
-      await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topicz4", deepScrape ? 500 : 25, 0);
+      await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topicz4", deepScrape ? 1500 : 25, 0);
     } catch (e) {
       _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
       Sentry.captureException(e);
@@ -171,7 +171,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
     try {
       await MemoScraperTag("${cacheId}recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], deepScrape ? 1000 : 0, 0);
-      await MemoScraperTag("${cacheId}most", saveToFirebase, _prefs).startScrapeTags(["/most-posts"], deepScrape ? 500 : 0, 0);
+      await MemoScraperTag("${cacheId}most", saveToFirebase, _prefs).startScrapeTags(["/most-posts"], deepScrape ? 750 : 0, 0);
     } catch (e) {
       _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
       Sentry.captureException(e);
@@ -181,14 +181,14 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
   Future<void> _runProductionScraping() async {
     try {
-      await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topicz4", 25, 0);
+      await MemoScraperTopic(saveToFirebase, _prefs).startScrapeTopics(cacheId + "topicz4", 100, 0);
     } catch (e) {
       _print("BGS: ❌ An error occurred during TOPIC scraping: $e 🚨");
       Sentry.captureException(e);
     }
 
     try {
-      await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], 100, 0);
+      await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], 150, 0);
     } catch (e) {
       _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
       Sentry.captureException(e);

@@ -222,7 +222,7 @@ void createSentryConfig(SentryFlutterOptions options, SentryConfig sentryConfig)
   // === BASIC ERROR CONTEXT ===
   options.sendDefaultPii = true;
   options.attachStacktrace = true;
-  options.diagnosticLevel = SentryLevel.debug;
+  options.diagnosticLevel = SentryLevel.warning;
 
   // === NATIVE CRASH HANDLING ===
   options.enableNativeCrashHandling = true;
@@ -237,7 +237,7 @@ void createSentryConfig(SentryFlutterOptions options, SentryConfig sentryConfig)
   options.enableAppLifecycleBreadcrumbs = true;
   options.enableUserInteractionBreadcrumbs = true;
 
-  options.enableLogs = true;
+  options.enableLogs = false;
 
   // === REMOVED COMPLEX FEATURES CAUSING ERRORS ===
   // options.attachScreenshot = false; // Remove for now

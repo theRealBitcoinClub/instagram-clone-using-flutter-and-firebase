@@ -250,7 +250,7 @@ class MemoPostScraper {
   }
 
   void _logInfo(String message) {
-    print("MemoPostScraper INFO: $message");
+    // print("MemoPostScraper INFO: $message");
     Sentry.logger.info("MemoPostScraper: $message");
   }
 
@@ -271,9 +271,9 @@ class MemoPostScraper {
   Future<MemoModelPost?> parsePost(postData, {bool strictFilter = true, bool isFromApiFetch = false}) async {
     var item = postData;
     if (postData is! Map<String, Object?>) {
-      if (postData[0] is Map<String, Object?>)
+      if (postData[0] is Map<String, Object?>) {
         item = postData[0];
-      else {
+      } else {
         _logWarning("Expected post item to be a Map, but got ${postData.runtimeType}. Item: $postData");
         return null;
       }
@@ -290,10 +290,11 @@ class MemoPostScraper {
       post = parsePostFromScraperObject(item);
     }
 
-    if (!(await hitsTheFilter(post, strictFilter)))
+    if (!(await hitsTheFilter(post, strictFilter))) {
       return post;
-    else
+    } else {
       return null;
+    }
   }
 
   Future<bool> hitsTheFilter(MemoModelPost post, bool strictFilter) async {
@@ -333,9 +334,9 @@ class MemoPostScraper {
           post.videoUrl == null &&
           !hasAtleastWhitelistedDomain) {
         // If no image, and has URLs that aren't from approved media domains, skip.
-        _logInfo(
-          "Skipping post (only text, no imgur (let imgur & youtube pass always), has zero whitelisted domains): ${post.urls.toString()}",
-        );
+        // _logInfo(
+        //   "Skipping post (only text, no imgur (let imgur & youtube pass always), has zero whitelisted domains): ${post.urls.toString()}",
+        // );
         return true;
       }
     } catch (e, s) {

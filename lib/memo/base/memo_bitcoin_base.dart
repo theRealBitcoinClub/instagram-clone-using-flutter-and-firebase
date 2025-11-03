@@ -31,9 +31,12 @@ class MemoBitcoinBase {
   //TODO MAKE SURE THIS URL IS OPENED IN OWN WEBVIEW TO APPRECIATE LOGIN STATUS
   static const String memoExplorerUrlPrefix = "https://memo.cash/explore/address/";
   static const String memoExplorerUrlSuffix = "?p=utxos";
-  static const String cauldronSwapTokenUrl = "https://app.cauldron.quest/swap/d44bf7822552d522802e7076dc9405f5e43151f0ac12b9f6553bda1ce8560002";
-  static const String tokenTicker = "PEPE";
-  static const String tokenId = "d44bf7822552d522802e7076dc9405f5e43151f0ac12b9f6553bda1ce8560002";
+  // static const String cauldronSwapTokenUrl = "https://app.cauldron.quest/swap/d44bf7822552d522802e7076dc9405f5e43151f0ac12b9f6553bda1ce8560002";
+  static const String cauldronSwapTokenUrl = "https://app.cauldron.quest/swap/ee4bc04f7c39b380a0d7d5c86d9514af4f76f6b65da8fdd9d21f349ebd973f7c";
+  // static const String tokenTicker = "PEPE";
+  // static const String tokenId = "d44bf7822552d522802e7076dc9405f5e43151f0ac12b9f6553bda1ce8560002";
+  static const String tokenTicker = "MKA";
+  static const String tokenId = "ee4bc04f7c39b380a0d7d5c86d9514af4f76f6b65da8fdd9d21f349ebd973f7c";
 
   static const mainnetServers = [
     "cashnode.bch.ninja", // Kallisti / Selene Official

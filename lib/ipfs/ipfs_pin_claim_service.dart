@@ -101,7 +101,7 @@ class IpfsPinClaimService {
         print('IpfsPinClaimService: Transaction sent successfully, txid: $txid');
 
         // Wait for the transaction delay
-        await Future.delayed(Duration(seconds: 3));
+        await Future.delayed(Duration(seconds: 12));
 
         // Generate a Pin Claim
         final pinObj = {
@@ -109,12 +109,14 @@ class IpfsPinClaimService {
           'filename': file.uri.pathSegments.last, // Get filename from path
           'address': address,
         };
+        print('IpfsPinClaimService: pinObj: $pinObj');
 
         final pinClaimResponse = await http.post(
           Uri.parse('$serverUrl/ipfs/createPinClaim'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode(pinObj),
         );
+        print('IpfsPinClaimService: pinClaimResponse statusCode: ${pinClaimResponse.statusCode}');
 
         if (pinClaimResponse.statusCode != 200) {
           throw Exception('Failed to create pin claim: ${pinClaimResponse.statusCode}');

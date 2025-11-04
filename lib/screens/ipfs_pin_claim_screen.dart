@@ -49,7 +49,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
 
   // Timer variables
   Timer? _countdownTimer;
-  int _countdownSeconds = 69;
+  int _countdownSeconds = 78;
   bool _showOverlay = false;
 
   final String _serverUrl = 'https://file-stage.fullstack.cash';
@@ -85,7 +85,7 @@ class _PinClaimScreenState extends ConsumerState<IpfsPinClaimScreen> {
   void _startCountdown() {
     setState(() {
       _showOverlay = true;
-      _countdownSeconds = 69;
+      _countdownSeconds = 78;
     });
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {

@@ -14,15 +14,15 @@ import '../memo/scraper/memo_scraper_topics.dart';
 
 final backgroundScraperManagerProvider = AsyncNotifierProvider<BackgroundScraperManager, void>(() => BackgroundScraperManager());
 
-const bool forceScrape = true;
+const bool forceScrape = false;
 const bool saveToFirebase = true;
-const bool deepScrape = true;
+const bool deepScrape = false;
 const cacheId = "okeywhynot_";
 
 class BackgroundScraperManager extends AsyncNotifier<void> {
   Timer? _scraperTimer;
   final Duration _initialDelay = Duration(seconds: 10);
-  final Duration _scrapeInterval = kDebugMode && !forceScrape ? Duration(hours: 3) : Duration(seconds: 60);
+  final Duration _scrapeInterval = kDebugMode && !forceScrape ? Duration(hours: 3) : Duration(seconds: 10);
   final bool _debugMode = kDebugMode;
 
   static const String _lastScrapeKey = 'last_scrape_timestamp';

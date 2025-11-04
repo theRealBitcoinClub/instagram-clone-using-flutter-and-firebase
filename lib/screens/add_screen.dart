@@ -107,14 +107,14 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
         ref.read(mediaSelectionProvider.notifier).clearSelection();
       });
       return Expanded(
-        child: Padding(padding: EdgeInsets.fromLTRB(8, 8, 8, 0), child: mediaWidget),
+        child: Padding(padding: EdgeInsets.fromLTRB(9, 9, 9, 0), child: mediaWidget),
       );
     }
 
     // All are empty, show media type selector
     return MediaTypeSelector(
       onMediaTypeSelected: (mediaType) {
-        updateTitleAndHint(mediaType.title, mediaType.hint);
+        updateTitleAndHint(mediaType);
       },
     );
   }
@@ -144,12 +144,11 @@ class _AddPostState extends ConsumerState<AddPost> with TickerProviderStateMixin
     return null;
   }
 
-  void updateTitleAndHint(String title, String hint) {
+  void updateTitleAndHint(MediaType type) {
     setState(() {
-      _title = title;
-      _hint = hint;
-      // Only set callbacks for IPFS (they're handled by the selector directly)
-      if (title.toUpperCase().contains('IPFS')) {
+      _title = type.title;
+      _hint = type.hint;
+      if (type == MediaType.ipfs) {
         _onCreateCallback = _showIpfsUploadScreen;
         _onGalleryCallback = _showIpfsGallery;
       } else {

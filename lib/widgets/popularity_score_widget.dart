@@ -62,7 +62,7 @@ class PopularityScoreWidget extends ConsumerStatefulWidget {
           return value.toStringAsFixed(0);
         } else if (value >= 10) {
           return value.toStringAsFixed(1).replaceAll('.0', '');
-        } else if (value >= 1) {
+        } else if (value >= 0.01) {
           return value.toStringAsFixed(2).replaceAll(RegExp(r'\.0+$'), '');
         } else {
           return value.toStringAsFixed(0);

@@ -27,7 +27,6 @@ enum MediaType {
     outlinedIcon: Icons.cloud_upload_outlined,
     filledIcon: Icons.cloud_upload_rounded,
     label: "IPFS",
-    isIpfs: true,
   ),
   odysee(
     title: "PASTE ODYSEE URL",
@@ -42,16 +41,8 @@ enum MediaType {
   final IconData outlinedIcon;
   final IconData filledIcon;
   final String label;
-  final bool isIpfs;
 
-  const MediaType({
-    required this.title,
-    required this.hint,
-    required this.outlinedIcon,
-    required this.filledIcon,
-    required this.label,
-    this.isIpfs = false,
-  });
+  const MediaType({required this.title, required this.hint, required this.outlinedIcon, required this.filledIcon, required this.label});
 }
 
 class MediaTypeSelector extends ConsumerWidget {
@@ -96,6 +87,13 @@ class MediaTypeSelector extends ConsumerWidget {
     final selectionColor = isSelected ? colorScheme.secondary : colorScheme.onSurface;
     final backgroundColor = isSelected ? theme.scaffoldBackgroundColor : theme.colorScheme.surface;
 
+    //This be executed once on rebuild after app was sleeping and is coming back with preselected media type
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (isSelected) {
+        onMediaTypeSelected(mediaType);
+      }
+    });
+
     return Expanded(
       child: Tooltip(
         message: mediaType.label,
@@ -104,7 +102,7 @@ class MediaTypeSelector extends ConsumerWidget {
             foregroundColor: selectionColor,
             backgroundColor: backgroundColor,
             padding: EdgeInsets.zero,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(15))),
           ),
           onPressed: () {
             ref.read(mediaSelectionProvider.notifier).selectMediaType(mediaType);
@@ -114,7 +112,7 @@ class MediaTypeSelector extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(isSelected ? mediaType.filledIcon : mediaType.outlinedIcon, size: 24, color: selectionColor),
-              const SizedBox(height: 2),
+              const SizedBox(height: 2.1),
               Text(
                 mediaType.label,
                 style: theme.textTheme.labelSmall?.copyWith(

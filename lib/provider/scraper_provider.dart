@@ -171,7 +171,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
 
     try {
       await MemoScraperTag("${cacheId}recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], deepScrape ? 1000 : 0, 0);
-      await MemoScraperTag("${cacheId}most", saveToFirebase, _prefs).startScrapeTags(["/most-posts"], deepScrape ? 750 : 0, 0);
+      // await MemoScraperTag("${cacheId}most", saveToFirebase, _prefs).startScrapeTags(["/most-posts"], deepScrape ? 750 : 0, 0);
     } catch (e) {
       _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
       Sentry.captureException(e);
@@ -188,7 +188,7 @@ class BackgroundScraperManager extends AsyncNotifier<void> {
     }
 
     try {
-      await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], 150, 0);
+      await MemoScraperTag(cacheId + "recent", saveToFirebase, _prefs).startScrapeTags(["/recent"], 100, 0);
     } catch (e) {
       _print("BGS: ❌ An error occurred during TAG scraping: $e 🚨");
       Sentry.captureException(e);

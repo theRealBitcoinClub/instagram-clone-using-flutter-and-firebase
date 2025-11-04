@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Add this import
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_bar_burn_mahakka_theme.dart';
 import 'package:mahakka/app_utils.dart';
@@ -16,6 +17,7 @@ import '../memo/model/memo_model_post.dart';
 import '../providers/token_limits_provider.dart';
 import '../widgets/limit_info_widget.dart';
 import '../widgets/post_dialog.dart';
+import 'home.dart';
 
 class ScrollUpIntent extends Intent {}
 
@@ -39,6 +41,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     context.afterBuild(refreshUI: false, () {
       ref.read(feedScrollControllerProvider.notifier).setController(_scrollController);
     });
+    context.afterLayout(() {
+      ref.read(feedFocusNodeProvider).requestFocus();
+    }, refreshUI: false);
     _print('FSCR:📜 Scroll listener added');
   }
 
@@ -136,6 +141,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   Widget _buildFeedBody(FeedState feedState, ThemeData theme) {
     _print('FSCR:🏗️ _buildFeedBody called');
+    // final focusNode = ref.read(feedFocusNodeProvider);
+    // focusNode.requestFocus();
 
     if (feedState.posts.isEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom) {
       _print('FSCR:📭 No posts available, showing empty state');
@@ -151,7 +158,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       'FSCR:   - end message: ${(!feedState.hasMorePosts && feedState.posts.isNotEmpty && !feedState.isLoadingInitialAtTop && !feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimit) ? 1 : 0}',
     );
 
-    return RefreshIndicator(
+    return
+    // Focus(
+    // focusNode: ref.read(feedFocusNodeProvider), // Use read, not watch
+    // // focusNode: ref.read(feedFocusNodeProvider), // Use read, not watch
+    // onFocusChange: (hasFocus) {
+    //   print('FOCUS: FeedScreen focus changed: $hasFocus');
+    // },
+    // child:
+    RefreshIndicator(
       onRefresh: () {
         setState(() {});
         _print('FSCR:🔄 ListView RefreshIndicator triggered');
@@ -159,34 +174,63 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       },
       color: theme.colorScheme.onPrimary,
       backgroundColor: theme.colorScheme.primary,
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        controller: _scrollController,
-        itemCount: _getDisplayedItemCount(feedState),
-        itemBuilder: (context, index) {
-          _print('FSCR:📜 ListView building item at index: $index');
-
-          // Apply soft limit to displayed posts
-          final displayedPosts = _getDisplayedPosts(feedState);
-
-          if (index < displayedPosts.length) {
-            final post = displayedPosts[index];
-            _print('FSCR:📜 Building PostCard for post ${post.id} at index $index');
-            return _wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme, index: index);
-          } else if (feedState.isMaxFreeLimit && index >= displayedPosts.length) {
-            _print('FSCR:💰 Building free plan limit widget at index $index');
-            return _buildFreePlanLimitWidget(theme);
-          } else if (feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimit && index >= displayedPosts.length) {
-            _print('FSCR:⏳ Building loading indicator at index $index');
-            return _buildLoadingIndicator();
-          } else if (!feedState.hasMorePosts && index == displayedPosts.length) {
-            _print('FSCR:🏁 Building end of feed message at index $index');
-            return _buildEndOfFeedWidget(theme);
-          }
-          _print('FSCR:❌ Unexpected index in ListView builder: $index');
-          return const SizedBox.shrink();
+      child: FocusableActionDetector(
+        autofocus: false,
+        onFocusChange: (hasFocus) {
+          print('FOCUS: FeedScreen focus changed: $hasFocus');
         },
+        focusNode: ref.read(feedFocusNodeProvider),
+        // focusNode: focusNode,
+        shortcuts: {
+          LogicalKeySet(LogicalKeyboardKey.arrowUp): ScrollUpIntent(),
+          LogicalKeySet(LogicalKeyboardKey.arrowDown): ScrollDownIntent(),
+          LogicalKeySet(LogicalKeyboardKey.pageUp): ScrollUpIntent(),
+          LogicalKeySet(LogicalKeyboardKey.pageDown): ScrollDownIntent(),
+        },
+        actions: {
+          ScrollUpIntent: CallbackAction<ScrollUpIntent>(
+            onInvoke: (ScrollUpIntent intent) {
+              _scrollController.animateTo(_scrollController.offset - 180, duration: const Duration(milliseconds: 240), curve: Curves.easeInOut);
+              return null;
+            },
+          ),
+          ScrollDownIntent: CallbackAction<ScrollDownIntent>(
+            onInvoke: (ScrollDownIntent intent) {
+              _scrollController.animateTo(_scrollController.offset + 180, duration: const Duration(milliseconds: 240), curve: Curves.easeInOut);
+              return null;
+            },
+          ),
+        },
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          controller: _scrollController,
+          itemCount: _getDisplayedItemCount(feedState),
+          itemBuilder: (context, index) {
+            _print('FSCR:📜 ListView building item at index: $index');
+
+            // Apply soft limit to displayed posts
+            final displayedPosts = _getDisplayedPosts(feedState);
+
+            if (index < displayedPosts.length) {
+              final post = displayedPosts[index];
+              _print('FSCR:📜 Building PostCard for post ${post.id} at index $index');
+              return _wrapInDoubleTapDetectorImagesOnly(post, context, feedState, theme, index: index);
+            } else if (feedState.isMaxFreeLimit && index >= displayedPosts.length) {
+              _print('FSCR:💰 Building free plan limit widget at index $index');
+              return _buildFreePlanLimitWidget(theme);
+            } else if (feedState.isLoadingMorePostsAtBottom && !feedState.isMaxFreeLimit && index >= displayedPosts.length) {
+              _print('FSCR:⏳ Building loading indicator at index $index');
+              return _buildLoadingIndicator();
+            } else if (!feedState.hasMorePosts && index == displayedPosts.length) {
+              _print('FSCR:🏁 Building end of feed message at index $index');
+              return _buildEndOfFeedWidget(theme);
+            }
+            _print('FSCR:❌ Unexpected index in ListView builder: $index');
+            return const SizedBox.shrink();
+          },
+        ),
       ),
+      // ),
     );
   }
 

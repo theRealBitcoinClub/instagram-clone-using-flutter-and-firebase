@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Add this import if not already present
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mahakka/app_utils.dart';
 import 'package:mahakka/memo/model/memo_model_creator.dart';
@@ -29,6 +30,15 @@ import '../intros/intro_overlay.dart';
 import '../intros/intro_state_notifier.dart';
 import '../provider/profile_data_model_provider.dart';
 import '../widgets/profile/profile_app_bar.dart';
+import 'home.dart';
+
+class ScrollUpIntent extends Intent {}
+
+class ScrollDownIntent extends Intent {}
+
+class SwitchTabLeftIntent extends Intent {}
+
+class SwitchTabRightIntent extends Intent {}
 
 class ProfileScreenWidget extends ConsumerStatefulWidget {
   const ProfileScreenWidget({Key? key}) : super(key: key);
@@ -178,11 +188,21 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
         onRetry: () => ref.read(navigationStateProvider.notifier).navigateToOwnProfile(),
       );
     }
+    //
+    // final focusNode = ref.watch(profileFocusNodeProvider);
+    // focusNode.requestFocus();
 
     final isOwnProfile = loggedInUser?.profileIdMemoBch == creator.id;
     ref.read(profileDataNotifier.notifier).refreshCreatorDataOnProfileLoad(currentTabIndex, creator.id, isOwnProfile, context);
 
-    return Scaffold(
+    return
+    // Focus(
+    // focusNode: ref.read(profileFocusNodeProvider),
+    // onFocusChange: (hasFocus) {
+    //   print('FOCUS: Profile Screen focus changed: $hasFocus');
+    // },
+    // child:
+    Scaffold(
       key: ValueKey("profile_scaffold_${creator.id}_$limit"),
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: ProfileAppBar(
@@ -193,23 +213,77 @@ class _ProfileScreenWidgetState extends ConsumerState<ProfileScreenWidget> with 
       ),
       body: Stack(
         children: [
-          GestureDetector(
-            onHorizontalDragStart: _handleHorizontalDragStart,
-            onHorizontalDragUpdate: _handleHorizontalDragUpdate,
-            onHorizontalDragEnd: _handleHorizontalDragEnd,
-            behavior: HitTestBehavior.opaque,
-            child: CustomScrollView(
-              controller: _scrollController,
-              slivers: [
-                SliverToBoxAdapter(child: _buildProfileHeader(creator, isOwnProfile, theme)),
-                _buildTabSelector(),
-                _buildContent(theme, profileData, limit),
-              ],
+          FocusableActionDetector(
+            autofocus: false,
+            onFocusChange: (hasFocus) {
+              print('FOCUS: Profile Screen focus changed: $hasFocus');
+            },
+            focusNode: ref.read(profileFocusNodeProvider),
+            shortcuts: {
+              // Scrolling
+              LogicalKeySet(LogicalKeyboardKey.arrowUp): ScrollUpIntent(),
+              LogicalKeySet(LogicalKeyboardKey.arrowDown): ScrollDownIntent(),
+              LogicalKeySet(LogicalKeyboardKey.pageUp): ScrollUpIntent(),
+              LogicalKeySet(LogicalKeyboardKey.pageDown): ScrollDownIntent(),
+              // Tab switching
+              LogicalKeySet(LogicalKeyboardKey.arrowLeft): SwitchTabLeftIntent(),
+              LogicalKeySet(LogicalKeyboardKey.arrowRight): SwitchTabRightIntent(),
+              LogicalKeySet(LogicalKeyboardKey.keyA): SwitchTabLeftIntent(), // Alternative keys
+              LogicalKeySet(LogicalKeyboardKey.keyD): SwitchTabRightIntent(),
+            },
+            actions: {
+              ScrollUpIntent: CallbackAction<ScrollUpIntent>(
+                onInvoke: (ScrollUpIntent intent) {
+                  _scrollController.animateTo(
+                    _scrollController.offset - 90,
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeInOut,
+                  );
+                  return null;
+                },
+              ),
+              ScrollDownIntent: CallbackAction<ScrollDownIntent>(
+                onInvoke: (ScrollDownIntent intent) {
+                  _scrollController.animateTo(
+                    _scrollController.offset + 90,
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeInOut,
+                  );
+                  return null;
+                },
+              ),
+              SwitchTabLeftIntent: CallbackAction<SwitchTabLeftIntent>(
+                onInvoke: (SwitchTabLeftIntent intent) {
+                  _navigateToAdjacentTab(-1);
+                  return null;
+                },
+              ),
+              SwitchTabRightIntent: CallbackAction<SwitchTabRightIntent>(
+                onInvoke: (SwitchTabRightIntent intent) {
+                  _navigateToAdjacentTab(1);
+                  return null;
+                },
+              ),
+            },
+            child: GestureDetector(
+              onHorizontalDragStart: _handleHorizontalDragStart,
+              onHorizontalDragUpdate: _handleHorizontalDragUpdate,
+              onHorizontalDragEnd: _handleHorizontalDragEnd,
+              behavior: HitTestBehavior.opaque,
+              child: CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  SliverToBoxAdapter(child: _buildProfileHeader(creator, isOwnProfile, theme)),
+                  _buildTabSelector(),
+                  _buildContent(theme, profileData, limit),
+                ],
+              ),
             ),
           ),
           if (_showIntro) IntroOverlay(introType: _introType, onComplete: () {}),
         ],
       ),
+      // ),
     );
   }
 

@@ -29,6 +29,18 @@ class HomeSceen extends ConsumerStatefulWidget {
   ConsumerState<HomeSceen> createState() => _HomeSceenState();
 }
 
+final feedFocusNodeProvider = Provider<FocusNode>((ref) {
+  final focusNode = FocusNode();
+  ref.onDispose(() => focusNode.dispose());
+  return focusNode;
+});
+
+final profileFocusNodeProvider = Provider<FocusNode>((ref) {
+  final focusNode = FocusNode();
+  ref.onDispose(() => focusNode.dispose());
+  return focusNode;
+});
+
 class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateMixin {
   late TabController _tabController;
   late AnimationController _animationController;
@@ -104,6 +116,7 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     if (_lastIndex != index) {
       context.afterLayout(refreshUI: true, () {
         ref.read(feedScrollControllerProvider.notifier).resetScroll();
+        focusNodeKeyScroll(index);
       });
       _lastIndex = index;
     } else
@@ -120,6 +133,30 @@ class _HomeSceenState extends ConsumerState<HomeSceen> with TickerProviderStateM
     }
 
     _animateIndicatorToTab(index);
+  }
+
+  void focusNodeKeyScroll(int index) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(Duration(milliseconds: 100), () {
+        if (index == AppTab.feed.tabIndex) {
+          final focusNode = ref.read(feedFocusNodeProvider);
+          if (!focusNode.hasFocus) {
+            focusNode.requestFocus();
+            print('FOCUS: Requested focus for FeedScreen');
+          }
+        } else if (index == AppTab.profile.tabIndex) {
+          final focusNode = ref.read(profileFocusNodeProvider);
+          if (!focusNode.hasFocus) {
+            focusNode.requestFocus();
+            print('FOCUS: Requested focus for ProfileScreen');
+          }
+        } else {
+          // For other tabs, unfocus to prevent keyboard conflicts
+          FocusScope.of(context).unfocus();
+          print('FOCUS: unfocus');
+        }
+      });
+    });
   }
 
   @override
